@@ -1,13 +1,16 @@
 ---
 title: "Product Brief Addendum: Nudge-inator"
-updated: 2026-10-01
+updated: 2026-10-02
 ---
 
 # Product Brief Addendum: Nudge-inator
 
 Detail behind the [brief](brief.md) that later documents (PRD, UX, architecture) will need, but that
 doesn't belong in the brief itself. The rules in the brief come from the tags mockup: where they
-disagree, its `index.html` is the reference for behavior, and its README for reasons.
+disagree, its `index.html` is the reference for behavior, and its README for reasons. The exception
+is the nudging rules decided on 2026-10-02 (brief §10), which the mockup predates. Where those
+differ from the mockup, the brief wins. For example, the mockup starts a carry-over one step
+further along the schedule, and it has no **Not Done** or **Ignore Quiet Hours**.
 
 ## A. What the earlier brief had that this one drops
 
