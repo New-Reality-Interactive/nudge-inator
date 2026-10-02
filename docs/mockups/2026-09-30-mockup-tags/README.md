@@ -679,5 +679,12 @@ notifications off, alarms off and both off, and onboarding.
 
 At AX5 the alarm scrolls instead of clipping.
 
+After Normal nudges became ordinary notifications, the longer text was checked in headless Chrome:
+New Reminder's How It Nudges summary for each strength, and the Settings footer, on the iPhone SE
+and the 440 pt iPhone, in portrait and landscape, at Large, AX3 and AX5, with Bold Text off and on
+(96 checks). The text wraps with nothing clipped, cut off with "…" or scrolling sideways, and the
+Focus sentence appears for Gentle and Firm but not Relentless. The console has no errors.
+
 The typography, contrast, accessibility and materials checks above were run on the final version,
-apart from the AlarmKit corrections, which were checked as described in the previous paragraph.
+apart from the AlarmKit corrections and the Normal-nudge wording, which were checked as described in
+the previous paragraphs.

@@ -843,7 +843,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
     <p>Not part of the app. The clock is fixed at Mon 28 Sep, 8:20 AM and the data is made up.</p>
     <fieldset>
       <legend>Show what the iPhone does</legend>
-      <button type="button" class="cbtn" id="c-notif">Next early nudge: Time Sensitive notification</button>
+      <button type="button" class="cbtn" id="c-notif">Next early nudge: notification</button>
       <p class="why" id="c-notif-why"></p>
       <button type="button" class="cbtn" id="c-alarm">Next Urgent nudge: alarm</button>
       <p class="why" id="c-alarm-why"></p>
@@ -1032,7 +1032,8 @@ function priorityAt(s, l) { const p = PROFILES[s], top = maxLevel(s); return p.m
 const URGENCY = { 3: "Normal", 4: "High", 5: "Urgent" };
 const urgencyAt = (s, l) => URGENCY[priorityAt(s, l)];
 /* How a nudge reaches the phone: Urgent rings as an AlarmKit alarm; everything else is a
-   local Time Sensitive notification. Without alarm permission, Urgent falls back too. With
+   local notification (Time Sensitive at High and Urgent, ordinary at Normal, so a Focus holds
+   Normal ones). Without alarm permission, Urgent falls back too. With
    notifications off, a nudge that isn't an alarm can't arrive at all. */
 const viaFor = (urg) => (urg === "Urgent" && perm.alarms ? "alarm" : perm.notifications ? "notification" : "none");
 const VIA = {
