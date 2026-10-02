@@ -6,7 +6,7 @@
 <title>Nudge-inator Tags Mockup</title>
 <style>
 /* ============ Colors =============
-   Follows Apple's HIG "Color" and "Dark Mode" pages (docs/design). Every token is a dynamic color
+   Follows Apple's HIG "Color" and "Dark Mode" pages (docs/apple/design). Every token is a dynamic color
    with four variants: light, dark, and Increased Contrast light and dark (data-contrast="more").
    - Semantic names match UIKit/SwiftUI (label, secondaryLabel, separator, the grouped
      backgrounds, tertiarySystemFill...), and each is used only for what it's named for.
@@ -113,7 +113,7 @@
   --bar: var(--bar-solid); --alert: var(--alert-solid); --material: var(--material-solid); --glass: var(--glass-solid); --blur: none;
 }
 /* ============ Typography =============
-   Follows Apple's HIG "Typography" page (docs/design). Every piece of app text uses one of the
+   Follows Apple's HIG "Typography" page (docs/apple/design). Every piece of app text uses one of the
    iOS text styles, as a token set with `font: var(--body); letter-spacing: var(--body-track);`.
    - Sizes follow the iOS Dynamic Type tables for all 12 sizes, from xSmall to AX5 (Large is the
      default). Leading is Apple's for xSmall, Large and AX1; the other sizes keep the Large
@@ -320,8 +320,10 @@ svg { flex: none; }
 .home-btn { display: none; position: absolute; left: 50%; width: calc(52px * var(--s, 1)); height: calc(52px * var(--s, 1)); transform: translateX(-50%); top: calc((var(--dh, 876px) - 62px) * var(--s, 1)); border-radius: 50%; border: 2px solid #3a3a3c; pointer-events: none; }
 .notch { display: none; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: var(--notch-w, 162px); height: 32px; border-radius: 0 0 20px 20px; background: #000; z-index: 90; pointer-events: none; }
 /* Screens scroll but show no scrollbars, as on iOS. */
-.scroller, .sheet-body { scrollbar-width: none; }
-.scroller::-webkit-scrollbar, .sheet-body::-webkit-scrollbar { display: none; }
+.scroller, .sheet-body, .alarm, .lock { scrollbar-width: none; }
+.scroller::-webkit-scrollbar, .sheet-body::-webkit-scrollbar, .alarm::-webkit-scrollbar, .lock::-webkit-scrollbar { display: none; }
+/* At large text sizes the Lock Screen and the alarm scroll rather than clip. */
+.alarm, .lock { overflow-y: auto; }
 .screen { font: var(--body); letter-spacing: var(--body-track); position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--system-grouped-background); color: var(--label); }
 .island { position: absolute; top: 11px; left: 50%; transform: translateX(-50%); width: 122px; height: 35px; border-radius: 20px; background: #000; z-index: 90; pointer-events: none; }
 .statusbar { flex: none; height: 54px; display: flex; justify-content: space-between; align-items: center; padding: 8px 30px 0 46px; font-size: 16px; font-weight: var(--semibold); position: relative; z-index: 3; }
@@ -618,16 +620,29 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .lock-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 12px 34px; }
 .lock-foot .btn { background: #3a3f66; color: #fff; }
 .lock-hint { font: var(--footnote); letter-spacing: var(--footnote-track); text-align: center; margin: 0 16px 6px; color: rgba(255, 255, 255, 0.9); }
-.alarm { position: absolute; inset: 0; z-index: 70; color: #fff; background: linear-gradient(180deg, #1c1c1e, #000); display: flex; flex-direction: column; align-items: center; text-align: center; padding: 72px 24px 48px; }
-.alarm .app { font: var(--subhead); letter-spacing: var(--subhead-track); display: flex; gap: 6px; align-items: center; color: #ffb340; font-weight: var(--semibold); }
-.alarm .atime { font-size: 80px; font-weight: var(--regular); line-height: 1; margin: 18px 0 8px; font-variant-numeric: tabular-nums; }
-.alarm-title { font: var(--title1); letter-spacing: var(--title1-track); font-weight: var(--bold); margin: 8px 0 4px; overflow-wrap: anywhere; }
-.alarm-text { margin: 4px 0; color: #d1d1d6; }
-.alarm .abuttons { margin-top: auto; display: grid; gap: 14px; width: 100%; }
-.alarm .snz { font: var(--title3); letter-spacing: var(--title3-track); background: #ff9f0a; color: #000; border: 0; border-radius: 99px; padding: 18px; font-weight: var(--semibold); cursor: pointer; }
-.alarm .stop { font: var(--title3); letter-spacing: var(--title3-track); background: #3a3a3c; color: #fff; border: 0; border-radius: 99px; padding: 18px; font-weight: var(--semibold); cursor: pointer; }
-.alarm .left { font: var(--footnote); letter-spacing: var(--footnote-track); color: #d1d1d6; }
-@keyframes ring { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }
+/* The AlarmKit alert is system UI. The app supplies only the title, two buttons (each text, a text
+   color and an SF Symbol) and a tint color; the system draws the rest over the Lock Screen. The
+   colors here are fixed, because the Lock Screen is dark in every appearance. */
+.alarm { position: absolute; inset: 0; z-index: 70; color: #fff; background: radial-gradient(circle at 30% 20%, #3b4c8f, #16163a 60%, #0b0b18); display: flex; flex-direction: column; text-align: center; }
+.alarm-body { margin-top: auto; padding: 0 20px 12px; display: grid; gap: 14px; }
+.alarm-title { font: var(--title1); letter-spacing: var(--title1-track); font-weight: var(--bold); margin: 0 0 10px; overflow-wrap: anywhere; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3); }
+.alarm-title:focus { outline: none; }
+.abtn { font: var(--title3); letter-spacing: var(--title3-track); font-weight: var(--semibold); display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 58px; border: 0; border-radius: 99px; padding: 12px 20px; cursor: pointer; }
+.abtn.secondary { background: rgba(255, 255, 255, 0.2); color: #fff; -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
+.abtn.stop { background: #409cff; color: #000; }
+:root[data-transparency="reduce"] .abtn.secondary { background: #4a4a63; }
+:root[data-contrast="more"] .abtn.secondary { box-shadow: inset 0 0 0 1px #fff; }
+.alarm .abtn .i { --w: 2.2; }
+/* The Live Activity after a snooze is the app's own design (a widget extension), on the Lock Screen. */
+.activity { width: 100%; text-align: left; border-radius: 22px; padding: 14px 16px; background: var(--material); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); color: var(--material-text); display: grid; gap: 10px; }
+.activity .ahead { display: flex; align-items: center; gap: 10px; }
+.activity .ahead .appicon { width: 30px; height: 30px; border-radius: 7px; background: linear-gradient(160deg, #b3380a, #9e0010); display: grid; place-items: center; color: #fff; flex: none; }
+.activity-title { font: var(--headline); letter-spacing: var(--headline-track); font-weight: var(--semibold); margin: 0; overflow-wrap: anywhere; flex: 1; min-width: 0; }
+.activity-title:focus { outline: none; }
+.activity .count { font: var(--title1); letter-spacing: var(--title1-track); font-weight: var(--bold); font-variant-numeric: tabular-nums; }
+.activity .arow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.activity .asub { font: var(--subhead); letter-spacing: var(--subhead-track); color: var(--material-text2); margin: 0; }
+.activity .abtn { font: var(--body); letter-spacing: var(--body-track); min-height: 44px; padding: 6px 18px; }
 /* ============ Overrides, after the rules they change ============ */
 /* Increase Contrast outlines tinted controls, so their shape doesn't rely on a faint fill. */
 :root[data-contrast="more"] .btn.bordered, :root[data-contrast="more"] .seg, :root[data-contrast="more"] .stepper, :root[data-contrast="more"] .pill-input, :root[data-contrast="more"] .token { box-shadow: inset 0 0 0 1px var(--system-gray); }
@@ -642,7 +657,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .device[data-cut="none"] .tabbar { bottom: 8px; }
 .device[data-cut="none"] .home-ind { display: none; }
 .device[data-cut="none"] .lock-top { padding-top: 24px; }
-.device[data-cut="none"] .alarm { padding-top: 40px; padding-bottom: 24px; }
+.device[data-cut="none"] .alarm .lock-top { padding-top: 24px; }
 .device[data-cut="none"] .lock-foot { padding-bottom: 12px; }
 /* Bold Text: symbols get heavier along with the text. */
 :root[data-bold] .i { --w: 2.2; }
@@ -675,7 +690,6 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
   .switch::after { transition: left 0.2s; }
   .hud { transition: opacity 0.2s, transform 0.2s; }
   .inline-title { transition: opacity 0.15s; }
-  .ring { animation: ring 1s ease-in-out 3; }
 }
 /* On a phone, the app fills the screen and the controls follow it. */
 @media (max-width: 760px) {
@@ -730,7 +744,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <legend>iPhone</legend>
       <label for="c-device">Screen size (points)</label>
       <select id="c-device"></select>
-      <p class="why">Screen sizes of the iPhones that run iOS 26, which AlarmKit needs.</p>
+      <p class="why">Screen sizes of the iPhones that run iOS 18 or later. The iPhone XS, XS Max and XR stop at iOS 18, so they get the notification chain instead of alarms.</p>
     </fieldset>
     <fieldset>
       <legend>iPhone settings</legend>
@@ -811,7 +825,7 @@ const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
 /* ================= Icons: SF Symbols, redrawn =================
    A web page can't use SF Symbols, so each icon here is drawn to match the SF Symbol it names,
-   following Apple's HIG "Icons" page (docs/design): standard actions use the standard symbols
+   following Apple's HIG "Icons" page (docs/apple/design): standard actions use the standard symbols
    (checkmark, xmark, trash, plus, ellipsis, magnifyingglass, square.and.arrow.up, alarm, calendar).
    Every icon has the same stroke weight, set in CSS to match the adjacent text (regular or
    semibold), and is sized in rem so it scales with the text. `scale` evens out visual size and
@@ -869,7 +883,7 @@ const I = (k, sz = 22, fixed = false) => {
 };
 const chev = `<span class="chev">${I("chevron.right", 15)}</span>`;
 
-/* ================= Strengths and escalation (same rules as mockups 1 and 2) ================= */
+/* ================= Strengths and escalation ================= */
 const PROFILES = {
   gentle:     { initial: 60, factor: 0.75, floor: 20, min: 3, max: 4, blurb: "Hourly at first, easing to every 20 min. Never rings as an alarm." },
   firm:       { initial: 30, factor: 0.5,  floor: 5,  min: 3, max: 5, blurb: "Every 30 min, down to every 5. Rings as an alarm from nudge 4." },
@@ -947,7 +961,7 @@ function nudgeSummary(s, cap, startLevel = 0) {
   return { sim, text: `${plural(n, "nudge")} over ${fmtDur(sim.giveUpAt)}, then it gives up. ${how}` };
 }
 
-/* ================= Made-up data (same story as mockups 1 and 2) ================= */
+/* ================= Made-up data ================= */
 const me = { timezone: "America/New_York", autoTz: true, quietHours: { start: "22:00", end: "07:00" } };
 const perm = { notifications: true, alarms: true };
 let uidN = 0x20;
@@ -1903,23 +1917,39 @@ function showAlarm() {
   state.system = { kind: "alarm", occId: o.id, title: r.title, n: o.attempts, of: capOf(r).maxAttempts, at };
   state.focus = "system"; render();
 }
-/* The full-screen AlarmKit alarm. */
+/* The full-screen AlarmKit alert, as the system presents it on the Lock Screen: the Lock Screen
+   clock, then the alarm's title and its two buttons. Snooze (the secondary button) is left out once
+   the occurrence has no snoozes left, because the app reschedules its alarms without it. */
 function alarmUI(s) {
   const o = occurrences.find((x) => x.id === s.occId), r = remById(o.reminderId);
   const left = MAX_SNOOZES - (o.snoozes || 0);
-  const after = left - 1 === 0 ? "This is the last snooze" : `${plural(left - 1, "snooze")} left after this`;
-  const snoozeBtn = `<button type="button" class="snz" data-alarm="snooze">Snooze ${SNOOZE[r.strength]} min</button><span class="left">${after}</span>`;
-  return `<div class="alarm" role="alertdialog" aria-modal="true" aria-labelledby="al-t" aria-describedby="al-d">
-      <div class="app"><span class="ring">${I("alarm", 18)}</span> Nudge-inator · Urgent</div>
-      <div class="atime">${clock(s.at)}</div>
-      <h2 class="alarm-title" id="al-t" tabindex="-1">${esc(s.title)}</h2>
-      <p class="alarm-text" id="al-d">Nudge ${s.n} of ${s.of}. Only the title is shown.</p>
-      <div class="abuttons">
-        ${left > 0 ? snoozeBtn : `<span class="left">No snoozes left</span>`}
-        <button type="button" class="stop" data-alarm="done">Done</button>
+  const snoozeBtn = `<button type="button" class="abtn secondary" data-alarm="snooze">${I("clock", 22)} Snooze ${SNOOZE[r.strength]} min</button>`;
+  return `<div class="alarm" role="alertdialog" aria-modal="true" aria-labelledby="al-t">
+      <div class="lock-top" aria-hidden="true"><div class="lock-date">${LONGDAY[NOW.getDay()]} ${NOW.getDate()} ${LONGMON[NOW.getMonth()]}</div><div class="lock-time">${clock(s.at)}</div></div>
+      <div class="alarm-body">
+        <h2 class="alarm-title" id="al-t" tabindex="-1">${esc(s.title)}</h2>
+        ${left > 0 ? snoozeBtn : ""}
+        <button type="button" class="abtn stop" data-alarm="done">${I("checkmark", 22)} Done</button>
       </div>
-      <p class="lock-hint" style="margin-top:16px">Simulated AlarmKit alarm: full screen, rings and vibrates through silent mode and Focus.</p>
+      <p class="lock-hint" style="margin:4px 16px 30px">Simulated AlarmKit alert. iOS draws this screen; the app supplies only the title, the two buttons and a tint color.</p>
     </div>`;
+}
+/* After Snooze on the alarm, AlarmKit counts down and rings again. The countdown shows on the Lock
+   Screen as the app's Live Activity, with Done to stop it early. */
+function activityUI(s) {
+  const until = L(s.until);
+  return `<div class="lock" role="dialog" aria-modal="true" aria-label="Lock Screen (simulated)">
+    <div class="lock-top" aria-hidden="true"><div class="lock-date">${LONGDAY[NOW.getDay()]} ${NOW.getDate()} ${LONGMON[NOW.getMonth()]}</div><div class="lock-time">${clock(NOW)}</div></div>
+    <div class="lock-stack">
+      <p class="lock-hint">Simulated Live Activity: the app designs this view.</p>
+      <section class="activity" aria-labelledby="act-t">
+        <div class="ahead"><span class="appicon" aria-hidden="true">${I("alarm", 18)}</span><h2 class="activity-title" id="act-t" tabindex="-1">${esc(s.title)}</h2></div>
+        <div class="arow"><div><span class="count">${s.mins}:00</span><p class="asub">Snoozed. Rings again at ${hm(until)}.</p></div>
+          <button type="button" class="abtn stop" data-activity-done aria-label="Done: ${esc(s.title)}">${I("checkmark", 18)} Done</button></div>
+      </section>
+    </div>
+    <div class="lock-foot"><button type="button" class="btn" data-lock-close>Unlock</button></div>
+  </div>`;
 }
 /* A notification's actions, shown as they are after a long press on iPhone. */
 function notifActions(o) {
@@ -1956,6 +1986,7 @@ function lockUI(s) {
 function systemUI() {
   const s = state.system;
   if (!s) return "";
+  if (s.kind === "activity") return activityUI(s);
   return s.kind === "alarm" ? alarmUI(s) : lockUI(s);
 }
 
@@ -2103,7 +2134,8 @@ function answerAlert(i) {
 function hud(msg) {
   const h = document.getElementById("hud");
   h.textContent = "";
-  setTimeout(() => { h.textContent = msg; h.classList.add("show"); }, 30);
+  // Status messages belong to the app, so none appear over the Lock Screen or the alarm.
+  setTimeout(() => { if (state.system) return; h.textContent = msg; h.classList.add("show"); }, 30);
 }
 /* Spoken status for VoiceOver. The views re-render whole, and text that's replaced isn't reliably
    read, so filter and search results are announced here: one region that stays put. */
@@ -2366,11 +2398,13 @@ const CLICK = {
   nact: (v) => notificationAction(v),
   alarm: (v) => {
     const s = state.system;
-    if (v === "done") ack(s.occId, "alarm");
-    else snooze(s.occId);
-    state.system = null;
-    nav();
+    if (v === "done") { ack(s.occId, "alarm"); state.system = null; nav(); return; }
+    snooze(s.occId);
+    const o = occurrences.find((x) => x.id === s.occId);
+    state.system = { kind: "activity", occId: s.occId, title: s.title, until: o.snoozedUntil, mins: SNOOZE[remById(o.reminderId).strength] };
+    state.focus = "system"; render();
   },
+  activityDone: () => { ack(state.system.occId, "alarm"); state.system = null; nav(); },
   lockClose: () => {
     state.system = null;
     if (!state.stacks[state.tab].length) state.tab = "now";
@@ -2529,15 +2563,15 @@ function followSetting(query, box, attr, value) {
 followSetting("(prefers-contrast: more)", "c-contrast", "contrast", "more");
 followSetting("(prefers-reduced-transparency: reduce)", "c-transparency", "transparency", "reduce");
 
-/* Screen sizes, in points, of the iPhones that run iOS 26. "cut" is what sits at the top of the
+/* Screen sizes, in points, of the iPhones that run iOS 18 or later. "cut" is what sits at the top of the
    screen: the Dynamic Island, a notch, or nothing (iPhone SE, which has a Home button). */
 const DEVICES = [
   { id: "se", w: 375, h: 667, cut: "none", name: "iPhone SE (2nd and 3rd generation)" },
-  { id: "mini", w: 375, h: 812, cut: "notch", name: "iPhone 11 Pro, 12 mini, 13 mini", notch: 162 },
+  { id: "mini", w: 375, h: 812, cut: "notch", name: "iPhone XS, 11 Pro, 12 mini, 13 mini", notch: 162 },
   { id: "6.1n", w: 390, h: 844, cut: "notch", name: "iPhone 12, 12 Pro, 13, 13 Pro, 14, 16e", notch: 162 },
   { id: "6.1", w: 393, h: 852, cut: "island", name: "iPhone 14 Pro, 15, 15 Pro, 16" },
   { id: "6.3", w: 402, h: 874, cut: "island", name: "iPhone 16 Pro, 17, 17 Pro" },
-  { id: "xr", w: 414, h: 896, cut: "notch", name: "iPhone 11, 11 Pro Max", notch: 210 },
+  { id: "xr", w: 414, h: 896, cut: "notch", name: "iPhone XR, XS Max, 11, 11 Pro Max", notch: 210 },
   { id: "air", w: 420, h: 912, cut: "island", name: "iPhone Air" },
   { id: "6.7n", w: 428, h: 926, cut: "notch", name: "iPhone 12 Pro Max, 13 Pro Max, 14 Plus", notch: 162 },
   { id: "6.7", w: 430, h: 932, cut: "island", name: "iPhone 14 Pro Max, 15 Plus, 15 Pro Max, 16 Plus" },
