@@ -43,17 +43,33 @@ it gets iOS 18's look without a separate design.
 
 ## C. Layout notes for landscape and iPad
 
-These are starting points for the UX work. The mockup only shows an iPhone in portrait.
+The iPhone notes describe what the tags mockup shows; its README has the reasons and how it was
+checked. The iPad notes are starting points for the UX work.
 
-- **iPhone, landscape:** compact height.
-  - Large titles collapse to inline titles.
-  - The tab bar stays at the bottom.
-  - Content keeps a readable width.
-  - Sheets fill the screen.
-  - The alarm is the system's own and handles orientation itself.
+- **iPhone, landscape:** compact height. Every model:
+  - Large titles collapse to inline titles. The status bar is hidden.
+  - Content stays inside the safe areas, at a readable width; backgrounds run to the edges.
+  - The tab bar stays at the bottom, with each symbol beside its title. It shrinks to the current
+    tab while scrolling down (`tabBarMinimizeBehavior(.onScrollDown)`), except on Search.
+  - My Day's header is shorter: the date is the title's subtitle (`navigationSubtitle`), Filter is a
+    bar button showing how many tags are chosen, and the counts are a row of capsules.
+  - Nudge cards 540 pt wide or more put Done and Snooze beside the text. It depends on the card's
+    width, not the orientation, so it applies on iPad too. At accessibility sizes they stack.
+  - Sheets fill the screen. Alerts stay centered; action sheets keep their portrait width.
+  - Nudges arrive over the app, because the iPhone is in use: the alarm as AlarmKit's alert (a
+    banner at the top in the mockup, to confirm on a device) and notifications as banners. The Lock
+    Screen doesn't rotate, so it's only ever portrait.
+- **iPhone, landscape, regular width:** the iPhones 414 pt wide or more (XR, 11, the Plus and Max
+  models, and probably Air).
+  - Tags, Search and Settings use a split view (`NavigationSplitView`): the list on the left, the
+    chosen reminder or Settings section on the right. Rotating to portrait collapses it into a
+    navigation stack.
+  - Now and My Day stay one column.
+  - Only the list column shrinks the tab bar.
 - **iPad, portrait and landscape:** regular width.
   - The tabs can become a sidebar (iPadOS 18 and later).
-  - Tags and Search show the list and the selected reminder side by side.
+  - Tags, Search and Settings start from the larger iPhones' split view: the list and the chosen
+    item side by side.
   - Now and My Day keep a readable column, and could add a details column in landscape.
   - Sheets are centered form sheets.
   - Every window size is supported, from Slide Over to full screen, with Stage Manager.
@@ -129,7 +145,9 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
   are rescheduled when it changes.
 - **Where it shows:** the Lock Screen, the Dynamic Island and StandBy, and a paired Apple Watch,
   which the system forwards the alert to. Apple calls it a prominent alert and doesn't describe it
-  as full screen.
+  as full screen. WWDC25 session 230 says the buttons' SF Symbols are used "when the alert is shown
+  in the Dynamic Island". That suggests the Dynamic Island is where it appears on an iPhone that's
+  in use, and the Lock Screen only on a locked one. Apple doesn't say this directly.
 - **Reconciling:** `AlarmManager.alarms` lists what's scheduled, and `alarmUpdates` reports changes.
   An alarm missing from `alarmUpdates` is no longer scheduled. The app can compare these with what
   it expects on every launch.
@@ -146,5 +164,6 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
 - **iOS 27 (beta):** new `AlarmConfiguration` initializers add an optional `appEntityIdentifier`,
   which could link an alarm to the reminder's App Entity for Siri.
 - **Not covered by the docs or the sample:** the alarm limit's value, App Review's view of alarms
-  for reminders, behavior after the app has been force-quit, how the alert looks on an unlocked
-  iPhone and on iPad, and whether alarms ring with notifications turned off.
+  for reminders, behavior after the app has been force-quit, and whether alarms ring with
+  notifications turned off. Nor how the alert looks on an unlocked iPhone: in landscape, where the
+  Dynamic Island is at the side; on iPhones without a Dynamic Island; and on iPad.

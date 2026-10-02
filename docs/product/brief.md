@@ -14,8 +14,9 @@ nudging until you tap **Done**.
 The [tags mockup](../mockups/2026-09-30-mockup-tags/index.html) is the visual reference for the app.
 Its [README](../mockups/2026-09-30-mockup-tags/README.md) explains the reasons behind it and how it
 was checked against Apple's Human Interface Guidelines. The app looks and behaves like the mockup.
-It differs only where a layout the mockup doesn't show needs a different choice: landscape, iPad,
-and iOS 18's system appearance (see [§5](#5-devices-orientations-and-ios-versions)).
+It shows an iPhone in portrait and landscape. The app differs only where something the mockup
+doesn't show needs a different choice: iPad, and iOS 18's system appearance (see
+[§5](#5-devices-orientations-and-ios-versions)).
 
 This brief replaces the earlier website-and-API brief. Detail that doesn't belong in the brief, such
 as what was removed and why, layout notes and a localization checklist, is in the
@@ -98,6 +99,12 @@ TestFlight. Releasing on the App Store is a later decision (see [§10](#10-open-
   app's code, which marks the occurrence done, and onboarding says so. The nudge count and snoozes
   left can't appear on the alarm, so the app shows them on the nudging card. After a snooze, the
   countdown shows on the Lock Screen as the app's Live Activity, with **Done**.
+- **Where nudges appear depends on whether the iPhone is in use.** On a locked iPhone, the alarm
+  and notifications appear on the Lock Screen, which is always portrait. On an iPhone that's in use,
+  they appear over the app: the alarm in the Dynamic Island, and notifications as banners at the
+  top. In landscape the Dynamic Island is at the side, so the mockup shows the alarm as a banner at
+  the top center. That's an approximation, to confirm on a device (see [§10](#10-risks-and-open-questions)).
+  The alarm also shows in StandBy.
 - A paired **Apple Watch** shows the alarm too. The system does this, so it needs no Watch app.
 - The iOS 18 chain repeats the current nudge. The repeats don't count toward the nudge
   limit, but their time counts toward the time limit. Snooze or Done ends the chain.
@@ -122,14 +129,27 @@ iOS 27**, on iPhone and iPad.
 | Urgent nudges | See [§4](#4-how-nudges-reach-you) | See §4 |
 | Everything else | Same screens, layouts and behavior | Same |
 
-**Visual reference and where it changes.** The mockup shows an iPhone in portrait. The app keeps
-its screens, text styles, colors, symbols and behavior everywhere, and changes only the layout:
+**Visual reference and where it changes.** The mockup shows an iPhone in portrait and landscape.
+The app keeps its screens, text styles, colors, symbols and behavior everywhere, and changes only
+the layout:
 - **System components draw the chrome.** The tab bar, navigation bars, sheets, alerts and Search
   are the system's own, so they get Liquid Glass on iOS 26 and later and the classic look on
   iOS 18 without separate designs.
-- **iPhone in landscape.** Inline titles instead of large ones, and content at a readable width.
-- **iPad.** The tabs can become a sidebar, Tags and Search show details beside the list, sheets are
-  centered form sheets, and every window size and keyboard shortcuts (⌘N, ⌘F) are supported.
+- **iPhone in landscape (in the mockup).** In landscape the screen is short, so the layout saves
+  height:
+  - inline titles instead of large ones, and content at a readable width
+  - the tab bar shrinks to the current tab while you scroll down
+  - My Day's date moves under the title and Filter into the navigation bar, and its counts become
+    one row
+  - nudge cards that are wide enough put Done and Snooze beside the text
+  - sheets fill the screen
+  - nudges arrive over the app, because the iPhone is in use (see [§4](#4-how-nudges-reach-you))
+- **Larger iPhones in landscape (in the mockup).** The iPhones 414 pt wide or more, such as the Plus
+  and Max models, are regular width in landscape. There, Tags, Search and Settings show their list
+  and the chosen item side by side, and fold back to one column in portrait.
+- **iPad.** It starts from the larger iPhones' two-column layout. The tabs can become a sidebar,
+  sheets are centered form sheets, and every window size and keyboard shortcuts (⌘N, ⌘F) are
+  supported.
 
   The addendum has the full layout notes.
 - **Accessibility text sizes** keep the mockup's stacked layouts in every orientation.
@@ -231,8 +251,13 @@ sharing reminders with other people, in-app purchases, and languages other than 
 - **The iOS 18 chain is weaker.** Silent mode can mute it, so Urgent nudges are less forceful on
   iOS 18.
 - **How the alarm looks.** Apple describes it only as a prominent alert, on the Lock Screen, in the
-  Dynamic Island and in StandBy. Confirm how it presents on an unlocked iPhone and on iPad
-  (AlarmKit supports iPadOS 26), and that it sounds on iPad as it does on iPhone.
+  Dynamic Island and in StandBy. Confirm how it presents on an unlocked iPhone, including in
+  landscape, where the mockup's banner at the top is a guess, and on iPhones without a Dynamic
+  Island. Confirm it on iPad too (AlarmKit supports iPadOS 26), and that it sounds there as it does
+  on iPhone.
+- **Which iPhones get two columns.** The mockup assumes the iPhone Air is regular width in
+  landscape, like the other iPhones 414 pt wide or more. Apple doesn't list it, so confirm it on a
+  device or in Simulator.
 - **Losing the device loses the reminders,** unless it's restored from a backup. Export is the only
   other copy.
 
@@ -243,6 +268,8 @@ sharing reminders with other people, in-app purchases, and languages other than 
 - Is Match All Tags the right default, or do people expect a second tag to widen the list (Any)?
 - Should tags have colors, from a fixed palette, if people need to tell them apart at a glance?
 - Should navigation bars stay at a fixed size at large text sizes (the mockup's choice) or grow?
+- Should the tab bar shrink while scrolling in portrait too? The mockup does it only in landscape,
+  where height is shortest.
 - Is the pale selected-tab color in dark mode with Increase Contrast acceptable?
 - Any limit on tags per reminder? (Names are already limited to 30 characters.)
 
