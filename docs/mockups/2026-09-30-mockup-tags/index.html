@@ -639,6 +639,21 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 :root[data-transparency="reduce"] .abtn.sys-stop { background: #4a4a63; }
 :root[data-contrast="more"] .abtn.sys-stop { box-shadow: inset 0 0 0 1px #fff; }
 .alarm .abtn .i { --w: 2.2; }
+/* Nudges over the app while the iPhone is in use (landscape): a banner at the top center, about the
+   width of the screen in portrait. The alarm's alert uses fixed dark colors, like the Dynamic Island. */
+.sysbanner { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 60; width: min(calc(100% - 2 * var(--safe-l, 0px) - 32px), calc(var(--sh, 393px) - 16px)); display: grid; gap: 8px; }
+/* At accessibility sizes the alert can be taller than the screen, so it scrolls rather than clip. */
+:root[data-type^="ax"] .sysbanner { max-height: calc(100% - 16px); overflow-y: auto; scrollbar-width: none; }
+.sysbanner .notif { box-shadow: var(--shadow); }
+.island-alert { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px 14px 14px 22px; border-radius: 32px; background: #000; color: #fff; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45), inset 0 0 0 0.5px rgba(255, 255, 255, 0.18); }
+.ia-text { flex: 1 1 10rem; min-width: 0; }
+.island-alert .alarm-app { display: flex; align-items: center; gap: 5px; margin: 0; }
+.ia-title { font: var(--headline); letter-spacing: var(--headline-track); font-weight: var(--semibold); margin: 2px 0 0; overflow-wrap: anywhere; }
+.ia-title:focus { outline: none; }
+.ia-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.island-alert .abtn { font: var(--body); letter-spacing: var(--body-track); font-weight: var(--semibold); min-height: 44px; padding: 8px 18px; }
+.island-alert .abtn.sys-stop { background: #3a3a3c; }
+:root[data-contrast="more"] .island-alert { box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45), inset 0 0 0 1px #8e8e93; }
 /* The Live Activity after a snooze is the app's own design (a widget extension), on the Lock Screen. */
 .activity { width: 100%; text-align: left; border-radius: 22px; padding: 14px 16px; background: var(--material); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); color: var(--material-text); display: grid; gap: 10px; }
 .activity .ahead { display: flex; align-items: center; gap: 10px; }
@@ -680,8 +695,8 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
      each tab's symbol beside its title (UITabBarItemAppearance's compactInline style).
    - Sheets fill the screen, as page sheets do in compact height. Alerts stay centered; action sheets
      keep their portrait width, centered at the bottom.
-   - The Lock Screen and the alarm don't rotate on iPhone, so the phone turns back to portrait while
-     they're showing (see isLandscape()). */
+   - The iPhone is in use, so nudges arrive as banners over the app (see bannerUI()). The Lock
+     Screen doesn't rotate on iPhone, so a locked-phone screen would turn it back to portrait. */
 .device[data-orient="landscape"] {
   --readable: 42rem;
   --gut-l: max(var(--safe-l), calc((var(--sw) - var(--readable)) / 2));
@@ -710,6 +725,54 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .device[data-orient="landscape"] .hud { top: 12px; }
 .device[data-orient="landscape"] .unavailable { padding-top: 24px; }
 .device[data-orient="landscape"] .welcome { padding-top: 8px; }
+/* The tab bar, shrunk while scrolling down (landscape): only the current tab, as a glass circle at
+   the leading edge, with Search at the trailing edge. Its title stays for VoiceOver. */
+.device[data-orient="landscape"] .tabbar.min { justify-content: space-between; }
+.tabbar.min .tabgroup { padding: 0; border-radius: 50%; }
+.tabbar.min .tab:not([aria-current]) { display: none; }
+.tabbar.min .tab[aria-current] { width: 50px; height: 50px; padding: 0; justify-content: center; background: none; }
+.tabbar.min .tab[aria-current] > span:not(.badge) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* A title with a subtitle under it (My Day's date, in landscape). Both are fixed-size, like the bar. */
+.navtitles { text-align: center; min-width: 0; }
+.navsub { font: 13px/16px var(--font); letter-spacing: -0.006em; margin: 0; color: var(--secondary-label); }
+/* My Day's Filter as a bar button. While the filter is on it shows how many tags are chosen, in the
+   accent color, so it doesn't rely on color alone. */
+.btn.bar.filter-on { gap: 4px; padding: 0 14px 0 10px; color: var(--accent); font-weight: var(--semibold); }
+/* My Day's counts as a row of capsules in landscape, to save height. They keep the chosen count's
+   fill and ring, and become two columns at accessibility sizes. */
+.device[data-orient="landscape"] .counts { display: flex; flex-wrap: wrap; gap: 8px; background: none; padding: 0; margin-bottom: 16px; }
+.device[data-orient="landscape"] .count { display: inline-flex; align-items: baseline; justify-content: center; gap: 6px; flex: 1 1 auto; padding: 10px 14px; border-radius: 99px; background: var(--secondary-system-grouped-background); }
+.device[data-orient="landscape"] .count[aria-pressed="true"] { background: var(--tertiary-system-fill); }
+.device[data-orient="landscape"] .counts b { font: var(--headline); letter-spacing: var(--headline-track); font-weight: var(--bold); }
+.device[data-orient="landscape"] .count-label { font: var(--subhead); letter-spacing: var(--subhead-track); }
+:root[data-type^="ax"] .device[data-orient="landscape"] .counts { display: grid; grid-template-columns: repeat(2, 1fr); }
+:root[data-type^="ax"] .device[data-orient="landscape"] .count { flex-wrap: wrap; border-radius: 16px; }
+/* Split view: the list column and the detail column scroll on their own. The list sits inside the
+   leading safe area and the details inside the trailing one; a separator divides them. */
+#main.split { display: flex; overflow: hidden; padding: 0; }
+#main.split > .col { overflow-y: auto; overscroll-behavior: contain; padding-bottom: 84px; scrollbar-width: none; }
+#main.split > .col::-webkit-scrollbar { display: none; }
+#main.split > .list-col { flex: none; width: calc(320px + var(--safe-l)); padding-left: var(--safe-l); box-shadow: inset -0.5px 0 0 var(--separator); }
+#main.split > .detail-col { flex: 1; min-width: 0; padding-right: var(--safe-r); }
+.device[data-orient="landscape"] #main.split .navrow { margin: 0 0 8px; }
+#main.split .navtitle { max-width: 100%; }
+/* The chosen row in the list column: a fill, plus aria-current for VoiceOver. Rows there don't show
+   chevrons, because choosing one doesn't move to another screen. */
+#main.split .list-col .cell[aria-current="true"] { background: var(--tertiary-system-fill); }
+#main.split .list-col :is([data-open], [data-setsec]) .chev { display: none; }
+/* The list column is narrow, so its reminder rows leave out the strength badge: the details beside
+   them show it, and the title and tags get the room. */
+#main.split .list-col [data-open] .trail { display: none; }
+/* A nudge card that's wide enough (about 540 pt, as in landscape) puts Done and Snooze beside its
+   text instead of under it. It's based on the card's width, not the orientation, so a narrow
+   column keeps the stacked card. At accessibility sizes it always stacks. */
+.nudgecard { container-type: inline-size; }
+@container (min-width: 540px) {
+  :root:not([data-type^="ax"]) .nc { display: grid; grid-template-columns: 1fr 13rem; gap: 20px; align-items: center; }
+  :root:not([data-type^="ax"]) .nc .meter { margin-bottom: 0; }
+  :root:not([data-type^="ax"]) .nc-side .actions { flex-direction: column; }
+  :root:not([data-type^="ax"]) .nc-side .actions .btn { flex: none; }
+}
 /* Bold Text: symbols get heavier along with the text. */
 :root[data-bold] .i { --w: 2.2; }
 :root[data-bold] :is(.btn.prominent, .btn.bordered, .btn.bold, .btn.bar, .back, .chev, .checkmark, .ico, .nudgecard, .note-icon, .state, .token) .i { --w: 2.6; }
@@ -1198,13 +1261,16 @@ const ROOTS = { now: "Now", day: "My Day", tags: "Tags", settings: "Settings", s
 const newFilter = () => ({ ids: [], match: "all", q: "" });
 /* My Day's filter: the chosen tags and All or Any, or `none` for reminders with no tags. */
 const newDayFilter = () => ({ ids: [], match: "all", none: false });
-const state = { tab: "now", lastTab: "now", stacks: { now: [], day: [], tags: [], settings: [], search: [] }, dayFilter: newDayFilter(), dayStatus: null, tagFilter: newFilter(), tagEdit: false, sq: "", recent: [], sheet: null, system: null, alert: null, assistive: false, focus: "heading", keepScroll: false };
+const state = { tab: "now", lastTab: "now", stacks: { now: [], day: [], tags: [], settings: [], search: [] }, dayFilter: newDayFilter(), dayStatus: null, tagFilter: newFilter(), tagEdit: false, sq: "", recent: [], settingsSection: "nudges", tabMin: false, sheet: null, system: null, alert: null, assistive: false, focus: "heading", keepScroll: false };
 const main = document.getElementById("main");
 
-function push(entry) { state.stacks[state.tab].push(entry); nav(); }
+/* In a split view, choosing an item replaces what the detail column shows; otherwise it's pushed. */
+function stackPush(entry) { if (isSplit()) state.stacks[state.tab] = [entry]; else state.stacks[state.tab].push(entry); }
+function push(entry) { stackPush(entry); nav(); }
 function pop() { state.stacks[state.tab].pop(); nav(); }
-/* As on iOS, the Search tab's root puts you straight in the search field. */
-function nav() { state.focus = state.tab === "search" && !state.stacks.search.length && !state.assistive ? "#gsearch" : "heading"; state.keepScroll = false; render(); }
+/* As on iOS, the Search tab's root puts you straight in the search field. A new screen starts with
+   the tab bar at full size. */
+function nav() { state.focus = state.tab === "search" && !state.stacks.search.length && !state.assistive ? "#gsearch" : "heading"; state.keepScroll = false; state.tabMin = false; render(); }
 function titleOf(entry) {
   if (!entry) return ROOTS[state.tab];
   return remById(entry.id)?.title ?? "Reminder";
@@ -1219,17 +1285,31 @@ function backButton(back) {
   const to = back === "Back" ? titleOf(state.stacks[state.tab].at(-2)) : back;
   return `<button type="button" class="btn bar icon glass back" data-back aria-label="Back to ${esc(to)}">${I("chevron.backward", 22, true)}</button>`;
 }
-/* Landscape, as the Orientation control asks. The Lock Screen and the alarm don't rotate on iPhone,
-   so they're always portrait. On a phone the app fills the real screen, so the control is off. */
+/* Landscape, as the Orientation control asks. The Lock Screen doesn't rotate on iPhone, so a
+   locked-phone screen is always portrait. On a phone the app fills the real screen, so the control
+   is off. */
 const narrow = window.matchMedia("(max-width: 760px)");
-const isLandscape = () => prefs.landscape && !state.system && !narrow.matches;
-function navBar({ title, large = true, back = null, trailing = "" }) {
+const isLandscape = () => prefs.landscape && !(state.system && !state.system.unlocked) && !narrow.matches;
+/* Someone using the app in landscape has the iPhone unlocked, so a nudge arrives over the app as a
+   banner, not on the Lock Screen. */
+const inUse = () => prefs.landscape && !narrow.matches;
+/* Split view (NavigationSplitView): on the iPhones that are regular width in landscape, Tags, Search
+   and Settings show their list and the chosen item side by side. Elsewhere it collapses into a
+   navigation stack, as in portrait. */
+const SPLIT_TABS = ["tags", "search", "settings"];
+const isSplit = () => isLandscape() && !!device.regular && !state.assistive && SPLIT_TABS.includes(state.tab);
+/* An inline title, with a subtitle under it (iOS 26's navigationSubtitle) when there's one. */
+function navTitle(title, subtitle) {
+  const h1 = `<h1 class="navtitle" tabindex="-1">${esc(title)}</h1>`;
+  return subtitle ? `<div class="navtitles">${h1}<p class="navsub">${esc(subtitle)}</p></div>` : h1;
+}
+function navBar({ title, large = true, back = null, trailing = "", subtitle = "" }) {
   // In compact height, large titles collapse to inline titles.
   large = large && !isLandscape();
   return `<header class="navbar">
     <div class="navrow">
       ${back ? backButton(back) : "<span></span>"}
-      ${!title ? "<span></span>" : large ? `<span class="navtitle inline-title" aria-hidden="true">${esc(title)}</span>` : `<h1 class="navtitle" tabindex="-1">${esc(title)}</h1>`}
+      ${!title ? "<span></span>" : large ? `<span class="navtitle inline-title" aria-hidden="true">${esc(title)}</span>` : navTitle(title, subtitle)}
       <div>${trailing}</div>
     </div>
     ${large ? `<h1 class="largetitle" tabindex="-1">${esc(title)}</h1>` : ""}
@@ -1257,18 +1337,23 @@ function nudgeCard(o) {
   const next = L(o.nextNudgeAt);
   const left = MAX_SNOOZES - (o.snoozes || 0);
   const snoozed = o.snoozedUntil && L(o.snoozedUntil) > NOW;
-  return `<article class="nudgecard u-${urgencyAt(r.strength, o.level)}" aria-labelledby="nt-${o.id}">
+  // Two parts, so a wide card can put its buttons beside its text (see .nc in the CSS).
+  return `<article class="nudgecard u-${urgencyAt(r.strength, o.level)}" aria-labelledby="nt-${o.id}"><div class="nc">
+    <div class="nc-main">
     <div class="top">${strengthBadge(r.strength)}<span>Nudge ${o.attempts} of ${cap.maxAttempts}</span></div>
     <h3 id="nt-${o.id}"><button type="button" class="linkish" data-open="${r.id}">${esc(r.title)}</button></h3>
     <p>${tl ? `${tl} · ` : ""}due ${hm(L(o.scheduledFor))} · Urgency ${urgencyAt(r.strength, o.level)}</p>
     <p class="nextline">${snoozed ? `Snoozed until ${hm(next)}, then` : `Next nudge ${hm(next)} (${rel(next)}):`} ${VIA[via]()} · ${urg}</p>
     <div class="meter" role="img" aria-label="${o.attempts} of ${cap.maxAttempts} nudges sent"><span class="meter-fill" style="width:${Math.min(100, (o.attempts / cap.maxAttempts) * 100)}%"></span></div>
+    </div>
+    <div class="nc-side">
     <div class="actions">
       <button type="button" class="btn prominent" data-ack="${o.id}" aria-label="Done, stop nudging: ${esc(r.title)}">${I("checkmark", 18)} Done</button>
       ${left > 0 ? `<button type="button" class="btn bordered" data-snooze="${o.id}" aria-label="Snooze ${SNOOZE[r.strength]} minutes: ${esc(r.title)}">Snooze ${SNOOZE[r.strength]} min</button>` : ""}
     </div>
     <p class="sec-f" style="margin:8px 0 0">${left > 0 ? `${plural(left, "snooze")} left` : "No snoozes left. Only Done stops it."}</p>
-  </article>`;
+    </div>
+  </div></article>`;
 }
 
 function quietChip(q) {
@@ -1354,11 +1439,16 @@ function viewDay() {
     }
   };
   const emptyDay = `<li class="empty">${st ? st.empty : "Nothing is due today"}${dayFilterOn() ? ` ${esc(dayFilterPhrase())}` : ""}.</li>`;
-  return `${navBar({ title: "My Day", trailing: plusBtn })}
-  <p class="subhead">${LONGDAY[NOW.getDay()]} ${NOW.getDate()} ${LONGMON[NOW.getMonth()]}</p>
+  const date = `${LONGDAY[NOW.getDay()]} ${NOW.getDate()} ${LONGMON[NOW.getMonth()]}`;
+  // In compact height the header shrinks: the date is the title's subtitle and Filter is a bar button.
+  const head = isLandscape()
+    ? navBar({ title: "My Day", subtitle: date, trailing: dayFilterBarButton() + plusBtn })
+    : `${navBar({ title: "My Day", trailing: plusBtn })}
+  <p class="subhead">${date}</p>
   <div class="filterrow">
     ${dayFilterButton()}
-  </div>
+  </div>`;
+  return `${head}
   ${dayFilterTokens()}
   <div class="counts" role="group" aria-label="Today's counts. Choose one to show only those.">
     ${Object.keys(DAY_STATUS).map((k) => countButton(k, items)).join("")}
@@ -1405,6 +1495,14 @@ function dayFilterButton() {
   const f = state.dayFilter, n = f.none ? 1 : f.ids.length;
   const label = n ? `Filter (${n})` : "Filter by Tags";
   return `<button type="button" class="btn bordered small" data-dayfilter aria-haspopup="dialog">${I("line.3.horizontal.decrease", 18)} ${label}</button>`;
+}
+/* The same button in the navigation bar: a glass circle, or a capsule with the number of tags
+   chosen, in the accent color, while the filter is on. */
+function dayFilterBarButton() {
+  const f = state.dayFilter, n = f.none ? 1 : f.ids.length;
+  const icon = I("line.3.horizontal.decrease", 22, true);
+  if (!n) return `<button type="button" class="btn bar icon glass" data-dayfilter aria-haspopup="dialog" aria-label="Filter by Tags">${icon}</button>`;
+  return `<button type="button" class="btn bar glass filter-on" data-dayfilter aria-haspopup="dialog" aria-label="Filter by Tags, ${n} chosen">${icon}<span aria-hidden="true">${n}</span></button>`;
 }
 function dayFilterTokens() {
   const f = state.dayFilter;
@@ -1522,7 +1620,8 @@ function remRow(r, hl = [], extra = "") {
   const tl = tagLine(r, hl);
   const sub = { PAUSED: "Paused", COMPLETED: "Completed" }[r.status] ?? esc(scheduleText(r));
   const noNext = r.status === "PAUSED" ? "paused" : "done";
-  return `<li><button type="button" class="cell" data-open="${r.id}">
+  const chosen = isSplit() && state.stacks[state.tab].at(-1)?.id === r.id;
+  return `<li><button type="button" class="cell" data-open="${r.id}" ${chosen ? 'aria-current="true"' : ""}>
     <span class="time">${d ? hm(d) : "—"}<small>${d ? dayLabel(d) : noNext}</small></span>
     <span class="main"><span class="t">${esc(r.title)}</span><span class="s">${tl ? `${tl} · ` : ""}${sub}</span>${extra}</span>
     <span class="trail">${strengthBadge(r.strength)}${chev}</span>
@@ -1582,7 +1681,9 @@ const EVENT_TEXT = {
 };
 function viewRem(id) {
   const r = remById(id);
-  if (!r) return `${navBar({ title: "Reminder", large: false, back: backLabel() })}<p class="empty">This reminder was deleted.</p>`;
+  // In a split view the list stays beside the details, so it has no Back button.
+  const back = isSplit() ? null : backLabel();
+  if (!r) return `${navBar({ title: "Reminder", large: false, back })}<p class="empty">This reminder was deleted.</p>`;
   const o = openOccs().find((x) => x.reminderId === id);
   const cap = capOf(r), sl = startLevelFor(r);
   const status = o ? "NUDGING" : r.status;
@@ -1593,7 +1694,7 @@ function viewRem(id) {
   const hist = occsOf(id);
   const edit = `<button type="button" class="btn bar glass" data-edit="${r.id}" aria-label="Edit ${esc(r.title)}">Edit</button>`;
   const nextText = next ? when(next) : { PAUSED: "Paused" }[r.status] ?? "None";
-  return `${navBar({ title: "", large: false, back: backLabel(), trailing: edit })}
+  return `${navBar({ title: "", large: false, back, trailing: edit })}
   <div class="sec" style="margin-top:12px"><div class="hero">
     <h1 tabindex="-1">${esc(r.title)}</h1>
     ${r.body ? `<p>${esc(r.body)}</p>` : ""}
@@ -1649,53 +1750,60 @@ function historyRow(x) {
     </details></li>`;
 }
 
-function viewSettings() {
+/* Settings, as sections. In portrait (and on the smaller iPhones) they're one page. In a split view
+   the sections are a list beside the chosen one, as in the Settings app on iPad. */
+function settingsSections() {
   const q = me.quietHours;
   const ok = (on, yes, no) => `<span style="color:${on ? "var(--secondary-label)" : "var(--negative)"}">${on ? yes : no}</span>`;
-  return `${navBar({ title: "Settings" })}
-  ${permBanner()}
-  <h2 class="sec-h">Nudges</h2>
-  <div class="sec"><ul class="list icons">
+  return [
+    { id: "nudges", title: "Nudges", icon: "bell", tile: "--tile-red", body: `<div class="sec"><ul class="list icons">
     <li><div class="cell"><span class="ico" style="background:var(--tile-red)">${I("bell", 19)}</span><span class="main">Notifications</span><span class="trail">${ok(perm.notifications, "On · Time Sensitive", "Off")}</span></div></li>
     <li><div class="cell"><span class="ico" style="background:var(--tile-orange)">${I("alarm", 19)}</span><span class="main">Alarms</span><span class="trail">${ok(perm.alarms, "Allowed", "Off")}</span></div></li>
     ${!perm.notifications || !perm.alarms ? `<li><button type="button" class="cell tint" data-ios-settings><span class="ico" style="background:var(--tile-gray)">${I("gearshape", 19)}</span><span class="main">Open iOS Settings</span>${chev}</button></li>` : ""}
     <li><button type="button" class="cell tint" data-test ${perm.notifications ? "" : "disabled"}><span class="ico" style="background:var(--tile-blue)">${I("bell", 19)}</span><span class="main">Send a Test Nudge</span></button></li>
   </ul>
-  <p class="sec-f">Early nudges arrive as Time Sensitive notifications, which get through Focus. Urgent nudges ring as alarms, even in silent mode. Every nudge vibrates as well as sounding. Change these in iOS Settings.</p></div>
-
-  <h2 class="sec-h">Quiet Hours</h2>
-  <div class="sec"><ul class="list">
+  <p class="sec-f">Early nudges arrive as Time Sensitive notifications, which get through Focus. Urgent nudges ring as alarms, even in silent mode. Every nudge vibrates as well as sounding. Change these in iOS Settings.</p></div>` },
+    { id: "quiet", title: "Quiet Hours", icon: "moon.fill", tile: "--tile-blue", body: `<div class="sec"><ul class="list">
     <li><div class="formrow"><label for="s-quiet">Hold Nudges Overnight</label><input type="checkbox" class="switch" id="s-quiet" ${q ? "checked" : ""}></div></li>
     ${q ? `<li><div class="formrow"><label for="s-qs">From</label><input type="time" class="pill-input" id="s-qs" value="${q.start}"></div></li>
     <li><div class="formrow"><label for="s-qe">Until</label><input type="time" class="pill-input" id="s-qe" value="${q.end}"></div></li>` : ""}
   </ul>
-  <p class="sec-f">${q ? `Quiet from ${hmOf(q.start)} to ${hmOf(q.end)}. ` : ""}Nudges that fall due in this window wait until it ends, nothing escalates overnight, and no alarms ring.</p></div>
-
-  <h2 class="sec-h">Time Zone</h2>
-  <div class="sec"><ul class="list">
+  <p class="sec-f">${q ? `Quiet from ${hmOf(q.start)} to ${hmOf(q.end)}. ` : ""}Nudges that fall due in this window wait until it ends, nothing escalates overnight, and no alarms ring.</p></div>` },
+    { id: "tz", title: "Time Zone", icon: "clock", tile: "--tile-teal", body: `<div class="sec"><ul class="list">
     <li><div class="formrow"><label for="s-autotz">Set Automatically</label><input type="checkbox" class="switch" id="s-autotz" ${me.autoTz ? "checked" : ""}></div></li>
     <li><div class="formrow"><label for="s-tz">Time Zone</label><select class="menu" id="s-tz" ${me.autoTz ? "disabled" : ""}>${TZS.map((t) => `<option value="${t}" ${t === me.timezone ? "selected" : ""}>${t.replace("_", " ")}</option>`).join("")}</select></div></li>
   </ul>
-  <p class="sec-f">Used for quiet hours and new reminders. Each reminder keeps its own time zone. Times follow your iPhone's 12- or 24-hour setting.</p></div>
-
-  <h2 class="sec-h">Siri &amp; Shortcuts</h2>
-  <div class="sec"><ul class="list icons">
+  <p class="sec-f">Used for quiet hours and new reminders. Each reminder keeps its own time zone. Times follow your iPhone's 12- or 24-hour setting.</p></div>` },
+    { id: "siri", title: "Siri &amp; Shortcuts", icon: "mic", tile: "--tile-purple", body: `<div class="sec"><ul class="list icons">
     <li><button type="button" class="cell" data-shortcuts><span class="ico" style="background:var(--tile-purple)">${I("mic", 19)}</span><span class="main">Siri &amp; Shortcuts</span>${chev}</button></li>
   </ul>
-  <p class="sec-f">Mark a nudge done, snooze it, or hear what's nudging you by voice, from the Action button, or from a Home Screen shortcut, without opening the app.</p></div>
-
-  <h2 class="sec-h">Your Data</h2>
-  <div class="sec"><ul class="list icons">
+  <p class="sec-f">Mark a nudge done, snooze it, or hear what's nudging you by voice, from the Action button, or from a Home Screen shortcut, without opening the app.</p></div>` },
+    { id: "data", title: "Your Data", icon: "lock", tile: "--tile-gray", body: `<div class="sec"><ul class="list icons">
     <li><button type="button" class="cell tint" data-export><span class="ico" style="background:var(--tile-blue)">${I("square.and.arrow.up", 19)}</span><span class="main">Export Data</span></button></li>
     <li><button type="button" class="cell destructive" data-wipe><span class="ico" style="background:var(--tile-red)">${I("trash", 19)}</span><span class="main">Delete All Data</span></button></li>
   </ul>
-  <p class="sec-f">Your reminders stay on this iPhone. There's no account and no server, and nothing syncs to other devices. They're included in your iPhone's iCloud or computer backup. History is kept for 90 days.</p></div>
-
-  <h2 class="sec-h">About</h2>
-  <div class="sec"><ul class="list icons">
+  <p class="sec-f">Your reminders stay on this iPhone. There's no account and no server, and nothing syncs to other devices. They're included in your iPhone's iCloud or computer backup. History is kept for 90 days.</p></div>` },
+    { id: "about", title: "About", icon: "info.circle", tile: "--tile-gray", body: `<div class="sec"><ul class="list icons">
     <li><div class="cell"><span class="ico" style="background:var(--tile-gray)">${I("info.circle", 19)}</span><span class="main">Version</span><span class="trail">1.0 (mockup)</span></div></li>
     <li><button type="button" class="cell" data-a11y><span class="ico" style="background:var(--tile-blue)">${I("accessibility", 19)}</span><span class="main">Accessibility</span>${chev}</button></li>
-  </ul></div>`;
+  </ul></div>` },
+  ];
+}
+function viewSettings() {
+  const sections = settingsSections();
+  if (!isSplit()) return `${navBar({ title: "Settings" })}
+  ${permBanner()}
+  ${sections.map((x) => `<h2 class="sec-h">${x.title}</h2>${x.body}`).join("\n")}`;
+  // The list column: one row per section, the chosen one selected.
+  const row = (x) => `<li><button type="button" class="cell" data-setsec="${x.id}" ${x.id === state.settingsSection ? 'aria-current="true"' : ""}><span class="ico" style="background:var(${x.tile})">${I(x.icon, 19)}</span><span class="main">${x.title}</span></button></li>`;
+  return `${navBar({ title: "Settings" })}
+  ${permBanner()}
+  <div class="sec"><ul class="list icons">${sections.map(row).join("")}</ul></div>`;
+}
+/* The detail column of Settings in a split view: the chosen section, titled in the bar. */
+function settingsDetail() {
+  const x = settingsSections().find((y) => y.id === state.settingsSection);
+  return `${navBar({ title: x.title.replace("&amp;", "&"), large: false })}${x.body}`;
 }
 const TZS = ["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", "Europe/London", "Europe/Berlin", "Asia/Tokyo", "Australia/Sydney"];
 
@@ -1900,7 +2008,7 @@ function saveEditor() {
   const r = sh.editId ? updateReminder(remById(sh.editId), fields) : createReminder(fields);
   state.sheet = null;
   const top = state.stacks[state.tab].at(-1);
-  if (top?.kind !== "rem" || top.id !== r.id) state.stacks[state.tab].push({ kind: "rem", id: r.id });
+  if (top?.kind !== "rem" || top.id !== r.id) stackPush({ kind: "rem", id: r.id });
   nav();
 }
 function closeSheet() {
@@ -1979,13 +2087,14 @@ function showNotification(kind) {
     const { r, urg, at } = sendNudge(o, "notification");
     state.system = { kind: "notif", occId: o.id, title: r.title, urg, n: o.attempts, of: capOf(r).maxAttempts, expanded: false, at };
   }
+  state.system.unlocked = inUse();
   state.focus = "system"; render();
 }
 function showAlarm() {
   const o = demoOcc("alarm");
   if (!o) return;
   const { r, at } = sendNudge(o, "alarm");
-  state.system = { kind: "alarm", occId: o.id, title: r.title, n: o.attempts, of: capOf(r).maxAttempts, at };
+  state.system = { kind: "alarm", occId: o.id, title: r.title, n: o.attempts, of: capOf(r).maxAttempts, at, unlocked: inUse() };
   state.focus = "system"; render();
 }
 /* The AlarmKit alert, as the system presents it on the Lock Screen: the Lock Screen clock, the
@@ -2057,9 +2166,42 @@ function lockUI(s) {
     <div class="lock-foot"><button type="button" class="btn" data-lock-close>${s.test ? "Close" : "Unlock (keep nudging)"}</button>${clear}</div>
   </div>`;
 }
+/* The unlocked iPhone (landscape): the nudge arrives over the app, at the top of the screen.
+   - The alarm is AlarmKit's alert as iOS shows it while the iPhone is in use: in portrait it's in
+     the Dynamic Island. In landscape the island is at the side, so the mockup shows the same alert
+     as a banner at the top center. Its layout is an approximation, to confirm on a device. It has
+     the same parts as on the Lock Screen: the app's name, the title, Snooze (while snoozes are
+     left, filled with the tint color) and the system's Stop.
+   - The notification is a Time Sensitive banner. Its actions show on a tap here, as after a long
+     press on iPhone. */
+function bannerUI(s) {
+  const o = s.occId && occurrences.find((x) => x.id === s.occId);
+  if (s.kind === "alarm") {
+    const r = remById(o.reminderId), left = MAX_SNOOZES - (o.snoozes || 0);
+    const snoozeBtn = left > 0 ? `<button type="button" class="abtn secondary" data-alarm="snooze">${I("clock", 20)} Snooze ${SNOOZE[r.strength]} min</button>` : "";
+    return `<div class="sysbanner" role="alertdialog" aria-modal="true" aria-labelledby="al-t">
+      <div class="island-alert">
+        <div class="ia-text"><p class="alarm-app">${I("alarm", 16)} Nudge-inator</p><h2 class="ia-title" id="al-t" tabindex="-1">${esc(s.title)}</h2></div>
+        <div class="ia-actions">${snoozeBtn}<button type="button" class="abtn sys-stop" data-alarm="done">Stop</button></div>
+      </div>
+    </div>`;
+  }
+  const title = s.test ? "Test nudge" : esc(s.title);
+  const body = s.test ? "Nudges will look like this." : `Nudge ${s.n} of ${s.of} · ${s.urg}`;
+  const actions = s.test ? `<div class="nactions" role="group" aria-label="Notification actions"><button type="button" class="naction" data-nact="dismiss">Close ${I("xmark", 20)}</button></div>` : o ? notifActions(o) : "";
+  return `<div class="sysbanner" role="dialog" aria-modal="true" aria-label="Notification">
+      <button type="button" class="notif" id="notif" data-notif aria-expanded="${s.expanded}">
+        <span class="appicon">${I("bell", 22)}</span>
+        <span class="nmain"><span class="nhead"><span>NUDGE-INATOR</span><span>Time Sensitive · now</span></span>
+        <b class="notif-title">${title}</b><span class="nbody">${body}</span></span>
+      </button>
+      ${s.expanded ? actions : ""}
+    </div>`;
+}
 function systemUI() {
   const s = state.system;
   if (!s) return "";
+  if (s.unlocked) return bannerUI(s);
   if (s.kind === "activity") return activityUI(s);
   return s.kind === "alarm" ? alarmUI(s) : lockUI(s);
 }
@@ -2259,8 +2401,17 @@ function viewAssistive() {
 }
 function currentView(top) {
   if (state.assistive) return viewAssistive();
+  if (isSplit()) return `<div class="col list-col">${VIEWS[state.tab]()}</div><div class="col detail-col">${splitDetail(top)}</div>`;
   if (!top) return VIEWS[state.tab]();
   return viewRem(top.id);
+}
+/* What a split view's detail column shows: the chosen reminder, the chosen Settings section, or
+   a note saying what to choose. */
+function splitDetail(top) {
+  if (state.tab === "settings") return settingsDetail();
+  if (top) return viewRem(top.id);
+  const icon = state.tab === "tags" ? "tag" : "magnifyingglass";
+  return unavailable("No Reminder Selected", "Choose a reminder to see its details here.", icon);
 }
 const TABS = [["now", "bell"], ["day", "calendar"], ["tags", "tag"], ["settings", "gearshape"]];
 /* Tab symbols are smaller in landscape, where they sit beside their titles. */
@@ -2310,8 +2461,20 @@ function render() {
   if (document.getElementById("device").dataset.orient !== (isLandscape() ? "landscape" : "portrait")) setDevice(device.id);
   const scroll = main.scrollTop;
   const top = state.stacks[state.tab].at(-1);
+  // A split view's columns scroll on their own. The list keeps its place while you choose items
+  // from it; the details keep theirs only while they show the same item.
+  const [listCol, detailCol] = splitCols();
+  const was = { ...shown, list: listCol?.scrollTop, detail: detailCol?.scrollTop };
+  const sel = state.tab === "settings" ? state.settingsSection : top?.id ?? "";
+  main.classList.toggle("split", isSplit());
   main.innerHTML = currentView(top);
   main.scrollTop = state.keepScroll ? scroll : 0;
+  const [newList, newDetail] = splitCols();
+  if (newList && listCol && was.tab === state.tab) newList.scrollTop = was.list;
+  if (newDetail && detailCol && was.tab === state.tab && was.sel === sel && state.keepScroll) newDetail.scrollTop = was.detail;
+  // Restoring a position isn't scrolling, so it doesn't shrink the tab bar.
+  for (const el of [main, newList, newDetail]) if (el) lastY.set(el, el.scrollTop);
+  shown = { tab: state.tab, sel };
   updateScrolled();
   state.keepScroll = true;
 
@@ -2319,6 +2482,7 @@ function render() {
   const tabbar = document.getElementById("tabbar");
   tabbar.hidden = !!state.assistive;
   tabbar.innerHTML = state.assistive ? "" : tabBar(nudging);
+  tabbar.classList.toggle("min", canMinimizeTabs() && state.tabMin);
   const sh = state.sheet;
   document.getElementById("sheet").innerHTML = sh ? `<div class="overlay"><div class="scrim"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">${sheetContent(sh)}</div></div>` : "";
   document.getElementById("system").innerHTML = systemUI();
@@ -2337,6 +2501,31 @@ function render() {
 }
 /* Sizes a wrapping one-paragraph field to its text, for browsers without field-sizing. */
 function growField(f) { f.style.height = "auto"; f.style.height = `${f.scrollHeight}px`; }
+const splitCols = () => [main.querySelector(".list-col"), main.querySelector(".detail-col")];
+/* The tab and item the screen last showed, so render() knows when a column's scroll can stay. */
+let shown = { tab: null, sel: null };
+/* Landscape only: scrolling down shrinks the tab bar to the current tab, and scrolling up brings it
+   back (iOS 26's tabBarMinimizeBehavior(.onScrollDown)). In a split view only the list column does
+   this. Search keeps its field, so it doesn't shrink there. */
+const canMinimizeTabs = () => isLandscape() && !state.assistive && state.tab !== "search";
+function setTabMin(on) {
+  if (state.tabMin === on) return;
+  state.tabMin = on;
+  document.getElementById("tabbar").classList.toggle("min", canMinimizeTabs() && on);
+}
+const lastY = new WeakMap();
+main.addEventListener("scroll", (e) => {
+  const el = e.target;
+  const driver = main.classList.contains("split") ? el.classList?.contains("list-col") : el === main;
+  if (!driver || !canMinimizeTabs()) return;
+  const y = el.scrollTop, dy = y - (lastY.get(el) ?? 0);
+  lastY.set(el, y);
+  if (y < 24) setTabMin(false);
+  else if (dy > 4) setTabMin(true);
+  else if (dy < -4) setTabMin(false);
+}, { capture: true, passive: true });
+/* Keyboard users reaching the shrunken tab bar get it back at full size. */
+document.getElementById("tabbar").addEventListener("focusin", (e) => { if (e.target.matches(":focus-visible")) setTabMin(false); });
 /* Shows the inline title once the large title has scrolled under the bar. */
 function updateScrolled() {
   const lt = main.querySelector(".largetitle"), bar = main.querySelector(".navrow");
@@ -2345,7 +2534,7 @@ function updateScrolled() {
 main.addEventListener("scroll", updateScrolled, { passive: true });
 /* Where focus goes after a render: a named target, a selector, a function or an element. */
 const FOCUS_TARGETS = {
-  heading: () => main.querySelector("h1"),
+  heading: () => (main.classList.contains("split") && state.stacks[state.tab].length && main.querySelector(".detail-col h1")) || main.querySelector("h1"),
   sheet: () => document.querySelector("#sheet #sheet-title") || document.querySelector("#sheet .sheet-body"),
   system: () => document.querySelector("#system h2, #system #notif"),
   alert: () => document.querySelector("#alert button:not(.cancelb)") || document.querySelector("#alert button"),
@@ -2366,11 +2555,13 @@ function applyFocus() {
 }
 function notifWhy(n) {
   if (!perm.notifications) return "Notifications are off.";
-  return n ? `“${remById(n.reminderId).title}”, nudge ${n.attempts + 1}, ${nextNudgeFor(n).urg}.` : "No nudging reminder has an early nudge next. Reset the mockup.";
+  const where = inUse() ? " In landscape it arrives as a banner over the app." : "";
+  return n ? `“${remById(n.reminderId).title}”, nudge ${n.attempts + 1}, ${nextNudgeFor(n).urg}.${where}` : "No nudging reminder has an early nudge next. Reset the mockup.";
 }
 function alarmWhy(a) {
   if (!perm.alarms) return "Alarms are off, so Urgent nudges come as notifications.";
-  return a ? `“${remById(a.reminderId).title}”, nudge ${a.attempts + 1}, Urgent.` : "No nudging reminder has an Urgent nudge next. Reset the mockup.";
+  const where = inUse() ? " In landscape the iPhone is in use, so it rings over the app." : "";
+  return a ? `“${remById(a.reminderId).title}”, nudge ${a.attempts + 1}, Urgent.${where}` : "No nudging reminder has an Urgent nudge next. Reset the mockup.";
 }
 function updateControls() {
   const n = demoOcc("notification"), a = demoOcc("alarm");
@@ -2418,12 +2609,15 @@ function notificationAction(act) {
 }
 const CLICK = {
   tab: (v) => {
+    // Tapping the shrunken tab bar's tab brings the bar back, as on iOS.
+    if (state.tab === v && document.getElementById("tabbar").classList.contains("min")) { setTabMin(false); return; }
     if (state.tab === v) state.stacks[v] = []; // tapping the current tab pops to its root
     if (v === "search" && state.tab !== "search") state.lastTab = state.tab;
     state.tab = v;
     nav();
   },
   recent: (v) => { state.sq = v; refresh("#gsearch"); },
+  setsec: (v) => { state.settingsSection = v; refresh(`[data-setsec="${v}"]`); },
   clearRecent: () => { state.recent = []; refresh("#gsearch"); },
   new: () => openEditor(),
   back: () => pop(),
@@ -2477,6 +2671,7 @@ const CLICK = {
   alarm: (v) => {
     const s = state.system;
     if (v === "done") { ack(s.occId, "alarm"); state.system = null; nav(); return; }
+    if (s.unlocked) { state.system = null; snooze(s.occId); nav(); return; }
     snooze(s.occId);
     const o = occurrences.find((x) => x.id === s.occId);
     state.system = { kind: "activity", occId: s.occId, title: s.title, until: o.snoozedUntil, mins: SNOOZE[remById(o.reminderId).strength] };
@@ -2623,7 +2818,7 @@ document.getElementById("c-reset").addEventListener("click", () => {
   Object.assign(perm, { notifications: true, alarms: true });
   document.getElementById("c-perm-n").checked = true;
   document.getElementById("c-perm-a").checked = true;
-  Object.assign(state, { tab: "now", lastTab: "now", stacks: { now: [], day: [], tags: [], settings: [], search: [] }, dayFilter: newDayFilter(), dayStatus: null, tagFilter: newFilter(), tagEdit: false, sq: "", recent: [], sheet: null, system: null, alert: null, assistive: false });
+  Object.assign(state, { tab: "now", lastTab: "now", stacks: { now: [], day: [], tags: [], settings: [], search: [] }, dayFilter: newDayFilter(), dayStatus: null, tagFilter: newFilter(), tagEdit: false, sq: "", recent: [], settingsSection: "nudges", tabMin: false, sheet: null, system: null, alert: null, assistive: false });
   document.getElementById("c-assistive").checked = false;
   nav();
   hud("Mockup reset");
@@ -2644,18 +2839,19 @@ followSetting("(prefers-reduced-transparency: reduce)", "c-transparency", "trans
 /* Screen sizes, in points, of the iPhones that run iOS 18 or later. "cut" is what sits at the top of the
    screen: the Dynamic Island, a notch, or nothing (iPhone SE, which has a Home button). "safe" is the
    safe-area inset on each side in landscape, roughly that of the first model named: it clears the
-   Dynamic Island or notch on one side and is mirrored on the other. */
+   Dynamic Island or notch on one side and is mirrored on the other. "regular" marks the iPhones that
+   are regular width in landscape (414 pt wide or more), where split views show two columns. */
 const DEVICES = [
   { id: "se", w: 375, h: 667, cut: "none", name: "iPhone SE (2nd and 3rd generation)", safe: 0 },
   { id: "mini", w: 375, h: 812, cut: "notch", name: "iPhone XS, 11 Pro, 12 mini, 13 mini", notch: 162, safe: 44 },
   { id: "6.1n", w: 390, h: 844, cut: "notch", name: "iPhone 12, 12 Pro, 13, 13 Pro, 14, 16e", notch: 162, safe: 47 },
   { id: "6.1", w: 393, h: 852, cut: "island", name: "iPhone 14 Pro, 15, 15 Pro, 16", safe: 59 },
   { id: "6.3", w: 402, h: 874, cut: "island", name: "iPhone 16 Pro, 17, 17 Pro", safe: 62 },
-  { id: "xr", w: 414, h: 896, cut: "notch", name: "iPhone XR, XS Max, 11, 11 Pro Max", notch: 210, safe: 48 },
-  { id: "air", w: 420, h: 912, cut: "island", name: "iPhone Air", safe: 62 },
-  { id: "6.7n", w: 428, h: 926, cut: "notch", name: "iPhone 12 Pro Max, 13 Pro Max, 14 Plus", notch: 162, safe: 47 },
-  { id: "6.7", w: 430, h: 932, cut: "island", name: "iPhone 14 Pro Max, 15 Plus, 15 Pro Max, 16 Plus", safe: 59 },
-  { id: "6.9", w: 440, h: 956, cut: "island", name: "iPhone 16 Pro Max, 17 Pro Max", safe: 62 },
+  { id: "xr", w: 414, h: 896, cut: "notch", name: "iPhone XR, XS Max, 11, 11 Pro Max", notch: 210, safe: 48, regular: true },
+  { id: "air", w: 420, h: 912, cut: "island", name: "iPhone Air", safe: 62, regular: true },
+  { id: "6.7n", w: 428, h: 926, cut: "notch", name: "iPhone 12 Pro Max, 13 Pro Max, 14 Plus", notch: 162, safe: 47, regular: true },
+  { id: "6.7", w: 430, h: 932, cut: "island", name: "iPhone 14 Pro Max, 15 Plus, 15 Pro Max, 16 Plus", safe: 59, regular: true },
+  { id: "6.9", w: 440, h: 956, cut: "island", name: "iPhone 16 Pro Max, 17 Pro Max", safe: 62, regular: true },
 ];
 const deviceSel = document.getElementById("c-device");
 deviceSel.innerHTML = DEVICES.map((d) => `<option value="${d.id}">${d.w} × ${d.h}: ${d.name}</option>`).join("");
@@ -2684,14 +2880,14 @@ function setDevice(id) {
   wrap.style.setProperty("--s", String(Math.max(0.5, s)));
   const scaled = s < 1 ? ` · shown at ${Math.round(Math.max(0.5, s) * 100)}%` : "";
   let orient = land ? " · landscape" : "";
-  if (prefs.landscape && state.system && !narrow.matches) orient = " · portrait: the Lock Screen doesn't rotate";
+  if (prefs.landscape && state.system && !state.system.unlocked && !narrow.matches) orient = " · portrait: the Lock Screen doesn't rotate";
   document.getElementById("device-label").textContent = `${device.name} · ${sw} × ${sh} pt${orient}${scaled}`;
   try { localStorage.setItem("nat-mockup3-device", device.id); } catch (e) { /* storage unavailable */ }
 }
 /* Orientation: Portrait or Landscape. Rotating keeps the screen you're on and its place. */
 const orientWhy = () => (narrow.matches
   ? "On a phone, the app fills your screen. To see landscape, open the mockup on a computer."
-  : "Landscape turns the iPhone to the left: inline titles, a compact tab bar and full-screen sheets. The Lock Screen and the alarm stay in portrait, as on an iPhone.");
+  : "Landscape turns the iPhone to the left: inline titles, a tab bar that shrinks as you scroll, and full-screen sheets. On the iPhones 414 pt wide or more, Tags, Search and Settings show two columns. The iPhone is in use, so nudges arrive as banners over the app.");
 function setOrientation(landscape) {
   prefs.landscape = landscape;
   document.querySelectorAll('[name="c-orient"]').forEach((r) => { r.checked = r.value === (landscape ? "landscape" : "portrait"); });
@@ -2708,7 +2904,8 @@ narrow.addEventListener("change", () => { syncOrientControl(); state.keepScroll 
 syncOrientControl();
 try { prefs.landscape = localStorage.getItem("nat-mockup3-orient") === "landscape"; } catch (e) { /* storage unavailable */ }
 document.querySelectorAll('[name="c-orient"]').forEach((r) => { r.checked = r.value === (prefs.landscape ? "landscape" : "portrait"); });
-deviceSel.addEventListener("change", () => setDevice(deviceSel.value));
+// A different iPhone can change the layout too: the split view needs a regular-width one.
+deviceSel.addEventListener("change", () => { setDevice(deviceSel.value); state.keepScroll = true; render(); });
 window.addEventListener("resize", () => setDevice(device.id));
 let savedDevice = null;
 try { savedDevice = localStorage.getItem("nat-mockup3-device"); } catch (e) { /* storage unavailable */ }

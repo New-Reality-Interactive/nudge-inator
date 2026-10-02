@@ -166,8 +166,10 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
   The two permissions are separate, so the alarm prompt comes after the notification prompt
   whatever the person chose. That alarms still ring with notifications off is to be confirmed on a
   device.
-- **The alarm is AlarmKit's system alert.** iOS draws it over the Lock Screen, under the Lock
-  Screen clock, with the app's name above the title. The app supplies only:
+- **The alarm is AlarmKit's system alert.** On a locked iPhone, iOS draws it over the Lock Screen,
+  under the Lock Screen clock, with the app's name above the title. On an iPhone that's in use, it
+  appears over the app, in the Dynamic Island (see [Landscape](#landscape)). It also appears in
+  StandBy and on a paired Apple Watch. The app supplies only:
   - the title: the reminder's title
   - the secondary button: **Snooze 15 min** (the strength's length) with `clock`, filled with the
     tint color. It's left off once the occurrence has no snoozes left (see below).
@@ -201,9 +203,11 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
 These are not part of the app:
 
 - **Next early nudge** shows the Lock Screen with a Time Sensitive notification for the next nudging
-  reminder whose next nudge isn't Urgent. Tap it to see its actions, which on an iPhone come from a
+  reminder whose next nudge isn't Urgent. In landscape the iPhone is in use, so it arrives as a banner
+  over the app instead (see [Landscape](#landscape)). Tap it to see its actions, which on an iPhone come from a
   long press. It sends a real nudge in the mockup, so the card and history update.
-- **Next Urgent nudge** shows the alarm for the next reminder whose next nudge is Urgent. **Snooze**
+- **Next Urgent nudge** shows the alarm for the next reminder whose next nudge is Urgent. In landscape
+  it rings over the app, as it does on an iPhone that's in use. **Snooze**
   shows the Live Activity, and **Unlock** returns to the app. Press it several times to use up the
   snoozes and see the alarm with only **Stop**.
 - **First launch** shows onboarding and the permission prompts.
@@ -243,12 +247,54 @@ the left, and the iPhone SE's Home button is on the right.
 - **A compact tab bar.** It's still a floating glass capsule at the bottom, sized to its tabs and
   centered, with each symbol beside its title (`compactInline`). Search is a glass circle beside
   it, and on the Search tab the field takes the free width, up to 480 pt.
+- **The tab bar shrinks while you scroll down** (iOS 26's `tabBarMinimizeBehavior(.onScrollDown)`),
+  to give back about 50 pt of height. Only the current tab stays, as a glass circle at the leading
+  edge, with Search at the trailing edge. Scrolling up, or tapping the current tab, brings it back,
+  and keyboard focus does too. Search doesn't shrink, because it holds the search field. Portrait
+  is unchanged.
+- **My Day's header is shorter.** The date becomes a subtitle under the inline title (iOS 26's
+  `navigationSubtitle`), and **Filter** becomes a glass button in the navigation bar. While the
+  filter is on, the button shows how many tags are chosen, in the accent color. The four counts
+  become a row of capsules, still with the chosen count's fill and ring, and two columns at the
+  accessibility sizes. Together these show about two more reminders.
+- **Wide nudge cards put Done and Snooze beside the text.** This depends on the card's width
+  (540 pt or more), not on the orientation, so a card in a narrow column stays stacked. At the
+  accessibility sizes it always stacks. A card is about 60 pt shorter this way.
+- **A split view on the larger iPhones.** The iPhones 414 pt wide or more (XR, 11, and the Plus,
+  Max and Air models) are regular width in landscape, so Tags, Search and Settings show two
+  columns, as `NavigationSplitView` does:
+  - **Tags and Search:** the list on the left (320 pt) and the chosen reminder on the right, without
+    a Back button. The chosen row has a fill and `aria-current`. Choosing another reminder replaces
+    the one shown, and the list keeps its place. With nothing chosen, the right column says
+    **No Reminder Selected**.
+  - **Settings:** its six sections as a list on the left, the chosen section on the right, starting
+    with Nudges. In portrait they're still one page.
+  - Each column scrolls on its own and has its own bar. Only the list column shrinks the tab bar.
+  - Rows in the list column leave out the strength badge and chevrons. The details beside them
+    show the strength, and choosing a row doesn't move to another screen.
+  - Turning to portrait collapses the split view into a navigation stack, so a chosen reminder
+    shows with **Back**. Now and My Day stay one column, and the smaller iPhones never split.
+
+  This is the layout the [addendum](../../product/addendum.md) proposes for iPad, so the iPad
+  design should start from it. The iPhone Air is assumed to be regular width in landscape, like the
+  other iPhones 414 pt wide or more; that's still to confirm on a device.
 - **Sheets fill the screen,** as page sheets do in compact height, and their content keeps the
   readable width. Alerts stay centered and scroll if they're taller than the screen. Action sheets
   keep their portrait width, centered at the bottom.
-- **The Lock Screen and the alarm stay in portrait.** They don't rotate on an iPhone, so the
-  mockup turns the phone back to portrait while they're showing, and back again when you unlock.
-  The label under the phone says so.
+- **Nudges arrive over the app.** Someone using the app in landscape has the iPhone unlocked, so
+  nudges don't appear on the Lock Screen:
+  - **The alarm** is AlarmKit's alert as iOS shows it while the iPhone is in use. In portrait that's
+    the Dynamic Island. In landscape the island is at the side, so the mockup shows the same alert
+    as a black banner at the top center. It has the same parts as on the Lock Screen: the app's
+    name, the title, **Snooze** (while snoozes are left, filled with the tint color) and the
+    system's **Stop**. Snooze returns to the app, and the nudge card says when it rings again.
+    Where and how iOS draws this alert in landscape is an approximation, still to confirm on a
+    device.
+  - **The notification** is a Time Sensitive banner at the top center. Tap it to see **Done**,
+    **Snooze** and **Dismiss**, which on an iPhone come from a long press.
+  - The banners are about as wide as the screen in portrait. At the accessibility sizes the alarm
+    scrolls rather than clip.
+  - The Lock Screen itself doesn't rotate on an iPhone, so it's shown only in portrait.
 - **Everything else is unchanged:** the colors, text styles, materials, 44 pt targets and the
   layouts for accessibility sizes.
 
@@ -258,7 +304,7 @@ Dynamic Island sizes:
   the Delete action sheet, and My Day at AX3
 - every button, heading and list on those screens is inside the safe areas, and nothing scrolls
   sideways
-- the alarm turns the phone to portrait, and unlocking turns it back to landscape
+- the alarm and the notification arrive as banners over the app, and stay in landscape
 - Portrait looks the same as before
 - the console has no errors
 
@@ -271,6 +317,19 @@ filtered), Settings, reminder details, New Reminder and Filter My Day:
   were checked by eye: the glass, scroll edge effects and full-screen sheets follow each setting as
   in portrait
 - the tab bar's glass shapes are 10 pt apart, as in portrait
+
+The shrinking tab bar, My Day's header, the wide nudge cards and the split view were then checked
+on a compact-width iPhone (393 pt) and a regular-width one (440 pt):
+- the tab bar shrinks on scrolling down and comes back on scrolling up or tapping its tab; putting a
+  column back at its old position doesn't shrink it
+- the split view appears only on the regular-width iPhone, and only on Tags, Search and Settings
+- choosing reminders and Settings sections, and the Quiet Hours switch in the detail column
+- the notification banner's Done, Snooze and Dismiss, and the test nudge's Close; the alarm banner's
+  Snooze and Stop, with Snooze gone after the third snooze; portrait still shows the Lock Screen
+- turning to portrait with a reminder chosen shows it with Back, and portrait looks as before
+- the size audit above, repeated on both iPhones, including both split views: no clipped text, no
+  overlapping bar items, and buttons at least 44 pt
+- the console has no errors
 
 ## Icons
 
@@ -348,7 +407,7 @@ is in `docs/apple/design/`).
   - History events wrap under their time.
   - The day's four counts become two columns.
   - Text wraps; nothing is cut off with "…". The reminder **Title** field wraps onto more lines.
-- **Fixed-size system elements.** The tab bar, inline navigation titles and bar buttons keep their
+- **Fixed-size system elements.** The tab bar, inline navigation titles (and their subtitles) and bar buttons keep their
   default size (17 pt) at every text size, so they never crowd each other. People use the Large
   Content Viewer instead. Large titles are content and scale. The status bar, Lock Screen clock and
   alarm clock are fixed too.
