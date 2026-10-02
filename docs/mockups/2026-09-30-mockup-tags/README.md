@@ -629,18 +629,15 @@ is in `docs/apple/design/`):
 Transparency. A script confirmed that the inline title is hidden at the top and shown once the
 large title is under the bar, and screenshots were checked by eye.
 
-## Open questions
+## Decisions
 
-- **Should My Day and the Tags tab share one filter?** They're separate now, so filtering My Day
-  to `#work` doesn't change what the Tags tab shows.
-- **Should My Day's counts allow more than one at a time,** such as Nudging and Missed together?
-- **Is All Tags the right default?** Choosing a second tag narrows the list, as it does in Mail and
-  Reminders' smart lists. If people expect it to widen the list, Any Tag should be the default.
-- **Tag colors.** Leaving them out keeps the color rules simple. If people need to tell tags apart
-  at a glance, a fixed palette could be added.
-- **Fixed-size bars at large text sizes,** or bars that grow with the text?
-- **The pale selected-tab color** in dark mode with Increase Contrast (`#D8ECFF`): acceptable, or a
-  darker pill instead?
+The questions this mockup raised are settled in the
+[product brief, §10](../../product/brief.md#10-risks-and-decisions):
+- **Decided:** My Day and the Tags tab keep separate filters, My Day's counts filter one at a time,
+  Match All Tags is the default, tags have no colors, and the tab bar shrinks only in landscape.
+- **Left to check on a device:** the navigation bars at large text sizes (the system's own
+  behavior, as shown here), the selected tab's color in dark mode with Increase Contrast, and
+  reminders with many tags.
 
 ## How it was checked
 

@@ -19,7 +19,7 @@ doesn't show needs a different choice: iPad, and iOS 18's system appearance (see
 [§5](#5-devices-orientations-and-ios-versions)).
 
 This brief replaces the earlier website-and-API brief. Detail that doesn't belong in the brief, such
-as what was removed and why, layout notes and a localization checklist, is in the
+as what was removed and why, layout notes, a localization checklist and the TestFlight setup, is in the
 [addendum](addendum.md).
 
 ## 1. Executive summary
@@ -56,7 +56,7 @@ They need nudging they can tune per reminder: gentle for watering the plants, re
 rent. It must stop the moment they act.
 
 **Audience plan.** The first release goes to the owner and invited testers through
-TestFlight. Releasing on the App Store is a later decision (see [§10](#10-open-questions)).
+TestFlight. It's released on the App Store once the success measures are met (see [§10](#10-risks-and-decisions)).
 
 ## 3. Product concepts
 
@@ -103,7 +103,7 @@ TestFlight. Releasing on the App Store is a later decision (see [§10](#10-open-
   and notifications appear on the Lock Screen, which is always portrait. On an iPhone that's in use,
   they appear over the app: the alarm in the Dynamic Island, and notifications as banners at the
   top. In landscape the Dynamic Island is at the side, so the mockup shows the alarm as a banner at
-  the top center. That's an approximation, to confirm on a device (see [§10](#10-risks-and-open-questions)).
+  the top center. That's an approximation, to confirm on a device (see [§10](#10-risks-and-decisions)).
   The alarm also shows in StandBy.
 - A paired **Apple Watch** shows the alarm too. The system does this, so it needs no Watch app.
 - The iOS 18 chain repeats the current nudge. The repeats don't count toward the nudge
@@ -224,7 +224,7 @@ sharing reminders with other people, in-app purchases, and languages other than 
 - **Constraints:** iOS and iPadOS only, iOS 18 and later. English only at launch. No server, so
   every nudge has to come from the device itself.
 
-## 10. Risks and open questions
+## 10. Risks and decisions
 
 **Risks to confirm on real devices:**
 - **How many alarms an app can schedule.** A Firm or Relentless occurrence uses up to 17 alarms.
@@ -261,17 +261,31 @@ sharing reminders with other people, in-app purchases, and languages other than 
 - **Losing the device loses the reminders,** unless it's restored from a backup. Export is the only
   other copy.
 
-**Open questions:**
-- Release on the App Store after TestFlight, and when?
-- Should My Day and the Tags tab share one filter? Should My Day's counts allow more than one at a
-  time?
-- Is Match All Tags the right default, or do people expect a second tag to widen the list (Any)?
-- Should tags have colors, from a fixed palette, if people need to tell them apart at a glance?
-- Should navigation bars stay at a fixed size at large text sizes (the mockup's choice) or grow?
-- Should the tab bar shrink while scrolling in portrait too? The mockup does it only in landscape,
-  where height is shortest.
-- Is the pale selected-tab color in dark mode with Increase Contrast acceptable?
-- Any limit on tags per reminder? (Names are already limited to 30 characters.)
+**Device checks that replace earlier questions:**
+- **Navigation bars at large text sizes.** The app uses the system's navigation bar as it is: large
+  titles grow with Dynamic Type, and inline titles and bar buttons keep their size and use the Large
+  Content Viewer, as in the mockup. Confirm this on a device at the accessibility sizes.
+- **The selected tab's color.** The system draws the tab bar's selected state from the accent
+  color. Confirm it's legible in dark mode with Increase Contrast. The mockup's `#D8ECFF` reaches
+  7.1:1 but looks pale.
+- **Many tags on one reminder.** There's no limit on tags per reminder. Test rows, nudge cards and
+  the details with 10 or more tags.
+
+**Decided (2026-10-01):**
+- **My Day and the Tags tab keep separate filters.** My Day shows what's due today among the chosen
+  tags; the Tags tab browses every reminder.
+- **My Day's counts filter one at a time.**
+- **Match All Tags is the default.** Adding a tag narrows the list, as in Mail and Reminders. Watch
+  for confusion during TestFlight.
+- **Tags have no colors in v1.** Revisit if testers ask for them.
+- **The tab bar shrinks while scrolling only in landscape.** Portrait has room for it, and people
+  switch tabs often.
+
+- **Release on the App Store once the success measures are met** (see
+  [§8](#8-success-measures)) over a four-week TestFlight beta with external testers. The first beta
+  build goes through Beta App Review, an early test of using alarms for reminders.
+
+There are no open questions.
 
 ## 11. Questions for the architecture
 

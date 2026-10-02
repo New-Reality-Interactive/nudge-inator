@@ -50,7 +50,8 @@ checked. The iPad notes are starting points for the UX work.
   - Large titles collapse to inline titles. The status bar is hidden.
   - Content stays inside the safe areas, at a readable width; backgrounds run to the edges.
   - The tab bar stays at the bottom, with each symbol beside its title. It shrinks to the current
-    tab while scrolling down (`tabBarMinimizeBehavior(.onScrollDown)`), except on Search.
+    tab while scrolling down (`tabBarMinimizeBehavior(.onScrollDown)`), except on Search. Portrait
+    keeps the full tab bar (decided 2026-10-01).
   - My Day's header is shorter: the date is the title's subtitle (`navigationSubtitle`), Filter is a
     bar button showing how many tags are chosen, and the counts are a row of capsules.
   - Nudge cards 540 pt wide or more put Done and Snooze beside the text. It depends on the card's
@@ -167,3 +168,31 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
   for reminders, behavior after the app has been force-quit, and whether alarms ring with
   notifications turned off. Nor how the alert looks on an unlocked iPhone: in landscape, where the
   Dynamic Island is at the side; on iPhones without a Dynamic Island; and on iPad.
+
+## F. TestFlight beta
+
+The brief's release decision (§10): release on the App Store once the success measures (§8) are met
+over a four-week TestFlight beta. Apple's documentation confirms that external builds need Beta App
+Review and that testers can join by public link. The limits and time periods below are as of
+2026-10-01; check them in App Store Connect's help.
+
+- **Setup.** The Apple Developer Program ($99 a year), then an app record in App Store Connect with
+  the bundle ID. TestFlight doesn't need an App Store listing.
+- **Builds.** Archive in Xcode and upload from the Organizer (Distribute App > App Store Connect).
+  Set `ITSAppUsesNonExemptEncryption` to `NO` in `Info.plist`, since the app uses no encryption of
+  its own; otherwise App Store Connect asks about it for every build.
+- **Testers are external,** invited by email or a public link (up to 10,000). Internal testers (up to
+  100) would have to join the App Store Connect team, which gives them access to it, so they're
+  only for the owner.
+- **Beta App Review** checks the first build of each version before external testers get it,
+  usually within about a day; later builds of the same version usually skip it. It needs a
+  description of what to test and a contact email. It's the first time Apple sees the app schedule
+  AlarmKit alarms for reminders, so its outcome is an early signal for the App Review risk in the
+  brief: a rejection means rethinking alarms before release.
+- **Builds expire after 90 days.** Upload a new one at least that often while the beta runs.
+- **Devices.** Recruit testers on iOS 18 and on iOS 26 or later, so both Urgent paths, the
+  notification chain and AlarmKit alarms, get real use. Include at least one iPad and one iPhone
+  without a Dynamic Island, for the alarm checks the brief lists.
+- **Feedback.** Testers send screenshots and comments from the TestFlight app, and crash reports
+  arrive in App Store Connect. These are the evidence for the success measures.
+
