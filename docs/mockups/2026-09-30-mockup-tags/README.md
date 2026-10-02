@@ -11,14 +11,14 @@ find reminders by **filtering on one or more tags**.
   which counts as Done.
 
 Open [`index.html`](index.html) in a browser. It's a single file with no dependencies. On a desktop
-it shows a phone with **Mockup controls** beside it. On a phone the app fills the screen and the
-controls are below it.
+it shows a phone with **Mockup controls** beside it, in portrait or landscape. On a phone the app
+fills the screen and the controls are below it.
 
 **Words.** A *nudge* is one alert sent while an occurrence is open: a notification or an alarm. A
 reminder is *nudging* until you mark it done.
 
 The [product brief](../../product/brief.md) is built on this mockup. It also covers what the mockup
-doesn't show: landscape, iPad, and iOS 18.
+doesn't show: iPad and iOS 18.
 
 ## Product rules
 
@@ -212,6 +212,9 @@ These are not part of the app:
   Max and XR are included: they stop at iOS 18, and share their sizes with later models. The top of
   the screen matches each one: the Dynamic Island, a notch, or a Home button. The phone is scaled
   down, never up, to fit the window.
+- **Orientation** turns the phone between **Portrait** and **Landscape** (see
+  [Landscape](#landscape)). The screen you're on stays open. On a phone it's turned off, because
+  the app fills the real screen.
 - **Permissions**, **24-Hour Time**, **Appearance**, **Text Size** (all 12 Dynamic Type sizes),
   **Bold Text**, **Increase Contrast**, **Reduce Transparency** and **Assistive Access** stand in
   for iOS Settings.
@@ -219,6 +222,55 @@ These are not part of the app:
 
 The clock is fixed at Monday 28 Sep 2026, 8:20 AM. A snooze pushes the next nudge later, but the
 clock doesn't move.
+
+## Landscape
+
+Landscape follows Apple's Human Interface Guidelines page on
+[Layout](https://developer.apple.com/design/human-interface-guidelines/layout) and what iOS 26 does
+on an iPhone in compact height. The phone turns to the left, so the Dynamic Island or notch is on
+the left, and the iPhone SE's Home button is on the right.
+
+- **No status bar.** iOS hides it in landscape.
+- **Safe areas.** Backgrounds and scrolling content run to the screen's edges, but text and
+  controls stay inside the safe areas. The insets are about 44 to 62 pt on each side, depending on
+  the model (0 on the iPhone SE). They clear the Dynamic Island or notch, and are the same on the
+  other side.
+- **A readable width.** Content is centered at UIKit's readable width (about 672 pt at the default
+  text size). It grows with Dynamic Type, so at the accessibility sizes content fills the space
+  between the safe areas.
+- **Inline titles.** Large titles collapse into the navigation bar, which keeps its glass buttons
+  at the edges of the safe area. The inline title is the screen's heading for VoiceOver.
+- **A compact tab bar.** It's still a floating glass capsule at the bottom, sized to its tabs and
+  centered, with each symbol beside its title (`compactInline`). Search is a glass circle beside
+  it, and on the Search tab the field takes the free width, up to 480 pt.
+- **Sheets fill the screen,** as page sheets do in compact height, and their content keeps the
+  readable width. Alerts stay centered and scroll if they're taller than the screen. Action sheets
+  keep their portrait width, centered at the bottom.
+- **The Lock Screen and the alarm stay in portrait.** They don't rotate on an iPhone, so the
+  mockup turns the phone back to portrait while they're showing, and back again when you unlock.
+  The label under the phone says so.
+- **Everything else is unchanged:** the colors, text styles, materials, 44 pt targets and the
+  layouts for accessibility sizes.
+
+**How it was checked:** in headless Chrome, in landscape on the iPhone SE, a notched iPhone and two
+Dynamic Island sizes:
+- Now, My Day, Tags (browsing and filtered), Search with results, New Reminder, reminder details,
+  the Delete action sheet, and My Day at AX3
+- every button, heading and list on those screens is inside the safe areas, and nothing scrolls
+  sideways
+- the alarm turns the phone to portrait, and unlocking turns it back to landscape
+- Portrait looks the same as before
+- the console has no errors
+
+Then against the six local HIG pages in `docs/apple/design`, on Now, My Day, Tags (browsing and
+filtered), Settings, reminder details, New Reminder and Filter My Day:
+- at Large and AX5, each with Bold Text off and on: no text is clipped or cut off with "…", navigation
+  bar items don't overlap, and every enabled button is at least 44 pt tall (a reminder's title is
+  covered by its row, which is the target)
+- in all 8 combinations of light and dark, Increase Contrast and Reduce Transparency, screenshots
+  were checked by eye: the glass, scroll edge effects and full-screen sheets follow each setting as
+  in portrait
+- the tab bar's glass shapes are 10 pt apart, as in portrait
 
 ## Icons
 
