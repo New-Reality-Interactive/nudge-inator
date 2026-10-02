@@ -112,6 +112,10 @@ TestFlight. It's released on the App Store once the success measures are met (se
 - If notifications or alarms are turned off in iOS Settings, Now and Settings show a banner that
   says what that means. The two permissions are separate: with notifications off and alarms
   allowed, only Urgent nudges reach the person.
+- **Time Sensitive can be turned off on its own.** The person can turn it off for the app, and iOS
+  asks from time to time whether the app's Time Sensitive notifications are worth it. Then early
+  nudges no longer get through Focus. The app reads `timeSensitiveSetting` and shows a banner on Now
+  and Settings, like the other permissions.
 - **Privacy:** notifications and alarms show only the title (and the app's name). Notes and tags
   stay in the app.
 
@@ -127,6 +131,8 @@ iOS 27**, on iPhone and iPad.
 |---|---|---|
 | Appearance | iOS 18's standard bars and tab bar, without Liquid Glass | Liquid Glass, as in the mockup |
 | Urgent nudges | See [§4](#4-how-nudges-reach-you) | See §4 |
+| iPhone in landscape | My Day's date stays in the content, as in portrait, and the tab bar doesn't shrink. The APIs for both (`navigationSubtitle`, `tabBarMinimizeBehavior`) are iOS 26 and later. | As in the mockup |
+| Assistive Access | The app's own one-screen view, shown full screen (see [§6](#6-features)) | The system's Assistive Access scene |
 | Everything else | Same screens, layouts and behavior | Same |
 
 **Visual reference and where it changes.** The mockup shows an iPhone in portrait and landscape.
@@ -147,7 +153,9 @@ the layout:
 - **Larger iPhones in landscape (in the mockup).** The iPhones 414 pt wide or more, such as the Plus
   and Max models, are regular width in landscape. There, Tags, Search and Settings show their list
   and the chosen item side by side, and fold back to one column in portrait.
-- **iPad.** It starts from the larger iPhones' two-column layout. The tabs can become a sidebar,
+- **iPad.** It starts from the larger iPhones' two-column layout. The tab bar floats at the top, as
+  iPadOS 18 and later draw it, and never shrinks while scrolling (iOS only does that on iPhone).
+  The tabs can become a sidebar,
   sheets are centered form sheets, and every window size and keyboard shortcuts (⌘N, ⌘F) are
   supported.
 
@@ -169,7 +177,7 @@ the layout:
 | **Settings** | Notification and alarm status, Open iOS Settings, Send a Test Nudge. Quiet hours. Time zone (automatic or chosen). Siri & Shortcuts. Export Data and Delete All Data. About and Accessibility. |
 | **First launch** | Welcome, then the notification permission, then (on iOS 26 and later) the alarm permission. |
 | **Siri and Shortcuts** | "Mark my nudge done", "Snooze my nudge" and "What's nudging me?", from Siri, the Action button or a Home Screen shortcut. |
-| **Assistive Access** | One screen: what needs you now, with large Done and Snooze buttons, and what's later today. No editing, tags or settings. |
+| **Assistive Access** | One screen: what needs you now, with large Done and Snooze buttons, and what's later today. No editing, tags or settings. On iOS 26 and later it's an Assistive Access scene, drawn in the system's Assistive Access style. On iOS 18, where that scene doesn't exist, the app shows the same view full screen (`UISupportsFullScreenInAssistiveAccess`) when `isAssistiveAccessEnabled` is on. |
 
 **Not in this release:** Android, Mac, an Apple Watch app (alarms still show on a paired Watch), Home Screen widgets (the Live Activity that
 AlarmKit uses for a snoozed alarm is included), sync between devices, accounts,
@@ -230,8 +238,17 @@ sharing reminders with other people, in-app purchases, and languages other than 
 - **How many alarms an app can schedule.** A Firm or Relentless occurrence uses up to 17 alarms.
   AlarmKit has a limit (scheduling can fail with `maximumLimitReached`), but Apple doesn't publish
   it. When it's reached, the app falls back to Time Sensitive notifications for the alarms it
-  couldn't schedule. Local notifications are limited to 64 pending per app, and the iOS 18 chain
-  uses up to 10 of them at once.
+  couldn't schedule.
+- **How many notifications an app can schedule.** The limit of 64 pending local notifications per
+  app is documented only on the deprecated `UILocalNotification` page: "the system keeps the
+  soonest-firing 64 notifications … and discards the rest". The current UserNotifications docs
+  don't state it. Extra requests are dropped silently, with no error, so the app keeps its own
+  count. The iOS 18 chain uses up to 10 at once. Confirm the limit on iOS 18, 26 and 27.
+- **People turning off Time Sensitive.** iOS explains Time Sensitive notifications the first time
+  one arrives, offers to turn them off, and asks again from time to time. Apple's guidance is to use
+  them for events "happening now or will happen within an hour". A Gentle reminder sends up to 20
+  over 8 hours, which may lead people to turn them off, and then Focus holds every early nudge.
+  Watch for this during TestFlight (see the open question below).
 - **Stop and Snooze on an alarm when the app isn't running.** AlarmKit runs the app's own App
   Intents for an alarm's buttons without opening the app, which is how it cancels the remaining
   alarms, moves them after a snooze and enforces the 3-snooze limit. Confirm this still works after
@@ -285,7 +302,10 @@ sharing reminders with other people, in-app purchases, and languages other than 
   [§8](#8-success-measures)) over a four-week TestFlight beta with external testers. The first beta
   build goes through Beta App Review, an early test of using alarms for reminders.
 
-There are no open questions.
+**Open question:**
+- **Should Normal nudges be Time Sensitive?** Today every early nudge is. Sending Normal nudges as
+  ordinary (`.active`) notifications and keeping Time Sensitive for High would make the app less
+  likely to have Time Sensitive turned off, but Focus would hold Normal nudges.
 
 ## 11. Questions for the architecture
 
@@ -294,18 +314,22 @@ There are no open questions.
    between app versions.
 3. How the nudging rules are shared between the preview, the scheduler and tests, so they can't
    drift apart.
-4. How notifications and alarms are scheduled within system limits (64 pending notifications, and
-   AlarmKit's unpublished limit, reported as `maximumLimitReached`), and how far ahead.
+4. How notifications and alarms are scheduled within system limits (64 pending notifications,
+   where extras are dropped silently, and AlarmKit's unpublished limit, reported as
+   `maximumLimitReached`), and how far ahead.
 5. How Done, Snooze and Dismiss run from notifications, alarms, Siri and Shortcuts (App Intents),
    with or without the app open. For alarms: Snooze uses AlarmKit's own countdown, but an alarm
    that rings again keeps its buttons, so the third snooze has to replace that alarm with one
-   without Snooze, and every snooze has to move the occurrence's later alarms.
+   without Snooze, and every snooze has to move the occurrence's later alarms. iOS 27's `.clock`
+   App Intents domain has a `snoozeAlarm` schema for Siri, but an app that adopts one schema in the
+   domain has to support them all, including creating alarms, so it probably doesn't fit.
 6. How the alarm's Live Activity extension is set up, with the system countdown presentation as
    its fallback before the first unlock, and how the app reconciles its scheduled alarms with
    AlarmKit's list (`alarms` and `alarmUpdates`) and its permission (`authorizationUpdates`) on
    every launch.
 7. How alarms follow time zones. A fixed alarm doesn't move when the device's time zone changes, so
    reminders that follow the device's time zone need their alarms rescheduled when it changes.
-8. How the iOS 18 and iOS 26+ paths for Urgent nudges are separated and tested.
+8. How the iOS 18 and iOS 26+ paths are separated and tested: Urgent nudges, Assistive Access, and
+   the iOS 26-only layout APIs (`navigationSubtitle`, `tabBarMinimizeBehavior`).
 9. How strings, plurals and formats are set up so that adding a language needs no code changes.
 10. How the app is tested on iOS 18, 26 and 27, on iPhone and iPad, in both orientations.

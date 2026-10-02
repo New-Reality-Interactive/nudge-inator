@@ -5,7 +5,8 @@ no account, no server and no website. A reminder can have **any number of tags**
 find reminders by **filtering on one or more tags**.
 
 - **Early nudges** (Normal and High urgency) are **local Time Sensitive notifications**. They get
-  through Focus, and their actions are **Done**, **Snooze** and **Dismiss**.
+  through Focus unless the person turns Time Sensitive off for the app, and their actions are
+  **Done**, **Snooze** and **Dismiss**.
 - **Urgent nudges** ring as **AlarmKit alarms** (iOS 26 and later): a prominent system alert on the
   Lock Screen, sounding through silent mode and Focus, with **Snooze** and the system's **Stop**,
   which counts as Done.

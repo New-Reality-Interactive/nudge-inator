@@ -37,9 +37,13 @@ The earlier brief was never committed, so this list is the only record of it.
 | AlarmKit | Not available | Available (iOS and iPadOS 26.0+) | Available |
 | Bars, tab bar and sheets | iOS 18 system look | Liquid Glass | Liquid Glass |
 | Scroll edge effects | System default for iOS 18 | As in the mockup | As in the mockup |
+| Tab bar shrinking in landscape (`tabBarMinimizeBehavior`, iPhone only) | Not available: the full tab bar stays | As in the mockup | Same |
+| My Day's date as a subtitle (`navigationSubtitle`) | Not available: the date stays in the content, as in portrait | As in the mockup | Same |
+| Assistive Access | `UISupportsFullScreenInAssistiveAccess`, with the app's own one-screen view when `isAssistiveAccessEnabled` | `AssistiveAccess` scene and `UISupportsAssistiveAccess`, in the system's Assistive Access style | Same |
 
 The mockup's iOS 26 behavior is the target. On iOS 18, the app uses the same system components, so
-it gets iOS 18's look without a separate design.
+it gets iOS 18's look without a separate design. The rows above that say "Not available" are the
+exceptions: those APIs are iOS 26.0 and later, so iOS 18 keeps the portrait behavior.
 
 ## C. Layout notes for landscape and iPad
 
@@ -51,9 +55,10 @@ checked. The iPad notes are starting points for the UX work.
   - Content stays inside the safe areas, at a readable width; backgrounds run to the edges.
   - The tab bar stays at the bottom, with each symbol beside its title. It shrinks to the current
     tab while scrolling down (`tabBarMinimizeBehavior(.onScrollDown)`), except on Search. Portrait
-    keeps the full tab bar (decided 2026-10-01).
-  - My Day's header is shorter: the date is the title's subtitle (`navigationSubtitle`), Filter is a
-    bar button showing how many tags are chosen, and the counts are a row of capsules.
+    keeps the full tab bar (decided 2026-10-01). iOS 26 and later only; on iOS 18 it doesn't shrink.
+  - My Day's header is shorter: the date is the title's subtitle (`navigationSubtitle`, iOS 26 and
+    later; on iOS 18 it stays in the content), Filter is a bar button showing how many tags are
+    chosen, and the counts are a row of capsules.
   - Nudge cards 540 pt wide or more put Done and Snooze beside the text. It depends on the card's
     width, not the orientation, so it applies on iPad too. At accessibility sizes they stack.
   - Sheets fill the screen. Alerts stay centered; action sheets keep their portrait width.
@@ -68,7 +73,10 @@ checked. The iPad notes are starting points for the UX work.
   - Now and My Day stay one column.
   - Only the list column shrinks the tab bar.
 - **iPad, portrait and landscape:** regular width.
-  - The tabs can become a sidebar (iPadOS 18 and later).
+  - The tab bar floats at the top of the screen (iPadOS 18 and later), not at the bottom as on
+    iPhone, and the tabs can become a sidebar (`sidebarAdaptable`). Search stays pinned at the
+    trailing end.
+  - The tab bar never shrinks: Apple supports minimizing it "on only iPhone".
   - Tags, Search and Settings start from the larger iPhones' split view: the list and the chosen
     item side by side.
   - Now and My Day keep a readable column, and could add a details column in landscape.
@@ -162,8 +170,12 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
 - **App Review:** Apple says alarms suit countdowns and recurring scheduled alerts, and "are not a
   replacement for other prominent notifications, like critical alerts or time-sensitive
   notifications".
-- **iOS 27 (beta):** new `AlarmConfiguration` initializers add an optional `appEntityIdentifier`,
-  which could link an alarm to the reminder's App Entity for Siri.
+- **iOS 27:** new `AlarmConfiguration` initializers add an optional `appEntityIdentifier`,
+  which could link an alarm to the reminder's App Entity for Siri. Apple's documentation still
+  marked them beta on 2026-10-01, although iOS 27 is expected to be out by then; check that they're
+  final before relying on them. iOS 27 also adds a `.clock` App Intents domain with a `snoozeAlarm`
+  schema for Siri and Shortcuts. An app that adopts any schema in the domain must support them all,
+  including creating alarms, so it probably doesn't fit Nudge-inator.
 - **Not covered by the docs or the sample:** the alarm limit's value, App Review's view of alarms
   for reminders, behavior after the app has been force-quit, and whether alarms ring with
   notifications turned off. Nor how the alert looks on an unlocked iPhone: in landscape, where the
@@ -177,7 +189,10 @@ Review and that testers can join by public link. The limits and time periods bel
 2026-10-01; check them in App Store Connect's help.
 
 - **Setup.** The Apple Developer Program ($99 a year), then an app record in App Store Connect with
-  the bundle ID. TestFlight doesn't need an App Store listing.
+  the bundle ID. TestFlight doesn't need an App Store listing. In Xcode, add the Time Sensitive
+  Notifications capability (its entitlement is required to send Time Sensitive notifications), and
+  set `NSAlarmKitUsageDescription`, `NSSupportsLiveActivities` and `UISupportsAssistiveAccess` in
+  `Info.plist`.
 - **Builds.** Archive in Xcode and upload from the Organizer (Distribute App > App Store Connect).
   Set `ITSAppUsesNonExemptEncryption` to `NO` in `Info.plist`, since the app uses no encryption of
   its own; otherwise App Store Connect asks about it for every build.
