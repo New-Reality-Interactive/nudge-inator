@@ -496,6 +496,7 @@ select.menu:disabled { color: var(--secondary-label); background-image: none; }
 .actions { display: flex; gap: 12px; flex-wrap: wrap; }
 .actions .btn { flex: 1 1 8em; }
 .via { display: inline-flex; gap: 3px; align-items: center; vertical-align: -2px; }
+.via.off { color: var(--negative); }
 .nudgecard .nextline { color: var(--label); }
 .banner { display: flex; gap: 10px; align-items: flex-start; background: var(--secondary-system-grouped-background); border-radius: 12px; padding: 12px 14px; margin: 0 16px 20px; border: 2px solid var(--negative); }
 .banner.info { border-color: var(--warning); }
@@ -620,18 +621,20 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .lock-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 12px 34px; }
 .lock-foot .btn { background: #3a3f66; color: #fff; }
 .lock-hint { font: var(--footnote); letter-spacing: var(--footnote-track); text-align: center; margin: 0 16px 6px; color: rgba(255, 255, 255, 0.9); }
-/* The AlarmKit alert is system UI. The app supplies only the title, two buttons (each text, a text
-   color and an SF Symbol) and a tint color; the system draws the rest over the Lock Screen. The
-   colors here are fixed, because the Lock Screen is dark in every appearance. */
+/* The AlarmKit alert is system UI. The app supplies only the title, the secondary button (text, a
+   text color and an SF Symbol) and a tint color, which fills the secondary button. The system adds
+   the app's name and its own stop control (iOS 26.1 and later), and draws the rest over the Lock
+   Screen. The colors here are fixed, because the Lock Screen is dark in every appearance. */
 .alarm { position: absolute; inset: 0; z-index: 70; color: #fff; background: radial-gradient(circle at 30% 20%, #3b4c8f, #16163a 60%, #0b0b18); display: flex; flex-direction: column; text-align: center; }
 .alarm-body { margin-top: auto; padding: 0 20px 12px; display: grid; gap: 14px; }
 .alarm-title { font: var(--title1); letter-spacing: var(--title1-track); font-weight: var(--bold); margin: 0 0 10px; overflow-wrap: anywhere; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3); }
 .alarm-title:focus { outline: none; }
+.alarm-app { font: var(--subhead); letter-spacing: var(--subhead-track); font-weight: var(--semibold); margin: 0 0 -10px; color: rgba(255, 255, 255, 0.9); }
 .abtn { font: var(--title3); letter-spacing: var(--title3-track); font-weight: var(--semibold); display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 58px; border: 0; border-radius: 99px; padding: 12px 20px; cursor: pointer; }
-.abtn.secondary { background: rgba(255, 255, 255, 0.2); color: #fff; -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
-.abtn.stop { background: #409cff; color: #000; }
-:root[data-transparency="reduce"] .abtn.secondary { background: #4a4a63; }
-:root[data-contrast="more"] .abtn.secondary { box-shadow: inset 0 0 0 1px #fff; }
+.abtn.sys-stop { background: rgba(255, 255, 255, 0.2); color: #fff; -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
+.abtn.stop, .abtn.secondary { background: #409cff; color: #000; }
+:root[data-transparency="reduce"] .abtn.sys-stop { background: #4a4a63; }
+:root[data-contrast="more"] .abtn.sys-stop { box-shadow: inset 0 0 0 1px #fff; }
 .alarm .abtn .i { --w: 2.2; }
 /* The Live Activity after a snooze is the app's own design (a widget extension), on the Lock Screen. */
 .activity { width: 100%; text-align: left; border-radius: 22px; padding: 14px 16px; background: var(--material); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); color: var(--material-text); display: grid; gap: 10px; }
@@ -844,6 +847,7 @@ function gearPath() {
 }
 const SYMBOLS = {
   "bell": { d: '<path d="M18 16.5V11a6 6 0 0 0-12 0v5.5L4.5 18.2h15z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/>', dy: -0.3 },
+  "bell.slash": { d: '<path d="M18 16.5V11a6 6 0 0 0-12 0v5.5L4.5 18.2h15z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/><path d="M3.5 3.2 20.5 21"/>', dy: -0.3 },
   "calendar": { d: `<rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.2V7.5a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v1.7z" fill="currentColor"/>${dot(8, 13)}${dot(12, 13)}${dot(16, 13)}${dot(8, 16.8)}${dot(12, 16.8)}`, scale: 0.96 },
   "square.stack": { d: '<rect x="3.5" y="9" width="17" height="11.5" rx="2.5"/><path d="M5.8 6.2h12.4M8.3 3.5h7.4"/>', scale: 0.96 },
   "gearshape": { d: gearPath(), scale: 0.98 },
@@ -911,11 +915,13 @@ function priorityAt(s, l) { const p = PROFILES[s], top = maxLevel(s); return p.m
 const URGENCY = { 3: "Normal", 4: "High", 5: "Urgent" };
 const urgencyAt = (s, l) => URGENCY[priorityAt(s, l)];
 /* How a nudge reaches the phone: Urgent rings as an AlarmKit alarm; everything else is a
-   local Time Sensitive notification. Without alarm permission, Urgent falls back too. */
-const viaFor = (urg) => (urg === "Urgent" && perm.alarms ? "alarm" : "notification");
+   local Time Sensitive notification. Without alarm permission, Urgent falls back too. With
+   notifications off, a nudge that isn't an alarm can't arrive at all. */
+const viaFor = (urg) => (urg === "Urgent" && perm.alarms ? "alarm" : perm.notifications ? "notification" : "none");
 const VIA = {
   alarm: (sz = 16) => `<span class="via">${I("alarm", sz)} Alarm</span>`,
   notification: (sz = 16) => `<span class="via">${I("bell", sz)} Notification</span>`,
+  none: (sz = 16) => `<span class="via off">${I("bell.slash", sz)} Notifications off</span>`,
 };
 function simulate(s, cap = {}, startLevel = 0) {
   const maxAtt = cap.maxAttempts ?? DEFAULT_CAP.maxAttempts;
@@ -955,7 +961,12 @@ function nudgeSummary(s, cap, startLevel = 0) {
   const first = sim.nudges.findIndex((n) => viaFor(n.urgency) === "alarm");
   const n = sim.nudges.length;
   let how;
-  if (!alarms) how = `All ${plural(n, "nudge")} are Time Sensitive notifications.`;
+  if (!perm.notifications) {
+    if (!alarms) how = "Notifications are off, so none of them can reach you.";
+    else if (first === 0) how = `All ${n} ring as alarms.`;
+    else how = `Notifications are off, so nudges 1–${first} can't reach you. Nudges ${first + 1}–${n} ring as alarms (${alarms}).`;
+  }
+  else if (!alarms) how = `All ${plural(n, "nudge")} are Time Sensitive notifications.`;
   else if (first === 0) how = `All ${n} ring as alarms.`;
   else how = `Nudges 1–${first} are Time Sensitive notifications. Nudges ${first + 1}–${n} ring as alarms (${alarms}).`;
   return { sim, text: `${plural(n, "nudge")} over ${fmtDur(sim.giveUpAt)}, then it gives up. ${how}` };
@@ -1174,7 +1185,7 @@ function noteIcon(kind) {
 
 /* ================= Views ================= */
 function permBanner() {
-  if (!perm.notifications) return `<div class="banner" role="note">${I("exclamationmark.triangle", 22)}<div><p><strong>Notifications are off.</strong> Nudges can't reach you, and alarms can't ring either.</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
+  if (!perm.notifications) return `<div class="banner" role="note">${I("exclamationmark.triangle", 22)}<div><p><strong>Notifications are off.</strong> ${perm.alarms ? "Only Urgent nudges can reach you, as alarms. Gentle reminders can't reach you at all." : "Nudges can't reach you."}</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
   if (!perm.alarms) return `<div class="banner info" role="note">${I("alarm", 22)}<div><p><strong>Alarms are off.</strong> Urgent nudges come as Time Sensitive notifications instead, which silent mode can mute.</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
   return "";
 }
@@ -1586,11 +1597,11 @@ function viewSettings() {
   <h2 class="sec-h">Nudges</h2>
   <div class="sec"><ul class="list icons">
     <li><div class="cell"><span class="ico" style="background:var(--tile-red)">${I("bell", 19)}</span><span class="main">Notifications</span><span class="trail">${ok(perm.notifications, "On · Time Sensitive", "Off")}</span></div></li>
-    <li><div class="cell"><span class="ico" style="background:var(--tile-orange)">${I("alarm", 19)}</span><span class="main">Alarms</span><span class="trail">${ok(perm.alarms && perm.notifications, "Allowed", "Off")}</span></div></li>
+    <li><div class="cell"><span class="ico" style="background:var(--tile-orange)">${I("alarm", 19)}</span><span class="main">Alarms</span><span class="trail">${ok(perm.alarms, "Allowed", "Off")}</span></div></li>
     ${!perm.notifications || !perm.alarms ? `<li><button type="button" class="cell tint" data-ios-settings><span class="ico" style="background:var(--tile-gray)">${I("gearshape", 19)}</span><span class="main">Open iOS Settings</span>${chev}</button></li>` : ""}
     <li><button type="button" class="cell tint" data-test ${perm.notifications ? "" : "disabled"}><span class="ico" style="background:var(--tile-blue)">${I("bell", 19)}</span><span class="main">Send a Test Nudge</span></button></li>
   </ul>
-  <p class="sec-f">Early nudges arrive as Time Sensitive notifications, which get through Focus. Urgent nudges ring as alarms: full screen, even in silent mode. Every nudge vibrates as well as sounding. Change these in iOS Settings.</p></div>
+  <p class="sec-f">Early nudges arrive as Time Sensitive notifications, which get through Focus. Urgent nudges ring as alarms, even in silent mode. Every nudge vibrates as well as sounding. Change these in iOS Settings.</p></div>
 
   <h2 class="sec-h">Quiet Hours</h2>
   <div class="sec"><ul class="list">
@@ -1875,7 +1886,7 @@ function onboardSheet() {
   return `<div class="sheet-body" tabindex="-1"><div class="welcome">
     <h2 class="welcome-title" id="sheet-title" tabindex="-1">Welcome to Nudge-inator</h2>
     ${f("bell", "Nudges until you're done", "Reminders keep coming back, more often and more insistently, until you tap Done.")}
-    ${f("alarm", "Urgent nudges ring as alarms", "When it really matters, your iPhone rings and vibrates like an alarm, even on silent.")}
+    ${f("alarm", "Urgent nudges ring as alarms", "When it really matters, your iPhone rings and vibrates like an alarm, even on silent. Stopping the alarm counts as Done.")}
     ${f("moon.fill", "Quiet overnight", "Nudges wait until your quiet hours end.")}
     ${f("lock", "Stays on your iPhone", "No account and no server. Your reminders never leave this phone.")}
     <button type="button" class="btn prominent" style="width:100%;margin-top:14px;padding:14px" data-onboard-next>Continue</button>
@@ -1917,9 +1928,11 @@ function showAlarm() {
   state.system = { kind: "alarm", occId: o.id, title: r.title, n: o.attempts, of: capOf(r).maxAttempts, at };
   state.focus = "system"; render();
 }
-/* The full-screen AlarmKit alert, as the system presents it on the Lock Screen: the Lock Screen
-   clock, then the alarm's title and its two buttons. Snooze (the secondary button) is left out once
-   the occurrence has no snoozes left, because the app reschedules its alarms without it. */
+/* The AlarmKit alert, as the system presents it on the Lock Screen: the Lock Screen clock, the
+   app's name, the alarm's title, the secondary button (Snooze, filled with the tint color) and the
+   system's stop control. Stopping the alarm runs the app's stop intent, which marks the occurrence
+   done. Snooze is left out once the occurrence has no snoozes left, because the app cancels the
+   alarm and schedules a new one without it. */
 function alarmUI(s) {
   const o = occurrences.find((x) => x.id === s.occId), r = remById(o.reminderId);
   const left = MAX_SNOOZES - (o.snoozes || 0);
@@ -1927,11 +1940,12 @@ function alarmUI(s) {
   return `<div class="alarm" role="alertdialog" aria-modal="true" aria-labelledby="al-t">
       <div class="lock-top" aria-hidden="true"><div class="lock-date">${LONGDAY[NOW.getDay()]} ${NOW.getDate()} ${LONGMON[NOW.getMonth()]}</div><div class="lock-time">${clock(s.at)}</div></div>
       <div class="alarm-body">
+        <p class="alarm-app" aria-hidden="true">Nudge-inator</p>
         <h2 class="alarm-title" id="al-t" tabindex="-1">${esc(s.title)}</h2>
         ${left > 0 ? snoozeBtn : ""}
-        <button type="button" class="abtn stop" data-alarm="done">${I("checkmark", 22)} Done</button>
+        <button type="button" class="abtn sys-stop" data-alarm="done">Stop</button>
       </div>
-      <p class="lock-hint" style="margin:4px 16px 30px">Simulated AlarmKit alert. iOS draws this screen; the app supplies only the title, the two buttons and a tint color.</p>
+      <p class="lock-hint" style="margin:4px 16px 30px">Simulated AlarmKit alert. iOS draws this screen and its Stop control; the app supplies only the title, the Snooze button and a tint color. Stop counts as Done.</p>
     </div>`;
 }
 /* After Snooze on the alarm, AlarmKit counts down and rings again. The countdown shows on the Lock
@@ -2082,13 +2096,14 @@ function wipeAll() {
   hud("All data deleted");
   nav();
 }
-/* First launch: the system's notification prompt, then (if allowed) the alarm prompt. */
+/* First launch: the system's notification prompt, then the alarm prompt. The two permissions are
+   separate, so the alarm prompt comes whatever the person chose for notifications. */
 function askPermissions() {
   const setPerm = (key, on) => () => { perm[key] = on; syncPermControls(); };
   const askAlarms = () => ask({ title: "Allow “Nudge-inator” to Schedule Alarms?", message: "Urgent nudges ring like an alarm, even when your iPhone is on silent or in a Focus.",
     buttons: [{ label: "Don't Allow", run: setPerm("alarms", false) }, { label: "Allow", role: "cancel", run: setPerm("alarms", true) }] });
   ask({ title: "“Nudge-inator” Would Like to Send You Notifications", message: "Notifications may include alerts, sounds and icon badges. These can be configured in Settings.",
-    buttons: [{ label: "Don't Allow", run: setPerm("notifications", false) },
+    buttons: [{ label: "Don't Allow", run: () => { setPerm("notifications", false)(); setTimeout(askAlarms, 50); } },
       { label: "Allow", role: "cancel", run: () => { setPerm("notifications", true)(); setTimeout(askAlarms, 50); } }] });
 }
 
@@ -2290,14 +2305,13 @@ function notifWhy(n) {
   return n ? `“${remById(n.reminderId).title}”, nudge ${n.attempts + 1}, ${nextNudgeFor(n).urg}.` : "No nudging reminder has an early nudge next. Reset the mockup.";
 }
 function alarmWhy(a) {
-  if (!perm.notifications) return "Notifications are off.";
   if (!perm.alarms) return "Alarms are off, so Urgent nudges come as notifications.";
   return a ? `“${remById(a.reminderId).title}”, nudge ${a.attempts + 1}, Urgent.` : "No nudging reminder has an Urgent nudge next. Reset the mockup.";
 }
 function updateControls() {
   const n = demoOcc("notification"), a = demoOcc("alarm");
   document.getElementById("c-notif").disabled = !n || !perm.notifications;
-  document.getElementById("c-alarm").disabled = !a || !perm.notifications;
+  document.getElementById("c-alarm").disabled = !a;
   document.getElementById("c-notif-why").textContent = notifWhy(n);
   document.getElementById("c-alarm-why").textContent = alarmWhy(a);
 }

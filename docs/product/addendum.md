@@ -50,7 +50,7 @@ These are starting points for the UX work. The mockup only shows an iPhone in po
   - The tab bar stays at the bottom.
   - Content keeps a readable width.
   - Sheets fill the screen.
-  - The full-screen alarm is the system's own and handles orientation itself.
+  - The alarm is the system's own and handles orientation itself.
 - **iPad, portrait and landscape:** regular width.
   - The tabs can become a sidebar (iPadOS 18 and later).
   - Tags and Search show the list and the selected reminder side by side.
@@ -75,7 +75,8 @@ English only at launch. Adding a language should need only translations.
 - No sentences are assembled from fragments. Phrases such as "with #home and #morning" or "Due today
   with #work or #morning" use a format string per form, and lists use the system list formatter.
 - The permission prompts' text (`NSAlarmKitUsageDescription` and the other usage strings in
-  `Info.plist`) and the alarm's button labels ("Done", "Snooze 15 min") are localized too.
+  `Info.plist`) and the alarm's Snooze label ("Snooze 15 min") are localized too. The alarm's stop
+  control is the system's, so iOS localizes it.
 - Dates, times, durations ("2 h 18 min") and relative times ("in 3 min") use the system formatters,
   following the region and the 12- or 24-hour setting.
 - Layout uses leading and trailing, never left and right. Directional symbols, such as the Back
@@ -88,31 +89,62 @@ English only at launch. Adding a language should need only translations.
 
 ## E. AlarmKit notes
 
-From Apple's AlarmKit overview and the "Scheduling an alarm with AlarmKit" sample (WWDC25 session
-230). Local copies are in `docs/apple/swift/`, which isn't in the repo.
+From Apple's AlarmKit overview and API reference, the "Scheduling an alarm with AlarmKit" sample
+and WWDC25 session 230, "Wake up to the AlarmKit API". Local copies are in `docs/apple/swift/`,
+which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
 
 - **Platforms:** iOS 26.0+, iPadOS 26.0+ and Mac Catalyst 26.0+. The sample targets iPhone and iPad,
   with a deployment target of 26.0.
-- **The alarm UI is a system template.** `AlarmPresentation.Alert` holds a title, a stop button and
-  an optional secondary button. Each `AlarmButton` has text, a text color and an SF Symbol. Alarms
-  also take a tint color. There's no room for other text, so the alarm shows only the title, **Done** and
-  **Snooze**, and the nudge count and snoozes left appear in the app instead.
+- **The alarm UI is a system template.** `AlarmPresentation.Alert` holds a title and an optional
+  secondary button. Each `AlarmButton` has text, a text color and an SF Symbol (shown in the
+  Dynamic Island). Alarms also take a tint color, which fills the secondary button and tints the
+  title and countdown on the Lock Screen. The system adds the app's name. There's no room for other
+  text, so the nudge count and snoozes left appear in the app instead.
+- **The stop control is the system's.** The initializer with a `stopButton` is deprecated from
+  iOS 26.1 ("stopButton is deprecated and will no longer be used"). The current one,
+  `init(title:secondaryButton:secondaryButtonBehavior:)`, uses a system-provided stop control, so
+  the alarm can't say **Done**. Stopping still runs the app's `stopIntent`.
 - **Buttons run the app's code.** An alarm is configured with a `stopIntent` and a `secondaryIntent`,
   both `LiveActivityIntent`s. Their `perform()` runs without opening the app unless
-  `openAppWhenRun` is set. Done would stop the alarm, close the occurrence and cancel the rest of
-  its alarms there.
+  `openAppWhenRun` is set. Stop closes the occurrence as done and cancels the rest of its alarms
+  there. The secondary intent "is only available after first unlock", so a Snooze before the first
+  unlock after a restart isn't seen by the app until it next runs.
 - **Snooze can be the system's countdown.** A secondary button with the `.countdown` behavior and a
-  post-alert duration makes the system alert again after that time. That matches the fixed snooze
-  per strength. After the third snooze, the app has to reschedule the remaining alarms without the
-  Snooze button.
+  post-alert duration (`Alarm.CountdownDuration`'s `postAlert`) makes the system alert again after
+  that time. That matches the fixed snooze per strength.
+  - The alarm that rings again uses the presentation it was scheduled with, so it still has Snooze.
+    On the third snooze, the snooze intent cancels that alarm and schedules a new one for the end of
+    the snooze, with no secondary button, and the remaining alarms are scheduled without it.
+  - The occurrence's later alarms are separate alarms, so each snooze has to move them past the
+    snooze. Otherwise, for example, a Relentless alarm 2 minutes later would ring during a 5-minute
+    snooze.
 - **Countdowns are Live Activities.** The countdown and paused states appear as a Live Activity, set
   up in a widget extension, as in the sample. Nudge-inator needs that extension even without Home
-  Screen widgets.
+  Screen widgets. Apple warns that without it "the system may unexpectedly dismiss alarms and fail
+  to alert". Before the first unlock the Live Activity can't show, so the alarm also needs an
+  `AlarmPresentation.Countdown`, which the system draws instead.
 - **Schedules:** `Alarm.Schedule.fixed(date)` for a one-off time, or `.relative` for a time of day
-  with weekly repeats. Each Urgent nudge is a one-off, so it's `.fixed`.
+  with weekly repeats. Each Urgent nudge is a one-off, so it's `.fixed`. A fixed alarm "does not
+  change when device timezone changes", so alarms for reminders that follow the device's time zone
+  are rescheduled when it changes.
+- **Where it shows:** the Lock Screen, the Dynamic Island and StandBy, and a paired Apple Watch,
+  which the system forwards the alert to. Apple calls it a prominent alert and doesn't describe it
+  as full screen.
 - **Reconciling:** `AlarmManager.alarms` lists what's scheduled, and `alarmUpdates` reports changes.
-  The app can compare these with what it expects on every launch.
+  An alarm missing from `alarmUpdates` is no longer scheduled. The app can compare these with what
+  it expects on every launch.
 - **Permission:** `AlarmManager.requestAuthorization()`, with the reason in
-  `NSAlarmKitUsageDescription`. The states are not determined, denied and authorized.
-- **Not covered by the docs or the sample:** how many alarms an app can schedule, App Review's view
-  of alarms for reminders, and behavior after the app has been force-quit.
+  `NSAlarmKitUsageDescription`. Without that key, or with an empty value, the app can't schedule
+  alarms. The states are not determined, denied and authorized, and `authorizationUpdates` reports
+  changes. If the person denies it, every attempt to schedule an alarm fails. The permission is
+  separate from notifications.
+- **Limit:** scheduling can fail with `AlarmManager.AlarmError.maximumLimitReached`. Apple doesn't
+  say what the limit is.
+- **App Review:** Apple says alarms suit countdowns and recurring scheduled alerts, and "are not a
+  replacement for other prominent notifications, like critical alerts or time-sensitive
+  notifications".
+- **iOS 27 (beta):** new `AlarmConfiguration` initializers add an optional `appEntityIdentifier`,
+  which could link an alarm to the reminder's App Entity for Siri.
+- **Not covered by the docs or the sample:** the alarm limit's value, App Review's view of alarms
+  for reminders, behavior after the app has been force-quit, how the alert looks on an unlocked
+  iPhone and on iPad, and whether alarms ring with notifications turned off.

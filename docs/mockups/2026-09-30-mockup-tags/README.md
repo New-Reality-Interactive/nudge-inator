@@ -6,8 +6,9 @@ find reminders by **filtering on one or more tags**.
 
 - **Early nudges** (Normal and High urgency) are **local Time Sensitive notifications**. They get
   through Focus, and their actions are **Done**, **Snooze** and **Dismiss**.
-- **Urgent nudges** ring as **AlarmKit alarms** (iOS 26 and later): full screen on the Lock Screen,
-  sounding through silent mode and Focus, with **Done** and **Snooze**.
+- **Urgent nudges** ring as **AlarmKit alarms** (iOS 26 and later): a prominent system alert on the
+  Lock Screen, sounding through silent mode and Focus, with **Snooze** and the system's **Stop**,
+  which counts as Done.
 
 Open [`index.html`](index.html) in a browser. It's a single file with no dependencies. On a desktop
 it shows a phone with **Mockup controls** beside it. On a phone the app fills the screen and the
@@ -25,7 +26,8 @@ doesn't show: landscape, iPad, and iOS 18.
 - **Give-up limit:** 20 nudges or 24 hours by default, whichever comes first.
 - **Quiet hours**, and **carry-over** after a missed occurrence ("↑ Starts higher").
 - **Editing:** a repeat rule the form can't express is kept as it is ("Keep: …").
-- **Privacy:** only the title is shown in notifications and alarms. Notes and tags stay in the app.
+- **Privacy:** only the title (and, as iOS adds it, the app's name) is shown in notifications and
+  alarms. Notes and tags stay in the app.
 
 ## Screens
 
@@ -145,7 +147,7 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
 | Nudge | Arrives as | Actions |
 |---|---|---|
 | Normal or High urgency | Time Sensitive notification | **Done**, **Snooze** (while snoozes are left), **Dismiss** |
-| Urgent (Firm and Relentless, from nudge 4) | AlarmKit alarm | **Done**, **Snooze** (while snoozes are left) |
+| Urgent (Firm and Relentless, from nudge 4) | AlarmKit alarm | **Stop** (counts as Done), **Snooze** (while snoozes are left) |
 | Urgent, with alarms not allowed | Time Sensitive notification | as above |
 
 - **Gentle** reminders never reach Urgent, so they never ring an alarm.
@@ -158,21 +160,34 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
   records "Notification cleared (still nudging)".
 - If **alarms** are turned off in iOS Settings, Now and Settings show a banner, and Urgent nudges come
   as notifications, which silent mode can mute. If **notifications** are off, a red banner says
-  nudges can't reach you.
+  that only Urgent nudges can reach you, as alarms (or that nothing can, if alarms are off too).
+  Nudging cards and How It Nudges mark each nudge that can't arrive as **Notifications off**, with
+  `bell.slash`, in red.
+  The two permissions are separate, so the alarm prompt comes after the notification prompt
+  whatever the person chose. That alarms still ring with notifications off is to be confirmed on a
+  device.
 - **The alarm is AlarmKit's system alert.** iOS draws it over the Lock Screen, under the Lock
-  Screen clock. The app supplies only:
+  Screen clock, with the app's name above the title. The app supplies only:
   - the title: the reminder's title
-  - the stop button: **Done** with `checkmark`, filled with the tint color
-  - the secondary button: **Snooze 15 min** (the strength's length) with `clock`. It's left off once
-    the occurrence has no snoozes left, because the app reschedules its alarms without it.
+  - the secondary button: **Snooze 15 min** (the strength's length) with `clock`, filled with the
+    tint color. It's left off once the occurrence has no snoozes left (see below).
   - the tint color: the app's accent
 
-  The nudge count and snoozes left can't appear on the alarm, so the nudging card in the app shows
-  them. The mockup's layout and colors for the system parts are an approximation.
+  The stop control is the system's own from iOS 26.1: `AlarmPresentation.Alert`'s `stopButton` is
+  deprecated and ignored, so the app can't label it **Done**. The mockup shows it as **Stop**.
+  Stopping runs the app's stop intent, which marks the occurrence done, and onboarding says
+  "Stopping the alarm counts as Done". The nudge count and snoozes left can't appear on the alarm,
+  so the nudging card in the app shows them. The mockup's layout, wording and colors for the system
+  parts are an approximation.
 - **After Snooze on the alarm,** AlarmKit counts down and rings again when the time is up. The
   countdown shows on the Lock Screen as the app's **Live Activity**: the title, the time left,
   "Snoozed. Rings again at 8:35 AM." and **Done** to stop it early. The app designs this view, in a
-  widget extension.
+  widget extension. Before the first unlock after a restart, iOS shows its own countdown instead,
+  from the alarm's countdown presentation.
+- **The alarm that rings again keeps its buttons,** so the third Snooze can't simply remove Snooze
+  from it. On the third snooze, the app's snooze intent cancels that alarm and schedules a new one
+  for the end of the snooze, without Snooze. Each snooze also moves the occurrence's later alarms,
+  so none ring during the snooze.
 
 **Pausing:**
 - **Pause Reminder** stops the nudging. An occurrence that's nudging closes as **Skipped**, not
@@ -190,7 +205,7 @@ These are not part of the app:
   long press. It sends a real nudge in the mockup, so the card and history update.
 - **Next Urgent nudge** shows the alarm for the next reminder whose next nudge is Urgent. **Snooze**
   shows the Live Activity, and **Unlock** returns to the app. Press it several times to use up the
-  snoozes and see the alarm with only **Done**.
+  snoozes and see the alarm with only **Stop**.
 - **First launch** shows onboarding and the permission prompts.
 - **Screen size** switches the phone between the screen sizes, in points, of the iPhones that run
   iOS 18 or later, from iPhone SE (375 × 667) to iPhone 17 Pro Max (440 × 956). The iPhone XS, XS
@@ -228,7 +243,8 @@ it names. The real app uses the symbols themselves.
 
 - **Other icons use the nearest SF Symbol:** `bell`, `tag` and `gearshape` for tabs;
   `chevron.backward` and `chevron.right`; `moon.fill` for quiet hours and `arrow.up` for "starts
-  higher"; `pause`, `play` and `clock`; `exclamationmark.triangle`, `lock`, `info.circle`, `mic` and
+  higher"; `pause`, `play` and `clock`; `bell.slash` for a nudge that can't arrive because
+  notifications are off; `exclamationmark.triangle`, `lock`, `info.circle`, `mic` and
   `accessibility`.
 - **Rename** in the Tags tab's Edit mode is a text button, so it doesn't need `pencil`.
 - **One stroke weight, matched to the text beside it.** Icons next to regular text use a regular
@@ -531,13 +547,22 @@ In headless Chrome, a script went through these steps, and the console had no er
 9. search "#health"
 
 The alarm and its Live Activity were checked separately, in light and dark, with Increase Contrast
-off and on, at Large and AX3:
+off and on, at Large and AX3. They were checked again after the AlarmKit corrections (the system's
+Stop control, Snooze filled with the tint color, and the app's name), together with the screens
+those corrections changed: Now, Settings and a Firm reminder's details (How It Nudges) with
+notifications off, alarms off and both off, and onboarding.
 - axe-core found no violations
 - the buttons are at least 44 pt tall
-- the button text and the Live Activity text reach 4.5:1, or 7:1 with Increase Contrast
-- after the third snooze, the alarm shows only **Done**
+- the app's text on the alarm and the Live Activity reaches 7.4:1 or more against the background
+  behind it, so it passes 4.5:1 and 7:1 with Increase Contrast. The banners, Settings rows,
+  **Notifications off** labels and onboarding text reach 4.5:1, or 7:1 with Increase Contrast.
+- **Notifications off** appears only while notifications are off
+- after the third snooze, the alarm shows only **Stop**
 - no app status message appears over the Lock Screen
+- the alarm permission prompt follows the notification prompt, whichever choice is made
+- the console has no errors
 
 At AX5 the alarm scrolls instead of clipping.
 
-The typography, contrast, accessibility and materials checks above were run on the final version.
+The typography, contrast, accessibility and materials checks above were run on the final version,
+apart from the AlarmKit corrections, which were checked as described in the previous paragraph.

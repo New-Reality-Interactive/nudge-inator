@@ -31,7 +31,7 @@ fire, the moment passes and nothing follows up. Nudge-inator keeps nudging until
 - A missed occurrence makes the next one start more insistently.
 
 Early nudges are Time Sensitive notifications. On iOS 26 and later, the final, Urgent nudges ring as
-full-screen **AlarmKit alarms** that sound through silent mode. On iOS 18, a minute-by-minute chain
+**AlarmKit alarms**: prominent system alerts that sound through silent mode and Focus. On iOS 18, a minute-by-minute chain
 of notifications stands in. You organize reminders with **tags**, as many as each reminder needs,
 and filter by one or more tags on the Tags tab and on My Day.
 
@@ -73,7 +73,7 @@ TestFlight. Releasing on the App Store is a later decision (see [§10](#10-open-
 | **My Day** | Everything due today in time order, with Done, Nudging, Missed and Left counts. Filter by one or more tags (All or Any, or No Tags), and tap a count to show only that status. |
 | **Snooze** | A fixed break by strength (Gentle 30 minutes, Firm 15, Relentless 5), up to 3 times per occurrence. It doesn't raise the level, and snoozed time doesn't count toward the limit. |
 | **Dismiss** | Clears one notification. Nudging continues. |
-| **Done** | The only thing that stops nudging. It cancels the occurrence's remaining notifications and alarms. |
+| **Done** | The only thing that stops nudging. It cancels the occurrence's remaining notifications and alarms. On an alarm, it's the system's **Stop** control. |
 | **Pause** | Stops a reminder. Anything due while it's paused is **skipped**, not missed, so there's no carry-over. Resume picks up at the next time. |
 
 | Strength | Intervals between nudges | Urgency | With the default limit |
@@ -87,21 +87,26 @@ TestFlight. Releasing on the App Store is a later decision (see [§10](#10-open-
 | Nudge | iOS 26 and later | iOS 18 |
 |---|---|---|
 | Normal and High | **Time Sensitive notification** with **Done**, **Snooze** and **Dismiss** | Same |
-| Urgent (Firm and Relentless, from nudge 4) | **AlarmKit alarm**: full screen, rings and vibrates through silent mode and Focus, with **Done** and **Snooze** | **Notification chain**: when the occurrence first reaches Urgent, a Time Sensitive notification every minute, up to 10. Then Urgent nudges follow the strength's interval. Silent mode can mute them. |
+| Urgent (Firm and Relentless, from nudge 4) | **AlarmKit alarm**: a prominent system alert that rings and vibrates through silent mode and Focus, with **Snooze** and the system's **Stop**, which counts as Done | **Notification chain**: when the occurrence first reaches Urgent, a Time Sensitive notification every minute, up to 10. Then Urgent nudges follow the strength's interval. Silent mode can mute them. |
 | Urgent, with alarms not allowed | Time Sensitive notifications | n/a |
 
 - Gentle reminders never reach Urgent, so they never ring an alarm.
-- **The alarm screen is the system's own.** AlarmKit draws it from a title and up to two buttons, so
-  it shows only the reminder's title, **Done** and **Snooze** (with its length, such as "Snooze 15
-  min"). The nudge count and snoozes left can't appear on it, so the app shows them on the nudging
-  card. After a snooze, the countdown shows on the Lock Screen as the app's Live Activity, with
-  **Done**.
+- **The alarm screen is the system's own.** AlarmKit draws it from a title, an optional secondary
+  button and a tint color. It shows the app's name, the reminder's title, **Snooze** (with its
+  length, such as "Snooze 15 min", filled with the tint color) and the system's stop control. From
+  iOS 26.1 the app can't label that control, so it can't say **Done**. Stopping the alarm runs the
+  app's code, which marks the occurrence done, and onboarding says so. The nudge count and snoozes
+  left can't appear on the alarm, so the app shows them on the nudging card. After a snooze, the
+  countdown shows on the Lock Screen as the app's Live Activity, with **Done**.
+- A paired **Apple Watch** shows the alarm too. The system does this, so it needs no Watch app.
 - The iOS 18 chain repeats the current nudge. The repeats don't count toward the nudge
   limit, but their time counts toward the time limit. Snooze or Done ends the chain.
 - Snooze disappears from the card, the notification and the alarm after 3 snoozes.
 - If notifications or alarms are turned off in iOS Settings, Now and Settings show a banner that
-  says what that means.
-- **Privacy:** notifications and alarms show only the title. Notes and tags stay in the app.
+  says what that means. The two permissions are separate: with notifications off and alarms
+  allowed, only Urgent nudges reach the person.
+- **Privacy:** notifications and alarms show only the title (and the app's name). Notes and tags
+  stay in the app.
 
 ## 5. Devices, orientations and iOS versions
 
@@ -146,7 +151,7 @@ its screens, text styles, colors, symbols and behavior everywhere, and changes o
 | **Siri and Shortcuts** | "Mark my nudge done", "Snooze my nudge" and "What's nudging me?", from Siri, the Action button or a Home Screen shortcut. |
 | **Assistive Access** | One screen: what needs you now, with large Done and Snooze buttons, and what's later today. No editing, tags or settings. |
 
-**Not in this release:** Android, Mac, Apple Watch, Home Screen widgets (the Live Activity that
+**Not in this release:** Android, Mac, an Apple Watch app (alarms still show on a paired Watch), Home Screen widgets (the Live Activity that
 AlarmKit uses for a snoozed alarm is included), sync between devices, accounts,
 sharing reminders with other people, in-app purchases, and languages other than English.
 
@@ -202,21 +207,32 @@ sharing reminders with other people, in-app purchases, and languages other than 
 ## 10. Risks and open questions
 
 **Risks to confirm on real devices:**
-- **How many alarms an app can schedule.** A Firm or Relentless occurrence uses up to 17 alarms,
-  and Apple doesn't publish a limit. Local notifications are limited to 64 pending per app, and the
-  iOS 18 chain uses up to 10 of them at once.
-- **Done and Snooze on an alarm when the app isn't running.** AlarmKit runs the app's own App
+- **How many alarms an app can schedule.** A Firm or Relentless occurrence uses up to 17 alarms.
+  AlarmKit has a limit (scheduling can fail with `maximumLimitReached`), but Apple doesn't publish
+  it. When it's reached, the app falls back to Time Sensitive notifications for the alarms it
+  couldn't schedule. Local notifications are limited to 64 pending per app, and the iOS 18 chain
+  uses up to 10 of them at once.
+- **Stop and Snooze on an alarm when the app isn't running.** AlarmKit runs the app's own App
   Intents for an alarm's buttons without opening the app, which is how it cancels the remaining
-  alarms and enforces the 3-snooze limit. Confirm this still works after the app has been
-  force-quit.
+  alarms, moves them after a snooze and enforces the 3-snooze limit. Confirm this still works after
+  the app has been force-quit.
+- **Snooze before the first unlock.** After a restart, the alarm can ring before the device has
+  been unlocked. Snooze still counts down, but Apple says the app's snooze intent only runs after
+  the first unlock, so the snooze isn't counted and the later alarms aren't moved. The app
+  reconciles on its next launch.
+- **The alarm can't say Done.** From iOS 26.1 the stop control is the system's own. Confirm in
+  testing that people understand that stopping the alarm marks the reminder done.
+- **Alarms with notifications off.** Apple documents the alarm permission as separate from
+  notifications. Confirm that alarms still ring when notifications are turned off.
 - **Keeping future nudges scheduled if the app isn't opened for days.** Background refresh isn't
   guaranteed, so the app schedules a rolling window ahead.
 - **App Review and alarms.** Apple says alarms are "not a replacement for … time-sensitive
   notifications". Using them only for Urgent nudges follows that.
 - **The iOS 18 chain is weaker.** Silent mode can mute it, so Urgent nudges are less forceful on
   iOS 18.
-- **Alarms on iPad.** AlarmKit supports iPadOS 26. Confirm the alarm presents and sounds on iPad as
-  it does on iPhone.
+- **How the alarm looks.** Apple describes it only as a prominent alert, on the Lock Screen, in the
+  Dynamic Island and in StandBy. Confirm how it presents on an unlocked iPhone and on iPad
+  (AlarmKit supports iPadOS 26), and that it sounds on iPad as it does on iPhone.
 - **Losing the device loses the reminders,** unless it's restored from a backup. Export is the only
   other copy.
 
@@ -238,12 +254,17 @@ sharing reminders with other people, in-app purchases, and languages other than 
 3. How the nudging rules are shared between the preview, the scheduler and tests, so they can't
    drift apart.
 4. How notifications and alarms are scheduled within system limits (64 pending notifications, and
-   the unknown alarm limit), and how far ahead.
+   AlarmKit's unpublished limit, reported as `maximumLimitReached`), and how far ahead.
 5. How Done, Snooze and Dismiss run from notifications, alarms, Siri and Shortcuts (App Intents),
-   with or without the app open. For alarms, whether Snooze uses AlarmKit's own countdown, and how
-   the remaining alarms lose Snooze after the third.
-6. How the alarm's Live Activity extension is set up, and how the app reconciles its scheduled
-   alarms with AlarmKit's list (`alarms` and `alarmUpdates`) on every launch.
-7. How the iOS 18 and iOS 26+ paths for Urgent nudges are separated and tested.
-8. How strings, plurals and formats are set up so that adding a language needs no code changes.
-9. How the app is tested on iOS 18, 26 and 27, on iPhone and iPad, in both orientations.
+   with or without the app open. For alarms: Snooze uses AlarmKit's own countdown, but an alarm
+   that rings again keeps its buttons, so the third snooze has to replace that alarm with one
+   without Snooze, and every snooze has to move the occurrence's later alarms.
+6. How the alarm's Live Activity extension is set up, with the system countdown presentation as
+   its fallback before the first unlock, and how the app reconciles its scheduled alarms with
+   AlarmKit's list (`alarms` and `alarmUpdates`) and its permission (`authorizationUpdates`) on
+   every launch.
+7. How alarms follow time zones. A fixed alarm doesn't move when the device's time zone changes, so
+   reminders that follow the device's time zone need their alarms rescheduled when it changes.
+8. How the iOS 18 and iOS 26+ paths for Urgent nudges are separated and tested.
+9. How strings, plurals and formats are set up so that adding a language needs no code changes.
+10. How the app is tested on iOS 18, 26 and 27, on iPhone and iPad, in both orientations.
