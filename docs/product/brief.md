@@ -31,7 +31,8 @@ fire, the moment passes and nothing follows up. Nudge-inator keeps nudging until
 - **Quiet hours** hold nudges overnight.
 - A missed occurrence makes the next one start more insistently.
 
-Early nudges are Time Sensitive notifications. On iOS 26 and later, the final, Urgent nudges ring as
+Early nudges are notifications: ordinary ones at Normal urgency, and Time Sensitive ones, which get
+through Focus, at High. On iOS 26 and later, the final, Urgent nudges ring as
 **AlarmKit alarms**: prominent system alerts that sound through silent mode and Focus. On iOS 18, a minute-by-minute chain
 of notifications stands in. You organize reminders with **tags**, as many as each reminder needs,
 and filter by one or more tags on the Tags tab and on My Day.
@@ -87,11 +88,16 @@ TestFlight. It's released on the App Store once the success measures are met (se
 
 | Nudge | iOS 26 and later | iOS 18 |
 |---|---|---|
-| Normal and High | **Time Sensitive notification** with **Done**, **Snooze** and **Dismiss** | Same |
+| Normal | **Notification** (`.active`) with **Done**, **Snooze** and **Dismiss**. A Focus holds it. | Same |
+| High | **Time Sensitive notification**, with the same actions. It gets through Focus. | Same |
 | Urgent (Firm and Relentless, from nudge 4) | **AlarmKit alarm**: a prominent system alert that rings and vibrates through silent mode and Focus, with **Snooze** and the system's **Stop**, which counts as Done | **Notification chain**: when the occurrence first reaches Urgent, a Time Sensitive notification every minute, up to 10. Then Urgent nudges follow the strength's interval. Silent mode can mute them. |
 | Urgent, with alarms not allowed | Time Sensitive notifications | n/a |
 
 - Gentle reminders never reach Urgent, so they never ring an alarm.
+- **During a Focus, Normal nudges wait.** A Gentle or Firm reminder's first nudges are held until it
+  reaches High (Firm at nudge 3, 45 minutes after it's due; Gentle at nudge 5, about 2 h 45 min).
+  Relentless starts at High. People who want every nudge can allow Nudge-inator in that Focus. How
+  It Nudges and Settings say so.
 - **The alarm screen is the system's own.** AlarmKit draws it from a title, an optional secondary
   button and a tint color. It shows the app's name, the reminder's title, **Snooze** (with its
   length, such as "Snooze 15 min", filled with the tint color) and the system's stop control. From
@@ -113,7 +119,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
   says what that means. The two permissions are separate: with notifications off and alarms
   allowed, only Urgent nudges reach the person.
 - **Time Sensitive can be turned off on its own.** The person can turn it off for the app, and iOS
-  asks from time to time whether the app's Time Sensitive notifications are worth it. Then early
+  asks from time to time whether the app's Time Sensitive notifications are worth it. Then High
   nudges no longer get through Focus. The app reads `timeSensitiveSetting` and shows a banner on Now
   and Settings, like the other permissions.
 - **Privacy:** notifications and alarms show only the title (and the app's name). Notes and tags
@@ -246,9 +252,11 @@ sharing reminders with other people, in-app purchases, and languages other than 
   count. The iOS 18 chain uses up to 10 at once. Confirm the limit on iOS 18, 26 and 27.
 - **People turning off Time Sensitive.** iOS explains Time Sensitive notifications the first time
   one arrives, offers to turn them off, and asks again from time to time. Apple's guidance is to use
-  them for events "happening now or will happen within an hour". A Gentle reminder sends up to 20
-  over 8 hours, which may lead people to turn them off, and then Focus holds every early nudge.
-  Watch for this during TestFlight (see the open question below).
+  them for events "happening now or will happen within an hour". If people turn them off, Focus
+  holds every early nudge. Sending only High nudges as Time Sensitive keeps their number down (see
+  the decision below). Watch for it during TestFlight.
+- **Normal nudges held by a Focus.** Watch in TestFlight whether testers on Gentle or Firm miss
+  first nudges during a Focus.
 - **Stop and Snooze on an alarm when the app isn't running.** AlarmKit runs the app's own App
   Intents for an alarm's buttons without opening the app, which is how it cancels the remaining
   alarms, moves them after a snooze and enforces the 3-snooze limit. Confirm this still works after
@@ -301,11 +309,12 @@ sharing reminders with other people, in-app purchases, and languages other than 
 - **Release on the App Store once the success measures are met** (see
   [§8](#8-success-measures)) over a four-week TestFlight beta with external testers. The first beta
   build goes through Beta App Review, an early test of using alarms for reminders.
+- **Normal nudges are ordinary notifications; only High nudges are Time Sensitive.** This matches
+  Apple's interruption levels to the app's urgency, makes the app less likely to have Time Sensitive
+  turned off, and fits the strengths. The cost is that a Focus holds Normal nudges (see
+  [§4](#4-how-nudges-reach-you)).
 
-**Open question:**
-- **Should Normal nudges be Time Sensitive?** Today every early nudge is. Sending Normal nudges as
-  ordinary (`.active`) notifications and keeping Time Sensitive for High would make the app less
-  likely to have Time Sensitive turned off, but Focus would hold Normal nudges.
+There are no open questions.
 
 ## 11. Questions for the architecture
 

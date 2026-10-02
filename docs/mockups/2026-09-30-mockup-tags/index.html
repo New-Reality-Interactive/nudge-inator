@@ -1083,9 +1083,11 @@ function nudgeSummary(s, cap, startLevel = 0) {
     else if (first === 0) how = `All ${n} ring as alarms.`;
     else how = `Notifications are off, so nudges 1–${first} can't reach you. Nudges ${first + 1}–${n} ring as alarms (${alarms}).`;
   }
-  else if (!alarms) how = `All ${plural(n, "nudge")} are Time Sensitive notifications.`;
+  else if (!alarms) how = `All ${plural(n, "nudge")} are notifications.`;
   else if (first === 0) how = `All ${n} ring as alarms.`;
-  else how = `Nudges 1–${first} are Time Sensitive notifications. Nudges ${first + 1}–${n} ring as alarms (${alarms}).`;
+  else how = `Nudges 1–${first} are notifications. Nudges ${first + 1}–${n} ring as alarms (${alarms}).`;
+  /* Normal nudges are ordinary notifications, so a Focus holds them; High ones are Time Sensitive. */
+  if (perm.notifications && sim.nudges.some((x) => x.urgency === "Normal")) how += " During a Focus, Normal nudges wait until High.";
   return { sim, text: `${plural(n, "nudge")} over ${fmtDur(sim.giveUpAt)}, then it gives up. ${how}` };
 }
 
@@ -1762,7 +1764,7 @@ function settingsSections() {
     ${!perm.notifications || !perm.alarms ? `<li><button type="button" class="cell tint" data-ios-settings><span class="ico" style="background:var(--tile-gray)">${I("gearshape", 19)}</span><span class="main">Open iOS Settings</span>${chev}</button></li>` : ""}
     <li><button type="button" class="cell tint" data-test ${perm.notifications ? "" : "disabled"}><span class="ico" style="background:var(--tile-blue)">${I("bell", 19)}</span><span class="main">Send a Test Nudge</span></button></li>
   </ul>
-  <p class="sec-f">Early nudges arrive as Time Sensitive notifications, which get through Focus. Urgent nudges ring as alarms, even in silent mode. Every nudge vibrates as well as sounding. Change these in iOS Settings.</p></div>` },
+  <p class="sec-f">Normal nudges arrive as notifications, which a Focus can hold. High nudges are Time Sensitive, so they get through Focus. Urgent nudges ring as alarms, even in silent mode. Every nudge vibrates as well as sounding. Change these in iOS Settings.</p></div>` },
     { id: "quiet", title: "Quiet Hours", icon: "moon.fill", tile: "--tile-blue", body: `<div class="sec"><ul class="list">
     <li><div class="formrow"><label for="s-quiet">Hold Nudges Overnight</label><input type="checkbox" class="switch" id="s-quiet" ${q ? "checked" : ""}></div></li>
     ${q ? `<li><div class="formrow"><label for="s-qs">From</label><input type="time" class="pill-input" id="s-qs" value="${q.start}"></div></li>

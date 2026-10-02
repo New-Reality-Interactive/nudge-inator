@@ -4,9 +4,10 @@ Nudge-inator as an **iPhone app**. Reminders, nudging and history all live on th
 no account, no server and no website. A reminder can have **any number of tags** (or none), and you
 find reminders by **filtering on one or more tags**.
 
-- **Early nudges** (Normal and High urgency) are **local Time Sensitive notifications**. They get
-  through Focus unless the person turns Time Sensitive off for the app, and their actions are
-  **Done**, **Snooze** and **Dismiss**.
+- **Early nudges** are **local notifications** with **Done**, **Snooze** and **Dismiss**. High
+  urgency ones are **Time Sensitive**, so they get through Focus unless the person turns Time
+  Sensitive off for the app. Normal ones are ordinary notifications, which a Focus holds until the
+  reminder reaches High.
 - **Urgent nudges** ring as **AlarmKit alarms** (iOS 26 and later): a prominent system alert on the
   Lock Screen, sounding through silent mode and Focus, with **Snooze** and the system's **Stop**,
   which counts as Done.
@@ -147,11 +148,16 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
 
 | Nudge | Arrives as | Actions |
 |---|---|---|
-| Normal or High urgency | Time Sensitive notification | **Done**, **Snooze** (while snoozes are left), **Dismiss** |
+| Normal urgency | Notification (a Focus holds it) | **Done**, **Snooze** (while snoozes are left), **Dismiss** |
+| High urgency | Time Sensitive notification (gets through Focus) | as above |
 | Urgent (Firm and Relentless, from nudge 4) | AlarmKit alarm | **Stop** (counts as Done), **Snooze** (while snoozes are left) |
 | Urgent, with alarms not allowed | Time Sensitive notification | as above |
 
 - **Gentle** reminders never reach Urgent, so they never ring an alarm.
+- **Normal nudges aren't Time Sensitive,** so the app doesn't wear out the person's trust in its
+  Time Sensitive notifications: turning those off would let a Focus hold High nudges too. During a
+  Focus, a Gentle or Firm reminder's first nudges wait until it reaches High. People who want every
+  nudge can allow Nudge-inator in that Focus. How It Nudges and Settings say so.
 - **Done** stops the nudging and cancels the reminder's remaining notifications and alarms.
 - **Snooze** waits a fixed time set by the strength: Gentle 30 minutes, Firm 15, Relentless 5.
   - It doesn't raise the level, and the snoozed time doesn't count toward the time limit.
@@ -203,7 +209,7 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
 
 These are not part of the app:
 
-- **Next early nudge** shows the Lock Screen with a Time Sensitive notification for the next nudging
+- **Next early nudge** shows the Lock Screen with a notification for the next nudging
   reminder whose next nudge isn't Urgent. In landscape the iPhone is in use, so it arrives as a banner
   over the app instead (see [Landscape](#landscape)). Tap it to see its actions, which on an iPhone come from a
   long press. It sends a real nudge in the mockup, so the card and history update.
@@ -291,7 +297,7 @@ the left, and the iPhone SE's Home button is on the right.
     system's **Stop**. Snooze returns to the app, and the nudge card says when it rings again.
     Where and how iOS draws this alert in landscape is an approximation, still to confirm on a
     device.
-  - **The notification** is a Time Sensitive banner at the top center. Tap it to see **Done**,
+  - **The notification** is a banner at the top center. Tap it to see **Done**,
     **Snooze** and **Dismiss**, which on an iPhone come from a long press.
   - The banners are about as wide as the screen in portrait. At the accessibility sizes the alarm
     scrolls rather than clip.

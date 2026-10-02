@@ -31,7 +31,8 @@ The earlier brief was never committed, so this list is the only record of it.
 
 | | iOS 18 | iOS 26 | iOS 27 |
 |---|---|---|---|
-| Normal and High nudges | Time Sensitive notification | Same | Same |
+| Normal nudges | Notification (`.active`), held by a Focus | Same | Same |
+| High nudges | Time Sensitive notification | Same | Same |
 | Urgent nudges | Notification chain (every minute, up to 10, then the strength's interval) | AlarmKit alarm | AlarmKit alarm |
 | Alarm permission prompt | None | On first launch, after notifications | Same |
 | AlarmKit | Not available | Available (iOS and iPadOS 26.0+) | Available |
