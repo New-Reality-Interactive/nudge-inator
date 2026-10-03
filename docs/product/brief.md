@@ -136,7 +136,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
 | High | **Time Sensitive notification**, with the same actions. It gets through Focus. | Same |
 | Urgent (Firm and Relentless, from nudge 4) | **AlarmKit alarm**: a prominent system alert that rings and vibrates through silent mode and Focus, with **Snooze** and the system's **Stop**, which counts as Done | **Notification chain**: each time the occurrence enters Urgent, a Time Sensitive notification at once and then every minute, 10 in all. Then Urgent nudges follow the strength's interval. Silent mode can mute them. |
 | Urgent, with alarms not allowed | **Notification chain**, as on iOS 18 | n/a |
-| Urgent, once the system's alarm limit is reached | A Time Sensitive notification for each nudge that couldn't get an alarm | n/a |
+| Urgent, once the system's alarm limit is reached | A Time Sensitive notification (an ordinary one if Time Sensitive is off) for each nudge that couldn't get an alarm | n/a |
 
 - Gentle reminders never reach Urgent, so they never ring an alarm.
 - **During a Focus, Normal nudges wait.** A Gentle or Firm reminder's first nudges are held until it
@@ -344,8 +344,8 @@ format would have to stay compatible from version to version.
 **Risks to confirm on real devices:**
 - **How many alarms an app can schedule.** A Firm or Relentless occurrence uses many alarms (see
   the system limits in [§4](#4-how-nudges-reach-you)). AlarmKit has a limit, but Apple doesn't
-  publish it. When it's reached, the app falls back to Time Sensitive notifications for the alarms it
-  couldn't schedule, and says so (see [§4](#4-how-nudges-reach-you)).
+  publish it. When it's reached, the app falls back to notifications (Time Sensitive when allowed,
+  AD-11) for the alarms it couldn't schedule, and says so (see [§4](#4-how-nudges-reach-you)).
 - **How many notifications an app can schedule.** The limit of 64 pending local notifications per
   app is documented only on the deprecated `UILocalNotification` page: "the system keeps the
   soonest-firing 64 notifications … and discards the rest". The current UserNotifications docs
