@@ -230,6 +230,11 @@ and Assistive Access behavior lives in [Nudge Surfaces](#nudge-surfaces) and
 - **Actions:** four toggle buttons: Done, Nudging, Missed, Left. Only one can be chosen at a time,
   and tapping it again clears it.
 - **Rules:**
+  - **What each counts:** Done, Nudging (including a snoozed occurrence) and Missed count today's
+    occurrences with that status. Left counts what's still coming up today, including one that's
+    due but whose first nudge is held for quiet hours (its row reads "Coming up" with "Quiet hours:
+    first nudge at 7:00 AM"). Skipped and Paused items stay in the list but aren't counted, so the
+    counts can add up to less than the items shown.
   - **Zero:** a count of 0 can't be chosen, unless it's already chosen and drops to 0 (for example,
     after Done).
   - **Filtering:** the counts follow the tag filter. "Showing only Missed" and **Show All** appear

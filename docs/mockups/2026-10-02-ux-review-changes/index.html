@@ -1430,7 +1430,7 @@ function todayItems() {
   })).filter((it) => it.status !== "DONE_EARLIER").sort((a, b) => a.at - b.at || a.r.title.localeCompare(b.r.title));
 }
 const isOpen = (s) => s === "NUDGING" || s === "UPCOMING" || s === "DUE";
-const STATUS_LABEL = { ACKED: "Done", NUDGING: "Nudging", MISSED: "Missed", SKIPPED: "Skipped", PAUSED: "Paused", UPCOMING: "Coming up", DUE: "Due" };
+const STATUS_LABEL = { ACKED: "Done", NUDGING: "Nudging", MISSED: "Missed", SKIPPED: "Skipped", PAUSED: "Paused", UPCOMING: "Coming up", DUE: "Coming up" }; // Due but not yet nudged (held for quiet hours) still reads "Coming up" and counts as Left.
 
 /* ================= App state and navigation ================= */
 const ROOTS = { now: "Now", day: "My Day", tags: "Tags", settings: "Settings", search: "Search" };
