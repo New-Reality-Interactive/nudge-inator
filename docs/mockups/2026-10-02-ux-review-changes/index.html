@@ -1370,10 +1370,12 @@ function dayMatches(r, start, d) {
       const days = r.byday ?? [BYDAY[start.getDay()]];
       return (dayDiff(monday(start), monday(d)) / 7) % r.interval === 0 && days.includes(BYDAY[d.getDay()]);
     }
-    case "MONTHLY": return monthDiff(d) % r.interval === 0 && d.getDate() === (r.bymonthday ?? start.getDate());
-    default: return (d.getFullYear() - start.getFullYear()) % r.interval === 0 && d.getMonth() === start.getMonth() && d.getDate() === start.getDate();
+    // A day the month doesn't have (the 31st, or 29 February) falls on its last day (AD-10).
+    case "MONTHLY": return monthDiff(d) % r.interval === 0 && d.getDate() === Math.min(r.bymonthday ?? start.getDate(), lastDay(d));
+    default: return (d.getFullYear() - start.getFullYear()) % r.interval === 0 && d.getMonth() === start.getMonth() && d.getDate() === Math.min(start.getDate(), lastDay(d));
   }
 }
+function lastDay(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); }
 function timesOnDay(rem, day) {
   const start = L(rem.dtstart);
   if (!rem.rrule) return dayDiff(start, day) === 0 ? [start] : [];

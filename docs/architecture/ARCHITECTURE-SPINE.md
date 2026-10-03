@@ -176,6 +176,7 @@ graph TD
 - **Rule:**
   - **The type:** `RepeatRule` is an enum: `never`, the presets (every day, every weekday, every week, every 2 weeks, every month, every year) and `custom(frequency, interval, weekdays, timesOfDay)`.
   - **Times of day:** `timesOfDay` is a sorted, de-duplicated list of one or more local times. The first is the start's own time.
+  - **Month ends:** a monthly rule on a day the month doesn't have (29th–31st) falls on that month's last day, and a yearly rule on 29 February falls on 28 February in other years. It never skips a month or year. The form's Repeat summary and How It Nudges use the same rule.
   - **Closed set:** every value the type can hold is editable in the form. No other recurrence format is parsed or stored.
 
 ### AD-11 — Delivery channels and the "alarms unavailable" fallback

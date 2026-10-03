@@ -80,7 +80,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
 
 | Concept | Meaning |
 |---|---|
-| **Reminder** | Something to be nudged about: a title (required), optional notes (shown only in the app), any number of tags, a start time, a time zone (it follows the iPhone's time zone, the default, or stays in one chosen zone), a repeat rule (one of the form's presets, or Custom, which can repeat several times a day), a strength, a snooze length, a give-up limit and whether it ignores quiet hours. |
+| **Reminder** | Something to be nudged about: a title (required), optional notes (shown only in the app), any number of tags, a start time, a time zone (it follows the iPhone's time zone, the default, or stays in one chosen zone), a repeat rule (one of the form's presets, or Custom, which can repeat several times a day; a monthly or yearly repeat on a day a month doesn't have falls on its last day), a strength, a snooze length, a give-up limit and whether it ignores quiet hours. |
 | **Occurrence** | One time a reminder falls due. It's **coming up**, then **nudging**, then closes as **done**, **missed** or **skipped**. Each has an event history. A reminder has at most 1 open occurrence. When the next one falls due while the last is still open, the last closes as missed ("Missed: the next one took over") and the new one starts at nudge 1. |
 | **Nudge** | One alert sent while an occurrence is open: a notification or an alarm. |
 | **Strength** | Gentle, Firm or Relentless. It sets the intervals and how urgency rises (table below). |
