@@ -167,8 +167,8 @@ and **Cancel**, **Add**, **Save** and **Done** as words.
     action is implicit by tapping anywhere else." It holds only when the dialog is attached to its
     button; without a source, iOS 26 centers it and adds **Cancel**. On iOS 18 it's an action sheet
     at the bottom of the screen, with **Cancel**. Discarding a changed form asks the same way.
-  - **Not Done** appears while the reminder's latest occurrence is done, until the next one falls
-    due (for a one-off, 24 hours after Done; pausing ends it). It reopens that occurrence: the next nudge comes one interval later, at the next step, and
+  - **Not Done** appears while it applies
+    ([brief §3](../../product/brief.md#3-product-concepts), Not Done). It reopens that occurrence: the next nudge comes one interval later, at the next step, and
     the history records "Marked not done (nudging again)". The alarm's Stop counts as Done and
     can't be labelled, so this is how to take it back. Try it on "Walk the dog".
 - **First launch:** a welcome screen, then the notification permission prompt, then, on iOS 26
