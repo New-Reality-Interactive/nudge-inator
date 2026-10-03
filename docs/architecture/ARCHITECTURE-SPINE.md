@@ -76,7 +76,7 @@ graph TD
 
 - **Binds:** Occurrence, My Day counts, history, Siri, Assistive Access
 - **Prevents:** a status that's wrong because no code ran at the give-up limit or a takeover
-- **Rule:** the store holds facts only. Coming up, nudging, done, missed and skipped are computed by the engine. So is a reminder's status (Active, Paused or Completed, brief §3): Paused comes from the latest pause or resume event, and Completed from a one-off whose occurrence has closed and hasn't been reopened or given a new time. No stored column caches a status.
+- **Rule:** the store holds facts only. Coming up, nudging, done, missed and skipped are computed by the engine. So is a reminder's status (Active, Paused or Completed, brief §3): Paused comes from the latest pause or resume event and wins over Completed; Completed comes from an active one-off whose occurrence has closed and hasn't been reopened or given a new time. A Completed one-off accepts no pause. No stored column caches a status.
 
 ### AD-3 — Facts are immutable, versioned and carry their origin [ADOPTED]
 
