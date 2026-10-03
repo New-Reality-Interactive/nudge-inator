@@ -467,7 +467,7 @@ Visual only; decorative, hidden from VoiceOver.
 | Typing a tag name (Tags page, Rename Tag) | Spaces become hyphens as you type ("dog walks" becomes #dog-walks), and a leading # is dropped. Up to 30 characters, not counting a leading #; no more input is accepted. |
 | Unsaved changes, then Cancel | Confirmation: **Discard Changes** / **Keep Editing** |
 | Resuming a one-off whose time passed | Asks for a new time ("Choose a New Time"). |
-| Repeat Never with a start time that has passed | Inline error under Starts: "This time has passed. Choose a later time." **Add**/**Save** is disabled. An edit that leaves the time unchanged can still be saved. |
+| Repeat Never with a start time that has passed | Inline error under Starts: "This time has passed. Choose a later time." **Add**/**Save** is disabled. An edit to a reminder that was already a one-off, keeping its time, can still be saved; resuming one, or changing a repeat to Never, can't. |
 
 ### Settings
 

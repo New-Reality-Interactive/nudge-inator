@@ -2063,11 +2063,13 @@ const PRESETS = [
   ["biweekly", "Every 2 Weeks"], ["monthly", "Every Month"], ["yearly", "Every Year"],
 ];
 const DURATIONS = [15, 30, 60, 120, 180, 240, 480, 720, 1440, 2880, 4320, 10080];
-/* A one-off can't be saved with a start time that has passed (brief §3, Edit), unless an edit
-   leaves its time as it was. */
+/* A one-off can't be saved with a start time that has passed (brief §3, Edit). The one exception
+   is an edit to a reminder that was already a one-off and keeps its time, such as a rename. It
+   doesn't cover resuming (which needs a new time) or turning a repeat into a one-off. */
 function pastOneOff(x) {
   const r = state.sheet?.editId && remById(state.sheet.editId);
-  return x.repeat === "never" && L(x.dtstart) <= NOW && !(r && r.dtstart.slice(0, 16) === x.dtstart.slice(0, 16));
+  const keepsTime = r && !r.rrule && !state.sheet.resume && r.dtstart.slice(0, 16) === x.dtstart.slice(0, 16);
+  return x.repeat === "never" && L(x.dtstart) <= NOW && !keepsTime;
 }
 function ruleFor(x) {
   const d = L(x.dtstart);
