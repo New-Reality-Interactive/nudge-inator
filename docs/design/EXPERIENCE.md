@@ -159,7 +159,7 @@ and Assistive Access behavior lives in [Nudge Surfaces](#nudge-surfaces) and
   sizes, Done and Snooze come right after the title, before the detail lines, so they stay above
   the fold.
 - **Accessibility:** the card is three elements.
-  - A summary, title first ("Pay rent. Urgent. Nudge 3 of 20. Due 7:30 AM. Next nudge by alarm at
+  - A summary, title first ("Pay rent. High. Nudge 3 of 20. Due 7:30 AM. Next nudge by alarm at
     8:30 AM. 2 snoozes left."), with the button trait, the hint "Opens details", and the custom
     actions Done and Snooze.
   - **Done**.
