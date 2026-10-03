@@ -408,7 +408,15 @@ iOS 18, 26 and 27:
 - **Swipe actions for Done and Snooze** on nudging rows and cards, as shortcuts for their buttons.
 - **The selected tab uses the accent,** as the system draws it (see the device check above).
 
-There are no open questions.
+**Open question:**
+- **The iPhone Duo.** Apple's foldable shipped with iOS 27. It has a 7.6-inch inner screen
+  (1,878 × 2,670 pixels) and a 5.4-inch outer one, and its sizes in points aren't published. The
+  mockup leaves it out until these are decided:
+  - How much does v1 design for it? The app supports iOS 27, so it will run on the Duo either way,
+    and needs at least a layout that works there.
+  - Unfolded, it's probably regular width. Does it stay one column, like every other iPhone, or
+    take the split view planned for iPad?
+  - What happens when it folds or unfolds mid-task, and which layouts need checking at both sizes?
 
 ## 11. Questions for the architecture
 

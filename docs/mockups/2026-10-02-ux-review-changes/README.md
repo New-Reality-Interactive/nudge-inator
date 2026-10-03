@@ -337,10 +337,23 @@ These are not part of the app:
 - **First launch** shows onboarding and the permission prompts.
 - **iOS version** switches between iOS 18, 26 and 27 (see [iOS versions](#ios-versions)).
 - **Screen size** switches the phone between the screen sizes, in points, of the iPhones that run
-  iOS 18 or later, from iPhone SE (375 × 667) to iPhone 17 Pro Max (440 × 956). The iPhone XS, XS
-  Max and XR stop at iOS 18, so they're listed on their own, and choosing one locks the iOS version
-  to 18. The top of the screen matches each one: the Dynamic Island, a notch, or a Home button. The
-  phone is scaled down, never up, to fit the window.
+  the chosen iOS version, from iPhone SE (375 × 667) to the Pro Max models (440 × 956). Each size
+  names only the iPhones that run that version, from Apple's lists of iPhones compatible with
+  [iOS 26](https://support.apple.com/guide/iphone/iphone-models-compatible-with-ios-26-iphe3fa5df43/26/ios/26)
+  and [iOS 27](https://support.apple.com/guide/iphone/iphone-models-compatible-with-ios-27-iphe3fa5df43/ios):
+  - iOS 18 adds the iPhone XS, XS Max and XR, which stop at iOS 18, and leaves out the iPhones that
+    shipped with iOS 26 or later. So the iPhone Air (420 × 912) isn't there.
+  - iOS 26 adds the iPhone 17, 17 Pro, 17 Pro Max, Air and 17e.
+  - iOS 27 adds the iPhone 18 Pro and 18 Pro Max. It runs on every iPhone that iOS 26 does.
+  - Switching to a version that no iPhone of the current size runs moves to the nearest size, and
+    the note under the control says so.
+  - The 17e and 18 Pro Max sizes come from Apple's pixel resolutions at 3×; the 18 Pro is assumed to
+    match the 17 Pro (402 × 874). The **iPhone Duo**, a foldable, is left out: its sizes in points
+    aren't published, and it raises its own questions (see the
+    [brief, §10](../../product/brief.md#10-risks-and-decisions)).
+
+  The top of the screen matches each one: the Dynamic Island, a notch, or a Home button. The phone
+  is scaled down, never up, to fit the window.
 - **Window (iOS 27)** shows the app in a resizable window, as in iPhone Mirroring or as an iPhone
   app on iPad, at any width from 320 to 1,024 pt (see [iOS versions](#ios-versions)). The window is
   drawn at one scale at every width, with room kept for the widest, so dragging the width moves only
@@ -797,10 +810,12 @@ is in `docs/apple/design/`):
 - **The navigation bar has no background of its own.** Content scrolls under its glass buttons, as
   in iOS 26:
   - A **scroll edge effect**, a blur that fades the content out, keeps the buttons and title
-    legible.
+    legible. The mockup draws it as a fade into the background, without the blur: a browser can't
+    fade a blur in gradually, so it would start at a hard line. The app gets the system's effect. It shows only once content is under the bar: at rest, the first line below the bar
+    (such as Now's date in landscape) stays sharp.
   - The large title scrolls away with the content, and the **inline title** fades in once it's
     gone. The large title stays the screen's heading for VoiceOver.
-  - A gentler edge effect fades content under the floating tab bar.
+  - A gentler edge effect fades content under the floating tab bar, drawn the same way.
   - Sheets work the same way: their bar has no background, and the sheet's content scrolls under
     its glass buttons behind an edge effect. iOS 26 makes a full-height sheet opaque, so the edge
     effect fades into the sheet's own background.
@@ -827,7 +842,7 @@ The questions this mockup raised are settled in the
   done occurrence, and Export Data is a readable record, not a backup.
 - **Decided in the UX review of 2026-10-02, so the mockup shows only what the app can build on
   iOS 18, 26 and 27:**
-  1. The mockup shows iOS 18, 26 and 27, and the iOS 18-only iPhones lock it to iOS 18.
+  1. The mockup shows iOS 18, 26 and 27, with only the iPhones that run the chosen version.
   2. Each version's own look: title-case headers and dialogs from their button on iOS 26; capitals
      and bottom action sheets on iOS 18; sheet bars with no background on iOS 26.
   3. Menus instead of segmented controls at the accessibility sizes.
@@ -921,7 +936,7 @@ the 2026-10-02 UX review, apart from the AlarmKit corrections, the Normal-nudge 
   - the iOS 26 dialog shows only Delete and cancels on a tap outside it
   - swiping right snoozes, swiping left marks done, and taps still work after a swipe
   - Strength and Frequency are menus at AX2 and segmented at Large
-  - the XR locks iOS 18 and the iPhone 11 doesn't; the window works only on iOS 27
+  - the window works only on iOS 27
   - the Siri phrase includes the app's name
 - **A layout audit,** 540 checks: iOS 18, 26 and 27; the iPhone SE and the 440 pt iPhone; portrait
   and landscape; Large and AX5; Bold Text off and on; ten screens (Now, My Day filtered, Tags with
@@ -941,6 +956,16 @@ the 2026-10-02 UX review, apart from the AlarmKit corrections, the Normal-nudge 
   At AX5 on the iPhone SE, Cancel wraps under the field and stays on screen. The nine steps, the 31
   assertions, the layout audit, axe-core and the contrast audit above were run again after this
   change, with the same results.
+- **The Screen size list,** 11 assertions, all passing: each version lists only its iPhones (the
+  XS, XS Max and XR on iOS 18 only; the 17 series, Air and 17e from iOS 26; the 18 Pro and 18 Pro
+  Max on iOS 27; no Duo); the Air on iOS 18 moves to 414 × 896 and says why; a size that every
+  version has stays put; and the choice survives a reload.
+- **The edge effect at rest and the shrunk tab bar:** on iOS 18 and 26, on the iPhone SE, a 393 pt
+  and a 440 pt iPhone, in portrait and landscape, the edge effect is off with the content at the
+  top and on once it's scrolled; sheets in landscape leave 20 pt between the bar and the first row.
+  The shrunk tab bar shows the current tab and the Search circle. The edge effects are a fade
+  with no blur, so none of them starts at a hard line: checked by eye above the tab bar on the
+  iPhone SE in landscape, where a card crosses it.
 - **Screenshots checked by eye:** iOS 18's bars, tab bar (portrait and landscape), sheet and
   action sheet; iOS 26's dialogs growing from their buttons and its sheet bar; the notification and
   the iOS 18 chain; tokens; menus at AX3; a swipe; and windows 420 and 900 pt wide.

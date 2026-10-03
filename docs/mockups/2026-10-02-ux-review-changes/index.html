@@ -355,17 +355,23 @@ svg { flex: none; }
 
 /* ============ Navigation bar and tab bar ============ */
 /* Liquid Glass (HIG, Materials): the navigation bar has no background of its own. Its glass
-   buttons float over the content, which scrolls under them. A scroll edge effect (a blur that
-   fades the content out) keeps the bar legible, and the large title scrolls away with the content;
-   once it's gone, the inline title appears in the bar. Reduce Transparency makes the edge solid. */
+   buttons float over the content, which scrolls under them. A scroll edge effect keeps the bar
+   legible, and the large title scrolls away with the content; once it's gone, the inline title
+   appears in the bar. Reduce Transparency makes the edge solid.
+   iOS's edge effect is a blur that fades in gradually. A browser can't fade a backdrop blur (a mask
+   doesn't reach it, so the blur starts at a hard line), so the mockup draws the effect as a fade
+   into the background color only. */
 .navbar { display: contents; }
 #main .navrow { position: sticky; top: 0; z-index: 4; }
-#main .navrow::before { content: ""; position: absolute; inset: 0 0 -18px; z-index: -1; pointer-events: none; background: linear-gradient(var(--system-grouped-background) 55%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); -webkit-mask-image: linear-gradient(#000 60%, transparent); mask-image: linear-gradient(#000 60%, transparent); }
+#main .navrow::before { content: ""; position: absolute; inset: 0 0 -18px; z-index: -1; pointer-events: none; background: linear-gradient(var(--system-grouped-background) 55%, transparent); -webkit-mask-image: linear-gradient(#000 60%, transparent); mask-image: linear-gradient(#000 60%, transparent); }
 :root[data-transparency="reduce"] #main .navrow::before { inset: 0; background: var(--system-grouped-background); -webkit-backdrop-filter: none; backdrop-filter: none; -webkit-mask-image: none; mask-image: none; }
+/* The edge effect reaches a little below the bar, so it shows only once content is under the bar.
+   At rest the content below the bar stays sharp, as on iOS. */
+#main:not(.under) .navrow::before { opacity: 0; }
 .inline-title { opacity: 0; }
 #main.scrolled .inline-title { opacity: 1; }
 /* The same effect at the bottom edge, under the floating tab bar. */
-.tabbar::before { content: ""; position: absolute; left: -21px; right: -21px; bottom: -22px; height: 110px; z-index: -1; pointer-events: none; background: linear-gradient(transparent, color-mix(in srgb, var(--system-grouped-background) 70%, transparent)); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); -webkit-mask-image: linear-gradient(transparent, #000 55%); mask-image: linear-gradient(transparent, #000 55%); }
+.tabbar::before { content: ""; position: absolute; left: -21px; right: -21px; bottom: -22px; height: 110px; z-index: -1; pointer-events: none; background: linear-gradient(transparent, color-mix(in srgb, var(--system-grouped-background) 70%, transparent)); -webkit-mask-image: linear-gradient(transparent, #000 55%); mask-image: linear-gradient(transparent, #000 55%); }
 :root[data-transparency="reduce"] .tabbar::before { background: linear-gradient(transparent, var(--system-grouped-background) 45%); -webkit-backdrop-filter: none; backdrop-filter: none; -webkit-mask-image: none; mask-image: none; }
 .navrow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; min-height: 52px; padding: 4px 16px; }
 .navrow > :first-child { justify-self: start; }
@@ -780,7 +786,8 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
    the leading edge, with Search at the trailing edge. Its title stays for VoiceOver. */
 .device[data-orient="landscape"] .tabbar.min { justify-content: space-between; }
 .tabbar.min .tabgroup { padding: 0; border-radius: 50%; }
-.tabbar.min .tab:not([aria-current]) { display: none; }
+/* Only the tabs in the group hide; the Search circle beside it stays. */
+.tabbar.min .tabgroup .tab:not([aria-current]) { display: none; }
 .tabbar.min .tab[aria-current] { width: 50px; height: 50px; padding: 0; justify-content: center; background: none; }
 .tabbar.min .tab[aria-current] > span:not(.badge) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 /* A title with a subtitle under it (My Day's date, in landscape). Both are fixed-size, like the bar. */
@@ -838,10 +845,10 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
    the sheet's content, which scrolls under them behind a scroll edge effect. Reduce Transparency
    makes the edge solid. */
 :root:not([data-ios="18"]) .sheet .navrow { position: absolute; top: 0; left: 0; right: 0; z-index: 4; background: none; }
-:root:not([data-ios="18"]) .sheet .navrow::before { content: ""; position: absolute; inset: 0 0 -18px; z-index: -1; pointer-events: none; background: linear-gradient(var(--system-grouped-background) 55%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); -webkit-mask-image: linear-gradient(#000 60%, transparent); mask-image: linear-gradient(#000 60%, transparent); }
+:root:not([data-ios="18"]) .sheet .navrow::before { content: ""; position: absolute; inset: 0 0 -18px; z-index: -1; pointer-events: none; background: linear-gradient(var(--system-grouped-background) 55%, transparent); -webkit-mask-image: linear-gradient(#000 60%, transparent); mask-image: linear-gradient(#000 60%, transparent); }
 :root:not([data-ios="18"])[data-transparency="reduce"] .sheet .navrow::before { inset: 0; background: var(--system-grouped-background); -webkit-backdrop-filter: none; backdrop-filter: none; -webkit-mask-image: none; mask-image: none; }
 :root:not([data-ios="18"]) .sheet .navrow + .sheet-body { padding-top: 84px; }
-:root:not([data-ios="18"]) .device[data-orient="landscape"] .sheet .navrow + .sheet-body { padding-top: 64px; }
+:root:not([data-ios="18"]) .device[data-orient="landscape"] .sheet .navrow + .sheet-body { padding-top: 72px; }
 /* ============ iOS 18 ============
    The same system components, drawn as iOS 18 draws them, without Liquid Glass:
    - The navigation bar is clear at the top of the content. It takes the bar material, with a
@@ -888,7 +895,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
   .switch { transition: background 0.2s; }
   .switch::after { transition: left 0.2s; }
   .hud { transition: opacity 0.2s, transform 0.2s; }
-  .inline-title { transition: opacity 0.15s; }
+  .inline-title, #main .navrow::before { transition: opacity 0.15s; }
   .swipe:not(.dragging) .swipe-row { transition: transform 0.25s; }
 }
 /* On a phone, the app fills the screen and the controls follow it. */
@@ -948,7 +955,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <p class="why" id="c-ios-why"></p>
       <label for="c-device">Screen size (points)</label>
       <select id="c-device"></select>
-      <p class="why">Screen sizes of the iPhones that run iOS 18 or later.</p>
+      <p class="why" id="c-device-why"></p>
       <fieldset class="sub">
         <legend>Orientation</legend>
         <label><input type="radio" name="c-orient" value="portrait" checked> Portrait</label>
@@ -1451,8 +1458,8 @@ function backButton(back) {
    locked-phone screen is always portrait. On a phone the app fills the real screen, so the control
    is off. */
 const narrow = window.matchMedia("(max-width: 760px)");
-/* The iOS version the mockup shows. The iPhone XS, XS Max and XR stop at iOS 18. */
-const osVersion = () => Math.min(prefs.ios, device.maxIos ?? 27);
+/* The iOS version the mockup shows. The Screen size control lists only the iPhones that run it. */
+const osVersion = () => prefs.ios;
 /* Liquid Glass and the iOS 26 APIs the app uses: symbols for the .cancel and .confirm button roles,
    the Search tab's own circle, navigationSubtitle and tabBarMinimizeBehavior. iOS 18 draws the same
    system components its own way. */
@@ -2952,11 +2959,8 @@ function updateControls() {
   document.getElementById("c-alarm").textContent = hasAlarmKit() ? "Next Urgent nudge: alarm" : "Next Urgent nudge: notification chain";
   document.getElementById("c-notif-why").textContent = notifWhy(n);
   document.getElementById("c-alarm-why").textContent = alarmWhy(a);
-  // The iOS version, which the iOS 18-only iPhones lock.
-  const ios = document.getElementById("c-ios"), locked = device.maxIos === 18;
-  ios.value = String(osVersion());
-  ios.disabled = locked;
-  document.getElementById("c-ios-why").textContent = locked ? `The ${device.name.replace(" (iOS 18 only)", "")} stops at iOS 18.` : IOS_WHY[osVersion()];
+  document.getElementById("c-ios").value = String(osVersion());
+  document.getElementById("c-ios-why").textContent = IOS_WHY[osVersion()];
   document.getElementById("c-perm-a").disabled = !hasAlarmKit();
   // iOS 27's resizable window.
   const can = osVersion() >= 27 && !narrow.matches;
@@ -3265,7 +3269,7 @@ document.getElementById("c-type").addEventListener("change", (e) => { if (e.targ
 document.getElementById("c-ios").addEventListener("change", (e) => {
   prefs.ios = Number(e.target.value);
   try { localStorage.setItem("nat-mockup3-ios", e.target.value); } catch (err) { /* storage unavailable */ }
-  setDevice(device.id); state.keepScroll = true; render();
+  fillDevices(); setDevice(device.id); state.keepScroll = true; render();
 });
 document.getElementById("c-window").addEventListener("change", (e) => { prefs.window = e.target.checked; setDevice(device.id); state.keepScroll = true; render(); });
 document.getElementById("c-window-w").addEventListener("input", (e) => {
@@ -3303,24 +3307,45 @@ followSetting("(prefers-reduced-transparency: reduce)", "c-transparency", "trans
 /* Screen sizes, in points, of the iPhones that run iOS 18 or later. "cut" is what sits at the top of the
    screen: the Dynamic Island, a notch, or nothing (iPhone SE, which has a Home button). "safe" is the
    safe-area inset on each side in landscape, roughly that of the first model named: it clears the
-   Dynamic Island or notch on one side and is mirrored on the other. "maxIos" marks the iPhones that
-   stop at iOS 18: they share their sizes with later models, so they're listed on their own. */
+   Dynamic Island or notch on one side and is mirrored on the other.
+   "models" are the iPhones of that size, each with the first and last iOS version it runs (from
+   Apple's lists of iPhones compatible with iOS 26 and iOS 27). The XS, XS Max and XR stop at iOS 18;
+   the 17 series, Air and 17e start at iOS 26; the 18 Pro and 18 Pro Max start at iOS 27. The 17e
+   and 18 Pro Max sizes come from Apple's pixel resolutions at 3x; the 18 Pro is assumed to match the
+   17 Pro. The iPhone Duo is left out until its sizes are known (see the brief, §10). */
 const DEVICES = [
-  { id: "se", w: 375, h: 667, cut: "none", name: "iPhone SE (2nd and 3rd generation)", safe: 0 },
-  { id: "xs", w: 375, h: 812, cut: "notch", name: "iPhone XS (iOS 18 only)", notch: 162, safe: 44, maxIos: 18 },
-  { id: "mini", w: 375, h: 812, cut: "notch", name: "iPhone 11 Pro, 12 mini, 13 mini", notch: 162, safe: 44 },
-  { id: "6.1n", w: 390, h: 844, cut: "notch", name: "iPhone 12, 12 Pro, 13, 13 Pro, 14, 16e", notch: 162, safe: 47 },
-  { id: "6.1", w: 393, h: 852, cut: "island", name: "iPhone 14 Pro, 15, 15 Pro, 16", safe: 59 },
-  { id: "6.3", w: 402, h: 874, cut: "island", name: "iPhone 16 Pro, 17, 17 Pro", safe: 62 },
-  { id: "xr", w: 414, h: 896, cut: "notch", name: "iPhone XR, XS Max (iOS 18 only)", notch: 210, safe: 48, maxIos: 18 },
-  { id: "11", w: 414, h: 896, cut: "notch", name: "iPhone 11, 11 Pro Max", notch: 210, safe: 48 },
-  { id: "air", w: 420, h: 912, cut: "island", name: "iPhone Air", safe: 62 },
-  { id: "6.7n", w: 428, h: 926, cut: "notch", name: "iPhone 12 Pro Max, 13 Pro Max, 14 Plus", notch: 162, safe: 47 },
-  { id: "6.7", w: 430, h: 932, cut: "island", name: "iPhone 14 Pro Max, 15 Plus, 15 Pro Max, 16 Plus", safe: 59 },
-  { id: "6.9", w: 440, h: 956, cut: "island", name: "iPhone 16 Pro Max, 17 Pro Max", safe: 62 },
+  { id: "se", w: 375, h: 667, cut: "none", safe: 0, models: [["iPhone SE (2nd and 3rd generation)", 18]] },
+  { id: "mini", w: 375, h: 812, cut: "notch", notch: 162, safe: 44, models: [["iPhone XS", 18, 18], ["iPhone 11 Pro", 18], ["iPhone 12 mini", 18], ["iPhone 13 mini", 18]] },
+  { id: "6.1n", w: 390, h: 844, cut: "notch", notch: 162, safe: 47, models: [["iPhone 12", 18], ["iPhone 12 Pro", 18], ["iPhone 13", 18], ["iPhone 13 Pro", 18], ["iPhone 14", 18], ["iPhone 16e", 18], ["iPhone 17e", 26]] },
+  { id: "6.1", w: 393, h: 852, cut: "island", safe: 59, models: [["iPhone 14 Pro", 18], ["iPhone 15", 18], ["iPhone 15 Pro", 18], ["iPhone 16", 18]] },
+  { id: "6.3", w: 402, h: 874, cut: "island", safe: 62, models: [["iPhone 16 Pro", 18], ["iPhone 17", 26], ["iPhone 17 Pro", 26], ["iPhone 18 Pro", 27]] },
+  { id: "11", w: 414, h: 896, cut: "notch", notch: 210, safe: 48, models: [["iPhone XR", 18, 18], ["iPhone XS Max", 18, 18], ["iPhone 11", 18], ["iPhone 11 Pro Max", 18]] },
+  { id: "air", w: 420, h: 912, cut: "island", safe: 62, models: [["iPhone Air", 26]] },
+  { id: "6.7n", w: 428, h: 926, cut: "notch", notch: 162, safe: 47, models: [["iPhone 12 Pro Max", 18], ["iPhone 13 Pro Max", 18], ["iPhone 14 Plus", 18]] },
+  { id: "6.7", w: 430, h: 932, cut: "island", safe: 59, models: [["iPhone 14 Pro Max", 18], ["iPhone 15 Plus", 18], ["iPhone 15 Pro Max", 18], ["iPhone 16 Plus", 18]] },
+  { id: "6.9", w: 440, h: 956, cut: "island", safe: 62, models: [["iPhone 16 Pro Max", 18], ["iPhone 17 Pro Max", 26], ["iPhone 18 Pro Max", 27]] },
 ];
+/* The iPhones of a size that run an iOS version, as "iPhone 16 Pro, 17, 17 Pro". */
+function modelNames(d, v = osVersion()) {
+  const names = d.models.filter(([, from, to = 27]) => v >= from && v <= to).map(([n]) => n);
+  return names.map((n, i) => (i ? n.replace(/^iPhone /, "") : n)).join(", ");
+}
 const deviceSel = document.getElementById("c-device");
-deviceSel.innerHTML = DEVICES.map((d) => `<option value="${d.id}">${d.w} × ${d.h}: ${d.name}</option>`).join("");
+/* Why the screen size changed on its own, shown under the control until the next change. */
+let deviceNote = "";
+/* Lists only the sizes with an iPhone that runs the chosen iOS version. If the current size has
+   none, the nearest size that does takes its place. */
+function fillDevices() {
+  const v = osVersion(), avail = DEVICES.filter((d) => modelNames(d, v));
+  deviceSel.innerHTML = avail.map((d) => `<option value="${d.id}">${d.w} × ${d.h}: ${modelNames(d, v)}</option>`).join("");
+  deviceNote = "";
+  if (!avail.includes(device)) {
+    const was = device, near = avail.reduce((p, d) => (Math.abs(d.w - was.w) + Math.abs(d.h - was.h) < Math.abs(p.w - was.w) + Math.abs(p.h - was.h) ? d : p));
+    deviceNote = ` No ${was.w} × ${was.h} iPhone runs iOS ${v}, so it's now ${near.w} × ${near.h}.`;
+    device = near;
+  }
+  document.getElementById("c-device-why").textContent = `Screen sizes of the iPhones that run iOS ${v}.${deviceNote}`;
+}
 let device = DEVICES.find((d) => d.id === "6.1");
 function setDevice(id) {
   device = DEVICES.find((d) => d.id === id) || device;
@@ -3359,7 +3384,7 @@ function setDevice(id) {
   const scaled = s < 1 ? ` · shown at ${Math.round(Math.max(0.5, s) * 100)}%` : "";
   let orient = land ? " · landscape" : "";
   if (prefs.landscape && state.system && !state.system.unlocked && !narrow.matches) orient = " · portrait: the Lock Screen doesn't rotate";
-  const name = win ? "Resizable window (iOS 27)" : `${device.name} · iOS ${osVersion()}`;
+  const name = win ? "Resizable window (iOS 27)" : `${modelNames(device)} · iOS ${osVersion()}`;
   document.getElementById("device-label").textContent = `${name} · ${sw} × ${sh} pt${orient}${scaled}`;
   try { localStorage.setItem("nat-mockup3-device", device.id); } catch (e) { /* storage unavailable */ }
 }
@@ -3383,11 +3408,18 @@ narrow.addEventListener("change", () => { syncOrientControl(); state.keepScroll 
 syncOrientControl();
 try { prefs.landscape = localStorage.getItem("nat-mockup3-orient") === "landscape"; } catch (e) { /* storage unavailable */ }
 document.querySelectorAll('[name="c-orient"]').forEach((r) => { r.checked = r.value === (prefs.landscape ? "landscape" : "portrait"); });
-deviceSel.addEventListener("change", () => { setDevice(deviceSel.value); state.keepScroll = true; render(); });
+deviceSel.addEventListener("change", () => {
+  setDevice(deviceSel.value);
+  document.getElementById("c-device-why").textContent = `Screen sizes of the iPhones that run iOS ${osVersion()}.`;
+  state.keepScroll = true; render();
+});
 window.addEventListener("resize", () => setDevice(device.id));
 let savedDevice = null;
 try { savedDevice = localStorage.getItem("nat-mockup3-device"); prefs.ios = Number(localStorage.getItem("nat-mockup3-ios")) || 26; } catch (e) { /* storage unavailable */ }
-setDevice(savedDevice || device.id);
+// An iPhone saved before the list changed may be gone; the default stays then.
+device = DEVICES.find((d) => d.id === savedDevice) || device;
+fillDevices();
+setDevice(device.id);
 
 state.focus = null;
 render();
