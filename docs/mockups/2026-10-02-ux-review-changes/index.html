@@ -1979,7 +1979,8 @@ function latestDone(r) {
   if (r.status === "PAUSED" || last?.state !== "ACKED") return null;
   // A pause after Done ends the window, and resuming doesn't bring it back (brief §3).
   if (r.pausedAt && L(r.pausedAt) >= L(last.closedAt)) return null;
-  if (!r.rrule) return NOW - L(last.closedAt) < 864e5 ? last : null;
+  // A one-off: 24 hours after Done, unless it has since been given a new time (brief §3).
+  if (!r.rrule) return !r.nextOccurrenceAt && NOW - L(last.closedAt) < 864e5 ? last : null;
   return r.nextOccurrenceAt && L(r.nextOccurrenceAt) <= NOW ? null : last;
 }
 /* A reminder's tags in its details. Each one opens the Tags tab filtered by that tag. */
