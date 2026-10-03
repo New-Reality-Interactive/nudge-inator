@@ -209,7 +209,7 @@ graph TD
 - **Binds:** engine plan for Urgent when alarms are unavailable
 - **Prevents:** duplicate notifications in one minute and nudge counts that differ by OS
 - **Rule:**
-  - **When a chain starts:** when an occurrence enters or re-enters Urgent: its first Urgent nudge, the end of quiet hours, the end of a snooze, and Not Done (except Not Done past the give-up limit, whose one extra nudge is a single notification, AD-4).
+  - **When a chain starts:** each time an occurrence enters or re-enters Urgent, as listed in brief §4 (the one list, including its exception for the extra nudge after Not Done at the limit, AD-4).
   - **What it sends:** a `.timeSensitive` notification at once and every minute after, 10 in all. It ends early on Done, Snooze or the start of quiet hours.
   - **Nudges inside it:** the strength's Urgent nudges that fall inside a running chain still count on schedule but aren't sent separately. The chain notification at that minute shows the current nudge number.
   - **Limits:** chain repeats don't count toward the nudge limit, but their time counts toward the time limit.

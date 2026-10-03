@@ -280,8 +280,8 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
   the time, and the body under them. "Time Sensitive" heads High and Urgent nudges. There's no row
   with the app's name in capitals: with a title, the icon says which app it is. The layout is an
   approximation, to compare with a screenshot from a device.
-- **On iOS 18, Urgent nudges come as a chain.** Each time an occurrence enters Urgent (its first
-  Urgent nudge, the end of quiet hours or of a snooze, and Not Done), a Time Sensitive
+- **On iOS 18, Urgent nudges come as a chain.** Each time an occurrence enters Urgent ([brief §4](../../product/brief.md#4-how-nudges-reach-you)
+  lists when), a Time Sensitive
   notification comes at once and then every minute, 10 in all, until **Done** or **Snooze**. The strength's
   Urgent nudges inside a chain still count, but aren't sent separately (brief §4). Silent mode can mute
   them. There's no alarm permission, no Alarms row in Settings, and onboarding says "Urgent nudges

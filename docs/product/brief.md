@@ -166,7 +166,8 @@ TestFlight. It's released on the App Store once the success measures are met (se
   after that, or at once when Not Done is used. Stopping the alarm on a paired Watch does the same.
 - **The notification chain** (iOS 18, and whenever alarms aren't allowed) starts each time an
   occurrence enters Urgent: its first Urgent nudge, the end of quiet hours, the end of a snooze, and
-  Not Done. It sends a Time Sensitive notification at once and then every minute, 10 in all.
+  Not Done, except Not Done after the give-up limit, whose one extra nudge is a single notification
+  ([§3](#3-product-concepts)). This is the one list of when a chain starts. It sends a Time Sensitive notification at once and then every minute, 10 in all.
   - The strength's Urgent nudges that fall inside a chain still count on schedule, so the nudge
     count and the give-up time are the same as with alarms. They aren't sent as extra
     notifications: the chain's notification for that minute shows the current nudge number.
@@ -525,7 +526,7 @@ iOS 18, 26 and 27:
   gone, since nothing on the device can create one. Custom can repeat several times a day.
 - **With alarms not allowed, Urgent nudges come as the notification chain,** as on iOS 18. Only a
   nudge past the system's alarm limit comes as a single Time Sensitive notification.
-- **The chain starts each time an occurrence enters Urgent,** and covers the Urgent nudges inside
+- **The chain starts each time an occurrence enters Urgent** ([§4](#4-how-nudges-reach-you) lists when), and covers the Urgent nudges inside
   it (see [§4](#4-how-nudges-reach-you)).
 - **Done and Snooze work from the Lock Screen without Face ID,** as Stop does on an alarm.
 - **Filters on My Day and the Tags tab survive iOS closing the app in the background,** and reset
