@@ -1,5 +1,11 @@
 # Spine Pair Review — Nudge-inator
 
+> **Historical.** This review ran on 2026-10-03, before its findings were applied. The findings
+> were applied to DESIGN.md and EXPERIENCE.md the same day (see [.memlog.md](.memlog.md), "Review
+> findings applied"), and the mockup was brought in line afterwards. Read the spines for current
+> behavior; this file records why they changed. The critical and high findings are
+> tracked in [validation-report.md › Resolution status](validation-report.md#resolution-status).
+
 Reviewed 2026-10-03: `DESIGN.md` and `EXPERIENCE.md` (both updated 2026-10-03). Checked against
 `docs/product/brief.md`, `docs/product/addendum.md`, the mockup (`index.html` was searched, not read
 in full, plus `README.md`) and `docs/design/.memlog.md`. Line numbers are from the files as reviewed.

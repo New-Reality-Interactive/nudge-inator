@@ -1,5 +1,11 @@
 # Validation Report — Nudge-inator
 
+> **Historical.** This review ran on 2026-10-03, before its findings were applied. The findings
+> were applied to DESIGN.md and EXPERIENCE.md the same day (see [.memlog.md](.memlog.md), "Review
+> findings applied"), and the mockup was brought in line afterwards. Read the spines for current
+> behavior; this file records why they changed. The table under
+> [Resolution status](#resolution-status) gives each critical and high finding's status.
+
 - **DESIGN.md:** docs/design/DESIGN.md
 - **EXPERIENCE.md:** docs/design/EXPERIENCE.md
 - **Run at:** 2026-10-03
@@ -9,6 +15,27 @@
 The pair is close to a usable contract. Both files follow the required section order, all 37 `{token}` references resolve, the color system is fully specified with light, dark and Increased Contrast values, and the state table is unusually thorough. It doesn't yet extract cleanly, for four reasons: two of Rosa's flows contradicted the brief §3 strength tables and her own schedule; component names differ between the two files, and the core custom component (How It Nudges) has no visual spec; two nudge surfaces and states that the brief requires are missing; and the iPhone-only decision is tagged as an assumption, without the decision log that backs it. About 10 targeted edits would fix all of the rubric's high findings, and none of them needs a redesign. One of them, Flow 2's timings, was already fixed before this synthesis: Flow 2 now says 8:17 AM.
 
 The accessibility review changes that picture. The rubric found nothing critical; the accessibility reviewer found one critical defect in the product behavior the spines describe, not just in how they are written. The alarm's system **Stop** silently counts as Done. For Rosa's blood-pressure pill that is a missed dose the app records as taken, and the only recovery is a Not Done button she has to remember to go and find. The reviewer adds six highs that bear on the same audience: no in-place undo for Done, no Not Done in Assistive Access, a fixed snooze budget nobody can extend, High and Urgent that look alike to color-blind users, two different "Done"s told apart by hue, and VoiceOver focus that lands on the next destructive Done button. So the spines are structurally close, but they are not ready to build from until Done is made reversible where the person already is. Four of the seven Nutrition Labels the README claims (VoiceOver, Voice Control, Differentiate Without Color Alone, Sufficient Contrast) are only partly supported as specified.
+
+## Resolution status
+
+| Finding | Status | Where it's resolved |
+|---|---|---|
+| **Critical:** the alarm's Stop silently counts as Done | Resolved | Done follow-up notification with Not Done; rows read "Done (alarm stopped)" with Not Done; Assistive Access "Done today" (EXPERIENCE › Nudge Surfaces, Reminder row, Assistive Access) |
+| Flow 2's timings | Resolved before synthesis | EXPERIENCE › Key Flows, Flow 2 |
+| Rosa's schedule doesn't add up | Resolved | Flows rewritten (Morning 8:00, Evening 9:45 PM with Ignore Quiet Hours) |
+| Same component, different names | Resolved | Canonical names in both spines |
+| How It Nudges and History have no spec | Resolved | EXPERIENCE › How It Nudges, History; DESIGN › Components |
+| Top-up notification and alarm-limit fallback missing | Resolved | Keep-nudging notice; alarm-limit Via label (wording still an owner assumption) |
+| iPhone-only tagged as an assumption | Resolved | EXPERIENCE › Foundation states it as the owner's decision |
+| Done has no in-place undo | Resolved in the spines | Undo in the status message; no full swipe. Not drawn in the mockup yet |
+| Assistive Access has no Not Done | Resolved in the spines | "Done today" with Not done yet. Not drawn in the mockup yet |
+| Snooze budget is fixed | Partly resolved | Snooze length per reminder (default or longer); the 3-snooze cap is kept on purpose |
+| High and Urgent look alike | Resolved in the spines | Urgency word and glyph in the card's top row. Not drawn in the mockup yet |
+| Two kinds of "Done" told apart by hue | Resolved | Status label leads with a glyph and the words differ ("Done (alarm stopped)") |
+| VoiceOver focus lands on the next Done | Resolved | Focus moves to the next card's summary (EXPERIENCE › Accessibility); mockup matches |
+| Nutrition Labels only partly supported (VoiceOver, Voice Control, Differentiate Without Color Alone, Sufficient Contrast) | Specified; declaring waits for the release gate | EXPERIENCE › Accessibility Floor release gate, and brief §10 › Device checklist |
+
+For the medium and low findings, the memlog's "Review findings applied" entry lists what changed.
 
 ## Category verdicts
 
