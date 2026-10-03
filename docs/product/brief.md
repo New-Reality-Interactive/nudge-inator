@@ -3,7 +3,7 @@ title: "Product Brief: Nudge-inator"
 status: draft
 created: 2026-09-29
 updated: 2026-10-02
-source: docs/mockups/2026-09-30-mockup-tags (index.html and README.md)
+source: docs/mockups/2026-10-02-ux-review-changes (index.html and README.md)
 ---
 
 # Product Brief: Nudge-inator
@@ -11,8 +11,8 @@ source: docs/mockups/2026-09-30-mockup-tags (index.html and README.md)
 Nudge-inator is a reminders app for **iPhone and iPad**, built for iOS and iPadOS only, that keeps
 nudging until you tap **Done**.
 
-The [tags mockup](../mockups/2026-09-30-mockup-tags/index.html) is the visual reference for the app.
-Its [README](../mockups/2026-09-30-mockup-tags/README.md) explains the reasons behind it and how it
+The [tags mockup](../mockups/2026-10-02-ux-review-changes/index.html) is the visual reference for the app.
+Its [README](../mockups/2026-10-02-ux-review-changes/README.md) explains the reasons behind it and how it
 was checked against Apple's Human Interface Guidelines. The app looks and behaves like the mockup.
 It shows an iPhone in portrait and landscape. The app differs only where something the mockup
 doesn't show needs a different choice: iPad, and iOS 18's system appearance (see
