@@ -3064,7 +3064,7 @@ const CLICK = {
   new: () => openEditor(),
   back: () => pop(),
   open: (v) => { rememberSearch(); push({ kind: "rem", id: v }); },
-  ack: (v) => { ack(v); refresh(nextFocusAfterAck()); },
+  ack: (v) => { const focus = nextFocusAfterAck(v); ack(v); refresh(focus); },
   snooze: (v) => { snooze(v); refresh(() => main.querySelector(`[data-snooze="${v}"]`) || main.querySelector(`[data-ack="${v}"]`)); },
   pause: (v) => { pause(v); refresh(`[data-resume="${v}"]`); },
   undone: (v) => { reopen(v); refresh(`[data-ack="${v}"]`); },
@@ -3156,10 +3156,19 @@ document.addEventListener("click", (e) => {
   pressed = t;
   if (key) CLICK[key](t.dataset[key]);
 });
-/* After Done the card goes away, so focus moves to the next card's summary (its title), or the
-   heading. It never lands on another Done button, so a second double-tap can't close another one. */
-function nextFocusAfterAck() {
-  return () => main.querySelector(".nudgecard [data-open]") || main.querySelector("h1");
+/* After Done the card goes away, so focus moves to the summary (title) of the card that takes its
+   place, or of the one before it if it was last, or to the heading. On My Day the row stays, so focus
+   goes to its title. It never lands on a Done button, so a second double-tap can't close another
+   one. Call it before the card is removed. */
+function nextFocusAfterAck(occId) {
+  const h1 = () => main.querySelector("h1");
+  const card = occId && main.querySelector(`.nudgecard [data-ack="${occId}"]`)?.closest(".nudgecard");
+  if (!card) {
+    const rid = occId && occurrences.find((o) => o.id === occId)?.reminderId;
+    return () => (rid && main.querySelector(`[data-open="${rid}"]`)) || h1();
+  }
+  const i = [...main.querySelectorAll(".nudgecard")].indexOf(card);
+  return () => { const titles = main.querySelectorAll(".nudgecard [data-open]"); return titles[i] || titles[i - 1] || h1(); };
 }
 
 /* Re-render, then put the caret back at the end of the field being typed in. */
