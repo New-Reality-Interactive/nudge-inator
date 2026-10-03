@@ -2371,7 +2371,7 @@ function onboardSheet() {
     <h2 class="welcome-title" id="sheet-title" tabindex="-1">Welcome to Nudge-inator</h2>
     ${f("bell", "Nudges until you're done", "Reminders keep coming back, more often and more insistently, until you tap Done.")}
     ${hasAlarmKit() ? f("alarm", "Urgent nudges ring as alarms", "When it really matters, your iPhone rings and vibrates like an alarm, even on silent. Stopping the alarm counts as Done.")
-      : f("bell", "Urgent nudges keep coming", "When it really matters, a nudge comes every minute, up to 10 times, and keeps coming after that until you tap Done.")}
+      : f("bell", "Urgent nudges keep coming", "When it really matters, a nudge comes every minute, up to 10 times, then keeps nudging until you tap Done or it reaches its give-up limit.")}
     ${f("moon.fill", "Quiet overnight", "Nudges wait until your quiet hours end, and nothing gives up overnight.")}
     ${f("lock", "Stays on your iPhone", "No account and no server. Your reminders stay on this iPhone and in your own backups.")}
     <button type="button" class="btn prominent" style="width:100%;margin-top:14px;padding:14px" data-onboard-next>Continue</button>
