@@ -401,7 +401,7 @@ Visual only; decorative, hidden from VoiceOver.
 | Quiet hours on | The chip reads "· on now". Coming Up rows due in quiet hours say "Quiet hours: first nudge at 7:00 AM". |
 | Quiet hours turned off | No chip |
 | A nudge starts while the app is open | The card appears, and VoiceOver makes one queued announcement ("Pay rent is nudging"). Focus doesn't move. A nudge count going up isn't announced. |
-| A card closes while the app is open (Done from a notification, the give-up limit, the next occurrence taking over) | The card leaves. If it had VoiceOver focus, focus moves to the next card's summary, or to the Nudging header, with an announcement of why ("Pay rent was marked done"). |
+| A card closes while the app is open (Done from a notification, the give-up limit, the next occurrence taking over) | The card leaves. If it had VoiceOver focus, focus follows the rule in [Interaction Primitives › Done is the climax](#interaction-primitives), with an announcement of why ("Pay rent was marked done"). |
 | Opened from a notification | Scrolled to that occurrence's card, with VoiceOver focus on its summary |
 | Notifications off, alarms on, iOS 26+ (also Settings) | Red banner: "Notifications are off. Only Urgent nudges can reach you, as alarms. Gentle reminders can't reach you at all." Cards mark the nudges that can't arrive. |
 | Notifications off, with alarms off or on iOS 18 (also Settings) | Red banner: "Notifications are off. Nudges can't reach you." Cards mark the nudges that can't arrive. |
@@ -527,8 +527,10 @@ section covers what the person sees and can do on each.
      "Done 8:22 AM".
   3. The status message says "Done: Pay rent. Nudging stopped." (or, for a reminder with alarms,
      "Done: Pay rent. Its alarms are cancelled."), with **Undo**.
-  4. VoiceOver focus moves to the next card's summary, or to the Nudging header if none is left. It
-     never lands on another Done button.
+  4. VoiceOver focus moves to the title of the item now at the same position in that list (a
+     nudge card's summary, a My Day row, or an Assistive Access card), or to the one before it if it
+     was last, or to that section's header if none is left. It never lands on a Done button. This is
+     the one focus rule for an item that leaves or changes after Done.
 
   VoiceOver makes one announcement, the status message, posted with the layout change. There's no
   custom animation.

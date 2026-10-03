@@ -3076,7 +3076,7 @@ const CLICK = {
   new: () => openEditor(),
   back: () => pop(),
   open: (v) => { rememberSearch(); push({ kind: "rem", id: v }); },
-  ack: (v, el) => { const focus = nextFocusAfterAck(v); ack(v, el?.dataset.src); refresh(focus); },
+  ack: (v, el) => { const focus = nextFocusAfterAck(v, el); ack(v, el?.dataset.src); refresh(focus); },
   snooze: (v) => { snooze(v); refresh(() => main.querySelector(`[data-snooze="${v}"]`) || main.querySelector(`[data-ack="${v}"]`)); },
   pause: (v) => { pause(v); refresh(`[data-resume="${v}"]`); },
   undone: (v) => { reopen(v); refresh(`[data-ack="${v}"]`); },
@@ -3168,19 +3168,24 @@ document.addEventListener("click", (e) => {
   pressed = t;
   if (key) CLICK[key](t.dataset[key], t);
 });
-/* After Done the card goes away, so focus moves to the summary (title) of the card that takes its
-   place, or of the one before it if it was last, or to the heading. On My Day the row stays, so focus
-   goes to its title. It never lands on a Done button, so a second double-tap can't close another
-   one. Call it before the card is removed. */
-function nextFocusAfterAck(occId) {
+/* Focus after Done (EXPERIENCE › Interaction Primitives, Done is the climax): the title of the item
+   now at the same position in that list, else the one before it, else the section's header. Never a
+   Done button. Call it before the item is removed; it works by position, so a reminder with several
+   rows today keeps focus on the right one. */
+function nextFocusAfterAck(occId, el) {
+  const sw = el?.closest(".swipe");
+  const item = sw?.querySelector(".nudgecard") || el?.closest(".nudgecard, .aa-card, li")
+    || main.querySelector(`.nudgecard [data-ack="${occId}"]`)?.closest(".nudgecard");
   const h1 = () => main.querySelector("h1");
-  const card = occId && main.querySelector(`.nudgecard [data-ack="${occId}"]`)?.closest(".nudgecard");
-  if (!card) {
-    const rid = occId && occurrences.find((o) => o.id === occId)?.reminderId;
-    return () => (rid && main.querySelector(`[data-open="${rid}"]`)) || h1();
-  }
-  const i = [...main.querySelectorAll(".nudgecard")].indexOf(card);
-  return () => { const titles = main.querySelectorAll(".nudgecard [data-open]"); return titles[i] || titles[i - 1] || h1(); };
+  if (!item) return h1;
+  const kind = item.matches(".nudgecard") ? "card" : item.matches(".aa-card") ? "aa" : "row";
+  const listIdx = kind === "row" ? [...main.querySelectorAll("ul")].indexOf(item.parentElement) : -1;
+  const pool = () => kind === "card" ? [...main.querySelectorAll(".nudgecard")] : kind === "aa" ? [...main.querySelectorAll(".aa-card")]
+    : [...(main.querySelectorAll("ul")[listIdx]?.children || [])];
+  const i = pool().indexOf(item);
+  const header = { card: "#h-nudge", aa: "#aa-now", row: null }[kind];
+  const titleOf = (x) => x.querySelector("[data-open], .aa-title");
+  return () => { const p = pool(), t = p[i] || p[i - 1]; return (t && titleOf(t)) || (header && main.querySelector(header)) || h1(); };
 }
 
 /* Re-render, then put the caret back at the end of the field being typed in. */
