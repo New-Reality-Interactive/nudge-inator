@@ -28,11 +28,13 @@ the person meets them.
   conflict, precedence runs (owner's decision, 2026-10-03, in the
   [architecture decision log](../architecture/.memlog.md)):
   1. The nudging rules in [brief §3, §4 and §10](../product/brief.md#3-product-concepts).
-  2. The owner's decisions in the [decision log](.memlog.md), then this spine and DESIGN.md, for
-     how the app looks and behaves around those rules.
-  3. The mockup.
+  2. The [architecture spine](../architecture/ARCHITECTURE-SPINE.md), for how those rules are
+     built.
+  3. This spine and DESIGN.md, for how the app looks and behaves around those rules.
+  4. The mockup, which illustrates the spines and doesn't add rules of its own.
 
-  Technical decisions are in the [architecture spine](../architecture/ARCHITECTURE-SPINE.md).
+  The [decision log](.memlog.md) records the reasons behind decisions. It doesn't rank above the
+  spines: where a log entry and the spine text differ, the spine text is current.
 - **Form factor: iPhone only in v1** (owner's decision, 2026-10-02, [decision log](.memlog.md)).
   - Portrait and landscape, on iOS 18, 26 and 27.
   - One column at every width: large iPhones in landscape, iOS 27 resizable windows, and the iPhone

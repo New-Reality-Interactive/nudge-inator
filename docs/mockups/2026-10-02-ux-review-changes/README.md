@@ -25,7 +25,9 @@ something, it says so and lists it to check on a device. iPad is for v2.
 reminder is *nudging* until you mark it done.
 
 The [product brief](../../product/brief.md) is built on this mockup. It also covers what the mockup
-doesn't show: iPad.
+doesn't show: iPad. The mockup illustrates the brief and the
+[UX spines](../../design/EXPERIENCE.md); where they differ, the brief and the spines win (the order
+is set in the [brief's introduction](../../product/brief.md)).
 
 This version follows the UX review of 2026-10-02. The version before it is archived in
 [`../archive/2026-09-30-mockup-tags-v1/`](../archive/2026-09-30-mockup-tags-v1/README.md).

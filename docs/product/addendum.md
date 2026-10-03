@@ -8,9 +8,9 @@ updated: 2026-10-03
 Detail behind the [brief](brief.md) that later documents (PRD, UX, architecture) will need, but that
 doesn't belong in the brief itself. The rules in the brief started from the tags mockup. Which
 document wins where they differ is set once, in the brief's introduction: the nudging rules in brief
-§3, §4 and §10 win, the UX spines own how the app looks and behaves around them, and the mockup
-comes last. Technical decisions are in the
-[architecture spine](../architecture/ARCHITECTURE-SPINE.md).
+§3, §4 and §10 win, then the [architecture spine](../architecture/ARCHITECTURE-SPINE.md) for how
+they're built, then the UX spines for how the app looks and behaves around them, and the mockup
+comes last.
 
 ## A. What the earlier brief had that this one drops
 

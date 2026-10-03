@@ -14,14 +14,23 @@ Nudge-inator is a reminders app for **iPhone**, built for iOS only, that keeps n
 
 The [tags mockup](../mockups/2026-10-02-ux-review-changes/index.html) is the visual reference for the app.
 Its [README](../mockups/2026-10-02-ux-review-changes/README.md) explains the reasons behind it and how it
-was checked against Apple's Human Interface Guidelines. The app looks and behaves like the mockup.
-It shows an iPhone in portrait and landscape, on iOS 18, 26 and 27, and draws only what the app can
-build with the system's components on each. The UX spines, [DESIGN.md](../design/DESIGN.md) (how it
-looks) and [EXPERIENCE.md](../design/EXPERIENCE.md) (how it works), build on the mockup and add what
-it doesn't show. Where they differ from the mockup, the spines win. The nudging rules in
-[§3](#3-product-concepts), [§4](#4-how-nudges-reach-you) and [§10](#10-risks-and-decisions) win over
-the spines and the mockup; the spines own how the app looks and behaves around those rules. The
-technical decisions are in the [architecture spine](../architecture/ARCHITECTURE-SPINE.md).
+was checked against Apple's Human Interface Guidelines. It shows an iPhone in portrait and
+landscape, on iOS 18, 26 and 27, and draws only what the app can build with the system's components
+on each. The UX spines, [DESIGN.md](../design/DESIGN.md) (how it looks) and
+[EXPERIENCE.md](../design/EXPERIENCE.md) (how it works), build on the mockup and add what it doesn't
+show.
+
+Where documents differ, precedence runs:
+
+1. The nudging rules in [§3](#3-product-concepts), [§4](#4-how-nudges-reach-you) and
+   [§10](#10-risks-and-decisions).
+2. The [architecture spine](../architecture/ARCHITECTURE-SPINE.md), for how those rules are built.
+3. The UX spines, for how the app looks and behaves around those rules.
+4. The mockup, which illustrates the spines. The app looks like the mockup, but where the mockup and
+   a spine differ, the spine wins.
+
+The decision logs (`.memlog.md` in each folder) record the reasons behind decisions and don't
+override any of these.
 
 This brief replaces the earlier website-and-API brief. Detail that doesn't belong in the brief, such
 as what was removed and why, layout notes, a localization checklist and the TestFlight setup, is in the
