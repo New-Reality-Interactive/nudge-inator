@@ -44,6 +44,8 @@ mockup yet. Build them from the spines:
 - **Got It** on permission banners
 - **Settings › How Nudges Work**
 - Assistive Access's **Done today** list with **Not done yet**
+- the alarm permission prompt on the first launch after an update from iOS 18 (the mockup doesn't
+  simulate an OS update)
 - the **keep-nudging** notice
 - the alarm-limit Via label, "Notification: too many alarms scheduled"
 
