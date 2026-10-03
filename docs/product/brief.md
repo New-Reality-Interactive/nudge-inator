@@ -136,7 +136,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
 | High | **Time Sensitive notification**, with the same actions. It gets through Focus. | Same |
 | Urgent (Firm and Relentless, from nudge 4) | **AlarmKit alarm**: a prominent system alert that rings and vibrates through silent mode and Focus, with **Snooze** and the system's **Stop**, which counts as Done | **Notification chain**: each time the occurrence enters Urgent, a Time Sensitive notification at once and then every minute, 10 in all. Then Urgent nudges follow the strength's interval. Silent mode can mute them. |
 | Urgent, with alarms not allowed | **Notification chain**, as on iOS 18 | n/a |
-| Urgent, once the system's alarm limit is reached | A Time Sensitive notification (an ordinary one if Time Sensitive is off) for each nudge that couldn't get an alarm | n/a |
+| Urgent, once the system's alarm limit is reached | A Time Sensitive notification for each nudge that couldn't get an alarm | n/a |
 
 - Gentle reminders never reach Urgent, so they never ring an alarm.
 - **During a Focus, Normal nudges wait.** A Gentle or Firm reminder's first nudges are held until it
@@ -166,8 +166,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
   after that, or at once when Not Done is used. Stopping the alarm on a paired Watch does the same.
 - **The notification chain** (iOS 18, and whenever alarms aren't allowed) starts each time an
   occurrence enters Urgent: its first Urgent nudge, the end of quiet hours, the end of a snooze, and
-  Not Done. It sends a notification at once and then every minute, 10 in all (how each one is
-  delivered, including when Time Sensitive is off, is in the architecture spine's AD-13).
+  Not Done. It sends a Time Sensitive notification at once and then every minute, 10 in all.
   - The strength's Urgent nudges that fall inside a chain still count on schedule, so the nudge
     count and the give-up time are the same as with alarms. They aren't sent as extra
     notifications: the chain's notification for that minute shows the current nudge number.
@@ -202,9 +201,11 @@ TestFlight. It's released on the App Store once the success measures are met (se
   occurrence's nudges and give-up limit run on schedule, so it closes as missed at its limit
   rather than nudging forever, and its history shows each nudge that couldn't be sent.
 - **Time Sensitive can be turned off on its own.** The person can turn it off for the app, and iOS
-  asks from time to time whether the app's Time Sensitive notifications are worth it. Then High
-  nudges, and Urgent nudges that fall back to notifications, arrive as ordinary notifications, which
-  a Focus holds. The app reads `timeSensitiveSetting` and shows a banner on Now
+  asks from time to time whether the app's Time Sensitive notifications are worth it. Then every
+  nudge that would be Time Sensitive (High nudges, the notification chain, and Urgent nudges past the
+  alarm limit) arrives as an ordinary notification, which a Focus holds. This is the one statement of
+  that rule: wherever the brief, the spines or the mockup README say a nudge is Time Sensitive, they
+  mean when Time Sensitive is on. The app reads `timeSensitiveSetting` and shows a banner on Now
   and Settings, like the other permissions.
 - **Privacy:** notifications show the title and a second line with the nudge count and urgency
   ("Nudge 3 of 20 · High"), under the app's icon. Alarms show only the title, since
@@ -344,8 +345,7 @@ format would have to stay compatible from version to version.
 **Risks to confirm on real devices:**
 - **How many alarms an app can schedule.** A Firm or Relentless occurrence uses many alarms (see
   the system limits in [§4](#4-how-nudges-reach-you)). AlarmKit has a limit, but Apple doesn't
-  publish it. When it's reached, the app falls back to notifications (Time Sensitive when allowed,
-  AD-11) for the alarms it couldn't schedule, and says so (see [§4](#4-how-nudges-reach-you)).
+  publish it. When it's reached, the app falls back to Time Sensitive notifications for the alarms it couldn't schedule, and says so (see [§4](#4-how-nudges-reach-you)).
 - **How many notifications an app can schedule.** The limit of 64 pending local notifications per
   app is documented only on the deprecated `UILocalNotification` page: "the system keeps the
   soonest-firing 64 notifications … and discards the rest". The current UserNotifications docs

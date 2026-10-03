@@ -185,10 +185,11 @@ graph TD
 - **Prevents:** iOS 18 and a denied alarm permission taking different paths, or a channel decided outside the engine
 - **Rule:**
   - **Who decides:** the engine picks each delivery's channel from `Capabilities`. The canonical fields are `notificationsAllowed`, `timeSensitiveAllowed`, `alarmsAvailable`, `alarmCapacity` and `previewsHidden`.
+  - **Time Sensitive off:** every `.timeSensitive` delivery in this spine is sent as `.active` when `timeSensitiveAllowed` is false (brief §4). This is the only place the spine states it.
   - **Normal:** an `.active` notification.
-  - **High:** a `.timeSensitive` notification, or `.active` when Time Sensitive is off.
+  - **High:** a `.timeSensitive` notification.
   - **Urgent:** an AlarmKit alarm when `alarmsAvailable`; otherwise the notification chain (AD-13). `alarmsAvailable` is false on iOS 18 and whenever AlarmKit authorization isn't `.authorized`. When AlarmKit is available and authorization is `.notDetermined` (an iPhone updated from iOS 18), the shell asks once on launch (EXPERIENCE › State Patterns › Any).
-  - **Past the alarm limit:** Urgent nudges beyond `alarmCapacity` come as one Time Sensitive notification each, or `.active` when Time Sensitive is off.
+  - **Past the alarm limit:** Urgent nudges beyond `alarmCapacity` come as one `.timeSensitive` notification each.
 
 ### AD-12 — Snooze and Stop are commands; the engine plans what follows
 
@@ -209,7 +210,7 @@ graph TD
 - **Prevents:** duplicate notifications in one minute and nudge counts that differ by OS
 - **Rule:**
   - **When a chain starts:** when an occurrence enters or re-enters Urgent: its first Urgent nudge, the end of quiet hours, the end of a snooze, and Not Done (except Not Done past the give-up limit, whose one extra nudge is a single notification, AD-4).
-  - **What it sends:** a notification at once and every minute after, 10 in all. Each is `.timeSensitive`, or `.active` when `timeSensitiveAllowed` is false (brief §4), so a Focus can hold it; the banners and Via labels say so (EXPERIENCE › Via label). It ends early on Done, Snooze or the start of quiet hours.
+  - **What it sends:** a `.timeSensitive` notification at once and every minute after, 10 in all. It ends early on Done, Snooze or the start of quiet hours.
   - **Nudges inside it:** the strength's Urgent nudges that fall inside a running chain still count on schedule but aren't sent separately. The chain notification at that minute shows the current nudge number.
   - **Limits:** chain repeats don't count toward the nudge limit, but their time counts toward the time limit.
 
