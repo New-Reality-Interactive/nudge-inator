@@ -295,7 +295,8 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
   - the title: the reminder's title
   - the secondary button: **Snooze 15 min** (the strength's length) with `clock`, filled with the
     tint color. It's left off once the occurrence has no snoozes left (see below).
-  - the tint color: the app's accent
+  - the tint color: the app's accent, in its dark variant (`#07DDE6`, with black text), since the
+    alarm is always on a dark screen
 
   The stop control is the system's own from iOS 26.1: `AlarmPresentation.Alert`'s `stopButton` is
   deprecated and ignored, so the app can't label it **Done**. The mockup shows it as **Stop**.
@@ -615,7 +616,7 @@ Colors follow Apple's Human Interface Guidelines page on
 
 | Token | Hue | Means | Used for |
 |---|---|---|---|
-| `--accent` | blue | You can tap this | Buttons, links, the selected tab, menus, checkmarks, tokens, the chosen count's ring |
+| `--accent` | teal (Lagoon) | You can tap this | Buttons, links, the selected tab, menus, checkmarks, tokens, the chosen count's ring |
 | `--negative` | red | Danger or needs you now | Nudging, Urgent, Missed, errors, Off, destructive actions |
 | `--warning` | orange | Escalating | High urgency, "starts higher" |
 | `--positive` | green | Done or on | Done, switches that are on |
@@ -632,7 +633,7 @@ Colors follow Apple's Human Interface Guidelines page on
 
 **Color sparingly on controls.** Only primary actions get a colored background: the confirm button
 in each sheet (**Add**, **Save**, **Done**) and **Done** on each nudge card. My Day's per-row
-**Done** buttons are tinted instead of filled, so a long list isn't a column of blue.
+**Done** buttons are tinted instead of filled, so a long list isn't a column of teal.
 
 **Semantic colors used as named.** Token names match the UIKit and SwiftUI colors they stand for,
 and each is used only for its purpose:
@@ -655,7 +656,11 @@ use values:
 - **Graphics** (tiles, the badge) use Apple's published values, with all four variants.
 - **Text** in a status color uses slightly darker (light mode) or lighter (dark mode) versions of
   the same hues, because several default system colors are below 4.5:1 as text.
-- The accent is the app's own color set, with light, dark and Increased Contrast values.
+- The accent is the app's own color set, **Lagoon** teal, with light, dark and Increased Contrast
+  values. It replaced a system-like blue on 2026-10-03 (see the
+  [design spine](../../design/DESIGN.md#colors) and its
+  [color study](../../design/.working/color-themes-1.html)): the blue fell short on the selected
+  tab's pill, and white text on its dark fill reached only 2.8:1.
 - **The selected tab's title is the accent.** On iOS 26 the system draws the selected tab from the
   TabView's tint, and the app can't color its label on its own: a different tint on the TabView
   would carry into every screen. So the mockup uses the accent, as the app will. Measured on the
@@ -663,19 +668,19 @@ use values:
 
   | Appearance | Accent | On the pill | Target |
   |---|---|---|---|
-  | Light | `#0064D2` | 4.5:1 or more | 4.5:1 |
-  | Light, Increase Contrast | `#0036C0` | 6.5:1 | 7:1 |
-  | Dark | `#409CFF` | 3.9:1 | 4.5:1 |
-  | Dark, Increase Contrast | `#8CC8FF` | 4.8:1 | 7:1 |
+  | Light | `#04666B` | 5.4:1 | 4.5:1 |
+  | Light, Increase Contrast | `#04474A` | 7.4:1 | 7:1 |
+  | Dark | `#07DDE6` | 6.5:1 | 4.5:1 |
+  | Dark, Increase Contrast | `#A5FAFE` | 7.2:1 | 7:1 |
 
-  Three of the four fall short on the mockup's pill. The system's pill may differ, so this is to
-  measure on a device. If it falls short there too, the fix is a lighter dark accent (and a darker
-  Increased Contrast one), which changes the accent everywhere.
+  All four pass on the mockup's pill, as measured in the color study. The system's pill may
+  differ, so this is still to measure on a device. Text on a filled accent button is white in light
+  mode and black in dark mode.
 - **Search tokens** sit on their own fill (`--token-fill`: white, or near-black in dark mode), which
   keeps their accent text at 4.5:1 or more. A selected token is filled with the accent.
 - **Swipe actions** use tile colors, which keep white text at 4.5:1: green (`--tile-green`) for
-  **Done**, the color of done, and blue (`--tile-blue`) for **Snooze**, the color of something
-  tappable.
+  **Done**, the color of done, and teal (`--tile-teal`) for **Snooze**, the tile nearest the
+  Lagoon accent, the color of something tappable.
 
 **Not color alone.** Every status has words as well as a color, such as "Nudging", "Urgent",
 "Missed" and "Done". Strength shows its name and bars. The chosen count has a fill, a ring and
@@ -948,7 +953,7 @@ the 2026-10-02 UX review, apart from the AlarmKit corrections, the Normal-nudge 
 - **axe-core** (WCAG 2.0 and 2.1, A and AA) on nine screens, on iOS 18, 26 and 27, in light and
   dark, with Increase Contrast off and on, at Large and AX3: no violations.
 - **A contrast audit** of the same screens: all text reaches 4.5:1, or 7:1 with Increase Contrast,
-  apart from the selected tab's title on iOS 26 and 27 (see [Color](#color)). The Lock Screen
+  apart from the selected tab's title on iOS 26 and 27 with the earlier blue accent (see [Color](#color)). The Lagoon accent passes there in the color study; the full audit hasn't been re-run with it. The Lock Screen
   wasn't measured, because the audit skips text over gradients.
 - **Cancel and the visible tag list,** 11 assertions, all passing: Cancel shows only while a field
   is focused, on the Tags tab and iOS 18's Search tab; it clears the text, keeps the tokens and ends

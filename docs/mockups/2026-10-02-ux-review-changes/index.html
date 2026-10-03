@@ -11,7 +11,7 @@
    - Semantic names match UIKit/SwiftUI (label, secondaryLabel, separator, the grouped
      backgrounds, tertiarySystemFill...), and each is used only for what it's named for.
    - One color, one meaning. Status colors are named by their job, and nothing else uses them:
-     --accent: interactive (the app's AccentColor)
+     --accent: interactive (the app's AccentColor, Lagoon teal; see docs/design/DESIGN.md)
      --negative: danger, meaning nudging, Urgent, missed, errors, Off, and destructive actions (red)
      --warning: escalating, meaning High urgency and "starts higher" (orange)
      --positive: done and on (green)
@@ -34,7 +34,7 @@
   --label: #000000; --secondary-label: #6c6c70; --tertiary-label: rgba(60, 60, 67, 0.3); --placeholder-text: #6c6c70;
   --separator: #c6c6c8; --system-gray: #8e8e93;
   --tertiary-system-fill: #ebebf0; --tertiary-system-fill-elevated: #ebebf0; --segment-selected: #ffffff;
-  --accent: #0064d2; --on-accent: #ffffff;
+  --accent: #04666b; --on-accent: #ffffff;
   --negative: #d70015; --warning: #c93400; --positive: #1e7b34; --quiet: #3634a3; --neutral: #6c6c70;
   --badge-fill: #e9152d; --on-badge: #ffffff;
   --tile-blue: #1e6ef4; --tile-red: #e9152d; --tile-orange: #c55300; --tile-gray: #6c6c70; --tile-green: #008932;
@@ -56,8 +56,8 @@
       --label: #ffffff; --secondary-label: #aeaeb2; --tertiary-label: rgba(235, 235, 245, 0.3); --placeholder-text: #aeaeb2;
       --separator: #38383a; --system-gray: #8e8e93;
       --tertiary-system-fill: #2c2c2e; --tertiary-system-fill-elevated: #3a3a3c; --segment-selected: #636366;
-      --accent: #409cff; --on-accent: #000000;
-      --negative: #ff6961; --warning: #ff9f0a; --positive: #30d158; --quiet: #7d7aff; --neutral: #aeaeb2;
+      --accent: #07dde6; --on-accent: #000000;
+      --negative: #ff6961; --warning: #ff9f0a; --positive: #30d158; --quiet: #9290ff; --neutral: #aeaeb2;
       --badge-fill: #e9152d; --on-badge: #ffffff;
       --bar: rgba(22, 22, 24, 0.8); --bar-solid: #161618; --alert: rgba(44, 44, 46, 0.88); --alert-solid: #2c2c2e;
       --material: rgba(30, 30, 32, 0.78); --material-solid: #1e1e20; --material-text: #ffffff; --material-text2: #aeaeb2;
@@ -75,8 +75,8 @@
     --label: #ffffff; --secondary-label: #aeaeb2; --tertiary-label: rgba(235, 235, 245, 0.3); --placeholder-text: #aeaeb2;
     --separator: #38383a; --system-gray: #8e8e93;
     --tertiary-system-fill: #2c2c2e; --tertiary-system-fill-elevated: #3a3a3c; --segment-selected: #636366;
-    --accent: #409cff; --on-accent: #000000;
-    --negative: #ff6961; --warning: #ff9f0a; --positive: #30d158; --quiet: #7d7aff; --neutral: #aeaeb2;
+    --accent: #07dde6; --on-accent: #000000;
+    --negative: #ff6961; --warning: #ff9f0a; --positive: #30d158; --quiet: #9290ff; --neutral: #aeaeb2;
     --badge-fill: #e9152d; --on-badge: #ffffff;
     --bar: rgba(22, 22, 24, 0.8); --bar-solid: #161618; --alert: rgba(44, 44, 46, 0.88); --alert-solid: #2c2c2e;
     --material: rgba(30, 30, 32, 0.78); --material-solid: #1e1e20; --material-text: #ffffff; --material-text2: #aeaeb2;
@@ -88,7 +88,7 @@
 :root[data-contrast="more"] {
   --secondary-label: #3c3c43; --tertiary-label: rgba(60, 60, 67, 0.5); --placeholder-text: #3c3c43;
   --separator: #8e8e93; --system-gray: #6c6c70; --tertiary-system-fill: #e9e9ee; --tertiary-system-fill-elevated: #e9e9ee;
-  --accent: #0036c0; --negative: #9e0010; --warning: #8f2800; --positive: #145a22; --quiet: #2b2a8c; --neutral: #3c3c43;
+  --accent: #04474a; --negative: #9e0010; --warning: #8f2800; --positive: #145a22; --quiet: #2b2a8c; --neutral: #3c3c43;
   --badge-fill: #b00012;
   --material: rgba(245, 245, 250, 0.96); --material-red: #9e0010; --alert: rgba(242, 242, 247, 0.98); --bar: rgba(249, 249, 249, 0.96);
   --glass: rgba(255, 255, 255, 0.96); --glass-edge: #8e8e93; --glass-selected: rgba(120, 120, 128, 0.28);
@@ -97,7 +97,7 @@
   :root[data-contrast="more"]:not([data-theme="light"]) {
     --secondary-label: #d1d1d6; --tertiary-label: rgba(235, 235, 245, 0.5); --placeholder-text: #d1d1d6;
       --separator: #636366; --system-gray: #aeaeb2; --tertiary-system-fill: #2c2c2e; --tertiary-system-fill-elevated: #1c1c1e; --segment-selected: #48484a;
-      --accent: #8cc8ff; --negative: #ffa39c; --warning: #ffb340; --positive: #5de07b; --quiet: #a5a3ff; --neutral: #d1d1d6;
+      --accent: #a5fafe; --negative: #ffa39c; --warning: #ffb340; --positive: #5de07b; --quiet: #b8b6ff; --neutral: #d1d1d6;
       --material: rgba(30, 30, 32, 0.95); --material-red: #ffa39c; --alert: rgba(44, 44, 46, 0.98); --bar: rgba(22, 22, 24, 0.96);
       --glass: rgba(44, 44, 46, 0.96); --glass-edge: #aeaeb2; --glass-selected: rgba(120, 120, 128, 0.44);
   }
@@ -105,7 +105,7 @@
 :root[data-contrast="more"][data-theme="dark"] {
   --secondary-label: #d1d1d6; --tertiary-label: rgba(235, 235, 245, 0.5); --placeholder-text: #d1d1d6;
     --separator: #636366; --system-gray: #aeaeb2; --tertiary-system-fill: #2c2c2e; --tertiary-system-fill-elevated: #1c1c1e; --segment-selected: #48484a;
-    --accent: #8cc8ff; --negative: #ffa39c; --warning: #ffb340; --positive: #5de07b; --quiet: #a5a3ff; --neutral: #d1d1d6;
+    --accent: #a5fafe; --negative: #ffa39c; --warning: #ffb340; --positive: #5de07b; --quiet: #b8b6ff; --neutral: #d1d1d6;
     --material: rgba(30, 30, 32, 0.95); --material-red: #ffa39c; --alert: rgba(44, 44, 46, 0.98); --bar: rgba(22, 22, 24, 0.96);
     --glass: rgba(44, 44, 46, 0.96); --glass-edge: #aeaeb2; --glass-selected: rgba(120, 120, 128, 0.44);
 }
@@ -524,14 +524,14 @@ select.menu:disabled { color: var(--secondary-label); background-image: none; }
 .nudgecard { position: relative; background: var(--secondary-system-grouped-background); border-radius: 12px; padding: 14px 16px; border-left: 5px solid var(--c); }
 .nudgecard + .nudgecard, .swipe + .swipe { margin-top: 12px; }
 /* Swipe actions: the row slides over its action, which fills the space it leaves. Done uses the
-   green of done, Snooze the blue of something tappable; both are tile colors, which keep white
+   green of done, Snooze the teal of the Lagoon accent (something tappable); both are tile colors, which keep white
    text at 4.5:1. */
 .swipe { position: relative; overflow: hidden; border-radius: 12px; }
 li > .swipe { border-radius: 0; }
 .swipe-row { position: relative; z-index: 1; background: var(--secondary-system-grouped-background); touch-action: pan-y; }
 .swipe.dragging .swipe-row { user-select: none; -webkit-user-select: none; }
 .swipe-act { font: var(--footnote); letter-spacing: var(--footnote-track); font-weight: var(--semibold); position: absolute; top: 0; bottom: 0; width: 50%; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 0 22px; border: 0; color: #fff; cursor: pointer; visibility: hidden; }
-.swipe-act.lead { left: 0; align-items: flex-start; background: var(--tile-blue); }
+.swipe-act.lead { left: 0; align-items: flex-start; background: var(--tile-teal); }
 .swipe-act.trail { right: 0; align-items: flex-end; background: var(--tile-green); }
 .swipe[data-dir="lead"] .swipe-act.lead, .swipe[data-dir="trail"] .swipe-act.trail { visibility: visible; }
 .nudgecard.u-Normal { --c: var(--neutral); } .nudgecard.u-High { --c: var(--warning); } .nudgecard.u-Urgent { --c: var(--negative); }
@@ -666,7 +666,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .lock-time { font-size: 88px; font-weight: var(--bold); line-height: 1; }
 .lock-stack { margin-top: auto; padding: 0 10px 12px; display: grid; gap: 8px; }
 .notif { display: flex; gap: 10px; width: 100%; text-align: left; border: 0; border-radius: 20px; padding: 12px 14px; background: var(--material); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); color: var(--material-text); cursor: pointer; }
-.notif .appicon { width: 38px; height: 38px; border-radius: 9px; background: linear-gradient(160deg, #b3380a, #9e0010); display: grid; place-items: center; color: #fff; flex: none; }
+.notif .appicon { width: 38px; height: 38px; border-radius: 9px; background: linear-gradient(160deg, #0a8f96, #04474a); display: grid; place-items: center; color: #fff; flex: none; }
 .notif .nmain { flex: 1; min-width: 0; }
 .notif .nts { font: var(--footnote); letter-spacing: var(--footnote-track); font-weight: var(--semibold); display: block; color: var(--material-text2); }
 .notif .nrow { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
@@ -691,7 +691,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .alarm-app { font: var(--subhead); letter-spacing: var(--subhead-track); font-weight: var(--semibold); margin: 0 0 -10px; color: rgba(255, 255, 255, 0.9); }
 .abtn { font: var(--title3); letter-spacing: var(--title3-track); font-weight: var(--semibold); display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 58px; border: 0; border-radius: 99px; padding: 12px 20px; cursor: pointer; }
 .abtn.sys-stop { background: rgba(255, 255, 255, 0.2); color: #fff; -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); }
-.abtn.stop, .abtn.secondary { background: #409cff; color: #000; }
+.abtn.stop, .abtn.secondary { background: #07dde6; color: #000; }
 :root[data-transparency="reduce"] .abtn.sys-stop { background: #4a4a63; }
 :root[data-contrast="more"] .abtn.sys-stop { box-shadow: inset 0 0 0 1px #fff; }
 .alarm .abtn .i { --w: 2.2; }
@@ -713,7 +713,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 /* The Live Activity after a snooze is the app's own design (a widget extension), on the Lock Screen. */
 .activity { width: 100%; text-align: left; border-radius: 22px; padding: 14px 16px; background: var(--material); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); color: var(--material-text); display: grid; gap: 10px; }
 .activity .ahead { display: flex; align-items: center; gap: 10px; }
-.activity .ahead .appicon { width: 30px; height: 30px; border-radius: 7px; background: linear-gradient(160deg, #b3380a, #9e0010); display: grid; place-items: center; color: #fff; flex: none; }
+.activity .ahead .appicon { width: 30px; height: 30px; border-radius: 7px; background: linear-gradient(160deg, #0a8f96, #04474a); display: grid; place-items: center; color: #fff; flex: none; }
 .activity-title { font: var(--headline); letter-spacing: var(--headline-track); font-weight: var(--semibold); margin: 0; overflow-wrap: anywhere; flex: 1; min-width: 0; }
 .activity-title:focus { outline: none; }
 .activity .count { font: var(--title1); letter-spacing: var(--title1-track); font-weight: var(--bold); font-variant-numeric: tabular-nums; }
