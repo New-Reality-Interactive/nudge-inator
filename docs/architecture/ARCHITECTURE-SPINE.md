@@ -95,7 +95,7 @@ graph TD
 - **Prevents:** racing commands, reconciles undoing each other, double closes, half-applied changes
 - **Rule:**
   - **One queue:** the `Coordinator` in `NudgeShell` owns a single serial job queue (one consumer of an `AsyncStream`). Each job runs to completion, including its awaits, before the next starts. There are two job kinds.
-  - **Command job:** `NudgeCore.accepts(command, facts, at: command.issuedAt)` decides whether the command applies. Not Done applies to the latest done occurrence until the next due instant, or for 24 hours after Done on a one-off, and not after a pause (brief §3). If it applies, the job writes the resulting events in one transaction, then reconciles. A command naming a valid projected occurrence key materializes it (AD-8). A command that doesn't apply writes nothing.
+  - **Command job:** `NudgeCore.accepts(command, facts, at: command.issuedAt)` decides whether the command applies. Not Done applies to the latest done occurrence until the next due instant, or for 24 hours after Done on a one-off, and not after a pause (brief §3). If the occurrence had already used its give-up limit, Not Done allows exactly one more nudge, one interval after reopening at the next step, delivered as its urgency would be, except that an Urgent one without alarms is a single notification, not a chain (AD-13); if it's unanswered one interval later, the occurrence closes as missed. If it applies, the job writes the resulting events in one transaction, then reconciles. A command naming a valid projected occurrence key materializes it (AD-8). A command that doesn't apply writes nothing.
   - **Reconcile job:** triggers enqueue one, and several pending ones coalesce. A reconcile writes only bookkeeping: materialized occurrences, ledger rows, capability state, zone facts and pruning.
   - **Write access:** `NudgeStore`'s write API is `package` access, used only by the `Coordinator`. Views, intents and the widget can't write.
 
@@ -208,7 +208,7 @@ graph TD
 - **Binds:** engine plan for Urgent when alarms are unavailable
 - **Prevents:** duplicate notifications in one minute and nudge counts that differ by OS
 - **Rule:**
-  - **When a chain starts:** when an occurrence enters or re-enters Urgent: its first Urgent nudge, the end of quiet hours, the end of a snooze, and Not Done.
+  - **When a chain starts:** when an occurrence enters or re-enters Urgent: its first Urgent nudge, the end of quiet hours, the end of a snooze, and Not Done (except Not Done past the give-up limit, whose one extra nudge is a single notification, AD-4).
   - **What it sends:** a notification at once and every minute after, 10 in all. Each is `.timeSensitive`, or `.active` when `timeSensitiveAllowed` is false (brief §4), so a Focus can hold it; the banners and Via labels say so (EXPERIENCE › Via label). It ends early on Done, Snooze or the start of quiet hours.
   - **Nudges inside it:** the strength's Urgent nudges that fall inside a running chain still count on schedule but aren't sent separately. The chain notification at that minute shows the current nudge number.
   - **Limits:** chain repeats don't count toward the nudge limit, but their time counts toward the time limit.
