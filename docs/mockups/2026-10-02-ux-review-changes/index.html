@@ -2254,7 +2254,7 @@ function updateReminder(r, fields) {
   Object.assign(r, fields);
   if (closes) closeSkipped(o, "edited");
   if (scheduleChanged || r.status === "COMPLETED") {
-    const n = nextOccurrence(r);
+    const n = scheduleChanged ? dueAt(r) : nextOccurrence(r);
     r.nextOccurrenceAt = n ? iso(n) : null;
     if (r.status === "COMPLETED" && n) r.status = "ACTIVE";
   }
@@ -2283,9 +2283,11 @@ function countedMinutes(o, r) {
   }
   return n;
 }
+/* A one-off whose start time has passed falls due as soon as it's saved (brief §3, Edit). */
+const dueAt = (r) => nextOccurrence(r) ?? (!r.rrule && L(r.dtstart) <= NOW ? NOW : null);
 function createReminder(fields) {
   const r = { id: `r${Date.now()}`, ...fields, status: "ACTIVE" };
-  const n = nextOccurrence(r);
+  const n = dueAt(r);
   r.nextOccurrenceAt = n ? iso(n) : null;
   reminders.push(r);
   hud(`Added “${r.title}”`);

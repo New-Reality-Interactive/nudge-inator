@@ -465,6 +465,7 @@ Visual only; decorative, hidden from VoiceOver.
 | Typing a tag name (Tags page, Rename Tag) | Spaces become hyphens as you type ("dog walks" becomes #dog-walks), and a leading # is dropped. Up to 30 characters, not counting a leading #; no more input is accepted. |
 | Unsaved changes, then Cancel | Confirmation: **Discard Changes** / **Keep Editing** |
 | Resuming a one-off whose time passed | Asks for a new time ("Choose a New Time"). |
+| Repeat Never with a start time that has passed | Footer under Starts: "This time has passed, so it starts nudging as soon as you save." Saving is allowed. |
 
 ### Settings
 
