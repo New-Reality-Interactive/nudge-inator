@@ -184,6 +184,9 @@ and Assistive Access behavior lives in [Nudge Surfaces](#nudge-surfaces) and
   - On My Day, a row closed by an alarm's Stop reads "Done (alarm stopped)" with a **Not Done**
     button, available until the next occurrence falls due. Rows in Now › Last 24 Hours show the
     same alarm-stopped treatment.
+  - Rows show **Not Done** only when the occurrence was closed by an alarm's Stop. Any other done
+    occurrence can be reopened from Reminder details, Undo right after Done, or Assistive Access's
+    "Done today" list.
 
 ### History
 
