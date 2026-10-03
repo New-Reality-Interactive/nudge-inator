@@ -32,6 +32,20 @@ is set in the [brief's introduction](../../product/brief.md)).
 This version follows the UX review of 2026-10-02. The version before it is archived in
 [`../archive/2026-09-30-mockup-tags-v1/`](../archive/2026-09-30-mockup-tags-v1/README.md).
 
+**In the spines, not drawn here.** These are specified in
+[EXPERIENCE.md](../../design/EXPERIENCE.md) and [DESIGN.md](../../design/DESIGN.md) but aren't in this
+mockup yet. Build them from the spines:
+
+- **Undo** in the Done status message (it runs Not Done)
+- the **Done follow-up** notification after an alarm's Stop ("Marked done: … Not done yet?")
+- **Not Done** on rows closed by an alarm's Stop, in Now and My Day
+- the **urgency word** and glyph in the nudge card's top row
+- **Got It** on permission banners
+- **Settings › How Nudges Work**
+- Assistive Access's **Done today** list with **Not done yet**
+- the **keep-nudging** notice
+- the alarm-limit Via label, "Notification: too many alarms scheduled"
+
 ## Product rules
 
 These follow the nudging rules in the [product brief](../../product/brief.md#3-product-concepts),
@@ -155,8 +169,9 @@ and **Cancel**, **Add**, **Save** and **Done** as words.
 - **First launch:** a welcome screen, then the notification permission prompt, then, on iOS 26
   and later, the alarm permission prompt.
 - **Swipe actions** on nudging rows and cards (Now and My Day): swipe left for **Done**, right for
-  **Snooze** while snoozes are left. They're shortcuts for the buttons the row already has (see
-  [Accessibility](#accessibility)).
+  **Snooze** while snoozes are left. A swipe only shows the button, and a tap does the action:
+  there's no full swipe, so a stray swipe can't mark a reminder done. They're shortcuts for the
+  buttons the row already has (see [Accessibility](#accessibility)).
 
 ## Tags
 
@@ -248,7 +263,7 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
 | High urgency | Time Sensitive notification (gets through Focus). An ordinary one if Time Sensitive is off. | as above |
 | Urgent (Firm and Relentless, from nudge 4), iOS 26 and later | AlarmKit alarm | **Stop** (counts as Done), **Snooze** (while snoozes are left) |
 | Urgent, with alarms not allowed | Notification chain, as on iOS 18, marked "Notification chain: alarms are off" | **Done**, **Snooze** |
-| Urgent, past the system's alarm limit | Time Sensitive notification, marked "Notification: too many alarms scheduled" | **Done**, **Snooze** |
+| Urgent, past the system's alarm limit | Time Sensitive notification, marked "Notification: too many alarms scheduled" (the spine's wording; not drawn in this mockup) | **Done**, **Snooze** |
 | Urgent, iOS 18 | Notification chain: each time the occurrence enters Urgent, a Time Sensitive notification at once and then every minute, 10 in all, marked "Notification chain" | **Done**, **Snooze** |
 
 - **There's no Dismiss action.** The system's own **Clear** (swipe left on a notification) already
@@ -362,9 +377,10 @@ These are not part of the app:
   - Switching to a version that no iPhone of the current size runs moves to the nearest size, and
     the note under the control says so.
   - The 17e and 18 Pro Max sizes come from Apple's pixel resolutions at 3×; the 18 Pro is assumed to
-    match the 17 Pro (402 × 874). The **iPhone Duo**, a foldable, is left out: its sizes in points
-    aren't published, and it raises its own questions (see the
-    [brief, §10](../../product/brief.md#10-risks-and-decisions)).
+    match the 17 Pro (402 × 874). The **iPhone Duo**, a foldable, is left out because its sizes in
+    points aren't published. It's treated like any iPhone (see the
+    [brief, §5 and §10](../../product/brief.md#10-risks-and-decisions), and
+    [EXPERIENCE.md › Responsive & Platform](../../design/EXPERIENCE.md)).
 
   The top of the screen matches each one: the Dynamic Island, a notch, or a Home button. The phone
   is scaled down, never up, to fit the window.
@@ -738,7 +754,8 @@ under [Color](#color) covered dark mode too.
 
 Accessibility follows Apple's Human Interface Guidelines page on
 [Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility) (a
-local copy is in `docs/apple/design/`), and WCAG 2.1 AA:
+local copy is in `docs/apple/design/`), and WCAG 2.2 AA (the target set in
+[EXPERIENCE.md](../../design/EXPERIENCE.md)):
 
 **Vision**
 - **Larger text** up to AX5, about 3 times the default (see [Typography](#typography)).
@@ -754,8 +771,8 @@ local copy is in `docs/apple/design/`), and WCAG 2.1 AA:
     region that stays in place, because the screens re-render whole.
 
 **Hearing**
-- Every nudge vibrates as well as sounding, and the alarm and notifications are visual, so nothing
-  relies on hearing it.
+- Nudges vibrate when the iPhone's settings allow it, and the alarm and notifications are visual,
+  so nothing relies on hearing it.
 
 **Mobility**
 - **Target size.** Buttons are at least 44 pt tall, apart from the iOS switch, stepper, segmented
@@ -805,7 +822,9 @@ phone's on-screen scale taken out:
 - every control's name contains its visible label
 - every control can be reached by keyboard
 - each filter change and search is announced with its result
-- **axe-core** (WCAG 2.0 and 2.1, A and AA) found no violations, in light and dark
+- **axe-core** (WCAG 2.0 and 2.1, A and AA) found no violations, in light and dark. The WCAG 2.2
+  additions (such as 2.4.11 Focus Not Obscured and 3.2.6 Consistent Help) weren't part of these
+  runs; they're covered by EXPERIENCE.md's device release gate.
 
 **Known gaps:** iOS form fields are borderless, as in the Settings app, so they have no 3:1
 borders. The app will need testing with Accessibility Inspector, VoiceOver, Voice Control and
@@ -965,7 +984,8 @@ the 2026-10-02 UX review, apart from the AlarmKit corrections, the Normal-nudge 
   are at least 44 pt, apart from the system's small controls listed under
   [Accessibility](#accessibility).
 - **axe-core** (WCAG 2.0 and 2.1, A and AA) on nine screens, on iOS 18, 26 and 27, in light and
-  dark, with Increase Contrast off and on, at Large and AX3: no violations.
+  dark, with Increase Contrast off and on, at Large and AX3: no violations. These runs didn't
+  include the WCAG 2.2 additions (see [Accessibility](#accessibility)).
 - **A contrast audit** of the same screens: all text reaches 4.5:1, or 7:1 with Increase Contrast,
   apart from the selected tab's title on iOS 26 and 27 with the earlier blue accent (see [Color](#color)). The Lagoon accent passes there in the color study; the full audit hasn't been re-run with it. The Lock Screen
   wasn't measured, because the audit skips text over gradients.

@@ -1511,11 +1511,14 @@ function noteIcon(kind) {
 }
 
 /* ================= Views ================= */
+/* One banner per missing permission. Notifications off replaces the others, because it already says
+   what can still reach you. */
 function permBanner() {
   if (!perm.notifications) return `<div class="banner" role="note">${I("exclamationmark.triangle", 22)}<div><p><strong>Notifications are off.</strong> ${perm.alarms && hasAlarmKit() ? "Only Urgent nudges can reach you, as alarms. Gentle reminders can't reach you at all." : "Nudges can't reach you."}</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
-  if (!perm.alarms && hasAlarmKit()) return `<div class="banner info" role="note">${I("alarm", 22)}<div><p><strong>Alarms are off.</strong> Urgent nudges come as ${perm.timeSensitive ? "a chain of Time Sensitive notifications instead, which silent mode can mute" : "a chain of ordinary notifications instead, which silent mode can mute and a Focus can hold"}.</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
-  if (!perm.timeSensitive) return `<div class="banner info" role="note">${I("bell", 22)}<div><p><strong>Time Sensitive is off.</strong> ${hasAlarmKit() ? "High nudges come" : "High and Urgent nudges come"} as ordinary notifications, so a Focus can hold them.</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
-  return "";
+  let out = "";
+  if (!perm.alarms && hasAlarmKit()) out += `<div class="banner info" role="note">${I("alarm", 22)}<div><p><strong>Alarms are off.</strong> Urgent nudges come as ${perm.timeSensitive ? "a chain of Time Sensitive notifications instead, which silent mode can mute" : "a chain of ordinary notifications instead, which silent mode can mute and a Focus can hold"}.</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
+  if (!perm.timeSensitive) out += `<div class="banner info" role="note">${I("bell", 22)}<div><p><strong>Time Sensitive is off.</strong> ${hasAlarmKit() ? "High nudges come" : "High and Urgent nudges come"} as ordinary notifications, so a Focus can hold them.</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
+  return out;
 }
 
 function nudgeCard(o) {
@@ -1545,7 +1548,8 @@ function nudgeCard(o) {
 }
 
 /* Swipe actions (SwiftUI's swipeActions on List rows, iOS 15 and later): swipe left for Done, right
-   for Snooze while snoozes are left. A full swipe does the action; a shorter one shows its button.
+   for Snooze while snoozes are left. A swipe only shows the button, and a tap does the action: there's
+   no full swipe (allowsFullSwipe: false), so a stray swipe can't mark a reminder done.
    They're shortcuts for buttons the row already has, so they're hidden from assistive technology and
    the keyboard, which use those buttons. */
 function swipeable(inner, o) {
@@ -1909,10 +1913,10 @@ function viewSearch() {
 const EVENT_TEXT = {
   SCHEDULED: () => "Due",
   DEFERRED_QUIET: (d) => `Held for quiet hours until ${hm(L(d.until))}`,
-  NUDGE_SENT: (d) => `Nudge ${d.attempt} · level ${d.level} · ${URGENCY[d.priority]} · ${d.via === "chain" ? "notification chain" : d.priority === 5 && d.via !== "notification" ? "alarm" : "notification"}`,
+  NUDGE_SENT: (d) => `Nudge ${d.attempt} · ${URGENCY[d.priority]} · ${d.via === "chain" ? "notification chain" : d.priority === 5 && d.via !== "notification" ? "alarm" : "notification"}`,
   SNOOZED: (d) => `Snoozed ${d.minutes} min (${plural(d.left, "snooze")} left)`,
   DISMISSED: () => "Notification cleared (still nudging)",
-  ACKED: (d) => (d.from ? `Done from the ${d.from}` : "Done"),
+  ACKED: (d) => (d.from === "alarm" ? "Done (alarm stopped)" : d.from ? `Done from the ${d.from}` : "Done"),
   MISSED: (d) => closedWhy(d.reason, "MISSED"),
   SKIPPED: (d) => closedWhy(d.reason, "SKIPPED"),
   REOPENED: () => "Marked not done (nudging again)",
@@ -2002,12 +2006,12 @@ function settingsSections() {
   const ok = (on, yes, no) => `<span style="color:${on ? "var(--secondary-label)" : "var(--negative)"}">${on ? yes : no}</span>`;
   return [
     { title: "Nudges", body: `<div class="sec"><ul class="list icons">
-    <li><div class="cell"><span class="ico" style="background:var(--tile-red)">${I("bell", 19)}</span><span class="main">Notifications</span><span class="trail">${ok(perm.notifications && perm.timeSensitive, "On · Time Sensitive", perm.notifications ? "On · Time Sensitive off" : "Off")}</span></div></li>
-    ${hasAlarmKit() ? `<li><div class="cell"><span class="ico" style="background:var(--tile-orange)">${I("alarm", 19)}</span><span class="main">Alarms</span><span class="trail">${ok(perm.alarms, "Allowed", "Off")}</span></div></li>` : ""}
+    <li><div class="cell"><span class="ico" style="background:var(--tile-red)">${I("bell", 19)}</span><span class="main">Notifications</span><span class="trail">${ok(perm.notifications && perm.timeSensitive, "On", perm.notifications ? "On · Time Sensitive off" : "Off")}</span></div></li>
+    ${hasAlarmKit() ? `<li><div class="cell"><span class="ico" style="background:var(--tile-orange)">${I("alarm", 19)}</span><span class="main">Alarms</span><span class="trail">${ok(perm.alarms, "On", "Off")}</span></div></li>` : ""}
     ${!perm.notifications || (!perm.alarms && hasAlarmKit()) || !perm.timeSensitive ? `<li><button type="button" class="cell tint" data-ios-settings><span class="ico" style="background:var(--tile-gray)">${I("gearshape", 19)}</span><span class="main">Open iOS Settings</span>${chev}</button></li>` : ""}
     <li><button type="button" class="cell tint" data-test ${perm.notifications ? "" : "disabled"}><span class="ico" style="background:var(--tile-blue)">${I("bell", 19)}</span><span class="main">Send a Test Nudge</span></button></li>
   </ul>
-  <p class="sec-f">Normal nudges arrive as notifications, which a Focus can hold. High nudges are Time Sensitive, so they get through Focus. ${hasAlarmKit() ? "Urgent nudges ring as alarms, even in silent mode." : "Urgent nudges repeat every minute as Time Sensitive notifications, up to 10 times, until you tap Done or Snooze. Silent mode can mute them."} To get every nudge during a Focus, allow Nudge-inator in that Focus. Every nudge vibrates as well as sounding. Change these in iOS Settings.</p></div>` },
+  <p class="sec-f">Normal nudges arrive as notifications, which a Focus can hold. High nudges are Time Sensitive, so they get through Focus. ${hasAlarmKit() ? "Urgent nudges ring as alarms, even in silent mode." : "Urgent nudges repeat every minute as Time Sensitive notifications, up to 10 times, until you tap Done or Snooze. Silent mode can mute them."} To get every nudge during a Focus, allow Nudge-inator in that Focus. Nudges vibrate when your iPhone's settings allow it. Change these in iOS Settings.</p></div>` },
     { title: "Quiet Hours", body: `<div class="sec"><ul class="list">
     <li><div class="formrow"><label for="s-quiet">Hold Nudges Overnight</label><input type="checkbox" class="switch" id="s-quiet" ${q ? "checked" : ""}></div></li>
     ${q ? `<li><div class="formrow"><label for="s-qs">From</label><input type="time" class="pill-input" id="s-qs" value="${q.start}"></div></li>
@@ -2347,9 +2351,9 @@ function onboardSheet() {
     <h2 class="welcome-title" id="sheet-title" tabindex="-1">Welcome to Nudge-inator</h2>
     ${f("bell", "Nudges until you're done", "Reminders keep coming back, more often and more insistently, until you tap Done.")}
     ${hasAlarmKit() ? f("alarm", "Urgent nudges ring as alarms", "When it really matters, your iPhone rings and vibrates like an alarm, even on silent. Stopping the alarm counts as Done.")
-      : f("bell", "Urgent nudges keep coming", "When it really matters, a nudge comes every minute until you tap Done or Snooze, even in a Focus.")}
+      : f("bell", "Urgent nudges keep coming", "When it really matters, a nudge comes every minute, up to 10 times, and keeps coming after that until you tap Done.")}
     ${f("moon.fill", "Quiet overnight", "Nudges wait until your quiet hours end, and nothing gives up overnight.")}
-    ${f("lock", "Stays on your iPhone", "No account and no server. Your reminders never leave this phone.")}
+    ${f("lock", "Stays on your iPhone", "No account and no server. Your reminders stay on this iPhone and in your own backups.")}
     <button type="button" class="btn prominent" style="width:100%;margin-top:14px;padding:14px" data-onboard-next>Continue</button>
   </div></div>`;
 }
@@ -2623,6 +2627,7 @@ function wipeAll() {
   state.tagFilter = newFilter();
   state.tagEdit = false;
   state.dayFilter = newDayFilter();
+  state.recent = [];
   for (const k of Object.keys(state.stacks)) state.stacks[k] = [];
   hud("All data deleted");
   nav();
@@ -2914,8 +2919,6 @@ function endSwipe(e) {
   if (!active) return;
   swallowClick = true;
   row.parentElement.classList.remove("dragging");
-  const w = row.offsetWidth;
-  if (e.type === "pointerup" && Math.abs(x) > w * 0.6) { row.parentElement.querySelector(x < 0 ? ".trail" : ".lead")?.click(); return; }
   setSwipe(row, Math.abs(x) > 40 ? Math.sign(x) * SWIPE_OPEN : 0);
 }
 main.addEventListener("pointerup", endSwipe);
@@ -3122,7 +3125,7 @@ const CLICK = {
   wipe: () => ask({ title: "Delete All Data?", message: `This deletes every reminder, tag and all history from this iPhone, and cancels every ${hasAlarmKit() ? "nudge and alarm" : "nudge"}. It can't be undone.`,
     buttons: [{ label: "Cancel", role: "cancel" }, { label: "Delete", role: "destructive", run: wipeAll }] }),
   shortcuts: () => ask({ title: "Siri & Shortcuts", message: "Add these to the Action button or a Home Screen shortcut, or say “Mark my Nudge-inator nudge done”, “Snooze Nudge-inator” or “What's nudging me in Nudge-inator?” They're the same actions as Done and Snooze on notifications and alarms.", buttons: [{ label: "OK", role: "cancel" }] }),
-  a11y: () => ask({ title: "Accessibility", message: "Nudge-inator works with VoiceOver, Voice Control, Full Keyboard Access and Switch Control, Dynamic Type up to AX5, Bold Text, Increase Contrast, Reduce Transparency, Reduce Motion, Dark Mode and Assistive Access. Nothing relies on color or sound alone: every nudge vibrates too, and every status has words.", buttons: [{ label: "OK", role: "cancel" }] }),
+  a11y: () => ask({ title: "Accessibility", message: "Nudge-inator works with VoiceOver, Voice Control, Full Keyboard Access and Switch Control, Dynamic Type up to AX5, Bold Text, Increase Contrast, Reduce Transparency, Reduce Motion, Dark Mode and Assistive Access. Nothing relies on color or sound alone: nudges vibrate when your iPhone's settings allow it, and every status has words.", buttons: [{ label: "OK", role: "cancel" }] }),
 };
 // Pressing Cancel doesn't take focus from the field, so the button stays shown until it's clicked.
 document.addEventListener("mousedown", (e) => { if (e.target.closest(".scancel")) e.preventDefault(); });
@@ -3137,9 +3140,10 @@ document.addEventListener("click", (e) => {
   pressed = t;
   if (key) CLICK[key](t.dataset[key]);
 });
-/* After Done the card goes away, so focus moves to the next Done button, or the heading. */
+/* After Done the card goes away, so focus moves to the next card's summary (its title), or the
+   heading. It never lands on another Done button, so a second double-tap can't close another one. */
 function nextFocusAfterAck() {
-  return () => main.querySelector("[data-ack]") || main.querySelector("h1");
+  return () => main.querySelector(".nudgecard [data-open]") || main.querySelector("h1");
 }
 
 /* Re-render, then put the caret back at the end of the field being typed in. */

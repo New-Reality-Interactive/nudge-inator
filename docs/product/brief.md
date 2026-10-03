@@ -87,15 +87,16 @@ TestFlight. It's released on the App Store once the success measures are met (se
 | **Give-up limit** | After a number of nudges or a time, whichever comes first, the occurrence stops and counts as **missed**. Quiet hours and snoozed time don't count toward the time. The limit can't end an occurrence before its first High nudge, so each strength has a smallest limit. Choosing a gentler strength raises a lower limit to its minimum. Ranges, defaults and minimums are in the tables below. |
 | **Quiet hours** | A daily window, such as 10 PM to 7 AM, in the iPhone's current time zone, that stops every open occurrence's clock, as Snooze does. No nudges are sent, nothing escalates, no alarms ring and the time doesn't count toward the give-up limit. When it ends, the next nudge is sent at once (1 nudge, not a backlog), and the intervals carry on from it. An occurrence due during quiet hours sends nudge 1 then. Start and end can't be the same time. A reminder with **Ignore Quiet Hours** on nudges through them. |
 | **Carry-over** | After a missed occurrence, the next one that nudges sends its Normal nudges at High ("↑ Starts higher"). Its intervals, and when it reaches Urgent, don't change, so Relentless, which starts at High, isn't affected. Carry-over doesn't stack. Skipped occurrences neither use it nor clear it, and pausing the reminder clears it. |
-| **Tag** | A one-word label shown as `#home`, with no color. A reminder can have any number of tags or none. Names are unique, ignoring case. |
+| **Tag** | A one-word label shown as `#home`, with no color. A reminder can have any number of tags or none. Names are unique, ignoring case. Deleting a tag removes it from its reminders (which aren't deleted) and from any tag filter. |
 | **My Day** | Everything due today in time order, with Done, Nudging, Missed and Left counts. Filter by one or more tags (All or Any, or No Tags), and tap a count to show only that status. |
-| **Snooze** | A break of a set length, a limited number of times per occurrence. Each reminder has its own snooze length: its strength's default, or longer (tables below). It doesn't raise the level, and snoozed time doesn't count toward the limit. |
+| **Snooze** | A break of a set length, a limited number of times per occurrence. Each reminder has its own snooze length: its strength's default, or longer (tables below). Choosing a gentler strength raises a shorter snooze length to the new strength's default. It doesn't raise the level, and snoozed time doesn't count toward the limit. |
 | **Clear** | The system's own Clear on a notification. Nudging continues. The app has no Dismiss action of its own. |
 | **Done** | The only way to close an occurrence as done. On an alarm, it's the system's **Stop** control, and a **Done follow-up** notification asks at once whether it's really done ([§4](#4-how-nudges-reach-you)). The give-up limit, the next occurrence, Pause, Delete and some edits also stop nudging. Quiet hours hold it. |
 | **Not Done** | Reopens the reminder's latest done occurrence until its next occurrence falls due. It's offered in Reminder details, on the done row in Now and My Day, on the Done follow-up notification, in Assistive Access, and as **Undo** right after Done. The next nudge comes one interval after reopening, at the next step, and the time it was closed doesn't count toward the limit. |
 | **Pause** | Stops a reminder. An occurrence that's nudging closes as **skipped**, and anything due while it's paused is skipped too. Skipped isn't missed, so there's no carry-over, and pausing clears any carry-over. Resume picks up at the next time. |
-| **Edit** | A new schedule applies from the next time it's due. A new strength, give-up limit or Ignore Quiet Hours applies from the next nudge, and the nudge count carries on. If the new limit has already been reached, the open occurrence closes as skipped. So does a one-off reminder whose time changes while it's nudging. |
-| **Delete** | Deletes a reminder and its history, after a confirmation. **Delete All Data** does this for every reminder and tag. |
+| **Edit** | A new schedule applies from the next time it's due. A new strength, give-up limit or Ignore Quiet Hours applies from the next nudge, and the nudge count carries on. A new snooze length applies from the next snooze. If the new limit has already been reached, the open occurrence closes as skipped. So does a one-off reminder whose time changes while it's nudging. |
+| **Completed** | A one-off reminder whose occurrence has closed. It has nothing left to nudge, so Tags and Search list it under Completed. Not Done, or giving it a new time, makes it active again. Repeating reminders are never completed. |
+| **Delete** | Deletes a reminder and its history, after a confirmation. **Delete All Data** does this for every reminder and tag, and also clears Recent Searches and the tag filters. It keeps settings (quiet hours, time zone for new reminders). |
 
 **How each strength nudges:**
 
@@ -119,6 +120,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
 |---|---|---|
 | Title | Up to 200 characters. Required. | None |
 | Notes | Up to 2,000 characters | None |
+| Tag name | 1–30 characters, one word. Spaces become hyphens and a leading `#` is dropped. | None |
 | Give-up limit, nudges | 1–100, and at least the strength's smallest | 20 |
 | Give-up limit, time | 15 minutes to 7 days, and at least the strength's smallest | 24 hours |
 | Snooze length | The strength's default, or 5, 10, 15 or 30 min where that's longer | The strength's default |
