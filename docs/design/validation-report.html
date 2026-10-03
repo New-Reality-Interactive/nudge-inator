@@ -206,7 +206,31 @@
     </header>
 
     <div class="synthesis">
-      <p><strong>Historical.</strong> This review ran on 2026-10-03, before its findings were applied. The findings were applied to DESIGN.md and EXPERIENCE.md the same day (see <code>.memlog.md</code>), and the mockup was brought in line afterwards. Read the spines for current behavior. Each critical and high finding's status is in <code>validation-report.md</code> › Resolution status.</p>
+      <p><strong>Historical.</strong> This review ran on 2026-10-03, before its findings were applied. The findings were applied to DESIGN.md and EXPERIENCE.md the same day (see <code>.memlog.md</code>), and the mockup was brought in line afterwards. Read the spines for current behavior. Each critical and high finding's status is in the table below.</p>
+    </div>
+
+    <div class="synthesis">
+      <p><strong>Resolution status</strong> (critical and high findings)</p>
+      <table class="labels">
+        <thead><tr><th>Finding</th><th>Status</th><th>Where it's resolved</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Critical:</strong> the alarm's Stop silently counts as Done</td><td>Resolved</td><td>Done follow-up notification with Not Done; rows read "Done (alarm stopped)" with Not Done; Assistive Access "Done today" (EXPERIENCE › Nudge Surfaces, Reminder row, Assistive Access)</td></tr>
+          <tr><td>Flow 2's timings</td><td>Resolved before synthesis</td><td>EXPERIENCE › Key Flows, Flow 2</td></tr>
+          <tr><td>Rosa's schedule doesn't add up</td><td>Resolved</td><td>Flows rewritten (Morning 8:00, Evening 9:45 PM with Ignore Quiet Hours)</td></tr>
+          <tr><td>Same component, different names</td><td>Resolved</td><td>Canonical names in both spines</td></tr>
+          <tr><td>How It Nudges and History have no spec</td><td>Resolved</td><td>EXPERIENCE › How It Nudges, History; DESIGN › Components</td></tr>
+          <tr><td>Top-up notification and alarm-limit fallback missing</td><td>Resolved</td><td>Keep-nudging notice; alarm-limit Via label (wording still an owner assumption)</td></tr>
+          <tr><td>iPhone-only tagged as an assumption</td><td>Resolved</td><td>EXPERIENCE › Foundation states it as the owner's decision</td></tr>
+          <tr><td>Done has no in-place undo</td><td>Resolved in the spines</td><td>Undo in the status message; no full swipe. Not drawn in the mockup yet</td></tr>
+          <tr><td>Assistive Access has no Not Done</td><td>Resolved in the spines</td><td>"Done today" with Not done yet. Not drawn in the mockup yet</td></tr>
+          <tr><td>Snooze budget is fixed</td><td>Partly resolved</td><td>Snooze length per reminder (default or longer); the 3-snooze cap is kept on purpose</td></tr>
+          <tr><td>High and Urgent look alike</td><td>Resolved in the spines</td><td>Urgency word and glyph in the card's top row. Not drawn in the mockup yet</td></tr>
+          <tr><td>Two kinds of "Done" told apart by hue</td><td>Resolved</td><td>Status label leads with a glyph and the words differ ("Done (alarm stopped)")</td></tr>
+          <tr><td>VoiceOver focus lands on the next Done</td><td>Resolved</td><td>Focus moves to the next card's summary (EXPERIENCE › Accessibility); mockup matches</td></tr>
+          <tr><td>Nutrition Labels only partly supported (VoiceOver, Voice Control, Differentiate Without Color Alone, Sufficient Contrast)</td><td>Specified; declaring waits for the release gate</td><td>EXPERIENCE › Accessibility Floor release gate, and brief §10 › Device checklist</td></tr>
+        </tbody>
+      </table>
+      <p>For the medium and low findings, the memlog's "Review findings applied" entry lists what changed.</p>
     </div>
 
     <div class="synthesis">
