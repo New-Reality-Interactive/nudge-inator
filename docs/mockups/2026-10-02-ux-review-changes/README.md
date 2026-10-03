@@ -46,6 +46,8 @@ mockup yet. Build them from the spines:
 - Assistive Access's **Done today** list with **Not done yet**
 - the **keep-nudging** notice
 - the alarm-limit Via label, "Notification: too many alarms scheduled"
+- the form footer for a one-off whose start time has passed ("This time has passed, so it starts
+  nudging as soon as you save."); the mockup already schedules it on save
 
 ## Product rules
 
