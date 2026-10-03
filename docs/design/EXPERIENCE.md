@@ -24,17 +24,8 @@ the person meets them.
 
 - **References and precedence.** The [mockup](../mockups/2026-10-02-ux-review-changes/index.html)
   is the visual and behavioral reference for every iPhone screen, and its
-  [README](../mockups/2026-10-02-ux-review-changes/README.md) gives the reasons. Where they
-  conflict, precedence runs (owner's decision, 2026-10-03, in the
-  [architecture decision log](../architecture/.memlog.md)):
-  1. The nudging rules in [brief §3, §4 and §10](../product/brief.md#3-product-concepts).
-  2. The [architecture spine](../architecture/ARCHITECTURE-SPINE.md), for how those rules are
-     built.
-  3. This spine and DESIGN.md, for how the app looks and behaves around those rules.
-  4. The mockup, which illustrates the spines and doesn't add rules of its own.
-
-  The [decision log](.memlog.md) records the reasons behind decisions. It doesn't rank above the
-  spines: where a log entry and the spine text differ, the spine text is current.
+  [README](../mockups/2026-10-02-ux-review-changes/README.md) gives the reasons. Precedence is set once, in the [brief's introduction](../product/brief.md).
+  Reasons for decisions are in the [decision log](.memlog.md).
 - **Form factor: iPhone only in v1** (owner's decision, 2026-10-02, [decision log](.memlog.md)).
   - Portrait and landscape, on iOS 18, 26 and 27.
   - One column at every width: large iPhones in landscape, iOS 27 resizable windows, and the iPhone

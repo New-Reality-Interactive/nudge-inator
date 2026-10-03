@@ -26,7 +26,7 @@ Where documents differ, precedence runs:
    [§10](#10-risks-and-decisions).
 2. The [architecture spine](../architecture/ARCHITECTURE-SPINE.md), for how those rules are built.
 3. The UX spines, for how the app looks and behaves around those rules.
-4. The mockup, which illustrates the spines. The app looks like the mockup, but where the mockup and
+4. The mockup, which illustrates the spines and adds no rules of its own. The app looks like the mockup, but where the mockup and
    a spine differ, the spine wins.
 
 The decision logs (`.memlog.md` in each folder) record the reasons behind decisions and don't
