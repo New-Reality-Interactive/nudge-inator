@@ -234,7 +234,7 @@ graph TD
 - **Binds:** history, export, restore detection
 - **Prevents:** history claiming a nudge was sent when it never was
 - **Rule:**
-  - **What's recorded:** every delivery the reconciler schedules gets a ledger row with its delivery ID, occurrence key, nudge index, urgency, channel and fire instant. A planned nudge with no channel (notifications off, and no alarm for it) gets a row with channel `none` and state `undeliverable`, so history and the nudge count agree; it still counts toward the give-up limit (brief §4).
+  - **What's recorded:** every delivery the reconciler schedules gets a ledger row with its delivery ID, occurrence key, nudge index, urgency, channel and fire instant. A planned nudge with no channel (notifications off, and no alarm for it) gets a row with channel `none` and state `undeliverable`, so history and the nudge count agree; it still counts toward the give-up limit (brief §4). A row's state is settled when its fire instant passes: `undeliverable` if it had no channel then, `scheduled` otherwise. Before that, a permission change replans it like any other change. A notification chain gets one row per nudge index, not one per repeat, so History shows one line for it.
   - **States:**
     - `scheduled`
     - `cancelled`: the reconciler removed it before its fire instant
