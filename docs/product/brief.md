@@ -2,21 +2,23 @@
 title: "Product Brief: Nudge-inator"
 status: draft
 created: 2026-09-29
-updated: 2026-10-02
-source: docs/mockups/2026-10-02-ux-review-changes (index.html and README.md)
+updated: 2026-10-03
+source: docs/mockups/2026-10-02-ux-review-changes (index.html and README.md); docs/design (DESIGN.md and EXPERIENCE.md)
 ---
 
 # Product Brief: Nudge-inator
 
-Nudge-inator is a reminders app for **iPhone and iPad**, built for iOS and iPadOS only, that keeps
-nudging until you tap **Done**.
+Nudge-inator is a reminders app for **iPhone**, built for iOS only, that keeps nudging until you tap
+**Done**. iPad runs the iPhone app in v1 and gets its own layout in v2 (see
+[§5](#5-devices-orientations-and-ios-versions)).
 
 The [tags mockup](../mockups/2026-10-02-ux-review-changes/index.html) is the visual reference for the app.
 Its [README](../mockups/2026-10-02-ux-review-changes/README.md) explains the reasons behind it and how it
 was checked against Apple's Human Interface Guidelines. The app looks and behaves like the mockup.
 It shows an iPhone in portrait and landscape, on iOS 18, 26 and 27, and draws only what the app can
-build with the system's components on each. The app differs only where something the mockup doesn't
-show needs a different choice: iPad (see [§5](#5-devices-orientations-and-ios-versions)). The mockup follows the later decisions on how
+build with the system's components on each. The UX spines, [DESIGN.md](../design/DESIGN.md) (how it
+looks) and [EXPERIENCE.md](../design/EXPERIENCE.md) (how it works), build on the mockup and add what
+it doesn't show. Where they differ from the mockup, the spines win. The mockup follows the later decisions on how
 nudging works in [§10](#10-risks-and-decisions), and where they differ, §10 wins.
 
 This brief replaces the earlier website-and-API brief. Detail that doesn't belong in the brief, such
@@ -31,6 +33,8 @@ fire, the moment passes and nothing follows up. Nudge-inator keeps nudging until
 - A **give-up limit** keeps it from nudging forever.
 - **Quiet hours** hold nudges overnight.
 - A missed occurrence makes the next one start more insistently.
+- Done can be taken back. Stopping an alarm counts as Done, so the app asks at once whether it
+  really is done.
 
 Early nudges are notifications: ordinary ones at Normal urgency, and Time Sensitive ones, which get
 through Focus, at High. On iOS 26 and later, the final, Urgent nudges ring as
@@ -74,10 +78,10 @@ TestFlight. It's released on the App Store once the success measures are met (se
 | **Carry-over** | After a missed occurrence, the next one that nudges sends its Normal nudges at High ("↑ Starts higher"). Its intervals, and when it reaches Urgent, don't change, so Relentless, which starts at High, isn't affected. Carry-over doesn't stack. Skipped occurrences neither use it nor clear it, and pausing the reminder clears it. |
 | **Tag** | A one-word label shown as `#home`, with no color. A reminder can have any number of tags or none. Names are unique, ignoring case. |
 | **My Day** | Everything due today in time order, with Done, Nudging, Missed and Left counts. Filter by one or more tags (All or Any, or No Tags), and tap a count to show only that status. |
-| **Snooze** | A fixed break set by the strength, a limited number of times per occurrence (tables below). It doesn't raise the level, and snoozed time doesn't count toward the limit. |
+| **Snooze** | A break of a set length, a limited number of times per occurrence. Each reminder has its own snooze length: its strength's default, or longer (tables below). It doesn't raise the level, and snoozed time doesn't count toward the limit. |
 | **Clear** | The system's own Clear on a notification. Nudging continues. The app has no Dismiss action of its own. |
-| **Done** | The only way to close an occurrence as done. On an alarm, it's the system's **Stop** control. The give-up limit, the next occurrence, Pause, Delete and some edits also stop nudging. Quiet hours hold it. |
-| **Not Done** | Reopens the reminder's latest done occurrence, from Reminder details, until its next occurrence falls due. The next nudge comes one interval after reopening, at the next step, and the time it was closed doesn't count toward the limit. |
+| **Done** | The only way to close an occurrence as done. On an alarm, it's the system's **Stop** control, and a **Done follow-up** notification asks at once whether it's really done ([§4](#4-how-nudges-reach-you)). The give-up limit, the next occurrence, Pause, Delete and some edits also stop nudging. Quiet hours hold it. |
+| **Not Done** | Reopens the reminder's latest done occurrence until its next occurrence falls due. It's offered in Reminder details, on the done row in Now and My Day, on the Done follow-up notification, in Assistive Access, and as **Undo** right after Done. The next nudge comes one interval after reopening, at the next step, and the time it was closed doesn't count toward the limit. |
 | **Pause** | Stops a reminder. An occurrence that's nudging closes as **skipped**, and anything due while it's paused is skipped too. Skipped isn't missed, so there's no carry-over, and pausing clears any carry-over. Resume picks up at the next time. |
 | **Edit** | A new schedule applies from the next time it's due. A new strength, give-up limit or Ignore Quiet Hours applies from the next nudge, and the nudge count carries on. If the new limit has already been reached, the open occurrence closes as skipped. So does a one-off reminder whose time changes while it's nudging. |
 | **Delete** | Deletes a reminder and its history, after a confirmation. **Delete All Data** does this for every reminder and tag. |
@@ -92,7 +96,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
 
 **Set by the strength:**
 
-| Strength | Snooze length | Smallest give-up limit |
+| Strength | Default snooze length | Smallest give-up limit |
 |---|---|---|
 | **Gentle** | 30 min | 5 nudges or 3 hours |
 | **Firm** | 15 min | 3 nudges or 1 hour |
@@ -106,6 +110,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
 | Notes | Up to 2,000 characters | None |
 | Give-up limit, nudges | 1–100, and at least the strength's smallest | 20 |
 | Give-up limit, time | 15 minutes to 7 days, and at least the strength's smallest | 24 hours |
+| Snooze length | The strength's default, or 5, 10, 15 or 30 min where that's longer | The strength's default |
 | Snoozes per occurrence | 3 | Not applicable |
 | Event history | Kept for 90 days | Not applicable |
 
@@ -138,6 +143,10 @@ TestFlight. It's released on the App Store once the success measures are met (se
   the top center. That's an approximation, to confirm on a device (see [§10](#10-risks-and-decisions)).
   The alarm also shows in StandBy.
 - A paired **Apple Watch** shows the alarm too. The system does this, so it needs no Watch app.
+- **Stopping an alarm is confirmed.** People stop alarms by reflex, and Stop counts as Done. So the
+  stop intent sends an ordinary notification at once: "Marked done: Blood-pressure pill. Not done
+  yet?", with **Not Done**. It's removed when the next occurrence falls due, or when Not Done is
+  used. Stopping the alarm on a paired Watch does the same.
 - The iOS 18 chain repeats the current nudge. The repeats don't count toward the nudge
   limit, but their time counts toward the time limit. Snooze or Done ends the chain. So does the
   start of quiet hours. If the nudge sent when they end is Urgent, it starts a new chain.
@@ -145,7 +154,8 @@ TestFlight. It's released on the App Store once the success measures are met (se
   coming-up occurrence, and so does turning a reminder's **Ignore Quiet Hours** on or off. A
   reminder that ignores quiet hours can ring alarms at night.
 - **Closing an occurrence clears its nudges.** However it closes, its pending notifications, alarms
-  and Live Activity are cancelled, and its delivered notifications are removed. An action from a
+  and Live Activity are cancelled, and its delivered notifications are removed. The Done follow-up
+  is the only exception. An action from a
   notification, alarm or Live Activity whose occurrence has already closed does nothing.
 - **When the system's limits are reached.** The app schedules within the limits in the table
   below, and tops up whenever it runs (see [§10](#10-risks-and-decisions) for what's still to
@@ -179,11 +189,12 @@ TestFlight. It's released on the App Store once the success measures are met (se
 
 ## 5. Devices, orientations and iOS versions
 
-**Devices.** iPhone and iPad, both in portrait and landscape. Each device keeps its own reminders:
-nothing syncs, so someone using both has two separate lists, each nudging for its own reminders.
+**Devices.** iPhone, in portrait and landscape. In v1, iPad runs the iPhone app, and v2 gives it its
+own layout (decided in the UX work, 2026-10-02). Each device keeps its own reminders: nothing syncs,
+so someone using an iPhone and an iPad has two separate lists, each nudging for its own reminders.
 
 **iOS versions.** The app supports **iOS 18 and later** and is tested on **iOS 18, iOS 26 and
-iOS 27**, on iPhone and iPad.
+iOS 27**, on iPhone, and on iPad running the iPhone app.
 
 | | iOS 18 | iOS 26 and 27 |
 |---|---|---|
@@ -212,13 +223,17 @@ the layout:
 - **One column on every iPhone.** The iPhone app has no split view, even where the larger iPhones
   are regular width in landscape. Layouts depend on the available width, never on the iPhone model,
   so iOS 27's resizable windows need nothing extra.
-- **iPad.** It adds a two-column layout (`NavigationSplitView`) for Tags, Search and Settings. The tab bar floats at the top, as
-  iPadOS 18 and later draw it, and never shrinks while scrolling (iOS only does that on iPhone).
-  The tabs can become a sidebar,
-  sheets are centered form sheets, and every window size and keyboard shortcuts (⌘N, ⌘F) are
-  supported.
+- **iPhone Duo.** Treated like any iPhone: one column, folded and unfolded, with the layout
+  following the width. What's on screen survives folding and unfolding. Check it on a device at
+  both sizes.
+- **iPad (v2).** In v1, iPad runs the iPhone app in a window whose layout follows its width, as
+  iOS 27's resizable windows do. Keyboard shortcuts (⌘N, ⌘F, ⌘1 to ⌘4) work with a hardware
+  keyboard. v2 adds an iPad layout:
+  - a two-column layout (`NavigationSplitView`) for Tags, Search and Settings
+  - the tab bar floating at the top, as iPadOS 18 and later draw it, or as a sidebar
+  - centered form sheets, and every window size
 
-  The addendum has the full layout notes.
+  The addendum has the layout notes.
 - **Accessibility text sizes** keep the mockup's stacked layouts in every orientation.
 - **The alarm** is drawn by the system (see [§4](#4-how-nudges-reach-you)). The mockup shows it
   that way, but its layout is an approximation of iOS's.
@@ -227,18 +242,18 @@ the layout:
 
 | Screen | Features |
 |---|---|
-| **Now** | Nudging cards with **Done**, **Snooze** (snoozes left), the next nudge and how it arrives. Coming Up (7 days) with quiet-hours and "starts higher" notes. Last 24 Hours. Quiet-hours chip, permission banners, and a badge on the tab. |
+| **Now** | Nudging cards with **Done**, **Snooze** (snoozes left), the next nudge and how it arrives. Coming Up (7 days) with quiet-hours and "starts higher" notes. Last 24 Hours, where a reminder done by stopping its alarm offers **Not Done**. Quiet-hours chip, permission banners, and a badge on the tab. |
 | **My Day** | Today in time order, with Now and quiet-hours markers. Done, Nudging, Missed and Left counts that filter the list. **Filter by Tags**: one or more tags, Match All or Any, or No Tags. |
 | **Tags** | Your tags with counts. Find tags and choose one or more as tokens, then Match All or Any. Results in Today, Later, Paused and Completed. **Edit** renames or deletes tags (deleting keeps the reminders). |
 | **Search** | Every reminder by title, notes or tag, with recent searches. |
 | **Reminder details** | Nudging card, tags (tap to filter), schedule, How It Nudges, history (90 days), **Not Done** (on the latest done occurrence, until the next one falls due), **Pause/Resume**, **Delete** (confirmed), **Edit**. |
-| **New / Edit** | Title (wraps), notes, tags (choose or add), start, Repeat (presets and Custom), time zone, strength, give-up limits (with a minimum per strength), **Ignore Quiet Hours**, and a live How It Nudges preview, which shows where a repeat's next occurrence takes over. While a reminder is nudging, Edit says when each change applies. Rules the form can't express are kept as they are. |
+| **New / Edit** | Title (wraps), notes, tags (choose or add), start, Repeat (presets and Custom), time zone, strength, snooze length, give-up limits (with a minimum per strength), **Ignore Quiet Hours**, and a live How It Nudges preview, which shows where a repeat's next occurrence takes over. While a reminder is nudging, Edit says when each change applies. Rules the form can't express are kept as they are. |
 | **Settings** | Notification and alarm status, Open iOS Settings, Send a Test Nudge. Quiet hours. Time zone (automatic or chosen). Siri & Shortcuts. Export Data (a readable record, not a backup) and Delete All Data. About and Accessibility. |
 | **First launch** | Welcome, then the notification permission, then (on iOS 26 and later) the alarm permission. |
 | **Siri and Shortcuts** | "Mark my Nudge-inator nudge done", "Snooze Nudge-inator" and "What's nudging me in Nudge-inator?" (Apple requires the app's name in every App Shortcut phrase), from Siri, the Action button or a Home Screen shortcut. |
-| **Assistive Access** | One screen: what needs you now, with large Done and Snooze buttons, and what's later today. No editing, tags or settings. On iOS 26 and later it's an Assistive Access scene, drawn in the system's Assistive Access style. On iOS 18, where that scene doesn't exist, the app shows the same view full screen (`UISupportsFullScreenInAssistiveAccess`) when `isAssistiveAccessEnabled` is on. |
+| **Assistive Access** | One screen: what needs you now, with large Done and Snooze buttons; what's done today, with **Not done yet**; and what's later today. No editing, tags or settings. On iOS 26 and later it's an Assistive Access scene, drawn in the system's Assistive Access style. On iOS 18, where that scene doesn't exist, the app shows the same view full screen (`UISupportsFullScreenInAssistiveAccess`) when `isAssistiveAccessEnabled` is on. |
 
-**Not in this release:** Android, Mac, an Apple Watch app (alarms still show on a paired Watch), Home Screen widgets (the Live Activity that
+**Not in this release:** an iPad layout (iPad runs the iPhone app), Android, Mac, an Apple Watch app (alarms still show on a paired Watch), Home Screen widgets (the Live Activity that
 AlarmKit uses for a snoozed alarm is included), sync between devices, accounts,
 sharing reminders with other people, in-app purchases, and languages other than English. Nor is
 importing exported data: iCloud and computer backups already restore everything, and an import
@@ -281,14 +296,14 @@ format would have to stay compatible from version to version.
 |---|---|
 | **People rely on it** | The owner and at least 3 testers use it daily for 4 weeks. |
 | **Nudging works** | Nudges arrive within 1 minute of their scheduled time. In testing, no notification or alarm arrives after Done for the same occurrence. Snooze and Clear behave as specified on iOS 18, 26 and 27. |
-| **Every device and orientation** | Every screen works in portrait and landscape on iPhone and iPad, on all 3 iOS versions, with no clipped or cut-off text at any Dynamic Type size. |
+| **Every device and orientation** | Every screen works in portrait and landscape on iPhone, and on iPad running the iPhone app, on all 3 iOS versions, with no clipped or cut-off text at any Dynamic Type size. |
 | **Accessible** | VoiceOver, Voice Control and Dynamic Type pass on every screen, tested with Accessibility Inspector and on real devices. |
 | **Ready to translate** | A pseudo-localized build shows no hard-coded strings and no clipped layouts. |
 
 ## 9. Costs and constraints
 
 - **Cost:** the Apple Developer Program, $99 a year. There's nothing else to pay for.
-- **Constraints:** iOS and iPadOS only, iOS 18 and later. English only at launch. No server, so
+- **Constraints:** iPhone only in v1 (iPad runs the iPhone app), iOS 18 and later. English only at launch. No server, so
   every nudge has to come from the device itself.
 
 ## 10. Risks and decisions
@@ -341,10 +356,10 @@ format would have to stay compatible from version to version.
   titles grow with Dynamic Type, and inline titles and bar buttons keep their size and use the Large
   Content Viewer, as in the mockup. Confirm this on a device at the accessibility sizes.
 - **The selected tab's color.** The system draws the tab bar's selected state from the TabView's
-  tint, the accent, so the app can't color it on its own. On the mockup's pill the accent reaches
-  only 3.9:1 in dark mode, 4.8:1 in dark mode with Increase Contrast and 6.5:1 in light mode with
-  Increase Contrast. Measure it on a device. If it falls short there too, lighten the accent's dark
-  variant (and darken its Increased Contrast one), which changes the accent everywhere.
+  tint, the accent, so the app can't color it on its own. The accent is now Lagoon teal (decided in
+  the UX work, 2026-10-03), which passes on the mockup's pill in every appearance: 5.4:1 light,
+  6.5:1 dark, and 7.4:1 and 7.2:1 with Increase Contrast. Measure it on the system's pill on a
+  device before the App Store listing declares Sufficient Contrast.
 - **What the mockup can't know about the system's drawing.** Whether the search field's clear
   button removes tokens and Cancel keeps them, what iOS 26's Search tab shows to end a search, the
   notification's layout, and iOS 26's alerts (the mockup's README lists them under "iOS versions").
@@ -404,23 +419,33 @@ iOS 18, 26 and 27:
   miss and shouldn't replace visible filter controls.
 - **Menus replace segmented controls at the accessibility sizes,** because a segmented control
   can't stack its options.
-- **One column on every iPhone.** The larger iPhones' split view waits for iPad.
+- **One column on every iPhone.** The larger iPhones' split view waits for the iPad layout in v2.
 - **Swipe actions for Done and Snooze** on nudging rows and cards, as shortcuts for their buttons.
 - **The selected tab uses the accent,** as the system draws it (see the device check above).
 
-**Open question:**
-- **The iPhone Duo.** Apple's foldable shipped with iOS 27. It has a 7.6-inch inner screen
-  (1,878 × 2,670 pixels) and a 5.4-inch outer one, and its sizes in points aren't published. The
-  mockup leaves it out until these are decided:
-  - How much does v1 design for it? The app supports iOS 27, so it will run on the Duo either way,
-    and needs at least a layout that works there.
-  - Unfolded, it's probably regular width. Does it stay one column, like every other iPhone, or
-    take the split view planned for iPad?
-  - What happens when it folds or unfolds mid-task, and which layouts need checking at both sizes?
+**Decided in the UX work (2026-10-02 and 2026-10-03),** recorded in the
+[design decision log](../design/.memlog.md) and specified in the [UX spines](../design/):
+- **iPhone only in v1.** iPad runs the iPhone app; its own layout (split view, sidebar, form sheets)
+  waits for v2.
+- **The iPhone Duo is treated like any iPhone:** one column, folded and unfolded, laid out by width.
+  This settles the earlier open question.
+- **The accent is Lagoon teal** (#04666B light, #07DDE6 dark), replacing the system-like blue, which
+  fell short on the selected tab's pill.
+- **Snooze length is set per reminder:** the strength's default or longer (5, 10, 15 or 30 min). The
+  3-snooze cap stays. This gives people who need more time a way to get it.
+- **Stopping an alarm is confirmed.** A Done follow-up notification offers **Not Done** at once, and
+  the done row on Now and My Day and Assistive Access offer it too.
+- **Done has an Undo,** and swipe actions need a tap after the swipe, so a stray swipe can't mark a
+  reminder done.
+- **Urgency shows as a word and a glyph** on nudge cards, not just their color, because High's orange
+  and Urgent's red are hard to tell apart.
+
+There are no open questions left in this brief.
 
 ## 11. Questions for the architecture
 
-1. SwiftUI, UIKit or both, and how the app adapts to size classes for landscape and iPad.
+1. SwiftUI, UIKit or both, and how the app adapts to landscape and to iOS 27's resizable windows
+   (iPad's own layout is v2).
 2. How reminders, occurrences and history are stored on the device, and how the data model migrates
    between app versions.
 3. How the nudging rules are shared between the preview, the scheduler and tests, so they can't
@@ -442,9 +467,14 @@ iOS 18, 26 and 27:
 8. How the iOS 18 and iOS 26+ paths are separated and tested: Urgent nudges, Assistive Access, and
    the iOS 26-only layout APIs (`navigationSubtitle`, `tabBarMinimizeBehavior`).
 9. How strings, plurals and formats are set up so that adding a language needs no code changes.
-10. How the app is tested on iOS 18, 26 and 27, on iPhone and iPad, in both orientations.
+10. How the app is tested on iOS 18, 26 and 27, on iPhone and on iPad running the iPhone app, in
+    both orientations.
 11. How an occurrence that closes while the app isn't running (at the give-up limit, or when the
     next one takes over) has its delivered notifications and Live Activity removed, and how the app
     knows an action came from an occurrence that has already closed.
 12. What format Export Data uses (the mockup shows a JSON file), so the record can be read without
     the app.
+13. How the alarm's stop intent sends the Done follow-up notification without opening the app, and
+    how that notification is removed when the next occurrence falls due.
+14. Whether My Day's and the Tags tab's filters survive a relaunch (the UX spines assume they
+    don't).

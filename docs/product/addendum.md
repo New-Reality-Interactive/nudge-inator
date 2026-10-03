@@ -1,6 +1,6 @@
 ---
 title: "Product Brief Addendum: Nudge-inator"
-updated: 2026-10-02
+updated: 2026-10-03
 ---
 
 # Product Brief Addendum: Nudge-inator
@@ -58,7 +58,7 @@ exceptions: those APIs are iOS 26.0 and later, so iOS 18 keeps the portrait beha
 ## C. Layout notes for landscape and iPad
 
 The iPhone notes describe what the tags mockup shows; its README has the reasons and how it was
-checked. The iPad notes are starting points for the UX work.
+checked. The iPad notes are for v2: in v1, iPad runs the iPhone app (decided in the UX work on 2026-10-02).
 
 | Threshold | Value | What changes |
 |---|---|---|
@@ -85,7 +85,7 @@ checked. The iPad notes are starting points for the UX work.
   previous mockup's split view is archived in
   `docs/mockups/archive/2026-09-30-mockup-tags-v1/`.
 - **iPhone app in a resizable window (iOS 27):** the layout follows the window's width, as above.
-- **iPad, portrait and landscape:** regular width.
+- **iPad (v2), portrait and landscape:** regular width. In v1, iPad runs the iPhone app.
   - The tab bar floats at the top of the screen (iPadOS 18 and later), not at the bottom as on
     iPhone, and the tabs can become a sidebar (`sidebarAdaptable`). Search stays pinned at the
     trailing end.
@@ -155,7 +155,7 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
   unlock after a restart isn't seen by the app until it next runs.
 - **Snooze can be the system's countdown.** A secondary button with the `.countdown` behavior and a
   post-alert duration (`Alarm.CountdownDuration`'s `postAlert`) makes the system alert again after
-  that time. That matches the fixed snooze per strength.
+  that time. That matches the reminder's snooze length (the strength's default or longer).
   - The alarm that rings again uses the presentation it was scheduled with, so it still has Snooze.
     On the third snooze, the snooze intent cancels that alarm and schedules a new one for the end of
     the snooze, with no secondary button, and the remaining alarms are scheduled without it.
