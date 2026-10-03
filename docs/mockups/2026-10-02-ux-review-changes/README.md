@@ -9,8 +9,9 @@ find reminders by **filtering on one or more tags**.
   app. Normal ones are ordinary notifications, which a Focus holds until the reminder reaches High.
 - **Urgent nudges** ring as **AlarmKit alarms** on iOS 26 and later: a prominent system alert on the
   Lock Screen, sounding through silent mode and Focus, with **Snooze** and the system's **Stop**,
-  which counts as Done. iOS 18 has no AlarmKit, so there they repeat as a **chain of Time Sensitive
-  notifications**, and so do they on iOS 26 and later when alarms aren't allowed.
+  which counts as Done. iOS 18 has no AlarmKit, so there they repeat as a **notification chain**,
+  and so do they on iOS 26 and later when alarms aren't allowed (delivery per
+  [AD-13](../../architecture/ARCHITECTURE-SPINE.md#ad-13--notification-chain-semantics)).
 
 Open [`index.html`](index.html) in a browser. It's a single file with no dependencies. On a desktop
 it shows a phone with **Mockup controls** beside it, in portrait or landscape. On a phone the app
@@ -264,7 +265,7 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
 | Urgent (Firm and Relentless, from nudge 4), iOS 26 and later | AlarmKit alarm | **Stop** (counts as Done), **Snooze** (while snoozes are left) |
 | Urgent, with alarms not allowed | Notification chain, as on iOS 18, marked "Notification chain: alarms are off" | **Done**, **Snooze** |
 | Urgent, past the system's alarm limit | Time Sensitive notification, marked "Notification: too many alarms scheduled" (the spine's wording; not drawn in this mockup) | **Done**, **Snooze** |
-| Urgent, iOS 18 | Notification chain: each time the occurrence enters Urgent, a Time Sensitive notification at once and then every minute, 10 in all, marked "Notification chain" | **Done**, **Snooze** |
+| Urgent, iOS 18 | Notification chain: each time the occurrence enters Urgent, a notification at once and then every minute, 10 in all, marked "Notification chain" (delivery per [AD-13](../../architecture/ARCHITECTURE-SPINE.md#ad-13--notification-chain-semantics)) | **Done**, **Snooze** |
 
 - **There's no Dismiss action.** The system's own **Clear** (swipe left on a notification) already
   does that. The app hears about it through its notification category's `customDismissAction`
