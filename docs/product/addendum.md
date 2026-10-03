@@ -37,7 +37,7 @@ The earlier brief was never committed, so this list is the only record of it.
 | Normal nudges | Notification (`.active`), held by a Focus | Same | Same |
 | High nudges | Time Sensitive notification | Same | Same |
 | Urgent nudges | Notification chain (each time an occurrence enters Urgent: at once and then every minute, 10 in all; then the strength's interval) | AlarmKit alarm; the notification chain if alarms aren't allowed | Same as iOS 26 |
-| Alarm permission prompt | None | On first launch, after notifications | Same |
+| Alarm permission prompt | None | On first launch, after notifications; or, after updating from iOS 18, on the first launch on iOS 26 | Same |
 | AlarmKit | Not available | Available (iOS and iPadOS 26.0+) | Available |
 | Bars, tab bar and sheets | iOS 18 system look | Liquid Glass | Liquid Glass |
 | Scroll edge effects | System default for iOS 18 | As in the mockup | As in the mockup |

@@ -488,6 +488,7 @@ Visual only; decorative, hidden from VoiceOver.
 | State | Treatment |
 |---|---|
 | First launch | Welcome, then the permission prompts. Denying either lands on Now with its banner. |
+| Launch after updating from iOS 18 to iOS 26 or later (alarm permission never asked) | The system's alarm prompt, once, before Now. No Welcome. Denying it lands on Now with the alarms-off banner. |
 | Loading | None. Data is local and loads with the view, so there are no spinners or skeletons. |
 
 ## Nudge Surfaces

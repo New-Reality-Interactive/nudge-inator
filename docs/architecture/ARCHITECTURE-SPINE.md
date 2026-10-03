@@ -188,7 +188,7 @@ graph TD
   - **Who decides:** the engine picks each delivery's channel from `Capabilities`. The canonical fields are `notificationsAllowed`, `timeSensitiveAllowed`, `alarmsAvailable`, `alarmCapacity` and `previewsHidden`.
   - **Normal:** an `.active` notification.
   - **High:** a `.timeSensitive` notification, or `.active` when Time Sensitive is off.
-  - **Urgent:** an AlarmKit alarm when `alarmsAvailable`; otherwise the notification chain (AD-13). `alarmsAvailable` is false on iOS 18 and whenever AlarmKit authorization isn't `.authorized`.
+  - **Urgent:** an AlarmKit alarm when `alarmsAvailable`; otherwise the notification chain (AD-13). `alarmsAvailable` is false on iOS 18 and whenever AlarmKit authorization isn't `.authorized`. When AlarmKit is available and authorization is `.notDetermined` (an iPhone updated from iOS 18), the shell asks once on launch (EXPERIENCE › State Patterns › Any).
   - **Past the alarm limit:** Urgent nudges beyond `alarmCapacity` come as one Time Sensitive notification each, or `.active` when Time Sensitive is off.
 
 ### AD-12 — Snooze and Stop are commands; the engine plans what follows
