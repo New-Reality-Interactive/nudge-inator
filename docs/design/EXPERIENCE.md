@@ -531,7 +531,7 @@ section covers what the person sees and can do on each.
      "Done: Pay rent. Its alarms are cancelled."), with **Undo**.
   4. VoiceOver focus moves to the title of the item now at the same position in that list (a
      nudge card's summary, a My Day row, or an Assistive Access card), or to the one before it if it
-     was last, or to that section's header if none is left. It never lands on a Done button. This is
+     was last, or to that section's header if none is left. Only reminder items count; My Day's Now and quiet-hours markers aren't items. It never lands on a Done button. This is
      the one focus rule for an item that leaves or changes after Done.
 
   VoiceOver makes one announcement, the status message, posted with the layout change. There's no

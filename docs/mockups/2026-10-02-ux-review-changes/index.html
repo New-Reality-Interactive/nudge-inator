@@ -3177,11 +3177,12 @@ function nextFocusAfterAck(occId, el) {
   if (!item) return h1;
   const kind = item.matches(".nudgecard") ? "card" : item.matches(".aa-card") ? "aa" : "row";
   const listIdx = kind === "row" ? [...main.querySelectorAll("ul")].indexOf(item.parentElement) : -1;
-  const pool = () => kind === "card" ? [...main.querySelectorAll(".nudgecard")] : kind === "aa" ? [...main.querySelectorAll(".aa-card")]
-    : [...(main.querySelectorAll("ul")[listIdx]?.children || [])];
+  // Only items with a title count; My Day's Now and quiet-hours markers aren't items.
+  const titleOf = (x) => x.querySelector("[data-open], .aa-title");
+  const pool = () => (kind === "card" ? [...main.querySelectorAll(".nudgecard")] : kind === "aa" ? [...main.querySelectorAll(".aa-card")]
+    : [...(main.querySelectorAll("ul")[listIdx]?.children || [])]).filter(titleOf);
   const i = pool().indexOf(item);
   const header = { card: "#h-nudge", aa: "#aa-now", row: null }[kind];
-  const titleOf = (x) => x.querySelector("[data-open], .aa-title");
   return () => { const p = pool(), t = p[i] || p[i - 1]; return (t && titleOf(t)) || (header && main.querySelector(header)) || h1(); };
 }
 
