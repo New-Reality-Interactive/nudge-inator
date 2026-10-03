@@ -1413,8 +1413,9 @@ function scheduleText(rem) {
       const names = listJoin(days.map((d) => LONGDAY[BYDAY.indexOf(d)]));
       return n > 1 ? `${every("week")} on ${names} at ${times}` : `Every ${names} at ${times}`;
     }
-    case "MONTHLY": return `${every("month")} on the ${ord(r.bymonthday ?? s.getDate())} at ${times}`;
-    default: return `${every("year")} on ${s.getDate()} ${LONGMON[s.getMonth()]} at ${times}`;
+    // A day some months don't have falls on the last day (AD-10), and the summary says so.
+    case "MONTHLY": { const md = r.bymonthday ?? s.getDate(); return `${every("month")} on the ${ord(md)}${md > 28 ? " (or the last day of shorter months)" : ""} at ${times}`; }
+    default: return `${every("year")} on ${s.getDate()} ${LONGMON[s.getMonth()]}${s.getMonth() === 1 && s.getDate() === 29 ? " (28 February in other years)" : ""} at ${times}`;
   }
 }
 /* A time today: what happened to it, or what will. */

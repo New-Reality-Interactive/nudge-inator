@@ -132,6 +132,7 @@ Fixed phrases (verbatim copy):
 | History events, Done by source (AD-3 `source`) | `app`: "Done"; `notification`: "Done from the notification"; `alarmStop`: "Done (alarm stopped)"; `liveActivity`: "Done from the Lock Screen"; `siri`: "Done with Siri"; `assistiveAccess`: "Done in Assistive Access" |
 | Welcome, Urgent (iOS 26+) | "Urgent nudges ring as alarms" / "When it really matters, your iPhone rings and vibrates like an alarm, even on silent. Stopping the alarm counts as Done." |
 | Welcome, Urgent (iOS 18) | "Urgent nudges keep coming" / "When it really matters, a nudge comes every minute, up to 10 times, and keeps coming after that until you tap Done." |
+| Repeat summary, a day some months don't have | "Every month on the 31st (or the last day of shorter months) at 9:00 AM", "Every year on 29 February (28 February in other years) at 9:00 AM" |
 | Welcome, privacy | "Stays on your iPhone" / "No account and no server. Your reminders stay on this iPhone and in your own backups." |
 
 Every string quoted in double quotes anywhere in this spine is verbatim copy for the string catalog.
