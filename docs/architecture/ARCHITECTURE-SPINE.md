@@ -145,7 +145,7 @@ graph TD
     - `keep/<UTC yyyyMMdd'T'HHmm>`
     - `test/<UTC instant>`
   - **AlarmKit IDs:** UUIDv5 (RFC 9562) of the delivery ID, in a namespace UUID that is a literal constant in `NudgeCore`, computed with CryptoKit's SHA-1.
-  - **One owner:** only `NudgeCore.DeliveryID` builds and parses IDs, with round-trip tests. Every notification's `userInfo` and every alarm's metadata carry the occurrence key and nudge index.
+  - **One owner:** only `NudgeCore.DeliveryID` builds and parses IDs, with round-trip tests. Every notification's `userInfo` and every alarm's metadata carry the occurrence key and nudge index; an alarm's metadata also carries the reminder's title (AD-16).
   - **DST:** a wall time that doesn't exist resolves forward by the gap; a repeated wall time resolves to its first instance.
 
 ### AD-8 — Occurrences materialize once, with a frozen instant [ADOPTED]
@@ -251,7 +251,7 @@ graph TD
 - **Rule:**
   - **The database:** one SQLite database through GRDB, in its own folder in Application Support. The folder has file protection `completeUntilFirstUserAuthentication`, so the `-wal` and `-shm` files match. It's included in iCloud and computer backups.
   - **Migrations:** only through numbered `DatabaseMigrator` migrations, each covered by a test that migrates a fixture from the previous version.
-  - **The journal:** when the database can't open, a command goes to an append-only journal file with protection `none`. It holds only the command kind, occurrence key, nudge index and `issuedAt`, never titles. If the command is a Stop, the intent also posts `followup/<key>`. On the first open, the journal is replayed in order and then deleted.
+  - **The journal:** when the database can't open, a command goes to an append-only journal file with protection `none`. It holds only the command kind, occurrence key, nudge index and `issuedAt`, never titles. If the command is a Stop, the intent also posts `followup/<key>`, taking the reminder's title from the alarm's `NudgeAlarmMetadata` (the alarm already shows the title, so this exposes nothing new), so the follow-up reads as EXPERIENCE gives it. On the first open, the journal is replayed in order and then deleted.
   - **Delete All Data:** deletes every row (including Recent Searches) and the journal in one job, then reconciles to an empty plan.
 
 ### AD-17 — Lock Screen actions and Siri need no authentication
