@@ -342,7 +342,12 @@ These are not part of the app:
   to 18. The top of the screen matches each one: the Dynamic Island, a notch, or a Home button. The
   phone is scaled down, never up, to fit the window.
 - **Window (iOS 27)** shows the app in a resizable window, as in iPhone Mirroring or as an iPhone
-  app on iPad, at any width from 320 to 1,024 pt (see [iOS versions](#ios-versions)).
+  app on iPad, at any width from 320 to 1,024 pt (see [iOS versions](#ios-versions)). The window is
+  drawn at one scale at every width, with room kept for the widest, so dragging the width moves only
+  its right edge. Ticks mark 375 and 440 pt (the smallest and largest iPhones), 540 pt (wide nudge
+  cards) and 700 pt (sheets as a centered card). The label under it gives the exact size.
+- **The controls scroll on their own** beside the phone, so the phone stays in view while they're
+  used.
 - **Orientation** turns the phone between **Portrait** and **Landscape** (see
   [Landscape](#landscape)). The screen you're on stays open. On a phone it's turned off, because
   the app fills the real screen.

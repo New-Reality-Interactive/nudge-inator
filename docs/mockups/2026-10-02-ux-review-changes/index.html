@@ -314,7 +314,10 @@ svg { flex: none; }
 .stage { min-height: 100vh; display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; align-items: flex-start; padding: 24px 16px; }
 /* The phone is drawn at its real size in points, then scaled down to fit the window.
    --dw/--dh (outer size) and --s (scale) are set by setDevice(). */
-.device-wrap { position: relative; flex: none; width: calc(var(--dw, 417px) * var(--s, 1)); height: calc(var(--dh, 876px) * var(--s, 1) + 30px); }
+/* --ww is the width the phone's area keeps: the phone's own, or for a resizable window the widest
+   window, so changing the window's width doesn't move the controls beside it. */
+.device-wrap { position: relative; flex: none; width: calc(var(--ww, var(--dw, 417px)) * var(--s, 1)); height: calc(var(--dh, 876px) * var(--s, 1) + 30px); }
+.device-wrap[data-window] .device-label { text-align: left; }
 .device { position: absolute; top: 0; left: 0; width: var(--dw, 417px); height: var(--dh, 876px); transform: scale(var(--s, 1)); transform-origin: top left; border: 12px solid #1b1b1d; border-radius: 67px; overflow: hidden; background: var(--system-grouped-background); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35); }
 .device-label { font-size: 13px; position: absolute; left: 0; right: 0; bottom: 0; margin: 0; text-align: center; color: var(--stage-muted); }
 .home-btn { display: none; position: absolute; left: 50%; width: calc(52px * var(--s, 1)); height: calc(52px * var(--s, 1)); transform: translateX(-50%); top: calc((var(--dh, 876px) - 62px) * var(--s, 1)); border-radius: 50%; border: 2px solid #3a3a3c; pointer-events: none; }
@@ -334,6 +337,10 @@ svg { flex: none; }
 .controls { font-size: 15px; width: 320px; flex: none; background: var(--stage-card); border-radius: 16px; padding: 18px 18px 8px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12); line-height: 1.4; }
 .controls h2 { font-size: 17px; margin: 0 0 4px; }
 .controls p { margin: 0 0 12px; color: var(--stage-muted); }
+/* Beside the phone, the controls scroll on their own, so the phone stays in view while they're used. */
+@media (min-width: 761px) {
+  .controls { position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; overscroll-behavior: contain; }
+}
 .controls fieldset { border: 0; border-top: 1px solid var(--separator); margin: 0; padding: 12px 0; }
 .controls legend { font-weight: var(--semibold); padding: 0; margin-bottom: 6px; }
 .controls select { width: 100%; max-width: 100%; }
@@ -952,7 +959,8 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
         <legend>Window (iOS 27)</legend>
         <label><input type="checkbox" id="c-window"> Resizable window</label>
         <label for="c-window-w">Width: <output id="c-window-out" for="c-window-w">700</output> pt</label>
-        <input type="range" id="c-window-w" min="320" max="1024" step="10" value="700">
+        <input type="range" id="c-window-w" min="320" max="1024" step="10" value="700" list="c-window-ticks">
+        <datalist id="c-window-ticks"><option value="375"></option><option value="440"></option><option value="540"></option><option value="700"></option></datalist>
       </fieldset>
       <p class="why" id="c-window-why"></p>
     </fieldset>
@@ -2957,7 +2965,7 @@ function updateControls() {
   document.querySelectorAll('[name="c-orient"]').forEach((r) => { r.disabled = narrow.matches || inWindow(); });
   document.getElementById("c-window-why").textContent = !can
     ? "iOS 27 only."
-    : "On iOS 27 an iPhone app can be resized, as in iPhone Mirroring or as an iPhone app on iPad. The layout follows the width: content keeps a readable width, and a nudge card wider than 540 pt puts Done and Snooze beside its text. There's no split view in v1.";
+    : "On iOS 27 an iPhone app can be resized, as in iPhone Mirroring or as an iPhone app on iPad. The layout follows the width: content keeps a readable width, and a nudge card wider than 540 pt puts Done and Snooze beside its text. From 700 pt, sheets are a centered card. There's no split view in v1. The ticks mark 375 and 440 pt (the smallest and largest iPhones), 540 and 700 pt. The window is drawn at the same scale at every width.";
 }
 
 /* ================= Events =================
@@ -3335,8 +3343,16 @@ function setDevice(id) {
   const side = win ? 1 : device.cut === "none" ? 14 : 12, end = win ? 1 : device.cut === "none" ? 72 : 12;
   const bx = land ? end : side, by = land ? side : end;
   const dw = sw + 2 * bx, dh = sh + 2 * by;
-  // Scale down, never up, so the whole phone and its label fit in the window.
-  const s = Math.min(1, (window.innerHeight - 48 - 30) / dh, (window.innerWidth - 32) / dw);
+  // A resizable window keeps the room and the scale of the widest window at every width, so
+  // dragging the width control moves only the window's right edge: not the controls, and not the zoom.
+  const ww = win ? Number(document.getElementById("c-window-w").max) + 2 * bx : dw;
+  // Scale down, never up, so the whole phone and its label fit in the window. A resizable window
+  // also leaves room for the controls (320 px and a 32 px gap) beside it, so the width control
+  // stays in view while it's dragged.
+  const room = window.innerWidth - 32 - (win ? 352 : 0);
+  const s = Math.min(1, (window.innerHeight - 48 - 30) / dh, room / ww);
+  wrap.toggleAttribute("data-window", win);
+  wrap.style.setProperty("--ww", `${ww}px`);
   wrap.style.setProperty("--dw", `${dw}px`);
   wrap.style.setProperty("--dh", `${dh}px`);
   wrap.style.setProperty("--s", String(Math.max(0.5, s)));
