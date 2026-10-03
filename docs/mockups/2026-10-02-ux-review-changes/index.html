@@ -1975,6 +1975,8 @@ function viewRem(id) {
 function latestDone(r) {
   const last = occsOf(r.id)[0];
   if (r.status === "PAUSED" || last?.state !== "ACKED") return null;
+  // A pause after Done ends the window, and resuming doesn't bring it back (brief §3).
+  if (r.pausedAt && L(r.pausedAt) >= L(last.closedAt)) return null;
   if (!r.rrule) return NOW - L(last.closedAt) < 864e5 ? last : null;
   return r.nextOccurrenceAt && L(r.nextOccurrenceAt) <= NOW ? null : last;
 }
@@ -2570,6 +2572,7 @@ function pause(rid) {
   const r = remById(rid);
   r.status = "PAUSED";
   r.nextOccurrenceAt = null;
+  r.pausedAt = iso(NOW);
   r.carryClearedAt = iso(NOW);
   for (const o of openOccs().filter((x) => x.reminderId === rid)) closeSkipped(o, "paused");
   hud(`Paused “${r.title}”`);
