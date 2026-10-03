@@ -227,10 +227,14 @@ Review and that testers can join by public link. The limits and time periods bel
 | Build expiry | 90 days after upload |
 
 - **Setup.** The Apple Developer Program, then an app record in App Store Connect with
-  the bundle ID. TestFlight doesn't need an App Store listing. In Xcode, add the Time Sensitive
-  Notifications capability (its entitlement is required to send Time Sensitive notifications), and
-  set `NSAlarmKitUsageDescription`, `NSSupportsLiveActivities` and `UISupportsAssistiveAccess` in
-  `Info.plist`.
+  the bundle ID. TestFlight doesn't need an App Store listing. In Xcode, add the capabilities and
+  `Info.plist` keys listed in the architecture spine's
+  [Structural Seed › Environments](../architecture/ARCHITECTURE-SPINE.md#structural-seed), which is
+  the one list. It includes the Time Sensitive Notifications entitlement (required to send Time
+  Sensitive notifications), `NSAlarmKitUsageDescription`, `NSSupportsLiveActivities`,
+  `UISupportsAssistiveAccess` and `UISupportsFullScreenInAssistiveAccess` (iOS 18's Assistive
+  Access view), and `UIBackgroundModes` with `fetch` plus `BGTaskSchedulerPermittedIdentifiers`
+  (the background top-up of scheduled nudges, AD-14).
 - **Builds.** Archive in Xcode and upload from the Organizer (Distribute App > App Store Connect).
   Set `ITSAppUsesNonExemptEncryption` to `NO` in `Info.plist`, since the app uses no encryption of
   its own; otherwise App Store Connect asks about it for every build.
