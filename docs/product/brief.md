@@ -166,8 +166,8 @@ TestFlight. It's released on the App Store once the success measures are met (se
   after that, or at once when Not Done is used. Stopping the alarm on a paired Watch does the same.
 - **The notification chain** (iOS 18, and whenever alarms aren't allowed) starts each time an
   occurrence enters Urgent: its first Urgent nudge, the end of quiet hours, the end of a snooze, and
-  Not Done, except Not Done after the give-up limit, whose one extra nudge is a single notification
-  ([§3](#3-product-concepts)). This is the one list of when a chain starts. It sends a Time Sensitive notification at once and then every minute, 10 in all.
+  Not Done. The one extra nudge after Not Done at the give-up limit never starts a chain, whatever
+  releases it ([§3](#3-product-concepts)). This is the one list of when a chain starts. It sends a Time Sensitive notification at once and then every minute, 10 in all.
   - The strength's Urgent nudges that fall inside a chain still count on schedule, so the nudge
     count and the give-up time are the same as with alarms. They aren't sent as extra
     notifications: the chain's notification for that minute shows the current nudge number.
