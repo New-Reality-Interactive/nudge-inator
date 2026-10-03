@@ -183,7 +183,7 @@ and Assistive Access behavior lives in [Nudge Surfaces](#nudge-surfaces) and
   - The whole row is the target; it pushes details (chevron).
   - On My Day, a nudging row has its own bordered **Done** beside the chevron.
   - On My Day, a row closed by an alarm's Stop reads "Done (alarm stopped)" with a **Not Done**
-    button, available until the next occurrence falls due. Rows in Now › Last 24 Hours show the
+    button, available while Not Done applies ([brief §3](../product/brief.md#3-product-concepts)). Rows in Now › Last 24 Hours show the
     same alarm-stopped treatment.
   - Rows show **Not Done** only when the occurrence was closed by an alarm's Stop. Any other done
     occurrence can be reopened from Reminder details, Undo right after Done, or Assistive Access's
@@ -420,7 +420,7 @@ Visual only; decorative, hidden from VoiceOver.
 | Snoozed (also Reminder details) | The card says "Snoozed until 8:35 AM, then …", and the snoozes left update. |
 | No snoozes left (also Reminder details) | Snooze is removed from the card, notification and alarm. Footer: "No snoozes left. Only Done stops it." |
 | Carry-over (also Reminder details) | "↑ Starts higher" on the card and the Coming Up row |
-| Closed by an alarm's Stop (also My Day) | The row reads "Done (alarm stopped)" with **Not Done** until the next occurrence falls due. |
+| Closed by an alarm's Stop (also My Day) | The row reads "Done (alarm stopped)" with **Not Done** while Not Done applies ([brief §3](../product/brief.md#3-product-concepts)). |
 
 ### My Day
 
@@ -451,7 +451,7 @@ Visual only; decorative, hidden from VoiceOver.
 | State | Treatment |
 |---|---|
 | No history | "No occurrences yet. The first one is created when it falls due." |
-| Latest occurrence done | **Not Done** shows until the next occurrence falls due, or for 24 hours after Done on a one-off. It's hidden once the reminder is paused. |
+| Latest occurrence done | **Not Done** shows while Not Done applies ([brief §3](../product/brief.md#3-product-concepts)). |
 | Paused | **Resume**, with the note "Pausing stops the nudging and clears any carry-over. Anything due while it's paused is skipped, not missed." |
 | Delete | Confirmation: "Delete "Pay rent"?" / "This deletes its history too, and cancels any nudges and alarms." |
 | Deleted while open (a notification action got there first) | "This reminder was deleted.", with Back |
@@ -502,7 +502,7 @@ section covers what the person sees and can do on each.
 | **Notification** (Normal: ordinary; High: Time Sensitive) | App icon, title (bold), "Nudge 3 of 20 · High". The header says "Time Sensitive" for High and Urgent only. | **Done**, **Snooze 15 min** (while snoozes are left), on a long press; the system's **Clear** | Tapping it opens Now at the card. Clear is recorded in the history ("Notification cleared (still nudging)"); a banner flicked away isn't. With previews hidden, iOS shows only the app's name. |
 | **Notification chain** (Urgent on iOS 18, and Urgent with alarms off) | As above, but Time Sensitive, sent each time the occurrence enters Urgent: at once and then every minute, 10 in all. Each shows the current nudge number. | **Done**, **Snooze** | The card marks it "Notification chain". Silent mode can mute it. The rules are in [brief §4](../product/brief.md#4-how-nudges-reach-you). |
 | **Alarm** (Urgent on iOS 26+) | The app's name and the title, tinted `{colors.accent-dark}` | **Snooze N min** (`clock`, filled with the tint) while snoozes are left; the system's **Stop** | Stop counts as Done, as onboarding and How It Nudges say. On the third snooze the app replaces the alarm with one that has no Snooze. The alarm also shows in StandBy and on a paired Apple Watch. |
-| **Done follow-up** (after Stop on an alarm, or on the Watch) | An ordinary notification: "Marked done: Blood-pressure pill. Not done yet?" | **Not Done**; tapping it opens the reminder | Sent at once. **Not Done** works until the next occurrence falls due; the app removes the notification the next time it runs after that, or at once when Not Done is used. |
+| **Done follow-up** (after Stop on an alarm, or on the Watch) | An ordinary notification: "Marked done: Blood-pressure pill. Not done yet?" | **Not Done**; tapping it opens the reminder | Sent at once. **Not Done** works while Not Done applies ([brief §3](../product/brief.md#3-product-concepts)); the app removes the notification the next time it runs after that, or at once when Not Done is used. |
 | **Live Activity** (after Snooze on an alarm) | Title (up to 2 lines), countdown, "Snoozed. Rings again at 8:35 AM." | **Done** | Designed by the app, in a widget extension. Before the first unlock, iOS shows its own countdown instead. |
 | **Keep-nudging notice** (the reserved slot) | An ordinary notification: "Open Nudge-inator to keep nudging." [ASSUMPTION: wording; brief §4 gives only the phrase] | Tapping it opens the app, which tops up the schedule | Sent when the scheduled nudges run out before the app has run again. |
 | **Over the app** (the iPhone is in use) | Notifications as banners. The alarm in the Dynamic Island, or as a banner at the top in landscape [To confirm on a device: the alarm as a banner in landscape]. | Same as on each surface | |
@@ -646,8 +646,7 @@ This section covers behavior. Contrast and color rules are in
   - **Heading:** "Nudge-inator".
   - **"Needs you now"** (or "Nothing needs you now"): a large card for each nudging reminder, with
     the title, the due time and large **Done** and **Snooze** buttons.
-  - **"Done today":** each reminder done today, with a large **Not done yet** button until its next
-    occurrence falls due.
+  - **"Done today":** each reminder done today, with a large **Not done yet** button while Not Done applies ([brief §3](../product/brief.md#3-product-concepts)).
   - **"Later today":** up to 4 rows, or "Nothing else today".
 - **Left out:** editing, tags, search, settings and history. Reminders are set up in the full app,
   by the person or a caregiver. Settings › Accessibility tells caregivers what Assistive Access

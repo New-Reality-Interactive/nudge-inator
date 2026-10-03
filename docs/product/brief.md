@@ -162,7 +162,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
   stopping the alarm marks it done, and the app sends an ordinary notification at once: "Marked
   done: Blood-pressure pill. Not done yet?", with **Not Done**. (The stop intent only records Done;
   the app's reconciler sends the notification. See the architecture spine, AD-12.) Not Done stops
-  working on it once the next occurrence falls due, and the app removes it the next time it runs
+  working on it once Not Done no longer applies ([§3](#3-product-concepts)), and the app removes it the next time it runs
   after that, or at once when Not Done is used. Stopping the alarm on a paired Watch does the same.
 - **The notification chain** (iOS 18, and whenever alarms aren't allowed) starts each time an
   occurrence enters Urgent: its first Urgent nudge, the end of quiet hours, the end of a snooze, and
@@ -279,7 +279,7 @@ the layout:
 | **My Day** | Today in time order, with Now and quiet-hours markers. Done, Nudging, Missed and Left counts that filter the list. **Filter by Tags**: one or more tags, Match All or Any, or No Tags. |
 | **Tags** | Your tags with counts. Find tags and choose one or more as tokens, then Match All or Any. Results in Today, Later, Paused and Completed. **Edit** renames or deletes tags (deleting keeps the reminders). |
 | **Search** | Every reminder by title, notes or tag, with recent searches. |
-| **Reminder details** | Nudging card, tags (tap to filter), schedule, How It Nudges, history (90 days), **Not Done** (on the latest done occurrence, until the next one falls due), **Pause/Resume**, **Delete** (confirmed), **Edit**. |
+| **Reminder details** | Nudging card, tags (tap to filter), schedule, How It Nudges, history (90 days), **Not Done** (on the latest done occurrence, while it applies; see [§3](#3-product-concepts)), **Pause/Resume**, **Delete** (confirmed), **Edit**. |
 | **New / Edit** | Title (wraps), notes, tags (choose or add), start, Repeat (presets and Custom, which can repeat several times a day), time zone (Follow iPhone or a chosen zone), strength, snooze length, give-up limits (with a minimum per strength), **Ignore Quiet Hours**, and a live How It Nudges preview, which shows where a repeat's next occurrence takes over. While a reminder is nudging, Edit says when each change applies. Every repeat rule can be shown and edited in the form. |
 | **Settings** | Notification and alarm status, Open iOS Settings, Send a Test Nudge. Quiet hours (in the iPhone's time zone). Time zone for new reminders (Follow iPhone or a chosen zone). Siri & Shortcuts. Export Data (a readable record, not a backup) and Delete All Data. **How Nudges Work** (strengths, urgency, Focus, quiet hours, alarms), the one help page every permission banner links to. About and Accessibility. |
 | **First launch** | Welcome, then the notification permission, then (on iOS 26 and later) the alarm permission. |
@@ -475,7 +475,7 @@ decision or section it affects.
   first High nudge, which gets through a Focus. A short window means Firm or Relentless, not Gentle.
 - **Changes while nudging apply now, and Done can be undone.** A new strength or limit applies from
   the next nudge, and a new schedule from the next time it's due. **Not Done** reopens the latest
-  done occurrence until the next one falls due, because the alarm's Stop counts as Done and can't
+  done occurrence while it applies ([§3](#3-product-concepts)), because the alarm's Stop counts as Done and can't
   be labelled.
 - **Export Data is a record, not a backup.** There's no Import in this release (see
   [§6](#6-features)). Device backups restore everything.
