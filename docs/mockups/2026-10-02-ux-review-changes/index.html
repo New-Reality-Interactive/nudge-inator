@@ -2889,8 +2889,7 @@ main.addEventListener("scroll", () => {
 /* Keyboard users reaching the shrunken tab bar get it back at full size. */
 document.getElementById("tabbar").addEventListener("focusin", (e) => { if (e.target.matches(":focus-visible")) setTabMin(false); });
 /* Swiping a row: it follows the pointer sideways once the movement is clearly sideways, and a
-   vertical movement is left to scrolling. On release, a full swipe (past 60% of the row) does the
-   action, a partial one (past 40 pt) leaves its button showing, and a short one springs back. */
+   vertical movement is left to scrolling. */
 const SWIPE_OPEN = 88;
 let swipe = null, swallowClick = false;
 const phoneScale = () => { const scr = document.getElementById("screen"); return scr.getBoundingClientRect().width / scr.offsetWidth; };
