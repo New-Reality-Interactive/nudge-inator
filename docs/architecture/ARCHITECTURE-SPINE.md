@@ -252,7 +252,7 @@ graph TD
   - **The database:** one SQLite database through GRDB, in its own folder in Application Support. The folder has file protection `completeUntilFirstUserAuthentication`, so the `-wal` and `-shm` files match. It's included in iCloud and computer backups.
   - **Migrations:** only through numbered `DatabaseMigrator` migrations, each covered by a test that migrates a fixture from the previous version.
   - **The journal:** when the database can't open, a command goes to an append-only journal file with protection `none`. It holds only the command kind, occurrence key, nudge index and `issuedAt`, never titles. If the command is a Stop, the intent also posts `followup/<key>`, taking the reminder's title from the alarm's `NudgeAlarmMetadata` (the alarm already shows the title, so this exposes nothing new), so the follow-up reads as EXPERIENCE gives it. On the first open, the journal is replayed in order and then deleted.
-  - **Delete All Data:** deletes every reminder, tag, occurrence, event, ledger row and Recent Search, and the journal, in one job, then reconciles to an empty plan. It keeps settings (quiet hours and their versions, the time zone for new reminders, zone facts and capability state) and the `UserDefaults` flags, as brief §3 says.
+  - **Delete All Data:** deletes every reminder, tag, occurrence, event, ledger row and Recent Search, and the journal, in one job, resets the My Day and Tags filters (`SceneStorage`) in the running scene, then reconciles to an empty plan. It keeps settings (quiet hours and their versions, the time zone for new reminders, zone facts and capability state) and the `UserDefaults` flags, as brief §3 says.
 
 ### AD-17 — Lock Screen actions and Siri need no authentication
 
