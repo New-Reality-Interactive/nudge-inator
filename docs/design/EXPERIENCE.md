@@ -128,7 +128,8 @@ Fixed phrases (verbatim copy):
 | Follow-up after Stop | "Marked done: Blood-pressure pill. Not done yet?" |
 | Privacy hint | "Notes and tags stay in the app. Notifications and alarms show the title, not these." |
 | Onboarding, and How It Nudges for any reminder with alarms | "Stopping the alarm counts as Done." |
-| History events | "Due", "Held for quiet hours until 7:00 AM", "Nudge 2 · Normal · notification", "Nudge 5 · Urgent · alarm", "Nudge 4 · Urgent · notification chain", "Snoozed 15 min (2 snoozes left)", "Done", "Done from the notification", "Done (alarm stopped)", "Marked not done (nudging again)", "Notification cleared (still nudging)". The engine's internal step index ("level") never appears. |
+| History events | "Due", "Held for quiet hours until 7:00 AM", "Nudge 2 · Normal · notification", "Nudge 5 · Urgent · alarm", "Nudge 4 · Urgent · notification chain", "Snoozed 15 min (2 snoozes left)", "Notification cleared (still nudging)", "Marked not done (nudging again)", "Paused", "Resumed". The engine's internal step index ("level") never appears. |
+| History events, Done by source (AD-3 `source`) | `app`: "Done"; `notification`: "Done from the notification"; `alarmStop`: "Done (alarm stopped)"; `liveActivity`: "Done from the Lock Screen"; `siri`: "Done with Siri"; `assistiveAccess`: "Done in Assistive Access" |
 | Welcome, Urgent (iOS 26+) | "Urgent nudges ring as alarms" / "When it really matters, your iPhone rings and vibrates like an alarm, even on silent. Stopping the alarm counts as Done." |
 | Welcome, Urgent (iOS 18) | "Urgent nudges keep coming" / "When it really matters, a nudge comes every minute, up to 10 times, and keeps coming after that until you tap Done." |
 | Welcome, privacy | "Stays on your iPhone" / "No account and no server. Your reminders stay on this iPhone and in your own backups." |
