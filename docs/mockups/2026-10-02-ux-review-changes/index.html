@@ -1319,8 +1319,14 @@ function tagLine(r, hl = []) {
 /* Tag-name rules: brief §3, Limits and defaults, "Tag name". */
 // Slices by whole characters, so an emoji is never cut in half.
 const cleanTag = (s) => s.trim().replace(/^#/, "").replace(/\s+/g, "-").replace(/^-+|-+$/g, "");
-/* A typed leading # is dropped at once. */
-const dropTagHash = (t) => { if (!t.value.startsWith("#")) return; const p = Math.max(0, (t.selectionStart ?? 1) - 1); t.value = t.value.slice(1); t.setSelectionRange(p, p); };
+/* As you type: one leading # is dropped and spaces become hyphens, keeping the caret in place. */
+const tagTyping = (v) => v.replace(/^#/, "").replace(/\s+/g, "-");
+const shapeTagField = (t) => {
+  const caret = t.selectionStart ?? t.value.length, next = tagTyping(t.value);
+  if (next === t.value) return;
+  const p = tagTyping(t.value.slice(0, caret)).length;
+  t.value = next; t.setSelectionRange(p, p);
+};
 const sameName = (a, b) => a.toLowerCase() === b.toLowerCase();
 /* Whether a reminder passes the tag filter: it has all of the tags, or any of them. */
 function matchesTags(r, ids, match) {
@@ -3226,7 +3232,7 @@ function onDraftField(t) {
   render();
 }
 function onTagField(t) {
-  dropTagHash(t);
+  shapeTagField(t);
   state.sheet.draft.name = t.value;
   const name = cleanTag(t.value), dup = tagNameTaken(state.sheet.id, name);
   const btn = document.querySelector("[data-tag-save]");
@@ -3248,7 +3254,7 @@ document.addEventListener("input", (e) => {
   } else if (t.dataset.t && state.sheet) onTagField(t);
   else if (t.id === "f-newtag" && state.sheet) {
     // Typing doesn't rebuild the field; only the Add button changes.
-    dropTagHash(t);
+    shapeTagField(t);
     state.sheet.newTag = t.value;
     document.querySelector("[data-addtag]").disabled = !cleanTag(t.value);
   } else if (t.name === "day-match" || t.name === "tag-match") {
