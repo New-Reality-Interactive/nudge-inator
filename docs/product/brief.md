@@ -53,7 +53,8 @@ through Focus, at High. On iOS 26 and later, the final, Urgent nudges ring as
 and whenever alarms aren't allowed, a minute-by-minute chain of notifications stands in. You organize reminders with **tags**, as many as each reminder needs,
 and filter by one or more tags on the Tags tab and on My Day.
 
-The app runs entirely on the device: no sign-up, no data leaving the phone, and no running costs
+The app runs entirely on the device: no sign-up, no server, and nothing sent anywhere except the
+person's own iCloud or computer backup (or an export they choose to share), and no running costs
 beyond the Apple Developer Program.
 
 ## 2. Problem and audience
