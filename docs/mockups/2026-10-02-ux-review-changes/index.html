@@ -2281,7 +2281,11 @@ function updateReminder(r, fields) {
    nudge, and the count carries on. Snoozed and quiet time aren't taken off the elapsed time here. */
 function closesOnEdit(o, r, dtstart, cap) {
   if (!r.rrule && dtstart !== r.dtstart.slice(0, 16)) return "time";
-  return o.attempts >= cap.maxAttempts || countedMinutes(o, r) >= cap.maxDurationMinutes ? "limit" : null;
+  // Only a lowered limit can close it, so editing a title or notes never does, even on an
+  // occurrence reopened past its limit (brief §3, Not Done).
+  const old = capOf(r);
+  const reached = (cap.maxAttempts < old.maxAttempts && o.attempts >= cap.maxAttempts) || (cap.maxDurationMinutes < old.maxDurationMinutes && countedMinutes(o, r) >= cap.maxDurationMinutes);
+  return reached ? "limit" : null;
 }
 /* Minutes an open occurrence has counted toward its time limit. Quiet hours (unless it ignores
    them), snoozes and the time it was closed before Not Done don't count. */

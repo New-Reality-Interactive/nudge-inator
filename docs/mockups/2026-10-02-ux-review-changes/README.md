@@ -146,7 +146,7 @@ and **Cancel**, **Add**, **Save** and **Done** as words.
     High.
   - **Edit** on a reminder that's nudging says when each change applies: a new schedule from the
     next time it's due, a new strength, give-up limit or Ignore Quiet Hours from the next nudge, with
-    the nudge count carrying on. If the new limit has already been reached, or a one-off reminder's
+    the nudge count carrying on. If a lowered limit has already been reached, or a one-off reminder's
     time changes, it warns that saving closes the occurrence as **skipped** ("Skipped: the
     reminder was changed"). The time counted toward the limit leaves out quiet hours, snoozes and
     any time it was closed before Not Done.
