@@ -327,7 +327,9 @@ at least 44 pt.
   are off, only that banner shows, because it already says what can still reach you.
 - **Actions:** **Open Settings** and **Got It**. **Got It** collapses the banner on Now to a
   one-line row at the bottom of the screen. When two banners are showing, each has its own **Got
-  It** and collapses to its own row, and the rows stack. Settings keeps the full banner until the
+  It** and collapses to its own row, and the rows stack. Got It is remembered for each permission
+  until that permission changes; any change clears it, so a banner that comes back shows in full. A
+  collapsed row shows only while its banner would. Settings keeps the full banner until the
   permission changes.
 - **Layout:** a banner never sits above the first nudge card's Done.
 
