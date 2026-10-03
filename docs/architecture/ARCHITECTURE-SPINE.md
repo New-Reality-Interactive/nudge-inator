@@ -133,7 +133,7 @@ graph TD
 - **Binds:** engine, reconciler, ledger, intents, App Entities
 - **Prevents:** two units naming the same nudge differently; IDs that change with region settings; an action that can't be traced to its occurrence
 - **Rule:**
-  - **Occurrence key:** `OccurrenceKey` is `<lowercase reminder UUID>@<yyyyMMdd'T'HHmm>`, the due wall-clock time in the reminder's zone mode. It uses the Gregorian calendar and ASCII digits, independent of locale.
+  - **Occurrence key:** `OccurrenceKey` is `<lowercase reminder UUID>@<yyyyMMdd'T'HHmm>`, the due wall-clock time (reminders have no zone of their own; AD-9). It uses the Gregorian calendar and ASCII digits, independent of locale.
   - **Delivery IDs:**
     - `nudge/<key>/<n>`
     - `chain/<key>/<startNudge>/<k>`
@@ -309,7 +309,7 @@ graph TD
 | --- | --- |
 | Naming | Domain types use the brief's words: `Reminder`, `ReminderConfig`, `Occurrence`, `Nudge`, `Strength`, `Urgency`, `Tag`, `QuietHours`, `GiveUpLimit`, `Snooze`. Never "alert level", "ping", "dismiss". |
 | IDs | Reminders and tags: UUID. Occurrences and deliveries: AD-7. |
-| Time | Instants stored as UTC `Date`. Wall-clock values as a `LocalDateTime` plus the zone mode. All date math in `NudgeCore` through an injected Gregorian `Calendar`. |
+| Time | Instants stored as UTC `Date`. Wall-clock values as a `LocalDateTime`, read in the iPhone's current zone (AD-9). All date math in `NudgeCore` through an injected Gregorian `Calendar`. |
 | Durations | Integer minutes in the model and engine; `TimeInterval` only at the OS adapters. |
 | Clock | One `Clock` protocol injected into the shell; `NudgeCore` takes `now` as a parameter. |
 | Errors | Adapter failures are logged and fold into `Capabilities`; they never surface as raw errors in UI. User-visible states are the spines' banners and Via labels. |
