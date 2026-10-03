@@ -86,7 +86,7 @@ graph TD
 - **Rule:**
   - **Events are append-only rows:** done, not done, snooze, clear, pause, resume and skip-by-edit. Each records `issuedAt` (when the person acted, from the surface) and `source` (`app`, `notification`, `alarmStop`, `liveActivity`, `siri`, `assistiveAccess`).
   - **Versioned facts carry the instant they were saved:** a reminder's nudging configuration (`ReminderConfig`: schedule, repeat rule, time zone mode, strength, snooze length, give-up limits, Ignore Quiet Hours), quiet hours, and the device time zone. The coordinator writes a zone fact when it detects a change.
-  - **How versions apply:** the engine applies each version per brief §3. A new schedule applies from the next due time; strength, limit and Ignore Quiet Hours apply from the next nudge. Each past instant is evaluated with the quiet hours and zone in effect then.
+  - **How versions apply:** the engine applies each version per brief §3. A new schedule applies from the next due time; strength, limit and Ignore Quiet Hours apply from the next nudge; a new snooze length applies from the next snooze. A version with a gentler strength already carries the raised snooze length and limit (brief §3), so the engine never sees a snooze length below the strength's default. Each past instant is evaluated with the quiet hours and zone in effect then.
   - **Mutable fields:** only title, notes and tags.
   - **Give-up time:** the time counted toward the limit leaves out the union of quiet, snoozed and closed intervals.
 
