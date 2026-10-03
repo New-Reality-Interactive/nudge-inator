@@ -24,12 +24,39 @@ doesn't show: iPad and iOS 18.
 
 ## Product rules
 
+These follow the nudging rules in the [product brief](../../product/brief.md#3-product-concepts),
+including the ones decided on 2026-10-02.
+
 - **Strengths:** Gentle, Firm and Relentless, each with its own intervals and urgency ladder.
-- **Give-up limit:** 20 nudges or 24 hours by default, whichever comes first.
-- **Quiet hours**, and **carry-over** after a missed occurrence ("↑ Starts higher").
-- **Editing:** a repeat rule the form can't express is kept as it is ("Keep: …").
-- **Privacy:** only the title (and, as iOS adds it, the app's name) is shown in notifications and
-  alarms. Notes and tags stay in the app.
+- **Give-up limit:** 20 nudges or 24 hours by default, whichever comes first. Quiet hours and
+  snoozed time don't count toward the time.
+  - Each strength has a smallest limit, so the limit can't end an occurrence before its first High
+    nudge: Gentle 5 nudges or 3 hours, Firm 3 nudges or 1 hour, Relentless 1 nudge or 15 minutes.
+  - The stepper and the time menu stop at the minimum. Choosing a gentler strength raises a lower
+    limit to its minimum.
+- **One open occurrence per reminder.** When the next one falls due while the last is still
+  nudging, the last closes as missed ("Missed: the next one took over") and the new one starts at
+  nudge 1. How It Nudges shows where that happens for a repeat ("Next one due at +4 h").
+- **Quiet hours stop the clock** for every open occurrence, as Snooze does: nothing is sent,
+  nothing escalates, no alarms ring, and the time doesn't count toward the give-up limit. When they
+  end, the next nudge comes at once (1 nudge, not a backlog). Start and end can't be the same time.
+  A reminder with **Ignore Quiet Hours** on nudges through them.
+- **Carry-over** ("↑ Starts higher"): after a missed occurrence, the next one that nudges sends its
+  Normal nudges at High, so they get through a Focus. Its intervals, and when it reaches Urgent,
+  don't change, so Relentless, which starts at High, has none. It doesn't stack. Skipped
+  occurrences neither use it nor clear it, and pausing clears it.
+- **Editing:** a repeat rule the form can't express is kept as it is ("Keep: …"). While a reminder
+  is nudging, the form says when each change applies (see [Screens](#screens)).
+- **Privacy:** notifications show the title and the nudge count and urgency ("Nudge 3 of 20 ·
+  High"), and alarms only the title. iOS adds the app's name to both. Notes and tags stay in the
+  app.
+
+The made-up data shows carry-over on "Stretch break" (Firm, 1 hour limit), whose 4 PM occurrence
+yesterday was missed.
+
+**Not shown,** because the mockup's clock doesn't move: an occurrence being taken over, a nudge
+sent when quiet hours end, which nudges get the system's notification and alarm slots, the "Open
+Nudge-inator to keep nudging" notification.
 
 ## Screens
 
@@ -50,7 +77,7 @@ The bars follow iOS 26's Liquid Glass (see [Materials](#materials)):
 | **Now** | `bell` | Nudging cards with **Done** and **Snooze**, Coming Up (7 days), Last 24 Hours |
 | **My Day** | `calendar` | Today in time order, with Now and quiet-hours markers. Done, Nudging, Missed and Left counts that filter the list, and a tag filter. |
 | **Tags** | `tag` | Your tags with counts. Choose one or more to filter, then see the matching reminders in Today, Later, Paused and Completed sections. |
-| **Settings** | `gearshape` | Nudges (permission status, Send a Test Nudge), Quiet Hours, Time Zone, Siri & Shortcuts, Your Data, About |
+| **Settings** | `gearshape` | Nudges (permission status, Send a Test Nudge), Quiet Hours, Time Zone, Siri & Shortcuts, Your Data (Export Data, a readable record rather than a backup, and Delete All Data), About |
 | **Search** | `magnifyingglass` | Every reminder, found by title, notes or tag, in Today, Later, Paused and Completed sections |
 
 - **Search:** choosing the Search circle turns the tab bar into a search field, with the tab you
@@ -67,13 +94,28 @@ The bars follow iOS 26's Liquid Glass (see [Materials](#materials)):
   - **Repeat** opens a picker page: Never, Every Day, Every Weekday, Every Week, Every 2 Weeks,
     Every Month, Every Year, or Custom (frequency, interval and weekdays).
   - **Strength** is a segmented control.
-  - **Give Up** uses a stepper for the number of nudges and a menu for the time.
+  - **Give Up** uses a stepper for the number of nudges and a menu for the time, neither going
+    below the strength's minimum. The footer says what the minimum is and why.
+  - **Ignore Quiet Hours** is a switch, for medication or caregiving reminders that must nudge at
+    night.
   - **How It Nudges** previews every nudge: when it comes, its urgency, and whether it's a
-    notification or an alarm.
+    notification or an alarm. For a repeat whose next occurrence falls due first, the last row says
+    **Next one due** and that it takes over. After a miss, the footer says the Normal nudges come at
+    High.
+  - **Edit** on a reminder that's nudging says when each change applies: a new schedule from the
+    next time it's due, a new strength, give-up limit or Ignore Quiet Hours from the next nudge, with
+    the nudge count carrying on. If the new limit has already been reached, or a one-off reminder's
+    time changes, it warns that saving closes the occurrence as **skipped** ("Skipped: the
+    reminder was changed"). The time counted toward the limit leaves out quiet hours, snoozes and
+    any time it was closed before Not Done.
 - **Reminder details** are pushed onto the tab's navigation stack. They show the nudging card, the
-  reminder's tags, the schedule, How It Nudges, the history (kept 90 days), **Pause** or
-  **Resume**, and **Delete**, which asks for confirmation in an action sheet. **Edit** is in the
-  navigation bar.
+  reminder's tags, the schedule (with whether it waits for quiet hours), How It Nudges, the history
+  (kept 90 days), **Not Done**, **Pause** or **Resume**, and **Delete**, which asks for
+  confirmation in an action sheet. **Edit** is in the navigation bar.
+  - **Not Done** appears while the reminder's latest occurrence is done, until the next one falls
+    due. It reopens that occurrence: the next nudge comes one interval later, at the next step, and
+    the history records "Marked not done (nudging again)". The alarm's Stop counts as Done and
+    can't be labelled, so this is how to take it back. Try it on "Walk the dog".
 - **First launch:** a welcome screen, then the notification permission prompt, then the alarm
   permission prompt.
 
@@ -149,16 +191,27 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
 | Nudge | Arrives as | Actions |
 |---|---|---|
 | Normal urgency | Notification (a Focus holds it) | **Done**, **Snooze** (while snoozes are left), **Dismiss** |
-| High urgency | Time Sensitive notification (gets through Focus) | as above |
+| High urgency | Time Sensitive notification (gets through Focus). An ordinary one if Time Sensitive is off. | as above |
 | Urgent (Firm and Relentless, from nudge 4) | AlarmKit alarm | **Stop** (counts as Done), **Snooze** (while snoozes are left) |
-| Urgent, with alarms not allowed | Time Sensitive notification | as above |
+| Urgent, with alarms not allowed | Time Sensitive notification, marked "Notification: alarms are off" | as above |
 
 - **Gentle** reminders never reach Urgent, so they never ring an alarm.
 - **Normal nudges aren't Time Sensitive,** so the app doesn't wear out the person's trust in its
   Time Sensitive notifications: turning those off would let a Focus hold High nudges too. During a
   Focus, a Gentle or Firm reminder's first nudges wait until it reaches High. People who want every
   nudge can allow Nudge-inator in that Focus. How It Nudges and Settings say so.
-- **Done** stops the nudging and cancels the reminder's remaining notifications and alarms.
+- **The notification's header** says "Time Sensitive" only for High and Urgent nudges. Normal
+  nudges and the test nudge are ordinary notifications.
+- **If Time Sensitive is turned off** for the app (the **Time Sensitive allowed** mockup control),
+  Now and Settings show a banner, the Notifications row in Settings says "On · Time Sensitive off",
+  and High nudges are marked "Notification: Time Sensitive is off". How It Nudges says that during a
+  Focus every notification waits.
+- **Done** is the only way to close an occurrence as done. The give-up limit, the next
+  occurrence, Pause, Delete and some edits also stop the nudging, and quiet hours hold it. However
+  an occurrence closes, its pending notifications and alarms are cancelled.
+- **Weaker fallbacks show.** With alarms off, nudging cards and How It Nudges mark each Urgent
+  nudge as "Notification: alarms are off" ("alarms and Time Sensitive are off" if both are), and
+  the New Reminder summary says how Urgent nudges come instead.
 - **Snooze** waits a fixed time set by the strength: Gentle 30 minutes, Firm 15, Relentless 5.
   - It doesn't raise the level, and the snoozed time doesn't count toward the time limit.
   - Each occurrence can be snoozed 3 times. Then Snooze disappears from the card, the notification
@@ -201,7 +254,8 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
 **Pausing:**
 - **Pause Reminder** stops the nudging. An occurrence that's nudging closes as **Skipped**, not
   missed.
-- Anything due while the reminder is paused is skipped too, so there's no carry-over from a pause.
+- Anything due while the reminder is paused is skipped too, so there's no carry-over from a pause,
+  and pausing clears any carry-over there was.
 - **Resume** picks up at the next time in the future. A one-off reminder whose time passed while it
   was paused asks for a new time.
 
@@ -226,7 +280,7 @@ These are not part of the app:
 - **Orientation** turns the phone between **Portrait** and **Landscape** (see
   [Landscape](#landscape)). The screen you're on stays open. On a phone it's turned off, because
   the app fills the real screen.
-- **Permissions**, **24-Hour Time**, **Appearance**, **Text Size** (all 12 Dynamic Type sizes),
+- **Permissions** (notifications, alarms and Time Sensitive), **24-Hour Time**, **Appearance**, **Text Size** (all 12 Dynamic Type sizes),
   **Bold Text**, **Increase Contrast**, **Reduce Transparency** and **Assistive Access** stand in
   for iOS Settings.
 - **Reset the mockup** restores the data.
@@ -361,7 +415,7 @@ it names. The real app uses the symbols themselves.
 
 - **Other icons use the nearest SF Symbol:** `bell`, `tag` and `gearshape` for tabs;
   `chevron.backward` and `chevron.right`; `moon.fill` for quiet hours and `arrow.up` for "starts
-  higher"; `pause`, `play` and `clock`; `bell.slash` for a nudge that can't arrive because
+  higher"; `arrow.uturn.backward` for Not Done; `pause`, `play` and `clock`; `bell.slash` for a nudge that can't arrive because
   notifications are off; `exclamationmark.triangle`, `lock`, `info.circle`, `mic` and
   `accessibility`.
 - **Rename** in the Tags tab's Edit mode is a text button, so it doesn't need `pencil`.
@@ -642,6 +696,10 @@ The questions this mockup raised are settled in the
 [product brief, §10](../../product/brief.md#10-risks-and-decisions):
 - **Decided:** My Day and the Tags tab keep separate filters, My Day's counts filter one at a time,
   Match All Tags is the default, tags have no colors, and the tab bar shrinks only in landscape.
+- **Decided on 2026-10-02, and shown here since:** carry-over sends Normal nudges at High, the next
+  occurrence takes over, quiet hours stop the clock and a reminder can ignore them, give-up limits
+  have a minimum per strength, changes while nudging apply from the next nudge, Not Done reopens a
+  done occurrence, and Export Data is a readable record, not a backup.
 - **Left to check on a device:** the navigation bars at large text sizes (the system's own
   behavior, as shown here), the selected tab's color in dark mode with Increase Contrast, and
   reminders with many tags.
@@ -685,6 +743,29 @@ and the 440 pt iPhone, in portrait and landscape, at Large, AX3 and AX5, with Bo
 (96 checks). The text wraps with nothing clipped, cut off with "…" or scrolling sideways, and the
 Focus sentence appears for Gentle and Firm but not Relentless. The console has no errors.
 
+After the 2026-10-02 nudging rules, a script in headless Chrome checked them, and the console had
+no errors:
+- carry-over: "Starts higher" on Now, and Stretch break's How It Nudges starting at High; pausing
+  clears it
+- Not Done on "Walk the dog" reopens it, with the next nudge an hour later, and then disappears
+- the Gentle form's time menu starts at 3 hours, and switching from Relentless to Gentle raises the
+  limit to 5 nudges or 3 hours
+- Ignore Quiet Hours saves, and removes the quiet-hours note from Coming Up
+- lowering a nudging reminder's limit below its nudges warns, then closes it as skipped
+- How It Nudges shows **Next one due** when a repeat's next occurrence comes first
+- Settings refuses quiet hours that start and end at the same time, and says why
+- with alarms off, Urgent nudges are marked "Notification: alarms are off"
+- the notification's header says "Time Sensitive" for a High nudge but not for a Normal one
+- with Time Sensitive off: the banner on Now, the Settings row, High nudges marked "Notification:
+  Time Sensitive is off", and the Focus sentence in How It Nudges
+- a snooze is left out of the time counted toward the limit
+
+The new text was then checked on the iPhone SE and the 440 pt iPhone, in portrait and landscape,
+at Large, AX3 and AX5, with Bold Text off and on, on 8 screens (192 checks): details with carry-over,
+Not Done and alarms off, Now, the form for a Gentle reminder, for a nudging reminder about to close
+and for a takeover, and Settings with the quiet-hours error. Nothing is clipped, cut off with "…"
+or scrolls sideways.
+
 The typography, contrast, accessibility and materials checks above were run on the final version,
-apart from the AlarmKit corrections and the Normal-nudge wording, which were checked as described in
-the previous paragraphs.
+apart from the AlarmKit corrections, the Normal-nudge wording and the 2026-10-02 nudging rules,
+which were checked as described in the previous paragraphs.

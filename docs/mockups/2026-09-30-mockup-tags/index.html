@@ -853,6 +853,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <legend>Permissions (iOS Settings)</legend>
       <label><input type="checkbox" id="c-perm-n" checked> Notifications allowed</label>
       <label><input type="checkbox" id="c-perm-a" checked> Alarms allowed</label>
+      <label><input type="checkbox" id="c-perm-t" checked> Time Sensitive allowed</label>
     </fieldset>
     <fieldset>
       <legend>iPhone</legend>
@@ -924,6 +925,8 @@ function dayLabel(d) {
   return { 0: "Today", 1: "Tomorrow", [-1]: "Yesterday" }[diff] ?? shortDate(d);
 }
 const when = (d) => `${dayLabel(d)}, ${hm(d)}`;
+/* "today", "yesterday" or "on Mon 21 Sep", for use inside a sentence. */
+const dayPhrase = (d) => { const l = dayLabel(d); return Math.abs(dayDiff(NOW, d)) <= 1 ? l.toLowerCase() : `on ${l}`; };
 function rel(d) {
   const m = Math.round((d - NOW) / 6e4), a = Math.abs(m);
   if (a < 1) return "now";
@@ -978,6 +981,7 @@ const SYMBOLS = {
   "arrow.up": { d: '<path d="M12 19.5V4.8M6 10.8l6-6 6 6"/>', scale: 0.94 },
   "alarm": { d: '<circle cx="12" cy="13" r="7.3"/><path d="M12 9.2V13H8.8"/><path d="M3.8 7.2a3.3 3.3 0 0 1 4.6-4M20.2 7.2a3.3 3.3 0 0 0-4.6-4M7.2 18.8l-1.9 2M16.8 18.8l1.9 2"/>', scale: 0.96, dy: -0.4 },
   "pause": { d: '<path d="M9 5.5v13M15 5.5v13"/>', scale: 0.92 },
+  "arrow.uturn.backward": { d: '<path d="M8.5 4.5 4 9l4.5 4.5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H10"/>', scale: 0.94 },
   "play": { d: '<path d="M8 5.2v13.6a.8.8 0 0 0 1.2.7l10.3-6.8a.8.8 0 0 0 0-1.4L9.2 4.5A.8.8 0 0 0 8 5.2z"/>', scale: 0.9 },
   "trash": { d: '<path d="M4 6.5h16"/><path d="M9 6.5V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v1.5"/><path d="m6 6.5 1 12.8A1.8 1.8 0 0 0 8.8 21h6.4a1.8 1.8 0 0 0 1.8-1.7L18 6.5"/><path d="M9.6 10.2v7.2M12 10.2v7.2M14.4 10.2v7.2"/>', scale: 0.96 },
   "magnifyingglass": { d: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/>', scale: 0.96 },
@@ -1021,6 +1025,9 @@ function strengthBadge(s) {
 const SNOOZE = { gentle: 30, firm: 15, relentless: 5 };
 const MAX_SNOOZES = 3;
 const DEFAULT_CAP = { maxDurationMinutes: 1440, maxAttempts: 20 };
+/* The smallest give-up limit for each strength, so the limit can't end an occurrence before its
+   first High nudge, which gets through a Focus. */
+const MIN_CAP = { gentle: { maxAttempts: 5, maxDurationMinutes: 180 }, firm: { maxAttempts: 3, maxDurationMinutes: 60 }, relentless: { maxAttempts: 1, maxDurationMinutes: 15 } };
 function maxLevel(s) {
   const p = PROFILES[s];
   let l = 0;
@@ -1031,6 +1038,8 @@ function intervalAt(s, l) { const p = PROFILES[s]; const x = Math.max(p.floor, p
 function priorityAt(s, l) { const p = PROFILES[s], top = maxLevel(s); return p.min + Math.floor(((p.max - p.min) * Math.min(l, top)) / top); }
 const URGENCY = { 3: "Normal", 4: "High", 5: "Urgent" };
 const urgencyAt = (s, l) => URGENCY[priorityAt(s, l)];
+/* With carry-over, Normal nudges come at High. The intervals, and when it reaches Urgent, don't change. */
+const urgencyFor = (s, l, carry) => (carry && urgencyAt(s, l) === "Normal" ? "High" : urgencyAt(s, l));
 /* How a nudge reaches the phone: Urgent rings as an AlarmKit alarm; everything else is a
    local notification (Time Sensitive at High and Urgent, ordinary at Normal, so a Focus holds
    Normal ones). Without alarm permission, Urgent falls back too. With
@@ -1041,17 +1050,39 @@ const VIA = {
   notification: (sz = 16) => `<span class="via">${I("bell", sz)} Notification</span>`,
   none: (sz = 16) => `<span class="via off">${I("bell.slash", sz)} Notifications off</span>`,
 };
-function simulate(s, cap = {}, startLevel = 0) {
+/* How a nudge of this urgency arrives. One that arrives a weaker way than its urgency says so, and why. */
+function viaLabel(urg, sz = 16) {
+  const via = viaFor(urg);
+  if (via !== "notification" || urg === "Normal") return VIA[via](sz);
+  const noAlarm = urg === "Urgent", noTs = !perm.timeSensitive;
+  const why = noAlarm && noTs ? "alarms and Time Sensitive are off" : noAlarm ? "alarms are off" : noTs ? "Time Sensitive is off" : "";
+  return why ? `<span class="via">${I("bell", sz)} Notification: ${why}</span>` : VIA[via](sz);
+}
+/* Every nudge of one occurrence, from when it's due. `until` is when the next occurrence of a repeat
+   falls due and takes over (in minutes), and `carry` sends Normal nudges at High. */
+function simulate(s, cap = {}, carry = false, until = Infinity) {
   const maxAtt = cap.maxAttempts ?? DEFAULT_CAP.maxAttempts;
   const maxDur = cap.maxDurationMinutes ?? DEFAULT_CAP.maxDurationMinutes;
   const nudges = []; let t = 0;
-  while (nudges.length < maxAtt && t < maxDur) {
-    const level = Math.min(startLevel + nudges.length, maxLevel(s));
+  while (nudges.length < maxAtt && t < maxDur && t < until) {
+    const level = Math.min(nudges.length, maxLevel(s));
     const iv = intervalAt(s, level);
-    nudges.push({ at: t, level, urgency: urgencyAt(s, level), interval: iv });
-    t = Math.min(t + iv, maxDur);
+    nudges.push({ at: t, level, urgency: urgencyFor(s, level, carry), interval: iv });
+    t = Math.min(t + iv, maxDur, until);
   }
-  return { nudges, giveUpAt: t, byAttempts: nudges.length >= maxAtt };
+  return { nudges, giveUpAt: t, byAttempts: nudges.length >= maxAtt, takeover: t >= until };
+}
+/* Minutes from a repeat's next occurrence to the one after, when that one takes over. */
+function takeoverAfter(rem) {
+  if (!rem.rrule) return Infinity;
+  const a = nextOccurrence(rem, new Date(Math.max(NOW, L(rem.dtstart)) - 1));
+  const b = a && nextOccurrence(rem, a);
+  return b ? (b - a) / 6e4 : Infinity;
+}
+/* The last row of How It Nudges, when the next occurrence falls due before this one gives up. */
+function takeoverRow(sim) {
+  if (!sim.takeover) return "";
+  return `<li><div class="cell"><span class="main"><span class="t"><strong>Next one due</strong> at +${fmtDur(sim.giveUpAt)}</span><span class="s">It takes over, and this one counts as missed</span></span></div></li>`;
 }
 /* Consecutive nudges at the top level collapse into one row: "Nudges 4–20, every 5 min". */
 function ladderRows(sim) {
@@ -1070,11 +1101,11 @@ function ladderRow(x) {
   const gap = x.from === x.to ? `then waits ${fmtMin(x.interval)}` : `every ${fmtMin(x.interval)}`;
   return `<li><div class="cell">
     <span class="main"><span class="t"><strong>${which}</strong> ${at}</span><span class="s">${gap}</span></span>
-    <span class="trail stack"><span class="u ${x.urgency}">${x.urgency}</span>${VIA[viaFor(x.urgency)](15)}</span>
+    <span class="trail stack"><span class="u ${x.urgency}">${x.urgency}</span>${viaLabel(x.urgency, 15)}</span>
   </div></li>`;
 }
-function nudgeSummary(s, cap, startLevel = 0) {
-  const sim = simulate(s, cap, startLevel);
+function nudgeSummary(s, cap, carry = false, until = Infinity) {
+  const sim = simulate(s, cap, carry, until);
   const alarms = sim.nudges.filter((n) => viaFor(n.urgency) === "alarm").length;
   const first = sim.nudges.findIndex((n) => viaFor(n.urgency) === "alarm");
   const n = sim.nudges.length;
@@ -1087,14 +1118,22 @@ function nudgeSummary(s, cap, startLevel = 0) {
   else if (!alarms) how = `All ${plural(n, "nudge")} are notifications.`;
   else if (first === 0) how = `All ${n} ring as alarms.`;
   else how = `Nudges 1–${first} are notifications. Nudges ${first + 1}–${n} ring as alarms (${alarms}).`;
-  /* Normal nudges are ordinary notifications, so a Focus holds them; High ones are Time Sensitive. */
-  if (perm.notifications && sim.nudges.some((x) => x.urgency === "Normal")) how += " During a Focus, Normal nudges wait until High.";
-  return { sim, text: `${plural(n, "nudge")} over ${fmtDur(sim.giveUpAt)}, then it gives up. ${how}` };
+  if (perm.notifications && !perm.alarms && sim.nudges.some((x) => x.urgency === "Urgent")) how += ` Alarms are off, so Urgent nudges come as ${perm.timeSensitive ? "Time Sensitive " : ""}notifications.`;
+  /* Normal nudges are ordinary notifications, so a Focus holds them; High ones are Time Sensitive,
+     unless Time Sensitive is off. People can allow the app in a Focus to get every nudge. */
+  const held = sim.nudges.some((x) => viaFor(x.urgency) === "notification" && (x.urgency === "Normal" || !perm.timeSensitive));
+  if (perm.notifications && held) how += perm.timeSensitive
+    ? " During a Focus, Normal nudges wait until High, unless you allow Nudge-inator in that Focus."
+    : " Time Sensitive is off, so during a Focus every notification waits, unless you allow Nudge-inator in that Focus.";
+  const end = sim.takeover ? "then the next one takes over and this one counts as missed" : "then it gives up";
+  return { sim, text: `${plural(n, "nudge")} over ${fmtDur(sim.giveUpAt)}, ${end}. ${how}` };
 }
 
 /* ================= Made-up data ================= */
 const me = { timezone: "America/New_York", autoTz: true, quietHours: { start: "22:00", end: "07:00" } };
-const perm = { notifications: true, alarms: true };
+/* timeSensitive stands for the app's Time Sensitive setting (timeSensitiveSetting), which the person
+   can turn off on its own. Then High nudges, and Urgent ones that fall back, are ordinary notifications. */
+const perm = { notifications: true, alarms: true, timeSensitive: true };
 let uidN = 0x20;
 const uid = () => `e${(uidN++).toString(16)}`;
 const ev = (type, at, data = {}) => ({ id: uid(), type, at, data });
@@ -1107,12 +1146,12 @@ function seed() {
     { id: "r1", tagIds: ["home"], title: "Take the bins out", body: null, dtstart: "2026-01-05T07:30", timezone: me.timezone, rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "firm", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-10-05T07:30" },
     { id: "r7", tagIds: ["money", "home"], title: "Reply to Alex about the lease", body: "They need an answer before 10.", dtstart: "2026-09-28T08:10", timezone: me.timezone, rrule: null, strength: "relentless", cap: { maxDurationMinutes: 120 }, status: "ACTIVE", nextOccurrenceAt: null },
     { id: "r2", tagIds: ["health", "morning"], title: "Morning meds", body: "Blue pill + vitamin D", dtstart: "2026-03-01T06:30", timezone: me.timezone, rrule: "FREQ=DAILY", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-29T06:30" },
-    { id: "r6", tagIds: ["health", "work"], title: "Stretch break", body: null, dtstart: "2026-09-01T10:00", timezone: me.timezone, rrule: "FREQ=DAILY;BYHOUR=10,14,16;BYMINUTE=0", strength: "gentle", cap: { maxDurationMinutes: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T10:00" },
+    { id: "r6", tagIds: ["health", "work"], title: "Stretch break", body: null, dtstart: "2026-09-01T10:00", timezone: me.timezone, rrule: "FREQ=DAILY;BYHOUR=10,14,16;BYMINUTE=0", strength: "firm", cap: { maxDurationMinutes: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T10:00" },
     { id: "r3", tagIds: ["home"], title: "Water the plants", body: null, dtstart: "2026-04-02T18:00", timezone: me.timezone, rrule: "FREQ=WEEKLY;BYDAY=MO,TH", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T18:00" },
     { id: "r4", tagIds: ["money", "home"], title: "Pay rent", body: "Transfer to the landlord's account.", dtstart: "2026-01-01T09:00", timezone: me.timezone, rrule: "FREQ=MONTHLY;BYMONTHDAY=1", strength: "relentless", cap: { maxDurationMinutes: 480, maxAttempts: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-10-01T09:00" },
     { id: "r5", tagIds: ["health", "appointments"], title: "Dentist appointment", body: "Bring the insurance card.", dtstart: "2026-10-02T13:15", timezone: me.timezone, rrule: null, strength: "firm", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-10-02T13:15" },
     { id: "r8", tagIds: ["money", "travel"], title: "Renew passport", body: null, dtstart: "2026-09-10T09:00", timezone: me.timezone, rrule: null, strength: "firm", cap: {}, status: "COMPLETED", nextOccurrenceAt: null },
-    { id: "r9", tagIds: ["work", "morning"], title: "Team stand-up", body: "Join from the meeting link in the calendar invite.", dtstart: "2026-01-05T09:30", timezone: me.timezone, rrule: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", strength: "firm", cap: { maxDurationMinutes: 30 }, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T09:30" },
+    { id: "r9", tagIds: ["work", "morning"], title: "Team stand-up", body: "Join from the meeting link in the calendar invite.", dtstart: "2026-01-05T09:30", timezone: me.timezone, rrule: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", strength: "firm", cap: { maxDurationMinutes: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T09:30" },
     { id: "r10", tagIds: ["work"], title: "Send the weekly status update", body: null, dtstart: "2026-01-05T16:30", timezone: me.timezone, rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T16:30" },
     { id: "r11", tagIds: ["home", "morning"], title: "Walk the dog", body: null, dtstart: "2026-02-01T07:00", timezone: me.timezone, rrule: "FREQ=DAILY", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-29T07:00" },
     { id: "r12", tagIds: [], title: "Call Grandma", body: null, dtstart: "2026-06-07T17:00", timezone: me.timezone, rrule: "FREQ=WEEKLY;BYDAY=SU", strength: "gentle", cap: {}, status: "PAUSED", nextOccurrenceAt: null },
@@ -1124,8 +1163,8 @@ function seed() {
       events: [ev("SCHEDULED", "2026-09-28T08:10"), ev("NUDGE_SENT", "2026-09-28T08:10", { attempt: 1, level: 0, priority: 4 }), ev("NUDGE_SENT", "2026-09-28T08:20", { attempt: 2, level: 1, priority: 4 })] },
     { id: "o4", reminderId: "r2", scheduledFor: "2026-09-28T06:30", level: 0, attempts: 1, state: "ACKED", closedAt: "2026-09-28T07:04",
       events: [ev("SCHEDULED", "2026-09-28T06:30"), ev("DEFERRED_QUIET", "2026-09-28T06:30", { until: "2026-09-28T07:00" }), ev("NUDGE_SENT", "2026-09-28T07:00", { attempt: 1, level: 0, priority: 3 }), ev("ACKED", "2026-09-28T07:04")] },
-    { id: "o6", reminderId: "r6", scheduledFor: "2026-09-27T16:00", level: 0, attempts: 1, state: "MISSED", closedAt: "2026-09-27T17:00", closeReason: "cap",
-      events: [ev("SCHEDULED", "2026-09-27T16:00"), ev("NUDGE_SENT", "2026-09-27T16:00", { attempt: 1, level: 0, priority: 3 }), ev("MISSED", "2026-09-27T17:00", { reason: "cap" })] },
+    { id: "o6", reminderId: "r6", scheduledFor: "2026-09-27T16:00", level: 2, attempts: 3, state: "MISSED", closedAt: "2026-09-27T17:00", closeReason: "cap",
+      events: [ev("SCHEDULED", "2026-09-27T16:00"), ev("NUDGE_SENT", "2026-09-27T16:00", { attempt: 1, level: 0, priority: 3 }), ev("NUDGE_SENT", "2026-09-27T16:30", { attempt: 2, level: 1, priority: 3 }), ev("NUDGE_SENT", "2026-09-27T16:45", { attempt: 3, level: 2, priority: 4 }), ev("MISSED", "2026-09-27T17:00", { reason: "cap" })] },
     { id: "o2", reminderId: "r1", scheduledFor: "2026-09-21T07:30", level: 0, attempts: 1, state: "ACKED", closedAt: "2026-09-21T07:52",
       events: [ev("SCHEDULED", "2026-09-21T07:30"), ev("NUDGE_SENT", "2026-09-21T07:30", { attempt: 1, level: 0, priority: 3 }), ev("ACKED", "2026-09-21T07:52")] },
     { id: "o5", reminderId: "r2", scheduledFor: "2026-09-27T06:30", level: 0, attempts: 1, state: "ACKED", closedAt: "2026-09-27T07:11" },
@@ -1169,11 +1208,20 @@ function inQuiet(d, q = me.quietHours) {
   const t = d.getHours() * 60 + d.getMinutes(), s = toMin(q.start), e = toMin(q.end);
   return s <= e ? t >= s && t < e : t >= s || t < e;
 }
-/* Carry-over: after a missed occurrence the next one starts a level higher. Skipped ones don't count. */
-function startLevelFor(r) {
-  const last = occsOf(r.id).find((o) => o.state === "ACKED" || o.state === "MISSED");
-  if (!last || last.state === "ACKED") return 0;
-  return Math.min(last.attempts > 0 ? last.level + 1 : last.level, maxLevel(r.strength));
+/* Quiet hours hold a reminder's nudges, unless it's set to Ignore Quiet Hours. */
+const heldByQuiet = (r, d) => !r.ignoreQuiet && inQuiet(d);
+/* Carry-over: after a missed occurrence, the next one that nudges sends its Normal nudges at High.
+   It doesn't stack, skipped ones neither use it nor clear it, and pausing clears it. Relentless
+   starts at High, so it has none. While one is nudging, the next one's carry-over isn't known yet. */
+function carriesOver(r) {
+  if (r.strength === "relentless") return false;
+  const last = occsOf(r.id).find((o) => o.state !== "SKIPPED");
+  return last?.state === "MISSED" && !(r.carryClearedAt && L(r.carryClearedAt) >= L(last.closedAt));
+}
+/* Why an occurrence closed as missed or skipped. */
+function closedWhy(reason, state) {
+  if (state === "SKIPPED") return reason === "edited" ? "Skipped: the reminder was changed" : "Skipped: the reminder was paused";
+  return reason === "superseded" ? "Missed: the next one took over" : "Missed: gave up after the limit";
 }
 
 /* ================= Repeat rules ================= */
@@ -1264,7 +1312,7 @@ const ROOTS = { now: "Now", day: "My Day", tags: "Tags", settings: "Settings", s
 const newFilter = () => ({ ids: [], match: "all", q: "" });
 /* My Day's filter: the chosen tags and All or Any, or `none` for reminders with no tags. */
 const newDayFilter = () => ({ ids: [], match: "all", none: false });
-const state = { tab: "now", lastTab: "now", stacks: { now: [], day: [], tags: [], settings: [], search: [] }, dayFilter: newDayFilter(), dayStatus: null, tagFilter: newFilter(), tagEdit: false, sq: "", recent: [], settingsSection: "nudges", tabMin: false, sheet: null, system: null, alert: null, assistive: false, focus: "heading", keepScroll: false };
+const state = { tab: "now", lastTab: "now", stacks: { now: [], day: [], tags: [], settings: [], search: [] }, dayFilter: newDayFilter(), dayStatus: null, tagFilter: newFilter(), tagEdit: false, sq: "", recent: [], settingsSection: "nudges", tabMin: false, sheet: null, system: null, alert: null, assistive: false, quietError: false, focus: "heading", keepScroll: false };
 const main = document.getElementById("main");
 
 /* In a split view, choosing an item replaces what the detail column shows; otherwise it's pushed. */
@@ -1329,24 +1377,25 @@ function noteIcon(kind) {
 /* ================= Views ================= */
 function permBanner() {
   if (!perm.notifications) return `<div class="banner" role="note">${I("exclamationmark.triangle", 22)}<div><p><strong>Notifications are off.</strong> ${perm.alarms ? "Only Urgent nudges can reach you, as alarms. Gentle reminders can't reach you at all." : "Nudges can't reach you."}</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
-  if (!perm.alarms) return `<div class="banner info" role="note">${I("alarm", 22)}<div><p><strong>Alarms are off.</strong> Urgent nudges come as Time Sensitive notifications instead, which silent mode can mute.</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
+  if (!perm.alarms) return `<div class="banner info" role="note">${I("alarm", 22)}<div><p><strong>Alarms are off.</strong> Urgent nudges come as ${perm.timeSensitive ? "Time Sensitive notifications instead, which silent mode can mute" : "ordinary notifications instead, which silent mode can mute and a Focus can hold"}.</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
+  if (!perm.timeSensitive) return `<div class="banner info" role="note">${I("bell", 22)}<div><p><strong>Time Sensitive is off.</strong> High nudges come as ordinary notifications, so a Focus can hold them.</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
   return "";
 }
 
 function nudgeCard(o) {
   const r = remById(o.reminderId), cap = capOf(r), tl = tagLine(r);
   const nextLevel = Math.min(o.level + 1, maxLevel(r.strength));
-  const urg = urgencyAt(r.strength, nextLevel), via = viaFor(urg);
+  const urg = urgencyFor(r.strength, nextLevel, o.carry), now = urgencyFor(r.strength, o.level, o.carry);
   const next = L(o.nextNudgeAt);
   const left = MAX_SNOOZES - (o.snoozes || 0);
   const snoozed = o.snoozedUntil && L(o.snoozedUntil) > NOW;
   // Two parts, so a wide card can put its buttons beside its text (see .nc in the CSS).
-  return `<article class="nudgecard u-${urgencyAt(r.strength, o.level)}" aria-labelledby="nt-${o.id}"><div class="nc">
+  return `<article class="nudgecard u-${now}" aria-labelledby="nt-${o.id}"><div class="nc">
     <div class="nc-main">
     <div class="top">${strengthBadge(r.strength)}<span>Nudge ${o.attempts} of ${cap.maxAttempts}</span></div>
     <h3 id="nt-${o.id}"><button type="button" class="linkish" data-open="${r.id}">${esc(r.title)}</button></h3>
-    <p>${tl ? `${tl} · ` : ""}due ${hm(L(o.scheduledFor))} · Urgency ${urgencyAt(r.strength, o.level)}</p>
-    <p class="nextline">${snoozed ? `Snoozed until ${hm(next)}, then` : `Next nudge ${hm(next)} (${rel(next)}):`} ${VIA[via]()} · ${urg}</p>
+    <p>${tl ? `${tl} · ` : ""}due ${hm(L(o.scheduledFor))} · Urgency ${now}</p>
+    <p class="nextline">${snoozed ? `Snoozed until ${hm(next)}, then` : `Next nudge ${hm(next)} (${rel(next)}):`} ${viaLabel(urg)} · ${urg}</p>
     <div class="meter" role="img" aria-label="${o.attempts} of ${cap.maxAttempts} nudges sent"><span class="meter-fill" style="width:${Math.min(100, (o.attempts / cap.maxAttempts) * 100)}%"></span></div>
     </div>
     <div class="nc-side">
@@ -1366,8 +1415,7 @@ function quietChip(q) {
 /* Why an occurrence closed, for the Last 24 Hours list. */
 function closedLabel(o) {
   if (o.state === "ACKED") return `Done after ${plural(o.attempts, "nudge")}`;
-  if (o.state === "SKIPPED") return "Skipped: paused";
-  return o.closeReason === "superseded" ? "Missed: the next one took over" : "Missed: gave up after the limit";
+  return closedWhy(o.closeReason, o.state);
 }
 function viewNow() {
   const nudge = openOccs();
@@ -1386,10 +1434,10 @@ function viewNow() {
   <section aria-labelledby="h-up">
     <h2 class="sec-h" id="h-up"><span>Coming Up</span><span>Next 7 days</span></h2>
     <div class="sec"><ul class="list">${upcoming.map((r) => {
-      const d = L(r.nextOccurrenceAt), sl = startLevelFor(r);
+      const d = L(r.nextOccurrenceAt);
       const notes = [];
-      if (inQuiet(d)) notes.push(`<span class="s note-quiet">${noteIcon("quiet")} Quiet hours: first nudge at ${hmOf(me.quietHours.end, d)}</span>`);
-      if (sl > 0) notes.push(`<span class="s note-carry">${noteIcon("carry")} Starts at level ${sl}: the last one was missed</span>`);
+      if (heldByQuiet(r, d)) notes.push(`<span class="s note-quiet">${noteIcon("quiet")} Quiet hours: first nudge at ${hmOf(me.quietHours.end, d)}</span>`);
+      if (carriesOver(r)) notes.push(`<span class="s note-carry">${noteIcon("carry")} Starts higher: the last one was missed</span>`);
       return `<li><div class="cell">
         <span class="time">${hm(d)}<small>${dayLabel(d)}</small></span>
         <span class="main"><button type="button" class="linkish t" data-open="${r.id}">${esc(r.title)}</button>${notes.join("") || `<span class="s">${esc(scheduleText(r))}</span>`}</span>
@@ -1435,10 +1483,9 @@ function viewDay() {
         return `Done at ${hm(L(o.closedAt))}${after}`;
       }
       case "NUDGING": return `Nudging · ${plural(o.attempts, "nudge")} · next ${hm(L(o.nextNudgeAt))}`;
-      case "MISSED": return "Missed: gave up after the limit";
-      case "SKIPPED": return "Skipped: the reminder was paused";
+      case "MISSED": case "SKIPPED": return closedWhy(o.closeReason, it.status);
       case "PAUSED": return "Paused: this one will be skipped";
-      default: return inQuiet(it.at) ? `${noteIcon("quiet")} Quiet hours: first nudge at ${hmOf(q.end, it.at)}` : rel(it.at);
+      default: return heldByQuiet(it.r, it.at) ? `${noteIcon("quiet")} Quiet hours: first nudge at ${hmOf(q.end, it.at)}` : rel(it.at);
     }
   };
   const emptyDay = `<li class="empty">${st ? st.empty : "Nothing is due today"}${dayFilterOn() ? ` ${esc(dayFilterPhrase())}` : ""}.</li>`;
@@ -1679,8 +1726,9 @@ const EVENT_TEXT = {
   SNOOZED: (d) => `Snoozed ${d.minutes} min (${plural(d.left, "snooze")} left)`,
   DISMISSED: () => "Notification cleared (still nudging)",
   ACKED: (d) => (d.from ? `Done from the ${d.from}` : "Done"),
-  MISSED: (d) => (d.reason === "superseded" ? "Missed: the next one took over" : "Missed: gave up after the limit"),
-  SKIPPED: () => "Skipped: the reminder was paused",
+  MISSED: (d) => closedWhy(d.reason, "MISSED"),
+  SKIPPED: (d) => closedWhy(d.reason, "SKIPPED"),
+  REOPENED: () => "Marked not done (nudging again)",
 };
 function viewRem(id) {
   const r = remById(id);
@@ -1688,13 +1736,13 @@ function viewRem(id) {
   const back = isSplit() ? null : backLabel();
   if (!r) return `${navBar({ title: "Reminder", large: false, back })}<p class="empty">This reminder was deleted.</p>`;
   const o = openOccs().find((x) => x.reminderId === id);
-  const cap = capOf(r), sl = startLevelFor(r);
+  const cap = capOf(r), carry = !o && carriesOver(r);
   const status = o ? "NUDGING" : r.status;
   const statusText = { NUDGING: "Nudging now", ACTIVE: "Active", PAUSED: "Paused", COMPLETED: "Completed" }[status];
   const next = r.nextOccurrenceAt && L(r.nextOccurrenceAt);
-  const sim = simulate(r.strength, cap, sl);
+  const sim = simulate(r.strength, cap, carry, takeoverAfter(r));
   const rows = ladderRows(sim);
-  const hist = occsOf(id);
+  const hist = occsOf(id), undone = latestDone(r);
   const edit = `<button type="button" class="btn bar glass" data-edit="${r.id}" aria-label="Edit ${esc(r.title)}">Edit</button>`;
   const nextText = next ? when(next) : { PAUSED: "Paused" }[r.status] ?? "None";
   return `${navBar({ title: "", large: false, back, trailing: edit })}
@@ -1710,20 +1758,29 @@ function viewRem(id) {
     <li><div class="cell"><span class="main">Repeats</span><span class="trail">${esc(scheduleText(r))}</span></div></li>
     <li><div class="cell"><span class="main">Next</span><span class="trail">${nextText}</span></div></li>
     <li><div class="cell"><span class="main">Time Zone</span><span class="trail">${esc(r.timezone.replace("_", " "))}</span></div></li>
+    <li><div class="cell"><span class="main">Quiet Hours</span><span class="trail">${r.ignoreQuiet ? "Ignored: nudges through them" : me.quietHours ? "Waits until they end" : "None set"}</span></div></li>
   </ul></div>
   <h2 class="sec-h"><span>How It Nudges</span></h2>
-  <div class="sec"><ol class="list ladder" aria-label="Nudge schedule">${rows.map(ladderRow).join("")}</ol>
-    <p class="sec-f">${sl ? `<span class="note-carry">${noteIcon("carry")} The last one was missed, so the next one starts at level ${sl}.</span> ` : ""}Gives up after ${fmtDur(sim.giveUpAt)}, at nudge ${sim.nudges.length} (limit: ${cap.maxAttempts} nudges or ${fmtDur(cap.maxDurationMinutes)}). Snooze: ${SNOOZE[r.strength]} min, up to ${MAX_SNOOZES} times.</p>
+  <div class="sec"><ol class="list ladder" aria-label="Nudge schedule">${rows.map(ladderRow).join("")}${takeoverRow(sim)}</ol>
+    <p class="sec-f">${carry ? `<span class="note-carry">${noteIcon("carry")} The last one was missed, so the next one's Normal nudges come at High.</span> ` : ""}${sim.takeover ? `The next one takes over after ${fmtDur(sim.giveUpAt)}, at nudge ${sim.nudges.length}` : `Gives up after ${fmtDur(sim.giveUpAt)}, at nudge ${sim.nudges.length}`} (limit: ${cap.maxAttempts} nudges or ${fmtDur(cap.maxDurationMinutes)}, not counting quiet hours or snoozes). Snooze: ${SNOOZE[r.strength]} min, up to ${MAX_SNOOZES} times.</p>
   </div>
   <h2 class="sec-h">History</h2>
   <div class="sec"><ul class="list">${hist.map(historyRow).join("") || `<li class="empty">No occurrences yet. The first one is created when it falls due.</li>`}</ul>
     <p class="sec-f">History is kept for 90 days.</p>
   </div>
   <div class="sec"><ul class="list">
+    ${undone ? `<li><button type="button" class="cell tint" data-undone="${undone.id}">${I("arrow.uturn.backward", 20)} Not Done</button></li>` : ""}
     ${pauseRow(r)}
     <li><button type="button" class="cell destructive" data-delete="${r.id}">${I("trash", 20)} Delete Reminder</button></li>
   </ul>
-  ${r.status === "ACTIVE" ? PAUSE_NOTE : ""}</div>`;
+  ${undone || r.status === "ACTIVE" ? `<p class="sec-f">${undone ? `Not Done reopens the one marked done ${dayPhrase(L(undone.closedAt))} at ${hm(L(undone.closedAt))}, until the next one is due. ` : ""}${r.status === "ACTIVE" ? PAUSE_NOTE : ""}</p>` : ""}</div>`;
+}
+/* Not Done is offered on the reminder's latest occurrence while it's done, until the next one falls
+   due. The alarm's Stop counts as Done and can't be labelled, so this is how to take it back. */
+function latestDone(r) {
+  const last = occsOf(r.id)[0];
+  if (r.status === "PAUSED" || last?.state !== "ACKED") return null;
+  return r.nextOccurrenceAt && L(r.nextOccurrenceAt) <= NOW ? null : last;
 }
 /* A reminder's tags in its details. Each one opens the Tags tab filtered by that tag. */
 function detailTags(r) {
@@ -1731,7 +1788,7 @@ function detailTags(r) {
   if (!list.length) return "";
   return `<div class="row" role="group" aria-label="Tags">${list.map((t) => `<button type="button" class="btn bordered small" data-tagfilter="${t.id}" aria-label="#${esc(t.name)}: show reminders with this tag">#${esc(t.name)}</button>`).join("")}</div>`;
 }
-const PAUSE_NOTE =`<p class="sec-f">Pausing stops the nudging. Anything due while it's paused is skipped, not missed.</p>`;
+const PAUSE_NOTE = "Pausing stops the nudging and clears any carry-over. Anything due while it's paused is skipped, not missed.";
 /* Pause for an active reminder, Resume for a paused one, nothing for a completed one. */
 function pauseRow(r) {
   if (r.status === "PAUSED") return `<li><button type="button" class="cell tint" data-resume="${r.id}">${I("play", 20)} Resume Reminder</button></li>`;
@@ -1760,18 +1817,19 @@ function settingsSections() {
   const ok = (on, yes, no) => `<span style="color:${on ? "var(--secondary-label)" : "var(--negative)"}">${on ? yes : no}</span>`;
   return [
     { id: "nudges", title: "Nudges", icon: "bell", tile: "--tile-red", body: `<div class="sec"><ul class="list icons">
-    <li><div class="cell"><span class="ico" style="background:var(--tile-red)">${I("bell", 19)}</span><span class="main">Notifications</span><span class="trail">${ok(perm.notifications, "On · Time Sensitive", "Off")}</span></div></li>
+    <li><div class="cell"><span class="ico" style="background:var(--tile-red)">${I("bell", 19)}</span><span class="main">Notifications</span><span class="trail">${ok(perm.notifications && perm.timeSensitive, "On · Time Sensitive", perm.notifications ? "On · Time Sensitive off" : "Off")}</span></div></li>
     <li><div class="cell"><span class="ico" style="background:var(--tile-orange)">${I("alarm", 19)}</span><span class="main">Alarms</span><span class="trail">${ok(perm.alarms, "Allowed", "Off")}</span></div></li>
-    ${!perm.notifications || !perm.alarms ? `<li><button type="button" class="cell tint" data-ios-settings><span class="ico" style="background:var(--tile-gray)">${I("gearshape", 19)}</span><span class="main">Open iOS Settings</span>${chev}</button></li>` : ""}
+    ${!perm.notifications || !perm.alarms || !perm.timeSensitive ? `<li><button type="button" class="cell tint" data-ios-settings><span class="ico" style="background:var(--tile-gray)">${I("gearshape", 19)}</span><span class="main">Open iOS Settings</span>${chev}</button></li>` : ""}
     <li><button type="button" class="cell tint" data-test ${perm.notifications ? "" : "disabled"}><span class="ico" style="background:var(--tile-blue)">${I("bell", 19)}</span><span class="main">Send a Test Nudge</span></button></li>
   </ul>
-  <p class="sec-f">Normal nudges arrive as notifications, which a Focus can hold. High nudges are Time Sensitive, so they get through Focus. Urgent nudges ring as alarms, even in silent mode. Every nudge vibrates as well as sounding. Change these in iOS Settings.</p></div>` },
+  <p class="sec-f">Normal nudges arrive as notifications, which a Focus can hold. High nudges are Time Sensitive, so they get through Focus. Urgent nudges ring as alarms, even in silent mode. To get every nudge during a Focus, allow Nudge-inator in that Focus. Every nudge vibrates as well as sounding. Change these in iOS Settings.</p></div>` },
     { id: "quiet", title: "Quiet Hours", icon: "moon.fill", tile: "--tile-blue", body: `<div class="sec"><ul class="list">
     <li><div class="formrow"><label for="s-quiet">Hold Nudges Overnight</label><input type="checkbox" class="switch" id="s-quiet" ${q ? "checked" : ""}></div></li>
     ${q ? `<li><div class="formrow"><label for="s-qs">From</label><input type="time" class="pill-input" id="s-qs" value="${q.start}"></div></li>
     <li><div class="formrow"><label for="s-qe">Until</label><input type="time" class="pill-input" id="s-qe" value="${q.end}"></div></li>` : ""}
   </ul>
-  <p class="sec-f">${q ? `Quiet from ${hmOf(q.start)} to ${hmOf(q.end)}. ` : ""}Nudges that fall due in this window wait until it ends, nothing escalates overnight, and no alarms ring.</p></div>` },
+  ${state.quietError ? `<p class="errtext" role="alert">Quiet hours can't start and end at the same time.</p>` : ""}
+  <p class="sec-f">${q ? `Quiet from ${hmOf(q.start)} to ${hmOf(q.end)}. ` : ""}Nudging stops in this window: nothing is sent, nothing escalates, no alarms ring, and the time doesn't count toward give-up limits. When it ends, the next nudge comes at once. Reminders set to Ignore Quiet Hours still nudge.</p></div>` },
     { id: "tz", title: "Time Zone", icon: "clock", tile: "--tile-teal", body: `<div class="sec"><ul class="list">
     <li><div class="formrow"><label for="s-autotz">Set Automatically</label><input type="checkbox" class="switch" id="s-autotz" ${me.autoTz ? "checked" : ""}></div></li>
     <li><div class="formrow"><label for="s-tz">Time Zone</label><select class="menu" id="s-tz" ${me.autoTz ? "disabled" : ""}>${TZS.map((t) => `<option value="${t}" ${t === me.timezone ? "selected" : ""}>${t.replace("_", " ")}</option>`).join("")}</select></div></li>
@@ -1785,7 +1843,7 @@ function settingsSections() {
     <li><button type="button" class="cell tint" data-export><span class="ico" style="background:var(--tile-blue)">${I("square.and.arrow.up", 19)}</span><span class="main">Export Data</span></button></li>
     <li><button type="button" class="cell destructive" data-wipe><span class="ico" style="background:var(--tile-red)">${I("trash", 19)}</span><span class="main">Delete All Data</span></button></li>
   </ul>
-  <p class="sec-f">Your reminders stay on this iPhone. There's no account and no server, and nothing syncs to other devices. They're included in your iPhone's iCloud or computer backup. History is kept for 90 days.</p></div>` },
+  <p class="sec-f">Your reminders stay on this iPhone. There's no account and no server, and nothing syncs to other devices. They're included in your iPhone's iCloud or computer backup, which is how they're restored. Export Data saves a readable record of your reminders and history. It isn't a backup and can't be imported. History is kept for 90 days.</p></div>` },
     { id: "about", title: "About", icon: "info.circle", tile: "--tile-gray", body: `<div class="sec"><ul class="list icons">
     <li><div class="cell"><span class="ico" style="background:var(--tile-gray)">${I("info.circle", 19)}</span><span class="main">Version</span><span class="trail">1.0 (mockup)</span></div></li>
     <li><button type="button" class="cell" data-a11y><span class="ico" style="background:var(--tile-blue)">${I("accessibility", 19)}</span><span class="main">Accessibility</span>${chev}</button></li>
@@ -1815,7 +1873,7 @@ const PRESETS = [
   ["never", "Never"], ["daily", "Every Day"], ["weekdays", "Every Weekday"], ["weekly", "Every Week"],
   ["biweekly", "Every 2 Weeks"], ["monthly", "Every Month"], ["yearly", "Every Year"],
 ];
-const DURATIONS = [15, 30, 60, 120, 240, 480, 720, 1440, 2880, 4320, 10080];
+const DURATIONS = [15, 30, 60, 120, 180, 240, 480, 720, 1440, 2880, 4320, 10080];
 function ruleFor(x) {
   const d = L(x.dtstart);
   switch (x.repeat) {
@@ -1841,9 +1899,9 @@ function draftFor(r) {
   // A new reminder made on the Tags tab starts with the tags being filtered by.
   const base = { title: "", body: "", tagIds: state.tab === "tags" && !state.tagEdit ? [...state.tagFilter.ids] : [],
     dtstart: "2026-09-28T09:00", timezone: me.timezone, repeat: "never", keepRule: null, custom: { freq: "WEEKLY", interval: 1, days: ["MO"] },
-    strength: "firm", maxAttempts: DEFAULT_CAP.maxAttempts, maxDurationMinutes: DEFAULT_CAP.maxDurationMinutes };
+    strength: "firm", maxAttempts: DEFAULT_CAP.maxAttempts, maxDurationMinutes: DEFAULT_CAP.maxDurationMinutes, ignoreQuiet: false };
   if (!r) return base;
-  const x = { ...base, title: r.title, body: r.body || "", tagIds: [...r.tagIds], dtstart: r.dtstart.slice(0, 16), timezone: r.timezone, strength: r.strength, maxAttempts: capOf(r).maxAttempts, maxDurationMinutes: capOf(r).maxDurationMinutes };
+  const x = { ...base, title: r.title, body: r.body || "", tagIds: [...r.tagIds], dtstart: r.dtstart.slice(0, 16), timezone: r.timezone, strength: r.strength, maxAttempts: capOf(r).maxAttempts, maxDurationMinutes: capOf(r).maxDurationMinutes, ignoreQuiet: !!r.ignoreQuiet };
   if (!r.rrule) { x.repeat = "never"; return x; }
   const preset = PRESETS.find(([k]) => k !== "never" && ruleFor({ ...x, repeat: k }) === r.rrule);
   if (preset) { x.repeat = preset[0]; return x; }
@@ -1878,13 +1936,18 @@ function sheetNav(left, title, right) {
 function editorMain(sh) {
   const x = sh.draft, editing = !!sh.editId, r = editing && remById(sh.editId);
   const d = L(x.dtstart);
-  const cap = { maxAttempts: x.maxAttempts, maxDurationMinutes: x.maxDurationMinutes };
-  const sum = nudgeSummary(x.strength, cap, editing ? startLevelFor(r) : 0);
-  const nudging = editing && openOccs().some((o) => o.reminderId === r.id);
+  const cap = { maxAttempts: +x.maxAttempts, maxDurationMinutes: +x.maxDurationMinutes }, min = MIN_CAP[x.strength];
+  const carry = editing && carriesOver({ ...r, strength: x.strength });
+  const sum = nudgeSummary(x.strength, cap, carry, takeoverAfter({ dtstart: x.dtstart, rrule: ruleFor(x) }));
+  const o = editing && openOccs().find((y) => y.reminderId === r.id);
   const canSave = x.title.trim().length > 0;
   const confirm = `<button type="button" class="btn bar prominent glass" data-sheet-save ${canSave ? "" : "disabled"}>${editing ? "Save" : "Add"}</button>`;
-  const stillNudging = nudging ? "This reminder is nudging now and keeps nudging until you mark it done. " : "";
-  const editNote = `<p class="sec-f" style="margin:0 32px 14px">${stillNudging}A new schedule applies from the next time it's due. A new strength or give-up limit applies from the next nudge.</p>`;
+  // While it's nudging, the form says when each change applies, and warns when saving would close it.
+  const closes = o && closesOnEdit(o, r, x.dtstart, cap);
+  const closeNote = { time: "Its time changed, so saving closes this one as skipped.", limit: "It has already reached this limit, so saving closes this one as skipped." }[closes];
+  const editNote = `<p class="sec-f" style="margin:0 32px 14px">${o ? "This reminder is nudging now. " : ""}A new schedule applies from the next time it's due. A new strength, give-up limit or Ignore Quiet Hours applies from the next nudge${o ? `, and the nudge count carries on from ${o.attempts}` : ""}.${closeNote ? ` <strong>${closeNote}</strong>` : ""}</p>`;
+  const missText = x.strength === "relentless" ? "Then it stops nudging and counts as missed." : "Then it stops nudging and counts as missed, and the next one starts higher: its Normal nudges come at High.";
+  const minText = `The smallest limit for ${NAME[x.strength]} is ${plural(min.maxAttempts, "nudge")} or ${fmtDur(min.maxDurationMinutes)}${x.strength === "relentless" ? "" : ", so it reaches High before it gives up"}.`;
   return `${sheetNav(CANCEL_BTN, editing ? "Edit Reminder" : "New Reminder", confirm)}
   <div class="sheet-body" tabindex="-1">
     ${editing ? editNote : ""}
@@ -1892,13 +1955,13 @@ function editorMain(sh) {
       <li><div class="formrow"><textarea class="plain-input grow" id="f-title" data-f="title" rows="1" maxlength="200" placeholder="Title" aria-label="Title (required)" autocomplete="off" enterkeyhint="done">${esc(x.title)}</textarea></div></li>
       <li><div class="formrow"><textarea class="plain-input" id="f-body" data-f="body" maxlength="2000" placeholder="Notes" aria-label="Notes" aria-describedby="f-body-h">${esc(x.body)}</textarea></div></li>
       <li><button type="button" class="cell" data-sheet-page="tags"><span class="main">Tags</span><span class="trail">${esc(sheetTags(sh).filter((t) => x.tagIds.includes(t.id)).map((t) => `#${t.name}`).join(" ")) || "None"}</span>${chev}</button></li>
-    </ul><p class="sec-f" id="f-body-h">${canSave ? "" : "Add a title to save. "}Notes and tags stay in the app. Notifications and alarms show only the title.</p></div>
+    </ul><p class="sec-f" id="f-body-h">${canSave ? "" : "Add a title to save. "}Notes and tags stay in the app. Notifications and alarms show the title, not these.</p></div>
 
     <div class="sec"><ul class="list">
       <li><div class="formrow"><label for="f-dt">Starts</label><input type="datetime-local" class="pill-input" id="f-dt" data-f="dtstart" value="${esc(x.dtstart)}" aria-describedby="f-dt-h"></div></li>
       <li><button type="button" class="cell" data-sheet-page="repeat"><span class="main">Repeat</span><span class="trail">${esc(repeatLabel(x))}</span>${chev}</button></li>
       <li><div class="formrow"><label for="f-tz">Time Zone</label><select class="menu" id="f-tz" data-f="timezone">${TZS.map((t) => `<option value="${t}" ${t === x.timezone ? "selected" : ""}>${t.replace("_", " ")}</option>`).join("")}</select></div></li>
-    </ul><p class="sec-f" id="f-dt-h">${inQuiet(d) ? `<span class="note-quiet">${noteIcon("quiet")} During your quiet hours: the first nudge waits until ${hmOf(me.quietHours.end, d)}.</span>` : `${scheduleText({ dtstart: x.dtstart, rrule: ruleFor(x) })}.`}</p></div>
+    </ul><p class="sec-f" id="f-dt-h">${heldByQuiet(x, d) ? `<span class="note-quiet">${noteIcon("quiet")} During your quiet hours: the first nudge waits until ${hmOf(me.quietHours.end, d)}.</span>` : `${scheduleText({ dtstart: x.dtstart, rrule: ruleFor(x) })}.`}</p></div>
 
     <h3 class="sec-h" id="l-strength">Strength</h3>
     <div class="sec"><div class="list" style="padding:10px 12px">
@@ -1908,13 +1971,17 @@ function editorMain(sh) {
     <h3 class="sec-h">Give Up</h3>
     <div class="sec"><ul class="list">
       <li><div class="formrow"><span class="lbl" id="l-att">After <strong>${x.maxAttempts}</strong> nudges</span>
-        <span class="stepper" role="group" aria-labelledby="l-att"><button type="button" data-step="-1" aria-label="Fewer nudges" ${x.maxAttempts <= 1 ? "disabled" : ""}>−</button><button type="button" data-step="1" aria-label="More nudges" ${x.maxAttempts >= 100 ? "disabled" : ""}>+</button></span></div></li>
-      <li><div class="formrow"><label for="f-dur">Or after</label><select class="menu" id="f-dur" data-f="maxDurationMinutes">${DURATIONS.map((m) => `<option value="${m}" ${m === +x.maxDurationMinutes ? "selected" : ""}>${m >= 1440 ? plural(m / 1440, "day") : fmtDur(m)}</option>`).join("")}</select></div></li>
-    </ul><p class="sec-f">Whichever comes first. Then it stops nudging and counts as missed, and the next one starts a level higher.</p></div>
+        <span class="stepper" role="group" aria-labelledby="l-att"><button type="button" data-step="-1" aria-label="Fewer nudges" ${x.maxAttempts <= min.maxAttempts ? "disabled" : ""}>−</button><button type="button" data-step="1" aria-label="More nudges" ${x.maxAttempts >= 100 ? "disabled" : ""}>+</button></span></div></li>
+      <li><div class="formrow"><label for="f-dur">Or after</label><select class="menu" id="f-dur" data-f="maxDurationMinutes">${DURATIONS.filter((m) => m >= min.maxDurationMinutes).map((m) => `<option value="${m}" ${m === +x.maxDurationMinutes ? "selected" : ""}>${m >= 1440 ? plural(m / 1440, "day") : fmtDur(m)}</option>`).join("")}</select></div></li>
+    </ul><p class="sec-f">Whichever comes first, not counting quiet hours or snoozes. ${missText} ${minText}</p></div>
+
+    <div class="sec"><ul class="list">
+      <li><div class="formrow"><label for="f-iq">Ignore Quiet Hours</label><input type="checkbox" class="switch" id="f-iq" data-f="ignoreQuiet" ${x.ignoreQuiet ? "checked" : ""} aria-describedby="f-iq-h"></div></li>
+    </ul><p class="sec-f" id="f-iq-h">${x.ignoreQuiet ? "Nudges and alarms come during your quiet hours too, even at night." : "Nudges wait until your quiet hours end."} Turn this on for medication or caregiving that can't wait.</p></div>
 
     <h3 class="sec-h">How It Nudges</h3>
-    <div class="sec"><ol class="list ladder" aria-label="Nudge schedule preview">${ladderRows(sum.sim).map(ladderRow).join("")}</ol>
-    <p class="sec-f" aria-live="polite">${esc(sum.text)}</p></div>
+    <div class="sec"><ol class="list ladder" aria-label="Nudge schedule preview">${ladderRows(sum.sim).map(ladderRow).join("")}${takeoverRow(sum.sim)}</ol>
+    <p class="sec-f" aria-live="polite">${carry ? `<span class="note-carry">${noteIcon("carry")} The last one was missed, so the next one's Normal nudges come at High.</span> ` : ""}${esc(sum.text)}</p></div>
   </div>`;
 }
 function editorRepeat(sh) {
@@ -1979,14 +2046,39 @@ function weekdayPicker(days) {
    future time becomes active again. */
 function updateReminder(r, fields) {
   const scheduleChanged = r.dtstart !== fields.dtstart || r.rrule !== fields.rrule;
+  const o = openOccs().find((y) => y.reminderId === r.id);
+  const closes = o && closesOnEdit(o, r, fields.dtstart, { ...DEFAULT_CAP, ...fields.cap });
   Object.assign(r, fields);
+  if (closes) closeSkipped(o, "edited");
   if (scheduleChanged || r.status === "COMPLETED") {
     const n = nextOccurrence(r);
     r.nextOccurrenceAt = n ? iso(n) : null;
     if (r.status === "COMPLETED" && n) r.status = "ACTIVE";
   }
-  hud("Changes saved");
+  if (closes && !r.rrule && !r.nextOccurrenceAt) r.status = "COMPLETED";
+  hud(closes ? "Changes saved. This one closed as skipped." : "Changes saved");
   return r;
+}
+/* An edit closes the open occurrence as skipped when it has already reached the new give-up limit,
+   or when a one-off reminder's time changes. Otherwise a new strength or limit applies from the next
+   nudge, and the count carries on. Snoozed and quiet time aren't taken off the elapsed time here. */
+function closesOnEdit(o, r, dtstart, cap) {
+  if (!r.rrule && dtstart !== r.dtstart.slice(0, 16)) return "time";
+  return o.attempts >= cap.maxAttempts || countedMinutes(o, r) >= cap.maxDurationMinutes ? "limit" : null;
+}
+/* Minutes an open occurrence has counted toward its time limit. Quiet hours (unless it ignores
+   them), snoozes and the time it was closed before Not Done don't count. */
+function countedMinutes(o, r) {
+  const gaps = (o.events || []).flatMap((e) => {
+    if (e.type === "SNOOZED") return [[L(e.at).getTime(), L(e.at).getTime() + e.data.minutes * 6e4]];
+    if (e.type === "REOPENED" && e.data.closedAt) return [[L(e.data.closedAt).getTime(), L(e.at).getTime()]];
+    return [];
+  });
+  let n = 0;
+  for (let t = L(o.scheduledFor).getTime(); t < NOW.getTime(); t += 6e4) {
+    if (!heldByQuiet(r, new Date(t)) && !gaps.some(([a, b]) => t >= a && t < b)) n++;
+  }
+  return n;
 }
 function createReminder(fields) {
   const r = { id: `r${Date.now()}`, ...fields, status: "ACTIVE" };
@@ -2007,7 +2099,7 @@ function saveEditor() {
   const sh = state.sheet, x = sh.draft;
   if (!x.title.trim()) return;
   for (const t of sh.newTags) if (x.tagIds.includes(t.id)) tags.push(t);
-  const fields = { title: x.title.trim(), body: x.body.trim() || null, tagIds: x.tagIds.filter(tagById), dtstart: x.dtstart, timezone: x.timezone, rrule: ruleFor(x), strength: x.strength, cap: capFor(x) };
+  const fields = { title: x.title.trim(), body: x.body.trim() || null, tagIds: x.tagIds.filter(tagById), dtstart: x.dtstart, timezone: x.timezone, rrule: ruleFor(x), strength: x.strength, cap: capFor(x), ignoreQuiet: x.ignoreQuiet };
   const r = sh.editId ? updateReminder(remById(sh.editId), fields) : createReminder(fields);
   state.sheet = null;
   const top = state.stacks[state.tab].at(-1);
@@ -2058,7 +2150,7 @@ function onboardSheet() {
     <h2 class="welcome-title" id="sheet-title" tabindex="-1">Welcome to Nudge-inator</h2>
     ${f("bell", "Nudges until you're done", "Reminders keep coming back, more often and more insistently, until you tap Done.")}
     ${f("alarm", "Urgent nudges ring as alarms", "When it really matters, your iPhone rings and vibrates like an alarm, even on silent. Stopping the alarm counts as Done.")}
-    ${f("moon.fill", "Quiet overnight", "Nudges wait until your quiet hours end.")}
+    ${f("moon.fill", "Quiet overnight", "Nudges wait until your quiet hours end, and nothing gives up overnight.")}
     ${f("lock", "Stays on your iPhone", "No account and no server. Your reminders never leave this phone.")}
     <button type="button" class="btn prominent" style="width:100%;margin-top:14px;padding:14px" data-onboard-next>Continue</button>
   </div></div>`;
@@ -2068,7 +2160,7 @@ function onboardSheet() {
 function nextNudgeFor(o) {
   const r = remById(o.reminderId);
   const level = Math.min(o.level + 1, maxLevel(r.strength));
-  return { r, level, urg: urgencyAt(r.strength, level) };
+  return { r, level, urg: urgencyFor(r.strength, level, o.carry) };
 }
 /* Picks the open occurrence whose next nudge would arrive the way the control asks for. */
 function demoOcc(via) { return openOccs().find((o) => viaFor(nextNudgeFor(o).urg) === via); }
@@ -2148,7 +2240,9 @@ function notifActions(o) {
         <button type="button" class="naction destr" data-nact="dismiss">Dismiss ${I("xmark", 20)}</button>
       </div>`;
 }
-/* The Lock Screen with one Time Sensitive notification (a real nudge, or a test). */
+/* The notification's header. Normal nudges and the test are ordinary notifications. */
+const notifKind = (s) => (!s.test && s.urg !== "Normal" && perm.timeSensitive ? "Time Sensitive · now" : "now");
+/* The Lock Screen with one notification (a real nudge, or a test). */
 function lockUI(s) {
   const o = s.occId && occurrences.find((x) => x.id === s.occId);
   const hint = s.expanded ? "Actions shown. On an iPhone you'd long-press the notification." : "Tap the notification to show its actions (a long press on iPhone).";
@@ -2161,7 +2255,7 @@ function lockUI(s) {
       <p class="lock-hint">${hint}</p>
       <button type="button" class="notif" id="notif" data-notif aria-expanded="${s.expanded}">
         <span class="appicon">${I("bell", 22)}</span>
-        <span class="nmain"><span class="nhead"><span>NUDGE-INATOR</span><span>Time Sensitive · now</span></span>
+        <span class="nmain"><span class="nhead"><span>NUDGE-INATOR</span><span>${notifKind(s)}</span></span>
         <b class="notif-title">${title}</b><span class="nbody">${body}</span></span>
       </button>
       ${s.expanded && o ? notifActions(o) : ""}
@@ -2175,7 +2269,7 @@ function lockUI(s) {
      as a banner at the top center. Its layout is an approximation, to confirm on a device. It has
      the same parts as on the Lock Screen: the app's name, the title, Snooze (while snoozes are
      left, filled with the tint color) and the system's Stop.
-   - The notification is a Time Sensitive banner. Its actions show on a tap here, as after a long
+   - The notification is a banner (Time Sensitive from High). Its actions show on a tap here, as after a long
      press on iPhone. */
 function bannerUI(s) {
   const o = s.occId && occurrences.find((x) => x.id === s.occId);
@@ -2195,7 +2289,7 @@ function bannerUI(s) {
   return `<div class="sysbanner" role="dialog" aria-modal="true" aria-label="Notification">
       <button type="button" class="notif" id="notif" data-notif aria-expanded="${s.expanded}">
         <span class="appicon">${I("bell", 22)}</span>
-        <span class="nmain"><span class="nhead"><span>NUDGE-INATOR</span><span>Time Sensitive · now</span></span>
+        <span class="nmain"><span class="nhead"><span>NUDGE-INATOR</span><span>${notifKind(s)}</span></span>
         <b class="notif-title">${title}</b><span class="nbody">${body}</span></span>
       </button>
       ${s.expanded ? actions : ""}
@@ -2243,14 +2337,29 @@ function pause(rid) {
   const r = remById(rid);
   r.status = "PAUSED";
   r.nextOccurrenceAt = null;
-  for (const o of openOccs().filter((x) => x.reminderId === rid)) {
-    o.state = "SKIPPED";
-    o.closedAt = iso(NOW);
-    o.closeReason = "paused";
-    o.nextNudgeAt = null;
-    logEvent(o, "SKIPPED", iso(NOW), { reason: "paused" });
-  }
+  r.carryClearedAt = iso(NOW);
+  for (const o of openOccs().filter((x) => x.reminderId === rid)) closeSkipped(o, "paused");
   hud(`Paused “${r.title}”`);
+}
+/* Closing an occurrence cancels its pending nudges and alarms and removes its notifications. */
+function closeSkipped(o, reason) {
+  o.state = "SKIPPED";
+  o.closedAt = iso(NOW);
+  o.closeReason = reason;
+  o.nextNudgeAt = null;
+  logEvent(o, "SKIPPED", iso(NOW), { reason });
+}
+/* Not Done reopens the latest done occurrence. The next nudge comes one interval after reopening,
+   at the next step, and the time it was closed doesn't count toward the limit. */
+function reopen(id) {
+  const o = occurrences.find((x) => x.id === id), r = remById(o.reminderId);
+  const closedAt = o.closedAt;
+  o.state = "NUDGING";
+  o.closedAt = null;
+  o.nextNudgeAt = iso(new Date(NOW.getTime() + intervalAt(r.strength, o.level) * 6e4));
+  logEvent(o, "REOPENED", iso(NOW), { closedAt });
+  if (r.status === "COMPLETED") r.status = "ACTIVE";
+  hud(`Not done: ${r.title}. Next nudge ${hm(L(o.nextNudgeAt))}.`);
 }
 function resume(rid) {
   const r = remById(rid);
@@ -2628,6 +2737,7 @@ const CLICK = {
   ack: (v) => { ack(v); refresh(nextFocusAfterAck()); },
   snooze: (v) => { snooze(v); refresh(() => main.querySelector(`[data-snooze="${v}"]`) || main.querySelector(`[data-ack="${v}"]`)); },
   pause: (v) => { pause(v); refresh(`[data-resume="${v}"]`); },
+  undone: (v) => { reopen(v); refresh(`[data-ack="${v}"]`); },
   resume: (v) => { resume(v); if (!state.alert && !state.sheet) refresh(`[data-pause="${v}"]`); },
   delete: (v) => del(v),
   edit: (v) => openEditor(v),
@@ -2664,7 +2774,7 @@ const CLICK = {
     render();
   },
   cday: (v) => { const c = state.sheet.draft.custom; c.days = toggleDay(c, v); state.focus = `[data-cday="${v}"]`; render(); },
-  step: (v) => { const x = state.sheet.draft; x.maxAttempts = Math.max(1, Math.min(100, x.maxAttempts + Number(v))); stepperFocus(`[data-step="${v}"]:not(:disabled)`); },
+  step: (v) => { const x = state.sheet.draft; x.maxAttempts = Math.max(MIN_CAP[x.strength].maxAttempts, Math.min(100, x.maxAttempts + Number(v))); stepperFocus(`[data-step="${v}"]:not(:disabled)`); },
   cstep: (v) => { const c = state.sheet.draft.custom; c.interval = Math.max(1, Math.min(30, c.interval + Number(v))); stepperFocus(`[data-cstep="${v}"]:not(:disabled)`); },
   tagSave: () => saveTag(),
   onboardNext: () => { state.sheet = null; render(); askPermissions(); },
@@ -2730,13 +2840,19 @@ function onDraftField(t) {
   const x = state.sheet.draft;
   if (t.id === "f-title" && /\n/.test(t.value)) t.value = t.value.replace(/\s*\n\s*/g, " ");
   if (t.classList.contains("grow")) growField(t);
-  x[t.dataset.f] = t.dataset.f === "maxDurationMinutes" ? Number(t.value) : t.value;
+  x[t.dataset.f] = t.type === "checkbox" ? t.checked : t.dataset.f === "maxDurationMinutes" ? Number(t.value) : t.value;
+  // Choosing a gentler strength raises a lower give-up limit to its minimum.
+  if (t.dataset.f === "strength") {
+    const m = MIN_CAP[x.strength];
+    x.maxAttempts = Math.max(x.maxAttempts, m.maxAttempts);
+    x.maxDurationMinutes = Math.max(+x.maxDurationMinutes, m.maxDurationMinutes);
+  }
   if (t.tagName === "TEXTAREA" || t.type === "text") {
     // Typing doesn't rebuild the field being typed in; only the Add button and its hint change.
     const btn = document.querySelector("[data-sheet-save]");
     if (btn) btn.disabled = !x.title.trim();
     const hint = document.getElementById("f-body-h");
-    if (hint) hint.textContent = `${x.title.trim() ? "" : "Add a title to save. "}Notes and tags stay in the app. Notifications and alarms show only the title.`;
+    if (hint) hint.textContent = `${x.title.trim() ? "" : "Add a title to save. "}Notes and tags stay in the app. Notifications and alarms show the title, not these.`;
     return;
   }
   if (t.type === "datetime-local") return; // re-rendered on change, so typing a date isn't interrupted
@@ -2778,11 +2894,18 @@ document.addEventListener("keydown", (e) => {
     if (first && state.tagFilter.q.trim()) CLICK.addfilter(first.dataset.addfilter);
   }
 });
+/* Quiet hours can't start and end at the same time: the change is refused and says why. */
+function setQuiet(k, v) {
+  if (!v) return;
+  state.quietError = v === me.quietHours[k === "start" ? "end" : "start"];
+  if (!state.quietError) me.quietHours[k] = v;
+  refresh(k === "start" ? "#s-qs" : "#s-qe");
+}
 const CHANGE = {
   "f-dt": () => { if (state.sheet) refresh("#f-dt"); },
-  "s-quiet": (t) => { me.quietHours = t.checked ? { start: "22:00", end: "07:00" } : null; refresh("#s-quiet"); },
-  "s-qs": (t) => { if (t.value) { me.quietHours.start = t.value; refresh("#s-qs"); } },
-  "s-qe": (t) => { if (t.value) { me.quietHours.end = t.value; refresh("#s-qe"); } },
+  "s-quiet": (t) => { me.quietHours = t.checked ? { start: "22:00", end: "07:00" } : null; state.quietError = false; refresh("#s-quiet"); },
+  "s-qs": (t) => setQuiet("start", t.value),
+  "s-qe": (t) => setQuiet("end", t.value),
   "s-autotz": (t) => {
     me.autoTz = t.checked;
     if (t.checked) me.timezone = "America/New_York";
@@ -2802,6 +2925,7 @@ document.addEventListener("keydown", (e) => {
 function syncPermControls() {
   document.getElementById("c-perm-n").checked = perm.notifications;
   document.getElementById("c-perm-a").checked = perm.alarms;
+  document.getElementById("c-perm-t").checked = perm.timeSensitive;
   state.keepScroll = true;
   render();
 }
@@ -2810,6 +2934,7 @@ document.getElementById("c-alarm").addEventListener("click", () => { state.alert
 document.getElementById("c-onboard").addEventListener("click", () => { state.system = null; state.alert = null; state.sheet = { kind: "onboard", ret: document.activeElement }; state.focus = "sheet"; render(); });
 document.getElementById("c-perm-n").addEventListener("change", (e) => { perm.notifications = e.target.checked; state.keepScroll = true; render(); });
 document.getElementById("c-perm-a").addEventListener("change", (e) => { perm.alarms = e.target.checked; state.keepScroll = true; render(); });
+document.getElementById("c-perm-t").addEventListener("change", (e) => { perm.timeSensitive = e.target.checked; state.keepScroll = true; render(); });
 document.getElementById("c-24h").addEventListener("change", (e) => { prefs.h24 = e.target.checked; state.keepScroll = true; render(); });
 document.getElementById("c-theme").addEventListener("change", (e) => { if (e.target.value) document.documentElement.dataset.theme = e.target.value; else delete document.documentElement.dataset.theme; });
 document.getElementById("c-type").addEventListener("change", (e) => { if (e.target.value) document.documentElement.dataset.type = e.target.value; else delete document.documentElement.dataset.type; });
@@ -2818,10 +2943,11 @@ document.getElementById("c-bold").addEventListener("change", (e) => { if (e.targ
 document.getElementById("c-reset").addEventListener("click", () => {
   seed();
   Object.assign(me, { timezone: "America/New_York", autoTz: true, quietHours: { start: "22:00", end: "07:00" } });
-  Object.assign(perm, { notifications: true, alarms: true });
+  Object.assign(perm, { notifications: true, alarms: true, timeSensitive: true });
   document.getElementById("c-perm-n").checked = true;
   document.getElementById("c-perm-a").checked = true;
-  Object.assign(state, { tab: "now", lastTab: "now", stacks: { now: [], day: [], tags: [], settings: [], search: [] }, dayFilter: newDayFilter(), dayStatus: null, tagFilter: newFilter(), tagEdit: false, sq: "", recent: [], settingsSection: "nudges", tabMin: false, sheet: null, system: null, alert: null, assistive: false });
+  document.getElementById("c-perm-t").checked = true;
+  Object.assign(state, { tab: "now", lastTab: "now", stacks: { now: [], day: [], tags: [], settings: [], search: [] }, dayFilter: newDayFilter(), dayStatus: null, tagFilter: newFilter(), tagEdit: false, sq: "", recent: [], settingsSection: "nudges", tabMin: false, sheet: null, system: null, alert: null, assistive: false, quietError: false });
   document.getElementById("c-assistive").checked = false;
   nav();
   hud("Mockup reset");

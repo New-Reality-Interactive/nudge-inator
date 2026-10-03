@@ -8,9 +8,8 @@ updated: 2026-10-02
 Detail behind the [brief](brief.md) that later documents (PRD, UX, architecture) will need, but that
 doesn't belong in the brief itself. The rules in the brief come from the tags mockup: where they
 disagree, its `index.html` is the reference for behavior, and its README for reasons. The exception
-is the nudging rules decided on 2026-10-02 (brief §10), which the mockup predates. Where those
-differ from the mockup, the brief wins. For example, the mockup starts a carry-over one step
-further along the schedule, and it has no **Not Done** or **Ignore Quiet Hours**.
+is the nudging rules decided on 2026-10-02 (brief §10). The mockup was updated to follow them, but
+where the two still differ, the brief wins.
 
 ## A. What the earlier brief had that this one drops
 
@@ -54,6 +53,11 @@ exceptions: those APIs are iOS 26.0 and later, so iOS 18 keeps the portrait beha
 The iPhone notes describe what the tags mockup shows; its README has the reasons and how it was
 checked. The iPad notes are starting points for the UX work.
 
+| Threshold | Value | What changes |
+|---|---|---|
+| Regular width in landscape | iPhones 414 pt wide or more: XR, 11, the Plus and Max models, and probably Air | Tags, Search and Settings use a split view |
+| Wide nudge cards | A card 540 pt wide or more, in any orientation and on iPad | Done and Snooze sit beside the text, except at accessibility sizes |
+
 - **iPhone, landscape:** compact height. Every model:
   - Large titles collapse to inline titles. The status bar is hidden.
   - Content stays inside the safe areas, at a readable width; backgrounds run to the edges.
@@ -63,14 +67,13 @@ checked. The iPad notes are starting points for the UX work.
   - My Day's header is shorter: the date is the title's subtitle (`navigationSubtitle`, iOS 26 and
     later; on iOS 18 it stays in the content), Filter is a bar button showing how many tags are
     chosen, and the counts are a row of capsules.
-  - Nudge cards 540 pt wide or more put Done and Snooze beside the text. It depends on the card's
-    width, not the orientation, so it applies on iPad too. At accessibility sizes they stack.
+  - Wide nudge cards put Done and Snooze beside the text (see the table). It depends on the card's
+    width, not the orientation.
   - Sheets fill the screen. Alerts stay centered; action sheets keep their portrait width.
   - Nudges arrive over the app, because the iPhone is in use: the alarm as AlarmKit's alert (a
     banner at the top in the mockup, to confirm on a device) and notifications as banners. The Lock
     Screen doesn't rotate, so it's only ever portrait.
-- **iPhone, landscape, regular width:** the iPhones 414 pt wide or more (XR, 11, the Plus and Max
-  models, and probably Air).
+- **iPhone, landscape, regular width:** the larger iPhones (see the table).
   - Tags, Search and Settings use a split view (`NavigationSplitView`): the list on the left, the
     chosen reminder or Settings section on the right. Rotating to portrait collapses it into a
     navigation stack.
@@ -87,9 +90,15 @@ checked. The iPad notes are starting points for the UX work.
   - Sheets are centered form sheets.
   - Every window size is supported, from Slide Over to full screen, with Stage Manager.
 - **Keyboard (iPad and Full Keyboard Access):**
-  - ⌘N new reminder, ⌘F Search
-  - ⌘1 to ⌘4 for the tabs
-  - Return to save a sheet, Escape to cancel
+
+  | Key | Action |
+  |---|---|
+  | ⌘N | New reminder |
+  | ⌘F | Search |
+  | ⌘1 to ⌘4 | Now, My Day, Tags, Settings |
+  | Return | Save a sheet |
+  | Escape | Cancel a sheet |
+
 - **Pointer:** hover effects on the system controls.
 - **Accessibility sizes:** the mockup's stacked layouts apply in every size class.
 
@@ -192,7 +201,15 @@ over a four-week TestFlight beta. Apple's documentation confirms that external b
 Review and that testers can join by public link. The limits and time periods below are as of
 2026-10-01; check them in App Store Connect's help.
 
-- **Setup.** The Apple Developer Program ($99 a year), then an app record in App Store Connect with
+| Item | Value |
+|---|---|
+| Cost | The Apple Developer Program, $99 a year |
+| External testers | Up to 10,000, by email or a public link |
+| Internal testers | Up to 100, members of the App Store Connect team |
+| Beta App Review | The first build of each version, usually within about a day |
+| Build expiry | 90 days after upload |
+
+- **Setup.** The Apple Developer Program, then an app record in App Store Connect with
   the bundle ID. TestFlight doesn't need an App Store listing. In Xcode, add the Time Sensitive
   Notifications capability (its entitlement is required to send Time Sensitive notifications), and
   set `NSAlarmKitUsageDescription`, `NSSupportsLiveActivities` and `UISupportsAssistiveAccess` in
@@ -200,15 +217,14 @@ Review and that testers can join by public link. The limits and time periods bel
 - **Builds.** Archive in Xcode and upload from the Organizer (Distribute App > App Store Connect).
   Set `ITSAppUsesNonExemptEncryption` to `NO` in `Info.plist`, since the app uses no encryption of
   its own; otherwise App Store Connect asks about it for every build.
-- **Testers are external,** invited by email or a public link (up to 10,000). Internal testers (up to
-  100) would have to join the App Store Connect team, which gives them access to it, so they're
-  only for the owner.
-- **Beta App Review** checks the first build of each version before external testers get it,
-  usually within about a day; later builds of the same version usually skip it. It needs a
+- **Testers are external,** invited by email or a public link. Internal testers would have to join
+  the App Store Connect team, which gives them access to it, so they're only for the owner.
+- **Beta App Review** checks the first build of each version before external testers get it; later
+  builds of the same version usually skip it. It needs a
   description of what to test and a contact email. It's the first time Apple sees the app schedule
   AlarmKit alarms for reminders, so its outcome is an early signal for the App Review risk in the
   brief: a rejection means rethinking alarms before release.
-- **Builds expire after 90 days.** Upload a new one at least that often while the beta runs.
+- **Builds expire.** Upload a new one before the last one expires while the beta runs.
 - **Devices.** Recruit testers on iOS 18 and on iOS 26 or later, so both Urgent paths, the
   notification chain and AlarmKit alarms, get real use. Include at least one iPad and one iPhone
   without a Dynamic Island, for the alarm checks the brief lists.
