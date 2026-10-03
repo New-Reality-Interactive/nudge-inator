@@ -415,17 +415,11 @@ nudge-inator/
 
 **First spike:** App Intents declared in `NudgeKit` targets and used from both the app and the widget, with an `AppIntentsPackage` in each. If that fails, the fallback is a framework target.
 
-**Device checklist** (not automatable):
-- the AlarmKit limit
-- cancelling an alarm during its snooze countdown, and reusing IDs
-- intents after force-quit, including a Watch Stop
-- alarms with notifications off
-- an alarm that rings out
-- Stop, Snooze and Done before the first unlock (the journal)
-- how the alarm presents on an unlocked iPhone and in landscape
-- the 64-notification limit on 18, 26 and 27
-- restoring from a backup
-- Assistive Access with alarms
+**Device checklist** (not automatable): the one list is in
+[brief §10 › Device checklist](../product/brief.md#10-risks-and-decisions). The checks that can
+change a decision here are the AlarmKit limit (AD-11), cancelling during a countdown and reusing IDs
+(AD-12), intents after force-quit (AD-12), before the first unlock (AD-16), the 64-notification
+limit (AD-14) and restoring from a backup (AD-15).
 
 ## Capability → Architecture Map
 

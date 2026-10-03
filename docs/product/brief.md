@@ -405,6 +405,41 @@ format would have to stay compatible from version to version.
 - **Many tags on one reminder.** There's no limit on tags per reminder. Test rows, nudge cards and
   the details with 10 or more tags.
 
+**Device checklist.** This is the one list of checks to run on real devices before TestFlight and
+the App Store. The architecture spine and EXPERIENCE.md point here, and each item names the
+decision or section it affects.
+
+- *Alarms and notifications*
+  - The AlarmKit alarm limit (risk above; AD-11's `alarmCapacity`).
+  - The 64-notification limit on iOS 18, 26 and 27 (risk above; AD-14).
+  - Cancelling an alarm during its snooze countdown, and reusing alarm IDs (AD-12, and its `.custom`
+    fallback).
+  - Stop and Snooze after the app has been force-quit, including Stop on a paired Watch (risk
+    above; AD-12).
+  - Stop, Snooze and Done before the first unlock: the journal and the follow-up (risk above;
+    AD-16).
+  - Alarms with notifications off (risk above).
+  - An alarm that rings out: AlarmKit doesn't report it as a stop
+    ([EXPERIENCE › Nudge Surfaces](../design/EXPERIENCE.md#nudge-surfaces)).
+  - How the alarm presents: on an unlocked iPhone, as a banner over the app in landscape, in the
+    Dynamic Island over another app, and in StandBy (risk above; EXPERIENCE Flow 3).
+  - Alarms, Time Sensitive notifications and the Live Activity under Assistive Access
+    ([EXPERIENCE › Assistive Access](../design/EXPERIENCE.md#assistive-access)).
+  - Restoring from a backup: whether nudging resumes before the app is opened (risk above; AD-15).
+- *Screens*
+  - Navigation bars at the accessibility sizes (above).
+  - The selected tab's contrast on the system's glass pill (above; the accessibility release gate).
+  - What the mockup can't know about the system's drawing (above).
+  - Rows, nudge cards and details with 10 or more tags (above).
+  - Token selection and deletion in the Tags tab's field
+    ([EXPERIENCE › Tag token field](../design/EXPERIENCE.md#tag-token-field)).
+  - Folding and unfolding the iPhone Duo, at both sizes
+    ([EXPERIENCE › Responsive & Platform](../design/EXPERIENCE.md#responsive--platform)).
+- *Accessibility release gate* (before the App Store listing declares its Accessibility Nutrition
+  Labels; [EXPERIENCE › Accessibility Floor](../design/EXPERIENCE.md#accessibility-floor)): an
+  Accessibility Inspector audit, then VoiceOver, Voice Control and Switch Control on the common
+  tasks, at Large and AX5, in light, dark and Increase Contrast.
+
 **Decided (2026-10-01):**
 - **My Day and the Tags tab keep separate filters.** My Day shows what's due today among the chosen
   tags; the Tags tab browses every reminder.

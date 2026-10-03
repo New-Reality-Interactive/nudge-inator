@@ -853,15 +853,14 @@ Add a flow for any of these if TestFlight shows it's needed.
 - The keep-nudging notice's wording ([Nudge Surfaces](#nudge-surfaces)).
 - The flows' protagonists ([Key Flows](#key-flows)).
 
-**Device checks:**
-- Token selection and deletion in the Tags tab's field ([Tag token field](#tag-token-field)).
-- AlarmKit doesn't report an alarm that rang out as a stop ([Nudge Surfaces › States](#states)).
-- The alarm as a banner over the app in landscape ([Nudge Surfaces](#nudge-surfaces)).
-- The alarm in the Dynamic Island over another app ([Key Flows](#key-flows), Flow 3).
-- Alarms, Time Sensitive notifications and the Live Activity under Assistive Access
-  ([Assistive Access](#assistive-access)).
-- Folding and unfolding the iPhone Duo, at both sizes ([Responsive & Platform](#responsive--platform)).
-- Restoring from a backup: whether nudging resumes before the app is opened (brief §10).
+**Device checks:** the one list is in
+[brief §10 › Device checklist](../product/brief.md#10-risks-and-decisions). The ones that can
+change this spine are the Tags tab's token field ([Tag token field](#tag-token-field)), an alarm
+that rings out ([Nudge Surfaces › States](#states)), the alarm over the app and in the Dynamic
+Island ([Nudge Surfaces](#nudge-surfaces), Flow 3), Assistive Access with alarms
+([Assistive Access](#assistive-access)), the iPhone Duo
+([Responsive & Platform](#responsive--platform)) and the
+accessibility [release gate](#accessibility-floor).
 
 **Architecture questions:** none. Filters across a relaunch were settled on 2026-10-03
 ([Information Architecture](#information-architecture)).
