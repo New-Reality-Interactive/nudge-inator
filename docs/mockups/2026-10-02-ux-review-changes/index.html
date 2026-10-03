@@ -3035,12 +3035,14 @@ function saveFromSheet() {
   const resuming = state.sheet.resume, id = state.sheet.editId;
   saveEditor();
   if (!resuming || !id) return;
+  // Saving the Resume sheet always resumes. The form already blocks the one case that can't: a
+  // one-off whose time has passed.
   const r = remById(id);
-  if (r && L(r.dtstart) > NOW) {
-    r.status = "ACTIVE";
-    r.nextOccurrenceAt = r.dtstart;
-    render();
-  }
+  if (!r) return;
+  r.status = "ACTIVE";
+  const next = nextOccurrence(r);
+  r.nextOccurrenceAt = next ? iso(next) : null;
+  render();
 }
 function notificationAction(act) {
   const s = state.system;
