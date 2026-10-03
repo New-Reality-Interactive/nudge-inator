@@ -569,9 +569,8 @@ maps each one to its decisions under "Capability → Architecture Map".
     knows an action came from an occurrence that has already closed.
 12. What format Export Data uses (the mockup shows a JSON file), so the record can be read without
     the app.
-13. How the Done follow-up notification is sent without opening the app, and how it's removed when
-    the next occurrence falls due. (Sending is answered in the architecture spine: the stop intent
-    only records Done and the reconciler sends the follow-up, AD-12; before the first unlock the
-    intent posts it itself, AD-16.)
+13. How the Done follow-up notification is sent without opening the app, and how it's removed.
+    (Answered: it's sent per the architecture spine's AD-12, or AD-16 before the first unlock, and
+    removed once Not Done no longer applies ([§3](#3-product-concepts)) by AD-6's cleanup.)
 14. Whether My Day's and the Tags tab's filters survive a relaunch. (Answered: they're restored
     after iOS ends the app in the background, and reset when the person closes it.)
