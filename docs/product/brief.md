@@ -104,7 +104,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
 | Strength | Intervals between nudges | Urgency | With the default limit |
 |---|---|---|---|
 | **Gentle** | 60, 45, 34, 25 min, then every 20 | Normal, then High from nudge 5 (about 2 h 45 min after it's due). Never Urgent. | 20 nudges over about 8 hours |
-| **Firm** | 30, 15, 7.5 min, then every 5 | Normal, then High at nudge 3 (45 min after it's due) and Urgent from nudge 4 | 20 nudges over about 2 h 20 min |
+| **Firm** | 30, 15, 7.5 min, then every 5 | Normal, then High at nudge 3 (45 min after it's due) and Urgent from nudge 4 | 20 nudges over about 2 h 12 min |
 | **Relentless** | 10, 5, 2.5 min, then every 2 | High from nudge 1, Urgent from nudge 4 | 20 nudges over about 50 min |
 
 **Set by the strength:**
