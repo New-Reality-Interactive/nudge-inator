@@ -197,7 +197,9 @@ TestFlight. It's released on the App Store once the success measures are met (se
   snoozes left.
 - If notifications or alarms are turned off in iOS Settings, Now and Settings show a banner that
   says what that means. The two permissions are separate: with notifications off and alarms
-  allowed, only Urgent nudges reach the person.
+  allowed, only Urgent nudges reach the person. A nudge that can't be delivered still counts: the
+  occurrence's nudges and give-up limit run on schedule, so it closes as missed at its limit
+  rather than nudging forever, and its history shows each nudge that couldn't be sent.
 - **Time Sensitive can be turned off on its own.** The person can turn it off for the app, and iOS
   asks from time to time whether the app's Time Sensitive notifications are worth it. Then High
   nudges, and Urgent nudges that fall back to notifications, arrive as ordinary notifications, which

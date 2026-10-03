@@ -235,12 +235,13 @@ graph TD
 - **Binds:** history, export, restore detection
 - **Prevents:** history claiming a nudge was sent when it never was
 - **Rule:**
-  - **What's recorded:** every delivery the reconciler schedules gets a ledger row with its delivery ID, occurrence key, nudge index, urgency, channel and fire instant.
+  - **What's recorded:** every delivery the reconciler schedules gets a ledger row with its delivery ID, occurrence key, nudge index, urgency, channel and fire instant. A planned nudge with no channel (notifications off, and no alarm for it) gets a row with channel `none` and state `undeliverable`, so history and the nudge count agree; it still counts toward the give-up limit (brief §4).
   - **States:**
     - `scheduled`
     - `cancelled`: the reconciler removed it before its fire instant
     - `lost`: it vanished from the OS before its fire instant without the reconciler removing it
-  - **History:** shows rows that are past their fire instant and still `scheduled`.
+    - `undeliverable`: planned with no channel, so nothing was given to the OS
+  - **History:** shows rows that are past their fire instant and still `scheduled`, and `undeliverable` rows past their fire instant.
   - **Restore detection:** an install marker (Keychain, `ThisDeviceOnly`) that doesn't match the database's marks every future `scheduled` row `lost`, then replans.
   - **Pruning:** facts and rows older than 90 days are pruned only where `NudgeCore.prunable` says they're inert. Reminder-level state (pause, current versions) and each reminder's latest occurrence with its facts are never prunable.
 
