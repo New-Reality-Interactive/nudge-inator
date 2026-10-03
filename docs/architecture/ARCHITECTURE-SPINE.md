@@ -187,7 +187,7 @@ graph TD
   - **Normal:** an `.active` notification.
   - **High:** a `.timeSensitive` notification, or `.active` when Time Sensitive is off.
   - **Urgent:** an AlarmKit alarm when `alarmsAvailable`; otherwise the notification chain (AD-13). `alarmsAvailable` is false on iOS 18 and whenever AlarmKit authorization isn't `.authorized`.
-  - **Past the alarm limit:** Urgent nudges beyond `alarmCapacity` come as one Time Sensitive notification each.
+  - **Past the alarm limit:** Urgent nudges beyond `alarmCapacity` come as one Time Sensitive notification each, or `.active` when Time Sensitive is off.
 
 ### AD-12 — Snooze and Stop are commands; the engine plans what follows
 
@@ -208,7 +208,7 @@ graph TD
 - **Prevents:** duplicate notifications in one minute and nudge counts that differ by OS
 - **Rule:**
   - **When a chain starts:** when an occurrence enters or re-enters Urgent: its first Urgent nudge, the end of quiet hours, the end of a snooze, and Not Done.
-  - **What it sends:** a Time Sensitive notification at once and every minute after, 10 in all. It ends early on Done, Snooze or the start of quiet hours.
+  - **What it sends:** a notification at once and every minute after, 10 in all. Each is `.timeSensitive`, or `.active` when `timeSensitiveAllowed` is false (brief §4), so a Focus can hold it; the banners and Via labels say so (EXPERIENCE › Via label). It ends early on Done, Snooze or the start of quiet hours.
   - **Nudges inside it:** the strength's Urgent nudges that fall inside a running chain still count on schedule but aren't sent separately. The chain notification at that minute shows the current nudge number.
   - **Limits:** chain repeats don't count toward the nudge limit, but their time counts toward the time limit.
 
