@@ -465,7 +465,7 @@ Visual only; decorative, hidden from VoiceOver.
 | Editing while nudging | The footer says when each change applies. It warns when saving would close the occurrence as skipped. |
 | Notes at 2,000 characters | No more input is accepted. A footer counter appears from 1,800 characters ("1,950 of 2,000"). |
 | New tag name already used, ignoring case (Tags page) | The form checks the existing tag instead of creating a new one, and the footer says "Using #home". |
-| Typing a tag name (Tags page, Rename Tag) | Spaces become hyphens as you type ("dog walks" becomes #dog-walks), and a leading # is dropped. Up to 30 characters, not counting a leading #; no more input is accepted. |
+| Typing a tag name (Tags page, Rename Tag) | Spaces become hyphens as you type ("dog walks" becomes #dog-walks), one leading # is dropped, and hyphens at either end are removed when it's saved. Up to 30 characters, not counting a leading #; no more input is accepted. |
 | Unsaved changes, then Cancel | Confirmation: **Discard Changes** / **Keep Editing** |
 | Resuming a one-off whose time passed | Asks for a new time ("Choose a New Time"). |
 | Repeat Never with a start time that has passed | Inline error under Starts: "This time has passed. Choose a later time." **Add**/**Save** is disabled. An edit to a reminder that was already a one-off, keeping its time, can still be saved; resuming one, or changing a repeat to Never, can't. |
@@ -483,7 +483,7 @@ Visual only; decorative, hidden from VoiceOver.
 | State | Treatment |
 |---|---|
 | Name already in use | Inline error: "You already have a tag with this name." **Save** is disabled. |
-| Typing | The same name rules as a new tag: spaces become hyphens, a leading # is dropped, up to 30 characters. |
+| Typing | The same name rules as a new tag: spaces become hyphens, one leading # is dropped, hyphens at either end are removed, up to 30 characters. |
 
 ### Any
 

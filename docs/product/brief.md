@@ -121,7 +121,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
 |---|---|---|
 | Title | Up to 200 characters. Required. | None |
 | Notes | Up to 2,000 characters | None |
-| Tag name | 1–30 characters, one word. Spaces become hyphens and a leading `#` is dropped. | None |
+| Tag name | 1–30 characters, one word. Spaces become hyphens, one leading `#` is dropped, and hyphens at either end are removed. | None |
 | Give-up limit, nudges | 1–100, and at least the strength's smallest | 20 |
 | Give-up limit, time | 15 minutes to 7 days, and at least the strength's smallest | 24 hours |
 | Snooze length | The strength's default, or 5, 10, 15 or 30 min where that's longer | The strength's default |
