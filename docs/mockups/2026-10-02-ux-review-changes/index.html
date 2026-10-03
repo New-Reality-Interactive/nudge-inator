@@ -1922,7 +1922,7 @@ const EVENT_TEXT = {
   SNOOZED: (d) => `Snoozed ${d.minutes} min (${plural(d.left, "snooze")} left)`,
   DISMISSED: () => "Notification cleared (still nudging)",
   // One string per Done source (EXPERIENCE › Voice and Tone, AD-3 `source`).
-  ACKED: (d) => ({ alarm: "Done (alarm stopped)", liveActivity: "Done from the Lock Screen", notification: "Done from the notification", siri: "Done with Siri", assistiveAccess: "Done in Assistive Access" })[d.from] ?? "Done",
+  ACKED: (d) => ({ alarm: "Done (alarm stopped)", liveActivity: "Done from the Lock Screen", notification: "Done from the notification", assistiveAccess: "Done in Assistive Access" })[d.from] ?? "Done",
   MISSED: (d) => closedWhy(d.reason, "MISSED"),
   SKIPPED: (d) => closedWhy(d.reason, "SKIPPED"),
   REOPENED: () => "Marked not done (nudging again)",
@@ -2780,7 +2780,7 @@ function assistiveCard(o) {
   const left = MAX_SNOOZES - (o.snoozes || 0);
   const snoozeBtn = left > 0 ? `<button type="button" class="aa-btn secondary" data-snooze="${o.id}" aria-label="Snooze ${snoozeOf(r)} minutes: ${esc(r.title)}">Snooze ${snoozeOf(r)} min</button>` : "";
   return `<li class="aa-card"><h3 class="aa-title">${esc(r.title)}</h3>
-      <button type="button" class="aa-btn" data-ack="${o.id}" aria-label="Done: ${esc(r.title)}">${I("checkmark", 26)} Done</button>
+      <button type="button" class="aa-btn" data-ack="${o.id}" data-src="assistiveAccess" aria-label="Done: ${esc(r.title)}">${I("checkmark", 26)} Done</button>
       ${snoozeBtn}
     </li>`;
 }
@@ -3070,7 +3070,7 @@ const CLICK = {
   new: () => openEditor(),
   back: () => pop(),
   open: (v) => { rememberSearch(); push({ kind: "rem", id: v }); },
-  ack: (v) => { const focus = nextFocusAfterAck(v); ack(v); refresh(focus); },
+  ack: (v, el) => { const focus = nextFocusAfterAck(v); ack(v, el?.dataset.src); refresh(focus); },
   snooze: (v) => { snooze(v); refresh(() => main.querySelector(`[data-snooze="${v}"]`) || main.querySelector(`[data-ack="${v}"]`)); },
   pause: (v) => { pause(v); refresh(`[data-resume="${v}"]`); },
   undone: (v) => { reopen(v); refresh(`[data-ack="${v}"]`); },
@@ -3160,7 +3160,7 @@ document.addEventListener("click", (e) => {
   const t = e.target.closest("button, [data-tab]");
   const key = t && Object.keys(t.dataset).find((k) => CLICK[k]);
   pressed = t;
-  if (key) CLICK[key](t.dataset[key]);
+  if (key) CLICK[key](t.dataset[key], t);
 });
 /* After Done the card goes away, so focus moves to the summary (title) of the card that takes its
    place, or of the one before it if it was last, or to the heading. On My Day the row stays, so focus
