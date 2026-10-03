@@ -68,9 +68,14 @@ The bars follow iOS 26's Liquid Glass (see [Materials](#materials)):
 - The **tab bar** is a glass capsule that floats above the content. The selected tab sits in a
   lighter pill, in the accent color. **Search** is a separate glass circle at the trailing end, as
   iOS 26 does for a search tab.
-- **Bar buttons** are glass capsules (**Edit**, **Cancel**) or glass circles when they hold only a
-  symbol (**+**, and Back, which shows just the chevron). They use the label color. The confirming
-  action in a sheet (**Add**, **Save**, **Done**) is tinted with the accent color.
+- **Bar buttons** are glass capsules when they hold words (**Edit**, **Clear**) or glass circles
+  when they hold only a symbol (**+**, and Back, which shows just the chevron). They use the label
+  color.
+  - Sheets use symbols, as iOS 26 does for SwiftUI's `.cancel` and `.confirm` button roles: an
+    `xmark` circle to cancel, and a `checkmark` circle tinted with the accent color to confirm
+    (**Add**, **Save**, **Done**). Each symbol keeps its word as its accessibility label.
+  - **Edit** stays a word, because Apple's toolbar guidance names it as an action that symbols
+    don't represent well.
 
 | Tab | SF Symbol | What it shows |
 |---|---|---|
@@ -87,8 +92,8 @@ The bars follow iOS 26's Liquid Glass (see [Materials](#materials)):
   - When a reminder matches only in its notes, the row shows the words around the match. A leading
     `#` is ignored, so "#health" finds that tag.
   - With no matches it says **No Results for "…"**, as iOS apps do.
-- **New reminder:** the **+** button in the navigation bar opens a sheet with **Cancel** and
-  **Add**.
+- **New reminder:** the **+** button in the navigation bar opens a sheet with **Cancel** (`xmark`)
+  and **Add** (`checkmark`).
   - The **Title** wraps onto more lines as you type. Return doesn't add a line.
   - **Tags** opens a page with a **New Tag** field and a checklist of your tags.
   - **Repeat** opens a picker page: Never, Every Day, Every Weekday, Every Week, Every 2 Weeks,
@@ -170,7 +175,7 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
   - **No Tags**, which shows only reminders without tags. Checking it clears the tags, and checking
     a tag clears it. My Day is the only place to see reminders with no tags.
   - The sheet applies changes as you make them and says how many match ("7 due today with #work or
-    #morning"). **Clear** resets the filter, and **Done** closes the sheet.
+    #morning"). **Clear** resets the filter, and **Done** (`checkmark`) closes the sheet.
 
   Back on My Day, the button reads **Filter (2)**, and the chosen tags show as tokens you can
   remove, with **Clear**. The rows and the counts all follow the filter. In each row the chosen

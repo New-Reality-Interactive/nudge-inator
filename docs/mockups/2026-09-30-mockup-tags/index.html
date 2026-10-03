@@ -555,8 +555,10 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 /* ============ Sheets, alerts, HUD ============ */
 .overlay { position: absolute; inset: 0; z-index: 40; }
 .scrim { position: absolute; inset: 0; background: var(--scrim); }
-.sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 48px; background: var(--system-grouped-background); border-radius: 12px 12px 0 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow); }
-.sheet .navrow { background: var(--system-grouped-background); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 48px; background: var(--system-grouped-background); border-radius: 38px 38px 0 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow); }
+/* Bar buttons sit concentric with the sheet's corners: the same 16px gap above and beside them,
+   and a corner radius of the 22px button radius plus that gap. */
+.sheet .navrow { background: var(--system-grouped-background); padding: 16px 16px 4px; }
 .sheet-body { flex: 1; overflow-y: auto; padding: 20px 0 40px; }
 .sheet-body:focus { outline: none; }
 .formrow { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 16px; }
@@ -1568,7 +1570,7 @@ function openDayFilter() {
 function dayFilterSheet() {
   const f = state.dayFilter, n = todayItems().filter((it) => inDayFilter(it.r)).length;
   const clear = `<button type="button" class="btn bar glass" data-cleardayfilter ${dayFilterOn() ? "" : "disabled"}>Clear</button>`;
-  const done = `<button type="button" class="btn bar prominent glass" data-sheet-close>Done</button>`;
+  const done = `<button type="button" class="btn bar icon prominent glass" data-sheet-close aria-label="Done">${I("checkmark", 22, true)}</button>`;
   const check = (attr, v, label, on, sub = "") => `<li><button type="button" class="cell" role="checkbox" aria-checked="${on}" ${attr}="${v}"><span class="main"><span class="t">${label}</span>${sub}</span>${on ? CHECK : ""}</button></li>`;
   const tagRows = sortTags(tags).map((t) => check("data-daytag", t.id, `#${esc(t.name)}`, f.ids.includes(t.id))).join("");
   const result = dayFilterOn() ? `${n} due today ${esc(dayFilterPhrase())}.` : `Showing everything due today (${n}).`;
@@ -1926,7 +1928,7 @@ function openEditor(editId = null) {
 }
 function draftDirty() { return state.sheet && JSON.stringify(state.sheet.draft) !== state.sheet.orig; }
 
-const CANCEL_BTN = `<button type="button" class="btn bar glass" data-sheet-cancel>Cancel</button>`;
+const CANCEL_BTN = `<button type="button" class="btn bar icon glass" data-sheet-cancel aria-label="Cancel">${I("xmark", 22, true)}</button>`;
 /* A back button inside a sheet, returning to one of its pages. */
 const sheetBack = (page, label) => `<button type="button" class="btn bar icon glass back" data-sheet-page="${page}" aria-label="Back to ${label}">${I("chevron.backward", 22, true)}</button>`;
 const CHECK = `<span class="checkmark">${I("checkmark", 20)}</span>`;
@@ -1941,7 +1943,7 @@ function editorMain(sh) {
   const sum = nudgeSummary(x.strength, cap, carry, takeoverAfter({ dtstart: x.dtstart, rrule: ruleFor(x) }));
   const o = editing && openOccs().find((y) => y.reminderId === r.id);
   const canSave = x.title.trim().length > 0;
-  const confirm = `<button type="button" class="btn bar prominent glass" data-sheet-save ${canSave ? "" : "disabled"}>${editing ? "Save" : "Add"}</button>`;
+  const confirm = `<button type="button" class="btn bar icon prominent glass" data-sheet-save aria-label="${editing ? "Save" : "Add"}" ${canSave ? "" : "disabled"}>${I("checkmark", 22, true)}</button>`;
   // While it's nudging, the form says when each change applies, and warns when saving would close it.
   const closes = o && closesOnEdit(o, r, x.dtstart, cap);
   const closeNote = { time: "Its time changed, so saving closes this one as skipped.", limit: "It has already reached this limit, so saving closes this one as skipped." }[closes];
@@ -2127,7 +2129,7 @@ function openTagSheet(id) {
 const tagNameTaken = (id, name) => tags.some((t) => t.id !== id && sameName(t.name, name));
 function tagSheet(sh) {
   const name = cleanTag(sh.draft.name), dup = tagNameTaken(sh.id, name);
-  const done = `<button type="button" class="btn bar prominent glass" data-tag-save ${name && !dup ? "" : "disabled"}>Done</button>`;
+  const done = `<button type="button" class="btn bar icon prominent glass" data-tag-save aria-label="Done" ${name && !dup ? "" : "disabled"}>${I("checkmark", 22, true)}</button>`;
   return `${sheetNav(CANCEL_BTN, "Rename Tag", done)}
   <div class="sheet-body" tabindex="-1">
     <div class="sec" style="text-align:center"><span class="ico round" style="width:84px;height:84px;margin:0 auto;background:var(--tile-gray)">${I("tag", 40)}</span></div>
