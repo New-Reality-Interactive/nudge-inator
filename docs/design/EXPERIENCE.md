@@ -335,8 +335,9 @@ at least 44 pt.
   that means. When alarms and Time Sensitive are both off, both banners show. When notifications
   are off, only that banner shows, because it already says what can still reach you.
 - **Actions:** **Open Settings** and **Got It**. **Got It** collapses the banner on Now to a
-  one-line row at the bottom of the screen. Settings keeps the full banner until the permission
-  changes.
+  one-line row at the bottom of the screen. When two banners are showing, each has its own **Got
+  It** and collapses to its own row, and the rows stack. Settings keeps the full banner until the
+  permission changes.
 - **Layout:** a banner never sits above the first nudge card's Done.
 
 ### Quiet-hours chip
