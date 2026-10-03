@@ -181,9 +181,8 @@ and **Cancel**, **Add**, **Save** and **Done** as words.
 ## Tags
 
 **What a tag is:**
-- **A name, nothing else.** It's one word, shown as `#home`. Typing spaces turns them into hyphens
-  ("dog walks" becomes `#dog-walks`), one leading `#` is dropped, and hyphens at either end are
-  removed. Names are up to 30 characters.
+- **A name, nothing else.** It's one word, shown as `#home`; typing "dog walks" gives `#dog-walks`.
+  The naming rules are in [brief §3](../../product/brief.md#3-product-concepts) (Tag name).
 - **No color.** Tags are all the same neutral gray, so they never compete with the status colors
   (see [Color](#color)).
 - **Names are unique**, ignoring case. Adding `Home` when `#home` exists reuses `#home`.
