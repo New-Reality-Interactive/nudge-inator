@@ -1,0 +1,475 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Accent Candidates</title>
+<style>
+:root{--bg:#fafafa;--fg:#1d1d1f;--mut:#6e6e73;--line:#e2e2e7;--panel:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#111;--fg:#f5f5f7;--mut:#a1a1a6;--line:#2c2c2e;--panel:#18181a}}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;padding:24px 16px 64px}
+.wrap{max-width:1180px;margin:0 auto} h1{font-size:28px;margin:0 0 6px} .note{color:var(--mut);margin:0 0 6px} .note b{color:var(--fg)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px;margin:22px 0}
+.panel h2{margin:0;font-size:21px} .panel header p{margin:2px 0 12px;color:var(--mut)}
+.tokens{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 10px 4px 4px;font-size:12px}
+.chip i{width:20px;height:20px;border-radius:50%;display:inline-block;border:1px solid rgba(128,128,128,.35)} .chip.sm i{width:14px;height:14px;margin-right:-4px} .chip em{font-style:normal;color:var(--mut)} .chip code{font:12px ui-monospace,Menlo,monospace}
+.strip{display:inline-flex;border-radius:8px;overflow:hidden;border:1px solid var(--line)} .strip i{width:26px;height:22px;display:block} .strip i:first-child{width:44px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px} @media(max-width:760px){.pair{grid-template-columns:1fr}}
+.phone{border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.phone .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.06em;opacity:.6}
+.lt{background:#F2F2F7;color:#000;--cell:#fff;--sec:rgba(60,60,67,.6);--tert:#EBEBF0;--red:#D70015;--org:#C93400;--grn:#1E7B34;--ind:#3634A3;--neu:#6C6C70;--pill:#E6E6E9;--glass:rgba(255,255,255,.72);--glassb:rgba(0,0,0,.06)}
+.dk{background:#000;color:#fff;--cell:#1C1C1E;--sec:rgba(235,235,245,.6);--tert:#2C2C2E;--red:#FF6961;--org:#FF9F0A;--grn:#30D158;--ind:#7D7AFF;--neu:#AEAEB2;--pill:#3C3C3F;--glass:rgba(44,44,46,.72);--glassb:rgba(255,255,255,.1)}
+.card{background:var(--cell);border-radius:16px;display:flex;overflow:hidden} .stripe{width:5px;background:var(--org);flex:none} .cbody{padding:12px 14px;flex:1;min-width:0}
+.row1{display:flex;gap:8px;align-items:center;font-size:12px;flex-wrap:wrap} .nudging{color:var(--red);font-weight:600} .sec{color:var(--sec)}
+.cap{border:1px solid var(--neu);color:var(--neu);border-radius:999px;padding:1px 8px;display:inline-flex;gap:5px;align-items:center;font-weight:600}
+.bars{display:inline-flex;gap:2px;align-items:flex-end;height:10px} .bars b{width:3px;background:currentColor;border-radius:1px} .bars b:nth-child(1){height:4px}.bars b:nth-child(2){height:6px}.bars b:nth-child(3){height:8px}.bars b:nth-child(4){height:10px} .bars b.off{opacity:.3}
+.title{font-size:17px;font-weight:600;margin:6px 0 2px} .meta{font-size:13px;color:var(--sec)} .hi{color:var(--org);font-weight:600} .urg{color:var(--red);font-weight:600}
+.btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap} .b{border-radius:999px;padding:8px 16px;font-weight:600;font-size:15px} .fill{background:var(--ac);color:var(--on)} .tert{background:var(--tert);color:var(--ac)}
+.foot{font-size:12px;color:var(--sec);margin-top:8px}
+.counts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px} .cnt{background:var(--cell);border-radius:12px;padding:8px;text-align:center} .cnt b{display:block;font-size:22px} .cnt span{font-size:12px;color:var(--sec)}
+.cnt .g{color:var(--grn)} .cnt .r{color:var(--red)} .cnt .n{color:var(--neu)} .cnt.chosen{background:var(--tert);box-shadow:inset 0 0 0 2px var(--ac)}
+.chips{display:flex;gap:8px;flex-wrap:wrap} .token{background:var(--cell);color:var(--ac);border-radius:8px;padding:4px 10px;font-weight:500} .quiet{color:var(--ind);border:1px solid var(--ind);border-radius:999px;padding:3px 10px;font-size:13px;display:inline-flex;gap:5px;align-items:center}
+.tabwrap{display:flex;gap:8px;align-items:center;padding:10px 4px;border-radius:16px;background:linear-gradient(135deg,var(--cell),transparent)}
+.tabbar{flex:1;display:flex;background:var(--glass);border:1px solid var(--glassb);border-radius:999px;padding:4px;backdrop-filter:blur(20px);box-shadow:0 6px 20px rgba(0,0,0,.12);min-width:0}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;font-size:10px;font-weight:500;padding:5px 2px;border-radius:999px;color:inherit;min-width:0} .tab span{white-space:nowrap}
+.tab.sel{background:var(--pill);color:var(--ac);font-weight:600}
+.searchc{width:52px;height:52px;flex:none;border-radius:50%;background:var(--glass);border:1px solid var(--glassb);display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.lock{border-radius:18px;padding:16px;background:radial-gradient(circle at 30% 0%,#3b4c8f,#16163a 60%,#0b0b18);color:#fff}
+.lock .app{font-size:12px;opacity:.75} .ltitle{font-size:28px;font-weight:700;margin:2px 0 12px} .lbtns{display:flex;gap:10px}
+.lb{flex:1;text-align:center;border-radius:999px;padding:11px;font-weight:600} .snooze{background:var(--lac);color:var(--lon)} .stop{background:rgba(120,120,128,.36);color:#fff}
+.icrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px;font-size:13px} .icl{color:var(--mut)}
+.icchip{display:inline-flex;gap:12px;align-items:center;border-radius:14px;padding:8px 12px;font-weight:600} .icchip.lt{background:#F2F2F7} .icchip.dk{background:#000}
+.icchip.lt .icpill{background:#D9D9DB} .icchip.dk .icpill{background:#4C4C51}
+.icpill{display:inline-flex;gap:4px;align-items:center;border-radius:999px;padding:4px 10px} .icpill svg{width:14px;height:14px} .icfill{border-radius:999px;padding:5px 12px}
+details{margin-top:12px} summary{cursor:pointer;color:var(--mut);font-size:13px}
+.res{border-collapse:collapse;font-size:12.5px;margin-top:8px;font-variant-numeric:tabular-nums;width:100%;max-width:640px} .res td,.res th{padding:3px 8px;text-align:left;border-bottom:1px solid var(--line)} .res th{color:var(--mut);font-weight:500}
+.ok{color:#1E7B34} .bad{color:#D70015;font-weight:700} .warn{color:#C93400;font-weight:700}
+@media (prefers-color-scheme:dark){.ok{color:#30D158} .bad{color:#FF6961} .warn{color:#FF9F0A}}
+.panel.v6{border-style:dashed}
+/* Lagoon: accent light #04666B, dark #07DDE6, IC light #04474A, IC dark #A5FAFE, on-accent light #FFFFFF, on-accent dark #000000 */
+.v1 .lt{--ac:#04666B;--on:#FFFFFF} .v1 .dk{--ac:#07DDE6;--on:#000000} .v1 .lock{--lac:#07DDE6;--lon:#000000}
+/* Raspberry: accent light #A93075, dark #FEA4CF, IC light #7E0151, IC dark #FEE5F0, on-accent light #FFFFFF, on-accent dark #000000 */
+.v2 .lt{--ac:#A93075;--on:#FFFFFF} .v2 .dk{--ac:#FEA4CF;--on:#000000} .v2 .lock{--lac:#FEA4CF;--lon:#000000}
+/* Deep Petrol: accent light #004E55, dark #5DE8F7, IC light #02282C, IC dark #D2FAFF, on-accent light #FFFFFF, on-accent dark #000000 */
+.v3 .lt{--ac:#004E55;--on:#FFFFFF} .v3 .dk{--ac:#5DE8F7;--on:#000000} .v3 .lock{--lac:#5DE8F7;--lon:#000000}
+/* Ink: accent light #163138, dark #CEEEF6, IC light #00171D, IC dark #F5FDFF, on-accent light #FFFFFF, on-accent dark #000000 */
+.v4 .lt{--ac:#163138;--on:#FFFFFF} .v4 .dk{--ac:#CEEEF6;--on:#000000} .v4 .lock{--lac:#CEEEF6;--lon:#000000}
+/* Fuchsia: accent light #B003AB, dark #FF90F6, IC light #750171, IC dark #FFE4FB, on-accent light #FFFFFF, on-accent dark #000000 */
+.v5 .lt{--ac:#B003AB;--on:#FFFFFF} .v5 .dk{--ac:#FF90F6;--on:#000000} .v5 .lock{--lac:#FF90F6;--lon:#000000}
+/* Baseline (current blue): accent light #0064D2, dark #409CFF, IC light #0036C0, IC dark #8CC8FF, on-accent light #FFFFFF, on-accent dark #FFFFFF */
+.v6 .lt{--ac:#0064D2;--on:#FFFFFF} .v6 .dk{--ac:#409CFF;--on:#FFFFFF} .v6 .lock{--lac:#409CFF;--lon:#FFFFFF}
+</style></head><body><div class="wrap">
+<h1>Nudge-inator accent candidates</h1>
+<p class="note"><b>The spine stays semantic; pick one (or ask for a blend).</b> The accent means only "you can tap this". Status colors (red, orange, green, indigo, gray) are fixed.</p>
+<p class="note">Contrast is WCAG 2 ratio, measured with a script. Tab pill is composited as described in the brief. ΔE2000 below 25 is shown in orange as "risky". Light-mode accents sit near the neutral gray in ΔE because both must reach about 4.5:1 on the same background; the difference there is hue/chroma (gray is achromatic), not lightness. Lock Screen Snooze always uses the dark variant.</p>
+<section class="panel v1"><header><h2>1. Lagoon</h2><p>Clinical-calm: clean, quiet, like a well-run pharmacy label</p></header>
+<div class="tokens"><span class="chip"><i style="background:#04666B"></i><em>accent</em><code>#04666B</code></span><span class="chip"><i style="background:#07DDE6"></i><em>accent dark</em><code>#07DDE6</code></span><span class="chip"><i style="background:#04474A"></i><em>IC light</em><code>#04474A</code></span><span class="chip"><i style="background:#A5FAFE"></i><em>IC dark</em><code>#A5FAFE</code></span><span class="chip"><i style="background:#FFFFFF"></i><em>on-accent L</em><code>#FFFFFF</code></span><span class="chip"><i style="background:#000000"></i><em>on-accent D</em><code>#000000</code></span></div><div class="tokens"><span class="chip sm"><i style="background:#D70015"></i><i style="background:#FF6961"></i><em>negative</em></span><span class="chip sm"><i style="background:#C93400"></i><i style="background:#FF9F0A"></i><em>warning</em></span><span class="chip sm"><i style="background:#1E7B34"></i><i style="background:#30D158"></i><em>positive</em></span><span class="chip sm"><i style="background:#3634A3"></i><i style="background:#7D7AFF"></i><em>quiet</em></span><span class="chip sm"><i style="background:#6C6C70"></i><i style="background:#AEAEB2"></i><em>neutral</em></span><span class="strip"><i style="background:#04666B"></i><i style="background:#D70015"></i><i style="background:#C93400"></i><i style="background:#1E7B34"></i><i style="background:#3634A3"></i><i style="background:#6C6C70"></i></span><span class="strip"><i style="background:#07DDE6"></i><i style="background:#FF6961"></i><i style="background:#FF9F0A"></i><i style="background:#30D158"></i><i style="background:#7D7AFF"></i><i style="background:#AEAEB2"></i></span></div>
+<div class="pair"><div class="phone lt">
+ <div class="lbl">Light</div>
+ <div class="card">
+  <div class="stripe"></div>
+  <div class="cbody">
+   <div class="row1"><span class="nudging">● Nudging</span><span class="cap"><i class="bars"><b></b><b></b><b></b><b class="off"></b></i>Firm</span><span class="sec">Nudge 3 of 20</span></div>
+   <div class="title">Pay rent</div>
+   <div class="meta"><span class="tagt">#home #money</span> · due 7:30 AM · Urgency <span class="hi">High</span></div>
+   <div class="meta">Next nudge 8:22 AM (in 2 min): Notification · <span class="urg">Urgent</span></div>
+   <div class="btns"><span class="b fill">✓ Done</span><span class="b tert">Snooze 15 min</span></div>
+   <div class="foot">2 snoozes left</div>
+  </div>
+ </div>
+ <div class="counts">
+  <div class="cnt"><b class="g">3</b><span>Done</span></div>
+  <div class="cnt chosen"><b class="r">2</b><span>Nudging</span></div>
+  <div class="cnt"><b class="r">1</b><span>Missed</span></div>
+  <div class="cnt"><b class="n">4</b><span>Left</span></div>
+ </div>
+ <div class="chips"><span class="token">#home</span><span class="quiet"><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/></svg> Quiet 10:00 PM to 7:00 AM</span></div>
+ <div class="tabwrap"><div class="tabbar">
+   <div class="tab sel"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg><span>Now</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg><span>My Day</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 4v7.2l9.8 9.8 8.2-8.2L11.2 3H4a1 1 0 0 0-1 1Zm4.5 1.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg><span>Tags</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L14.9 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.4 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.9h4l.4-2.7c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg><span>Settings</span></div>
+  </div><div class="searchc"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></div></div>
+ <div class="lock">
+  <div class="app">Nudge-inator</div>
+  <div class="ltitle">Take medication</div>
+  <div class="lbtns"><span class="lb snooze">Snooze 5 min</span><span class="lb stop">Stop</span></div>
+ </div>
+</div><div class="phone dk">
+ <div class="lbl">Dark</div>
+ <div class="card">
+  <div class="stripe"></div>
+  <div class="cbody">
+   <div class="row1"><span class="nudging">● Nudging</span><span class="cap"><i class="bars"><b></b><b></b><b></b><b class="off"></b></i>Firm</span><span class="sec">Nudge 3 of 20</span></div>
+   <div class="title">Pay rent</div>
+   <div class="meta"><span class="tagt">#home #money</span> · due 7:30 AM · Urgency <span class="hi">High</span></div>
+   <div class="meta">Next nudge 8:22 AM (in 2 min): Notification · <span class="urg">Urgent</span></div>
+   <div class="btns"><span class="b fill">✓ Done</span><span class="b tert">Snooze 15 min</span></div>
+   <div class="foot">2 snoozes left</div>
+  </div>
+ </div>
+ <div class="counts">
+  <div class="cnt"><b class="g">3</b><span>Done</span></div>
+  <div class="cnt chosen"><b class="r">2</b><span>Nudging</span></div>
+  <div class="cnt"><b class="r">1</b><span>Missed</span></div>
+  <div class="cnt"><b class="n">4</b><span>Left</span></div>
+ </div>
+ <div class="chips"><span class="token">#home</span><span class="quiet"><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/></svg> Quiet 10:00 PM to 7:00 AM</span></div>
+ <div class="tabwrap"><div class="tabbar">
+   <div class="tab sel"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg><span>Now</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg><span>My Day</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 4v7.2l9.8 9.8 8.2-8.2L11.2 3H4a1 1 0 0 0-1 1Zm4.5 1.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg><span>Tags</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L14.9 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.4 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.9h4l.4-2.7c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg><span>Settings</span></div>
+  </div><div class="searchc"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></div></div>
+ <div class="lock">
+  <div class="app">Nudge-inator</div>
+  <div class="ltitle">Take medication</div>
+  <div class="lbtns"><span class="lb snooze">Snooze 5 min</span><span class="lb stop">Stop</span></div>
+ </div>
+</div></div><div class="icrow"><span class="icl">Increased contrast</span>
+     <span class="icchip lt"><span class="icpill" style="color:#04474A"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg> Now</span><span style="color:#04474A">Snooze 15 min</span><span class="icfill" style="background:#04474A;color:#FFFFFF">✓ Done</span></span>
+     <span class="icchip dk"><span class="icpill" style="color:#A5FAFE"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg> Now</span><span style="color:#A5FAFE">Snooze 15 min</span><span class="icfill" style="background:#A5FAFE;color:#000000">✓ Done</span></span></div><details open><summary>Measured</summary><table class="res"><tr><th></th><th>#F2F2F7</th><th>#FFF</th><th>#EBEBF0</th><th>tab pill</th><th>on-accent</th></tr>
+<tr><td>Light (4.5)</td><td><span class="ok">6.04</span></td><td><span class="ok">6.74</span></td><td><span class="ok">5.67</span></td><td><span class="ok">5.42</span></td><td><span class="ok">6.74</span></td></tr>
+<tr><td>IC light (7)</td><td><span class="ok">9.38</span></td><td><span class="ok">10.47</span></td><td><span class="ok">8.81</span></td><td><span class="ok">7.42</span></td><td><span class="ok">10.47</span></td></tr>
+<tr><th></th><th>#000</th><th>#1C1C1E</th><th>#2C2C2E</th><th>tab pill</th><th>on-accent</th></tr>
+<tr><td>Dark (4.5)</td><td><span class="ok">12.49</span></td><td><span class="ok">10.12</span></td><td><span class="ok">8.29</span></td><td><span class="ok">6.54</span></td><td><span class="ok">12.49</span></td></tr>
+<tr><td>IC dark (7)</td><td><span class="ok">17.71</span></td><td><span class="ok">14.35</span></td><td><span class="ok">11.75</span></td><td><span class="ok">7.15</span></td><td><span class="ok">17.71</span></td></tr></table>
+<table class="res"><tr><th>ΔE2000</th><th>red</th><th>orange</th><th>green</th><th>indigo</th><th>gray</th><th>sys blue</th></tr>
+<tr><td>light</td><td><span class="ok">51.7</span></td><td><span class="ok">48.7</span></td><td><span class="ok">25.2</span></td><td><span class="ok">30.2</span></td><td><span class="warn">21.9</span></td><td><span class="ok">27.2</span></td></tr>
+<tr><td>dark</td><td><span class="ok">59.9</span></td><td><span class="ok">49.4</span></td><td><span class="ok">31.4</span></td><td><span class="ok">40.3</span></td><td><span class="ok">27.2</span></td><td><span class="ok">30.0</span></td></tr></table></details></section>
+<section class="panel v2"><header><h2>2. Raspberry</h2><p>Warm-friendly: a kind voice, berry-sweet, not alarming</p></header>
+<div class="tokens"><span class="chip"><i style="background:#A93075"></i><em>accent</em><code>#A93075</code></span><span class="chip"><i style="background:#FEA4CF"></i><em>accent dark</em><code>#FEA4CF</code></span><span class="chip"><i style="background:#7E0151"></i><em>IC light</em><code>#7E0151</code></span><span class="chip"><i style="background:#FEE5F0"></i><em>IC dark</em><code>#FEE5F0</code></span><span class="chip"><i style="background:#FFFFFF"></i><em>on-accent L</em><code>#FFFFFF</code></span><span class="chip"><i style="background:#000000"></i><em>on-accent D</em><code>#000000</code></span></div><div class="tokens"><span class="chip sm"><i style="background:#D70015"></i><i style="background:#FF6961"></i><em>negative</em></span><span class="chip sm"><i style="background:#C93400"></i><i style="background:#FF9F0A"></i><em>warning</em></span><span class="chip sm"><i style="background:#1E7B34"></i><i style="background:#30D158"></i><em>positive</em></span><span class="chip sm"><i style="background:#3634A3"></i><i style="background:#7D7AFF"></i><em>quiet</em></span><span class="chip sm"><i style="background:#6C6C70"></i><i style="background:#AEAEB2"></i><em>neutral</em></span><span class="strip"><i style="background:#A93075"></i><i style="background:#D70015"></i><i style="background:#C93400"></i><i style="background:#1E7B34"></i><i style="background:#3634A3"></i><i style="background:#6C6C70"></i></span><span class="strip"><i style="background:#FEA4CF"></i><i style="background:#FF6961"></i><i style="background:#FF9F0A"></i><i style="background:#30D158"></i><i style="background:#7D7AFF"></i><i style="background:#AEAEB2"></i></span></div>
+<div class="pair"><div class="phone lt">
+ <div class="lbl">Light</div>
+ <div class="card">
+  <div class="stripe"></div>
+  <div class="cbody">
+   <div class="row1"><span class="nudging">● Nudging</span><span class="cap"><i class="bars"><b></b><b></b><b></b><b class="off"></b></i>Firm</span><span class="sec">Nudge 3 of 20</span></div>
+   <div class="title">Pay rent</div>
+   <div class="meta"><span class="tagt">#home #money</span> · due 7:30 AM · Urgency <span class="hi">High</span></div>
+   <div class="meta">Next nudge 8:22 AM (in 2 min): Notification · <span class="urg">Urgent</span></div>
+   <div class="btns"><span class="b fill">✓ Done</span><span class="b tert">Snooze 15 min</span></div>
+   <div class="foot">2 snoozes left</div>
+  </div>
+ </div>
+ <div class="counts">
+  <div class="cnt"><b class="g">3</b><span>Done</span></div>
+  <div class="cnt chosen"><b class="r">2</b><span>Nudging</span></div>
+  <div class="cnt"><b class="r">1</b><span>Missed</span></div>
+  <div class="cnt"><b class="n">4</b><span>Left</span></div>
+ </div>
+ <div class="chips"><span class="token">#home</span><span class="quiet"><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/></svg> Quiet 10:00 PM to 7:00 AM</span></div>
+ <div class="tabwrap"><div class="tabbar">
+   <div class="tab sel"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg><span>Now</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg><span>My Day</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 4v7.2l9.8 9.8 8.2-8.2L11.2 3H4a1 1 0 0 0-1 1Zm4.5 1.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg><span>Tags</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L14.9 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.4 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.9h4l.4-2.7c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg><span>Settings</span></div>
+  </div><div class="searchc"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></div></div>
+ <div class="lock">
+  <div class="app">Nudge-inator</div>
+  <div class="ltitle">Take medication</div>
+  <div class="lbtns"><span class="lb snooze">Snooze 5 min</span><span class="lb stop">Stop</span></div>
+ </div>
+</div><div class="phone dk">
+ <div class="lbl">Dark</div>
+ <div class="card">
+  <div class="stripe"></div>
+  <div class="cbody">
+   <div class="row1"><span class="nudging">● Nudging</span><span class="cap"><i class="bars"><b></b><b></b><b></b><b class="off"></b></i>Firm</span><span class="sec">Nudge 3 of 20</span></div>
+   <div class="title">Pay rent</div>
+   <div class="meta"><span class="tagt">#home #money</span> · due 7:30 AM · Urgency <span class="hi">High</span></div>
+   <div class="meta">Next nudge 8:22 AM (in 2 min): Notification · <span class="urg">Urgent</span></div>
+   <div class="btns"><span class="b fill">✓ Done</span><span class="b tert">Snooze 15 min</span></div>
+   <div class="foot">2 snoozes left</div>
+  </div>
+ </div>
+ <div class="counts">
+  <div class="cnt"><b class="g">3</b><span>Done</span></div>
+  <div class="cnt chosen"><b class="r">2</b><span>Nudging</span></div>
+  <div class="cnt"><b class="r">1</b><span>Missed</span></div>
+  <div class="cnt"><b class="n">4</b><span>Left</span></div>
+ </div>
+ <div class="chips"><span class="token">#home</span><span class="quiet"><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/></svg> Quiet 10:00 PM to 7:00 AM</span></div>
+ <div class="tabwrap"><div class="tabbar">
+   <div class="tab sel"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg><span>Now</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg><span>My Day</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 4v7.2l9.8 9.8 8.2-8.2L11.2 3H4a1 1 0 0 0-1 1Zm4.5 1.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg><span>Tags</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L14.9 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.4 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.9h4l.4-2.7c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg><span>Settings</span></div>
+  </div><div class="searchc"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></div></div>
+ <div class="lock">
+  <div class="app">Nudge-inator</div>
+  <div class="ltitle">Take medication</div>
+  <div class="lbtns"><span class="lb snooze">Snooze 5 min</span><span class="lb stop">Stop</span></div>
+ </div>
+</div></div><div class="icrow"><span class="icl">Increased contrast</span>
+     <span class="icchip lt"><span class="icpill" style="color:#7E0151"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg> Now</span><span style="color:#7E0151">Snooze 15 min</span><span class="icfill" style="background:#7E0151;color:#FFFFFF">✓ Done</span></span>
+     <span class="icchip dk"><span class="icpill" style="color:#FEE5F0"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg> Now</span><span style="color:#FEE5F0">Snooze 15 min</span><span class="icfill" style="background:#FEE5F0;color:#000000">✓ Done</span></span></div><details open><summary>Measured</summary><table class="res"><tr><th></th><th>#F2F2F7</th><th>#FFF</th><th>#EBEBF0</th><th>tab pill</th><th>on-accent</th></tr>
+<tr><td>Light (4.5)</td><td><span class="ok">5.59</span></td><td><span class="ok">6.24</span></td><td><span class="ok">5.25</span></td><td><span class="ok">5.02</span></td><td><span class="ok">6.24</span></td></tr>
+<tr><td>IC light (7)</td><td><span class="ok">9.36</span></td><td><span class="ok">10.45</span></td><td><span class="ok">8.79</span></td><td><span class="ok">7.40</span></td><td><span class="ok">10.45</span></td></tr>
+<tr><th></th><th>#000</th><th>#1C1C1E</th><th>#2C2C2E</th><th>tab pill</th><th>on-accent</th></tr>
+<tr><td>Dark (4.5)</td><td><span class="ok">11.43</span></td><td><span class="ok">9.26</span></td><td><span class="ok">7.58</span></td><td><span class="ok">5.98</span></td><td><span class="ok">11.43</span></td></tr>
+<tr><td>IC dark (7)</td><td><span class="ok">17.68</span></td><td><span class="ok">14.32</span></td><td><span class="ok">11.73</span></td><td><span class="ok">7.14</span></td><td><span class="ok">17.68</span></td></tr></table>
+<table class="res"><tr><th>ΔE2000</th><th>red</th><th>orange</th><th>green</th><th>indigo</th><th>gray</th><th>sys blue</th></tr>
+<tr><td>light</td><td><span class="ok">27.6</span></td><td><span class="ok">32.5</span></td><td><span class="ok">71.7</span></td><td><span class="ok">26.1</span></td><td><span class="ok">25.3</span></td><td><span class="ok">34.1</span></td></tr>
+<tr><td>dark</td><td><span class="warn">23.5</span></td><td><span class="ok">44.5</span></td><td><span class="ok">72.9</span></td><td><span class="ok">30.3</span></td><td><span class="warn">23.3</span></td><td><span class="ok">39.0</span></td></tr></table></details></section>
+<section class="panel v3"><header><h2>3. Deep Petrol</h2><p>Bold-confident: dark, saturated, decisive; buttons feel solid</p></header>
+<div class="tokens"><span class="chip"><i style="background:#004E55"></i><em>accent</em><code>#004E55</code></span><span class="chip"><i style="background:#5DE8F7"></i><em>accent dark</em><code>#5DE8F7</code></span><span class="chip"><i style="background:#02282C"></i><em>IC light</em><code>#02282C</code></span><span class="chip"><i style="background:#D2FAFF"></i><em>IC dark</em><code>#D2FAFF</code></span><span class="chip"><i style="background:#FFFFFF"></i><em>on-accent L</em><code>#FFFFFF</code></span><span class="chip"><i style="background:#000000"></i><em>on-accent D</em><code>#000000</code></span></div><div class="tokens"><span class="chip sm"><i style="background:#D70015"></i><i style="background:#FF6961"></i><em>negative</em></span><span class="chip sm"><i style="background:#C93400"></i><i style="background:#FF9F0A"></i><em>warning</em></span><span class="chip sm"><i style="background:#1E7B34"></i><i style="background:#30D158"></i><em>positive</em></span><span class="chip sm"><i style="background:#3634A3"></i><i style="background:#7D7AFF"></i><em>quiet</em></span><span class="chip sm"><i style="background:#6C6C70"></i><i style="background:#AEAEB2"></i><em>neutral</em></span><span class="strip"><i style="background:#004E55"></i><i style="background:#D70015"></i><i style="background:#C93400"></i><i style="background:#1E7B34"></i><i style="background:#3634A3"></i><i style="background:#6C6C70"></i></span><span class="strip"><i style="background:#5DE8F7"></i><i style="background:#FF6961"></i><i style="background:#FF9F0A"></i><i style="background:#30D158"></i><i style="background:#7D7AFF"></i><i style="background:#AEAEB2"></i></span></div>
+<div class="pair"><div class="phone lt">
+ <div class="lbl">Light</div>
+ <div class="card">
+  <div class="stripe"></div>
+  <div class="cbody">
+   <div class="row1"><span class="nudging">● Nudging</span><span class="cap"><i class="bars"><b></b><b></b><b></b><b class="off"></b></i>Firm</span><span class="sec">Nudge 3 of 20</span></div>
+   <div class="title">Pay rent</div>
+   <div class="meta"><span class="tagt">#home #money</span> · due 7:30 AM · Urgency <span class="hi">High</span></div>
+   <div class="meta">Next nudge 8:22 AM (in 2 min): Notification · <span class="urg">Urgent</span></div>
+   <div class="btns"><span class="b fill">✓ Done</span><span class="b tert">Snooze 15 min</span></div>
+   <div class="foot">2 snoozes left</div>
+  </div>
+ </div>
+ <div class="counts">
+  <div class="cnt"><b class="g">3</b><span>Done</span></div>
+  <div class="cnt chosen"><b class="r">2</b><span>Nudging</span></div>
+  <div class="cnt"><b class="r">1</b><span>Missed</span></div>
+  <div class="cnt"><b class="n">4</b><span>Left</span></div>
+ </div>
+ <div class="chips"><span class="token">#home</span><span class="quiet"><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/></svg> Quiet 10:00 PM to 7:00 AM</span></div>
+ <div class="tabwrap"><div class="tabbar">
+   <div class="tab sel"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg><span>Now</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg><span>My Day</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 4v7.2l9.8 9.8 8.2-8.2L11.2 3H4a1 1 0 0 0-1 1Zm4.5 1.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg><span>Tags</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L14.9 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.4 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.9h4l.4-2.7c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg><span>Settings</span></div>
+  </div><div class="searchc"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></div></div>
+ <div class="lock">
+  <div class="app">Nudge-inator</div>
+  <div class="ltitle">Take medication</div>
+  <div class="lbtns"><span class="lb snooze">Snooze 5 min</span><span class="lb stop">Stop</span></div>
+ </div>
+</div><div class="phone dk">
+ <div class="lbl">Dark</div>
+ <div class="card">
+  <div class="stripe"></div>
+  <div class="cbody">
+   <div class="row1"><span class="nudging">● Nudging</span><span class="cap"><i class="bars"><b></b><b></b><b></b><b class="off"></b></i>Firm</span><span class="sec">Nudge 3 of 20</span></div>
+   <div class="title">Pay rent</div>
+   <div class="meta"><span class="tagt">#home #money</span> · due 7:30 AM · Urgency <span class="hi">High</span></div>
+   <div class="meta">Next nudge 8:22 AM (in 2 min): Notification · <span class="urg">Urgent</span></div>
+   <div class="btns"><span class="b fill">✓ Done</span><span class="b tert">Snooze 15 min</span></div>
+   <div class="foot">2 snoozes left</div>
+  </div>
+ </div>
+ <div class="counts">
+  <div class="cnt"><b class="g">3</b><span>Done</span></div>
+  <div class="cnt chosen"><b class="r">2</b><span>Nudging</span></div>
+  <div class="cnt"><b class="r">1</b><span>Missed</span></div>
+  <div class="cnt"><b class="n">4</b><span>Left</span></div>
+ </div>
+ <div class="chips"><span class="token">#home</span><span class="quiet"><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/></svg> Quiet 10:00 PM to 7:00 AM</span></div>
+ <div class="tabwrap"><div class="tabbar">
+   <div class="tab sel"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg><span>Now</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg><span>My Day</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 4v7.2l9.8 9.8 8.2-8.2L11.2 3H4a1 1 0 0 0-1 1Zm4.5 1.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg><span>Tags</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L14.9 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.4 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.9h4l.4-2.7c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg><span>Settings</span></div>
+  </div><div class="searchc"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></div></div>
+ <div class="lock">
+  <div class="app">Nudge-inator</div>
+  <div class="ltitle">Take medication</div>
+  <div class="lbtns"><span class="lb snooze">Snooze 5 min</span><span class="lb stop">Stop</span></div>
+ </div>
+</div></div><div class="icrow"><span class="icl">Increased contrast</span>
+     <span class="icchip lt"><span class="icpill" style="color:#02282C"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg> Now</span><span style="color:#02282C">Snooze 15 min</span><span class="icfill" style="background:#02282C;color:#FFFFFF">✓ Done</span></span>
+     <span class="icchip dk"><span class="icpill" style="color:#D2FAFF"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg> Now</span><span style="color:#D2FAFF">Snooze 15 min</span><span class="icfill" style="background:#D2FAFF;color:#000000">✓ Done</span></span></div><details open><summary>Measured</summary><table class="res"><tr><th></th><th>#F2F2F7</th><th>#FFF</th><th>#EBEBF0</th><th>tab pill</th><th>on-accent</th></tr>
+<tr><td>Light (4.5)</td><td><span class="ok">8.47</span></td><td><span class="ok">9.46</span></td><td><span class="ok">7.96</span></td><td><span class="ok">7.61</span></td><td><span class="ok">9.46</span></td></tr>
+<tr><td>IC light (7)</td><td><span class="ok">14.02</span></td><td><span class="ok">15.64</span></td><td><span class="ok">13.17</span></td><td><span class="ok">11.08</span></td><td><span class="ok">15.64</span></td></tr>
+<tr><th></th><th>#000</th><th>#1C1C1E</th><th>#2C2C2E</th><th>tab pill</th><th>on-accent</th></tr>
+<tr><td>Dark (4.5)</td><td><span class="ok">14.35</span></td><td><span class="ok">11.63</span></td><td><span class="ok">9.52</span></td><td><span class="ok">7.51</span></td><td><span class="ok">14.35</span></td></tr>
+<tr><td>IC dark (7)</td><td><span class="ok">18.86</span></td><td><span class="ok">15.28</span></td><td><span class="ok">12.52</span></td><td><span class="ok">7.62</span></td><td><span class="ok">18.86</span></td></tr></table>
+<table class="res"><tr><th>ΔE2000</th><th>red</th><th>orange</th><th>green</th><th>indigo</th><th>gray</th><th>sys blue</th></tr>
+<tr><td>light</td><td><span class="ok">49.7</span></td><td><span class="ok">47.5</span></td><td><span class="ok">29.0</span></td><td><span class="ok">25.4</span></td><td><span class="warn">23.0</span></td><td><span class="ok">26.9</span></td></tr>
+<tr><td>dark</td><td><span class="ok">57.0</span></td><td><span class="ok">48.7</span></td><td><span class="ok">34.5</span></td><td><span class="ok">38.7</span></td><td><span class="ok">27.2</span></td><td><span class="ok">29.0</span></td></tr></table></details></section>
+<section class="panel v4"><header><h2>4. Ink</h2><p>Quiet-ink: near-monochrome, editorial, lets status colors do all the talking</p></header>
+<div class="tokens"><span class="chip"><i style="background:#163138"></i><em>accent</em><code>#163138</code></span><span class="chip"><i style="background:#CEEEF6"></i><em>accent dark</em><code>#CEEEF6</code></span><span class="chip"><i style="background:#00171D"></i><em>IC light</em><code>#00171D</code></span><span class="chip"><i style="background:#F5FDFF"></i><em>IC dark</em><code>#F5FDFF</code></span><span class="chip"><i style="background:#FFFFFF"></i><em>on-accent L</em><code>#FFFFFF</code></span><span class="chip"><i style="background:#000000"></i><em>on-accent D</em><code>#000000</code></span></div><div class="tokens"><span class="chip sm"><i style="background:#D70015"></i><i style="background:#FF6961"></i><em>negative</em></span><span class="chip sm"><i style="background:#C93400"></i><i style="background:#FF9F0A"></i><em>warning</em></span><span class="chip sm"><i style="background:#1E7B34"></i><i style="background:#30D158"></i><em>positive</em></span><span class="chip sm"><i style="background:#3634A3"></i><i style="background:#7D7AFF"></i><em>quiet</em></span><span class="chip sm"><i style="background:#6C6C70"></i><i style="background:#AEAEB2"></i><em>neutral</em></span><span class="strip"><i style="background:#163138"></i><i style="background:#D70015"></i><i style="background:#C93400"></i><i style="background:#1E7B34"></i><i style="background:#3634A3"></i><i style="background:#6C6C70"></i></span><span class="strip"><i style="background:#CEEEF6"></i><i style="background:#FF6961"></i><i style="background:#FF9F0A"></i><i style="background:#30D158"></i><i style="background:#7D7AFF"></i><i style="background:#AEAEB2"></i></span></div>
+<div class="pair"><div class="phone lt">
+ <div class="lbl">Light</div>
+ <div class="card">
+  <div class="stripe"></div>
+  <div class="cbody">
+   <div class="row1"><span class="nudging">● Nudging</span><span class="cap"><i class="bars"><b></b><b></b><b></b><b class="off"></b></i>Firm</span><span class="sec">Nudge 3 of 20</span></div>
+   <div class="title">Pay rent</div>
+   <div class="meta"><span class="tagt">#home #money</span> · due 7:30 AM · Urgency <span class="hi">High</span></div>
+   <div class="meta">Next nudge 8:22 AM (in 2 min): Notification · <span class="urg">Urgent</span></div>
+   <div class="btns"><span class="b fill">✓ Done</span><span class="b tert">Snooze 15 min</span></div>
+   <div class="foot">2 snoozes left</div>
+  </div>
+ </div>
+ <div class="counts">
+  <div class="cnt"><b class="g">3</b><span>Done</span></div>
+  <div class="cnt chosen"><b class="r">2</b><span>Nudging</span></div>
+  <div class="cnt"><b class="r">1</b><span>Missed</span></div>
+  <div class="cnt"><b class="n">4</b><span>Left</span></div>
+ </div>
+ <div class="chips"><span class="token">#home</span><span class="quiet"><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/></svg> Quiet 10:00 PM to 7:00 AM</span></div>
+ <div class="tabwrap"><div class="tabbar">
+   <div class="tab sel"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg><span>Now</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg><span>My Day</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 4v7.2l9.8 9.8 8.2-8.2L11.2 3H4a1 1 0 0 0-1 1Zm4.5 1.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg><span>Tags</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L14.9 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.4 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.9h4l.4-2.7c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg><span>Settings</span></div>
+  </div><div class="searchc"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></div></div>
+ <div class="lock">
+  <div class="app">Nudge-inator</div>
+  <div class="ltitle">Take medication</div>
+  <div class="lbtns"><span class="lb snooze">Snooze 5 min</span><span class="lb stop">Stop</span></div>
+ </div>
+</div><div class="phone dk">
+ <div class="lbl">Dark</div>
+ <div class="card">
+  <div class="stripe"></div>
+  <div class="cbody">
+   <div class="row1"><span class="nudging">● Nudging</span><span class="cap"><i class="bars"><b></b><b></b><b></b><b class="off"></b></i>Firm</span><span class="sec">Nudge 3 of 20</span></div>
+   <div class="title">Pay rent</div>
+   <div class="meta"><span class="tagt">#home #money</span> · due 7:30 AM · Urgency <span class="hi">High</span></div>
+   <div class="meta">Next nudge 8:22 AM (in 2 min): Notification · <span class="urg">Urgent</span></div>
+   <div class="btns"><span class="b fill">✓ Done</span><span class="b tert">Snooze 15 min</span></div>
+   <div class="foot">2 snoozes left</div>
+  </div>
+ </div>
+ <div class="counts">
+  <div class="cnt"><b class="g">3</b><span>Done</span></div>
+  <div class="cnt chosen"><b class="r">2</b><span>Nudging</span></div>
+  <div class="cnt"><b class="r">1</b><span>Missed</span></div>
+  <div class="cnt"><b class="n">4</b><span>Left</span></div>
+ </div>
+ <div class="chips"><span class="token">#home</span><span class="quiet"><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/></svg> Quiet 10:00 PM to 7:00 AM</span></div>
+ <div class="tabwrap"><div class="tabbar">
+   <div class="tab sel"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg><span>Now</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg><span>My Day</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 4v7.2l9.8 9.8 8.2-8.2L11.2 3H4a1 1 0 0 0-1 1Zm4.5 1.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg><span>Tags</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L14.9 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.4 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.9h4l.4-2.7c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg><span>Settings</span></div>
+  </div><div class="searchc"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></div></div>
+ <div class="lock">
+  <div class="app">Nudge-inator</div>
+  <div class="ltitle">Take medication</div>
+  <div class="lbtns"><span class="lb snooze">Snooze 5 min</span><span class="lb stop">Stop</span></div>
+ </div>
+</div></div><div class="icrow"><span class="icl">Increased contrast</span>
+     <span class="icchip lt"><span class="icpill" style="color:#00171D"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg> Now</span><span style="color:#00171D">Snooze 15 min</span><span class="icfill" style="background:#00171D;color:#FFFFFF">✓ Done</span></span>
+     <span class="icchip dk"><span class="icpill" style="color:#F5FDFF"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg> Now</span><span style="color:#F5FDFF">Snooze 15 min</span><span class="icfill" style="background:#F5FDFF;color:#000000">✓ Done</span></span></div><details open><summary>Measured</summary><table class="res"><tr><th></th><th>#F2F2F7</th><th>#FFF</th><th>#EBEBF0</th><th>tab pill</th><th>on-accent</th></tr>
+<tr><td>Light (4.5)</td><td><span class="ok">12.30</span></td><td><span class="ok">13.72</span></td><td><span class="ok">11.55</span></td><td><span class="ok">11.05</span></td><td><span class="ok">13.72</span></td></tr>
+<tr><td>IC light (7)</td><td><span class="ok">16.50</span></td><td><span class="ok">18.42</span></td><td><span class="ok">15.50</span></td><td><span class="ok">13.05</span></td><td><span class="ok">18.42</span></td></tr>
+<tr><th></th><th>#000</th><th>#1C1C1E</th><th>#2C2C2E</th><th>tab pill</th><th>on-accent</th></tr>
+<tr><td>Dark (4.5)</td><td><span class="ok">17.18</span></td><td><span class="ok">13.92</span></td><td><span class="ok">11.40</span></td><td><span class="ok">9.00</span></td><td><span class="ok">17.18</span></td></tr>
+<tr><td>IC dark (7)</td><td><span class="ok">20.38</span></td><td><span class="ok">16.51</span></td><td><span class="ok">13.52</span></td><td><span class="ok">8.23</span></td><td><span class="ok">20.38</span></td></tr></table>
+<table class="res"><tr><th>ΔE2000</th><th>red</th><th>orange</th><th>green</th><th>indigo</th><th>gray</th><th>sys blue</th></tr>
+<tr><td>light</td><td><span class="ok">48.9</span></td><td><span class="ok">44.0</span></td><td><span class="ok">34.5</span></td><td><span class="warn">17.8</span></td><td><span class="warn">24.2</span></td><td><span class="ok">27.0</span></td></tr>
+<tr><td>dark</td><td><span class="ok">46.2</span></td><td><span class="ok">39.6</span></td><td><span class="ok">34.1</span></td><td><span class="ok">31.3</span></td><td><span class="warn">18.4</span></td><td><span class="ok">28.0</span></td></tr></table></details></section>
+<section class="panel v5"><header><h2>5. Fuchsia</h2><p>Playful: bright and unmistakably its own, a wink without noise</p></header>
+<div class="tokens"><span class="chip"><i style="background:#B003AB"></i><em>accent</em><code>#B003AB</code></span><span class="chip"><i style="background:#FF90F6"></i><em>accent dark</em><code>#FF90F6</code></span><span class="chip"><i style="background:#750171"></i><em>IC light</em><code>#750171</code></span><span class="chip"><i style="background:#FFE4FB"></i><em>IC dark</em><code>#FFE4FB</code></span><span class="chip"><i style="background:#FFFFFF"></i><em>on-accent L</em><code>#FFFFFF</code></span><span class="chip"><i style="background:#000000"></i><em>on-accent D</em><code>#000000</code></span></div><div class="tokens"><span class="chip sm"><i style="background:#D70015"></i><i style="background:#FF6961"></i><em>negative</em></span><span class="chip sm"><i style="background:#C93400"></i><i style="background:#FF9F0A"></i><em>warning</em></span><span class="chip sm"><i style="background:#1E7B34"></i><i style="background:#30D158"></i><em>positive</em></span><span class="chip sm"><i style="background:#3634A3"></i><i style="background:#7D7AFF"></i><em>quiet</em></span><span class="chip sm"><i style="background:#6C6C70"></i><i style="background:#AEAEB2"></i><em>neutral</em></span><span class="strip"><i style="background:#B003AB"></i><i style="background:#D70015"></i><i style="background:#C93400"></i><i style="background:#1E7B34"></i><i style="background:#3634A3"></i><i style="background:#6C6C70"></i></span><span class="strip"><i style="background:#FF90F6"></i><i style="background:#FF6961"></i><i style="background:#FF9F0A"></i><i style="background:#30D158"></i><i style="background:#7D7AFF"></i><i style="background:#AEAEB2"></i></span></div>
+<div class="pair"><div class="phone lt">
+ <div class="lbl">Light</div>
+ <div class="card">
+  <div class="stripe"></div>
+  <div class="cbody">
+   <div class="row1"><span class="nudging">● Nudging</span><span class="cap"><i class="bars"><b></b><b></b><b></b><b class="off"></b></i>Firm</span><span class="sec">Nudge 3 of 20</span></div>
+   <div class="title">Pay rent</div>
+   <div class="meta"><span class="tagt">#home #money</span> · due 7:30 AM · Urgency <span class="hi">High</span></div>
+   <div class="meta">Next nudge 8:22 AM (in 2 min): Notification · <span class="urg">Urgent</span></div>
+   <div class="btns"><span class="b fill">✓ Done</span><span class="b tert">Snooze 15 min</span></div>
+   <div class="foot">2 snoozes left</div>
+  </div>
+ </div>
+ <div class="counts">
+  <div class="cnt"><b class="g">3</b><span>Done</span></div>
+  <div class="cnt chosen"><b class="r">2</b><span>Nudging</span></div>
+  <div class="cnt"><b class="r">1</b><span>Missed</span></div>
+  <div class="cnt"><b class="n">4</b><span>Left</span></div>
+ </div>
+ <div class="chips"><span class="token">#home</span><span class="quiet"><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/></svg> Quiet 10:00 PM to 7:00 AM</span></div>
+ <div class="tabwrap"><div class="tabbar">
+   <div class="tab sel"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg><span>Now</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg><span>My Day</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 4v7.2l9.8 9.8 8.2-8.2L11.2 3H4a1 1 0 0 0-1 1Zm4.5 1.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg><span>Tags</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L14.9 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.4 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.9h4l.4-2.7c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg><span>Settings</span></div>
+  </div><div class="searchc"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></div></div>
+ <div class="lock">
+  <div class="app">Nudge-inator</div>
+  <div class="ltitle">Take medication</div>
+  <div class="lbtns"><span class="lb snooze">Snooze 5 min</span><span class="lb stop">Stop</span></div>
+ </div>
+</div><div class="phone dk">
+ <div class="lbl">Dark</div>
+ <div class="card">
+  <div class="stripe"></div>
+  <div class="cbody">
+   <div class="row1"><span class="nudging">● Nudging</span><span class="cap"><i class="bars"><b></b><b></b><b></b><b class="off"></b></i>Firm</span><span class="sec">Nudge 3 of 20</span></div>
+   <div class="title">Pay rent</div>
+   <div class="meta"><span class="tagt">#home #money</span> · due 7:30 AM · Urgency <span class="hi">High</span></div>
+   <div class="meta">Next nudge 8:22 AM (in 2 min): Notification · <span class="urg">Urgent</span></div>
+   <div class="btns"><span class="b fill">✓ Done</span><span class="b tert">Snooze 15 min</span></div>
+   <div class="foot">2 snoozes left</div>
+  </div>
+ </div>
+ <div class="counts">
+  <div class="cnt"><b class="g">3</b><span>Done</span></div>
+  <div class="cnt chosen"><b class="r">2</b><span>Nudging</span></div>
+  <div class="cnt"><b class="r">1</b><span>Missed</span></div>
+  <div class="cnt"><b class="n">4</b><span>Left</span></div>
+ </div>
+ <div class="chips"><span class="token">#home</span><span class="quiet"><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/></svg> Quiet 10:00 PM to 7:00 AM</span></div>
+ <div class="tabwrap"><div class="tabbar">
+   <div class="tab sel"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg><span>Now</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg><span>My Day</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 4v7.2l9.8 9.8 8.2-8.2L11.2 3H4a1 1 0 0 0-1 1Zm4.5 1.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg><span>Tags</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L14.9 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.4 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.9h4l.4-2.7c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg><span>Settings</span></div>
+  </div><div class="searchc"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></div></div>
+ <div class="lock">
+  <div class="app">Nudge-inator</div>
+  <div class="ltitle">Take medication</div>
+  <div class="lbtns"><span class="lb snooze">Snooze 5 min</span><span class="lb stop">Stop</span></div>
+ </div>
+</div></div><div class="icrow"><span class="icl">Increased contrast</span>
+     <span class="icchip lt"><span class="icpill" style="color:#750171"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg> Now</span><span style="color:#750171">Snooze 15 min</span><span class="icfill" style="background:#750171;color:#FFFFFF">✓ Done</span></span>
+     <span class="icchip dk"><span class="icpill" style="color:#FFE4FB"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg> Now</span><span style="color:#FFE4FB">Snooze 15 min</span><span class="icfill" style="background:#FFE4FB;color:#000000">✓ Done</span></span></div><details open><summary>Measured</summary><table class="res"><tr><th></th><th>#F2F2F7</th><th>#FFF</th><th>#EBEBF0</th><th>tab pill</th><th>on-accent</th></tr>
+<tr><td>Light (4.5)</td><td><span class="ok">5.46</span></td><td><span class="ok">6.09</span></td><td><span class="ok">5.13</span></td><td><span class="ok">4.90</span></td><td><span class="ok">6.09</span></td></tr>
+<tr><td>IC light (7)</td><td><span class="ok">9.41</span></td><td><span class="ok">10.50</span></td><td><span class="ok">8.84</span></td><td><span class="ok">7.44</span></td><td><span class="ok">10.50</span></td></tr>
+<tr><th></th><th>#000</th><th>#1C1C1E</th><th>#2C2C2E</th><th>tab pill</th><th>on-accent</th></tr>
+<tr><td>Dark (4.5)</td><td><span class="ok">10.57</span></td><td><span class="ok">8.57</span></td><td><span class="ok">7.02</span></td><td><span class="ok">5.54</span></td><td><span class="ok">10.57</span></td></tr>
+<tr><td>IC dark (7)</td><td><span class="ok">17.74</span></td><td><span class="ok">14.38</span></td><td><span class="ok">11.77</span></td><td><span class="ok">7.16</span></td><td><span class="ok">17.74</span></td></tr></table>
+<table class="res"><tr><th>ΔE2000</th><th>red</th><th>orange</th><th>green</th><th>indigo</th><th>gray</th><th>sys blue</th></tr>
+<tr><td>light</td><td><span class="ok">36.2</span></td><td><span class="ok">41.4</span></td><td><span class="ok">81.7</span></td><td><span class="warn">21.4</span></td><td><span class="ok">28.0</span></td><td><span class="ok">31.2</span></td></tr>
+<tr><td>dark</td><td><span class="ok">30.5</span></td><td><span class="ok">55.0</span></td><td><span class="ok">85.9</span></td><td><span class="warn">24.6</span></td><td><span class="ok">25.3</span></td><td><span class="ok">38.0</span></td></tr></table></details></section>
+<section class="panel v6"><header><h2>6. Baseline (current blue)</h2><p>Current system-like blue, for comparison</p></header>
+<div class="tokens"><span class="chip"><i style="background:#0064D2"></i><em>accent</em><code>#0064D2</code></span><span class="chip"><i style="background:#409CFF"></i><em>accent dark</em><code>#409CFF</code></span><span class="chip"><i style="background:#0036C0"></i><em>IC light</em><code>#0036C0</code></span><span class="chip"><i style="background:#8CC8FF"></i><em>IC dark</em><code>#8CC8FF</code></span><span class="chip"><i style="background:#FFFFFF"></i><em>on-accent L</em><code>#FFFFFF</code></span><span class="chip"><i style="background:#FFFFFF"></i><em>on-accent D</em><code>#FFFFFF</code></span></div><div class="tokens"><span class="chip sm"><i style="background:#D70015"></i><i style="background:#FF6961"></i><em>negative</em></span><span class="chip sm"><i style="background:#C93400"></i><i style="background:#FF9F0A"></i><em>warning</em></span><span class="chip sm"><i style="background:#1E7B34"></i><i style="background:#30D158"></i><em>positive</em></span><span class="chip sm"><i style="background:#3634A3"></i><i style="background:#7D7AFF"></i><em>quiet</em></span><span class="chip sm"><i style="background:#6C6C70"></i><i style="background:#AEAEB2"></i><em>neutral</em></span><span class="strip"><i style="background:#0064D2"></i><i style="background:#D70015"></i><i style="background:#C93400"></i><i style="background:#1E7B34"></i><i style="background:#3634A3"></i><i style="background:#6C6C70"></i></span><span class="strip"><i style="background:#409CFF"></i><i style="background:#FF6961"></i><i style="background:#FF9F0A"></i><i style="background:#30D158"></i><i style="background:#7D7AFF"></i><i style="background:#AEAEB2"></i></span></div>
+<div class="pair"><div class="phone lt">
+ <div class="lbl">Light</div>
+ <div class="card">
+  <div class="stripe"></div>
+  <div class="cbody">
+   <div class="row1"><span class="nudging">● Nudging</span><span class="cap"><i class="bars"><b></b><b></b><b></b><b class="off"></b></i>Firm</span><span class="sec">Nudge 3 of 20</span></div>
+   <div class="title">Pay rent</div>
+   <div class="meta"><span class="tagt">#home #money</span> · due 7:30 AM · Urgency <span class="hi">High</span></div>
+   <div class="meta">Next nudge 8:22 AM (in 2 min): Notification · <span class="urg">Urgent</span></div>
+   <div class="btns"><span class="b fill">✓ Done</span><span class="b tert">Snooze 15 min</span></div>
+   <div class="foot">2 snoozes left</div>
+  </div>
+ </div>
+ <div class="counts">
+  <div class="cnt"><b class="g">3</b><span>Done</span></div>
+  <div class="cnt chosen"><b class="r">2</b><span>Nudging</span></div>
+  <div class="cnt"><b class="r">1</b><span>Missed</span></div>
+  <div class="cnt"><b class="n">4</b><span>Left</span></div>
+ </div>
+ <div class="chips"><span class="token">#home</span><span class="quiet"><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/></svg> Quiet 10:00 PM to 7:00 AM</span></div>
+ <div class="tabwrap"><div class="tabbar">
+   <div class="tab sel"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg><span>Now</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg><span>My Day</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 4v7.2l9.8 9.8 8.2-8.2L11.2 3H4a1 1 0 0 0-1 1Zm4.5 1.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg><span>Tags</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L14.9 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.4 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.9h4l.4-2.7c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg><span>Settings</span></div>
+  </div><div class="searchc"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></div></div>
+ <div class="lock">
+  <div class="app">Nudge-inator</div>
+  <div class="ltitle">Take medication</div>
+  <div class="lbtns"><span class="lb snooze">Snooze 5 min</span><span class="lb stop">Stop</span></div>
+ </div>
+</div><div class="phone dk">
+ <div class="lbl">Dark</div>
+ <div class="card">
+  <div class="stripe"></div>
+  <div class="cbody">
+   <div class="row1"><span class="nudging">● Nudging</span><span class="cap"><i class="bars"><b></b><b></b><b></b><b class="off"></b></i>Firm</span><span class="sec">Nudge 3 of 20</span></div>
+   <div class="title">Pay rent</div>
+   <div class="meta"><span class="tagt">#home #money</span> · due 7:30 AM · Urgency <span class="hi">High</span></div>
+   <div class="meta">Next nudge 8:22 AM (in 2 min): Notification · <span class="urg">Urgent</span></div>
+   <div class="btns"><span class="b fill">✓ Done</span><span class="b tert">Snooze 15 min</span></div>
+   <div class="foot">2 snoozes left</div>
+  </div>
+ </div>
+ <div class="counts">
+  <div class="cnt"><b class="g">3</b><span>Done</span></div>
+  <div class="cnt chosen"><b class="r">2</b><span>Nudging</span></div>
+  <div class="cnt"><b class="r">1</b><span>Missed</span></div>
+  <div class="cnt"><b class="n">4</b><span>Left</span></div>
+ </div>
+ <div class="chips"><span class="token">#home</span><span class="quiet"><svg viewBox="0 0 24 24" width="13" height="13"><path fill="currentColor" d="M20 15.5A8.5 8.5 0 0 1 8.5 4a8.5 8.5 0 1 0 11.5 11.5Z"/></svg> Quiet 10:00 PM to 7:00 AM</span></div>
+ <div class="tabwrap"><div class="tabbar">
+   <div class="tab sel"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg><span>Now</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></g></svg><span>My Day</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M3 4v7.2l9.8 9.8 8.2-8.2L11.2 3H4a1 1 0 0 0-1 1Zm4.5 1.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"/></svg><span>Tags</span></div><div class="tab"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L14.9 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.4 11a7.5 7.5 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1c.5.4 1.1.7 1.7 1l.4 2.9h4l.4-2.7c.6-.3 1.2-.6 1.7-1l2.5 1 2-3.5L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg><span>Settings</span></div>
+  </div><div class="searchc"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></div></div>
+ <div class="lock">
+  <div class="app">Nudge-inator</div>
+  <div class="ltitle">Take medication</div>
+  <div class="lbtns"><span class="lb snooze">Snooze 5 min</span><span class="lb stop">Stop</span></div>
+ </div>
+</div></div><div class="icrow"><span class="icl">Increased contrast</span>
+     <span class="icchip lt"><span class="icpill" style="color:#0036C0"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg> Now</span><span style="color:#0036C0">Snooze 15 min</span><span class="icfill" style="background:#0036C0;color:#FFFFFF">✓ Done</span></span>
+     <span class="icchip dk"><span class="icpill" style="color:#8CC8FF"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/></svg> Now</span><span style="color:#8CC8FF">Snooze 15 min</span><span class="icfill" style="background:#8CC8FF;color:#FFFFFF">✓ Done</span></span></div><details open><summary>Measured</summary><table class="res"><tr><th></th><th>#F2F2F7</th><th>#FFF</th><th>#EBEBF0</th><th>tab pill</th><th>on-accent</th></tr>
+<tr><td>Light (4.5)</td><td><span class="ok">5.01</span></td><td><span class="ok">5.59</span></td><td><span class="ok">4.71</span></td><td><span class="ok">4.50</span></td><td><span class="ok">5.59</span></td></tr>
+<tr><td>IC light (7)</td><td><span class="ok">8.22</span></td><td><span class="ok">9.18</span></td><td><span class="ok">7.72</span></td><td><span class="bad">6.50</span></td><td><span class="ok">9.18</span></td></tr>
+<tr><th></th><th>#000</th><th>#1C1C1E</th><th>#2C2C2E</th><th>tab pill</th><th>on-accent</th></tr>
+<tr><td>Dark (4.5)</td><td><span class="ok">7.42</span></td><td><span class="ok">6.01</span></td><td><span class="ok">4.92</span></td><td><span class="bad">3.88</span></td><td><span class="bad">2.83</span></td></tr>
+<tr><td>IC dark (7)</td><td><span class="ok">11.82</span></td><td><span class="ok">9.58</span></td><td><span class="ok">7.84</span></td><td><span class="bad">4.77</span></td><td><span class="bad">1.78</span></td></tr></table>
+<table class="res"><tr><th>ΔE2000</th><th>red</th><th>orange</th><th>green</th><th>indigo</th><th>gray</th><th>sys blue</th></tr>
+<tr><td>light</td><td><span class="ok">47.2</span></td><td><span class="ok">48.6</span></td><td><span class="ok">51.3</span></td><td><span class="warn">17.3</span></td><td><span class="ok">25.6</span></td><td><span class="warn">0.0</span></td></tr>
+<tr><td>dark</td><td><span class="ok">46.5</span></td><td><span class="ok">55.0</span></td><td><span class="ok">56.2</span></td><td><span class="warn">16.7</span></td><td><span class="ok">26.2</span></td><td><span class="warn">0.0</span></td></tr></table></details></section>
+</div></body></html>
