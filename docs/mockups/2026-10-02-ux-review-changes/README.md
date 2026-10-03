@@ -903,6 +903,10 @@ The questions this mockup raised are settled in the
 
 ## How it was checked
 
+The current checks are committed in [`checks/`](checks/README.md): 34 behavior checks and an axe-core
+run (WCAG 2.0, 2.1 and 2.2, 216 configurations), with a runner script. The notes below record earlier
+checking passes.
+
 In headless Chrome, a script went through these steps, and the console had no errors:
 1. browse tags
 2. choose `#home`, then type "#mor" and press Return to add `#morning`
