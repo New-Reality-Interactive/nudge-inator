@@ -114,7 +114,7 @@ and **Cancel**, **Add**, **Save** and **Done** as words.
 | **Now** | `bell` | Nudging cards with **Done** and **Snooze**, Coming Up (7 days), Last 24 Hours |
 | **My Day** | `calendar` | Today in time order, with Now and quiet-hours markers. Done, Nudging, Missed and Left counts that filter the list, and a tag filter. |
 | **Tags** | `tag` | Your tags with counts. Choose one or more to filter, then see the matching reminders in Today, Later, Paused and Completed sections. |
-| **Settings** | `gearshape` | Nudges (permission status, Send a Test Nudge), Quiet Hours, Time Zone, Siri & Shortcuts, Your Data (Export Data, a readable record rather than a backup, and Delete All Data), About |
+| **Settings** | `gearshape` | Nudges (permission status, Send a Test Nudge), Quiet Hours, Siri & Shortcuts, Your Data (Export Data, a readable record rather than a backup, and Delete All Data), About |
 | **Search** | `magnifyingglass` | Every reminder, found by title, notes or tag, in Today, Later, Paused and Completed sections |
 
 - **Search:** on iOS 26, choosing the Search circle turns the tab bar into a search field, with the
@@ -132,7 +132,6 @@ and **Cancel**, **Add**, **Save** and **Done** as words.
   - **Repeat** opens a picker page: Never, Every Day, Every Weekday, Every Week, Every 2 Weeks,
     Every Month, Every Year, or Custom (frequency, interval, weekdays, and one or more times of
     day, so a reminder can repeat several times a day).
-  - **Time Zone** is **Follow iPhone** by default, or a chosen zone the reminder stays in.
   - **Snooze Length** is a menu under Strength: the strength's default, or a longer 5, 10, 15 or
     30 minutes. Choosing a gentler strength raises a shorter length to its default.
   - **Strength** is a segmented control. At the accessibility sizes it's a menu instead (see
@@ -1020,7 +1019,6 @@ the 2026-10-02 UX review, apart from the AlarmKit corrections, the Normal-nudge 
 
 **After the architecture decisions of 2026-10-03,** these changes were checked in headless Chrome,
 with no console errors:
-- the form's **Time Zone** menu starts at **Follow iPhone**, and the details show it
 - **Repeat** has no "Keep: …" option; on **Custom**, **Add a Time** adds a time, typing one updates
   the summary ("Every day at 9:00 AM, 12:00 PM and 3:30 PM"), and **Remove** takes it away
 - Stretch break opens as Custom, every day at 10:00 AM, 2:00 PM and 4:00 PM, and My Day lists all

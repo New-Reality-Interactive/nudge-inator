@@ -1255,7 +1255,8 @@ function nudgeSummary(s, cap, carry = false, until = Infinity) {
 }
 
 /* ================= Made-up data ================= */
-const me = { timezone: "America/New_York", autoTz: true, quietHours: { start: "22:00", end: "07:00" } };
+/* Every time is in the iPhone's current time zone (brief §3, Reminder); there's no time zone setting. */
+const me = { quietHours: { start: "22:00", end: "07:00" } };
 /* timeSensitive stands for the app's Time Sensitive setting (timeSensitiveSetting), which the person
    can turn off on its own. Then High nudges, and Urgent ones that fall back, are ordinary notifications. */
 const perm = { notifications: true, alarms: true, timeSensitive: true };
@@ -1268,18 +1269,18 @@ let tags, reminders, occurrences;
 function seed() {
   tags = ["home", "health", "work", "money", "morning", "appointments", "travel"].map((name) => ({ id: name, name }));
   reminders = [
-    { id: "r1", tagIds: ["home"], title: "Take the bins out", body: null, dtstart: "2026-01-05T07:30", timezone: "device", rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "firm", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-10-05T07:30" },
-    { id: "r7", tagIds: ["money", "home"], title: "Reply to Alex about the lease", body: "They need an answer before 10.", dtstart: "2026-09-28T08:10", timezone: "device", rrule: null, strength: "relentless", cap: { maxDurationMinutes: 120 }, status: "ACTIVE", nextOccurrenceAt: null },
-    { id: "r2", tagIds: ["health", "morning"], title: "Morning meds", body: "Blue pill + vitamin D", dtstart: "2026-03-01T06:30", timezone: "device", rrule: "FREQ=DAILY", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-29T06:30" },
-    { id: "r6", tagIds: ["health", "work"], title: "Stretch break", body: null, dtstart: "2026-09-01T10:00", timezone: "device", rrule: "FREQ=DAILY;BYTIME=10:00,14:00,16:00", strength: "firm", cap: { maxDurationMinutes: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T10:00" },
-    { id: "r3", tagIds: ["home"], title: "Water the plants", body: null, dtstart: "2026-04-02T18:00", timezone: "device", rrule: "FREQ=WEEKLY;BYDAY=MO,TH", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T18:00" },
-    { id: "r4", tagIds: ["money", "home"], title: "Pay rent", body: "Transfer to the landlord's account.", dtstart: "2026-01-01T09:00", timezone: "device", rrule: "FREQ=MONTHLY;BYMONTHDAY=1", strength: "relentless", snooze: 15, cap: { maxDurationMinutes: 480, maxAttempts: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-10-01T09:00" },
-    { id: "r5", tagIds: ["health", "appointments"], title: "Dentist appointment", body: "Bring the insurance card.", dtstart: "2026-10-02T13:15", timezone: "device", rrule: null, strength: "firm", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-10-02T13:15" },
-    { id: "r8", tagIds: ["money", "travel"], title: "Renew passport", body: null, dtstart: "2026-09-10T09:00", timezone: "device", rrule: null, strength: "firm", cap: {}, status: "COMPLETED", nextOccurrenceAt: null },
-    { id: "r9", tagIds: ["work", "morning"], title: "Team stand-up", body: "Join from the meeting link in the calendar invite.", dtstart: "2026-01-05T09:30", timezone: "device", rrule: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", strength: "firm", cap: { maxDurationMinutes: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T09:30" },
-    { id: "r10", tagIds: ["work"], title: "Send the weekly status update", body: null, dtstart: "2026-01-05T16:30", timezone: "device", rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T16:30" },
-    { id: "r11", tagIds: ["home", "morning"], title: "Walk the dog", body: null, dtstart: "2026-02-01T07:00", timezone: "device", rrule: "FREQ=DAILY", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-29T07:00" },
-    { id: "r12", tagIds: [], title: "Call Grandma", body: null, dtstart: "2026-06-07T17:00", timezone: "device", rrule: "FREQ=WEEKLY;BYDAY=SU", strength: "gentle", cap: {}, status: "PAUSED", nextOccurrenceAt: null },
+    { id: "r1", tagIds: ["home"], title: "Take the bins out", body: null, dtstart: "2026-01-05T07:30", rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "firm", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-10-05T07:30" },
+    { id: "r7", tagIds: ["money", "home"], title: "Reply to Alex about the lease", body: "They need an answer before 10.", dtstart: "2026-09-28T08:10", rrule: null, strength: "relentless", cap: { maxDurationMinutes: 120 }, status: "ACTIVE", nextOccurrenceAt: null },
+    { id: "r2", tagIds: ["health", "morning"], title: "Morning meds", body: "Blue pill + vitamin D", dtstart: "2026-03-01T06:30", rrule: "FREQ=DAILY", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-29T06:30" },
+    { id: "r6", tagIds: ["health", "work"], title: "Stretch break", body: null, dtstart: "2026-09-01T10:00", rrule: "FREQ=DAILY;BYTIME=10:00,14:00,16:00", strength: "firm", cap: { maxDurationMinutes: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T10:00" },
+    { id: "r3", tagIds: ["home"], title: "Water the plants", body: null, dtstart: "2026-04-02T18:00", rrule: "FREQ=WEEKLY;BYDAY=MO,TH", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T18:00" },
+    { id: "r4", tagIds: ["money", "home"], title: "Pay rent", body: "Transfer to the landlord's account.", dtstart: "2026-01-01T09:00", rrule: "FREQ=MONTHLY;BYMONTHDAY=1", strength: "relentless", snooze: 15, cap: { maxDurationMinutes: 480, maxAttempts: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-10-01T09:00" },
+    { id: "r5", tagIds: ["health", "appointments"], title: "Dentist appointment", body: "Bring the insurance card.", dtstart: "2026-10-02T13:15", rrule: null, strength: "firm", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-10-02T13:15" },
+    { id: "r8", tagIds: ["money", "travel"], title: "Renew passport", body: null, dtstart: "2026-09-10T09:00", rrule: null, strength: "firm", cap: {}, status: "COMPLETED", nextOccurrenceAt: null },
+    { id: "r9", tagIds: ["work", "morning"], title: "Team stand-up", body: "Join from the meeting link in the calendar invite.", dtstart: "2026-01-05T09:30", rrule: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", strength: "firm", cap: { maxDurationMinutes: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T09:30" },
+    { id: "r10", tagIds: ["work"], title: "Send the weekly status update", body: null, dtstart: "2026-01-05T16:30", rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T16:30" },
+    { id: "r11", tagIds: ["home", "morning"], title: "Walk the dog", body: null, dtstart: "2026-02-01T07:00", rrule: "FREQ=DAILY", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-29T07:00" },
+    { id: "r12", tagIds: [], title: "Call Grandma", body: null, dtstart: "2026-06-07T17:00", rrule: "FREQ=WEEKLY;BYDAY=SU", strength: "gentle", cap: {}, status: "PAUSED", nextOccurrenceAt: null },
   ];
   occurrences = [
     { id: "o1", reminderId: "r1", scheduledFor: "2026-09-28T07:30", level: 2, attempts: 3, snoozes: 0, state: "NUDGING", nextNudgeAt: "2026-09-28T08:22:30", closedAt: null, closeReason: null,
@@ -1954,7 +1955,6 @@ function viewRem(id) {
   <div class="sec"><ul class="list">
     <li><div class="cell"><span class="main">Repeats</span><span class="trail">${esc(scheduleText(r))}</span></div></li>
     <li><div class="cell"><span class="main">Next</span><span class="trail">${nextText}</span></div></li>
-    <li><div class="cell"><span class="main">Time Zone</span><span class="trail">${esc(tzName(r.timezone))}</span></div></li>
     <li><div class="cell"><span class="main">Quiet Hours</span><span class="trail">${r.ignoreQuiet ? "Ignored: nudges through them" : me.quietHours ? "Waits until they end" : "None set"}</span></div></li>
   </ul></div>
   <h2 class="sec-h"><span>How It Nudges</span></h2>
@@ -2030,12 +2030,7 @@ function settingsSections() {
     <li><div class="formrow"><label for="s-qe">Until</label><input type="time" class="pill-input" id="s-qe" value="${q.end}"></div></li>` : ""}
   </ul>
   ${state.quietError ? `<p class="errtext" role="alert">Quiet hours can't start and end at the same time.</p>` : ""}
-  <p class="sec-f">${q ? `Quiet from ${hmOf(q.start)} to ${hmOf(q.end)}. ` : ""}Nudging stops in this window: nothing is sent, nothing escalates, no alarms ring, and the time doesn't count toward give-up limits. When it ends, the next nudge comes at once. Reminders set to Ignore Quiet Hours still nudge.</p></div>` },
-    { title: "Time Zone", body: `<div class="sec"><ul class="list">
-    <li><div class="formrow"><label for="s-autotz">Follow iPhone</label><input type="checkbox" class="switch" id="s-autotz" ${me.autoTz ? "checked" : ""}></div></li>
-    <li><div class="formrow"><label for="s-tz">Time Zone</label><select class="menu" id="s-tz" ${me.autoTz ? "disabled" : ""}>${TZS.map((t) => `<option value="${t}" ${t === me.timezone ? "selected" : ""}>${t.replace("_", " ")}</option>`).join("")}</select></div></li>
-  </ul>
-  <p class="sec-f">The time zone new reminders start with. With Follow iPhone, a reminder's times move with your iPhone when you travel; with a chosen zone, they stay in that zone. Each reminder can change it. Quiet hours always follow your iPhone. Times follow your iPhone's 12- or 24-hour setting.</p></div>` },
+  <p class="sec-f">${q ? `Quiet from ${hmOf(q.start)} to ${hmOf(q.end)}. ` : ""}Nudging stops in this window: nothing is sent, nothing escalates, no alarms ring, and the time doesn't count toward give-up limits. When it ends, the next nudge comes at once. Reminders set to Ignore Quiet Hours still nudge. Times follow your iPhone's time zone and its 12- or 24-hour setting.</p></div>` },
     { title: "Siri &amp; Shortcuts", body: `<div class="sec"><ul class="list icons">
     <li><button type="button" class="cell" data-shortcuts><span class="ico" style="background:var(--tile-purple)">${I("mic", 19)}</span><span class="main">Siri &amp; Shortcuts</span>${chev}</button></li>
   </ul>
@@ -2057,9 +2052,6 @@ function viewSettings() {
   ${permBanner()}
   ${sections.map((x) => `<h2 class="sec-h">${x.title}</h2>${x.body}`).join("\n")}`;
 }
-/* A reminder follows the iPhone's time zone ("device", the default) or stays in a chosen zone. */
-const tzName = (z) => (z === "device" ? "Follow iPhone" : z.replace("_", " "));
-const TZS = ["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", "Europe/London", "Europe/Berlin", "Asia/Tokyo", "Australia/Sydney"];
 
 /* ================= The reminder form (a sheet) ================= */
 const PRESETS = [
@@ -2101,10 +2093,10 @@ function ruleFor(x) {
 function draftFor(r) {
   // A new reminder made on the Tags tab starts with the tags being filtered by.
   const base = { title: "", body: "", tagIds: state.tab === "tags" && !state.tagEdit ? [...state.tagFilter.ids] : [],
-    dtstart: "2026-09-28T09:00", timezone: me.autoTz ? "device" : me.timezone, repeat: "never", custom: { freq: "WEEKLY", interval: 1, days: ["MO"], times: [] },
+    dtstart: "2026-09-28T09:00", repeat: "never", custom: { freq: "WEEKLY", interval: 1, days: ["MO"], times: [] },
     strength: "firm", snooze: SNOOZE.firm, maxAttempts: DEFAULT_CAP.maxAttempts, maxDurationMinutes: DEFAULT_CAP.maxDurationMinutes, ignoreQuiet: false };
   if (!r) return base;
-  const x = { ...base, title: r.title, body: r.body || "", tagIds: [...r.tagIds], dtstart: r.dtstart.slice(0, 16), timezone: r.timezone, strength: r.strength, snooze: snoozeOf(r), maxAttempts: capOf(r).maxAttempts, maxDurationMinutes: capOf(r).maxDurationMinutes, ignoreQuiet: !!r.ignoreQuiet };
+  const x = { ...base, title: r.title, body: r.body || "", tagIds: [...r.tagIds], dtstart: r.dtstart.slice(0, 16), strength: r.strength, snooze: snoozeOf(r), maxAttempts: capOf(r).maxAttempts, maxDurationMinutes: capOf(r).maxDurationMinutes, ignoreQuiet: !!r.ignoreQuiet };
   if (!r.rrule) { x.repeat = "never"; return x; }
   const preset = PRESETS.find(([k]) => k !== "never" && ruleFor({ ...x, repeat: k }) === r.rrule);
   if (preset) { x.repeat = preset[0]; return x; }
@@ -2175,7 +2167,6 @@ function editorMain(sh) {
     <div class="sec"><ul class="list">
       <li><div class="formrow"><label for="f-dt">Starts</label><input type="datetime-local" class="pill-input" id="f-dt" data-f="dtstart" value="${esc(x.dtstart)}" aria-describedby="f-dt-h"></div></li>
       <li><button type="button" class="cell" data-sheet-page="repeat"><span class="main">Repeat</span><span class="trail">${esc(repeatLabel(x))}</span>${chev}</button></li>
-      <li><div class="formrow"><label for="f-tz">Time Zone</label><select class="menu" id="f-tz" data-f="timezone">${["device", ...TZS].map((t) => `<option value="${t}" ${t === x.timezone ? "selected" : ""}>${esc(tzName(t))}</option>`).join("")}</select></div></li>
     </ul>${pastOneOff(x) ? `<p class="errtext" role="alert">This time has passed. Choose a later time.</p>` : ""}<p class="sec-f" id="f-dt-h">${heldByQuiet(x, d) ? `<span class="note-quiet">${noteIcon("quiet")} During your quiet hours: the first nudge waits until ${hmOf(me.quietHours.end, d)}.</span>` : `${scheduleText({ dtstart: x.dtstart, rrule: ruleFor(x) })}.`}</p></div>
 
     <h3 class="sec-h" id="l-strength">Strength</h3>
@@ -2326,7 +2317,7 @@ function saveEditor() {
   const sh = state.sheet, x = sh.draft;
   if (!x.title.trim()) return;
   for (const t of sh.newTags) if (x.tagIds.includes(t.id)) tags.push(t);
-  const fields = { title: x.title.trim(), body: x.body.trim() || null, tagIds: x.tagIds.filter(tagById), dtstart: x.dtstart, timezone: x.timezone, rrule: ruleFor(x), strength: x.strength, snooze: Number(x.snooze), cap: capFor(x), ignoreQuiet: x.ignoreQuiet };
+  const fields = { title: x.title.trim(), body: x.body.trim() || null, tagIds: x.tagIds.filter(tagById), dtstart: x.dtstart, rrule: ruleFor(x), strength: x.strength, snooze: Number(x.snooze), cap: capFor(x), ignoreQuiet: x.ignoreQuiet };
   const r = sh.editId ? updateReminder(remById(sh.editId), fields) : createReminder(fields);
   state.sheet = null;
   const top = state.stacks[state.tab].at(-1);
@@ -3309,12 +3300,6 @@ const CHANGE = {
   "s-quiet": (t) => { me.quietHours = t.checked ? { start: "22:00", end: "07:00" } : null; state.quietError = false; refresh("#s-quiet"); },
   "s-qs": (t) => setQuiet("start", t.value),
   "s-qe": (t) => setQuiet("end", t.value),
-  "s-autotz": (t) => {
-    me.autoTz = t.checked;
-    if (t.checked) me.timezone = "America/New_York";
-    refresh("#s-autotz");
-  },
-  "s-tz": (t) => { me.timezone = t.value; refresh("#s-tz"); },
 };
 document.addEventListener("change", (e) => CHANGE[e.target.id]?.(e.target));
 document.addEventListener("keydown", (e) => {
@@ -3357,7 +3342,7 @@ document.getElementById("c-assistive").addEventListener("change", (e) => { state
 document.getElementById("c-bold").addEventListener("change", (e) => { if (e.target.checked) document.documentElement.dataset.bold = ""; else delete document.documentElement.dataset.bold; });
 document.getElementById("c-reset").addEventListener("click", () => {
   seed();
-  Object.assign(me, { timezone: "America/New_York", autoTz: true, quietHours: { start: "22:00", end: "07:00" } });
+  Object.assign(me, { quietHours: { start: "22:00", end: "07:00" } });
   Object.assign(perm, { notifications: true, alarms: true, timeSensitive: true });
   document.getElementById("c-perm-n").checked = true;
   document.getElementById("c-perm-a").checked = true;

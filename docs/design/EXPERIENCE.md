@@ -45,8 +45,8 @@ the person meets them.
 - **Data:** everything stays on the device. There are no network, sign-in or sync states.
 - **Defaults:**
   - Quiet hours are on, from 10:00 PM to 7:00 AM, and can be turned off in Settings.
-  - New reminders follow the iPhone's time zone. Settings › Time Zone can make a chosen zone the
-    default instead, and each reminder can change it. Quiet hours always follow the iPhone.
+  - Times follow the iPhone's time zone; there's no time zone setting
+    ([brief §3](../product/brief.md#3-product-concepts), Reminder).
   - Appearance follows the system's Light, Dark or Automatic setting. There's no in-app theme
     setting.
 - **Accessibility target:** WCAG 2.2 AA and the App Store Accessibility Nutrition Labels listed in
@@ -64,9 +64,9 @@ inside the sheet.
 | **My Day** | Tab (`calendar`) | Tab bar | Today in time order, with Now and quiet-hours markers. Done, Nudging, Missed and Left counts filter the list. **Filter by Tags** narrows it by tag. |
 | **Tags** | Tab (`tag`) | Tab bar; a tag button in Reminder details | Browse tags; filter by one or more tag tokens, **All Tags** or **Any Tag**; **Edit** to rename or delete tags. |
 | **Search** | Search-role tab (`magnifyingglass`) | Tab bar: a circle on iOS 26+, a fifth tab on iOS 18 | Every reminder, by title, notes or tag; Recent Searches. |
-| **Settings** | Tab (`gearshape`) | Tab bar | Nudges (permission status, Open iOS Settings, Send a Test Nudge, How Nudges Work), Quiet Hours, Time Zone, Siri & Shortcuts, Your Data (Export Data, Delete All Data), About and Accessibility. |
+| **Settings** | Tab (`gearshape`) | Tab bar | Nudges (permission status, Open iOS Settings, Send a Test Nudge, How Nudges Work), Quiet Hours, Siri & Shortcuts, Your Data (Export Data, Delete All Data), About and Accessibility. |
 | **Reminder details** | Pushed | Any reminder row or nudge card | Nudge card, tags, schedule, How It Nudges, History (90 days), Not Done, Pause/Resume, Delete. **Edit** in the bar. |
-| **New Reminder / Edit Reminder** | Sheet | **+** on Now, My Day or Tags; **Edit** in details | The form, with pushed pages **Tags**, **Repeat** and **Custom** (frequency, interval, weekdays, and one or more times of day), a **Time Zone** menu (**Follow iPhone**, the default, or a chosen zone), and a live How It Nudges preview. |
+| **New Reminder / Edit Reminder** | Sheet | **+** on Now, My Day or Tags; **Edit** in details | The form, with pushed pages **Tags**, **Repeat** and **Custom** (frequency, interval, weekdays, and one or more times of day), and a live How It Nudges preview. |
 | **Filter My Day** | Sheet | **Filter by Tags** on My Day | Tag checklist, **All Tags** or **Any Tag**, No Tags. Changes apply as they're made. |
 | **Rename Tag** | Sheet | Edit mode on the Tags tab | One field, with an error for a name already in use. |
 | **Welcome** | Sheet that can't be swiped away, first launch only | First launch | The four promises from the mockup's onboarding (iOS 18 has its own wording for the Urgent one), then **Continue**, the notification prompt and, on iOS 26+, the alarm prompt. |
@@ -467,7 +467,7 @@ Visual only; decorative, hidden from VoiceOver.
 |---|---|
 | Quiet hours start equals end | Inline error: "Quiet hours can't start and end at the same time." Not saved. |
 | Export Data | Writes a readable JSON record and opens the share sheet. The footer says it isn't a backup and can't be imported. |
-| Delete All Data | Alert: "Delete All Data?" / "This deletes every reminder, tag and all history from this iPhone, and cancels every nudge and alarm. It can't be undone." On iOS 18: "…and cancels every nudge. It can't be undone." It deletes reminders, tags, history and Recent Searches, and clears the tag filters. Settings (quiet hours, time zone for new reminders) and iOS permissions are kept. |
+| Delete All Data | Alert: "Delete All Data?" / "This deletes every reminder, tag and all history from this iPhone, and cancels every nudge and alarm. It can't be undone." On iOS 18: "…and cancels every nudge. It can't be undone." It deletes reminders, tags, history and Recent Searches, and clears the tag filters. Settings (quiet hours) and iOS permissions are kept. |
 
 ### Rename Tag
 
@@ -838,7 +838,7 @@ Priya is looking for a reminder whose title she doesn't remember.
 
 **Surfaces without a journey.** Their behavior is specified in State Patterns and Component
 Patterns, and in the mockup:
-- **Settings:** Quiet Hours, Time Zone, Send a Test Nudge, Open iOS Settings, Export Data, Delete
+- **Settings:** Quiet Hours, Send a Test Nudge, Open iOS Settings, Export Data, Delete
   All Data, How Nudges Work
 - **Tags:** Rename Tag and deleting a tag
 - **Reminder details:** Delete Reminder

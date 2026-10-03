@@ -177,8 +177,8 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
   `AlarmPresentation.Countdown`, which the system draws instead.
 - **Schedules:** `Alarm.Schedule.fixed(date)` for a one-off time, or `.relative` for a time of day
   with weekly repeats. Each Urgent nudge is a one-off, so it's `.fixed`. A fixed alarm "does not
-  change when device timezone changes", so alarms for reminders that follow the device's time zone
-  (the default; a reminder can instead stay in a chosen zone) are rescheduled when it changes.
+  change when device timezone changes", so alarms are rescheduled when it changes (reminders follow
+  the iPhone's time zone; brief §3).
 - **Where it shows:** the Lock Screen, the Dynamic Island and StandBy, and a paired Apple Watch,
   which the system forwards the alert to. Apple calls it a prominent alert and doesn't describe it
   as full screen. WWDC25 session 230 says the buttons' SF Symbols are used "when the alert is shown

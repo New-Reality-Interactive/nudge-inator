@@ -82,7 +82,7 @@ graph TD
 - **Prevents:** an edit, a quiet-hours change or a flight rewriting past statuses; history that can't say "Done (alarm stopped)"
 - **Rule:**
   - **Events are append-only rows:** done, not done, snooze, clear, pause, resume and skip-by-edit. Each records `issuedAt` (when the person acted, from the surface) and `source` (`app`, `notification`, `alarmStop`, `alarmCountdown`, `liveActivity`, `siri`, `assistiveAccess`).
-  - **Versioned facts carry the instant they were saved:** a reminder's nudging configuration (`ReminderConfig`: schedule, repeat rule, time zone mode, strength, snooze length, give-up limits, Ignore Quiet Hours), quiet hours, and the device time zone. The coordinator writes a zone fact when it detects a change.
+  - **Versioned facts carry the instant they were saved:** a reminder's nudging configuration (`ReminderConfig`: schedule, repeat rule, strength, snooze length, give-up limits, Ignore Quiet Hours), quiet hours, and the device time zone. The coordinator writes a zone fact when it detects a change.
   - **How versions apply:** the engine applies each version per brief §3. A new schedule applies from the next due time; strength, limit and Ignore Quiet Hours apply from the next nudge; a new snooze length applies from the next snooze. A version with a gentler strength already carries the raised snooze length and limit (brief §3), so the engine never sees a snooze length below the strength's default. Each past instant is evaluated with the quiet hours and zone in effect then.
   - **Mutable fields:** only title, notes and tags.
   - **Give-up time:** the time counted toward the limit leaves out the union of quiet, snoozed and closed intervals.
@@ -156,14 +156,12 @@ graph TD
     - a reconcile finds that it's due, or that its first planned delivery is in the past
   - **Its instant:** the due instant is frozen from that delivery's ledger row, or from the command's payload if there's no row. It is never recomputed.
 
-### AD-9 — Time zones: follow the iPhone or pinned; quiet hours and "today" follow the iPhone
+### AD-9 — Time zones: everything follows the iPhone
 
-- **Binds:** ReminderConfig, engine, form, Settings › Time Zone, My Day, reconcile triggers
-- **Prevents:** one unit pinning a reminder's zone while another floats it
+- **Binds:** engine, My Day, reconcile triggers
+- **Prevents:** a unit using any zone other than the iPhone's current one
 - **Rule:**
-  - **Per reminder:** `ReminderConfig.timeZone` is `.followsDevice` (the default) or `.fixed(IANA identifier)`.
-  - **Always the iPhone's zone:** quiet hours, and My Day's "today" (the device's current calendar day).
-  - **New reminders:** Settings › Time Zone sets the default mode for them.
+  - **One zone:** reminder times, quiet hours and My Day's "today" all use the iPhone's current time zone (brief §3, Reminder). `ReminderConfig` has no time zone field.
   - **On a zone change:** the coordinator records a zone fact and re-plans every projection.
   - **OS triggers are absolute:** notification triggers are non-repeating `UNCalendarNotificationTrigger`s built from UTC date components; alarms are `Alarm.Schedule.fixed`. No request uses a repeating, wall-clock or relative trigger.
 
@@ -251,7 +249,7 @@ graph TD
   - **The database:** one SQLite database through GRDB, in its own folder in Application Support. The folder has file protection `completeUntilFirstUserAuthentication`, so the `-wal` and `-shm` files match. It's included in iCloud and computer backups.
   - **Migrations:** only through numbered `DatabaseMigrator` migrations, each covered by a test that migrates a fixture from the previous version.
   - **The journal:** when the database can't open, a command goes to an append-only journal file with protection `none`. It holds only the command kind, occurrence key, nudge index and `issuedAt`, never titles. If the command is a Stop, the intent also posts `followup/<key>`, taking the reminder's title from the alarm's `NudgeAlarmMetadata` (the alarm already shows the title, so this exposes nothing new), so the follow-up reads as EXPERIENCE gives it. On the first open, the journal is replayed in order and then deleted.
-  - **Delete All Data:** deletes every reminder, tag, occurrence, event, ledger row and Recent Search, and the journal, in one job, resets the My Day and Tags filters (`SceneStorage`) in the running scene, then reconciles to an empty plan. It keeps settings (quiet hours and their versions, the time zone for new reminders, zone facts and capability state) and the `UserDefaults` flags, as brief §3 says.
+  - **Delete All Data:** deletes every reminder, tag, occurrence, event, ledger row and Recent Search, and the journal, in one job, resets the My Day and Tags filters (`SceneStorage`) in the running scene, then reconciles to an empty plan. It keeps settings (quiet hours and their versions, zone facts and capability state) and the `UserDefaults` flags, as brief §3 says.
 
 ### AD-17 — Lock Screen actions and Siri need no authentication
 
@@ -432,7 +430,7 @@ limit (AD-14) and restoring from a backup (AD-15).
 | Done, Snooze, Clear from notifications, alarms, Live Activity, Siri (brief §11 Q5, Q13) | Intents and delegate → Coordinator | AD-4, AD-5, AD-12, AD-17 |
 | Closing clears nudges, stale actions (brief §11 Q11) | Coordinator, reconciler | AD-6, AD-4, AD-8 |
 | Live Activity setup and reconciling with AlarmKit (brief §11 Q6) | NudgeLiveActivity, NudgeWidgets, reconciler | AD-5, AD-6, AD-12 |
-| Time zones (brief §11 Q7) | ReminderConfig, zone facts, triggers | AD-9, AD-3, AD-8 |
+| Time zones (brief §11 Q7) | Zone facts, triggers | AD-9, AD-8 |
 | Storage and migration (brief §11 Q2) | NudgeStore | AD-16, AD-3 |
 | History (90 days), Export Data (brief §11 Q12) | Events + ledger; NudgeCore export | AD-15, Conventions › Export |
 | How It Nudges preview (brief §11 Q3) | NudgeCore `evaluate` on the draft | AD-1 |

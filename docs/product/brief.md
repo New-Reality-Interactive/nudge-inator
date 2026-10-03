@@ -80,7 +80,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
 
 | Concept | Meaning |
 |---|---|
-| **Reminder** | Something to be nudged about: a title (required), optional notes (shown only in the app), any number of tags, a start time, a time zone (it follows the iPhone's time zone, the default, or stays in one chosen zone), a repeat rule (one of the form's presets, or Custom, which can repeat several times a day; a monthly or yearly repeat on a day a month doesn't have falls on its last day), a strength, a snooze length, a give-up limit and whether it ignores quiet hours. |
+| **Reminder** | Something to be nudged about: a title (required), optional notes (shown only in the app), any number of tags, a start time, a repeat rule (one of the form's presets, or Custom, which can repeat several times a day; a monthly or yearly repeat on a day a month doesn't have falls on its last day), a strength, a snooze length, a give-up limit and whether it ignores quiet hours. Its times follow the iPhone's current time zone: 8:00 AM stays 8:00 AM local time when you travel. There's no time zone setting, per reminder or in Settings; this is the one statement of that rule. |
 | **Occurrence** | One time a reminder falls due. It's **coming up**, then **nudging**, then closes as **done**, **missed** or **skipped**. Each has an event history. A reminder has at most 1 open occurrence. When the next one falls due while the last is still open, the last closes as missed ("Missed: the next one took over") and the new one starts at nudge 1. |
 | **Nudge** | One alert sent while an occurrence is open: a notification or an alarm. |
 | **Strength** | Gentle, Firm or Relentless. It sets the intervals and how urgency rises (table below). |
@@ -97,7 +97,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
 | **Pause** | Stops a reminder. An occurrence that's nudging closes as **skipped**, and anything due while it's paused is skipped too. Skipped isn't missed, so there's no carry-over, and pausing clears any carry-over. Resume picks up at the next time. |
 | **Edit** | A new schedule applies from the next time it's due. A new strength, give-up limit or Ignore Quiet Hours applies from the next nudge, and the nudge count carries on. A new snooze length applies from the next snooze. An open occurrence closes as skipped in exactly two cases: a lowered limit it has already reached, or a change to a one-off reminder's time while it's nudging. No other edit closes it. A one-off can't be saved with a start time that has already passed; the form asks for a later time. The one exception is editing a reminder that was already a one-off without changing its time (for example, renaming it). Resuming one, or changing a repeat to Never, needs a later time. |
 | **Completed** | A one-off reminder whose occurrence has closed. It has nothing left to nudge, so Tags and Search list it under Completed. Not Done, or giving it a new time, makes it active again. Repeating reminders are never completed. A paused reminder is Paused, not Completed, even if its occurrence closed when it was paused; Resume then asks for a new time. A Completed one-off can't be paused. |
-| **Delete** | Deletes a reminder and its history, after a confirmation. **Delete All Data** does this for every reminder and tag, and also clears Recent Searches and the tag filters. It keeps settings (quiet hours, time zone for new reminders). |
+| **Delete** | Deletes a reminder and its history, after a confirmation. **Delete All Data** does this for every reminder and tag, and also clears Recent Searches and the tag filters. It keeps settings (quiet hours). |
 
 **How each strength nudges:**
 
@@ -282,8 +282,8 @@ the layout:
 | **Tags** | Your tags with counts. Find tags and choose one or more as tokens, then Match All or Any. Results in Today, Later, Paused and Completed. **Edit** renames or deletes tags (deleting keeps the reminders). |
 | **Search** | Every reminder by title, notes or tag, with recent searches. |
 | **Reminder details** | Nudging card, tags (tap to filter), schedule, How It Nudges, history (90 days), **Not Done** (on the latest done occurrence, while it applies; see [§3](#3-product-concepts)), **Pause/Resume**, **Delete** (confirmed), **Edit**. |
-| **New / Edit** | Title (wraps), notes, tags (choose or add), start, Repeat (presets and Custom, which can repeat several times a day), time zone (Follow iPhone or a chosen zone), strength, snooze length, give-up limits (with a minimum per strength), **Ignore Quiet Hours**, and a live How It Nudges preview, which shows where a repeat's next occurrence takes over. While a reminder is nudging, Edit says when each change applies. Every repeat rule can be shown and edited in the form. |
-| **Settings** | Notification and alarm status, Open iOS Settings, Send a Test Nudge. Quiet hours (in the iPhone's time zone). Time zone for new reminders (Follow iPhone or a chosen zone). Siri & Shortcuts. Export Data (a readable record, not a backup) and Delete All Data. **How Nudges Work** (strengths, urgency, Focus, quiet hours, alarms), the one help page every permission banner links to. About and Accessibility. |
+| **New / Edit** | Title (wraps), notes, tags (choose or add), start, Repeat (presets and Custom, which can repeat several times a day), strength, snooze length, give-up limits (with a minimum per strength), **Ignore Quiet Hours**, and a live How It Nudges preview, which shows where a repeat's next occurrence takes over. While a reminder is nudging, Edit says when each change applies. Every repeat rule can be shown and edited in the form. |
+| **Settings** | Notification and alarm status, Open iOS Settings, Send a Test Nudge. Quiet hours (in the iPhone's time zone). Siri & Shortcuts. Export Data (a readable record, not a backup) and Delete All Data. **How Nudges Work** (strengths, urgency, Focus, quiet hours, alarms), the one help page every permission banner links to. About and Accessibility. |
 | **First launch** | Welcome, then the notification permission, then (on iOS 26 and later) the alarm permission. After an update from iOS 18, the alarm permission is asked once on the next launch. |
 | **Siri and Shortcuts** | "Mark my Nudge-inator nudge done", "Snooze Nudge-inator" and "What's nudging me in Nudge-inator?" (Apple requires the app's name in every App Shortcut phrase), from Siri, the Action button or a Home Screen shortcut. |
 | **Assistive Access** | One screen: what needs you now, with large Done and Snooze buttons; what's done today, with **Not done yet**; and what's later today. No editing, tags or settings. On iOS 26 and later it's an Assistive Access scene, drawn in the system's Assistive Access style. On iOS 18, where that scene doesn't exist, the app shows the same view full screen (`UISupportsFullScreenInAssistiveAccess`) when `isAssistiveAccessEnabled` is on. |
@@ -520,8 +520,8 @@ iOS 18, 26 and 27:
 [architecture decision log](../architecture/.memlog.md):
 - **The nudging rules live in one engine.** The preview, the scheduler, history and Siri all get
   their answers from it, and it's tested with a fixed clock.
-- **A reminder follows the iPhone's time zone,** unless it's set to stay in a chosen zone. Quiet
-  hours always follow the iPhone.
+- **Reminders have no time zone setting.** Their times follow the iPhone ([§3](#3-product-concepts),
+  Reminder). A reminder pinned to another zone could come in v2 if testers ask for it.
 - **Repeat rules are only what the form can show.** "Keep: …" for rules the form can't express is
   gone, since nothing on the device can create one. Custom can repeat several times a day.
 - **With alarms not allowed, Urgent nudges come as the notification chain,** as on iOS 18. Only a
@@ -558,7 +558,8 @@ maps each one to its decisions under "Capability → Architecture Map".
    AlarmKit's list (`alarms` and `alarmUpdates`) and its permission (`authorizationUpdates`) on
    every launch.
 7. How alarms follow time zones. A fixed alarm doesn't move when the device's time zone changes, so
-   reminders that follow the device's time zone need their alarms rescheduled when it changes.
+   every reminder's alarms need rescheduling when it changes. (Answered in the architecture spine,
+   AD-9.)
 8. How the iOS 18 and iOS 26+ paths are separated and tested: Urgent nudges, Assistive Access, and
    the iOS 26-only layout APIs (`navigationSubtitle`, `tabBarMinimizeBehavior`).
 9. How strings, plurals and formats are set up so that adding a language needs no code changes.
