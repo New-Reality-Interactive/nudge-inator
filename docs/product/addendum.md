@@ -43,6 +43,13 @@ The earlier brief was never committed, so this list is the only record of it.
 | Tab bar shrinking in landscape (`tabBarMinimizeBehavior`, iPhone only) | Not available: the full tab bar stays | As in the mockup | Same |
 | My Day's date as a subtitle (`navigationSubtitle`) | Not available: the date stays in the content, as in portrait | As in the mockup | Same |
 | Assistive Access | `UISupportsFullScreenInAssistiveAccess`, with the app's own one-screen view when `isAssistiveAccessEnabled` | `AssistiveAccess` scene and `UISupportsAssistiveAccess`, in the system's Assistive Access style | Same |
+| Search | A fifth tab, with its field under the title | A separate circle in the tab bar (`Tab(role: .search)`) | Same |
+| Sheet buttons | **Cancel**, **Add**, **Save**, **Done** as words | Symbols for the `.cancel` and `.confirm` button roles | Same |
+| Section headers | Capitals | Title case | Same |
+| Confirming a delete | Action sheet at the bottom, with Cancel | `confirmationDialog` attached to its button, growing out of it, with no Cancel (WWDC25, "Build a UIKit app with the new design") | Same |
+| Unselected tabs | Secondary label color, set with `UITabBarAppearance` (iOS 18's default gray is about 3:1) | The system's own | Same |
+| Resizable iPhone app (iPhone Mirroring, an iPhone app on iPad) | Not available | Not available | Available: the layout follows the width |
+| Swipe actions on `List` rows | Available (iOS 15 and later) | Same | Same |
 
 The mockup's iOS 26 behavior is the target. On iOS 18, the app uses the same system components, so
 it gets iOS 18's look without a separate design. The rows above that say "Not available" are the
@@ -55,7 +62,6 @@ checked. The iPad notes are starting points for the UX work.
 
 | Threshold | Value | What changes |
 |---|---|---|
-| Regular width in landscape | iPhones 414 pt wide or more: XR, 11, the Plus and Max models, and probably Air | Tags, Search and Settings use a split view |
 | Wide nudge cards | A card 540 pt wide or more, in any orientation and on iPad | Done and Snooze sit beside the text, except at accessibility sizes |
 
 - **iPhone, landscape:** compact height. Every model:
@@ -69,23 +75,23 @@ checked. The iPad notes are starting points for the UX work.
     chosen, and the counts are a row of capsules.
   - Wide nudge cards put Done and Snooze beside the text (see the table). It depends on the card's
     width, not the orientation.
-  - Sheets fill the screen. Alerts stay centered; action sheets keep their portrait width.
+  - Sheets fill the screen. Alerts stay centered. On iOS 18, action sheets keep their portrait
+    width; on iOS 26, confirmation dialogs grow out of their button.
   - Nudges arrive over the app, because the iPhone is in use: the alarm as AlarmKit's alert (a
     banner at the top in the mockup, to confirm on a device) and notifications as banners. The Lock
     Screen doesn't rotate, so it's only ever portrait.
-- **iPhone, landscape, regular width:** the larger iPhones (see the table).
-  - Tags, Search and Settings use a split view (`NavigationSplitView`): the list on the left, the
-    chosen reminder or Settings section on the right. Rotating to portrait collapses it into a
-    navigation stack.
-  - Now and My Day stay one column.
-  - Only the list column shrinks the tab bar.
+- **iPhone, every model and orientation:** one column. The larger iPhones are regular width in
+  landscape, but the iPhone app has no split view (decided 2026-10-02): it waits for iPad. The
+  previous mockup's split view is archived in
+  `docs/mockups/archive/2026-09-30-mockup-tags-v1/`.
+- **iPhone app in a resizable window (iOS 27):** the layout follows the window's width, as above.
 - **iPad, portrait and landscape:** regular width.
   - The tab bar floats at the top of the screen (iPadOS 18 and later), not at the bottom as on
     iPhone, and the tabs can become a sidebar (`sidebarAdaptable`). Search stays pinned at the
     trailing end.
   - The tab bar never shrinks: Apple supports minimizing it "on only iPhone".
-  - Tags, Search and Settings start from the larger iPhones' split view: the list and the chosen
-    item side by side.
+  - Tags, Search and Settings use a split view (`NavigationSplitView`): the list and the chosen
+    item side by side. The archived mockup's iPhone split view is a starting point.
   - Now and My Day keep a readable column, and could add a details column in landscape.
   - Sheets are centered form sheets.
   - Every window size is supported, from Slide Over to full screen, with Stage Manager.

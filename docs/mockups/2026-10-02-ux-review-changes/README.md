@@ -4,23 +4,31 @@ Nudge-inator as an **iPhone app**. Reminders, nudging and history all live on th
 no account, no server and no website. A reminder can have **any number of tags** (or none), and you
 find reminders by **filtering on one or more tags**.
 
-- **Early nudges** are **local notifications** with **Done**, **Snooze** and **Dismiss**. High
-  urgency ones are **Time Sensitive**, so they get through Focus unless the person turns Time
-  Sensitive off for the app. Normal ones are ordinary notifications, which a Focus holds until the
-  reminder reaches High.
-- **Urgent nudges** ring as **AlarmKit alarms** (iOS 26 and later): a prominent system alert on the
+- **Early nudges** are **local notifications** with **Done** and **Snooze**. High urgency ones are
+  **Time Sensitive**, so they get through Focus unless the person turns Time Sensitive off for the
+  app. Normal ones are ordinary notifications, which a Focus holds until the reminder reaches High.
+- **Urgent nudges** ring as **AlarmKit alarms** on iOS 26 and later: a prominent system alert on the
   Lock Screen, sounding through silent mode and Focus, with **Snooze** and the system's **Stop**,
-  which counts as Done.
+  which counts as Done. iOS 18 has no AlarmKit, so there they repeat as a **chain of Time Sensitive
+  notifications**.
 
 Open [`index.html`](index.html) in a browser. It's a single file with no dependencies. On a desktop
 it shows a phone with **Mockup controls** beside it, in portrait or landscape. On a phone the app
 fills the screen and the controls are below it.
 
+**iOS versions.** The app supports iOS 18, 26 and 27 on iPhone, and the **iOS version** mockup
+control shows each one (see [iOS versions](#ios-versions)). The mockup draws only what the app can
+build with the system's own components and APIs on that version. Where it can't know how iOS draws
+something, it says so and lists it to check on a device. iPad is for v2.
+
 **Words.** A *nudge* is one alert sent while an occurrence is open: a notification or an alarm. A
 reminder is *nudging* until you mark it done.
 
 The [product brief](../../product/brief.md) is built on this mockup. It also covers what the mockup
-doesn't show: iPad and iOS 18.
+doesn't show: iPad.
+
+This version follows the UX review of 2026-10-02. The version before it is archived in
+[`../archive/2026-09-30-mockup-tags-v1/`](../archive/2026-09-30-mockup-tags-v1/README.md).
 
 ## Product rules
 
@@ -48,8 +56,8 @@ including the ones decided on 2026-10-02.
 - **Editing:** a repeat rule the form can't express is kept as it is ("Keep: …"). While a reminder
   is nudging, the form says when each change applies (see [Screens](#screens)).
 - **Privacy:** notifications show the title and the nudge count and urgency ("Nudge 3 of 20 ·
-  High"), and alarms only the title. iOS adds the app's name to both. Notes and tags stay in the
-  app.
+  High"), and alarms only the title. The alarm shows the app's name; a notification shows the app's
+  icon, and its name only when previews are hidden. Notes and tags stay in the app.
 
 The made-up data shows carry-over on "Stretch break" (Firm, 1 hour limit), whose 4 PM occurrence
 yesterday was missed.
@@ -61,13 +69,13 @@ Nudge-inator to keep nudging" notification.
 ## Screens
 
 The app uses standard iOS layouts: a tab bar, large titles, inset grouped lists, modal sheets,
-alerts and action sheets. As on iOS, screens and sheets scroll without showing a scrollbar.
+alerts and confirmation dialogs. As on iOS, screens and sheets scroll without showing a scrollbar.
 
-The bars follow iOS 26's Liquid Glass (see [Materials](#materials)):
+On iOS 26 and 27 the bars follow Liquid Glass (see [Materials](#materials)):
 
 - The **tab bar** is a glass capsule that floats above the content. The selected tab sits in a
-  lighter pill, in the accent color. **Search** is a separate glass circle at the trailing end, as
-  iOS 26 does for a search tab.
+  lighter pill, in the TabView's tint, which is the accent. **Search** is a separate glass circle at
+  the trailing end, as iOS 26 does for a tab with the search role.
 - **Bar buttons** are glass capsules when they hold words (**Edit**, **Clear**) or glass circles
   when they hold only a symbol (**+**, and Back, which shows just the chevron). They use the label
   color.
@@ -77,6 +85,10 @@ The bars follow iOS 26's Liquid Glass (see [Materials](#materials)):
   - **Edit** stays a word, because Apple's toolbar guidance names it as an action that symbols
     don't represent well.
 
+On iOS 18 the same components look as iOS 18 draws them (see [iOS versions](#ios-versions)): a
+full-width tab bar with Search as a fifth tab, bar buttons as words or symbols in the accent color,
+and **Cancel**, **Add**, **Save** and **Done** as words.
+
 | Tab | SF Symbol | What it shows |
 |---|---|---|
 | **Now** | `bell` | Nudging cards with **Done** and **Snooze**, Coming Up (7 days), Last 24 Hours |
@@ -85,8 +97,9 @@ The bars follow iOS 26's Liquid Glass (see [Materials](#materials)):
 | **Settings** | `gearshape` | Nudges (permission status, Send a Test Nudge), Quiet Hours, Time Zone, Siri & Shortcuts, Your Data (Export Data, a readable record rather than a backup, and Delete All Data), About |
 | **Search** | `magnifyingglass` | Every reminder, found by title, notes or tag, in Today, Later, Paused and Completed sections |
 
-- **Search:** choosing the Search circle turns the tab bar into a search field, with the tab you
-  came from shrunk to a circle in front of it. Tap that circle to go back.
+- **Search:** on iOS 26, choosing the Search circle turns the tab bar into a search field, with the
+  tab you came from shrunk to a circle in front of it. Tap that circle to go back. On iOS 18, Search
+  is an ordinary tab, with its field under the title and **Cancel** beside it while it's focused.
   - Before you type, it shows an empty state that says what you can search. Once you've opened a
     result, it shows **Recent Searches** (up to five) with **Clear**.
   - When a reminder matches only in its notes, the row shows the words around the match. A leading
@@ -98,7 +111,8 @@ The bars follow iOS 26's Liquid Glass (see [Materials](#materials)):
   - **Tags** opens a page with a **New Tag** field and a checklist of your tags.
   - **Repeat** opens a picker page: Never, Every Day, Every Weekday, Every Week, Every 2 Weeks,
     Every Month, Every Year, or Custom (frequency, interval and weekdays).
-  - **Strength** is a segmented control.
+  - **Strength** is a segmented control. At the accessibility sizes it's a menu instead (see
+    [Typography](#typography)), as are Custom's **Frequency** and the tag filters' **Match**.
   - **Give Up** uses a stepper for the number of nudges and a menu for the time, neither going
     below the strength's minimum. The footer says what the minimum is and why.
   - **Ignore Quiet Hours** is a switch, for medication or caregiving reminders that must nudge at
@@ -113,16 +127,30 @@ The bars follow iOS 26's Liquid Glass (see [Materials](#materials)):
     time changes, it warns that saving closes the occurrence as **skipped** ("Skipped: the
     reminder was changed"). The time counted toward the limit leaves out quiet hours, snoozes and
     any time it was closed before Not Done.
+- **Rows that open a reminder show a chevron** (`chevron.right`), on Now, My Day, Tags, Search and
+  the details' history, as a `NavigationLink` in a `List` does. My Day's rows keep their **Done**
+  button beside the chevron (`.buttonStyle(.borderless)`, so it does its own action). Nudge cards
+  have no chevron: tapping one opens the reminder through a button, because a chevron looks out of
+  place on a card.
 - **Reminder details** are pushed onto the tab's navigation stack. They show the nudging card, the
   reminder's tags, the schedule (with whether it waits for quiet hours), How It Nudges, the history
   (kept 90 days), **Not Done**, **Pause** or **Resume**, and **Delete**, which asks for
-  confirmation in an action sheet. **Edit** is in the navigation bar.
+  confirmation in a confirmation dialog. **Edit** is in the navigation bar.
+  - On iOS 26 the dialog grows out of the button that opened it, and has no **Cancel** button:
+    tapping outside it cancels. Apple's WWDC25 session "Build a UIKit app with the new design"
+    confirms this: "Action sheets presented inline don't have a cancel button because the cancel
+    action is implicit by tapping anywhere else." It holds only when the dialog is attached to its
+    button; without a source, iOS 26 centers it and adds **Cancel**. On iOS 18 it's an action sheet
+    at the bottom of the screen, with **Cancel**. Discarding a changed form asks the same way.
   - **Not Done** appears while the reminder's latest occurrence is done, until the next one falls
     due. It reopens that occurrence: the next nudge comes one interval later, at the next step, and
     the history records "Marked not done (nudging again)". The alarm's Stop counts as Done and
     can't be labelled, so this is how to take it back. Try it on "Walk the dog".
-- **First launch:** a welcome screen, then the notification permission prompt, then the alarm
-  permission prompt.
+- **First launch:** a welcome screen, then the notification permission prompt, then, on iOS 26
+  and later, the alarm permission prompt.
+- **Swipe actions** on nudging rows and cards (Now and My Day): swipe left for **Done**, right for
+  **Snooze** while snoozes are left. They're shortcuts for the buttons the row already has (see
+  [Accessibility](#accessibility)).
 
 ## Tags
 
@@ -138,9 +166,24 @@ The made-up data has seven tags: `#appointments`, `#health`, `#home`, `#money`, 
 `#travel` and `#work`. Most reminders have two. "Call Grandma" has none.
 
 **Filtering on the Tags tab:**
-- **Choose tags.** The field at the top finds tags as you type. Tap a tag in the list, or press
-  Return to take the first match, and it becomes a **token** under the field. Tap a token to remove
-  it. **Clear** removes them all.
+- **The search field holds the chosen tags.** It's SwiftUI's `searchable(text:tokens:suggestedTokens:)`,
+  placed under the title with `.navigationBarDrawer(displayMode: .always)`, so it sits in the same
+  place on iOS 18 and 26. Apple recommends this placement for a search scoped to one tab, alongside
+  a Search tab (WWDC26, "Design intuitive search experiences", with Apple Music's library as the
+  example).
+- **Cancel** shows beside the field while it's focused, as on every iOS search field. It clears the
+  typed text and ends the search, and keeps the tokens. Whether `searchable` keeps the tokens on
+  Cancel is to be confirmed on a device; if it doesn't, the app keeps the chosen tags itself.
+- **Choose tags.** Typing suggests matching tags. Tap one, or press Return to take the first match,
+  and it becomes a **token** inside the field.
+- **Remove tags** the way a search field's tokens are removed: tap a token to select it, then press
+  Delete. In an empty field, Delete selects the last token, and a second Delete removes it. The
+  field's clear button (`xmark.circle.fill`) removes the text and every token. That the clear button
+  also removes tokens is to be confirmed on a device.
+- **Tokens are the system's**, so their size and look are too. The mockup's are an approximation.
+- **The tags stay visible.** Under the results, **Add a Tag** lists the tags not chosen yet, so
+  adding one doesn't depend on typing. Apple warns that tokens "can also be less discoverable. So
+  don't use them to replace more visible filtering UI" (the same WWDC26 session).
 - **Match All Tags or Any Tag.** Once two or more tags are chosen, a segmented control appears.
   **All Tags** is the default and shows reminders that have every chosen tag. **Any Tag** shows
   reminders with at least one.
@@ -151,7 +194,7 @@ The made-up data has seven tags: `#appointments`, `#health`, `#home`, `#money`, 
 
 **Before you choose any tags,** the tab lists every tag. Each row shows how many reminders have
 that tag, how many are due today, and how many are nudging (in red). The footer says how many
-reminders have no tags.
+reminders have no tags. Tapping a row adds that tag as a token.
 
 **Edit** (in the navigation bar) switches the list to **Rename** and **Delete** for each tag.
 - **Rename** opens a sheet. A name that's already used shows an error.
@@ -195,10 +238,25 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
 
 | Nudge | Arrives as | Actions |
 |---|---|---|
-| Normal urgency | Notification (a Focus holds it) | **Done**, **Snooze** (while snoozes are left), **Dismiss** |
+| Normal urgency | Notification (a Focus holds it) | **Done**, **Snooze** (while snoozes are left) |
 | High urgency | Time Sensitive notification (gets through Focus). An ordinary one if Time Sensitive is off. | as above |
-| Urgent (Firm and Relentless, from nudge 4) | AlarmKit alarm | **Stop** (counts as Done), **Snooze** (while snoozes are left) |
-| Urgent, with alarms not allowed | Time Sensitive notification, marked "Notification: alarms are off" | as above |
+| Urgent (Firm and Relentless, from nudge 4), iOS 26 and later | AlarmKit alarm | **Stop** (counts as Done), **Snooze** (while snoozes are left) |
+| Urgent, with alarms not allowed | Time Sensitive notification, marked "Notification: alarms are off" | **Done**, **Snooze** |
+| Urgent, iOS 18 | Notification chain: a Time Sensitive notification every minute, up to 10, marked "Notification chain" | **Done**, **Snooze** |
+
+- **There's no Dismiss action.** The system's own **Clear** (swipe left on a notification) already
+  does that. The app hears about it through its notification category's `customDismissAction`
+  option, and the history records "Notification cleared (still nudging)". Flicking a banner away
+  doesn't tell the app, so that isn't recorded. The mockup's Lock Screen has **Clear**, and its
+  banners have **Flick it away** to show the difference.
+- **The notification looks as iOS 15 and later draw it:** the app's icon, the title in bold beside
+  the time, and the body under them. "Time Sensitive" heads High and Urgent nudges. There's no row
+  with the app's name in capitals: with a title, the icon says which app it is. The layout is an
+  approximation, to compare with a screenshot from a device.
+- **On iOS 18, Urgent nudges come as a chain.** When an occurrence reaches Urgent, a Time Sensitive
+  notification comes every minute, up to 10, until **Done** or **Snooze**. Silent mode can mute
+  them. There's no alarm permission, no Alarms row in Settings, and onboarding says "Urgent nudges
+  keep coming" instead of "ring as alarms".
 
 - **Gentle** reminders never reach Urgent, so they never ring an alarm.
 - **Normal nudges aren't Time Sensitive,** so the app doesn't wear out the person's trust in its
@@ -221,8 +279,7 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
   - It doesn't raise the level, and the snoozed time doesn't count toward the time limit.
   - Each occurrence can be snoozed 3 times. Then Snooze disappears from the card, the notification
     and the alarm, and the card says "No snoozes left. Only Done stops it."
-- **Dismiss** clears only the notification. The next nudge still comes on time, and the history
-  records "Notification cleared (still nudging)".
+- **Clear** clears only the notification. The next nudge still comes on time.
 - If **alarms** are turned off in iOS Settings, Now and Settings show a banner, and Urgent nudges come
   as notifications, which silent mode can mute. If **notifications** are off, a red banner says
   that only Urgent nudges can reach you, as alarms (or that nothing can, if alarms are off too).
@@ -275,23 +332,65 @@ These are not part of the app:
 - **Next Urgent nudge** shows the alarm for the next reminder whose next nudge is Urgent. In landscape
   it rings over the app, as it does on an iPhone that's in use. **Snooze**
   shows the Live Activity, and **Unlock** returns to the app. Press it several times to use up the
-  snoozes and see the alarm with only **Stop**.
+  snoozes and see the alarm with only **Stop**. On iOS 18 it shows the first notification of the
+  chain instead.
 - **First launch** shows onboarding and the permission prompts.
+- **iOS version** switches between iOS 18, 26 and 27 (see [iOS versions](#ios-versions)).
 - **Screen size** switches the phone between the screen sizes, in points, of the iPhones that run
   iOS 18 or later, from iPhone SE (375 × 667) to iPhone 17 Pro Max (440 × 956). The iPhone XS, XS
-  Max and XR are included: they stop at iOS 18, and share their sizes with later models. The top of
-  the screen matches each one: the Dynamic Island, a notch, or a Home button. The phone is scaled
-  down, never up, to fit the window.
+  Max and XR stop at iOS 18, so they're listed on their own, and choosing one locks the iOS version
+  to 18. The top of the screen matches each one: the Dynamic Island, a notch, or a Home button. The
+  phone is scaled down, never up, to fit the window.
+- **Window (iOS 27)** shows the app in a resizable window, as in iPhone Mirroring or as an iPhone
+  app on iPad, at any width from 320 to 1,024 pt (see [iOS versions](#ios-versions)).
 - **Orientation** turns the phone between **Portrait** and **Landscape** (see
   [Landscape](#landscape)). The screen you're on stays open. On a phone it's turned off, because
   the app fills the real screen.
 - **Permissions** (notifications, alarms and Time Sensitive), **24-Hour Time**, **Appearance**, **Text Size** (all 12 Dynamic Type sizes),
   **Bold Text**, **Increase Contrast**, **Reduce Transparency** and **Assistive Access** stand in
-  for iOS Settings.
+  for iOS Settings. **Alarms allowed** is off on iOS 18, which has no AlarmKit.
 - **Reset the mockup** restores the data.
 
 The clock is fixed at Monday 28 Sep 2026, 8:20 AM. A snooze pushes the next nudge later, but the
 clock doesn't move.
+
+## iOS versions
+
+The app supports iOS 18 and later. It uses the system's own components (`TabView`, `NavigationStack`, `List`, sheets, `confirmationDialog`, `searchable`), so
+each version draws them its own way. The **iOS version** mockup control shows the differences.
+
+| | iOS 18 | iOS 26 | iOS 27 |
+|---|---|---|---|
+| Bars, tab bar and sheets | iOS 18's own: a full-width tab bar with Search as a fifth tab, a navigation bar that takes the bar material once content is under it, solid sheet bars | Liquid Glass: a floating tab bar with a Search circle, glass bar buttons, scroll edge effects, sheet bars with no background | As iOS 26 |
+| Sheet buttons | **Cancel**, **Add**, **Save**, **Done** as words | `xmark` and `checkmark` circles (the `.cancel` and `.confirm` roles) | As iOS 26 |
+| Back | Chevron and the previous title | Chevron only, in a glass circle | As iOS 26 |
+| Section headers | Capitals | Title case | Title case |
+| Confirming a delete | Action sheet at the bottom, with **Cancel** | Dialog that grows out of its button, no **Cancel** | As iOS 26 |
+| Urgent nudges | Notification chain | AlarmKit alarm | AlarmKit alarm |
+| Alarm permission, Alarms row in Settings | None | Yes | Yes |
+| Landscape | Full tab bar; My Day's date in the content | Shrinking tab bar; My Day's date as a subtitle | As iOS 26 |
+| Resizable window | No | No | Yes (mockup control) |
+
+- **Unselected tabs on iOS 18** use the secondary label color, set with `UITabBarAppearance` on
+  iOS 18 only. iOS 18's default gray is about 3:1. On iOS 26 the app leaves the tab bar's
+  appearance alone, because custom bar appearances interfere with Liquid Glass.
+- **iOS 27's resizable window.** On iOS 27 an iPhone app can be resized, in iPhone Mirroring or as
+  an iPhone app on iPad. The layout follows the window's width, never the iPhone model: content
+  keeps a readable width (about 672 pt at Large), a nudge card 540 pt or wider puts **Done** and
+  **Snooze** beside its text, and the app stays one column. In a window 700 pt or wider, sheets are
+  a centered card. How iOS 27 places the tab bar and sheets in a window is an approximation.
+- **Also new in iOS 27, and not used:** a navigation bar that hides while you scroll
+  (`toolbarMinimizeBehavior`), swipe actions outside `List` (the app's swipe actions are on `List`
+  rows, which work from iOS 15), and the Liquid Glass tint setting, which the system applies to the
+  app's glass without any code.
+- **Confirmed in Apple's documentation:** iOS 26's confirmation dialog has no **Cancel** when it's
+  attached to its button (WWDC25, "Build a UIKit app with the new design"); the Tags field's place
+  under the title, and **Cancel** beside a focused search field (WWDC26, "Design intuitive search
+  experiences"); and that iOS 18's unselected tab color can be set (`UITabBarItemAppearance.normal`).
+- **To check on a device,** because the documentation doesn't say: each version's bars and sheets
+  against the mockup; that the search field's clear button removes tokens, and that Cancel keeps
+  them; what iOS 26's Search tab shows to end a search; the notification's layout; the selected
+  tab's contrast; and iOS 26's alerts, which the mockup draws in the iOS 18 style on every version.
 
 ## Landscape
 
@@ -313,40 +412,30 @@ the left, and the iPhone SE's Home button is on the right.
 - **A compact tab bar.** It's still a floating glass capsule at the bottom, sized to its tabs and
   centered, with each symbol beside its title (`compactInline`). Search is a glass circle beside
   it, and on the Search tab the field takes the free width, up to 480 pt.
-- **The tab bar shrinks while you scroll down** (iOS 26's `tabBarMinimizeBehavior(.onScrollDown)`),
-  to give back about 50 pt of height. Only the current tab stays, as a glass circle at the leading
+- **The tab bar shrinks while you scroll down** on iOS 26 and later
+  (`tabBarMinimizeBehavior(.onScrollDown)`), to give back about 50 pt of height. iOS 18 keeps its
+  full tab bar, with each symbol beside its title. Only the current tab stays, as a glass circle at the leading
   edge, with Search at the trailing edge. Scrolling up, or tapping the current tab, brings it back,
   and keyboard focus does too. Search doesn't shrink, because it holds the search field. Portrait
   is unchanged.
-- **My Day's header is shorter.** The date becomes a subtitle under the inline title (iOS 26's
-  `navigationSubtitle`), and **Filter** becomes a glass button in the navigation bar. While the
+- **My Day's header is shorter** on iOS 26 and later. The date becomes a subtitle under the inline
+  title (`navigationSubtitle`), and **Filter** becomes a glass button in the navigation bar. On
+  iOS 18, which has no `navigationSubtitle`, the date and Filter stay in the content. While the
   filter is on, the button shows how many tags are chosen, in the accent color. The four counts
   become a row of capsules, still with the chosen count's fill and ring, and two columns at the
   accessibility sizes. Together these show about two more reminders.
 - **Wide nudge cards put Done and Snooze beside the text.** This depends on the card's width
   (540 pt or more), not on the orientation, so a card in a narrow column stays stacked. At the
   accessibility sizes it always stacks. A card is about 60 pt shorter this way.
-- **A split view on the larger iPhones.** The iPhones 414 pt wide or more (XR, 11, and the Plus,
-  Max and Air models) are regular width in landscape, so Tags, Search and Settings show two
-  columns, as `NavigationSplitView` does:
-  - **Tags and Search:** the list on the left (320 pt) and the chosen reminder on the right, without
-    a Back button. The chosen row has a fill and `aria-current`. Choosing another reminder replaces
-    the one shown, and the list keeps its place. With nothing chosen, the right column says
-    **No Reminder Selected**.
-  - **Settings:** its six sections as a list on the left, the chosen section on the right, starting
-    with Nudges. In portrait they're still one page.
-  - Each column scrolls on its own and has its own bar. Only the list column shrinks the tab bar.
-  - Rows in the list column leave out the strength badge and chevrons. The details beside them
-    show the strength, and choosing a row doesn't move to another screen.
-  - Turning to portrait collapses the split view into a navigation stack, so a chosen reminder
-    shows with **Back**. Now and My Day stay one column, and the smaller iPhones never split.
-
-  This is the layout the [addendum](../../product/addendum.md) proposes for iPad, so the iPad
-  design should start from it. The iPhone Air is assumed to be regular width in landscape, like the
-  other iPhones 414 pt wide or more; that's still to confirm on a device.
+- **One column on every iPhone.** There's no split view in v1, even on the larger iPhones that are
+  regular width in landscape: the app uses `NavigationStack`, not `NavigationSplitView`, so it
+  stays one column in landscape and in a wide iOS 27 window too. A split view comes with iPad, in
+  v2 (see the [addendum](../../product/addendum.md)). The previous mockup's split view is in the
+  [archive](../archive/2026-09-30-mockup-tags-v1/README.md#landscape).
 - **Sheets fill the screen,** as page sheets do in compact height, and their content keeps the
-  readable width. Alerts stay centered and scroll if they're taller than the screen. Action sheets
-  keep their portrait width, centered at the bottom.
+  readable width. Alerts stay centered and scroll if they're taller than the screen. On iOS 26,
+  confirmation dialogs grow out of their button, as in portrait. On iOS 18, action sheets keep
+  their portrait width, centered at the bottom.
 - **Nudges arrive over the app.** Someone using the app in landscape has the iPhone unlocked, so
   nudges don't appear on the Lock Screen:
   - **The alarm** is AlarmKit's alert as iOS shows it while the iPhone is in use. In portrait that's
@@ -356,16 +445,18 @@ the left, and the iPhone SE's Home button is on the right.
     system's **Stop**. Snooze returns to the app, and the nudge card says when it rings again.
     Where and how iOS draws this alert in landscape is an approximation, still to confirm on a
     device.
-  - **The notification** is a banner at the top center. Tap it to see **Done**,
-    **Snooze** and **Dismiss**, which on an iPhone come from a long press.
+  - **The notification** is a banner at the top center. Tap it to see **Done** and
+    **Snooze**, which on an iPhone come from a long press. **Flick it away** hides the banner
+    without telling the app.
   - The banners are about as wide as the screen in portrait. At the accessibility sizes the alarm
     scrolls rather than clip.
   - The Lock Screen itself doesn't rotate on an iPhone, so it's shown only in portrait.
 - **Everything else is unchanged:** the colors, text styles, materials, 44 pt targets and the
   layouts for accessibility sizes.
 
-**How it was checked:** in headless Chrome, in landscape on the iPhone SE, a notched iPhone and two
-Dynamic Island sizes:
+**How it was checked** (before the 2026-10-02 UX review; see [How it was checked](#how-it-was-checked)
+for what was checked after it): in headless Chrome, in landscape on the iPhone SE, a notched iPhone
+and two Dynamic Island sizes:
 - Now, My Day, Tags (browsing and filtered), Search with results, New Reminder, reminder details,
   the Delete action sheet, and My Day at AX3
 - every button, heading and list on those screens is inside the safe areas, and nothing scrolls
@@ -384,17 +475,13 @@ filtered), Settings, reminder details, New Reminder and Filter My Day:
   in portrait
 - the tab bar's glass shapes are 10 pt apart, as in portrait
 
-The shrinking tab bar, My Day's header, the wide nudge cards and the split view were then checked
-on a compact-width iPhone (393 pt) and a regular-width one (440 pt):
-- the tab bar shrinks on scrolling down and comes back on scrolling up or tapping its tab; putting a
-  column back at its old position doesn't shrink it
-- the split view appears only on the regular-width iPhone, and only on Tags, Search and Settings
-- choosing reminders and Settings sections, and the Quiet Hours switch in the detail column
-- the notification banner's Done, Snooze and Dismiss, and the test nudge's Close; the alarm banner's
-  Snooze and Stop, with Snooze gone after the third snooze; portrait still shows the Lock Screen
-- turning to portrait with a reminder chosen shows it with Back, and portrait looks as before
-- the size audit above, repeated on both iPhones, including both split views: no clipped text, no
-  overlapping bar items, and buttons at least 44 pt
+The shrinking tab bar, My Day's header and the wide nudge cards were then checked on a 393 pt and
+a 440 pt iPhone:
+- the tab bar shrinks on scrolling down and comes back on scrolling up or tapping its tab
+- the alarm banner's Snooze and Stop, with Snooze gone after the third snooze, and the test nudge's
+  Close; portrait still shows the Lock Screen
+- the size audit above, repeated on both iPhones: no clipped text, no overlapping bar items, and
+  buttons at least 44 pt
 - the console has no errors
 
 ## Icons
@@ -409,7 +496,7 @@ it names. The real app uses the symbols themselves.
   | Action | Symbol |
   |---|---|
   | Done | `checkmark` |
-  | Dismiss, remove a tag from the filter | `xmark` |
+  | Cancel (iOS 26 sheets), remove a tag from My Day's filter | `xmark` |
   | Delete | `trash` |
   | New reminder, add a tag to the filter | `plus` |
   | Filter | `line.3.horizontal.decrease` |
@@ -418,7 +505,8 @@ it names. The real app uses the symbols themselves.
   | Alarms | `alarm` |
   | My Day | `calendar` |
 
-- **Other icons use the nearest SF Symbol:** `bell`, `tag` and `gearshape` for tabs;
+- **Other icons use the nearest SF Symbol:** `xmark.circle.fill` for the search field's clear
+  button; `bell`, `tag` and `gearshape` for tabs;
   `chevron.backward` and `chevron.right`; `moon.fill` for quiet hours and `arrow.up` for "starts
   higher"; `arrow.uturn.backward` for Not Done; `pause`, `play` and `clock`; `bell.slash` for a nudge that can't arrive because
   notifications are off; `exclamationmark.triangle`, `lock`, `info.circle`, `mic` and
@@ -434,8 +522,8 @@ it names. The real app uses the symbols themselves.
   navigation bar symbols are fixed, like their titles.
 - **No separate selected versions.** The selected tab only changes color, which is what the system
   does.
-- **Text labels.** Every icon-only button has one ("New Reminder", "Delete #home"). The + on a tag
-  row reads "add to filter". Decorative icons, such as tag tiles, are hidden from screen readers.
+- **Text labels.** Every icon-only button has one ("New Reminder", "Delete #home", "Clear"). The +
+  on a tag row reads "add to filter". Decorative icons, such as tag tiles, are hidden from screen readers.
 
 ## Typography
 
@@ -452,7 +540,7 @@ is in `docs/apple/design/`).
   | Large Title, bold | 34 pt | Screen titles, the welcome screen |
   | Title 1, bold | 28 pt | The alarm's reminder title |
   | Title 2, bold | 22 pt | Reminder title in details, My Day counts |
-  | Title 3 | 20 pt | Section title "Nudging" (semibold), action sheet buttons, steppers, Lock Screen date |
+  | Title 3 | 20 pt | Section title "Nudging" (semibold), iOS 18's action sheet buttons, steppers, Lock Screen date |
   | Headline | 17 pt semibold | Navigation titles, nudge card titles, alert titles |
   | Body | 17 pt | Row titles, buttons, notification actions |
   | Subhead | 15 pt | Row details, statuses, notifications, tokens, small buttons |
@@ -469,7 +557,10 @@ is in `docs/apple/design/`).
   Semibold and Bold only. **Bold Text** steps every weight up one level.
 - **Layouts that adapt at large sizes (AX1 to AX5):**
   - Rows stack: the time, the title and the trailing detail each get their own line.
-  - Segmented controls (Strength, Frequency, Match) list their options vertically.
+  - Segmented controls (Strength, Frequency, Match) become menus: a row with the label and the
+    chosen option, as SwiftUI's `Picker` with the `.menu` style. A segmented control stays on one
+    line and would cut off "Relentless", and iOS has no segmented control that stacks its options.
+    The app switches when `dynamicTypeSize.isAccessibilitySize` is true.
   - History events wrap under their time.
   - The day's four counts become two columns.
   - Text wraps; nothing is cut off with "…". The reminder **Title** field wraps onto more lines.
@@ -477,7 +568,8 @@ is in `docs/apple/design/`).
   default size (17 pt) at every text size, so they never crowd each other. People use the Large
   Content Viewer instead. Large titles are content and scale. The status bar, Lock Screen clock and
   alarm clock are fixed too.
-- **Short placeholders.** The Tags tab's field says "Find a tag" or "Add a tag", which fit at AX3.
+- **Short placeholders.** The Tags tab's field says "Find a tag", which fits at AX3. Once it holds
+  tokens it has no placeholder.
 
 **How it was checked:** in headless Chrome, all 12 Dynamic Type sizes with Bold Text off and on
 (24 combinations), on 17 screens:
@@ -546,22 +638,34 @@ use values:
 - **Text** in a status color uses slightly darker (light mode) or lighter (dark mode) versions of
   the same hues, because several default system colors are below 4.5:1 as text.
 - The accent is the app's own color set, with light, dark and Increased Contrast values.
-- **The selected tab's title** has its own shade of the accent (`--tab-selected`), so it reaches
-  4.5:1 (7:1 with Increase Contrast) on the tab's translucent pill:
+- **The selected tab's title is the accent.** On iOS 26 the system draws the selected tab from the
+  TabView's tint, and the app can't color its label on its own: a different tint on the TabView
+  would carry into every screen. So the mockup uses the accent, as the app will. Measured on the
+  mockup's pill, which approximates the system's:
 
-  | Appearance | `--tab-selected` | On the pill |
-  |---|---|---|
-  | Light | the accent (`#0064D2`) | 4.5:1 or more |
-  | Light, Increase Contrast | `#0032B3` | 7.1:1 |
-  | Dark | `#74B7FF` | 4.6:1 or more |
-  | Dark, Increase Contrast | `#D8ECFF` | 7.1:1 |
+  | Appearance | Accent | On the pill | Target |
+  |---|---|---|---|
+  | Light | `#0064D2` | 4.5:1 or more | 4.5:1 |
+  | Light, Increase Contrast | `#0036C0` | 6.5:1 | 7:1 |
+  | Dark | `#409CFF` | 3.9:1 | 4.5:1 |
+  | Dark, Increase Contrast | `#8CC8FF` | 4.8:1 | 7:1 |
+
+  Three of the four fall short on the mockup's pill. The system's pill may differ, so this is to
+  measure on a device. If it falls short there too, the fix is a lighter dark accent (and a darker
+  Increased Contrast one), which changes the accent everywhere.
+- **Search tokens** sit on their own fill (`--token-fill`: white, or near-black in dark mode), which
+  keeps their accent text at 4.5:1 or more. A selected token is filled with the accent.
+- **Swipe actions** use tile colors, which keep white text at 4.5:1: green (`--tile-green`) for
+  **Done**, the color of done, and blue (`--tile-blue`) for **Snooze**, the color of something
+  tappable.
 
 **Not color alone.** Every status has words as well as a color, such as "Nudging", "Urgent",
 "Missed" and "Done". Strength shows its name and bars. The chosen count has a fill, a ring and
 `aria-pressed`, and "Showing only Left" says it in words.
 
-**How it was checked:** in headless Chrome, on the same 17 screens, in all 8 combinations of light
-and dark, Increase Contrast and Reduce Transparency:
+**How it was checked** (before the 2026-10-02 UX review; see [How it was checked](#how-it-was-checked)
+for after it): in headless Chrome, on the same 17 screens, in all 8 combinations of light and dark,
+Increase Contrast and Reduce Transparency:
 - **A contrast audit** measured every visible piece of text against the background actually
   behind it, with translucent layers combined. All text reaches 4.5:1, or 7:1 with Increase
   Contrast. The only exceptions are disabled controls (**Add** with no tag typed, and a stepper at
@@ -620,18 +724,25 @@ local copy is in `docs/apple/design/`), and WCAG 2.1 AA:
 **Mobility**
 - **Target size.** Buttons are at least 44 pt tall, apart from the iOS switch, stepper, segmented
   control and menus, which are at least 28 pt and sit in 44 pt rows. A reminder's row or card is its
-  tap target, and its Done button keeps its own action.
+  tap target, and its Done button keeps its own action. The system's own small controls keep their
+  sizes: search tokens, the search field's clear button, and iOS 18's tab bar in landscape (32 pt).
 - **Spacing.** Controls with a visible shape are 12 pt apart, such as Done and Snooze on nudge
   cards, tokens, and Rename and Delete in Edit mode.
-- **No gestures needed.** Every action is a button. There are no swipe actions.
+- **No gestures needed.** Every action is a button. Swipe actions on nudging rows and cards
+  (**Done** and **Snooze**) are shortcuts for buttons the row already shows, so VoiceOver, Voice
+  Control and the keyboard use those buttons. In the app, SwiftUI's `swipeActions` also appear in
+  VoiceOver's Actions rotor.
 - **Voice Control.** Every control's name includes its visible label ("Remove #home from the
-  filter", "Rename #home").
-- **Siri and Shortcuts.** "Mark my nudge done", "Snooze my nudge" and "What's nudging me?", from
-  Siri, the Action button or a Home Screen shortcut.
+  filter" on My Day, "Rename #home"). On the Tags tab, a token is removed by selecting it ("Tap
+  #home") and then saying "Delete", or with the field's **Clear** button.
+- **Siri and Shortcuts.** From the Action button, a Home Screen shortcut, or Siri. Apple requires
+  every App Shortcut phrase to include the app's name, so the phrases are "Mark my Nudge-inator nudge
+  done", "Snooze Nudge-inator" and "What's nudging me in Nudge-inator?"
 
 **Speech**
 - **Keyboard alone.** Every control can be reached with Tab and used with Enter or Space. Return
-  chooses the first matching tag or adds a new one, and Escape closes a sheet or alert.
+  chooses the first matching tag or adds a new one, Delete removes a selected token, Tab reaches a
+  focused search field's **Cancel**, and Escape closes a sheet, alert or confirmation dialog.
 
 **Cognitive**
 - **Nothing on a timer.** Status messages stay until your next tap or key press.
@@ -685,7 +796,11 @@ is in `docs/apple/design/`):
   - The large title scrolls away with the content, and the **inline title** fades in once it's
     gone. The large title stays the screen's heading for VoiceOver.
   - A gentler edge effect fades content under the floating tab bar.
-  - Sheets keep solid bars, because their content scrolls inside the sheet, not under the bar.
+  - Sheets work the same way: their bar has no background, and the sheet's content scrolls under
+    its glass buttons behind an edge effect. iOS 26 makes a full-height sheet opaque, so the edge
+    effect fades into the sheet's own background.
+  - On iOS 18 there's no glass: the navigation bar takes the bar material, with a hairline, once
+    content is under it, and sheets have solid bars.
 - **System materials stay system.** Alerts, action sheets and the Lock Screen notification keep
   their standard blurred materials. Full-height sheets are opaque, as iOS's large sheets are.
 - **Accessibility settings.** Reduce Transparency makes every material, glass surface and edge
@@ -705,9 +820,23 @@ The questions this mockup raised are settled in the
   occurrence takes over, quiet hours stop the clock and a reminder can ignore them, give-up limits
   have a minimum per strength, changes while nudging apply from the next nudge, Not Done reopens a
   done occurrence, and Export Data is a readable record, not a backup.
+- **Decided in the UX review of 2026-10-02, so the mockup shows only what the app can build on
+  iOS 18, 26 and 27:**
+  1. The mockup shows iOS 18, 26 and 27, and the iOS 18-only iPhones lock it to iOS 18.
+  2. Each version's own look: title-case headers and dialogs from their button on iOS 26; capitals
+     and bottom action sheets on iOS 18; sheet bars with no background on iOS 26.
+  3. Menus instead of segmented controls at the accessibility sizes.
+  4. The Tags tab's chosen tags are tokens in its search field.
+  5. No Dismiss action on notifications: the system's Clear does that.
+  6. Siri phrases include the app's name.
+  7. Notifications drawn as iOS 15 and later draw them.
+  8. Layout follows the width, not the iPhone model, ready for iOS 27's resizable windows.
+  9. One column on every iPhone: the split view waits for iPad (v2).
+  10. Swipe actions for Done and Snooze, as shortcuts.
+  11. The selected tab uses the accent, as the system draws it.
 - **Left to check on a device:** the navigation bars at large text sizes (the system's own
-  behavior, as shown here), the selected tab's color in dark mode with Increase Contrast, and
-  reminders with many tags.
+  behavior, as shown here), the selected tab's contrast on its pill (see [Color](#color)), reminders
+  with many tags, and the items listed under [iOS versions](#ios-versions).
 
 ## How it was checked
 
@@ -771,6 +900,42 @@ Not Done and alarms off, Now, the form for a Gentle reminder, for a nudging remi
 and for a takeover, and Settings with the quiet-hours error. Nothing is clipped, cut off with "…"
 or scrolls sideways.
 
-The typography, contrast, accessibility and materials checks above were run on the final version,
-apart from the AlarmKit corrections, the Normal-nudge wording and the 2026-10-02 nudging rules,
-which were checked as described in the previous paragraphs.
+The typography, contrast, accessibility and materials checks above were run on the version before
+the 2026-10-02 UX review, apart from the AlarmKit corrections, the Normal-nudge wording and the
+2026-10-02 nudging rules, which were checked as described in the previous paragraphs.
+
+**After the 2026-10-02 UX review,** these checks were run in headless Chrome on this version:
+- **The nine steps above,** on iOS 18 and iOS 26, with the Tags tab's tokens in its field. All
+  passed, and the console had no errors.
+- **The new behavior,** with 31 assertions, all passing:
+  - tokens: added by tap and by Return, selected by tap, removed with Delete, cleared with the
+    clear button
+  - iOS 18: the chain notification with Done and Snooze, recorded in the history; no Alarms row
+    and no alarm prompt
+  - Clear is recorded and a flicked banner isn't
+  - the iOS 26 dialog shows only Delete and cancels on a tap outside it
+  - swiping right snoozes, swiping left marks done, and taps still work after a swipe
+  - Strength and Frequency are menus at AX2 and segmented at Large
+  - the XR locks iOS 18 and the iPhone 11 doesn't; the window works only on iOS 27
+  - the Siri phrase includes the app's name
+- **A layout audit,** 540 checks: iOS 18, 26 and 27; the iPhone SE and the 440 pt iPhone; portrait
+  and landscape; Large and AX5; Bold Text off and on; ten screens (Now, My Day filtered, Tags with
+  three tokens, Search, Settings, details, the form, Custom repeat, Filter My Day and the Delete
+  dialog). Plus iOS 27 windows 320, 600 and 1,024 pt wide, at Large and AX5. Nothing sticks out past
+  the screen, nothing is cut off with "…", navigation bar items don't overlap, and enabled buttons
+  are at least 44 pt, apart from the system's small controls listed under
+  [Accessibility](#accessibility).
+- **axe-core** (WCAG 2.0 and 2.1, A and AA) on nine screens, on iOS 18, 26 and 27, in light and
+  dark, with Increase Contrast off and on, at Large and AX3: no violations.
+- **A contrast audit** of the same screens: all text reaches 4.5:1, or 7:1 with Increase Contrast,
+  apart from the selected tab's title on iOS 26 and 27 (see [Color](#color)). The Lock Screen
+  wasn't measured, because the audit skips text over gradients.
+- **Cancel and the visible tag list,** 11 assertions, all passing: Cancel shows only while a field
+  is focused, on the Tags tab and iOS 18's Search tab; it clears the text, keeps the tokens and ends
+  focus; Tab reaches it and Enter presses it; **Add a Tag** lists the tags not chosen and adds them.
+  At AX5 on the iPhone SE, Cancel wraps under the field and stays on screen. The nine steps, the 31
+  assertions, the layout audit, axe-core and the contrast audit above were run again after this
+  change, with the same results.
+- **Screenshots checked by eye:** iOS 18's bars, tab bar (portrait and landscape), sheet and
+  action sheet; iOS 26's dialogs growing from their buttons and its sheet bar; the notification and
+  the iOS 18 chain; tokens; menus at AX3; a swipe; and windows 420 and 900 pt wide.
