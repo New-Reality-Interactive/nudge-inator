@@ -10,7 +10,7 @@ find reminders by **filtering on one or more tags**.
 - **Urgent nudges** ring as **AlarmKit alarms** on iOS 26 and later: a prominent system alert on the
   Lock Screen, sounding through silent mode and Focus, with **Snooze** and the system's **Stop**,
   which counts as Done. iOS 18 has no AlarmKit, so there they repeat as a **chain of Time Sensitive
-  notifications**.
+  notifications**, and so do they on iOS 26 and later when alarms aren't allowed.
 
 Open [`index.html`](index.html) in a browser. It's a single file with no dependencies. On a desktop
 it shows a phone with **Mockup controls** beside it, in portrait or landscape. On a phone the app
@@ -53,7 +53,7 @@ including the ones decided on 2026-10-02.
   Normal nudges at High, so they get through a Focus. Its intervals, and when it reaches Urgent,
   don't change, so Relentless, which starts at High, has none. It doesn't stack. Skipped
   occurrences neither use it nor clear it, and pausing clears it.
-- **Editing:** a repeat rule the form can't express is kept as it is ("Keep: …"). While a reminder
+- **Editing:** every repeat rule can be shown and edited in the form. While a reminder
   is nudging, the form says when each change applies (see [Screens](#screens)).
 - **Privacy:** notifications show the title and the nudge count and urgency ("Nudge 3 of 20 ·
   High"), and alarms only the title. The alarm shows the app's name; a notification shows the app's
@@ -110,7 +110,11 @@ and **Cancel**, **Add**, **Save** and **Done** as words.
   - The **Title** wraps onto more lines as you type. Return doesn't add a line.
   - **Tags** opens a page with a **New Tag** field and a checklist of your tags.
   - **Repeat** opens a picker page: Never, Every Day, Every Weekday, Every Week, Every 2 Weeks,
-    Every Month, Every Year, or Custom (frequency, interval and weekdays).
+    Every Month, Every Year, or Custom (frequency, interval, weekdays, and one or more times of
+    day, so a reminder can repeat several times a day).
+  - **Time Zone** is **Follow iPhone** by default, or a chosen zone the reminder stays in.
+  - **Snooze Length** is a menu under Strength: the strength's default, or a longer 5, 10, 15 or
+    30 minutes. Choosing a gentler strength raises a shorter length to its default.
   - **Strength** is a segmented control. At the accessibility sizes it's a menu instead (see
     [Typography](#typography)), as are Custom's **Frequency** and the tag filters' **Match**.
   - **Give Up** uses a stepper for the number of nudges and a menu for the time, neither going
@@ -241,8 +245,9 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
 | Normal urgency | Notification (a Focus holds it) | **Done**, **Snooze** (while snoozes are left) |
 | High urgency | Time Sensitive notification (gets through Focus). An ordinary one if Time Sensitive is off. | as above |
 | Urgent (Firm and Relentless, from nudge 4), iOS 26 and later | AlarmKit alarm | **Stop** (counts as Done), **Snooze** (while snoozes are left) |
-| Urgent, with alarms not allowed | Time Sensitive notification, marked "Notification: alarms are off" | **Done**, **Snooze** |
-| Urgent, iOS 18 | Notification chain: a Time Sensitive notification every minute, up to 10, marked "Notification chain" | **Done**, **Snooze** |
+| Urgent, with alarms not allowed | Notification chain, as on iOS 18, marked "Notification chain: alarms are off" | **Done**, **Snooze** |
+| Urgent, past the system's alarm limit | Time Sensitive notification, marked "Notification: too many alarms scheduled" | **Done**, **Snooze** |
+| Urgent, iOS 18 | Notification chain: each time the occurrence enters Urgent, a Time Sensitive notification at once and then every minute, 10 in all, marked "Notification chain" | **Done**, **Snooze** |
 
 - **There's no Dismiss action.** The system's own **Clear** (swipe left on a notification) already
   does that. The app hears about it through its notification category's `customDismissAction`
@@ -253,8 +258,10 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
   the time, and the body under them. "Time Sensitive" heads High and Urgent nudges. There's no row
   with the app's name in capitals: with a title, the icon says which app it is. The layout is an
   approximation, to compare with a screenshot from a device.
-- **On iOS 18, Urgent nudges come as a chain.** When an occurrence reaches Urgent, a Time Sensitive
-  notification comes every minute, up to 10, until **Done** or **Snooze**. Silent mode can mute
+- **On iOS 18, Urgent nudges come as a chain.** Each time an occurrence enters Urgent (its first
+  Urgent nudge, the end of quiet hours or of a snooze, and Not Done), a Time Sensitive notification
+  comes at once and then every minute, 10 in all, until **Done** or **Snooze**. The strength's
+  Urgent nudges inside a chain still count, but aren't sent separately (brief §4). Silent mode can mute
   them. There's no alarm permission, no Alarms row in Settings, and onboarding says "Urgent nudges
   keep coming" instead of "ring as alarms".
 
@@ -271,17 +278,21 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
   Focus every notification waits.
 - **Done** is the only way to close an occurrence as done. The give-up limit, the next
   occurrence, Pause, Delete and some edits also stop the nudging, and quiet hours hold it. However
-  an occurrence closes, its pending notifications and alarms are cancelled.
+  an occurrence closes, nothing more is sent for it, and its pending notifications and alarms are
+  cancelled the next time the app runs (no app code runs when a nudge arrives).
 - **Weaker fallbacks show.** With alarms off, nudging cards and How It Nudges mark each Urgent
-  nudge as "Notification: alarms are off" ("alarms and Time Sensitive are off" if both are), and
+  nudge as "Notification chain: alarms are off" ("alarms and Time Sensitive are off" if both are), and
   the New Reminder summary says how Urgent nudges come instead.
-- **Snooze** waits a fixed time set by the strength: Gentle 30 minutes, Firm 15, Relentless 5.
+- **Snooze** waits the reminder's snooze length. It starts at the strength's default (Gentle 30
+  minutes, Firm 15, Relentless 5), and the form's **Snooze Length** menu can make it longer (5, 10,
+  15 or 30 minutes, where that's longer than the default). Pay rent in the made-up data snoozes for
+  15 minutes, though it's Relentless.
   - It doesn't raise the level, and the snoozed time doesn't count toward the time limit.
   - Each occurrence can be snoozed 3 times. Then Snooze disappears from the card, the notification
     and the alarm, and the card says "No snoozes left. Only Done stops it."
 - **Clear** clears only the notification. The next nudge still comes on time.
 - If **alarms** are turned off in iOS Settings, Now and Settings show a banner, and Urgent nudges come
-  as notifications, which silent mode can mute. If **notifications** are off, a red banner says
+  as a notification chain, which silent mode can mute. If **notifications** are off, a red banner says
   that only Urgent nudges can reach you, as alarms (or that nothing can, if alarms are off too).
   Nudging cards and How It Nudges mark each nudge that can't arrive as **Notifications off**, with
   `bell.slash`, in red.
@@ -293,7 +304,7 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
   appears over the app, in the Dynamic Island (see [Landscape](#landscape)). It also appears in
   StandBy and on a paired Apple Watch. The app supplies only:
   - the title: the reminder's title
-  - the secondary button: **Snooze 15 min** (the strength's length) with `clock`, filled with the
+  - the secondary button: **Snooze 15 min** (the reminder's snooze length) with `clock`, filled with the
     tint color. It's left off once the occurrence has no snoozes left (see below).
   - the tint color: the app's accent, in its dark variant (`#07DDE6`, with black text), since the
     alarm is always on a dark screen
@@ -310,7 +321,7 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
   widget extension. Before the first unlock after a restart, iOS shows its own countdown instead,
   from the alarm's countdown presentation.
 - **The alarm that rings again keeps its buttons,** so the third Snooze can't simply remove Snooze
-  from it. On the third snooze, the app's snooze intent cancels that alarm and schedules a new one
+  from it. On the third snooze, once its snooze intent has run, the app cancels that alarm and schedules a new one
   for the end of the snooze, without Snooze. Each snooze also moves the occurrence's later alarms,
   so none ring during the snooze.
 
@@ -385,7 +396,7 @@ each version draws them its own way. The **iOS version** mockup control shows th
 | Back | Chevron and the previous title | Chevron only, in a glass circle | As iOS 26 |
 | Section headers | Capitals | Title case | Title case |
 | Confirming a delete | Action sheet at the bottom, with **Cancel** | Dialog that grows out of its button, no **Cancel** | As iOS 26 |
-| Urgent nudges | Notification chain | AlarmKit alarm | AlarmKit alarm |
+| Urgent nudges | Notification chain | AlarmKit alarm (the chain if alarms aren't allowed) | As iOS 26 |
 | Alarm permission, Alarms row in Settings | None | Yes | Yes |
 | Landscape | Full tab bar; My Day's date in the content | Shrinking tab bar; My Day's date as a subtitle | As iOS 26 |
 | Resizable window | No | No | Yes (mockup control) |
@@ -913,7 +924,8 @@ no errors:
 - lowering a nudging reminder's limit below its nudges warns, then closes it as skipped
 - How It Nudges shows **Next one due** when a repeat's next occurrence comes first
 - Settings refuses quiet hours that start and end at the same time, and says why
-- with alarms off, Urgent nudges are marked "Notification: alarms are off"
+- with alarms off, Urgent nudges are marked "Notification: alarms are off" (since 2026-10-03,
+  "Notification chain: alarms are off"; see below)
 - the notification's header says "Time Sensitive" for a High nudge but not for a Normal one
 - with Time Sensitive off: the banner on Now, the Settings row, High nudges marked "Notification:
   Time Sensitive is off", and the Focus sentence in How It Nudges
@@ -974,3 +986,17 @@ the 2026-10-02 UX review, apart from the AlarmKit corrections, the Normal-nudge 
 - **Screenshots checked by eye:** iOS 18's bars, tab bar (portrait and landscape), sheet and
   action sheet; iOS 26's dialogs growing from their buttons and its sheet bar; the notification and
   the iOS 18 chain; tokens; menus at AX3; a swipe; and windows 420 and 900 pt wide.
+
+**After the architecture decisions of 2026-10-03,** these changes were checked in headless Chrome,
+with no console errors:
+- the form's **Time Zone** menu starts at **Follow iPhone**, and the details show it
+- **Repeat** has no "Keep: …" option; on **Custom**, **Add a Time** adds a time, typing one updates
+  the summary ("Every day at 9:00 AM, 12:00 PM and 3:30 PM"), and **Remove** takes it away
+- Stretch break opens as Custom, every day at 10:00 AM, 2:00 PM and 4:00 PM, and My Day lists all
+  three
+- with alarms off on iOS 26, the banner says Urgent nudges come as a chain, and Urgent nudges are
+  marked "Notification chain: alarms are off"
+- **Snooze Length:** a new Firm reminder offers 15 and 30 min, starting at 15; a Relentless one
+  offers 5, 10, 15 and 30 min; switching to Gentle raises the length to 30 min and says why; Pay
+  rent (Relentless) snoozes for 15 min; and each nudge card's Snooze button shows its own
+  reminder's length. The notification, alarm, Live Activity and history read the same length.
