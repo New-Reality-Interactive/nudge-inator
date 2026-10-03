@@ -1963,13 +1963,15 @@ function viewRem(id) {
     ${pauseRow(r)}
     <li><button type="button" class="cell destructive" data-delete="${r.id}">${I("trash", 20)} Delete Reminder</button></li>
   </ul>
-  ${undone || r.status === "ACTIVE" ? `<p class="sec-f">${undone ? `Not Done reopens the one marked done ${dayPhrase(L(undone.closedAt))} at ${hm(L(undone.closedAt))}, until the next one is due. ` : ""}${r.status === "ACTIVE" ? PAUSE_NOTE : ""}</p>` : ""}</div>`;
+  ${undone || r.status === "ACTIVE" ? `<p class="sec-f">${undone ? `Not Done reopens the one marked done ${dayPhrase(L(undone.closedAt))} at ${hm(L(undone.closedAt))}, ${r.rrule ? "until the next one is due" : "for 24 hours"}. ` : ""}${r.status === "ACTIVE" ? PAUSE_NOTE : ""}</p>` : ""}</div>`;
 }
 /* Not Done is offered on the reminder's latest occurrence while it's done, until the next one falls
-   due. The alarm's Stop counts as Done and can't be labelled, so this is how to take it back. */
+   due, or for 24 hours after Done on a one-off. Pausing ends it. The alarm's Stop counts as Done and
+   can't be labelled, so this is how to take it back. */
 function latestDone(r) {
   const last = occsOf(r.id)[0];
   if (r.status === "PAUSED" || last?.state !== "ACKED") return null;
+  if (!r.rrule) return NOW - L(last.closedAt) < 864e5 ? last : null;
   return r.nextOccurrenceAt && L(r.nextOccurrenceAt) <= NOW ? null : last;
 }
 /* A reminder's tags in its details. Each one opens the Tags tab filtered by that tag. */

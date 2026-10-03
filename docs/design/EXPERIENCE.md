@@ -445,7 +445,7 @@ Visual only; decorative, hidden from VoiceOver.
 | State | Treatment |
 |---|---|
 | No history | "No occurrences yet. The first one is created when it falls due." |
-| Latest occurrence done | **Not Done** shows until the next occurrence falls due. |
+| Latest occurrence done | **Not Done** shows until the next occurrence falls due, or for 24 hours after Done on a one-off. It's hidden once the reminder is paused. |
 | Paused | **Resume**, with the note "Pausing stops the nudging and clears any carry-over. Anything due while it's paused is skipped, not missed." |
 | Delete | Confirmation: "Delete "Pay rent"?" / "This deletes its history too, and cancels any nudges and alarms." |
 | Deleted while open (a notification action got there first) | "This reminder was deleted.", with Back |

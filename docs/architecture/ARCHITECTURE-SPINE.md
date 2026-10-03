@@ -96,7 +96,7 @@ graph TD
 - **Prevents:** racing commands, reconciles undoing each other, double closes, half-applied changes
 - **Rule:**
   - **One queue:** the `Coordinator` in `NudgeShell` owns a single serial job queue (one consumer of an `AsyncStream`). Each job runs to completion, including its awaits, before the next starts. There are two job kinds.
-  - **Command job:** `NudgeCore.accepts(command, facts, at: command.issuedAt)` decides whether the command applies. Not Done applies to the latest done occurrence until the next due instant. If it applies, the job writes the resulting events in one transaction, then reconciles. A command naming a valid projected occurrence key materializes it (AD-8). A command that doesn't apply writes nothing.
+  - **Command job:** `NudgeCore.accepts(command, facts, at: command.issuedAt)` decides whether the command applies. Not Done applies to the latest done occurrence until the next due instant, or for 24 hours after Done on a one-off, and not after a pause (brief §3). If it applies, the job writes the resulting events in one transaction, then reconciles. A command naming a valid projected occurrence key materializes it (AD-8). A command that doesn't apply writes nothing.
   - **Reconcile job:** triggers enqueue one, and several pending ones coalesce. A reconcile writes only bookkeeping: materialized occurrences, ledger rows, capability state, zone facts and pruning.
   - **Write access:** `NudgeStore`'s write API is `package` access, used only by the `Coordinator`. Views, intents and the widget can't write.
 
