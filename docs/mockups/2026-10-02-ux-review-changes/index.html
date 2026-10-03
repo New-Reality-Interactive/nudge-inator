@@ -1315,8 +1315,7 @@ const tagsOf = (r) => sortTags(r.tagIds.map(tagById).filter(Boolean));
 function tagLine(r, hl = []) {
   return tagsOf(r).map((t) => (hl.includes(t.id) ? `<mark>#${esc(t.name)}</mark>` : `#${esc(t.name)}`)).join(" ");
 }
-/* Tag names are one word: no leading "#", spaces become hyphens. */
-/* A tag name: one leading # dropped, spaces to hyphens, at most 30 characters, no hyphen at either end. */
+/* Tag-name rules: brief §3, Limits and defaults, "Tag name". */
 const cleanTag = (s) => s.trim().replace(/^#/, "").replace(/\s+/g, "-").slice(0, 30).replace(/^-+|-+$/g, "");
 /* The field takes 30 visible characters; a typed leading # is the 31st. */
 const capTagField = (t) => { const max = t.value.startsWith("#") ? 31 : 30; if (t.value.length > max) t.value = t.value.slice(0, max); };
