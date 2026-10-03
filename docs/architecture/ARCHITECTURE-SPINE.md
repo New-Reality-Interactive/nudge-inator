@@ -22,10 +22,9 @@ companions: []
 
 # Architecture Spine — Nudge-inator
 
-Precedence: the nudging rules are owned by [brief §3–§4 and §10](../product/brief.md); behavior and
-looks by [EXPERIENCE.md](../design/EXPERIENCE.md) and [DESIGN.md](../design/DESIGN.md); technical
-decisions by this spine. The full order is set once, in the
-[brief's introduction](../product/brief.md). Reasons for each decision are in
+Precedence: [brief §3, §4 and §10](../product/brief.md), then this spine, then
+[EXPERIENCE.md](../design/EXPERIENCE.md) and [DESIGN.md](../design/DESIGN.md), then the mockup (set
+once, in the [brief's introduction](../product/brief.md)). Reasons for each decision are in
 [.memlog.md](.memlog.md); the log explains decisions and doesn't override any spine.
 
 ## Design Paradigm
