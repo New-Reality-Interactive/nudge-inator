@@ -1918,7 +1918,8 @@ const EVENT_TEXT = {
   NUDGE_SENT: (d) => `Nudge ${d.attempt} · ${URGENCY[d.priority]} · ${d.via === "chain" ? "notification chain" : d.priority === 5 && d.via !== "notification" ? "alarm" : "notification"}`,
   SNOOZED: (d) => `Snoozed ${d.minutes} min (${plural(d.left, "snooze")} left)`,
   DISMISSED: () => "Notification cleared (still nudging)",
-  ACKED: (d) => (d.from === "alarm" ? "Done (alarm stopped)" : d.from ? `Done from the ${d.from}` : "Done"),
+  // One string per Done source (EXPERIENCE › Voice and Tone, AD-3 `source`).
+  ACKED: (d) => ({ alarm: "Done (alarm stopped)", liveActivity: "Done from the Lock Screen", notification: "Done from the notification", siri: "Done with Siri", assistiveAccess: "Done in Assistive Access" })[d.from] ?? "Done",
   MISSED: (d) => closedWhy(d.reason, "MISSED"),
   SKIPPED: (d) => closedWhy(d.reason, "SKIPPED"),
   REOPENED: () => "Marked not done (nudging again)",
@@ -3122,7 +3123,7 @@ const CLICK = {
     state.system = { kind: "activity", occId: s.occId, title: s.title, until: o.snoozedUntil, mins: snoozeOf(remById(o.reminderId)) };
     state.focus = "system"; render();
   },
-  activityDone: () => { ack(state.system.occId, "alarm"); state.system = null; nav(); },
+  activityDone: () => { ack(state.system.occId, "liveActivity"); state.system = null; nav(); },
   lockClose: () => {
     state.system = null;
     if (!state.stacks[state.tab].length) state.tab = "now";
