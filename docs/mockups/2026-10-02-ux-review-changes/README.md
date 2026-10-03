@@ -45,6 +45,8 @@ mockup yet. Build them from the spines:
 - **Settings › How Nudges Work**
 - Assistive Access's **Done today** list with **Not done yet**
 - the "Done with Siri" history line (the mockup doesn't simulate Siri)
+- the one extra nudge after Not Done on an occurrence that had used its give-up limit (Done only,
+  no Snooze); no sample occurrence reaches its limit before Not Done
 - the alarm permission prompt on the first launch after an update from iOS 18 (the mockup doesn't
   simulate an OS update)
 - the **keep-nudging** notice

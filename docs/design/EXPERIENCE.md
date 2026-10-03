@@ -411,7 +411,7 @@ Visual only; decorative, hidden from VoiceOver.
 | Time Sensitive off, iOS 18 (also Settings) | Orange banner: "Time Sensitive is off. High and Urgent nudges come as ordinary notifications, so a Focus can hold them." |
 | Alarm limit reached (also Reminder details) | The Via label of the affected nudges reads "Notification: too many alarms scheduled". |
 | Snoozed (also Reminder details) | The card says "Snoozed until 8:35 AM, then …", and the snoozes left update. |
-| No snoozes left (also Reminder details) | Snooze is removed from the card, notification and alarm. Footer: "No snoozes left. Only Done stops it." |
+| No snoozes left, or the one extra nudge after Not Done at the limit (also Reminder details) | Snooze is removed from the card, notification and alarm. Footer: "No snoozes left. Only Done stops it." |
 | Carry-over (also Reminder details) | "↑ Starts higher" on the card and the Coming Up row |
 | Closed by an alarm's Stop (also My Day) | The row reads "Done (alarm stopped)" with **Not Done** while Not Done applies ([brief §3](../product/brief.md#3-product-concepts)). |
 
