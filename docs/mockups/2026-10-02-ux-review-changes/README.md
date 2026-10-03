@@ -823,9 +823,10 @@ phone's on-screen scale taken out:
 - every control's name contains its visible label
 - every control can be reached by keyboard
 - each filter change and search is announced with its result
-- **axe-core** (WCAG 2.0 and 2.1, A and AA) found no violations, in light and dark. The WCAG 2.2
-  additions (such as 2.4.11 Focus Not Obscured and 3.2.6 Consistent Help) weren't part of these
-  runs; they're covered by EXPERIENCE.md's device release gate.
+- **axe-core** (WCAG 2.0, 2.1 and 2.2, A and AA) found no violations, in light and dark. Of the
+  WCAG 2.2 additions, axe checks only 2.5.8 Target Size (Minimum); the rest (such as 2.4.11 Focus
+  Not Obscured and 3.2.6 Consistent Help) can't be checked automatically and are covered by
+  EXPERIENCE.md's device release gate.
 
 **Known gaps:** iOS form fields are borderless, as in the Settings app, so they have no 3:1
 borders. The app will need testing with Accessibility Inspector, VoiceOver, Voice Control and
@@ -984,9 +985,12 @@ the 2026-10-02 UX review, apart from the AlarmKit corrections, the Normal-nudge 
   the screen, nothing is cut off with "…", navigation bar items don't overlap, and enabled buttons
   are at least 44 pt, apart from the system's small controls listed under
   [Accessibility](#accessibility).
-- **axe-core** (WCAG 2.0 and 2.1, A and AA) on nine screens, on iOS 18, 26 and 27, in light and
-  dark, with Increase Contrast off and on, at Large and AX3: no violations. These runs didn't
-  include the WCAG 2.2 additions (see [Accessibility](#accessibility)).
+- **axe-core 4.13** (WCAG 2.0, 2.1 and 2.2, A and AA) on nine screens (Now, My Day, Tags, Search,
+  Settings, Reminder details, New Reminder, Welcome, Filter My Day), on iOS 18, 26 and 27, in light
+  and dark, with Increase Contrast off and on, at Large and AX3: 216 runs, no violations. Re-run on
+  2026-10-03 after the cross-doc review changes; a planted unlabeled button and image were flagged,
+  so the runs do detect violations. The only automated WCAG 2.2 rule is 2.5.8 Target Size; the
+  other 2.2 additions are covered by the device release gate (see [Accessibility](#accessibility)).
 - **A contrast audit** of the same screens: all text reaches 4.5:1, or 7:1 with Increase Contrast,
   apart from the selected tab's title on iOS 26 and 27 with the earlier blue accent (see [Color](#color)). The Lagoon accent passes there in the color study; the full audit hasn't been re-run with it. The Lock Screen
   wasn't measured, because the audit skips text over gradients.
