@@ -2275,6 +2275,8 @@ function updateReminder(r, fields) {
     if (r.status === "COMPLETED" && n) r.status = "ACTIVE";
   }
   if (closes && !r.rrule && !r.nextOccurrenceAt) r.status = "COMPLETED";
+  // A paused reminder has no next time until Resume (brief §3, Pause).
+  if (r.status === "PAUSED") r.nextOccurrenceAt = null;
   hud(closes ? "Changes saved. This one closed as skipped." : "Changes saved");
   return r;
 }
