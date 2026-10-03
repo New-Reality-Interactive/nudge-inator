@@ -151,23 +151,27 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
   the alarm can't say **Done**. Stopping still runs the app's `stopIntent`.
 - **Buttons run the app's code.** An alarm is configured with a `stopIntent` and a `secondaryIntent`,
   both `LiveActivityIntent`s. Their `perform()` runs without opening the app unless
-  `openAppWhenRun` is set. Stop closes the occurrence as done and cancels the rest of its alarms
-  there. The secondary intent "is only available after first unlock", so a Snooze before the first
+  `openAppWhenRun` is set. The intents only record a command (Done or Snooze); the app's reconciler
+  does the rest, such as cancelling the occurrence's other alarms after Stop (architecture spine,
+  AD-12). The one exception is before the first unlock (AD-16). The secondary intent "is only available after first unlock", so a Snooze before the first
   unlock after a restart isn't seen by the app until it next runs.
 - **Snooze can be the system's countdown.** A secondary button with the `.countdown` behavior and a
   post-alert duration (`Alarm.CountdownDuration`'s `postAlert`) makes the system alert again after
   that time. That matches the reminder's snooze length (the strength's default or longer).
   - The alarm that rings again uses the presentation it was scheduled with, so it still has Snooze.
-    On the third snooze, once the snooze intent has run, the app cancels that alarm and schedules a
-    new one for the end of the snooze, with no secondary button, and the remaining alarms are
+    On the third snooze, once the snooze command is recorded, the reconciler cancels that alarm and
+    schedules a new one for the end of the snooze, with no secondary button, and the remaining alarms are
     scheduled without it.
   - The occurrence's later alarms are separate alarms, so each snooze has to move them past the
     snooze. Otherwise, for example, a Relentless alarm 2 minutes later would ring during a 5-minute
     snooze.
   - The system's countdown rings again whatever has happened meanwhile, and no app code runs when
     it does. So if the snooze would end after the next occurrence takes over, or inside quiet hours
-    for a reminder that doesn't ignore them, the app cancels the countdown once the snooze intent
-    has run, and schedules a fixed alarm at the right time, or none.
+    for a reminder that doesn't ignore them, the reconciler cancels the countdown once the snooze
+    command is recorded, and schedules a fixed alarm at the right time, or none.
+  - If a device shows that cancelling an alarm during its countdown fails, the snooze button
+    switches to the `.custom` behavior: the intent runs, and the app's own alarm replaces the
+    countdown (AD-12's fallback).
 - **Countdowns are Live Activities.** The countdown and paused states appear as a Live Activity, set
   up in a widget extension, as in the sample. Nudge-inator needs that extension even without Home
   Screen widgets. Apple warns that without it "the system may unexpectedly dismiss alarms and fail

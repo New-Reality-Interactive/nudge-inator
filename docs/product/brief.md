@@ -158,11 +158,12 @@ TestFlight. It's released on the App Store once the success measures are met (se
   the top center. That's an approximation, to confirm on a device (see [§10](#10-risks-and-decisions)).
   The alarm also shows in StandBy.
 - A paired **Apple Watch** shows the alarm too. The system does this, so it needs no Watch app.
-- **Stopping an alarm is confirmed.** People stop alarms by reflex, and Stop counts as Done. So the
-  stop intent sends an ordinary notification at once: "Marked done: Blood-pressure pill. Not done
-  yet?", with **Not Done**. Not Done stops working on it once the next occurrence falls due, and the
-  app removes it the next time it runs after that, or at once when Not Done is used. Stopping the
-  alarm on a paired Watch does the same.
+- **Stopping an alarm is confirmed.** People stop alarms by reflex, and Stop counts as Done. So
+  stopping the alarm marks it done, and the app sends an ordinary notification at once: "Marked
+  done: Blood-pressure pill. Not done yet?", with **Not Done**. (The stop intent only records Done;
+  the app's reconciler sends the notification. See the architecture spine, AD-12.) Not Done stops
+  working on it once the next occurrence falls due, and the app removes it the next time it runs
+  after that, or at once when Not Done is used. Stopping the alarm on a paired Watch does the same.
 - **The notification chain** (iOS 18, and whenever alarms aren't allowed) starts each time an
   occurrence enters Urgent: its first Urgent nudge, the end of quiet hours, the end of a snooze, and
   Not Done. It sends a Time Sensitive notification at once and then every minute, 10 in all.
@@ -355,9 +356,10 @@ format would have to stay compatible from version to version.
 - **Normal nudges held by a Focus.** Watch in TestFlight whether testers on Gentle or Firm miss
   first nudges during a Focus.
 - **Stop and Snooze on an alarm when the app isn't running.** AlarmKit runs the app's own App
-  Intents for an alarm's buttons without opening the app, which is how it cancels the remaining
-  alarms, moves them after a snooze and enforces the 3-snooze limit. Confirm this still works after
-  the app has been force-quit.
+  Intents for an alarm's buttons without opening the app. The intents only record Done or Snooze;
+  the app's reconciler then cancels the remaining alarms, moves them after a snooze and enforces
+  the 3-snooze limit (architecture spine, AD-12). Confirm this still works after the app has been
+  force-quit.
 - **Snooze before the first unlock.** After a restart, the alarm can ring before the device has
   been unlocked. Snooze still counts down, but Apple says the app's snooze intent only runs after
   the first unlock, so the snooze isn't counted and the later alarms aren't moved. The app
@@ -528,7 +530,9 @@ maps each one to its decisions under "Capability → Architecture Map".
     knows an action came from an occurrence that has already closed.
 12. What format Export Data uses (the mockup shows a JSON file), so the record can be read without
     the app.
-13. How the alarm's stop intent sends the Done follow-up notification without opening the app, and
-    how that notification is removed when the next occurrence falls due.
+13. How the Done follow-up notification is sent without opening the app, and how it's removed when
+    the next occurrence falls due. (Sending is answered in the architecture spine: the stop intent
+    only records Done and the reconciler sends the follow-up, AD-12; before the first unlock the
+    intent posts it itself, AD-16.)
 14. Whether My Day's and the Tags tab's filters survive a relaunch. (Answered: they're restored
     after iOS ends the app in the background, and reset when the person closes it.)
