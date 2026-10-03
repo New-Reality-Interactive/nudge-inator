@@ -1316,9 +1316,10 @@ function tagLine(r, hl = []) {
   return tagsOf(r).map((t) => (hl.includes(t.id) ? `<mark>#${esc(t.name)}</mark>` : `#${esc(t.name)}`)).join(" ");
 }
 /* Tag-name rules: brief §3, Limits and defaults, "Tag name". */
-const cleanTag = (s) => s.trim().replace(/^#/, "").replace(/\s+/g, "-").slice(0, 30).replace(/^-+|-+$/g, "");
-/* The field takes 30 visible characters; a typed leading # is the 31st. */
-const capTagField = (t) => { const max = t.value.startsWith("#") ? 31 : 30; if (t.value.length > max) t.value = t.value.slice(0, max); };
+// Slices by whole characters, so an emoji is never cut in half.
+const cleanTag = (s) => Array.from(s.trim().replace(/^#/, "").replace(/\s+/g, "-")).slice(0, 30).join("").replace(/^-+|-+$/g, "");
+/* A typed leading # is dropped at once, so the field's own 30-character limit counts only the name. */
+const dropTagHash = (t) => { if (!t.value.startsWith("#")) return; const p = Math.max(0, (t.selectionStart ?? 1) - 1); t.value = t.value.slice(1); t.setSelectionRange(p, p); };
 const sameName = (a, b) => a.toLowerCase() === b.toLowerCase();
 /* Whether a reminder passes the tag filter: it has all of the tags, or any of them. */
 function matchesTags(r, ids, match) {
@@ -2239,7 +2240,7 @@ function editorTags(sh) {
   const pick = (t) => { const on = x.tagIds.includes(t.id); return `<li><button type="button" class="cell" role="checkbox" aria-checked="${on}" data-tagpick="${t.id}"><span class="main">#${esc(t.name)}</span>${on ? CHECK : ""}</button></li>`; };
   return `${sheetNav(sheetBack("main", "Back"), "Tags", "")}
   <div class="sheet-body" tabindex="-1">
-    <div class="sec"><ul class="list"><li><div class="formrow"><input class="plain-input" id="f-newtag" maxlength="31" placeholder="New Tag" aria-label="New tag" aria-describedby="f-newtag-h" value="${esc(sh.newTag)}" autocomplete="off" autocapitalize="none" enterkeyhint="done">
+    <div class="sec"><ul class="list"><li><div class="formrow"><input class="plain-input" id="f-newtag" maxlength="30" placeholder="New Tag" aria-label="New tag" aria-describedby="f-newtag-h" value="${esc(sh.newTag)}" autocomplete="off" autocapitalize="none" enterkeyhint="done">
       <button type="button" class="btn bordered small" data-addtag ${cleanTag(sh.newTag) ? "" : "disabled"}>Add</button></div></li></ul>
     <p class="sec-f" id="f-newtag-h">One word. Spaces become hyphens. A reminder can have as many tags as you like.</p></div>
     <h3 class="sec-h">Your Tags</h3>
@@ -2357,7 +2358,7 @@ function tagSheet(sh) {
   return `${sheetNav(cancelButton(), "Rename Tag", done)}
   <div class="sheet-body" tabindex="-1">
     <div class="sec" style="text-align:center"><span class="ico round" style="width:84px;height:84px;margin:0 auto;background:var(--tile-gray)">${I("tag", 40)}</span></div>
-    <div class="sec"><ul class="list"><li><div class="formrow"><input class="plain-input" id="t-name" data-t="name" maxlength="31" placeholder="Tag Name" aria-label="Tag name" aria-describedby="t-name-h" value="${esc(sh.draft.name)}" autocomplete="off" autocapitalize="none" style="text-align:center;font-weight:var(--semibold)"></div></li></ul>
+    <div class="sec"><ul class="list"><li><div class="formrow"><input class="plain-input" id="t-name" data-t="name" maxlength="30" placeholder="Tag Name" aria-label="Tag name" aria-describedby="t-name-h" value="${esc(sh.draft.name)}" autocomplete="off" autocapitalize="none" style="text-align:center;font-weight:var(--semibold)"></div></li></ul>
     ${dup ? `<p class="errtext" role="alert">You already have a tag with this name.</p>` : ""}
     <p class="sec-f" id="t-name-h">One word. Spaces become hyphens. Every reminder with this tag gets the new name.</p></div>
   </div>`;
@@ -3229,7 +3230,7 @@ function onDraftField(t) {
   render();
 }
 function onTagField(t) {
-  capTagField(t);
+  dropTagHash(t);
   state.sheet.draft.name = t.value;
   const name = cleanTag(t.value), dup = tagNameTaken(state.sheet.id, name);
   const btn = document.querySelector("[data-tag-save]");
@@ -3251,7 +3252,7 @@ document.addEventListener("input", (e) => {
   } else if (t.dataset.t && state.sheet) onTagField(t);
   else if (t.id === "f-newtag" && state.sheet) {
     // Typing doesn't rebuild the field; only the Add button changes.
-    capTagField(t);
+    dropTagHash(t);
     state.sheet.newTag = t.value;
     document.querySelector("[data-addtag]").disabled = !cleanTag(t.value);
   } else if (t.name === "day-match" || t.name === "tag-match") {
