@@ -2059,6 +2059,12 @@ const PRESETS = [
   ["biweekly", "Every 2 Weeks"], ["monthly", "Every Month"], ["yearly", "Every Year"],
 ];
 const DURATIONS = [15, 30, 60, 120, 180, 240, 480, 720, 1440, 2880, 4320, 10080];
+/* A one-off can't be saved with a start time that has passed (brief §3, Edit), unless an edit
+   leaves its time as it was. */
+function pastOneOff(x) {
+  const r = state.sheet?.editId && remById(state.sheet.editId);
+  return x.repeat === "never" && L(x.dtstart) <= NOW && !(r && r.dtstart.slice(0, 16) === x.dtstart.slice(0, 16));
+}
 function ruleFor(x) {
   const d = L(x.dtstart);
   switch (x.repeat) {
@@ -2139,7 +2145,7 @@ function editorMain(sh) {
   const carry = editing && carriesOver({ ...r, strength: x.strength });
   const sum = nudgeSummary(x.strength, cap, carry, takeoverAfter({ dtstart: x.dtstart, rrule: ruleFor(x) }));
   const o = editing && openOccs().find((y) => y.reminderId === r.id);
-  const canSave = x.title.trim().length > 0;
+  const canSave = x.title.trim().length > 0 && !pastOneOff(x);
   const confirm = confirmButton("data-sheet-save", editing ? "Save" : "Add", canSave);
   // While it's nudging, the form says when each change applies, and warns when saving would close it.
   const closes = o && closesOnEdit(o, r, x.dtstart, cap);
@@ -2160,7 +2166,7 @@ function editorMain(sh) {
       <li><div class="formrow"><label for="f-dt">Starts</label><input type="datetime-local" class="pill-input" id="f-dt" data-f="dtstart" value="${esc(x.dtstart)}" aria-describedby="f-dt-h"></div></li>
       <li><button type="button" class="cell" data-sheet-page="repeat"><span class="main">Repeat</span><span class="trail">${esc(repeatLabel(x))}</span>${chev}</button></li>
       <li><div class="formrow"><label for="f-tz">Time Zone</label><select class="menu" id="f-tz" data-f="timezone">${["device", ...TZS].map((t) => `<option value="${t}" ${t === x.timezone ? "selected" : ""}>${esc(tzName(t))}</option>`).join("")}</select></div></li>
-    </ul><p class="sec-f" id="f-dt-h">${heldByQuiet(x, d) ? `<span class="note-quiet">${noteIcon("quiet")} During your quiet hours: the first nudge waits until ${hmOf(me.quietHours.end, d)}.</span>` : `${scheduleText({ dtstart: x.dtstart, rrule: ruleFor(x) })}.`}</p></div>
+    </ul>${pastOneOff(x) ? `<p class="errtext" role="alert">This time has passed. Choose a later time.</p>` : ""}<p class="sec-f" id="f-dt-h">${heldByQuiet(x, d) ? `<span class="note-quiet">${noteIcon("quiet")} During your quiet hours: the first nudge waits until ${hmOf(me.quietHours.end, d)}.</span>` : `${scheduleText({ dtstart: x.dtstart, rrule: ruleFor(x) })}.`}</p></div>
 
     <h3 class="sec-h" id="l-strength">Strength</h3>
     <div class="sec">${choiceRow("Strength", { id: "f-strength", name: "strength", labelId: "l-strength", attr: 'data-f="strength"', options: Object.keys(PROFILES).map((k) => [k, NAME[k]]), value: x.strength })}<p class="sec-f">${PROFILES[x.strength].blurb}</p></div>
@@ -2256,7 +2262,7 @@ function updateReminder(r, fields) {
   Object.assign(r, fields);
   if (closes) closeSkipped(o, "edited");
   if (scheduleChanged || r.status === "COMPLETED") {
-    const n = scheduleChanged ? dueAt(r) : nextOccurrence(r);
+    const n = nextOccurrence(r);
     r.nextOccurrenceAt = n ? iso(n) : null;
     if (r.status === "COMPLETED" && n) r.status = "ACTIVE";
   }
@@ -2285,11 +2291,9 @@ function countedMinutes(o, r) {
   }
   return n;
 }
-/* A one-off whose start time has passed falls due as soon as it's saved (brief §3, Edit). */
-const dueAt = (r) => nextOccurrence(r) ?? (!r.rrule && L(r.dtstart) <= NOW ? NOW : null);
 function createReminder(fields) {
   const r = { id: `r${Date.now()}`, ...fields, status: "ACTIVE" };
-  const n = dueAt(r);
+  const n = nextOccurrence(r);
   r.nextOccurrenceAt = n ? iso(n) : null;
   reminders.push(r);
   hud(`Added “${r.title}”`);
@@ -3189,7 +3193,7 @@ function onDraftField(t) {
   if (t.tagName === "TEXTAREA" || t.type === "text") {
     // Typing doesn't rebuild the field being typed in; only the Add button and its hint change.
     const btn = document.querySelector("[data-sheet-save]");
-    if (btn) btn.disabled = !x.title.trim();
+    if (btn) btn.disabled = !x.title.trim() || pastOneOff(x);
     const hint = document.getElementById("f-body-h");
     if (hint) hint.textContent = `${x.title.trim() ? "" : "Add a title to save. "}Notes and tags stay in the app. Notifications and alarms show the title, not these.`;
     return;
