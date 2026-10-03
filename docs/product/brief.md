@@ -18,8 +18,10 @@ was checked against Apple's Human Interface Guidelines. The app looks and behave
 It shows an iPhone in portrait and landscape, on iOS 18, 26 and 27, and draws only what the app can
 build with the system's components on each. The UX spines, [DESIGN.md](../design/DESIGN.md) (how it
 looks) and [EXPERIENCE.md](../design/EXPERIENCE.md) (how it works), build on the mockup and add what
-it doesn't show. Where they differ from the mockup, the spines win. The mockup follows the later decisions on how
-nudging works in [§10](#10-risks-and-decisions), and where they differ, §10 wins.
+it doesn't show. Where they differ from the mockup, the spines win. The nudging rules in
+[§3](#3-product-concepts), [§4](#4-how-nudges-reach-you) and [§10](#10-risks-and-decisions) win over
+the spines and the mockup; the spines own how the app looks and behaves around those rules. The
+technical decisions are in the [architecture spine](../architecture/ARCHITECTURE-SPINE.md).
 
 This brief replaces the earlier website-and-API brief. Detail that doesn't belong in the brief, such
 as what was removed and why, layout notes, a localization checklist and the TestFlight setup, is in the
@@ -38,8 +40,8 @@ fire, the moment passes and nothing follows up. Nudge-inator keeps nudging until
 
 Early nudges are notifications: ordinary ones at Normal urgency, and Time Sensitive ones, which get
 through Focus, at High. On iOS 26 and later, the final, Urgent nudges ring as
-**AlarmKit alarms**: prominent system alerts that sound through silent mode and Focus. On iOS 18, a minute-by-minute chain
-of notifications stands in. You organize reminders with **tags**, as many as each reminder needs,
+**AlarmKit alarms**: prominent system alerts that sound through silent mode and Focus. On iOS 18,
+and whenever alarms aren't allowed, a minute-by-minute chain of notifications stands in. You organize reminders with **tags**, as many as each reminder needs,
 and filter by one or more tags on the Tags tab and on My Day.
 
 The app runs entirely on the device: no sign-up, no data leaving the phone, and no running costs
@@ -68,13 +70,13 @@ TestFlight. It's released on the App Store once the success measures are met (se
 
 | Concept | Meaning |
 |---|---|
-| **Reminder** | Something to be nudged about: a title (required), optional notes (shown only in the app), any number of tags, a start time, a time zone, a repeat rule, a strength, a give-up limit and whether it ignores quiet hours. |
+| **Reminder** | Something to be nudged about: a title (required), optional notes (shown only in the app), any number of tags, a start time, a time zone (it follows the iPhone's time zone, the default, or stays in one chosen zone), a repeat rule (one of the form's presets, or Custom, which can repeat several times a day), a strength, a snooze length, a give-up limit and whether it ignores quiet hours. |
 | **Occurrence** | One time a reminder falls due. It's **coming up**, then **nudging**, then closes as **done**, **missed** or **skipped**. Each has an event history. A reminder has at most 1 open occurrence. When the next one falls due while the last is still open, the last closes as missed ("Missed: the next one took over") and the new one starts at nudge 1. |
 | **Nudge** | One alert sent while an occurrence is open: a notification or an alarm. |
 | **Strength** | Gentle, Firm or Relentless. It sets the intervals and how urgency rises (table below). |
 | **Urgency** | Normal, High or Urgent. It rises as nudges go unanswered and decides how a nudge arrives ([§4](#4-how-nudges-reach-you)). |
 | **Give-up limit** | After a number of nudges or a time, whichever comes first, the occurrence stops and counts as **missed**. Quiet hours and snoozed time don't count toward the time. The limit can't end an occurrence before its first High nudge, so each strength has a smallest limit. Choosing a gentler strength raises a lower limit to its minimum. Ranges, defaults and minimums are in the tables below. |
-| **Quiet hours** | A daily window, such as 10 PM to 7 AM, that stops every open occurrence's clock, as Snooze does. No nudges are sent, nothing escalates, no alarms ring and the time doesn't count toward the give-up limit. When it ends, the next nudge is sent at once (1 nudge, not a backlog), and the intervals carry on from it. An occurrence due during quiet hours sends nudge 1 then. Start and end can't be the same time. A reminder with **Ignore Quiet Hours** on nudges through them. |
+| **Quiet hours** | A daily window, such as 10 PM to 7 AM, in the iPhone's current time zone, that stops every open occurrence's clock, as Snooze does. No nudges are sent, nothing escalates, no alarms ring and the time doesn't count toward the give-up limit. When it ends, the next nudge is sent at once (1 nudge, not a backlog), and the intervals carry on from it. An occurrence due during quiet hours sends nudge 1 then. Start and end can't be the same time. A reminder with **Ignore Quiet Hours** on nudges through them. |
 | **Carry-over** | After a missed occurrence, the next one that nudges sends its Normal nudges at High ("↑ Starts higher"). Its intervals, and when it reaches Urgent, don't change, so Relentless, which starts at High, isn't affected. Carry-over doesn't stack. Skipped occurrences neither use it nor clear it, and pausing the reminder clears it. |
 | **Tag** | A one-word label shown as `#home`, with no color. A reminder can have any number of tags or none. Names are unique, ignoring case. |
 | **My Day** | Everything due today in time order, with Done, Nudging, Missed and Left counts. Filter by one or more tags (All or Any, or No Tags), and tap a count to show only that status. |
@@ -120,8 +122,9 @@ TestFlight. It's released on the App Store once the success measures are met (se
 |---|---|---|
 | Normal | **Notification** (`.active`) with **Done** and **Snooze**. A Focus holds it. | Same |
 | High | **Time Sensitive notification**, with the same actions. It gets through Focus. | Same |
-| Urgent (Firm and Relentless, from nudge 4) | **AlarmKit alarm**: a prominent system alert that rings and vibrates through silent mode and Focus, with **Snooze** and the system's **Stop**, which counts as Done | **Notification chain**: when the occurrence first reaches Urgent, a Time Sensitive notification every minute, up to 10. Then Urgent nudges follow the strength's interval. Silent mode can mute them. |
-| Urgent, with alarms not allowed | Time Sensitive notifications | n/a |
+| Urgent (Firm and Relentless, from nudge 4) | **AlarmKit alarm**: a prominent system alert that rings and vibrates through silent mode and Focus, with **Snooze** and the system's **Stop**, which counts as Done | **Notification chain**: each time the occurrence enters Urgent, a Time Sensitive notification at once and then every minute, 10 in all. Then Urgent nudges follow the strength's interval. Silent mode can mute them. |
+| Urgent, with alarms not allowed | **Notification chain**, as on iOS 18 | n/a |
+| Urgent, once the system's alarm limit is reached | A Time Sensitive notification for each nudge that couldn't get an alarm | n/a |
 
 - Gentle reminders never reach Urgent, so they never ring an alarm.
 - **During a Focus, Normal nudges wait.** A Gentle or Firm reminder's first nudges are held until it
@@ -145,22 +148,36 @@ TestFlight. It's released on the App Store once the success measures are met (se
 - A paired **Apple Watch** shows the alarm too. The system does this, so it needs no Watch app.
 - **Stopping an alarm is confirmed.** People stop alarms by reflex, and Stop counts as Done. So the
   stop intent sends an ordinary notification at once: "Marked done: Blood-pressure pill. Not done
-  yet?", with **Not Done**. It's removed when the next occurrence falls due, or when Not Done is
-  used. Stopping the alarm on a paired Watch does the same.
-- The iOS 18 chain repeats the current nudge. The repeats don't count toward the nudge
-  limit, but their time counts toward the time limit. Snooze or Done ends the chain. So does the
-  start of quiet hours. If the nudge sent when they end is Urgent, it starts a new chain.
+  yet?", with **Not Done**. Not Done stops working on it once the next occurrence falls due, and the
+  app removes it the next time it runs after that, or at once when Not Done is used. Stopping the
+  alarm on a paired Watch does the same.
+- **The notification chain** (iOS 18, and whenever alarms aren't allowed) starts each time an
+  occurrence enters Urgent: its first Urgent nudge, the end of quiet hours, the end of a snooze, and
+  Not Done. It sends a Time Sensitive notification at once and then every minute, 10 in all.
+  - The strength's Urgent nudges that fall inside a chain still count on schedule, so the nudge
+    count and the give-up time are the same as with alarms. They aren't sent as extra
+    notifications: the chain's notification for that minute shows the current nudge number.
+  - The repeats don't count toward the nudge limit, but their time counts toward the time limit.
+  - Snooze, Done or the start of quiet hours ends the chain.
 - **Quiet hours apply at once.** Changing them reschedules the nudges and alarms of every open and
   coming-up occurrence, and so does turning a reminder's **Ignore Quiet Hours** on or off. A
   reminder that ignores quiet hours can ring alarms at night.
-- **Closing an occurrence clears its nudges.** However it closes, its pending notifications, alarms
-  and Live Activity are cancelled, and its delivered notifications are removed. The Done follow-up
-  is the only exception. An action from a
-  notification, alarm or Live Activity whose occurrence has already closed does nothing.
+- **Closing an occurrence clears its nudges.** However it closes, nothing more is sent for it: the
+  app plans every nudge ahead, so the last one is the last one scheduled. Its pending notifications,
+  alarms and Live Activity are cancelled, and its delivered notifications are removed, as soon as
+  the app runs. When an occurrence closes on its own (at the give-up limit, or when the next one
+  takes over), the app isn't running, because no app code runs when a nudge arrives, so its
+  delivered notifications stay until the app next runs. The Done follow-up is the only exception.
+  An action from a notification, alarm or Live Activity whose occurrence has already closed does
+  nothing.
+- **A snooze never outlasts its occurrence.** If a snooze on an alarm would end after the next
+  occurrence takes over, or inside quiet hours for a reminder that doesn't ignore them, the app
+  replaces the system's countdown with an alarm at the right time, or none.
 - **When the system's limits are reached.** The app schedules within the limits in the table
   below, and tops up whenever it runs (see [§10](#10-risks-and-decisions) for what's still to
   confirm).
-- **Weaker fallbacks show.** An Urgent nudge that can't get an alarm comes as a Time Sensitive
+- **Weaker fallbacks show.** With alarms not allowed, Urgent nudges come as a notification chain;
+  an Urgent nudge that can't get an alarm because of the system's limit comes as a Time Sensitive
   notification. The nudging card and How It Nudges mark any nudge that arrives a weaker way than
   its urgency, and say why.
 - Snooze disappears from the card, the notification and the alarm once the occurrence has no
@@ -183,8 +200,8 @@ TestFlight. It's released on the App Store once the success measures are met (se
 | Limit | Value | How the app works within it |
 |---|---|---|
 | Pending notifications | 64 per app. iOS keeps the soonest 64 and drops the rest without an error. | Keeps its own count. Slots go first to nudge 1 of each coming-up occurrence, soonest first, then to the remaining nudges, soonest first. 1 slot is kept for an "Open Nudge-inator to keep nudging" notification, at the time its scheduled nudges run out. |
-| iOS 18 notification chain | Up to 10 pending at once | Counts toward the 64 |
-| Alarms | Not published. Scheduling fails with `maximumLimitReached`. | Slots go soonest first. An Urgent nudge that can't get an alarm comes as a Time Sensitive notification. |
+| Notification chain (iOS 18, or alarms not allowed) | Up to 10 pending at once | Counts toward the 64 |
+| Alarms | Not published. Scheduling fails with `maximumLimitReached`. | Slots go soonest first. The app remembers how many it could schedule and plans within that. An Urgent nudge that can't get an alarm comes as a Time Sensitive notification. |
 | Alarms per occurrence | Firm and Relentless: 17 at the default limit (nudges 4–20), up to 97 at the 100-nudge maximum | Counts toward the alarm limit |
 
 ## 5. Devices, orientations and iOS versions
@@ -247,8 +264,8 @@ the layout:
 | **Tags** | Your tags with counts. Find tags and choose one or more as tokens, then Match All or Any. Results in Today, Later, Paused and Completed. **Edit** renames or deletes tags (deleting keeps the reminders). |
 | **Search** | Every reminder by title, notes or tag, with recent searches. |
 | **Reminder details** | Nudging card, tags (tap to filter), schedule, How It Nudges, history (90 days), **Not Done** (on the latest done occurrence, until the next one falls due), **Pause/Resume**, **Delete** (confirmed), **Edit**. |
-| **New / Edit** | Title (wraps), notes, tags (choose or add), start, Repeat (presets and Custom), time zone, strength, snooze length, give-up limits (with a minimum per strength), **Ignore Quiet Hours**, and a live How It Nudges preview, which shows where a repeat's next occurrence takes over. While a reminder is nudging, Edit says when each change applies. Rules the form can't express are kept as they are. |
-| **Settings** | Notification and alarm status, Open iOS Settings, Send a Test Nudge. Quiet hours. Time zone (automatic or chosen). Siri & Shortcuts. Export Data (a readable record, not a backup) and Delete All Data. About and Accessibility. |
+| **New / Edit** | Title (wraps), notes, tags (choose or add), start, Repeat (presets and Custom, which can repeat several times a day), time zone (Follow iPhone or a chosen zone), strength, snooze length, give-up limits (with a minimum per strength), **Ignore Quiet Hours**, and a live How It Nudges preview, which shows where a repeat's next occurrence takes over. While a reminder is nudging, Edit says when each change applies. Every repeat rule can be shown and edited in the form. |
+| **Settings** | Notification and alarm status, Open iOS Settings, Send a Test Nudge. Quiet hours (in the iPhone's time zone). Time zone for new reminders (Follow iPhone or a chosen zone). Siri & Shortcuts. Export Data (a readable record, not a backup) and Delete All Data. About and Accessibility. |
 | **First launch** | Welcome, then the notification permission, then (on iOS 26 and later) the alarm permission. |
 | **Siri and Shortcuts** | "Mark my Nudge-inator nudge done", "Snooze Nudge-inator" and "What's nudging me in Nudge-inator?" (Apple requires the app's name in every App Shortcut phrase), from Siri, the Action button or a Home Screen shortcut. |
 | **Assistive Access** | One screen: what needs you now, with large Done and Snooze buttons; what's done today, with **Not done yet**; and what's later today. No editing, tags or settings. On iOS 26 and later it's an Assistive Access scene, drawn in the system's Assistive Access style. On iOS 18, where that scene doesn't exist, the app shows the same view full screen (`UISupportsFullScreenInAssistiveAccess`) when `isAssistiveAccessEnabled` is on. |
@@ -283,7 +300,7 @@ format would have to stay compatible from version to version.
   right-to-left languages. The person's own text (titles, notes, tag names) is never translated.
   The addendum has the full checklist.
 - **Private.** Reminders stay on the device. They're included in the person's iCloud or computer
-  backup, which is how they're restored. They can be exported as a readable record, or deleted.
+  backup, which is how they're restored. After a restore, nudging resumes once the app is opened. They can be exported as a readable record, or deleted.
   There are no analytics or trackers.
 - **Predictable and testable.** Given the reminders, their history and a clock, the nudges are
   fully determined, including quiet hours, daylight saving changes, Snooze, carry-over, overlapping
@@ -350,6 +367,12 @@ format would have to stay compatible from version to version.
   on iPhone.
 - **Losing the device loses the reminders,** unless it's restored from an iCloud or computer backup.
   Export Data is a readable record, not a backup: it can't be imported.
+- **Restoring a backup probably doesn't restore what's scheduled.** Pending notifications and
+  alarms seem to belong to the device, so a restored or new iPhone may not nudge until the app is
+  opened once; then it reschedules everything. Apple doesn't document this. Confirm on a device.
+- **Nothing runs when a nudge arrives.** The app plans every nudge ahead, so what it shows is
+  always right, but a closed occurrence's delivered notifications stay until the app next runs.
+  Background refresh helps, but isn't guaranteed.
 
 **Device checks that replace earlier questions:**
 - **Navigation bars at large text sizes.** The app uses the system's navigation bar as it is: large
@@ -440,9 +463,28 @@ iOS 18, 26 and 27:
 - **Urgency shows as a word and a glyph** on nudge cards, not just their color, because High's orange
   and Urgent's red are hard to tell apart.
 
+**Decided in the architecture (2026-10-03),** recorded in the
+[architecture decision log](../architecture/.memlog.md):
+- **The nudging rules live in one engine.** The preview, the scheduler, history and Siri all get
+  their answers from it, and it's tested with a fixed clock.
+- **A reminder follows the iPhone's time zone,** unless it's set to stay in a chosen zone. Quiet
+  hours always follow the iPhone.
+- **Repeat rules are only what the form can show.** "Keep: …" for rules the form can't express is
+  gone, since nothing on the device can create one. Custom can repeat several times a day.
+- **With alarms not allowed, Urgent nudges come as the notification chain,** as on iOS 18. Only a
+  nudge past the system's alarm limit comes as a single Time Sensitive notification.
+- **The chain starts each time an occurrence enters Urgent,** and covers the Urgent nudges inside
+  it (see [§4](#4-how-nudges-reach-you)).
+- **Done and Snooze work from the Lock Screen without Face ID,** as Stop does on an alarm.
+- **Filters on My Day and the Tags tab survive iOS closing the app in the background,** and reset
+  when the person closes the app.
+
 There are no open questions left in this brief.
 
 ## 11. Questions for the architecture
+
+All of these are answered in the [architecture spine](../architecture/ARCHITECTURE-SPINE.md), which
+maps each one to its decisions under "Capability → Architecture Map".
 
 1. SwiftUI, UIKit or both, and how the app adapts to landscape and to iOS 27's resizable windows
    (iPad's own layout is v2).
@@ -476,5 +518,5 @@ There are no open questions left in this brief.
     the app.
 13. How the alarm's stop intent sends the Done follow-up notification without opening the app, and
     how that notification is removed when the next occurrence falls due.
-14. Whether My Day's and the Tags tab's filters survive a relaunch (the UX spines assume they
-    don't).
+14. Whether My Day's and the Tags tab's filters survive a relaunch. (Answered: they're restored
+    after iOS ends the app in the background, and reset when the person closes it.)

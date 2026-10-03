@@ -6,10 +6,11 @@ updated: 2026-10-03
 # Product Brief Addendum: Nudge-inator
 
 Detail behind the [brief](brief.md) that later documents (PRD, UX, architecture) will need, but that
-doesn't belong in the brief itself. The rules in the brief come from the tags mockup: where they
-disagree, its `index.html` is the reference for behavior, and its README for reasons. The exception
-is the nudging rules decided on 2026-10-02 (brief §10). The mockup was updated to follow them, but
-where the two still differ, the brief wins.
+doesn't belong in the brief itself. The rules in the brief started from the tags mockup. Which
+document wins where they differ is set once, in the brief's introduction: the nudging rules in brief
+§3, §4 and §10 win, the UX spines own how the app looks and behaves around them, and the mockup
+comes last. Technical decisions are in the
+[architecture spine](../architecture/ARCHITECTURE-SPINE.md).
 
 ## A. What the earlier brief had that this one drops
 
@@ -35,7 +36,7 @@ The earlier brief was never committed, so this list is the only record of it.
 |---|---|---|---|
 | Normal nudges | Notification (`.active`), held by a Focus | Same | Same |
 | High nudges | Time Sensitive notification | Same | Same |
-| Urgent nudges | Notification chain (every minute, up to 10, then the strength's interval) | AlarmKit alarm | AlarmKit alarm |
+| Urgent nudges | Notification chain (each time an occurrence enters Urgent: at once and then every minute, 10 in all; then the strength's interval) | AlarmKit alarm; the notification chain if alarms aren't allowed | Same as iOS 26 |
 | Alarm permission prompt | None | On first launch, after notifications | Same |
 | AlarmKit | Not available | Available (iOS and iPadOS 26.0+) | Available |
 | Bars, tab bar and sheets | iOS 18 system look | Liquid Glass | Liquid Glass |
@@ -157,11 +158,16 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
   post-alert duration (`Alarm.CountdownDuration`'s `postAlert`) makes the system alert again after
   that time. That matches the reminder's snooze length (the strength's default or longer).
   - The alarm that rings again uses the presentation it was scheduled with, so it still has Snooze.
-    On the third snooze, the snooze intent cancels that alarm and schedules a new one for the end of
-    the snooze, with no secondary button, and the remaining alarms are scheduled without it.
+    On the third snooze, once the snooze intent has run, the app cancels that alarm and schedules a
+    new one for the end of the snooze, with no secondary button, and the remaining alarms are
+    scheduled without it.
   - The occurrence's later alarms are separate alarms, so each snooze has to move them past the
     snooze. Otherwise, for example, a Relentless alarm 2 minutes later would ring during a 5-minute
     snooze.
+  - The system's countdown rings again whatever has happened meanwhile, and no app code runs when
+    it does. So if the snooze would end after the next occurrence takes over, or inside quiet hours
+    for a reminder that doesn't ignore them, the app cancels the countdown once the snooze intent
+    has run, and schedules a fixed alarm at the right time, or none.
 - **Countdowns are Live Activities.** The countdown and paused states appear as a Live Activity, set
   up in a widget extension, as in the sample. Nudge-inator needs that extension even without Home
   Screen widgets. Apple warns that without it "the system may unexpectedly dismiss alarms and fail
@@ -170,7 +176,7 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
 - **Schedules:** `Alarm.Schedule.fixed(date)` for a one-off time, or `.relative` for a time of day
   with weekly repeats. Each Urgent nudge is a one-off, so it's `.fixed`. A fixed alarm "does not
   change when device timezone changes", so alarms for reminders that follow the device's time zone
-  are rescheduled when it changes.
+  (the default; a reminder can instead stay in a chosen zone) are rescheduled when it changes.
 - **Where it shows:** the Lock Screen, the Dynamic Island and StandBy, and a paired Apple Watch,
   which the system forwards the alert to. Apple calls it a prominent alert and doesn't describe it
   as full screen. WWDC25 session 230 says the buttons' SF Symbols are used "when the alert is shown
@@ -182,10 +188,11 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
 - **Permission:** `AlarmManager.requestAuthorization()`, with the reason in
   `NSAlarmKitUsageDescription`. Without that key, or with an empty value, the app can't schedule
   alarms. The states are not determined, denied and authorized, and `authorizationUpdates` reports
-  changes. If the person denies it, every attempt to schedule an alarm fails. The permission is
-  separate from notifications.
+  changes. If the person denies it, every attempt to schedule an alarm fails, and Urgent nudges
+  come as the notification chain, as on iOS 18. The permission is separate from notifications.
 - **Limit:** scheduling can fail with `AlarmManager.AlarmError.maximumLimitReached`. Apple doesn't
-  say what the limit is.
+  say what the limit is, so the app records how many alarms it could schedule, plans within that,
+  and tries one more each time it reschedules.
 - **App Review:** Apple says alarms suit countdowns and recurring scheduled alerts, and "are not a
   replacement for other prominent notifications, like critical alerts or time-sensitive
   notifications".

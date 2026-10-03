@@ -1,0 +1,465 @@
+---
+name: Nudge-inator
+type: architecture-spine
+purpose: build-substrate
+altitude: initiative
+paradigm: 'Functional core, imperative shell, with desired-state reconciliation'
+scope: 'The v1 iPhone app (iOS 18, 26, 27): app target, widget extension and the nudging engine'
+status: final
+created: '2026-10-03'
+updated: '2026-10-03'
+binds: ['brief §3 concepts', 'brief §4 delivery', 'brief §6 features', 'brief §7 principles', 'brief §11 Q1–Q14']
+sources:
+  - ../product/brief.md
+  - ../product/addendum.md
+  - ../design/DESIGN.md
+  - ../design/EXPERIENCE.md
+  - ../mockups/2026-10-02-ux-review-changes/README.md
+  - ../mockups/2026-10-02-ux-review-changes/index.html
+  - .memlog.md
+companions: []
+---
+
+# Architecture Spine — Nudge-inator
+
+Precedence: the nudging rules are owned by [brief §3–§4 and §10](../product/brief.md); behavior and
+looks by [EXPERIENCE.md](../design/EXPERIENCE.md) and [DESIGN.md](../design/DESIGN.md); technical
+decisions by this spine. Reasons for each decision are in [.memlog.md](.memlog.md).
+
+## Design Paradigm
+
+**Functional core, imperative shell, with desired-state reconciliation.** No app code runs when a
+notification or alarm fires, so nothing may depend on it. A pure engine computes, from stored facts
+and a clock, everything that is true now and everything that should be scheduled. A reconciler
+makes the system's pending notifications and alarms match that plan. Every change is a job on one
+serial queue: a command writes facts, then a reconcile follows.
+
+All code outside the app and widget targets lives in one Swift package, `NudgeKit`, so `package`
+access can hide the store's write API from everything but the shell.
+
+| Layer | Target (in `NudgeKit` unless noted) | Holds | May import |
+|---|---|---|---|
+| Core | `NudgeCore` | Domain types, the engine (`evaluate`, `accepts`, `prunable`, Siri order), `DeliveryID`, slot policy, export encoding, the `CommandSubmitting` and `NudgeQuerying` protocols | Foundation, CryptoKit |
+| Store | `NudgeStore` | GRDB schema, migrations, read projections (public), write API (`package` only), command journal | NudgeCore, GRDB |
+| Shell | `NudgeShell` | `Coordinator` (serial job queue, command handling, reconciler), notification and AlarmKit adapters, `Capabilities`, background refresh, notification delegate, Test Nudge | NudgeCore, NudgeStore, UserNotifications, AlarmKit, BackgroundTasks |
+| Live Activity | `NudgeLiveActivity` | `NudgeAlarmMetadata`, the alarm's stop, snooze and Live Activity Done intents | NudgeCore, AppIntents, AlarmKit |
+| Intents | `NudgeIntents` | Siri and App Shortcuts intents, App Entities and queries | NudgeCore, NudgeLiveActivity, AppIntents |
+| UI | `Nudge-inator` app target | SwiftUI scenes and views, `NudgeModel`, Assistive Access | all of the above |
+| Widget | `NudgeWidgets` extension | The alarm's countdown Live Activity view | NudgeLiveActivity, NudgeCore, ActivityKit, WidgetKit |
+
+```mermaid
+graph TD
+  App[Nudge-inator app target] --> Shell[NudgeShell]
+  App --> Intents[NudgeIntents]
+  App --> Store[NudgeStore]
+  Intents --> LA[NudgeLiveActivity]
+  Intents --> Core[NudgeCore]
+  LA --> Core
+  Shell --> Store
+  Shell --> Core
+  Store --> Core
+  Widget[NudgeWidgets extension] --> LA
+  Widget --> Core
+  Shell -. "implements CommandSubmitting, NudgeQuerying" .-> Core
+```
+
+## Invariants & Rules
+
+### AD-1 — The engine is pure and is the only source of nudging rules [ADOPTED]
+
+- **Binds:** brief §3–§4, How It Nudges, the plan, history, Siri answers, tests
+- **Prevents:** the preview, the scheduler, the UI or Siri each encoding strengths, quiet hours, carry-over, give-up limits or the Siri order their own way
+- **Rule:** `NudgeCore` exposes `evaluate(facts, settings, capabilities, now) -> Evaluation`, holding the derived state of every occurrence, the ordered desired delivery plan, and `nextChangeAt` (the next instant any derived state changes). It reads no clock, OS API or database; `now` and the device zone are parameters. Any code that needs a nudge time, urgency, status, count, channel, Siri order or "is this command allowed" gets it from `NudgeCore`. How It Nudges is `evaluate` on the form's draft.
+
+### AD-2 — Occurrence status is derived, never written by a timer [ADOPTED]
+
+- **Binds:** Occurrence, My Day counts, history, Siri, Assistive Access
+- **Prevents:** a status that's wrong because no code ran at the give-up limit or a takeover
+- **Rule:** the store holds facts only. Coming up, nudging, done, missed and skipped are computed by the engine. No stored column caches a status.
+
+### AD-3 — Facts are immutable, versioned and carry their origin [ADOPTED]
+
+- **Binds:** Edit while nudging (brief §3), quiet hours, time-zone changes, history, export
+- **Prevents:** an edit, a quiet-hours change or a flight rewriting past statuses; history that can't say "Done (alarm stopped)"
+- **Rule:**
+  - **Events are append-only rows:** done, not done, snooze, clear, pause, resume and skip-by-edit. Each records `issuedAt` (when the person acted, from the surface) and `source` (`app`, `notification`, `alarmStop`, `liveActivity`, `siri`, `assistiveAccess`).
+  - **Versioned facts carry the instant they were saved:** a reminder's nudging configuration (`ReminderConfig`: schedule, repeat rule, time zone mode, strength, snooze length, give-up limits, Ignore Quiet Hours), quiet hours, and the device time zone. The coordinator writes a zone fact when it detects a change.
+  - **How versions apply:** the engine applies each version per brief §3. A new schedule applies from the next due time; strength, limit and Ignore Quiet Hours apply from the next nudge. Each past instant is evaluated with the quiet hours and zone in effect then.
+  - **Mutable fields:** only title, notes and tags.
+  - **Give-up time:** the time counted toward the limit leaves out the union of quiet, snoozed and closed intervals.
+
+### AD-4 — One serial queue for every write and every scheduling change [ADOPTED]
+
+- **Binds:** UI, notification delegate, every App Intent, background refresh, OS observers
+- **Prevents:** racing commands, reconciles undoing each other, double closes, half-applied changes
+- **Rule:**
+  - **One queue:** the `Coordinator` in `NudgeShell` owns a single serial job queue (one consumer of an `AsyncStream`). Each job runs to completion, including its awaits, before the next starts. There are two job kinds.
+  - **Command job:** `NudgeCore.accepts(command, facts, at: command.issuedAt)` decides whether the command applies. Not Done applies to the latest done occurrence until the next due instant. If it applies, the job writes the resulting events in one transaction, then reconciles. A command naming a valid projected occurrence key materializes it (AD-8). A command that doesn't apply writes nothing.
+  - **Reconcile job:** triggers enqueue one, and several pending ones coalesce. A reconcile writes only bookkeeping: materialized occurrences, ledger rows, capability state, zone facts and pruning.
+  - **Write access:** `NudgeStore`'s write API is `package` access, used only by the `Coordinator`. Views, intents and the widget can't write.
+
+### AD-5 — The app process is the only process that opens the database [ADOPTED]
+
+- **Binds:** NudgeIntents, NudgeLiveActivity, NudgeWidgets, NudgeStore
+- **Prevents:** two processes writing one SQLite file
+- **Rule:**
+  - **Where intents run:** in the app process. The alarm's stop and secondary intents and the Live Activity's Done are `LiveActivityIntent`s. Siri and App Shortcuts intents run in the app target. Notification actions run in the app's `UNUserNotificationCenterDelegate`.
+  - **How intents reach the coordinator:** only through `CommandSubmitting` and `NudgeQuerying` (both `Sendable`, defined in `NudgeCore`). The app registers both with `AppDependencyManager` at launch.
+  - **The widget:** links `NudgeLiveActivity` and `NudgeCore`, never `NudgeStore` or `NudgeShell`. It renders only from `AlarmAttributes<NudgeAlarmMetadata>`.
+  - **Packaging:** every target that holds or uses intents declares an `AppIntentsPackage`.
+  - **No shared container:** there is no App Group container for the database.
+
+### AD-6 — Only the reconciler schedules, cancels or removes [ADOPTED]
+
+- **Binds:** UNUserNotificationCenter, AlarmManager, delivered notifications
+- **Prevents:** a view or intent scheduling something the plan doesn't contain, or leaving something the plan dropped
+- **Rule:**
+  - **The diff:** the reconcile job evaluates, then diffs the plan only against what the OS reports (pending requests, delivered notifications, `AlarmManager.alarms`), never against the ledger. It adds what's missing, removes what's extra and replaces what changed.
+  - **Alarms in progress:** an alarm that is alerting or counting down for an open occurrence is never removed as extra until a command about it has been committed.
+  - **Cleanup:** it removes delivered notifications whose occurrence is closed, expired Done follow-ups and delivered keep-nudging notices.
+  - **Echoes:** `alarmUpdates` and `authorizationUpdates` that only echo the coordinator's last applied set are ignored.
+  - **Triggers:**
+    - launch and foreground
+    - after every command
+    - `BGAppRefreshTask`
+    - significant time change and `NSSystemTimeZoneDidChange`
+    - `NSCurrentLocaleDidChange`
+    - AlarmKit `authorizationUpdates` and `alarmUpdates`
+    - protected data becoming available
+  - **Exceptions:** two narrow ones, both outside the reconciler's namespace and never removed by it. Send a Test Nudge posts `test/…` directly and writes no events or ledger rows. When the store can't open before the first unlock, the stop intent posts `followup/<key>` itself (AD-16).
+
+### AD-7 — Deterministic, locale-independent identity [ADOPTED]
+
+- **Binds:** engine, reconciler, ledger, intents, App Entities
+- **Prevents:** two units naming the same nudge differently; IDs that change with region settings; an action that can't be traced to its occurrence
+- **Rule:**
+  - **Occurrence key:** `OccurrenceKey` is `<lowercase reminder UUID>@<yyyyMMdd'T'HHmm>`, the due wall-clock time in the reminder's zone mode. It uses the Gregorian calendar and ASCII digits, independent of locale.
+  - **Delivery IDs:**
+    - `nudge/<key>/<n>`
+    - `chain/<key>/<startNudge>/<k>`
+    - `snooze/<key>/<n>/<s>`
+    - `followup/<key>`
+    - `keep/<UTC yyyyMMdd'T'HHmm>`
+    - `test/<UTC instant>`
+  - **AlarmKit IDs:** UUIDv5 (RFC 9562) of the delivery ID, in a namespace UUID that is a literal constant in `NudgeCore`, computed with CryptoKit's SHA-1.
+  - **One owner:** only `NudgeCore.DeliveryID` builds and parses IDs, with round-trip tests. Every notification's `userInfo` and every alarm's metadata carry the occurrence key and nudge index.
+  - **DST:** a wall time that doesn't exist resolves forward by the gap; a repeated wall time resolves to its first instance.
+
+### AD-8 — Occurrences materialize once, with a frozen instant [ADOPTED]
+
+- **Binds:** Occurrence rows, follow-the-iPhone reminders, history, commands on unseen occurrences
+- **Prevents:** a nudge ringing twice after a flight; Done dropped for an occurrence whose row doesn't exist yet
+- **Rule:**
+  - **Before it's written:** an occurrence is a projection, recomputed with the current zone.
+  - **When it's written:** the coordinator writes its row the first time either of these happens:
+    - a command names its key
+    - a reconcile finds that it's due, or that its first planned delivery is in the past
+  - **Its instant:** the due instant is frozen from that delivery's ledger row, or from the command's payload if there's no row. It is never recomputed.
+
+### AD-9 — Time zones: follow the iPhone or pinned; quiet hours and "today" follow the iPhone
+
+- **Binds:** ReminderConfig, engine, form, Settings › Time Zone, My Day, reconcile triggers
+- **Prevents:** one unit pinning a reminder's zone while another floats it
+- **Rule:**
+  - **Per reminder:** `ReminderConfig.timeZone` is `.followsDevice` (the default) or `.fixed(IANA identifier)`.
+  - **Always the iPhone's zone:** quiet hours, and My Day's "today" (the device's current calendar day).
+  - **New reminders:** Settings › Time Zone sets the default mode for them.
+  - **On a zone change:** the coordinator records a zone fact and re-plans every projection.
+  - **OS triggers are absolute:** notification triggers are non-repeating `UNCalendarNotificationTrigger`s built from UTC date components; alarms are `Alarm.Schedule.fixed`. No request uses a repeating, wall-clock or relative trigger.
+
+### AD-10 — Repeat rules are a closed type that matches the form
+
+- **Binds:** ReminderConfig, engine, New/Edit form, export
+- **Prevents:** an engine that has to support rules no one can enter, and a "Keep: …" state with no source
+- **Rule:**
+  - **The type:** `RepeatRule` is an enum: `never`, the presets (every day, every weekday, every week, every 2 weeks, every month, every year) and `custom(frequency, interval, weekdays, timesOfDay)`.
+  - **Times of day:** `timesOfDay` is a sorted, de-duplicated list of one or more local times. The first is the start's own time.
+  - **Closed set:** every value the type can hold is editable in the form. No other recurrence format is parsed or stored.
+
+### AD-11 — Delivery channels and the "alarms unavailable" fallback
+
+- **Binds:** engine plan, adapters, Via labels
+- **Prevents:** iOS 18 and a denied alarm permission taking different paths, or a channel decided outside the engine
+- **Rule:**
+  - **Who decides:** the engine picks each delivery's channel from `Capabilities`. The canonical fields are `notificationsAllowed`, `timeSensitiveAllowed`, `alarmsAvailable`, `alarmCapacity` and `previewsHidden`.
+  - **Normal:** an `.active` notification.
+  - **High:** a `.timeSensitive` notification, or `.active` when Time Sensitive is off.
+  - **Urgent:** an AlarmKit alarm when `alarmsAvailable`; otherwise the notification chain (AD-13). `alarmsAvailable` is false on iOS 18 and whenever AlarmKit authorization isn't `.authorized`.
+  - **Past the alarm limit:** Urgent nudges beyond `alarmCapacity` come as one Time Sensitive notification each.
+
+### AD-12 — Snooze and Stop are commands; the engine plans what follows
+
+- **Binds:** alarm intents, engine, reconciler
+- **Prevents:** an intent scheduling behind the reconciler's back; an alarm ringing for a closed occurrence or during quiet hours
+- **Rule:**
+  - **Intents only submit commands:** the alarm's snooze and stop intents submit `snooze` and `done(source: .alarmStop)` and touch no OS API, except as in AD-16.
+  - **What the engine plans:**
+    - **The post-snooze alarm,** `snooze/<key>/<n>/<s>`. It has a pre-alert countdown so the Live Activity shows. It has no secondary button when no snoozes remain. It's moved, or dropped, if the snooze would end after a takeover or inside quiet hours for a reminder that doesn't ignore them.
+    - **The later alarms,** moved past the snooze.
+    - **The follow-up after Stop:** `followup/<key>` from a `done(source: .alarmStop)` event, sent at once.
+  - **The system's countdown:** the reconciler cancels it, because AD-6 lets it remove that alarm once the snooze command is committed.
+  - **Fallback:** if a device shows that cancelling during a countdown fails, the snooze button switches to `.custom` behavior: the intent runs and the engine's alarm replaces the countdown.
+
+### AD-13 — Notification chain semantics
+
+- **Binds:** engine plan for Urgent when alarms are unavailable
+- **Prevents:** duplicate notifications in one minute and nudge counts that differ by OS
+- **Rule:**
+  - **When a chain starts:** when an occurrence enters or re-enters Urgent: its first Urgent nudge, the end of quiet hours, the end of a snooze, and Not Done.
+  - **What it sends:** a Time Sensitive notification at once and every minute after, 10 in all. It ends early on Done, Snooze or the start of quiet hours.
+  - **Nudges inside it:** the strength's Urgent nudges that fall inside a running chain still count on schedule but aren't sent separately. The chain notification at that minute shows the current nudge number.
+  - **Limits:** chain repeats don't count toward the nudge limit, but their time counts toward the time limit.
+
+### AD-14 — Slot budgets, horizon and cost [ADOPTED]
+
+- **Binds:** engine plan, reconciler, background refresh
+- **Prevents:** iOS silently dropping a first nudge; a plan that grows without bound
+- **Rule:**
+  - **Horizon:** the plan covers 8 days ahead, or until the budgets are full, whichever comes first.
+  - **Notification order:**
+    1. nudge 1 of every coming-up occurrence, soonest first
+    2. every other delivery, soonest first
+
+    The plan is cut to 63 requests, plus 1 keep-nudging request at the fire time of the first dropped nudge.
+  - **Alarms:** soonest first, up to `alarmCapacity`. When AlarmKit throws `maximumLimitReached`, the reconciler persists the number that succeeded as `alarmCapacity`. Each later reconcile tries one more.
+  - **Background refresh:** each reconcile requests a `BGAppRefreshTask` for the plan's earliest top-up time, and no later than 12 hours ahead.
+  - **What `evaluate` reads:** current and future versions, plus each reminder's open or latest occurrence and the facts since then. History screens read past facts separately.
+  - **Cost:** a full evaluate stays under 50 ms for 200 reminders on the oldest iPhone that runs iOS 18. A benchmark test enforces it.
+
+### AD-15 — The ledger records what was scheduled, and what was lost
+
+- **Binds:** history, export, restore detection
+- **Prevents:** history claiming a nudge was sent when it never was
+- **Rule:**
+  - **What's recorded:** every delivery the reconciler schedules gets a ledger row with its delivery ID, occurrence key, nudge index, urgency, channel and fire instant.
+  - **States:**
+    - `scheduled`
+    - `cancelled`: the reconciler removed it before its fire instant
+    - `lost`: it vanished from the OS before its fire instant without the reconciler removing it
+  - **History:** shows rows that are past their fire instant and still `scheduled`.
+  - **Restore detection:** an install marker (Keychain, `ThisDeviceOnly`) that doesn't match the database's marks every future `scheduled` row `lost`, then replans.
+  - **Pruning:** facts and rows older than 90 days are pruned only where `NudgeCore.prunable` says they're inert. Reminder-level state (pause, current versions) and each reminder's latest occurrence with its facts are never prunable.
+
+### AD-16 — Persistence: GRDB, one protected file, a journal for before the first unlock
+
+- **Binds:** NudgeStore, Lock Screen and alarm intents
+- **Prevents:** schema drift between versions; a Stop or Done lost because it came before the first unlock
+- **Rule:**
+  - **The database:** one SQLite database through GRDB, in its own folder in Application Support. The folder has file protection `completeUntilFirstUserAuthentication`, so the `-wal` and `-shm` files match. It's included in iCloud and computer backups.
+  - **Migrations:** only through numbered `DatabaseMigrator` migrations, each covered by a test that migrates a fixture from the previous version.
+  - **The journal:** when the database can't open, a command goes to an append-only journal file with protection `none`. It holds only the command kind, occurrence key, nudge index and `issuedAt`, never titles. If the command is a Stop, the intent also posts `followup/<key>`. On the first open, the journal is replayed in order and then deleted.
+  - **Delete All Data:** deletes every row (including Recent Searches) and the journal in one job, then reconciles to an empty plan.
+
+### AD-17 — Lock Screen actions and Siri need no authentication
+
+- **Binds:** notification categories, alarm and Siri intents
+- **Prevents:** Done asking for Face ID on one surface and not another
+- **Rule:**
+  - **Categories:**
+    - `nudge`: Done and Snooze
+    - `nudge-final`: Done only
+    - `followup`: Not Done
+  - **No authentication:** no action is `.authenticationRequired` or `.foreground`, and no Siri intent needs authentication.
+  - **Clear:** `nudge` and `nudge-final` set `customDismissAction`. Recording a Clear is best effort: iOS reports only an explicit Clear.
+  - **Taps:** tapping a nudge opens Now at its occurrence; tapping a follow-up opens the reminder.
+
+### AD-18 — The OS split lives in the shell and in named wrappers
+
+- **Binds:** NudgeShell, view modifiers, Assistive Access
+- **Prevents:** `#available` checks scattered through views and the engine
+- **Rule:**
+  - **The engine:** `NudgeCore` never checks the OS. `Capabilities` (AD-11) is built in `NudgeShell`.
+  - **iOS 26-only APIs:** used only inside named wrappers in the app target:
+    - `tabBarMinimizeBehavior`
+    - `navigationSubtitle`
+    - the `AssistiveAccess` scene
+    - AlarmKit
+
+    `Tab(role: .search)` is iOS 18+ and is used directly.
+  - **UIKit:** used only for `UITabBarAppearance` on iOS 18.
+  - **Layout:** decided by width and size class, never by device idiom or interface orientation. "Landscape" in the spines means compact vertical size class.
+
+### AD-19 — Privacy floor
+
+- **Binds:** notifications, alarms, logging, journal, export, dependencies
+- **Prevents:** notes or tags leaking off the app's own screens; telemetry creeping in
+- **Rule:**
+  - **On system surfaces:** notification and alarm content carries only the title and the nudge line. Notes and tags appear only in the app's views and Export Data.
+  - **Logging:** `os.Logger`, with titles, notes and tag names marked `.private`.
+  - **Personal text:** the journal and `UserDefaults` hold none.
+  - **Dependencies:** no network calls, analytics or third-party SDKs. GRDB is the only dependency.
+
+### AD-20 — One live model for the open app
+
+- **Binds:** every screen, the Now badge, VoiceOver announcements, Assistive Access
+- **Prevents:** screens refreshing statuses at different moments; missed announcements because nothing was written when a nudge started
+- **Rule:**
+  - **One model:** a single app-wide `@Observable NudgeModel` holds the latest `Evaluation`. Views read derived state only from it.
+  - **When it refreshes:**
+    - on store change
+    - on foreground
+    - at the evaluation's `nextChangeAt`
+  - **Announcements:** the VoiceOver announcements in EXPERIENCE.md (a nudge starts, a card closes) come from diffing successive evaluations.
+  - **Banners over the app:** `willPresent` shows nudges as banners with sound while the app is open.
+
+## Consistency Conventions
+
+| Concern | Convention |
+| --- | --- |
+| Naming | Domain types use the brief's words: `Reminder`, `ReminderConfig`, `Occurrence`, `Nudge`, `Strength`, `Urgency`, `Tag`, `QuietHours`, `GiveUpLimit`, `Snooze`. Never "alert level", "ping", "dismiss". |
+| IDs | Reminders and tags: UUID. Occurrences and deliveries: AD-7. |
+| Time | Instants stored as UTC `Date`. Wall-clock values as a `LocalDateTime` plus the zone mode. All date math in `NudgeCore` through an injected Gregorian `Calendar`. |
+| Durations | Integer minutes in the model and engine; `TimeInterval` only at the OS adapters. |
+| Clock | One `Clock` protocol injected into the shell; `NudgeCore` takes `now` as a parameter. |
+| Errors | Adapter failures are logged and fold into `Capabilities`; they never surface as raw errors in UI. User-visible states are the spines' banners and Via labels. |
+| Tags | A tag's unique key is its name case-folded with Foundation (`.caseInsensitive`, no locale), stored in its own indexed column; never SQLite `NOCASE`. |
+| Strings | Every user-facing string, including notification, alarm, Live Activity, App Shortcut and accessibility text, is in a String Catalog with plural variants and positional arguments. The widget extension has its own catalog. Notification content is localized when scheduled. |
+| Formats | Dates, times and durations shown to people use the system formatters; IDs and export use fixed POSIX formats. |
+| UI state | Navigation per tab with `NavigationStack`. My Day's filter, match mode and chosen count, and the Tags tab's tokens and match mode, use `SceneStorage`; tag IDs that no longer exist are dropped on restore. Recent Searches live in the database. Non-personal flags (onboarding done, banners acknowledged) live in `UserDefaults`. |
+| Siri | "The first" nudging reminder is `NudgeCore`'s order: highest urgency, then earliest due, then most nudges sent. |
+| Testing | `NudgeCore` and `NudgeStore` tests use Swift Testing with a fixed clock and fixed zones, including DST transitions, zone changes mid-occurrence and the 50 ms benchmark. UI tests use XCTest on simulators. |
+| Export | JSON, `schemaVersion: 1`, ISO 8601 instants with offsets, IANA zone IDs, tags by name, reminders with their versions, occurrences, events and sent ledger rows. File `nudge-inator-YYYY-MM-DD.json`. Not importable. |
+
+## Stack
+
+| Name | Version |
+| --- | --- |
+| Xcode | 27.0 (27A266a) |
+| Swift (language mode 6) | 6.4 |
+| iOS deployment target | 18.0 |
+| SwiftUI, UserNotifications, App Intents, BackgroundTasks, CryptoKit | iOS 18 SDK surface |
+| AlarmKit, ActivityKit (alarm Live Activity), AssistiveAccess scene | iOS 26.0+ |
+| GRDB.swift | 7.11.1 |
+| Swift Testing / XCTest | bundled with Xcode 27.0 |
+
+## Structural Seed
+
+```mermaid
+erDiagram
+  REMINDER ||--o{ REMINDER_CONFIG : "versions"
+  REMINDER ||--o{ REMINDER_TAG : "tagged"
+  TAG ||--o{ REMINDER_TAG : "labels"
+  REMINDER ||--o{ REMINDER_EVENT : "pause, resume"
+  REMINDER ||--o{ OCCURRENCE : "materializes"
+  OCCURRENCE ||--o{ OCCURRENCE_EVENT : "done, snooze, clear"
+  OCCURRENCE ||--o{ LEDGER_ENTRY : "deliveries"
+  SETTINGS ||--o{ QUIET_HOURS_VERSION : "versions"
+  SETTINGS ||--o{ ZONE_FACT : "device zone changes"
+  SETTINGS ||--|| CAPABILITY_STATE : "stored with"
+  SETTINGS ||--o{ RECENT_SEARCH : "keeps"
+```
+
+```mermaid
+sequenceDiagram
+  participant Src as UI / notification action / App Intent
+  participant Q as Coordinator (serial job queue)
+  participant Core as NudgeCore
+  participant DB as NudgeStore
+  participant OS as UNUserNotificationCenter + AlarmManager
+  Src->>Q: enqueue Command(key, issuedAt, source)
+  Q->>DB: read facts
+  Q->>Core: accepts? events?
+  Q->>DB: write events (one transaction)
+  Q->>Core: evaluate(facts, settings, capabilities, now)
+  Q->>OS: read pending, delivered, alarms
+  Q->>OS: add / remove / replace the difference
+  Q->>DB: ledger rows, materialized occurrences, capability state
+  Q-->>Src: done (next job starts)
+```
+
+```mermaid
+graph LR
+  subgraph Device[iPhone]
+    AppP[App process: UI, intents, Coordinator, GRDB file, journal]
+    WidgetP[Widget extension: Live Activity view]
+    Sys[iOS: notifications, AlarmKit, BGTaskScheduler]
+  end
+  AppP --> Sys
+  Sys -- actions, intents --> AppP
+  Sys -- AlarmAttributes --> WidgetP
+  Dev[GitHub: PR] --> CI[GitHub Actions macOS: swift test, xcodebuild test on iOS 18 and 26/27 simulators]
+  Mac[Xcode Organizer] --> ASC[App Store Connect: TestFlight, then App Store]
+```
+
+```text
+nudge-inator/
+  App/                         # Nudge-inator app target: scenes, views, NudgeModel, Info.plist, String Catalog
+  Widgets/                     # NudgeWidgets extension: alarm Live Activity view, its String Catalog
+  Packages/NudgeKit/
+    Sources/NudgeCore/         # pure engine and domain; swift test on macOS
+    Sources/NudgeStore/        # GRDB schema, migrations, projections, journal
+    Sources/NudgeShell/        # Coordinator, reconciler, OS adapters, capabilities
+    Sources/NudgeLiveActivity/ # alarm metadata and Live Activity intents
+    Sources/NudgeIntents/      # Siri and App Shortcuts intents, entities
+    Tests/
+  .github/workflows/ci.yml     # engine tests and simulator tests on PRs
+```
+
+**Environments.**
+- **Builds:** Debug builds run on simulators and devices.
+- **TestFlight:** internal testing is the owner; external testers go through Beta App Review on the first build of each version.
+- **App Store:** once brief §8 is met. Builds are archived and uploaded from Xcode's Organizer.
+- **Entitlements and keys:**
+  - Time Sensitive Notifications
+  - `NSAlarmKitUsageDescription`
+  - `NSSupportsLiveActivities`
+  - `UISupportsAssistiveAccess`
+  - `UISupportsFullScreenInAssistiveAccess`
+  - `UIBackgroundModes` with `fetch`
+  - `BGTaskSchedulerPermittedIdentifiers`
+  - `ITSAppUsesNonExemptEncryption = NO`
+- **CI:** may need to download the iOS 18 simulator runtime.
+- **Infrastructure:** there is no server and no runtime infrastructure.
+
+**First spike:** App Intents declared in `NudgeKit` targets and used from both the app and the widget, with an `AppIntentsPackage` in each. If that fails, the fallback is a framework target.
+
+**Device checklist** (not automatable):
+- the AlarmKit limit
+- cancelling an alarm during its snooze countdown, and reusing IDs
+- intents after force-quit, including a Watch Stop
+- alarms with notifications off
+- an alarm that rings out
+- Stop, Snooze and Done before the first unlock (the journal)
+- how the alarm presents on an unlocked iPhone and in landscape
+- the 64-notification limit on 18, 26 and 27
+- restoring from a backup
+- Assistive Access with alarms
+
+## Capability → Architecture Map
+
+| Capability / Area | Lives in | Governed by |
+| --- | --- | --- |
+| Strengths, urgency, give-up, quiet hours, carry-over, takeover, Pause, Not Done (brief §3) | NudgeCore engine | AD-1, AD-2, AD-3 |
+| Delivery and fallbacks, iOS 18 chain (brief §4) | NudgeCore plan, NudgeShell adapters | AD-11, AD-13, AD-14 |
+| System limits, plan horizon (brief §4, §11 Q4) | NudgeCore slot policy, Coordinator | AD-14 |
+| Done, Snooze, Clear from notifications, alarms, Live Activity, Siri (brief §11 Q5, Q13) | Intents and delegate → Coordinator | AD-4, AD-5, AD-12, AD-17 |
+| Closing clears nudges, stale actions (brief §11 Q11) | Coordinator, reconciler | AD-6, AD-4, AD-8 |
+| Live Activity setup and reconciling with AlarmKit (brief §11 Q6) | NudgeLiveActivity, NudgeWidgets, reconciler | AD-5, AD-6, AD-12 |
+| Time zones (brief §11 Q7) | ReminderConfig, zone facts, triggers | AD-9, AD-3, AD-8 |
+| Storage and migration (brief §11 Q2) | NudgeStore | AD-16, AD-3 |
+| History (90 days), Export Data (brief §11 Q12) | Events + ledger; NudgeCore export | AD-15, Conventions › Export |
+| How It Nudges preview (brief §11 Q3) | NudgeCore `evaluate` on the draft | AD-1 |
+| iOS 18 vs 26/27 split, layout (brief §11 Q1, Q8) | NudgeShell Capabilities, app wrappers | AD-18, AD-11 |
+| Live updates, badge, VoiceOver announcements | NudgeModel | AD-20 |
+| Siri answers and order | NudgeIntents via `NudgeQuerying` | AD-5, AD-1, Conventions › Siri |
+| Assistive Access | App target scene (iOS 26) / full-screen view (iOS 18) | AD-18, AD-20, AD-4 |
+| Send a Test Nudge | NudgeShell | AD-6 exception |
+| Delete All Data, Recent Searches | NudgeStore | AD-16, Conventions › UI state |
+| Localization (brief §11 Q9) | String Catalogs in app and widget | Conventions › Strings |
+| Testing on 18/26/27 (brief §11 Q10) | Swift Testing, XCTest, CI, device checklist | Conventions › Testing |
+| Filters across relaunch (brief §11 Q14) | SceneStorage | Conventions › UI state |
+| Privacy | All targets | AD-19 |
+
+## Deferred
+
+- **Out of scope for v1 (brief §6):** the iPad layout, sync, accounts, import, a Watch app and Home Screen widgets. The paradigm doesn't block any of them. Sync would need a conflict model for AD-3's facts.
+- **iOS 27 `appEntityIdentifier` on alarms:** still marked beta in Apple's docs on 2026-10-03. Adopt it when final, as an optional link to the Occurrence entity.
+- **iOS 27 `.clock` App Intents domain:** not adopted. It requires every schema in the domain, including creating alarms.
+- **View structure below `NudgeModel`:** left to feature work. AD-1, AD-4, AD-18 and AD-20 constrain it.
+- **Exact GRDB table and column names:** owned by the first migration.
+- **Encryption at rest beyond iOS data protection (SQLCipher):** not needed for v1.
+- **Release automation (fastlane, Xcode Cloud):** manual Organizer uploads until the TestFlight cadence needs more.
+- **Device-only unknowns** in the device checklist:
+  - revisit AD-14 if the alarm limit is very low
+  - revisit AD-12 if cancelling during a countdown fails
+  - revisit AD-16 if notification actions can't run before the first unlock

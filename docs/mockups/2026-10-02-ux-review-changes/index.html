@@ -1130,6 +1130,10 @@ function strengthBadge(s) {
 }
 const SNOOZE = { gentle: 30, firm: 15, relentless: 5 };
 const MAX_SNOOZES = 3;
+/* Each reminder has its own snooze length: its strength's default, or 5, 10, 15 or 30 min where
+   that's longer. A gentler strength raises a shorter length to its default. */
+const snoozeChoices = (strength) => [SNOOZE[strength], ...[5, 10, 15, 30].filter((m) => m > SNOOZE[strength])];
+const snoozeOf = (r) => Math.max(r.snooze ?? 0, SNOOZE[r.strength]);
 const DEFAULT_CAP = { maxDurationMinutes: 1440, maxAttempts: 20 };
 /* The smallest give-up limit for each strength, so the limit can't end an occurrence before its
    first High nudge, which gets through a Focus. */
@@ -1148,13 +1152,14 @@ const urgencyAt = (s, l) => URGENCY[priorityAt(s, l)];
 const urgencyFor = (s, l, carry) => (carry && urgencyAt(s, l) === "Normal" ? "High" : urgencyAt(s, l));
 /* How a nudge reaches the phone: Urgent rings as an AlarmKit alarm; everything else is a
    local notification (Time Sensitive at High and Urgent, ordinary at Normal, so a Focus holds
-   Normal ones). Without alarm permission, Urgent falls back too. iOS 18 has no AlarmKit, so Urgent
-   nudges come as a chain: a Time Sensitive notification every minute, up to 10. With
-   notifications off, a nudge that isn't an alarm can't arrive at all. */
+   Normal ones). Where alarms aren't available (iOS 18, which has no AlarmKit, or alarms not
+   allowed), Urgent nudges come as a chain: each time the occurrence enters Urgent, a Time
+   Sensitive notification at once and then every minute, 10 in all. With notifications off, a
+   nudge that isn't an alarm can't arrive at all. */
 function viaFor(urg) {
   if (urg === "Urgent" && hasAlarmKit() && perm.alarms) return "alarm";
   if (!perm.notifications) return "none";
-  return urg === "Urgent" && !hasAlarmKit() ? "chain" : "notification";
+  return urg === "Urgent" ? "chain" : "notification";
 }
 const VIA = {
   alarm: (sz = 16) => `<span class="via">${I("alarm", sz)} Alarm</span>`,
@@ -1165,7 +1170,11 @@ const VIA = {
 /* How a nudge of this urgency arrives. One that arrives a weaker way than its urgency says so, and why. */
 function viaLabel(urg, sz = 16) {
   const via = viaFor(urg);
-  if (via === "chain") return perm.timeSensitive ? VIA.chain(sz) : `<span class="via">${I("bell", sz)} Notification chain: Time Sensitive is off</span>`;
+  if (via === "chain") {
+    // On iOS 26 and later a chain means alarms aren't allowed, so it says so.
+    const off = hasAlarmKit() && !perm.timeSensitive ? "alarms and Time Sensitive are off" : hasAlarmKit() ? "alarms are off" : !perm.timeSensitive ? "Time Sensitive is off" : "";
+    return off ? `<span class="via">${I("bell", sz)} Notification chain: ${off}</span>` : VIA.chain(sz);
+  }
   if (via !== "notification" || urg === "Normal") return VIA[via](sz);
   const noAlarm = urg === "Urgent", noTs = !perm.timeSensitive;
   const why = noAlarm && noTs ? "alarms and Time Sensitive are off" : noAlarm ? "alarms are off" : noTs ? "Time Sensitive is off" : "";
@@ -1234,7 +1243,7 @@ function nudgeSummary(s, cap, carry = false, until = Infinity) {
   else if (!alarms) how = `All ${plural(n, "nudge")} are notifications.`;
   else if (first === 0) how = `All ${n} ring as alarms.`;
   else how = `Nudges 1–${first} are notifications. Nudges ${first + 1}–${n} ring as alarms (${alarms}).`;
-  if (perm.notifications && hasAlarmKit() && !perm.alarms && sim.nudges.some((x) => x.urgency === "Urgent")) how += ` Alarms are off, so Urgent nudges come as ${perm.timeSensitive ? "Time Sensitive " : ""}notifications.`;
+  if (perm.notifications && hasAlarmKit() && !perm.alarms && sim.nudges.some((x) => x.urgency === "Urgent")) how += ` Alarms are off, so Urgent nudges come as a chain of ${perm.timeSensitive ? "Time Sensitive " : ""}notifications.`;
   /* Normal nudges are ordinary notifications, so a Focus holds them; High ones are Time Sensitive,
      unless Time Sensitive is off. People can allow the app in a Focus to get every nudge. */
   const held = sim.nudges.some((x) => ["notification", "chain"].includes(viaFor(x.urgency)) && (x.urgency === "Normal" || !perm.timeSensitive));
@@ -1259,18 +1268,18 @@ let tags, reminders, occurrences;
 function seed() {
   tags = ["home", "health", "work", "money", "morning", "appointments", "travel"].map((name) => ({ id: name, name }));
   reminders = [
-    { id: "r1", tagIds: ["home"], title: "Take the bins out", body: null, dtstart: "2026-01-05T07:30", timezone: me.timezone, rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "firm", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-10-05T07:30" },
-    { id: "r7", tagIds: ["money", "home"], title: "Reply to Alex about the lease", body: "They need an answer before 10.", dtstart: "2026-09-28T08:10", timezone: me.timezone, rrule: null, strength: "relentless", cap: { maxDurationMinutes: 120 }, status: "ACTIVE", nextOccurrenceAt: null },
-    { id: "r2", tagIds: ["health", "morning"], title: "Morning meds", body: "Blue pill + vitamin D", dtstart: "2026-03-01T06:30", timezone: me.timezone, rrule: "FREQ=DAILY", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-29T06:30" },
-    { id: "r6", tagIds: ["health", "work"], title: "Stretch break", body: null, dtstart: "2026-09-01T10:00", timezone: me.timezone, rrule: "FREQ=DAILY;BYHOUR=10,14,16;BYMINUTE=0", strength: "firm", cap: { maxDurationMinutes: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T10:00" },
-    { id: "r3", tagIds: ["home"], title: "Water the plants", body: null, dtstart: "2026-04-02T18:00", timezone: me.timezone, rrule: "FREQ=WEEKLY;BYDAY=MO,TH", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T18:00" },
-    { id: "r4", tagIds: ["money", "home"], title: "Pay rent", body: "Transfer to the landlord's account.", dtstart: "2026-01-01T09:00", timezone: me.timezone, rrule: "FREQ=MONTHLY;BYMONTHDAY=1", strength: "relentless", cap: { maxDurationMinutes: 480, maxAttempts: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-10-01T09:00" },
-    { id: "r5", tagIds: ["health", "appointments"], title: "Dentist appointment", body: "Bring the insurance card.", dtstart: "2026-10-02T13:15", timezone: me.timezone, rrule: null, strength: "firm", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-10-02T13:15" },
-    { id: "r8", tagIds: ["money", "travel"], title: "Renew passport", body: null, dtstart: "2026-09-10T09:00", timezone: me.timezone, rrule: null, strength: "firm", cap: {}, status: "COMPLETED", nextOccurrenceAt: null },
-    { id: "r9", tagIds: ["work", "morning"], title: "Team stand-up", body: "Join from the meeting link in the calendar invite.", dtstart: "2026-01-05T09:30", timezone: me.timezone, rrule: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", strength: "firm", cap: { maxDurationMinutes: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T09:30" },
-    { id: "r10", tagIds: ["work"], title: "Send the weekly status update", body: null, dtstart: "2026-01-05T16:30", timezone: me.timezone, rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T16:30" },
-    { id: "r11", tagIds: ["home", "morning"], title: "Walk the dog", body: null, dtstart: "2026-02-01T07:00", timezone: me.timezone, rrule: "FREQ=DAILY", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-29T07:00" },
-    { id: "r12", tagIds: [], title: "Call Grandma", body: null, dtstart: "2026-06-07T17:00", timezone: me.timezone, rrule: "FREQ=WEEKLY;BYDAY=SU", strength: "gentle", cap: {}, status: "PAUSED", nextOccurrenceAt: null },
+    { id: "r1", tagIds: ["home"], title: "Take the bins out", body: null, dtstart: "2026-01-05T07:30", timezone: "device", rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "firm", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-10-05T07:30" },
+    { id: "r7", tagIds: ["money", "home"], title: "Reply to Alex about the lease", body: "They need an answer before 10.", dtstart: "2026-09-28T08:10", timezone: "device", rrule: null, strength: "relentless", cap: { maxDurationMinutes: 120 }, status: "ACTIVE", nextOccurrenceAt: null },
+    { id: "r2", tagIds: ["health", "morning"], title: "Morning meds", body: "Blue pill + vitamin D", dtstart: "2026-03-01T06:30", timezone: "device", rrule: "FREQ=DAILY", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-29T06:30" },
+    { id: "r6", tagIds: ["health", "work"], title: "Stretch break", body: null, dtstart: "2026-09-01T10:00", timezone: "device", rrule: "FREQ=DAILY;BYTIME=10:00,14:00,16:00", strength: "firm", cap: { maxDurationMinutes: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T10:00" },
+    { id: "r3", tagIds: ["home"], title: "Water the plants", body: null, dtstart: "2026-04-02T18:00", timezone: "device", rrule: "FREQ=WEEKLY;BYDAY=MO,TH", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T18:00" },
+    { id: "r4", tagIds: ["money", "home"], title: "Pay rent", body: "Transfer to the landlord's account.", dtstart: "2026-01-01T09:00", timezone: "device", rrule: "FREQ=MONTHLY;BYMONTHDAY=1", strength: "relentless", snooze: 15, cap: { maxDurationMinutes: 480, maxAttempts: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-10-01T09:00" },
+    { id: "r5", tagIds: ["health", "appointments"], title: "Dentist appointment", body: "Bring the insurance card.", dtstart: "2026-10-02T13:15", timezone: "device", rrule: null, strength: "firm", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-10-02T13:15" },
+    { id: "r8", tagIds: ["money", "travel"], title: "Renew passport", body: null, dtstart: "2026-09-10T09:00", timezone: "device", rrule: null, strength: "firm", cap: {}, status: "COMPLETED", nextOccurrenceAt: null },
+    { id: "r9", tagIds: ["work", "morning"], title: "Team stand-up", body: "Join from the meeting link in the calendar invite.", dtstart: "2026-01-05T09:30", timezone: "device", rrule: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", strength: "firm", cap: { maxDurationMinutes: 60 }, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T09:30" },
+    { id: "r10", tagIds: ["work"], title: "Send the weekly status update", body: null, dtstart: "2026-01-05T16:30", timezone: "device", rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T16:30" },
+    { id: "r11", tagIds: ["home", "morning"], title: "Walk the dog", body: null, dtstart: "2026-02-01T07:00", timezone: "device", rrule: "FREQ=DAILY", strength: "gentle", cap: {}, status: "ACTIVE", nextOccurrenceAt: "2026-09-29T07:00" },
+    { id: "r12", tagIds: [], title: "Call Grandma", body: null, dtstart: "2026-06-07T17:00", timezone: "device", rrule: "FREQ=WEEKLY;BYDAY=SU", strength: "gentle", cap: {}, status: "PAUSED", nextOccurrenceAt: null },
   ];
   occurrences = [
     { id: "o1", reminderId: "r1", scheduledFor: "2026-09-28T07:30", level: 2, attempts: 3, snoozes: 0, state: "NUDGING", nextNudgeAt: "2026-09-28T08:22:30", closedAt: null, closeReason: null,
@@ -1348,6 +1357,8 @@ function parseRRule(s) {
   if (p.BYMONTHDAY) r.bymonthday = Number(p.BYMONTHDAY);
   if (p.BYHOUR) r.byhour = p.BYHOUR.split(",").map(Number);
   if (p.BYMINUTE) r.byminute = p.BYMINUTE.split(",").map(Number);
+  // BYTIME: the mockup's own field for Custom's "several times a day", as HH:MM.
+  if (p.BYTIME) r.bytime = p.BYTIME.split(",");
   return r;
 }
 function dayMatches(r, start, d) {
@@ -1370,7 +1381,8 @@ function timesOnDay(rem, day) {
   const r = parseRRule(rem.rrule);
   if (!dayMatches(r, start, day)) return [];
   const hours = r.byhour ?? [start.getHours()], mins = r.byminute ?? [start.getMinutes()];
-  return hours.flatMap((h) => mins.map((m) => { const d = new Date(day); d.setHours(h, m, 0, 0); return d; }))
+  const hms = r.bytime ? r.bytime.map((t) => t.split(":").map(Number)) : hours.flatMap((h) => mins.map((m) => [h, m]));
+  return hms.map(([h, m]) => { const d = new Date(day); d.setHours(h, m, 0, 0); return d; })
     .filter((d) => d >= start).sort((a, b) => a - b);
 }
 function nextOccurrence(rem, after = NOW) {
@@ -1388,7 +1400,7 @@ function scheduleText(rem) {
   const s = L(rem.dtstart);
   if (!rem.rrule) return `Once, ${dayLabel(s)} at ${hm(s)}`;
   const r = parseRRule(rem.rrule), n = r.interval;
-  const times = r.byhour ? listJoin(r.byhour.flatMap((h) => (r.byminute ?? [s.getMinutes()]).map((m) => hmOf(`${pad(h)}:${pad(m)}`)))) : hm(s);
+  const times = r.bytime ? listJoin(r.bytime.map((t) => hmOf(t))) : r.byhour ? listJoin(r.byhour.flatMap((h) => (r.byminute ?? [s.getMinutes()]).map((m) => hmOf(`${pad(h)}:${pad(m)}`)))) : hm(s);
   // "Every day", or "Every 2 days" when the interval is more than 1.
   const every = (unit) => (n > 1 ? `Every ${n} ${unit}s` : `Every ${unit}`);
   switch (r.freq) {
@@ -1501,7 +1513,7 @@ function noteIcon(kind) {
 /* ================= Views ================= */
 function permBanner() {
   if (!perm.notifications) return `<div class="banner" role="note">${I("exclamationmark.triangle", 22)}<div><p><strong>Notifications are off.</strong> ${perm.alarms && hasAlarmKit() ? "Only Urgent nudges can reach you, as alarms. Gentle reminders can't reach you at all." : "Nudges can't reach you."}</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
-  if (!perm.alarms && hasAlarmKit()) return `<div class="banner info" role="note">${I("alarm", 22)}<div><p><strong>Alarms are off.</strong> Urgent nudges come as ${perm.timeSensitive ? "Time Sensitive notifications instead, which silent mode can mute" : "ordinary notifications instead, which silent mode can mute and a Focus can hold"}.</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
+  if (!perm.alarms && hasAlarmKit()) return `<div class="banner info" role="note">${I("alarm", 22)}<div><p><strong>Alarms are off.</strong> Urgent nudges come as ${perm.timeSensitive ? "a chain of Time Sensitive notifications instead, which silent mode can mute" : "a chain of ordinary notifications instead, which silent mode can mute and a Focus can hold"}.</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
   if (!perm.timeSensitive) return `<div class="banner info" role="note">${I("bell", 22)}<div><p><strong>Time Sensitive is off.</strong> ${hasAlarmKit() ? "High nudges come" : "High and Urgent nudges come"} as ordinary notifications, so a Focus can hold them.</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
   return "";
 }
@@ -1525,7 +1537,7 @@ function nudgeCard(o) {
     <div class="nc-side">
     <div class="actions">
       <button type="button" class="btn prominent" data-ack="${o.id}" aria-label="Done, stop nudging: ${esc(r.title)}">${I("checkmark", 18)} Done</button>
-      ${left > 0 ? `<button type="button" class="btn bordered" data-snooze="${o.id}" aria-label="Snooze ${SNOOZE[r.strength]} minutes: ${esc(r.title)}">Snooze ${SNOOZE[r.strength]} min</button>` : ""}
+      ${left > 0 ? `<button type="button" class="btn bordered" data-snooze="${o.id}" aria-label="Snooze ${snoozeOf(r)} minutes: ${esc(r.title)}">Snooze ${snoozeOf(r)} min</button>` : ""}
     </div>
     <p class="sec-f" style="margin:8px 0 0">${left > 0 ? `${plural(left, "snooze")} left` : "No snoozes left. Only Done stops it."}</p>
     </div>
@@ -1931,12 +1943,12 @@ function viewRem(id) {
   <div class="sec"><ul class="list">
     <li><div class="cell"><span class="main">Repeats</span><span class="trail">${esc(scheduleText(r))}</span></div></li>
     <li><div class="cell"><span class="main">Next</span><span class="trail">${nextText}</span></div></li>
-    <li><div class="cell"><span class="main">Time Zone</span><span class="trail">${esc(r.timezone.replace("_", " "))}</span></div></li>
+    <li><div class="cell"><span class="main">Time Zone</span><span class="trail">${esc(tzName(r.timezone))}</span></div></li>
     <li><div class="cell"><span class="main">Quiet Hours</span><span class="trail">${r.ignoreQuiet ? "Ignored: nudges through them" : me.quietHours ? "Waits until they end" : "None set"}</span></div></li>
   </ul></div>
   <h2 class="sec-h"><span>How It Nudges</span></h2>
   <div class="sec"><ol class="list ladder" aria-label="Nudge schedule">${rows.map(ladderRow).join("")}${takeoverRow(sim)}</ol>
-    <p class="sec-f">${carry ? `<span class="note-carry">${noteIcon("carry")} The last one was missed, so the next one's Normal nudges come at High.</span> ` : ""}${sim.takeover ? `The next one takes over after ${fmtDur(sim.giveUpAt)}, at nudge ${sim.nudges.length}` : `Gives up after ${fmtDur(sim.giveUpAt)}, at nudge ${sim.nudges.length}`} (limit: ${cap.maxAttempts} nudges or ${fmtDur(cap.maxDurationMinutes)}, not counting quiet hours or snoozes). Snooze: ${SNOOZE[r.strength]} min, up to ${MAX_SNOOZES} times.</p>
+    <p class="sec-f">${carry ? `<span class="note-carry">${noteIcon("carry")} The last one was missed, so the next one's Normal nudges come at High.</span> ` : ""}${sim.takeover ? `The next one takes over after ${fmtDur(sim.giveUpAt)}, at nudge ${sim.nudges.length}` : `Gives up after ${fmtDur(sim.giveUpAt)}, at nudge ${sim.nudges.length}`} (limit: ${cap.maxAttempts} nudges or ${fmtDur(cap.maxDurationMinutes)}, not counting quiet hours or snoozes). Snooze: ${snoozeOf(r)} min, up to ${MAX_SNOOZES} times.</p>
   </div>
   <h2 class="sec-h">History</h2>
   <div class="sec"><ul class="list">${hist.map(historyRow).join("") || `<li class="empty">No occurrences yet. The first one is created when it falls due.</li>`}</ul>
@@ -2004,10 +2016,10 @@ function settingsSections() {
   ${state.quietError ? `<p class="errtext" role="alert">Quiet hours can't start and end at the same time.</p>` : ""}
   <p class="sec-f">${q ? `Quiet from ${hmOf(q.start)} to ${hmOf(q.end)}. ` : ""}Nudging stops in this window: nothing is sent, nothing escalates, no alarms ring, and the time doesn't count toward give-up limits. When it ends, the next nudge comes at once. Reminders set to Ignore Quiet Hours still nudge.</p></div>` },
     { title: "Time Zone", body: `<div class="sec"><ul class="list">
-    <li><div class="formrow"><label for="s-autotz">Set Automatically</label><input type="checkbox" class="switch" id="s-autotz" ${me.autoTz ? "checked" : ""}></div></li>
+    <li><div class="formrow"><label for="s-autotz">Follow iPhone</label><input type="checkbox" class="switch" id="s-autotz" ${me.autoTz ? "checked" : ""}></div></li>
     <li><div class="formrow"><label for="s-tz">Time Zone</label><select class="menu" id="s-tz" ${me.autoTz ? "disabled" : ""}>${TZS.map((t) => `<option value="${t}" ${t === me.timezone ? "selected" : ""}>${t.replace("_", " ")}</option>`).join("")}</select></div></li>
   </ul>
-  <p class="sec-f">Used for quiet hours and new reminders. Each reminder keeps its own time zone. Times follow your iPhone's 12- or 24-hour setting.</p></div>` },
+  <p class="sec-f">The time zone new reminders start with. With Follow iPhone, a reminder's times move with your iPhone when you travel; with a chosen zone, they stay in that zone. Each reminder can change it. Quiet hours always follow your iPhone. Times follow your iPhone's 12- or 24-hour setting.</p></div>` },
     { title: "Siri &amp; Shortcuts", body: `<div class="sec"><ul class="list icons">
     <li><button type="button" class="cell" data-shortcuts><span class="ico" style="background:var(--tile-purple)">${I("mic", 19)}</span><span class="main">Siri &amp; Shortcuts</span>${chev}</button></li>
   </ul>
@@ -2029,6 +2041,8 @@ function viewSettings() {
   ${permBanner()}
   ${sections.map((x) => `<h2 class="sec-h">${x.title}</h2>${x.body}`).join("\n")}`;
 }
+/* A reminder follows the iPhone's time zone ("device", the default) or stays in a chosen zone. */
+const tzName = (z) => (z === "device" ? "Follow iPhone" : z.replace("_", " "));
 const TZS = ["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", "Europe/London", "Europe/Berlin", "Asia/Tokyo", "Australia/Sydney"];
 
 /* ================= The reminder form (a sheet) ================= */
@@ -2047,13 +2061,15 @@ function ruleFor(x) {
     case "biweekly": return `FREQ=WEEKLY;INTERVAL=2;BYDAY=${BYDAY[d.getDay()]}`;
     case "monthly": return `FREQ=MONTHLY;BYMONTHDAY=${d.getDate()}`;
     case "yearly": return "FREQ=YEARLY";
-    case "keep": return x.keepRule;
     default: {
       const c = x.custom;
       const parts = [`FREQ=${c.freq}`];
       if (c.interval > 1) parts.push(`INTERVAL=${c.interval}`);
       if (c.freq === "WEEKLY") parts.push(`BYDAY=${(c.days.length ? c.days : [BYDAY[d.getDay()]]).join(",")}`);
       if (c.freq === "MONTHLY") parts.push(`BYMONTHDAY=${d.getDate()}`);
+      // Extra times of day: the start's own time is always the first.
+      const first = x.dtstart.slice(11, 16);
+      if (c.times.length) parts.push(`BYTIME=${[...new Set([first, ...c.times])].sort().join(",")}`);
       return parts.join(";");
     }
   }
@@ -2061,23 +2077,21 @@ function ruleFor(x) {
 function draftFor(r) {
   // A new reminder made on the Tags tab starts with the tags being filtered by.
   const base = { title: "", body: "", tagIds: state.tab === "tags" && !state.tagEdit ? [...state.tagFilter.ids] : [],
-    dtstart: "2026-09-28T09:00", timezone: me.timezone, repeat: "never", keepRule: null, custom: { freq: "WEEKLY", interval: 1, days: ["MO"] },
-    strength: "firm", maxAttempts: DEFAULT_CAP.maxAttempts, maxDurationMinutes: DEFAULT_CAP.maxDurationMinutes, ignoreQuiet: false };
+    dtstart: "2026-09-28T09:00", timezone: me.autoTz ? "device" : me.timezone, repeat: "never", custom: { freq: "WEEKLY", interval: 1, days: ["MO"], times: [] },
+    strength: "firm", snooze: SNOOZE.firm, maxAttempts: DEFAULT_CAP.maxAttempts, maxDurationMinutes: DEFAULT_CAP.maxDurationMinutes, ignoreQuiet: false };
   if (!r) return base;
-  const x = { ...base, title: r.title, body: r.body || "", tagIds: [...r.tagIds], dtstart: r.dtstart.slice(0, 16), timezone: r.timezone, strength: r.strength, maxAttempts: capOf(r).maxAttempts, maxDurationMinutes: capOf(r).maxDurationMinutes, ignoreQuiet: !!r.ignoreQuiet };
+  const x = { ...base, title: r.title, body: r.body || "", tagIds: [...r.tagIds], dtstart: r.dtstart.slice(0, 16), timezone: r.timezone, strength: r.strength, snooze: snoozeOf(r), maxAttempts: capOf(r).maxAttempts, maxDurationMinutes: capOf(r).maxDurationMinutes, ignoreQuiet: !!r.ignoreQuiet };
   if (!r.rrule) { x.repeat = "never"; return x; }
   const preset = PRESETS.find(([k]) => k !== "never" && ruleFor({ ...x, repeat: k }) === r.rrule);
   if (preset) { x.repeat = preset[0]; return x; }
   const p = parseRRule(r.rrule);
-  if (!p.byhour && !p.byminute && ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"].includes(p.freq)) {
-    x.repeat = "custom"; x.custom = { freq: p.freq, interval: p.interval, days: p.byday ?? [BYDAY[L(r.dtstart).getDay()]] };
-    return x;
-  }
-  x.repeat = "keep"; x.keepRule = r.rrule;
+  // Every rule the app stores is one the form can show: a preset, or Custom.
+  const first = r.dtstart.slice(11, 16);
+  x.repeat = "custom";
+  x.custom = { freq: p.freq, interval: p.interval, days: p.byday ?? [BYDAY[L(r.dtstart).getDay()]], times: (p.bytime ?? []).filter((t) => t !== first) };
   return x;
 }
 function repeatLabel(x) {
-  if (x.repeat === "keep") return `Keep: ${scheduleText({ dtstart: x.dtstart, rrule: x.keepRule }).replace(/ at .*/, "")}`;
   if (x.repeat === "custom") return scheduleText({ dtstart: x.dtstart, rrule: ruleFor(x) }).replace(/ at .*/, "");
   return PRESETS.find(([k]) => k === x.repeat)[1];
 }
@@ -2137,11 +2151,13 @@ function editorMain(sh) {
     <div class="sec"><ul class="list">
       <li><div class="formrow"><label for="f-dt">Starts</label><input type="datetime-local" class="pill-input" id="f-dt" data-f="dtstart" value="${esc(x.dtstart)}" aria-describedby="f-dt-h"></div></li>
       <li><button type="button" class="cell" data-sheet-page="repeat"><span class="main">Repeat</span><span class="trail">${esc(repeatLabel(x))}</span>${chev}</button></li>
-      <li><div class="formrow"><label for="f-tz">Time Zone</label><select class="menu" id="f-tz" data-f="timezone">${TZS.map((t) => `<option value="${t}" ${t === x.timezone ? "selected" : ""}>${t.replace("_", " ")}</option>`).join("")}</select></div></li>
+      <li><div class="formrow"><label for="f-tz">Time Zone</label><select class="menu" id="f-tz" data-f="timezone">${["device", ...TZS].map((t) => `<option value="${t}" ${t === x.timezone ? "selected" : ""}>${esc(tzName(t))}</option>`).join("")}</select></div></li>
     </ul><p class="sec-f" id="f-dt-h">${heldByQuiet(x, d) ? `<span class="note-quiet">${noteIcon("quiet")} During your quiet hours: the first nudge waits until ${hmOf(me.quietHours.end, d)}.</span>` : `${scheduleText({ dtstart: x.dtstart, rrule: ruleFor(x) })}.`}</p></div>
 
     <h3 class="sec-h" id="l-strength">Strength</h3>
-    <div class="sec">${choiceRow("Strength", { id: "f-strength", name: "strength", labelId: "l-strength", attr: 'data-f="strength"', options: Object.keys(PROFILES).map((k) => [k, NAME[k]]), value: x.strength })}<p class="sec-f">${PROFILES[x.strength].blurb} Snooze: ${SNOOZE[x.strength]} min, up to ${MAX_SNOOZES} times.</p></div>
+    <div class="sec">${choiceRow("Strength", { id: "f-strength", name: "strength", labelId: "l-strength", attr: 'data-f="strength"', options: Object.keys(PROFILES).map((k) => [k, NAME[k]]), value: x.strength })}<p class="sec-f">${PROFILES[x.strength].blurb}</p></div>
+    <div class="sec"><ul class="list"><li><div class="formrow"><label for="f-snooze">Snooze Length</label><select class="menu" id="f-snooze" data-f="snooze" aria-describedby="f-snooze-h">${snoozeChoices(x.strength).map((m) => `<option value="${m}" ${m === +x.snooze ? "selected" : ""}>${m} min</option>`).join("")}</select></div></li></ul>
+    <p class="sec-f" id="f-snooze-h">${NAME[x.strength]} snoozes for at least ${SNOOZE[x.strength]} min. Choose longer if you need more time. Each occurrence can be snoozed ${MAX_SNOOZES} times.</p></div>
 
     <h3 class="sec-h">Give Up</h3>
     <div class="sec"><ul class="list">
@@ -2161,7 +2177,7 @@ function editorMain(sh) {
 }
 function editorRepeat(sh) {
   const x = sh.draft;
-  const opts = [...(x.keepRule ? [["keep", repeatLabel({ ...x, repeat: "keep" })]] : []), ...PRESETS];
+  const opts = PRESETS;
   const option = ([k, t]) => `<li role="none"><button type="button" class="cell" role="radio" aria-checked="${x.repeat === k}" data-repeat="${k}"><span class="main">${esc(t)}</span>${x.repeat === k ? CHECK : ""}</button></li>`;
   return `${sheetNav(sheetBack("main", "Back"), "Repeat", "")}
   <div class="sheet-body" tabindex="-1">
@@ -2183,6 +2199,12 @@ function editorCustom(sh) {
     <div class="sec"><ul class="list"><li><div class="formrow"><span class="lbl" id="l-int">Every <strong>${c.interval === 1 ? unit : `${c.interval} ${unit}s`}</strong></span>
       <span class="stepper" role="group" aria-labelledby="l-int"><button type="button" data-cstep="-1" aria-label="Less often" ${c.interval <= 1 ? "disabled" : ""}>−</button><button type="button" data-cstep="1" aria-label="More apart" ${c.interval >= 30 ? "disabled" : ""}>+</button></span></div></li></ul></div>
     ${c.freq === "WEEKLY" ? weekdayPicker(c.days) : ""}
+    <h3 class="sec-h">Times</h3>
+    <div class="sec"><ul class="list">
+      <li><div class="formrow"><span class="lbl">${hm(d)}</span><span class="trail">From Starts</span></div></li>
+      ${c.times.map((t, i) => `<li><div class="formrow"><label for="c-time-${i}" class="sr-only">Time ${i + 2}</label><input type="time" class="pill-input" id="c-time-${i}" data-ctime="${i}" value="${esc(t)}"><button type="button" class="btn plain small" data-ctimedel="${i}" aria-label="Remove ${esc(hmOf(t))}">Remove</button></div></li>`).join("")}
+      <li><button type="button" class="cell tint" data-ctimeadd><span class="main">Add a Time</span></button></li>
+    </ul><p class="sec-f">To nudge several times a day, add more times.</p></div>
     <p class="sec-f" style="margin:0 32px">${esc(scheduleText({ dtstart: sh.draft.dtstart, rrule: ruleFor(sh.draft) }))}.${monthNote}</p>
   </div>`;
 }
@@ -2274,7 +2296,7 @@ function saveEditor() {
   const sh = state.sheet, x = sh.draft;
   if (!x.title.trim()) return;
   for (const t of sh.newTags) if (x.tagIds.includes(t.id)) tags.push(t);
-  const fields = { title: x.title.trim(), body: x.body.trim() || null, tagIds: x.tagIds.filter(tagById), dtstart: x.dtstart, timezone: x.timezone, rrule: ruleFor(x), strength: x.strength, cap: capFor(x), ignoreQuiet: x.ignoreQuiet };
+  const fields = { title: x.title.trim(), body: x.body.trim() || null, tagIds: x.tagIds.filter(tagById), dtstart: x.dtstart, timezone: x.timezone, rrule: ruleFor(x), strength: x.strength, snooze: Number(x.snooze), cap: capFor(x), ignoreQuiet: x.ignoreQuiet };
   const r = sh.editId ? updateReminder(remById(sh.editId), fields) : createReminder(fields);
   state.sheet = null;
   const top = state.stacks[state.tab].at(-1);
@@ -2371,7 +2393,7 @@ function showChain() {
   state.focus = "system"; render();
 }
 function showAlarm() {
-  if (!hasAlarmKit()) return showChain();
+  if (!hasAlarmKit() || !perm.alarms) return showChain();
   const o = demoOcc("alarm");
   if (!o) return;
   const { r, at } = sendNudge(o, "alarm");
@@ -2386,7 +2408,7 @@ function showAlarm() {
 function alarmUI(s) {
   const o = occurrences.find((x) => x.id === s.occId), r = remById(o.reminderId);
   const left = MAX_SNOOZES - (o.snoozes || 0);
-  const snoozeBtn = `<button type="button" class="abtn secondary" data-alarm="snooze">${I("clock", 22)} Snooze ${SNOOZE[r.strength]} min</button>`;
+  const snoozeBtn = `<button type="button" class="abtn secondary" data-alarm="snooze">${I("clock", 22)} Snooze ${snoozeOf(r)} min</button>`;
   return `<div class="alarm" role="alertdialog" aria-modal="true" aria-labelledby="al-t">
       <div class="lock-top" aria-hidden="true"><div class="lock-date">${LONGDAY[NOW.getDay()]} ${NOW.getDate()} ${LONGMON[NOW.getMonth()]}</div><div class="lock-time">${clock(s.at)}</div></div>
       <div class="alarm-body">
@@ -2420,7 +2442,7 @@ function activityUI(s) {
 function notifActions(o) {
   const r = remById(o.reminderId);
   const left = MAX_SNOOZES - (o.snoozes || 0);
-  const snoozeBtn = left > 0 ? `<button type="button" class="naction" data-nact="snooze">Snooze ${SNOOZE[r.strength]} min ${I("clock", 20)}</button>` : "";
+  const snoozeBtn = left > 0 ? `<button type="button" class="naction" data-nact="snooze">Snooze ${snoozeOf(r)} min ${I("clock", 20)}</button>` : "";
   return `<div class="nactions" role="group" aria-label="Notification actions">
         <button type="button" class="naction" data-nact="done">Done ${I("checkmark", 20)}</button>
         ${snoozeBtn}
@@ -2474,7 +2496,7 @@ function bannerUI(s) {
   const o = s.occId && occurrences.find((x) => x.id === s.occId);
   if (s.kind === "alarm") {
     const r = remById(o.reminderId), left = MAX_SNOOZES - (o.snoozes || 0);
-    const snoozeBtn = left > 0 ? `<button type="button" class="abtn secondary" data-alarm="snooze">${I("clock", 20)} Snooze ${SNOOZE[r.strength]} min</button>` : "";
+    const snoozeBtn = left > 0 ? `<button type="button" class="abtn secondary" data-alarm="snooze">${I("clock", 20)} Snooze ${snoozeOf(r)} min</button>` : "";
     return `<div class="sysbanner" role="alertdialog" aria-modal="true" aria-labelledby="al-t">
       <div class="island-alert">
         <div class="ia-text"><p class="alarm-app">${I("alarm", 16)} Nudge-inator</p><h2 class="ia-title" id="al-t" tabindex="-1">${esc(s.title)}</h2></div>
@@ -2518,7 +2540,7 @@ function ack(id, from) {
 function snooze(id) {
   const o = occurrences.find((x) => x.id === id);
   if (o?.state !== "NUDGING" || (o.snoozes || 0) >= MAX_SNOOZES) return;
-  const r = remById(o.reminderId), mins = SNOOZE[r.strength];
+  const r = remById(o.reminderId), mins = snoozeOf(r);
   o.snoozes = (o.snoozes || 0) + 1;
   const until = new Date(NOW.getTime() + mins * 6e4);
   o.nextNudgeAt = iso(until);
@@ -2728,7 +2750,7 @@ const VIEWS = { now: viewNow, day: viewDay, tags: viewTags, settings: viewSettin
 function assistiveCard(o) {
   const r = remById(o.reminderId);
   const left = MAX_SNOOZES - (o.snoozes || 0);
-  const snoozeBtn = left > 0 ? `<button type="button" class="aa-btn secondary" data-snooze="${o.id}" aria-label="Snooze ${SNOOZE[r.strength]} minutes: ${esc(r.title)}">Snooze ${SNOOZE[r.strength]} min</button>` : "";
+  const snoozeBtn = left > 0 ? `<button type="button" class="aa-btn secondary" data-snooze="${o.id}" aria-label="Snooze ${snoozeOf(r)} minutes: ${esc(r.title)}">Snooze ${snoozeOf(r)} min</button>` : "";
   return `<li class="aa-card"><h3 class="aa-title">${esc(r.title)}</h3>
       <button type="button" class="aa-btn" data-ack="${o.id}" aria-label="Done: ${esc(r.title)}">${I("checkmark", 26)} Done</button>
       ${snoozeBtn}
@@ -2943,7 +2965,7 @@ function alarmWhy(a) {
     if (!perm.notifications) return "Notifications are off, so iOS 18 has no way to send Urgent nudges.";
     return a ? `“${remById(a.reminderId).title}”, nudge ${a.attempts + 1}, Urgent. iOS 18 has no AlarmKit, so it repeats as notifications.` : "No nudging reminder has an Urgent nudge next. Reset the mockup.";
   }
-  if (!perm.alarms) return "Alarms are off, so Urgent nudges come as notifications.";
+  if (!perm.alarms) return "Alarms are off, so Urgent nudges come as a chain of notifications.";
   const where = inUse() ? " The iPhone is in use, so it rings over the app." : "";
   return a ? `“${remById(a.reminderId).title}”, nudge ${a.attempts + 1}, Urgent.${where}` : "No nudging reminder has an Urgent nudge next. Reset the mockup.";
 }
@@ -3071,6 +3093,8 @@ const CLICK = {
   },
   cday: (v) => { const c = state.sheet.draft.custom; c.days = toggleDay(c, v); state.focus = `[data-cday="${v}"]`; render(); },
   step: (v) => { const x = state.sheet.draft; x.maxAttempts = Math.max(MIN_CAP[x.strength].maxAttempts, Math.min(100, x.maxAttempts + Number(v))); stepperFocus(`[data-step="${v}"]:not(:disabled)`); },
+  ctimeadd: () => { const c = state.sheet.draft.custom; c.times.push("12:00"); state.focus = `#c-time-${c.times.length - 1}`; render(); },
+  ctimedel: (i) => { const c = state.sheet.draft.custom; c.times.splice(Number(i), 1); state.focus = "[data-ctimeadd]"; render(); },
   cstep: (v) => { const c = state.sheet.draft.custom; c.interval = Math.max(1, Math.min(30, c.interval + Number(v))); stepperFocus(`[data-cstep="${v}"]:not(:disabled)`); },
   tagSave: () => saveTag(),
   onboardNext: () => { state.sheet = null; render(); askPermissions(); },
@@ -3083,7 +3107,7 @@ const CLICK = {
     if (s.unlocked) { state.system = null; snooze(s.occId); nav(); return; }
     snooze(s.occId);
     const o = occurrences.find((x) => x.id === s.occId);
-    state.system = { kind: "activity", occId: s.occId, title: s.title, until: o.snoozedUntil, mins: SNOOZE[remById(o.reminderId).strength] };
+    state.system = { kind: "activity", occId: s.occId, title: s.title, until: o.snoozedUntil, mins: snoozeOf(remById(o.reminderId)) };
     state.focus = "system"; render();
   },
   activityDone: () => { ack(state.system.occId, "alarm"); state.system = null; nav(); },
@@ -3144,12 +3168,13 @@ function onDraftField(t) {
   const x = state.sheet.draft;
   if (t.id === "f-title" && /\n/.test(t.value)) t.value = t.value.replace(/\s*\n\s*/g, " ");
   if (t.classList.contains("grow")) growField(t);
-  x[t.dataset.f] = t.type === "checkbox" ? t.checked : t.dataset.f === "maxDurationMinutes" ? Number(t.value) : t.value;
+  x[t.dataset.f] = t.type === "checkbox" ? t.checked : ["maxDurationMinutes", "snooze"].includes(t.dataset.f) ? Number(t.value) : t.value;
   // Choosing a gentler strength raises a lower give-up limit to its minimum.
   if (t.dataset.f === "strength") {
     const m = MIN_CAP[x.strength];
     x.maxAttempts = Math.max(x.maxAttempts, m.maxAttempts);
     x.maxDurationMinutes = Math.max(+x.maxDurationMinutes, m.maxDurationMinutes);
+    x.snooze = Math.max(+x.snooze, SNOOZE[x.strength]);
   }
   if (t.tagName === "TEXTAREA" || t.type === "text") {
     // Typing doesn't rebuild the field being typed in; only the Add button and its hint change.
@@ -3175,7 +3200,10 @@ document.addEventListener("input", (e) => {
   const t = e.target;
   if (t.id === "tagq" || t.id === "gsearch") onSearch(t);
   else if (t.dataset.f && state.sheet) onDraftField(t);
-  else if (t.dataset.c && state.sheet) {
+  else if (t.dataset.ctime !== undefined && state.sheet) {
+    // Typing a time doesn't rebuild the page; the summary updates on the next render.
+    state.sheet.draft.custom.times[Number(t.dataset.ctime)] = t.value;
+  } else if (t.dataset.c && state.sheet) {
     state.sheet.draft.custom[t.dataset.c] = t.value;
     state.focus = t.tagName === "SELECT" ? `#${t.id}` : `[data-c="freq"][value="${t.value}"]`;
     render();
