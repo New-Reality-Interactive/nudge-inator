@@ -362,8 +362,8 @@ format would have to stay compatible from version to version.
   force-quit.
 - **Snooze before the first unlock.** After a restart, the alarm can ring before the device has
   been unlocked. Snooze still counts down, but Apple says the app's snooze intent only runs after
-  the first unlock, so the snooze isn't counted and the later alarms aren't moved. The app
-  reconciles on its next launch.
+  the first unlock, so the snooze isn't counted and the later alarms aren't moved until the app next
+  runs. Then it counts the snooze and moves the later alarms (architecture spine, AD-6).
 - **The alarm can't say Done.** From iOS 26.1 the stop control is the system's own. Confirm in
   testing that people understand that stopping the alarm marks the reminder done.
 - **Alarms with notifications off.** Apple documents the alarm permission as separate from

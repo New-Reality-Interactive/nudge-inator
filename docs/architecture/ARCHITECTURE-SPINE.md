@@ -84,7 +84,7 @@ graph TD
 - **Binds:** Edit while nudging (brief §3), quiet hours, time-zone changes, history, export
 - **Prevents:** an edit, a quiet-hours change or a flight rewriting past statuses; history that can't say "Done (alarm stopped)"
 - **Rule:**
-  - **Events are append-only rows:** done, not done, snooze, clear, pause, resume and skip-by-edit. Each records `issuedAt` (when the person acted, from the surface) and `source` (`app`, `notification`, `alarmStop`, `liveActivity`, `siri`, `assistiveAccess`).
+  - **Events are append-only rows:** done, not done, snooze, clear, pause, resume and skip-by-edit. Each records `issuedAt` (when the person acted, from the surface) and `source` (`app`, `notification`, `alarmStop`, `alarmCountdown`, `liveActivity`, `siri`, `assistiveAccess`).
   - **Versioned facts carry the instant they were saved:** a reminder's nudging configuration (`ReminderConfig`: schedule, repeat rule, time zone mode, strength, snooze length, give-up limits, Ignore Quiet Hours), quiet hours, and the device time zone. The coordinator writes a zone fact when it detects a change.
   - **How versions apply:** the engine applies each version per brief §3. A new schedule applies from the next due time; strength, limit and Ignore Quiet Hours apply from the next nudge; a new snooze length applies from the next snooze. A version with a gentler strength already carries the raised snooze length and limit (brief §3), so the engine never sees a snooze length below the strength's default. Each past instant is evaluated with the quiet hours and zone in effect then.
   - **Mutable fields:** only title, notes and tags.
@@ -118,6 +118,7 @@ graph TD
 - **Rule:**
   - **The diff:** the reconcile job evaluates, then diffs the plan only against what the OS reports (pending requests, delivered notifications, `AlarmManager.alarms`), never against the ledger. It adds what's missing, removes what's extra and replaces what changed.
   - **Alarms in progress:** an alarm that is alerting or counting down for an open occurrence is never removed as extra until a command about it has been committed.
+  - **Uncounted snoozes:** a counting-down alarm for an open occurrence with no committed snooze (a Snooze before the first unlock, whose intent never ran) is adopted. The reconciler commits a `snooze` command for it with `source: .alarmCountdown` and `issuedAt` when it first sees the countdown, so it counts toward the 3 snoozes and the later alarms move past it. If the countdown has already ended, the snooze is still counted, with its length taken from the reminder's config.
   - **Cleanup:** it removes delivered notifications whose occurrence is closed, expired Done follow-ups and delivered keep-nudging notices.
   - **Echoes:** `alarmUpdates` and `authorizationUpdates` that only echo the coordinator's last applied set are ignored.
   - **Triggers:**
