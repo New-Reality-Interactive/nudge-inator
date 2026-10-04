@@ -331,7 +331,7 @@ Every target may also import `os` for logging (AD-19).
 | UI state | Navigation per tab with `NavigationStack`. My Day's filter, match mode and chosen count, and the Tags tab's tokens and match mode, use `SceneStorage`. A tag filter is `off`, `tags(IDs, match)` or `noTags` (My Day only). Tag IDs that no longer exist are dropped whenever a `tags` filter is read, so deleting a tag or all data empties it in every scene (each scene has its own `SceneStorage`), and a `tags` filter with no tags left is off. Delete All Data also turns a `noTags` filter off in the scene it runs in. Recent Searches live in the database. Non-personal flags (onboarding done, banners acknowledged) live in `UserDefaults`. |
 | Search | Search (title, notes, tags), the Tags tab's tag search and Siri's entity queries use one `NudgeCore` matcher: Foundation case- and diacritic-insensitive comparison, no locale. |
 | Siri | "The first" nudging reminder is `NudgeCore`'s order: highest urgency, then earliest due, then most nudges sent. |
-| Testing | `NudgeCore` and `NudgeStore` tests use Swift Testing with a fixed clock and fixed zones, including DST transitions, zone changes mid-occurrence and the 50 ms benchmark. UI tests use XCTest. Every test, `NudgeKit`'s included, runs with `xcodebuild test` on the iOS 18 and 26/27 simulators; there is no macOS test run, because AlarmKit, ActivityKit and `BGTaskScheduler` have no macOS. |
+| Testing | `NudgeCore` and `NudgeStore` tests use Swift Testing with a fixed clock and fixed zones, including DST transitions, zone changes mid-occurrence and the 50 ms benchmark. UI tests use XCTest, including on an iPad simulator running the iPhone app in both orientations (brief §11 Q10). Every test, `NudgeKit`'s included, runs with `xcodebuild test` on the iOS 18 and 26/27 simulators; there is no macOS test run, because AlarmKit, ActivityKit and `BGTaskScheduler` have no macOS. |
 | Export | JSON, `schemaVersion: 1`, ISO 8601 instants with offsets, IANA zone IDs, tags by name, reminders with their versions, occurrences with their statuses, events, and History's nudge lines (AD-15). File `nudge-inator-YYYY-MM-DD.json`. Not importable. |
 
 ## Stack
@@ -420,11 +420,13 @@ nudge-inator/
   - `UISupportsAssistiveAccess`
   - `UISupportsFullScreenInAssistiveAccess`
   - `UIBackgroundModes` with `fetch`
-  - `BGTaskSchedulerPermittedIdentifiers`
+  - `BGTaskSchedulerPermittedIdentifiers`, with one identifier: the bundle ID plus `.refresh`
   - `ITSAppUsesNonExemptEncryption = NO`
   - `PrivacyInfo.xcprivacy` in the app target: no tracking, no collected data, and `UserDefaults` declared with reason `CA92.1`. GRDB 7.11.1 ships its own manifest, which declares no required-reason APIs.
   - App Store privacy label: Data Not Collected (AD-19)
 - **CI:** the workflow names a runner image that has Xcode 27.0 (not every macOS image does) and downloads the iOS 18 simulator runtime (`xcodebuild -downloadPlatform iOS -buildVersion 18.x`). Its first run confirms GRDB's UI tests on the Xcode 27.0 simulator (GRDB issue #1875, a UI-test crash on Xcode 27 beta 4, closed without a named fix).
+- **Signing and versions:** automatic signing in Xcode; CI builds for simulators and needs none. The build number goes up with every upload; the marketing version changes per release.
+- **Crash reports:** only from TestFlight and App Store Connect, read in Xcode's Organizer (AD-19 allows no other channel).
 - **Infrastructure:** there is no server and no runtime infrastructure.
 
 **First spike:** App Intents declared in `NudgeKit` targets and used from both the app and the widget, with an `AppIntentsPackage` in each. If that fails, the fallback is a framework target. The spike also records which process runs `NudgeLiveActivity`'s intents on iOS 26 and 27, with the app running and with it not running (WWDC26 session 345 says intents in a shared package may run in the extension when the app isn't running).
