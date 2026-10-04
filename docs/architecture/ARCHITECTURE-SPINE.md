@@ -242,7 +242,7 @@ Every target may also import `os` for logging (AD-19).
 - **Binds:** history, export, restore detection
 - **Prevents:** history claiming a nudge was sent when it never was
 - **Rule:**
-  - **What's recorded:** every delivery the reconciler schedules gets a ledger row with its delivery ID, occurrence key, nudge index, urgency, channel, fire instant and `handedOverAt`, set once the OS accepts the request. A planned nudge with no channel (notifications off, and no alarm for it) gets a row with channel `none`, and nothing is handed to the OS for it; it still counts toward the give-up limit (brief §4). Before a row's fire instant, a permission change replans it like any other change. Every chain notification gets its own row, like any delivery, so lost and restore detection work the same for chains.
+  - **What's recorded:** every delivery the reconciler schedules gets a ledger row with its delivery ID, occurrence key, nudge index, urgency, channel, fire instant and `handedOverAt`, set once the OS accepts the request. A planned nudge with no channel (notifications off, and no alarm for it) gets a row with channel `none`, and nothing is handed to the OS for it; it still counts toward the give-up limit (brief §4). Rows are never updated in place: replacing a delivery (a new instant, channel or content) marks its row `cancelled` and writes a new one. Before a row's fire instant, a permission change replans it like any other change. Every chain notification gets its own row, like any delivery, so lost and restore detection work the same for chains.
   - **States:**
     - `scheduled`
     - `cancelled`: the reconciler removed it before its fire instant
