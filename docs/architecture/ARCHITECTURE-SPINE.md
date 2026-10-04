@@ -88,8 +88,8 @@ Every target may also import `os` for logging (AD-19).
   - **Order:** every projection, the engine's fold, History and Export order events by `issuedAt`, then by commit sequence.
   - **Versioned facts carry the instant they were saved:** a reminder's nudging configuration (`ReminderConfig`: schedule, repeat rule, strength, snooze length, give-up limits, Ignore Quiet Hours), quiet hours, and the device time zone. The coordinator writes a zone fact when it detects a change.
   - **How versions apply:** the engine applies each version per brief §3. A new schedule applies from the next due time; strength, limit and Ignore Quiet Hours apply from the next nudge; a new snooze length applies from the next snooze. A version with a gentler strength already carries the raised snooze length and limit (brief §3), so the engine never sees a snooze length below the strength's default. Each past instant is evaluated with the quiet hours and zone in effect then.
-  - **Mutable fields:** only title, notes and tags.
-  - **Deletion:** deleting a reminder deletes its versions, occurrences, events and ledger rows in one job; deleting a tag deletes it and its links to reminders. With Delete All Data (AD-16), these are the only removals besides pruning (AD-15).
+  - **Mutable fields:** among a reminder's facts, only title, notes and tags. Tag names (Rename Tag) and Recent Searches are not facts.
+  - **Deletion:** deleting a reminder deletes its versions, occurrences, events and ledger rows in one job; deleting a tag deletes it and its links to reminders. With Delete All Data (AD-16), these are the only removals of facts besides pruning (AD-15).
   - **Give-up time:** the time counted toward the limit leaves out the union of quiet, snoozed and closed intervals.
 
 ### AD-4 — One serial queue for every write and every scheduling change [ADOPTED]
