@@ -485,7 +485,7 @@ Visual only; decorative, hidden from VoiceOver.
 | First launch | Welcome, then the permission prompts. Denying either lands on Now with its banner. |
 | Launch after updating from iOS 18 to iOS 26 or later (alarm permission never asked) | The system's alarm prompt, once, before Now. No Welcome. Denying it lands on Now with the alarms-off banner. |
 | Loading | None. Data is local and loads with the view, so there are no spinners or skeletons. |
-| The reminders can't be opened (a failed update or damaged data; architecture AD-16) | One message in place of the tabs: "Nudge-inator can't open your reminders, so it has stopped nudging. Check the App Store for an update, then open the app again." |
+| The reminders can't be opened (a failed update or damaged data; architecture AD-16) | One message in place of the tabs: "Nudge-inator can't open your reminders, so it has stopped nudging. Check for an update, then open the app again." |
 
 ## Nudge Surfaces
 
@@ -500,7 +500,7 @@ section covers what the person sees and can do on each.
 | **Alarm** (Urgent on iOS 26+) | The app's name and the title, tinted `{colors.accent-dark}` | **Snooze N min** (`clock`, filled with the tint) while snoozes are left; the system's **Stop** | Stop counts as Done, as onboarding and How It Nudges say. After each snooze the app's own alarm rings at the snooze's end, without Snooze once none are left (architecture spine, AD-12). The alarm also shows in StandBy and on a paired Apple Watch. |
 | **Done follow-up** (after Stop on an alarm, or on the Watch) | An ordinary notification: "Marked done: Blood-pressure pill. Not done yet?" | **Not Done**; tapping it opens the reminder | Sent at once. **Not Done** works while Not Done applies ([brief §3](../product/brief.md#3-product-concepts)); the app removes the notification the next time it runs after that, or at once when Not Done is used. |
 | **Live Activity** (after Snooze on an alarm) | Title (up to 2 lines), countdown, "Snoozed. Rings again at 8:35 AM." | **Done** | Designed by the app, in a widget extension. Before the first unlock, iOS shows its own countdown instead. |
-| **Keep-nudging notice** (the reserved slot) | An ordinary notification: "Open Nudge-inator to keep nudging." [ASSUMPTION: wording; brief §4 gives only the phrase] | Tapping it opens the app, which tops up the schedule | Sent when the scheduled nudges run out before the app has run again. |
+| **Keep-nudging notice** (the reserved slot) | An ordinary notification: "Open Nudge-inator to keep nudging." [ASSUMPTION: wording; brief §4 gives only the phrase] | Tapping it opens the app, which tops up the schedule | Sent when brief §4 says (the first nudge that couldn't be scheduled), unless the app has run again first. |
 | **Over the app** (the iPhone is in use) | Notifications as banners. The alarm in the Dynamic Island, or as a banner at the top in landscape [To confirm on a device: the alarm as a banner in landscape]. | Same as on each surface | |
 
 - **Privacy:** notes and tags never appear outside the app.

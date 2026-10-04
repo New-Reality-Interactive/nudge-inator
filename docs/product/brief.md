@@ -219,7 +219,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
 
 | Limit | Value | How the app works within it |
 |---|---|---|
-| Pending notifications | 64 per app. iOS keeps the soonest 64 and drops the rest without an error. | Keeps its own count. Slots go first to nudge 1 of each occurrence due in the next 24 hours, soonest first, then to every other nudge, soonest first. 1 slot is kept for an "Open Nudge-inator to keep nudging" notification, at the time its scheduled nudges run out. |
+| Pending notifications | 64 per app. iOS keeps the soonest 64 and drops the rest without an error. | Keeps its own count. Slots go first to nudge 1 of each occurrence due in the next 24 hours, soonest first, then to every other nudge, soonest first. 1 slot is kept for an "Open Nudge-inator to keep nudging" notification, at the time of the first nudge that couldn't be scheduled. |
 | Notification chain (iOS 18, or alarms not allowed) | Up to 10 pending at once | Counts toward the 64 |
 | Alarms | Not published. Scheduling fails with `maximumLimitReached`. | Slots go soonest first. The app remembers how many it could schedule and plans within that. An Urgent nudge that can't get an alarm comes as a Time Sensitive notification. |
 | Alarms per occurrence | Firm and Relentless: 17 at the default limit (nudges 4–20), up to 97 at the 100-nudge maximum | Counts toward the alarm limit |
