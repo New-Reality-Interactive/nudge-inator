@@ -38,5 +38,4 @@ branch.
 - `Alarm` exposes only `id`, `schedule`, `countdownDuration` and `state`, so the diff can't read an
   alarm's presentation or metadata back from AlarmKit.
 
-**Status: open.** Fixes are on `architecture/spine-update`; see the decision log entries after this
-run.
+**Status: closed (2026-10-04): every finding fixed on `architecture/spine-update`, then re-checked by the next run.**

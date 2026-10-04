@@ -17,4 +17,4 @@ launch-time registrations, the first settings facts, the order of work inside a 
 `previewsHidden`'s meaning, and one gesture as one command. The currency and inputs reviewers found
 no highs, and none of the earlier highs returned.
 
-**Status: open.** See the decision log entries after this run.
+**Status: closed (2026-10-04): every finding fixed on `architecture/spine-update`.**

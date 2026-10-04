@@ -5,8 +5,14 @@ A validate-mode run of the `bmad-architecture` skill on
 review branch `docs/align-precedence-and-mockup`. It reported findings only; the spine wasn't edited
 from it.
 
-**Status: open.** These findings are the input to the next step, a `bmad-architecture` Update run
-on its own branch. The prompt for that session is in [NEXT-STEP-PROMPT.md](NEXT-STEP-PROMPT.md).
+**Status: closed (2026-10-04).** Every finding here, critical to low, was resolved in the spine or
+the documents it points to on branch `architecture/spine-update`; the decision log
+(`../../.memlog.md`, entries "update run") records each decision and the option not chosen. Later
+validate runs found new issues in the text the fixes added, not these: see
+[2026-10-03-spine-revalidation](../2026-10-03-spine-revalidation/README.md),
+[-2](../2026-10-03-spine-revalidation-2/README.md) and
+[-3](../2026-10-03-spine-revalidation-3/review-adversarial.md). The prompt for the Update session
+is in [NEXT-STEP-PROMPT.md](NEXT-STEP-PROMPT.md).
 
 ## What was reviewed
 
