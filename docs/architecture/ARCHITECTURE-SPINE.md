@@ -43,7 +43,7 @@ access can hide the store's write API from everything but the shell.
 | Shell | `NudgeShell` | `Coordinator` (serial job queue, command handling, reconciler), notification and AlarmKit adapters, `Capabilities`, background refresh, notification delegate, Test Nudge | NudgeCore, NudgeStore, NudgeLiveActivity, UserNotifications, AlarmKit, BackgroundTasks, UIKit (AD-18) |
 | Live Activity | `NudgeLiveActivity` | `NudgeAlarmMetadata`, the alarm's stop, snooze and Live Activity Done intents | NudgeCore, AppIntents, AlarmKit |
 | Intents | `NudgeIntents` | Siri and App Shortcuts intents, App Entities and queries | NudgeCore, NudgeLiveActivity, AppIntents |
-| UI | `Nudge-inator` app target | SwiftUI scenes and views, `NudgeModel`, Assistive Access | all of the above |
+| UI | `Nudge-inator` app target | SwiftUI scenes and views, `NudgeModel`, Assistive Access | all of the above, plus Accessibility |
 | Widget | `NudgeWidgets` extension | The alarm's countdown Live Activity view | NudgeLiveActivity, NudgeCore, AlarmKit, ActivityKit, WidgetKit |
 
 ```mermaid
@@ -251,6 +251,7 @@ Every target may also import `os` for logging (AD-19).
 - **Rule:**
   - **The database:** one SQLite database through GRDB, in its own folder in Application Support. The folder has file protection `completeUntilFirstUserAuthentication`, so the `-wal` and `-shm` files match. It's included in iCloud and computer backups.
   - **Migrations:** only through numbered `DatabaseMigrator` migrations, each covered by a test that migrates a fixture from the previous version.
+  - **Locked or failed:** the coordinator opens the database only when `UIApplication.isProtectedDataAvailable` is true. An open that fails while it's true is "any other open failure" below; the error code is never used to tell the two apart.
   - **The journal:** while protected data is unavailable (before the first unlock), a command goes to an append-only journal file with protection `none`. It holds only the command kind, occurrence key, nudge index, `source` and `issuedAt`, never titles. If the command is a Stop, the intent also posts `followup/<key>/<n>`, taking the reminder's title from the alarm's `NudgeAlarmMetadata` (the alarm already shows the title, so this exposes nothing new), so the follow-up reads as EXPERIENCE gives it. On the first open, replay is one job, first in the queue. It runs each entry through `accepts` in order and writes the accepted rows. For each accepted `done(source: .alarm)` it writes the follow-up's ledger row (fire instant and `handedOverAt` set to the entry's `issuedAt`). Then it deletes the journal and runs one reconcile, so no reconcile sees a journaled command as missing (AD-6). A follow-up posted for a Stop that `accepts` rejected is removed by Cleanup, since Not Done doesn't apply. If the stop intent itself doesn't run before the first unlock (Apple documents this only for the secondary intent), the Stop isn't recorded: the alarm leaves `AlarmManager.alarms`, which AD-6 never reads as a command, and the occurrence keeps nudging.
   - **Any other open failure** (a failed migration, corruption): it's logged, nothing is journaled, and the coordinator runs no jobs. The shell cancels every pending notification and alarm, the one OS write allowed without the store, so nothing nudges that Done can't stop. The app shows the message in EXPERIENCE › State Patterns › Any.
   - **Delete All Data:** deletes every reminder, tag, occurrence, event, ledger row and Recent Search, and the journal, in one job, then reconciles to an empty plan. The tag filters turn off as Conventions › UI state says. It keeps what brief §3 keeps (settings), which here means quiet hours and their versions, zone facts, capability state and the `UserDefaults` flags.
@@ -281,7 +282,7 @@ Every target may also import `os` for logging (AD-19).
     - the `AssistiveAccess` scene, as an `if #available` in the scene body (iOS 18 behavior: EXPERIENCE › Assistive Access, detected with the Accessibility framework's `AccessibilitySettings.isAssistiveAccessEnabled`, iOS 18.0+)
 
     `Tab(role: .search)` is iOS 18+ and is used directly. iOS 27-only APIs, such as `allowedExecutionTargets` (AD-5), sit behind `@available(iOS 27, *)` where they're declared.
-  - **UIKit:** used only for the app lifecycle (the `UIApplicationDelegateAdaptor` in the app target; the `UIApplication` notifications and the Settings URL in `NudgeShell`) and `UITabBarAppearance` on iOS 18.
+  - **UIKit:** used only for the app lifecycle (the `UIApplicationDelegateAdaptor` in the app target; the `UIApplication` notifications, `isProtectedDataAvailable` and the Settings URL in `NudgeShell`) and `UITabBarAppearance` on iOS 18.
   - **Layout:** decided by width and size class, never by device idiom or interface orientation. "Landscape" in the spines means compact vertical size class.
 
 ### AD-19 — Privacy floor
