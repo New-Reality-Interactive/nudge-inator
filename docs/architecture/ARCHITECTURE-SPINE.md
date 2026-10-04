@@ -471,7 +471,7 @@ decision here:
 ## Deferred
 
 - **Out of scope for v1 (brief §6):** the iPad layout, sync, accounts, import, a Watch app and Home Screen widgets. The paradigm doesn't block any of them. Sync would need a conflict model for AD-3's facts.
-- **iOS 27 `appEntityIdentifier` on alarms:** still marked beta in Apple's docs on 2026-10-03, after iOS 27 shipped, which may be lag in the docs. Re-check with the iOS 27.1 SDK, and adopt it once it isn't beta, as an optional link to the Occurrence entity.
+- **iOS 27 `appEntityIdentifier` on alarms:** no longer marked beta in Apple's live docs. Not adopted, because no v1 feature needs Siri to identify an alarm (Siri's commands go through `NudgeQuerying`). Adopt it when a Siri or Shortcuts feature needs alarms linked to occurrences.
 - **iOS 27 `.clock` App Intents domain:** not adopted. It requires every schema in the domain, including creating alarms.
 - **View structure below `NudgeModel`:** left to feature work. AD-1, AD-4, AD-18 and AD-20 constrain it.
 - **Exact GRDB table and column names:** owned by the first migration.
