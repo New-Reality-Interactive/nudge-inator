@@ -8,7 +8,7 @@ scope: 'The v1 iPhone app (iOS 18, 26, 27): app target, widget extension and the
 status: final
 created: '2026-10-03'
 updated: '2026-10-03'
-binds: ['brief §3 concepts', 'brief §4 delivery', 'brief §6 features', 'brief §7 principles', 'brief §11 Q1–Q14']
+binds: ['brief §3 concepts', 'brief §4 delivery', 'brief §6 features', 'brief §7 principles', 'brief §10 risks and device checklist', 'brief §11 Q1–Q14']
 sources:
   - ../product/brief.md
   - ../product/addendum.md
@@ -353,7 +353,7 @@ erDiagram
   TAG ||--o{ REMINDER_TAG : "labels"
   REMINDER ||--o{ REMINDER_EVENT : "pause, resume"
   REMINDER ||--o{ OCCURRENCE : "materializes"
-  OCCURRENCE ||--o{ OCCURRENCE_EVENT : "done, snooze, clear"
+  OCCURRENCE ||--o{ OCCURRENCE_EVENT : "done, not done, snooze, clear, skip-by-edit"
   OCCURRENCE ||--o{ LEDGER_ENTRY : "deliveries"
   SETTINGS ||--o{ QUIET_HOURS_VERSION : "versions"
   SETTINGS ||--o{ ZONE_FACT : "device zone changes"
