@@ -160,11 +160,11 @@ Every target may also import `os` for logging (AD-19).
 - **Binds:** Occurrence rows, follow-the-iPhone reminders, history, commands on unseen occurrences
 - **Prevents:** a nudge ringing twice after a flight; Done dropped for an occurrence whose row doesn't exist yet
 - **Rule:**
-  - **Before it's written:** an occurrence is a projection, recomputed with the current zone.
+  - **Before it's written:** an occurrence is a projection; its due instant follows the rule below with the zone facts so far, so a new zone fact can move it.
   - **When it's written:** the coordinator writes its row the first time either of these happens:
     - a command names its key
     - a reconcile finds that it's due, or that its first planned delivery is in the past
-  - **Its instant:** when the row is written, the due instant is frozen by resolving the key's wall time in the latest zone fact (AD-7's DST rule). It is never recomputed. A ledger row's fire instant is not the due instant: quiet hours can hold nudge 1 past it.
+  - **Its instant:** the due instant is the earliest instant at which the zone fact in effect then (AD-3) reads the key's wall time, with AD-7's DST rule. So an occurrence due during a flight keeps the departure zone's instant, even when it's written after landing. It's frozen when the row is written and never recomputed. A ledger row's fire instant is not the due instant: quiet hours can hold nudge 1 past it.
 
 ### AD-9 — Time zones: everything follows the iPhone
 
