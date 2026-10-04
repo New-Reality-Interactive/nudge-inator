@@ -51,8 +51,8 @@ mockup yet. Build them from the spines:
   simulate an OS update)
 - the **keep-nudging** notice
 - the alarm-limit Via label, "Notification: too many alarms scheduled"
-- the history line for a nudge the app couldn't schedule because it wasn't opened, "Nudge 9 · High ·
-  couldn't be sent (the app wasn't opened)"
+- the history line for a nudge the app couldn't schedule because it wasn't opened (its copy is in
+  EXPERIENCE › Voice and Tone)
 
 ## Product rules
 
@@ -533,7 +533,7 @@ filtered), Settings, reminder details, New Reminder and Filter My Day:
 The shrinking tab bar, My Day's header and the wide nudge cards were then checked on a 393 pt and
 a 440 pt iPhone:
 - the tab bar shrinks on scrolling down and comes back on scrolling up or tapping its tab
-- the alarm banner's Snooze and Stop, with Snooze gone after the third snooze, and the test nudge's
+- the alarm banner's Snooze and Stop, with Snooze gone once no snoozes are left, and the test nudge's
   Close; portrait still shows the Lock Screen
 - the size audit above, repeated on both iPhones: no clipped text, no overlapping bar items, and
   buttons at least 44 pt
@@ -933,7 +933,7 @@ notifications off, alarms off and both off, and onboarding.
   behind it, so it passes 4.5:1 and 7:1 with Increase Contrast. The banners, Settings rows,
   **Notifications off** labels and onboarding text reach 4.5:1, or 7:1 with Increase Contrast.
 - **Notifications off** appears only while notifications are off
-- after the third snooze, the alarm shows only **Stop**
+- once no snoozes are left, the alarm shows only **Stop**
 - no app status message appears over the Lock Screen
 - the alarm permission prompt follows the notification prompt, whichever choice is made
 - the console has no errors
