@@ -108,7 +108,7 @@ Every target may also import `os` for logging (AD-19).
 - **Prevents:** two processes writing one SQLite file
 - **Rule:**
   - **Where intents run:** in the app process. The alarm's stop and secondary intents and the Live Activity's Done are `LiveActivityIntent`s; on iOS 27 they set `allowedExecutionTargets` to the main app (inside an AD-18 wrapper). Siri and App Shortcuts intents run in the app process. Notification actions run in the app's `UNUserNotificationCenterDelegate`.
-  - **No coordinator, no effect:** an intent that finds no `CommandSubmitting` registered does nothing, so the occurrence keeps nudging. Whether iOS 26 ever runs these intents in the widget extension is settled by the first spike (Deferred).
+  - **No coordinator, no effect:** an intent that finds no `CommandSubmitting` registered does nothing, so the occurrence keeps nudging. Whether iOS 26 ever runs these intents in the widget extension is settled by the first spike (Structural Seed › Device checklist).
   - **How intents reach the coordinator:** only through `CommandSubmitting` and `NudgeQuerying` (both `Sendable`, defined in `NudgeCore`). The app registers both with `AppDependencyManager` at launch.
   - **The widget:** links `NudgeLiveActivity` and `NudgeCore`, never `NudgeStore` or `NudgeShell`. It renders only from `AlarmAttributes<NudgeAlarmMetadata>`.
   - **Packaging:** every target that holds or uses intents declares an `AppIntentsPackage`.
@@ -428,10 +428,19 @@ nudge-inator/
 **First spike:** App Intents declared in `NudgeKit` targets and used from both the app and the widget, with an `AppIntentsPackage` in each. If that fails, the fallback is a framework target. The spike also records which process runs `NudgeLiveActivity`'s intents on iOS 26 and 27, with the app running and with it not running (WWDC26 session 345 says intents in a shared package may run in the extension when the app isn't running).
 
 **Device checklist** (not automatable): the one list is in
-[brief §10 › Device checklist](../product/brief.md#10-risks-and-decisions). The checks that can
-change a decision here are the AlarmKit limit (AD-11), cancelling during a countdown and reusing IDs
-(AD-12), intents after force-quit (AD-12), before the first unlock (AD-16), the 64-notification
-limit (AD-14) and restoring from a backup (AD-15).
+[brief §10 › Device checklist](../product/brief.md#10-risks-and-decisions). These checks can change a
+decision here:
+
+| Check | If it fails |
+| --- | --- |
+| The AlarmKit limit | If it's very low, revisit how AD-11 and AD-14 budget alarms. |
+| Cancelling an alarm during its countdown, and reusing alarm IDs | Switch to AD-12's `.custom` fallback. |
+| Stop and Snooze after a force-quit | Revisit AD-12's intents-only-submit rule. |
+| Stop, Snooze and Done before the first unlock | Revisit AD-16's journal. |
+| Which process runs the alarm intents on iOS 26 (first spike) | Choose a fallback for AD-5. |
+| The 64-notification limit | Change AD-14's budget. |
+| Restoring from a backup | Revisit AD-15's restore detection. |
+| The engine's speed on the oldest iOS 18 iPhone | Revisit AD-14's horizon or cost. |
 
 ## Capability → Architecture Map
 
@@ -467,8 +476,4 @@ limit (AD-14) and restoring from a backup (AD-15).
 - **Exact GRDB table and column names:** owned by the first migration.
 - **Encryption at rest beyond iOS data protection (SQLCipher):** not needed for v1.
 - **Release automation (fastlane, Xcode Cloud):** manual Organizer uploads until the TestFlight cadence needs more.
-- **Where iOS 26 runs the alarm and Live Activity intents:** settled by the first spike. If it runs them in the widget extension when the app isn't running, a fallback is chosen then; until then such a Stop or Snooze is lost and the occurrence keeps nudging (AD-5).
-- **Device-only unknowns** in the device checklist:
-  - revisit AD-14 if the alarm limit is very low
-  - revisit AD-12 if cancelling during a countdown fails
-  - revisit AD-16 if notification actions can't run before the first unlock
+- **Device-only unknowns:** the checks in Structural Seed › Device checklist, each with what it would change. One is the first spike: whether iOS 26 runs the alarm and Live Activity intents in the widget extension when the app isn't running (AD-5).
