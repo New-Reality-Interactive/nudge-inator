@@ -111,6 +111,13 @@ Vocabulary is in `CONTEXT.md`. The Stop and Open decision is in ADR 0001. The vi
 - Search, history, Export Data, Siri and Shortcuts, Assistive Access, the Live Activity countdown.
 - Updating the mockup or its README to match these decisions.
 
+### Candidates for a later version
+
+The first version builds an empty widget extension (AlarmKit expects one) but puts nothing in it. These are possible v2 work, not decided:
+
+- **Now widget (home screen or Lock Screen):** nudging reminders with an interactive Done button that runs an intent. It needs the store in the App Group (already planned) and a decision on what a widget may show, since notes and tags are never shown outside the app.
+- **Countdown Live Activity:** a custom countdown presentation for alarms on the Lock Screen, Dynamic Island and StandBy. This is the Live Activity listed above and reverses that exclusion if chosen. It also means giving alarms a countdown presentation, which is a change to how nudges look.
+
 ## Further Notes
 
 - The alarm limit is undocumented. Apple gives only the `maximumLimitReached` error, so the limit has to be measured on a device before the chain length is settled. The Time Sensitive fallback covers hitting it.
