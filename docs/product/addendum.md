@@ -221,8 +221,8 @@ Review and that testers can join by public link. The limits and time periods bel
   [Structural Seed › Environments](../architecture/ARCHITECTURE-SPINE.md#structural-seed), which is
   the one list, with the privacy manifest and the App Store privacy label.
 - **Builds.** Archive in Xcode and upload from the Organizer (Distribute App > App Store Connect).
-  `ITSAppUsesNonExemptEncryption` is `NO` (it's in the one list) because the app uses no
-  encryption of its own; otherwise App Store Connect asks about it for every build.
+  The encryption key in the one list exists because the app uses no encryption of its own;
+  without it, App Store Connect asks about encryption for every build.
 - **Testers are external,** invited by email or a public link. Internal testers would have to join
   the App Store Connect team, which gives them access to it, so they're only for the owner.
 - **Beta App Review** checks the first build of each version before external testers get it; later
@@ -235,5 +235,5 @@ Review and that testers can join by public link. The limits and time periods bel
   notification chain and AlarmKit alarms, get real use. Include at least one iPad and one iPhone
   without a Dynamic Island, for the alarm checks the brief lists.
 - **Feedback.** Testers send screenshots and comments from the TestFlight app, and crash reports
-  arrive in App Store Connect. These are the evidence for the success measures.
+  arrive in App Store Connect (architecture spine, Structural Seed › Environments › Crash reports). These are the evidence for the success measures.
 
