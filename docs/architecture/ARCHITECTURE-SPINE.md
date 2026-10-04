@@ -216,7 +216,7 @@ Every target may also import `os` for logging (AD-19).
 - **Prevents:** duplicate notifications in one minute and nudge counts that differ by OS
 - **Rule:**
   - **When a chain starts:** each time an occurrence enters or re-enters Urgent, as listed in brief §4 (the one list, including its exception for the extra nudge after Not Done at the limit, AD-4).
-  - **What it sends:** a `.timeSensitive` notification at once and every minute after, 10 in all. Each one's nudge index is the nudge number it shows, taken from the plan item, never parsed from its ID. It ends early on Done, Snooze or the start of quiet hours.
+  - **What it sends:** a `.timeSensitive` notification at once and every minute after, 10 in all. Each one's nudge index is the nudge number it shows, taken from the plan item, never parsed from its ID. It ends early when brief §4 says, and whenever the occurrence closes (brief §4, Closing an occurrence clears its nudges).
   - **Nudges inside it:** the strength's Urgent nudges that fall inside a running chain still count on schedule but aren't sent separately. The chain notification at that minute shows the current nudge number.
   - **Limits:** chain repeats don't count toward the nudge limit, but their time counts toward the time limit.
 
