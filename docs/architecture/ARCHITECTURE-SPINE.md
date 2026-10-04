@@ -190,7 +190,7 @@ Every target may also import `os` for logging (AD-19).
 - **Binds:** engine plan, adapters, Via labels
 - **Prevents:** iOS 18 and a denied alarm permission taking different paths, or a channel decided outside the engine
 - **Rule:**
-  - **Who decides:** the engine picks each delivery's channel from `Capabilities`. The canonical fields are `notificationsAllowed`, `timeSensitiveAllowed`, `alarmsAvailable`, `alarmCapacity` and `previewsHidden`.
+  - **Who decides:** the engine picks each delivery's channel from `Capabilities`. The canonical fields are `notificationsAllowed`, `timeSensitiveAllowed`, `alarmsAvailable`, `alarmCapacity`, `protectedAlarms` (the count of alarms AD-6 protects, from the last reconcile) and `previewsHidden`, persisted together as capability state.
   - **Time Sensitive off:** every `.timeSensitive` delivery in this spine is sent as `.active` when `timeSensitiveAllowed` is false (brief §4). This is the only place the spine states it.
   - **Normal:** an `.active` notification.
   - **High:** a `.timeSensitive` notification.
