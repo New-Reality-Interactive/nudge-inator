@@ -421,7 +421,7 @@ nudge-inator/
   - `ITSAppUsesNonExemptEncryption = NO`
   - `PrivacyInfo.xcprivacy` in the app target: no tracking, no collected data, and `UserDefaults` declared with reason `CA92.1`. GRDB 7.11.1 ships its own manifest, which declares no required-reason APIs.
   - App Store privacy label: Data Not Collected (AD-19)
-- **CI:** may need to download the iOS 18 simulator runtime.
+- **CI:** the workflow names a runner image that has Xcode 27.0 (not every macOS image does) and downloads the iOS 18 simulator runtime (`xcodebuild -downloadPlatform iOS -buildVersion 18.x`). Its first run confirms GRDB's UI tests on the Xcode 27.0 simulator (GRDB issue #1875, a UI-test crash on Xcode 27 beta 4, closed without a named fix).
 - **Infrastructure:** there is no server and no runtime infrastructure.
 
 **First spike:** App Intents declared in `NudgeKit` targets and used from both the app and the widget, with an `AppIntentsPackage` in each. If that fails, the fallback is a framework target. The spike also records which process runs `NudgeLiveActivity`'s intents on iOS 26 and 27, with the app running and with it not running (WWDC26 session 345 says intents in a shared package may run in the extension when the app isn't running).
