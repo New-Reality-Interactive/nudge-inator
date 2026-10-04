@@ -77,7 +77,7 @@ Every target may also import `os` for logging (AD-19).
 
 - **Binds:** Occurrence, My Day counts, history, Siri, Assistive Access
 - **Prevents:** a status that's wrong because no code ran at the give-up limit or a takeover
-- **Rule:** the store holds facts only. Coming up, nudging, done, missed and skipped are computed by the engine. So is a reminder's status (Active, Paused or Completed, brief §3): Paused comes from the latest pause or resume event and wins over Completed; Completed comes from an active one-off whose occurrence has closed and hasn't been reopened or given a new time. A Completed one-off accepts no pause. No stored column caches a status.
+- **Rule:** the store holds facts only. Coming up, nudging, done, missed and skipped are computed by the engine. So is a reminder's status (Active, Paused or Completed, brief §3): Paused comes from the latest pause or resume event and wins over Completed; Completed comes from an active one-off whose occurrence has closed and hasn't been reopened or given a new time. No stored column caches a status.
 
 ### AD-3 — Facts are immutable, versioned and carry their origin [ADOPTED]
 
@@ -98,7 +98,7 @@ Every target may also import `os` for logging (AD-19).
 - **Prevents:** racing commands, reconciles undoing each other, double closes, half-applied changes
 - **Rule:**
   - **One queue:** the `Coordinator` in `NudgeShell` owns a single serial job queue (one consumer of an `AsyncStream`). Each job runs to completion, including its awaits, before the next starts. There are two job kinds, plus the journal replay that runs first once the store opens (AD-16).
-  - **Command job:** `NudgeCore.accepts(command, facts, at: command.issuedAt)` decides whether the command applies. It judges the command against every committed fact as of its `issuedAt`, and rejects it if its occurrence already has a committed event other than a Clear (which changes nothing), or its reminder a committed pause or resume, with a later `issuedAt`, so a command never rewrites what came after it. A `snooze` is also rejected if a committed snooze already answers the same delivered nudge (the latest one delivered before its `issuedAt`), so one tap can't count twice. Not Done applies to the latest done occurrence while brief §3's Not Done window is open. If the occurrence had already used its give-up limit, Not Done allows exactly one more nudge, one interval after reopening at the next step, delivered as its urgency would be, except that an Urgent one without alarms is a single `.timeSensitive` notification, not a chain (AD-13). It offers Done but no Snooze. Quiet hours hold it like any nudge, and the interval counts from its planned fire instant, whether or not it has a channel; if it's unanswered one interval after that, the occurrence closes as missed. If it applies, the job writes the rows `accepts` returns in one transaction. A command naming a valid projected occurrence key materializes it (AD-8). A command that doesn't apply writes nothing. Either way the job ends with a reconcile, so a stale action's delivered notification is cleared.
+  - **Command job:** `NudgeCore.accepts(command, facts, at: command.issuedAt)` decides whether the command applies. It judges the command against every committed fact as of its `issuedAt`, and rejects it if its occurrence already has a committed event other than a Clear (which changes nothing), or its reminder a committed pause or resume, with a later `issuedAt`, so a command never rewrites what came after it. A `snooze` is also rejected if a committed snooze already answers the same delivered nudge (the latest one delivered before its `issuedAt`), so one tap can't count twice. Not Done applies as brief §3 says, including the one extra nudge after Not Done at the limit. That nudge's interval counts from its planned fire instant, whether or not it has a channel. If it applies, the job writes the rows `accepts` returns in one transaction. A command naming a valid projected occurrence key materializes it (AD-8). A command that doesn't apply writes nothing. Either way the job ends with a reconcile, so a stale action's delivered notification is cleared.
   - **The command set:** `NudgeCore` defines `Command` and every kind: the occurrence events (AD-3); creating, editing and deleting a reminder; creating, renaming and deleting a tag; quiet hours; Recent Searches; and Delete All Data. `accepts` returns every row the command writes (events, versions, tags, Recent Searches) and does the validation and uniqueness checks; database constraints are only a backstop. A version's saved instant is the command's `issuedAt`.
   - **Reconcile job:** triggers enqueue one, and several pending ones coalesce. A reconcile writes only bookkeeping: materialized occurrences, ledger rows, capability state, zone facts and pruning. The one command it creates is an adopted `snooze` (AD-6), which it enqueues like any other.
   - **Write access:** `NudgeStore`'s write API is `package` access, used only by the `Coordinator`. Views, intents and the widget can't write.
@@ -109,7 +109,7 @@ Every target may also import `os` for logging (AD-19).
 - **Prevents:** two processes writing one SQLite file
 - **Rule:**
   - **Where intents run:** in the app process. The alarm's stop and secondary intents and the Live Activity's Done are `LiveActivityIntent`s; on iOS 27 they set `allowedExecutionTargets` to the main app (inside an AD-18 wrapper). Siri and App Shortcuts intents run in the app process. Notification actions run in the app's `UNUserNotificationCenterDelegate`.
-  - **No coordinator, no effect:** an intent that finds no `CommandSubmitting` registered does nothing, so the occurrence keeps nudging. Whether iOS 26 ever runs these intents in the widget extension is settled by the first spike (Structural Seed › Device checklist).
+  - **No coordinator, no effect:** an intent that finds no `CommandSubmitting` registered does nothing, so the occurrence keeps nudging. Whether iOS 26 ever runs these intents in the widget extension is settled by the First spike (Structural Seed).
   - **How intents reach the coordinator:** only through `CommandSubmitting` and `NudgeQuerying` (both `Sendable`, defined in `NudgeCore`). The app registers both with `AppDependencyManager` at launch.
   - **The widget:** links `NudgeLiveActivity` and `NudgeCore`, never `NudgeStore` or `NudgeShell`. It renders only from `AlarmAttributes<NudgeAlarmMetadata>`.
   - **Packaging:** every target that holds or uses intents declares an `AppIntentsPackage`.
@@ -182,7 +182,7 @@ Every target may also import `os` for logging (AD-19).
 - **Rule:**
   - **The type:** `RepeatRule` is an enum: `never`, the presets (every day, every weekday, every week, every 2 weeks, every month, every year) and `custom(frequency, interval, weekdays, timesOfDay)`.
   - **Times of day:** `timesOfDay` is a sorted, de-duplicated list of one or more local times. The first is the start's own time.
-  - **Month ends:** a monthly rule on a day the month doesn't have (29th–31st) falls on that month's last day, and a yearly rule on 29 February falls on 28 February in other years. It never skips a month or year. The form's Repeat summary and How It Nudges use the same rule.
+  - **Month ends:** as brief §3's Reminder row says. The engine holds the rule, and the form's Repeat summary and How It Nudges call it.
   - **Closed set:** every value the type can hold is editable in the form. No other recurrence format is parsed or stored.
 
 ### AD-11 — Delivery channels and the "alarms unavailable" fallback
@@ -194,7 +194,7 @@ Every target may also import `os` for logging (AD-19).
   - **Time Sensitive off:** every `.timeSensitive` delivery in this spine is sent as `.active` when `timeSensitiveAllowed` is false (brief §4). This is the only place the spine states it.
   - **Normal:** an `.active` notification.
   - **High:** a `.timeSensitive` notification.
-  - **Urgent:** an AlarmKit alarm when `alarmsAvailable`; otherwise the notification chain (AD-13). `alarmsAvailable` is false on iOS 18 and whenever AlarmKit authorization isn't `.authorized`. When AlarmKit is available, authorization is `.notDetermined` and the onboarding-done flag is set (an iPhone updated from iOS 18), the shell asks once on launch; otherwise onboarding asks (EXPERIENCE › State Patterns › Any). The one extra nudge after Not Done at the limit is the exception to the chain fallback (AD-4).
+  - **Urgent:** an AlarmKit alarm when `alarmsAvailable`; otherwise the notification chain (AD-13). `alarmsAvailable` is false on iOS 18 and whenever AlarmKit authorization isn't `.authorized`. When AlarmKit is available, authorization is `.notDetermined` and the onboarding-done flag is set (an iPhone updated from iOS 18), the shell asks once on launch; otherwise onboarding asks (EXPERIENCE › State Patterns › Any). The one extra nudge after Not Done at the limit is the exception to the chain fallback (brief §3, Not Done).
   - **Past the alarm limit:** Urgent nudges beyond `alarmCapacity` come as one `.timeSensitive` notification each.
 
 ### AD-12 — Snooze and Stop are commands; the engine plans what follows
@@ -216,10 +216,8 @@ Every target may also import `os` for logging (AD-19).
 - **Binds:** engine plan for Urgent when alarms are unavailable
 - **Prevents:** duplicate notifications in one minute and nudge counts that differ by OS
 - **Rule:**
-  - **When a chain starts:** each time an occurrence enters or re-enters Urgent, as listed in brief §4 (the one list, including its exception for the extra nudge after Not Done at the limit, AD-4).
-  - **What it sends:** a `.timeSensitive` notification at once and every minute after, 10 in all. Each one's nudge index is the nudge number it shows (AD-7). It ends early when brief §4 says, and whenever the occurrence closes (brief §4, Closing an occurrence clears its nudges).
-  - **Nudges inside it:** the strength's Urgent nudges that fall inside a running chain still count on schedule but aren't sent separately. The chain notification at that minute shows the current nudge number.
-  - **Limits:** chain repeats don't count toward the nudge limit, but their time counts toward the time limit.
+  - **When a chain starts:** each time an occurrence enters or re-enters Urgent, as listed in brief §4 (the one list, including its exception for the extra nudge after Not Done at the limit).
+  - **What it sends:** as brief §4 says, including the strength's Urgent nudges that fall inside it and how it counts toward the limits. Each chain notification is its own delivery with its own ledger row (AD-15); its nudge index is the number it shows (AD-7). It ends early when brief §4 says, and whenever the occurrence closes (brief §4, Closing an occurrence clears its nudges).
 
 ### AD-14 — Slot budgets, horizon and cost [ADOPTED]
 
@@ -260,7 +258,7 @@ Every target may also import `os` for logging (AD-19).
   - **Migrations:** only through numbered `DatabaseMigrator` migrations, each covered by a test that migrates a fixture from the previous version.
   - **The journal:** while protected data is unavailable (before the first unlock), a command goes to an append-only journal file with protection `none`. It holds only the command kind, occurrence key, nudge index, `source` and `issuedAt`, never titles. If the command is a Stop, the intent also posts `followup/<key>/<n>`, taking the reminder's title from the alarm's `NudgeAlarmMetadata` (the alarm already shows the title, so this exposes nothing new), so the follow-up reads as EXPERIENCE gives it. On the first open, replay is one job, first in the queue. It runs each entry through `accepts` in order and writes the accepted rows. For each accepted `done(source: .alarm)` it writes the follow-up's ledger row (fire instant and `handedOverAt` set to the entry's `issuedAt`). Then it deletes the journal and runs one reconcile, so no reconcile sees a journaled command as missing (AD-6). A follow-up posted for a Stop that `accepts` rejected is removed by Cleanup, since Not Done doesn't apply. If the stop intent itself doesn't run before the first unlock (Apple documents this only for the secondary intent), the Stop isn't recorded: the alarm leaves `AlarmManager.alarms`, which AD-6 never reads as a command, and the occurrence keeps nudging.
   - **Any other open failure** (a failed migration, corruption): it's logged, nothing is journaled, and the coordinator runs no jobs. The shell cancels every pending notification and alarm, the one OS write allowed without the store, so nothing nudges that Done can't stop. The app shows the message in EXPERIENCE › State Patterns › Any.
-  - **Delete All Data:** deletes every reminder, tag, occurrence, event, ledger row and Recent Search, and the journal, in one job, then reconciles to an empty plan. The tag filters turn off as Conventions › UI state says. It keeps settings (quiet hours and their versions, zone facts and capability state) and the `UserDefaults` flags, as brief §3 says.
+  - **Delete All Data:** deletes every reminder, tag, occurrence, event, ledger row and Recent Search, and the journal, in one job, then reconciles to an empty plan. The tag filters turn off as Conventions › UI state says. It keeps what brief §3 keeps (settings), which here means quiet hours and their versions, zone facts, capability state and the `UserDefaults` flags.
 
 ### AD-17 — Lock Screen actions and Siri need no authentication
 
@@ -330,7 +328,7 @@ Every target may also import `os` for logging (AD-19).
 | Formats | Dates, times and durations shown to people use the system formatters; IDs and export use fixed POSIX formats. |
 | UI state | Navigation per tab with `NavigationStack`. My Day's filter, match mode and chosen count, and the Tags tab's tokens and match mode, use `SceneStorage`. A tag filter is `off`, `tags(IDs, match)` or `noTags` (My Day only). Tag IDs that no longer exist are dropped whenever a `tags` filter is read, so deleting a tag or all data empties it in every scene (each scene has its own `SceneStorage`), and a `tags` filter with no tags left is off. Delete All Data also turns a `noTags` filter off in the scene it runs in. Recent Searches live in the database. Non-personal flags (onboarding done, banners acknowledged) live in `UserDefaults`. |
 | Search | Search (title, notes, tags), the Tags tab's tag search and Siri's entity queries use one `NudgeCore` matcher: Foundation case- and diacritic-insensitive comparison, no locale. |
-| Siri | "The first" nudging reminder is `NudgeCore`'s order: highest urgency, then earliest due, then most nudges sent. |
+| Siri | "The first" nudging reminder follows EXPERIENCE › Siri & Shortcuts' order, computed only in `NudgeCore`. |
 | Testing | `NudgeCore` and `NudgeStore` tests use Swift Testing with a fixed clock and fixed zones, including DST transitions, zone changes mid-occurrence and the 50 ms benchmark. UI tests use XCTest, including on an iPad simulator running the iPhone app in both orientations (brief §11 Q10). Every test, `NudgeKit`'s included, runs with `xcodebuild test` on the iOS 18 and 26/27 simulators; there is no macOS test run, because AlarmKit, ActivityKit and `BGTaskScheduler` have no macOS. |
 | Export | JSON, `schemaVersion: 1`, ISO 8601 instants with offsets, IANA zone IDs, tags by name, reminders with their versions, occurrences with their statuses, events, and History's nudge lines (AD-15). File `nudge-inator-YYYY-MM-DD.json`. Not importable. |
 
@@ -481,4 +479,4 @@ decision here:
 - **Exact GRDB table and column names:** owned by the first migration.
 - **Encryption at rest beyond iOS data protection (SQLCipher):** not needed for v1.
 - **Release automation (fastlane, Xcode Cloud):** manual Organizer uploads until the TestFlight cadence needs more.
-- **Device-only unknowns:** the checks in Structural Seed › Device checklist, each with what it would change. One is the first spike: whether iOS 26 runs the alarm and Live Activity intents in the widget extension when the app isn't running (AD-5).
+- **Device-only unknowns:** the checks in Structural Seed › Device checklist and the First spike, each with what it would change.
