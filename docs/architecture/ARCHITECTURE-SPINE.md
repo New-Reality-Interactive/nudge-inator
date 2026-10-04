@@ -372,8 +372,8 @@ sequenceDiagram
   participant OS as UNUserNotificationCenter + AlarmManager
   Src->>Q: enqueue Command(key, issuedAt, source)
   Q->>DB: read facts
-  Q->>Core: accepts? events?
-  Q->>DB: write events (one transaction)
+  Q->>Core: accepts? rows?
+  Q->>DB: write the accepted rows (one transaction)
   Q->>Core: evaluate(facts, settings, capabilities, now, window)
   Q->>OS: read pending, delivered, alarms
   Q->>OS: add / remove / replace the difference
@@ -406,7 +406,7 @@ nudge-inator/
     Sources/NudgeLiveActivity/ # alarm metadata and Live Activity intents
     Sources/NudgeIntents/      # Siri and App Shortcuts intents, entities
     Tests/
-  .github/workflows/ci.yml     # engine tests and simulator tests on PRs
+  .github/workflows/ci.yml     # every test, on the iOS simulators, on PRs
 ```
 
 **Environments.**
