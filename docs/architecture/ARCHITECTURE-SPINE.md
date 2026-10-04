@@ -278,10 +278,10 @@ Every target may also import `os` for logging (AD-19).
   - **Other iOS 26-only APIs:** used only inside named wrappers in the app target:
     - `tabBarMinimizeBehavior`
     - `navigationSubtitle`
-    - the `AssistiveAccess` scene, as an `if #available` in the scene body (iOS 18 behavior: EXPERIENCE › Assistive Access)
+    - the `AssistiveAccess` scene, as an `if #available` in the scene body (iOS 18 behavior: EXPERIENCE › Assistive Access, detected with the Accessibility framework's `AccessibilitySettings.isAssistiveAccessEnabled`, iOS 18.0+)
 
     `Tab(role: .search)` is iOS 18+ and is used directly. iOS 27-only APIs, such as `allowedExecutionTargets` (AD-5), sit behind `@available(iOS 27, *)` where they're declared.
-  - **UIKit:** used only for the app lifecycle (the `UIApplicationDelegateAdaptor` in the app target; the `UIApplication` notifications and the Settings URL in `NudgeShell`), `UIAccessibility.isAssistiveAccessEnabled`, and `UITabBarAppearance` on iOS 18.
+  - **UIKit:** used only for the app lifecycle (the `UIApplicationDelegateAdaptor` in the app target; the `UIApplication` notifications and the Settings URL in `NudgeShell`) and `UITabBarAppearance` on iOS 18.
   - **Layout:** decided by width and size class, never by device idiom or interface orientation. "Landscape" in the spines means compact vertical size class.
 
 ### AD-19 — Privacy floor
