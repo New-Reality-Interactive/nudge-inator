@@ -417,7 +417,7 @@ decision or section it affects.
 - *Alarms and notifications*
   - The AlarmKit alarm limit (risk above; AD-11 and AD-14's `alarmCapacity`).
   - The 64-notification limit on iOS 18, 26 and 27 (risk above; AD-14).
-  - Cancelling an alarm during its snooze countdown, and reusing alarm IDs (AD-12, and its `.custom`
+  - Cancelling an alarm during its snooze countdown (AD-12, and its `.custom`
     fallback).
   - Stop and Snooze after the app has been force-quit, including Stop on a paired Watch (risk
     above; AD-12).
