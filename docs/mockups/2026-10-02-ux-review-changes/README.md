@@ -344,10 +344,10 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
   "Snoozed. Rings again at 8:35 AM." and **Done** to stop it early. The app designs this view, in a
   widget extension. Before the first unlock after a restart, iOS shows its own countdown instead,
   from the alarm's countdown presentation.
-- **The alarm that rings again keeps its buttons,** so the third Snooze can't simply remove Snooze
-  from it. On the third snooze, once its snooze intent has run, the app cancels that alarm and schedules a new one
-  for the end of the snooze, without Snooze. Each snooze also moves the occurrence's later alarms,
-  so none ring during the snooze.
+- **The alarm that rings again keeps its buttons,** so after every snooze the app replaces the
+  system's countdown with its own alarm for the end of the snooze (without Snooze once none are
+  left) and moves the occurrence's later alarms, so none ring during the snooze. The rule is in the
+  architecture spine, AD-12.
 
 **Pausing:**
 - **Pause Reminder** stops the nudging. An occurrence that's nudging closes as **Skipped**, not

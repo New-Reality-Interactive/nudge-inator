@@ -94,15 +94,8 @@ checked. The iPad notes are for v2: in v1, iPad runs the iPhone app (decided in 
   - Now and My Day keep a readable column, and could add a details column in landscape.
   - Sheets are centered form sheets.
   - Every window size is supported, from Slide Over to full screen, with Stage Manager.
-- **Keyboard (iPad and Full Keyboard Access):**
-
-  | Key | Action |
-  |---|---|
-  | ⌘N | New reminder |
-  | ⌘F | Search |
-  | ⌘1 to ⌘4 | Now, My Day, Tags, Settings |
-  | Return | Save a sheet |
-  | Escape | Cancel a sheet |
+- **Keyboard:** the same shortcuts as on iPhone, listed in
+  [EXPERIENCE › Interaction Primitives](../design/EXPERIENCE.md#interaction-primitives).
 
 - **Pointer:** hover effects on the system controls.
 - **Accessibility sizes:** the mockup's stacked layouts apply in every size class.
@@ -156,17 +149,16 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
 - **Snooze can be the system's countdown.** A secondary button with the `.countdown` behavior and a
   post-alert duration (`Alarm.CountdownDuration`'s `postAlert`) makes the system alert again after
   that time. That matches the reminder's snooze length (the strength's default or longer).
-  - The alarm that rings again uses the presentation it was scheduled with, so it still has Snooze.
-    On the third snooze, once the snooze command is recorded, the reconciler cancels that alarm and
-    schedules a new one for the end of the snooze, with no secondary button, and the remaining alarms are
-    scheduled without it.
+  - The alarm that rings again uses the presentation it was scheduled with, so it would still have
+    Snooze after the third snooze.
   - The occurrence's later alarms are separate alarms, so each snooze has to move them past the
     snooze. Otherwise, for example, a Relentless alarm 2 minutes later would ring during a 5-minute
     snooze.
   - The system's countdown rings again whatever has happened meanwhile, and no app code runs when
-    it does. So if the snooze would end after the next occurrence takes over, or inside quiet hours
-    for a reminder that doesn't ignore them, the reconciler cancels the countdown once the snooze
-    command is recorded, and schedules a fixed alarm at the right time, or none.
+    it does, so it could ring after a takeover or inside quiet hours.
+  - So on every snooze, once the snooze command is recorded, the reconciler cancels the system's
+    countdown and the app's own alarm rings at the end of the snooze instead (architecture spine,
+    AD-12, which holds the rule).
   - If a device shows that cancelling an alarm during its countdown fails, the snooze button
     switches to the `.custom` behavior: the intent runs, and the app's own alarm replaces the
     countdown (AD-12's fallback).
@@ -193,15 +185,14 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
   changes. If the person denies it, every attempt to schedule an alarm fails, and Urgent nudges
   come as the notification chain, as on iOS 18. The permission is separate from notifications.
 - **Limit:** scheduling can fail with `AlarmManager.AlarmError.maximumLimitReached`. Apple doesn't
-  say what the limit is, so the app records how many alarms it could schedule, plans within that,
-  and tries one more each time it reschedules.
+  say what the limit is, so the app records how many alarms it could schedule and plans within
+  that (architecture spine, AD-14, says how).
 - **App Review:** Apple says alarms suit countdowns and recurring scheduled alerts, and "are not a
   replacement for other prominent notifications, like critical alerts or time-sensitive
   notifications".
 - **iOS 27:** new `AlarmConfiguration` initializers add an optional `appEntityIdentifier`,
-  which could link an alarm to the reminder's App Entity for Siri. Apple's documentation still
-  marked them beta on 2026-10-01, although iOS 27 is expected to be out by then; check that they're
-  final before relying on them. iOS 27 also adds a `.clock` App Intents domain with a `snoozeAlarm`
+  which could link an alarm to the reminder's App Entity for Siri. The architecture spine's
+  Deferred list says when to adopt it. iOS 27 also adds a `.clock` App Intents domain with a `snoozeAlarm`
   schema for Siri and Shortcuts. An app that adopts any schema in the domain must support them all,
   including creating alarms, so it probably doesn't fit Nudge-inator.
 - **Not covered by the docs or the sample:** the alarm limit's value, App Review's view of alarms
@@ -230,8 +221,8 @@ Review and that testers can join by public link. The limits and time periods bel
   [Structural Seed › Environments](../architecture/ARCHITECTURE-SPINE.md#structural-seed), which is
   the one list, with the privacy manifest and the App Store privacy label.
 - **Builds.** Archive in Xcode and upload from the Organizer (Distribute App > App Store Connect).
-  Set `ITSAppUsesNonExemptEncryption` to `NO` in `Info.plist`, since the app uses no encryption of
-  its own; otherwise App Store Connect asks about it for every build.
+  `ITSAppUsesNonExemptEncryption` is `NO` (it's in the one list) because the app uses no
+  encryption of its own; otherwise App Store Connect asks about it for every build.
 - **Testers are external,** invited by email or a public link. Internal testers would have to join
   the App Store Connect team, which gives them access to it, so they're only for the owner.
 - **Beta App Review** checks the first build of each version before external testers get it; later

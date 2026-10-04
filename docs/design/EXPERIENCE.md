@@ -546,7 +546,7 @@ section covers what the person sees and can do on each.
 - **Motion:** only the system's transitions (push, sheet, list insert and remove, tab-bar
   minimize), plus 0.2 s fades for the status message and the inline title. System transitions
   follow Reduce Motion and Prefer Cross-Fade Transitions. The app's own fades become instant.
-- **Keyboard** ([addendum §C](../product/addendum.md#c-layout-notes-for-landscape-and-ipad)):
+- **Keyboard** (this is the one list; brief §5 names the shortcuts):
 
   | Key | Action |
   |---|---|

@@ -451,7 +451,8 @@ decision here:
 | Strengths, urgency, give-up, quiet hours, carry-over, takeover, Pause, Not Done (brief §3) | NudgeCore engine | AD-1, AD-2, AD-3 |
 | Delivery and fallbacks, iOS 18 chain (brief §4) | NudgeCore plan, NudgeShell adapters | AD-11, AD-13, AD-14 |
 | System limits, plan horizon (brief §4, §11 Q4) | NudgeCore slot policy, Coordinator | AD-14 |
-| Done, Snooze, Clear from notifications, alarms, Live Activity, Siri (brief §11 Q5, Q13) | Intents and delegate → Coordinator | AD-4, AD-5, AD-12, AD-17 |
+| Done, Snooze, Clear from notifications, alarms, Live Activity, Siri (brief §11 Q5, Q13) | Intents and delegate → Coordinator | AD-4, AD-5, AD-6, AD-12, AD-16, AD-17 |
+| First launch and the alarm prompt after an update (brief §6) | NudgeShell, app target | AD-11 |
 | Closing clears nudges, stale actions (brief §11 Q11) | Coordinator, reconciler | AD-6, AD-4, AD-8 |
 | Live Activity setup and reconciling with AlarmKit (brief §11 Q6) | NudgeLiveActivity, NudgeWidgets, reconciler | AD-5, AD-6, AD-12 |
 | Time zones (brief §11 Q7) | Zone facts, triggers | AD-9, AD-8 |
@@ -468,7 +469,7 @@ decision here:
 | Testing on 18/26/27 (brief §11 Q10) | Swift Testing, XCTest, CI, device checklist | Conventions › Testing |
 | Filters across relaunch (brief §11 Q14) | SceneStorage | Conventions › UI state |
 | Privacy | All targets | AD-19 |
-| Keyboard shortcuts (brief §5) | App target | brief §5 |
+| Keyboard shortcuts (brief §5) | App target | EXPERIENCE › Interaction Primitives |
 
 ## Deferred
 
