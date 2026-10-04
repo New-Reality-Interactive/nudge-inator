@@ -229,7 +229,7 @@ Every target may also import `os` for logging (AD-19).
     1. nudge 1 of every coming-up occurrence, soonest first
     2. every other delivery, soonest first
 
-    The plan is cut to 63 requests, plus 1 keep-nudging request at the fire time of the first dropped nudge.
+    The plan is cut to 63 requests, plus 1 keep-nudging request at the fire time of the first delivery left out, whether the budget or the horizon cut it.
   - **Alarms:** soonest first, up to `alarmCapacity`, which starts unknown (no limit). When AlarmKit throws `maximumLimitReached`, the reconciler persists the number that succeeded as `alarmCapacity`, then re-evaluates and re-diffs in the same job, so the overflow becomes notifications at once. A later reconcile tries one more alarm only when the plan wants more than `alarmCapacity`.
   - **Background refresh:** each reconcile requests a `BGAppRefreshTask` for the plan's earliest top-up time, and no later than 12 hours ahead.
   - **What `evaluate` reads:** current and future versions, the facts in its window (AD-1), and each reminder's latest occurrence before the window with the facts since then (for carry-over and Not Done).
