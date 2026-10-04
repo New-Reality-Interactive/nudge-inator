@@ -68,7 +68,7 @@ graph TD
 
 - **Binds:** brief §3–§4, How It Nudges, the plan, history, Siri answers, tests
 - **Prevents:** the preview, the scheduler, the UI or Siri each encoding strengths, quiet hours, carry-over, give-up limits or the Siri order their own way
-- **Rule:** `NudgeCore` exposes `evaluate(facts, settings, capabilities, now) -> Evaluation`, holding the derived state of every occurrence, the ordered desired delivery plan, and `nextChangeAt` (the next instant any derived state changes). It reads no clock, OS API or database; `now` and the device zone are parameters. Any code that needs a nudge time, urgency, status, count, channel, Siri order or "is this command allowed" gets it from `NudgeCore`. How It Nudges is `evaluate` on the form's draft.
+- **Rule:** `NudgeCore` exposes `evaluate(facts, settings, capabilities, now, window) -> Evaluation`, holding the derived state of every occurrence in the window, with its closing reason and nudges counted, the ordered desired delivery plan, and `nextChangeAt` (the next instant any derived state changes). It reads no clock, OS API or database; `now` and the device zone are parameters. `evaluate` is the only fold over facts. The live model and the reconciler pass the default window, from the start of yesterday in the current zone through the plan horizon (AD-14), which covers My Day, Last 24 Hours and Assistive Access. History and Export pass a 90-day window and a reminder filter. Any code that needs a nudge time, urgency, status, count, channel, Siri order or "is this command allowed" gets it from `NudgeCore`. How It Nudges is `evaluate` on the form's draft.
 
 ### AD-2 — Occurrence status is derived, never written by a timer [ADOPTED]
 
@@ -225,8 +225,8 @@ graph TD
     The plan is cut to 63 requests, plus 1 keep-nudging request at the fire time of the first dropped nudge.
   - **Alarms:** soonest first, up to `alarmCapacity`. When AlarmKit throws `maximumLimitReached`, the reconciler persists the number that succeeded as `alarmCapacity`. Each later reconcile tries one more.
   - **Background refresh:** each reconcile requests a `BGAppRefreshTask` for the plan's earliest top-up time, and no later than 12 hours ahead.
-  - **What `evaluate` reads:** current and future versions, plus each reminder's open or latest occurrence and the facts since then. History screens read past facts separately.
-  - **Cost:** a full evaluate stays under 50 ms for 200 reminders on the oldest iPhone that runs iOS 18. A benchmark test enforces it.
+  - **What `evaluate` reads:** current and future versions, the facts in its window (AD-1), and each reminder's latest occurrence before the window with the facts since then (for carry-over and Not Done).
+  - **Cost:** an evaluate with the default window stays under 50 ms for 200 reminders on the oldest iPhone that runs iOS 18. A benchmark test enforces it.
 
 ### AD-15 — The ledger records what was scheduled, and what was lost
 
@@ -363,7 +363,7 @@ sequenceDiagram
   Q->>DB: read facts
   Q->>Core: accepts? events?
   Q->>DB: write events (one transaction)
-  Q->>Core: evaluate(facts, settings, capabilities, now)
+  Q->>Core: evaluate(facts, settings, capabilities, now, window)
   Q->>OS: read pending, delivered, alarms
   Q->>OS: add / remove / replace the difference
   Q->>DB: ledger rows, materialized occurrences, capability state
@@ -434,7 +434,7 @@ limit (AD-14) and restoring from a backup (AD-15).
 | Live Activity setup and reconciling with AlarmKit (brief §11 Q6) | NudgeLiveActivity, NudgeWidgets, reconciler | AD-5, AD-6, AD-12 |
 | Time zones (brief §11 Q7) | Zone facts, triggers | AD-9, AD-8 |
 | Storage and migration (brief §11 Q2) | NudgeStore | AD-16, AD-3 |
-| History (90 days), Export Data (brief §11 Q12) | Events + ledger; NudgeCore export | AD-15, Conventions › Export |
+| History (90 days), Export Data (brief §11 Q12) | NudgeCore `evaluate` (90-day window) + ledger rows; NudgeCore export | AD-1, AD-15, Conventions › Export |
 | How It Nudges preview (brief §11 Q3) | NudgeCore `evaluate` on the draft | AD-1 |
 | iOS 18 vs 26/27 split, layout (brief §11 Q1, Q8) | NudgeShell Capabilities, app wrappers | AD-18, AD-11 |
 | Live updates, badge, VoiceOver announcements | NudgeModel | AD-20 |
