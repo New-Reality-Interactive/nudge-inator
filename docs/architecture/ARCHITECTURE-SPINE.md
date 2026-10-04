@@ -81,7 +81,7 @@ graph TD
 - **Binds:** Edit while nudging (brief §3), quiet hours, time-zone changes, history, export
 - **Prevents:** an edit, a quiet-hours change or a flight rewriting past statuses; history that can't say "Done (alarm stopped)"
 - **Rule:**
-  - **Events are append-only rows:** done, not done, snooze, clear, pause, resume and skip-by-edit. Each records `issuedAt` (when the person acted, from the surface), the occurrence key and nudge index, and `source` (`app`, `notification`, `alarmStop`, `alarmCountdown`, `liveActivity`, `siri`, `assistiveAccess`).
+  - **Events are append-only rows:** done, not done, snooze, clear, pause, resume and skip-by-edit. Each records `issuedAt` (when the person acted, from the surface), the occurrence key and nudge index, and `source` (`app`, `notification`, `alarm` (either of the alarm's buttons; the command kind says which), `alarmCountdown`, `liveActivity`, `siri`, `assistiveAccess`).
   - **Order:** every projection, the engine's fold, History and Export order events by `issuedAt`, then by commit sequence.
   - **Versioned facts carry the instant they were saved:** a reminder's nudging configuration (`ReminderConfig`: schedule, repeat rule, strength, snooze length, give-up limits, Ignore Quiet Hours), quiet hours, and the device time zone. The coordinator writes a zone fact when it detects a change.
   - **How versions apply:** the engine applies each version per brief §3. A new schedule applies from the next due time; strength, limit and Ignore Quiet Hours apply from the next nudge; a new snooze length applies from the next snooze. A version with a gentler strength already carries the raised snooze length and limit (brief §3), so the engine never sees a snooze length below the strength's default. Each past instant is evaluated with the quiet hours and zone in effect then.
@@ -196,11 +196,11 @@ graph TD
 - **Binds:** alarm intents, engine, reconciler
 - **Prevents:** an intent scheduling behind the reconciler's back; an alarm ringing for a closed occurrence or during quiet hours
 - **Rule:**
-  - **Intents only submit commands:** the alarm's snooze and stop intents submit `snooze` and `done(source: .alarmStop)` and touch no OS API, except as in AD-16.
+  - **Intents only submit commands:** the alarm's snooze and stop intents submit `snooze` and `done(source: .alarm)` and touch no OS API, except as in AD-16.
   - **What the engine plans:**
     - **The post-snooze alarm,** `snooze/<key>/<n>/<s>`. It has a pre-alert countdown so the Live Activity shows. It has no secondary button when no snoozes remain. It's moved, or dropped, if the snooze would end after a takeover or inside quiet hours for a reminder that doesn't ignore them.
     - **The later alarms,** moved past the snooze.
-    - **The follow-up after Stop:** `followup/<key>` from a `done(source: .alarmStop)` event, sent at once.
+    - **The follow-up after Stop:** `followup/<key>` from a `done(source: .alarm)` event, sent at once.
   - **The system's countdown:** the reconciler cancels it, because AD-6 lets it remove that alarm once the snooze command is committed.
   - **Fallback:** if a device shows that cancelling during a countdown fails, the snooze button switches to `.custom` behavior: the intent runs and the engine's alarm replaces the countdown.
 
