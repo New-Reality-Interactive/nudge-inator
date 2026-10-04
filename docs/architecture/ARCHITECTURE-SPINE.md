@@ -320,7 +320,7 @@ graph TD
 | Formats | Dates, times and durations shown to people use the system formatters; IDs and export use fixed POSIX formats. |
 | UI state | Navigation per tab with `NavigationStack`. My Day's filter, match mode and chosen count, and the Tags tab's tokens and match mode, use `SceneStorage`; tag IDs that no longer exist are dropped whenever a filter is read, so deleting a tag or all data empties the filter in every scene (each scene has its own `SceneStorage`), and a filter with no tags left is off. Recent Searches live in the database. Non-personal flags (onboarding done, banners acknowledged) live in `UserDefaults`. |
 | Siri | "The first" nudging reminder is `NudgeCore`'s order: highest urgency, then earliest due, then most nudges sent. |
-| Testing | `NudgeCore` and `NudgeStore` tests use Swift Testing with a fixed clock and fixed zones, including DST transitions, zone changes mid-occurrence and the 50 ms benchmark. UI tests use XCTest on simulators. |
+| Testing | `NudgeCore` and `NudgeStore` tests use Swift Testing with a fixed clock and fixed zones, including DST transitions, zone changes mid-occurrence and the 50 ms benchmark. UI tests use XCTest. Every test, `NudgeKit`'s included, runs with `xcodebuild test` on the iOS 18 and 26/27 simulators; there is no macOS test run, because AlarmKit, ActivityKit and `BGTaskScheduler` have no macOS. |
 | Export | JSON, `schemaVersion: 1`, ISO 8601 instants with offsets, IANA zone IDs, tags by name, reminders with their versions, occurrences, events and sent ledger rows. File `nudge-inator-YYYY-MM-DD.json`. Not importable. |
 
 ## Stack
@@ -380,7 +380,7 @@ graph LR
   AppP --> Sys
   Sys -- actions, intents --> AppP
   Sys -- AlarmAttributes --> WidgetP
-  Dev[GitHub: PR] --> CI[GitHub Actions macOS: swift test, xcodebuild test on iOS 18 and 26/27 simulators]
+  Dev[GitHub: PR] --> CI[GitHub Actions macOS runner: xcodebuild test on iOS 18 and 26/27 simulators]
   Mac[Xcode Organizer] --> ASC[App Store Connect: TestFlight, then App Store]
 ```
 
@@ -389,7 +389,7 @@ nudge-inator/
   App/                         # Nudge-inator app target: scenes, views, NudgeModel, Info.plist, String Catalog
   Widgets/                     # NudgeWidgets extension: alarm Live Activity view, its String Catalog
   Packages/NudgeKit/
-    Sources/NudgeCore/         # pure engine and domain; swift test on macOS
+    Sources/NudgeCore/         # pure engine and domain
     Sources/NudgeStore/        # GRDB schema, migrations, projections, journal
     Sources/NudgeShell/        # Coordinator, reconciler, OS adapters, capabilities
     Sources/NudgeLiveActivity/ # alarm metadata and Live Activity intents
