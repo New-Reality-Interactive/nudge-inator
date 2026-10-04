@@ -10,7 +10,9 @@ find reminders by **filtering on one or more tags**.
 - **Urgent nudges** ring as **AlarmKit alarms** on iOS 26 and later: a prominent system alert on the
   Lock Screen, sounding through silent mode and Focus, with **Snooze** and the system's **Stop**,
   which counts as Done. iOS 18 has no AlarmKit, so there they repeat as a **chain of Time Sensitive
-  notifications**, and so do they on iOS 26 and later when alarms aren't allowed.
+  notifications**, and so do they on iOS 26 and later when alarms aren't allowed. (With Time
+  Sensitive off, these come as ordinary notifications; the rule is in
+  [brief §4](../../product/brief.md#4-how-nudges-reach-you).)
 
 Open [`index.html`](index.html) in a browser. It's a single file with no dependencies. On a desktop
 it shows a phone with **Mockup controls** beside it, in portrait or landscape. On a phone the app
@@ -25,10 +27,30 @@ something, it says so and lists it to check on a device. iPad is for v2.
 reminder is *nudging* until you mark it done.
 
 The [product brief](../../product/brief.md) is built on this mockup. It also covers what the mockup
-doesn't show: iPad.
+doesn't show: iPad. The mockup illustrates the brief and the
+[UX spines](../../design/EXPERIENCE.md). Precedence is set once, in the [brief's introduction](../../product/brief.md).
 
 This version follows the UX review of 2026-10-02. The version before it is archived in
 [`../archive/2026-09-30-mockup-tags-v1/`](../archive/2026-09-30-mockup-tags-v1/README.md).
+
+**In the spines, not drawn here.** These are specified in
+[EXPERIENCE.md](../../design/EXPERIENCE.md) and [DESIGN.md](../../design/DESIGN.md) but aren't in this
+mockup yet. Build them from the spines:
+
+- **Undo** in the Done status message (it runs Not Done)
+- the **Done follow-up** notification after an alarm's Stop ("Marked done: … Not done yet?")
+- **Not Done** on rows closed by an alarm's Stop, in Now and My Day
+- the **urgency word** and glyph in the nudge card's top row
+- **Got It** on permission banners
+- **Settings › How Nudges Work**
+- Assistive Access's **Done today** list with **Not done yet**
+- the "Done with Siri" history line (the mockup doesn't simulate Siri)
+- the one extra nudge after Not Done on an occurrence that had used its give-up limit (Done only,
+  no Snooze); no sample occurrence reaches its limit before Not Done
+- the alarm permission prompt on the first launch after an update from iOS 18 (the mockup doesn't
+  simulate an OS update)
+- the **keep-nudging** notice
+- the alarm-limit Via label, "Notification: too many alarms scheduled"
 
 ## Product rules
 
@@ -94,7 +116,7 @@ and **Cancel**, **Add**, **Save** and **Done** as words.
 | **Now** | `bell` | Nudging cards with **Done** and **Snooze**, Coming Up (7 days), Last 24 Hours |
 | **My Day** | `calendar` | Today in time order, with Now and quiet-hours markers. Done, Nudging, Missed and Left counts that filter the list, and a tag filter. |
 | **Tags** | `tag` | Your tags with counts. Choose one or more to filter, then see the matching reminders in Today, Later, Paused and Completed sections. |
-| **Settings** | `gearshape` | Nudges (permission status, Send a Test Nudge), Quiet Hours, Time Zone, Siri & Shortcuts, Your Data (Export Data, a readable record rather than a backup, and Delete All Data), About |
+| **Settings** | `gearshape` | Nudges (permission status, Send a Test Nudge), Quiet Hours, Siri & Shortcuts, Your Data (Export Data, a readable record rather than a backup, and Delete All Data), About |
 | **Search** | `magnifyingglass` | Every reminder, found by title, notes or tag, in Today, Later, Paused and Completed sections |
 
 - **Search:** on iOS 26, choosing the Search circle turns the tab bar into a search field, with the
@@ -112,7 +134,6 @@ and **Cancel**, **Add**, **Save** and **Done** as words.
   - **Repeat** opens a picker page: Never, Every Day, Every Weekday, Every Week, Every 2 Weeks,
     Every Month, Every Year, or Custom (frequency, interval, weekdays, and one or more times of
     day, so a reminder can repeat several times a day).
-  - **Time Zone** is **Follow iPhone** by default, or a chosen zone the reminder stays in.
   - **Snooze Length** is a menu under Strength: the strength's default, or a longer 5, 10, 15 or
     30 minutes. Choosing a gentler strength raises a shorter length to its default.
   - **Strength** is a segmented control. At the accessibility sizes it's a menu instead (see
@@ -127,8 +148,8 @@ and **Cancel**, **Add**, **Save** and **Done** as words.
     High.
   - **Edit** on a reminder that's nudging says when each change applies: a new schedule from the
     next time it's due, a new strength, give-up limit or Ignore Quiet Hours from the next nudge, with
-    the nudge count carrying on. If the new limit has already been reached, or a one-off reminder's
-    time changes, it warns that saving closes the occurrence as **skipped** ("Skipped: the
+    the nudge count carrying on. In the two cases where saving closes the occurrence as **skipped**
+    ([brief §3](../../product/brief.md#3-product-concepts), Edit), it warns ("Skipped: the
     reminder was changed"). The time counted toward the limit leaves out quiet hours, snoozes and
     any time it was closed before Not Done.
 - **Rows that open a reminder show a chevron** (`chevron.right`), on Now, My Day, Tags, Search and
@@ -146,21 +167,22 @@ and **Cancel**, **Add**, **Save** and **Done** as words.
     action is implicit by tapping anywhere else." It holds only when the dialog is attached to its
     button; without a source, iOS 26 centers it and adds **Cancel**. On iOS 18 it's an action sheet
     at the bottom of the screen, with **Cancel**. Discarding a changed form asks the same way.
-  - **Not Done** appears while the reminder's latest occurrence is done, until the next one falls
-    due. It reopens that occurrence: the next nudge comes one interval later, at the next step, and
+  - **Not Done** appears while it applies
+    ([brief §3](../../product/brief.md#3-product-concepts), Not Done). It reopens that occurrence: the next nudge comes one interval later, at the next step, and
     the history records "Marked not done (nudging again)". The alarm's Stop counts as Done and
     can't be labelled, so this is how to take it back. Try it on "Walk the dog".
 - **First launch:** a welcome screen, then the notification permission prompt, then, on iOS 26
   and later, the alarm permission prompt.
 - **Swipe actions** on nudging rows and cards (Now and My Day): swipe left for **Done**, right for
-  **Snooze** while snoozes are left. They're shortcuts for the buttons the row already has (see
-  [Accessibility](#accessibility)).
+  **Snooze** while snoozes are left. A swipe only shows the button, and a tap does the action:
+  there's no full swipe, so a stray swipe can't mark a reminder done. They're shortcuts for the
+  buttons the row already has (see [Accessibility](#accessibility)).
 
 ## Tags
 
 **What a tag is:**
-- **A name, nothing else.** It's one word, shown as `#home`. Typing spaces turns them into hyphens
-  ("dog walks" becomes `#dog-walks`), and a leading `#` is dropped. Names are up to 30 characters.
+- **A name, nothing else.** It's one word, shown as `#home`; typing "dog walks" gives `#dog-walks`.
+  The naming rules are in [brief §3](../../product/brief.md#3-product-concepts) (Tag name).
 - **No color.** Tags are all the same neutral gray, so they never compete with the status colors
   (see [Color](#color)).
 - **Names are unique**, ignoring case. Adding `Home` when `#home` exists reuses `#home`.
@@ -243,10 +265,10 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
 | Nudge | Arrives as | Actions |
 |---|---|---|
 | Normal urgency | Notification (a Focus holds it) | **Done**, **Snooze** (while snoozes are left) |
-| High urgency | Time Sensitive notification (gets through Focus). An ordinary one if Time Sensitive is off. | as above |
+| High urgency | Time Sensitive notification (gets through Focus). | as above |
 | Urgent (Firm and Relentless, from nudge 4), iOS 26 and later | AlarmKit alarm | **Stop** (counts as Done), **Snooze** (while snoozes are left) |
 | Urgent, with alarms not allowed | Notification chain, as on iOS 18, marked "Notification chain: alarms are off" | **Done**, **Snooze** |
-| Urgent, past the system's alarm limit | Time Sensitive notification, marked "Notification: too many alarms scheduled" | **Done**, **Snooze** |
+| Urgent, past the system's alarm limit | Time Sensitive notification, marked "Notification: too many alarms scheduled" (the spine's wording; not drawn in this mockup) | **Done**, **Snooze** |
 | Urgent, iOS 18 | Notification chain: each time the occurrence enters Urgent, a Time Sensitive notification at once and then every minute, 10 in all, marked "Notification chain" | **Done**, **Snooze** |
 
 - **There's no Dismiss action.** The system's own **Clear** (swipe left on a notification) already
@@ -258,9 +280,9 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
   the time, and the body under them. "Time Sensitive" heads High and Urgent nudges. There's no row
   with the app's name in capitals: with a title, the icon says which app it is. The layout is an
   approximation, to compare with a screenshot from a device.
-- **On iOS 18, Urgent nudges come as a chain.** Each time an occurrence enters Urgent (its first
-  Urgent nudge, the end of quiet hours or of a snooze, and Not Done), a Time Sensitive notification
-  comes at once and then every minute, 10 in all, until **Done** or **Snooze**. The strength's
+- **On iOS 18, Urgent nudges come as a chain.** Each time an occurrence enters Urgent ([brief §4](../../product/brief.md#4-how-nudges-reach-you)
+  lists when), a Time Sensitive
+  notification comes at once and then every minute, 10 in all, until **Done** or **Snooze**. The strength's
   Urgent nudges inside a chain still count, but aren't sent separately (brief §4). Silent mode can mute
   them. There's no alarm permission, no Alarms row in Settings, and onboarding says "Urgent nudges
   keep coming" instead of "ring as alarms".
@@ -360,9 +382,10 @@ These are not part of the app:
   - Switching to a version that no iPhone of the current size runs moves to the nearest size, and
     the note under the control says so.
   - The 17e and 18 Pro Max sizes come from Apple's pixel resolutions at 3×; the 18 Pro is assumed to
-    match the 17 Pro (402 × 874). The **iPhone Duo**, a foldable, is left out: its sizes in points
-    aren't published, and it raises its own questions (see the
-    [brief, §10](../../product/brief.md#10-risks-and-decisions)).
+    match the 17 Pro (402 × 874). The **iPhone Duo**, a foldable, is left out because its sizes in
+    points aren't published. It's treated like any iPhone (see the
+    [brief, §5 and §10](../../product/brief.md#10-risks-and-decisions), and
+    [EXPERIENCE.md › Responsive & Platform](../../design/EXPERIENCE.md)).
 
   The top of the screen matches each one: the Dynamic Island, a notch, or a Home button. The phone
   is scaled down, never up, to fit the window.
@@ -736,7 +759,8 @@ under [Color](#color) covered dark mode too.
 
 Accessibility follows Apple's Human Interface Guidelines page on
 [Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility) (a
-local copy is in `docs/apple/design/`), and WCAG 2.1 AA:
+local copy is in `docs/apple/design/`), and WCAG 2.2 AA (the target set in
+[EXPERIENCE.md](../../design/EXPERIENCE.md)):
 
 **Vision**
 - **Larger text** up to AX5, about 3 times the default (see [Typography](#typography)).
@@ -752,8 +776,8 @@ local copy is in `docs/apple/design/`), and WCAG 2.1 AA:
     region that stays in place, because the screens re-render whole.
 
 **Hearing**
-- Every nudge vibrates as well as sounding, and the alarm and notifications are visual, so nothing
-  relies on hearing it.
+- Nudges vibrate when the iPhone's settings allow it, and the alarm and notifications are visual,
+  so nothing relies on hearing it.
 
 **Mobility**
 - **Target size.** Buttons are at least 44 pt tall, apart from the iOS switch, stepper, segmented
@@ -803,7 +827,10 @@ phone's on-screen scale taken out:
 - every control's name contains its visible label
 - every control can be reached by keyboard
 - each filter change and search is announced with its result
-- **axe-core** (WCAG 2.0 and 2.1, A and AA) found no violations, in light and dark
+- **axe-core** (WCAG 2.0, 2.1 and 2.2, A and AA) found no violations, in light and dark. Of the
+  WCAG 2.2 additions, axe checks only 2.5.8 Target Size (Minimum); the rest (such as 2.4.11 Focus
+  Not Obscured and 3.2.6 Consistent Help) can't be checked automatically and are covered by
+  EXPERIENCE.md's device release gate.
 
 **Known gaps:** iOS form fields are borderless, as in the Settings app, so they have no 3:1
 borders. The app will need testing with Accessibility Inspector, VoiceOver, Voice Control and
@@ -875,6 +902,10 @@ The questions this mockup raised are settled in the
   with many tags, and the items listed under [iOS versions](#ios-versions).
 
 ## How it was checked
+
+The current checks are committed in [`checks/`](checks/README.md): 34 behavior checks and an axe-core
+run (WCAG 2.0, 2.1 and 2.2, 216 configurations), with a runner script. The notes below record earlier
+checking passes.
 
 In headless Chrome, a script went through these steps, and the console had no errors:
 1. browse tags
@@ -962,8 +993,12 @@ the 2026-10-02 UX review, apart from the AlarmKit corrections, the Normal-nudge 
   the screen, nothing is cut off with "…", navigation bar items don't overlap, and enabled buttons
   are at least 44 pt, apart from the system's small controls listed under
   [Accessibility](#accessibility).
-- **axe-core** (WCAG 2.0 and 2.1, A and AA) on nine screens, on iOS 18, 26 and 27, in light and
-  dark, with Increase Contrast off and on, at Large and AX3: no violations.
+- **axe-core 4.13** (WCAG 2.0, 2.1 and 2.2, A and AA) on nine screens (Now, My Day, Tags, Search,
+  Settings, Reminder details, New Reminder, Welcome, Filter My Day), on iOS 18, 26 and 27, in light
+  and dark, with Increase Contrast off and on, at Large and AX3: 216 runs, no violations. Re-run on
+  2026-10-03 after the cross-doc review changes; a planted unlabeled button and image were flagged,
+  so the runs do detect violations. The only automated WCAG 2.2 rule is 2.5.8 Target Size; the
+  other 2.2 additions are covered by the device release gate (see [Accessibility](#accessibility)).
 - **A contrast audit** of the same screens: all text reaches 4.5:1, or 7:1 with Increase Contrast,
   apart from the selected tab's title on iOS 26 and 27 with the earlier blue accent (see [Color](#color)). The Lagoon accent passes there in the color study; the full audit hasn't been re-run with it. The Lock Screen
   wasn't measured, because the audit skips text over gradients.
@@ -989,7 +1024,6 @@ the 2026-10-02 UX review, apart from the AlarmKit corrections, the Normal-nudge 
 
 **After the architecture decisions of 2026-10-03,** these changes were checked in headless Chrome,
 with no console errors:
-- the form's **Time Zone** menu starts at **Follow iPhone**, and the details show it
 - **Repeat** has no "Keep: …" option; on **Custom**, **Add a Time** adds a time, typing one updates
   the summary ("Every day at 9:00 AM, 12:00 PM and 3:30 PM"), and **Remove** takes it away
 - Stretch break opens as Custom, every day at 10:00 AM, 2:00 PM and 4:00 PM, and My Day lists all

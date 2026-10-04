@@ -24,15 +24,8 @@ the person meets them.
 
 - **References and precedence.** The [mockup](../mockups/2026-10-02-ux-review-changes/index.html)
   is the visual and behavioral reference for every iPhone screen, and its
-  [README](../mockups/2026-10-02-ux-review-changes/README.md) gives the reasons. Where they
-  conflict, precedence runs (owner's decision, 2026-10-03, in the
-  [architecture decision log](../architecture/.memlog.md)):
-  1. The nudging rules in [brief §3, §4 and §10](../product/brief.md#3-product-concepts).
-  2. The owner's decisions in the [decision log](.memlog.md), then this spine and DESIGN.md, for
-     how the app looks and behaves around those rules.
-  3. The mockup.
-
-  Technical decisions are in the [architecture spine](../architecture/ARCHITECTURE-SPINE.md).
+  [README](../mockups/2026-10-02-ux-review-changes/README.md) gives the reasons. Precedence is set once, in the [brief's introduction](../product/brief.md).
+  Reasons for decisions are in the [decision log](.memlog.md).
 - **Form factor: iPhone only in v1** (owner's decision, 2026-10-02, [decision log](.memlog.md)).
   - Portrait and landscape, on iOS 18, 26 and 27.
   - One column at every width: large iPhones in landscape, iOS 27 resizable windows, and the iPhone
@@ -52,8 +45,8 @@ the person meets them.
 - **Data:** everything stays on the device. There are no network, sign-in or sync states.
 - **Defaults:**
   - Quiet hours are on, from 10:00 PM to 7:00 AM, and can be turned off in Settings.
-  - New reminders follow the iPhone's time zone. Settings › Time Zone can make a chosen zone the
-    default instead, and each reminder can change it. Quiet hours always follow the iPhone.
+  - Times follow the iPhone's time zone; there's no time zone setting
+    ([brief §3](../product/brief.md#3-product-concepts), Reminder).
   - Appearance follows the system's Light, Dark or Automatic setting. There's no in-app theme
     setting.
 - **Accessibility target:** WCAG 2.2 AA and the App Store Accessibility Nutrition Labels listed in
@@ -71,9 +64,9 @@ inside the sheet.
 | **My Day** | Tab (`calendar`) | Tab bar | Today in time order, with Now and quiet-hours markers. Done, Nudging, Missed and Left counts filter the list. **Filter by Tags** narrows it by tag. |
 | **Tags** | Tab (`tag`) | Tab bar; a tag button in Reminder details | Browse tags; filter by one or more tag tokens, **All Tags** or **Any Tag**; **Edit** to rename or delete tags. |
 | **Search** | Search-role tab (`magnifyingglass`) | Tab bar: a circle on iOS 26+, a fifth tab on iOS 18 | Every reminder, by title, notes or tag; Recent Searches. |
-| **Settings** | Tab (`gearshape`) | Tab bar | Nudges (permission status, Open iOS Settings, Send a Test Nudge, How Nudges Work), Quiet Hours, Time Zone, Siri & Shortcuts, Your Data (Export Data, Delete All Data), About and Accessibility. |
+| **Settings** | Tab (`gearshape`) | Tab bar | Nudges (permission status, Open iOS Settings, Send a Test Nudge, How Nudges Work), Quiet Hours, Siri & Shortcuts, Your Data (Export Data, Delete All Data), About and Accessibility. |
 | **Reminder details** | Pushed | Any reminder row or nudge card | Nudge card, tags, schedule, How It Nudges, History (90 days), Not Done, Pause/Resume, Delete. **Edit** in the bar. |
-| **New Reminder / Edit Reminder** | Sheet | **+** on Now, My Day or Tags; **Edit** in details | The form, with pushed pages **Tags**, **Repeat** and **Custom** (frequency, interval, weekdays, and one or more times of day), a **Time Zone** menu (**Follow iPhone**, the default, or a chosen zone), and a live How It Nudges preview. |
+| **New Reminder / Edit Reminder** | Sheet | **+** on Now, My Day or Tags; **Edit** in details | The form, with pushed pages **Tags**, **Repeat** and **Custom** (frequency, interval, weekdays, and one or more times of day), and a live How It Nudges preview. |
 | **Filter My Day** | Sheet | **Filter by Tags** on My Day | Tag checklist, **All Tags** or **Any Tag**, No Tags. Changes apply as they're made. |
 | **Rename Tag** | Sheet | Edit mode on the Tags tab | One field, with an error for a name already in use. |
 | **Welcome** | Sheet that can't be swiped away, first launch only | First launch | The four promises from the mockup's onboarding (iOS 18 has its own wording for the Urgent one), then **Continue**, the notification prompt and, on iOS 26+, the alarm prompt. |
@@ -109,8 +102,8 @@ distractible or older, so every line has to be understood at a glance.
 | Second person, short declaratives: "Nothing is nudging you." | Cheerleading: "You've got this!", "Great job!" |
 | Lead with the consequence in everyday words, then the mechanism: "Alarms are off. Urgent nudges come as a chain of Time Sensitive notifications instead, which silent mode can mute." | Bare states: "Permission denied", "Error" |
 | Name the consequence before a destructive action: "This deletes its history too, and cancels any nudges and alarms." | "Are you sure?" |
-| Status words that stand alone: **Nudging**, **Done**, **Missed**, **Skipped**, **Paused**, **Coming up** | An icon or color as the only status signal |
-| The product's own words, used the same way everywhere: *nudge*, *nudging*, *strength*, *give-up limit*, *quiet hours*, *starts higher* | Synonyms: "nag", "ping", "alert level", "dismiss" |
+| Status words that stand alone: **Nudging**, **Done**, **Missed**, **Skipped**, **Paused**, **Coming up** for occurrences; **Active**, **Paused**, **Completed** for a reminder (Reminder details, and the Tags and Search sections) | An icon or color as the only status signal |
+| The product's own words, used the same way everywhere: *nudge*, *nudging*, *strength*, *give-up limit*, *quiet hours*, *starts higher* | Synonyms: "nag", "ping", "alert level", "level", "dismiss" |
 | Title Case for buttons and headers on iOS 26+ (iOS 18 draws section headers in capitals) | Exclamation marks, emoji, jokes, ALL CAPS for emphasis |
 | Numerals, through the system formatters: "in 3 min", "2 h 18 min" | Hand-built plurals: "1 reminder(s)" |
 | Plain language outside the form, at about a grade 6–8 reading level. Each concept gets a one-line explanation in the form's footers and in Settings › How Nudges Work. | Unexplained jargon on Now or in banners |
@@ -126,7 +119,12 @@ Fixed phrases (verbatim copy):
 | Follow-up after Stop | "Marked done: Blood-pressure pill. Not done yet?" |
 | Privacy hint | "Notes and tags stay in the app. Notifications and alarms show the title, not these." |
 | Onboarding, and How It Nudges for any reminder with alarms | "Stopping the alarm counts as Done." |
-| History events | "Nudge 2 · Normal · notification", "Snoozed 15 min (2 snoozes left)", "Done from the notification", "Done (alarm stopped)", "Marked not done (nudging again)", "Notification cleared (still nudging)" |
+| History events | "Due", "Held for quiet hours until 7:00 AM", "Nudge 2 · Normal · notification", "Nudge 5 · Urgent · alarm", "Nudge 4 · Urgent · notification chain", "Snoozed 15 min (2 snoozes left)", "Notification cleared (still nudging)", "Marked not done (nudging again)", "Paused", "Resumed", "Nudge 3 · Normal · couldn't be sent (notifications off)". The engine's internal step index ("level") never appears. |
+| History events, Done by source (AD-3 `source`) | `app`: "Done"; `notification`: "Done from the notification"; `alarmStop`: "Done (alarm stopped)"; `liveActivity`: "Done from the Lock Screen"; `siri`: "Done with Siri"; `assistiveAccess`: "Done in Assistive Access" |
+| Welcome, Urgent (iOS 26+) | "Urgent nudges ring as alarms" / "When it really matters, your iPhone rings and vibrates like an alarm, even on silent. Stopping the alarm counts as Done." |
+| Welcome, Urgent (iOS 18) | "Urgent nudges keep coming" / "When it really matters, a nudge comes every minute, up to 10 times, then keeps nudging until you tap Done or it reaches its give-up limit." |
+| Repeat summary, a day some months don't have | "Every month on the 31st (the last day in months without one) at 9:00 AM", "Every year on 29 February (28 February in years without one) at 9:00 AM" |
+| Welcome, privacy | "Stays on your iPhone" / "No account and no server. Your reminders stay on this iPhone and in your own backups." |
 
 Every string quoted in double quotes anywhere in this spine is verbatim copy for the string catalog.
 
@@ -154,7 +152,7 @@ and Assistive Access behavior lives in [Nudge Surfaces](#nudge-surfaces) and
   sizes, Done and Snooze come right after the title, before the detail lines, so they stay above
   the fold.
 - **Accessibility:** the card is three elements.
-  - A summary, title first ("Pay rent. Urgent. Nudge 3 of 20. Due 7:30 AM. Next nudge by alarm at
+  - A summary, title first ("Pay rent. High. Nudge 3 of 20. Due 7:30 AM. Next nudge by alarm at
     8:30 AM. 2 snoozes left."), with the button trait, the hint "Opens details", and the custom
     actions Done and Snooze.
   - **Done**.
@@ -177,8 +175,11 @@ and Assistive Access behavior lives in [Nudge Surfaces](#nudge-surfaces) and
   - The whole row is the target; it pushes details (chevron).
   - On My Day, a nudging row has its own bordered **Done** beside the chevron.
   - On My Day, a row closed by an alarm's Stop reads "Done (alarm stopped)" with a **Not Done**
-    button, available until the next occurrence falls due. Rows in Now › Last 24 Hours show the
+    button, available while Not Done applies ([brief §3](../product/brief.md#3-product-concepts)). Rows in Now › Last 24 Hours show the
     same alarm-stopped treatment.
+  - Rows show **Not Done** only when the occurrence was closed by an alarm's Stop. Any other done
+    occurrence can be reopened from Reminder details, Undo right after Done, or Assistive Access's
+    "Done today" list.
 
 ### History
 
@@ -195,6 +196,10 @@ and Assistive Access behavior lives in [Nudge Surfaces](#nudge-surfaces) and
 - **Content:** how the next nudge arrives: Notification, Alarm, or Notification chain. A weaker
   fallback is said in words:
   - "Notification chain: alarms are off"
+  - "Notification chain: alarms and Time Sensitive are off"
+  - "Notification chain: Time Sensitive is off" (iOS 18)
+  - "Notification: alarms are off"
+  - "Notification: alarms and Time Sensitive are off"
   - "Notification: Time Sensitive is off"
   - "Notification: too many alarms scheduled" [ASSUMPTION: wording], when AlarmKit's limit is
     reached
@@ -218,6 +223,11 @@ and Assistive Access behavior lives in [Nudge Surfaces](#nudge-surfaces) and
 - **Actions:** four toggle buttons: Done, Nudging, Missed, Left. Only one can be chosen at a time,
   and tapping it again clears it.
 - **Rules:**
+  - **What each counts:** Done, Nudging (including a snoozed occurrence) and Missed count today's
+    occurrences with that status. Left counts what's still coming up today, including one that's
+    due but whose first nudge is held for quiet hours (its row reads "Coming up" with "Quiet hours:
+    first nudge at 7:00 AM"). Skipped and Paused items stay in the list but aren't counted, so the
+    counts can add up to less than the items shown.
   - **Zero:** a count of 0 can't be chosen, unless it's already chosen and drops to 0 (for example,
     after Done).
   - **Filtering:** the counts follow the tag filter. "Showing only Missed" and **Show All** appear
@@ -262,8 +272,11 @@ and Assistive Access behavior lives in [Nudge Surfaces](#nudge-surfaces) and
 - **Use:** Form.
 - **Content:** a menu with the strength's default (Gentle 30, Firm 15, Relentless 5 min) and any of
   5, 10, 15 and 30 min that are longer. It starts at the strength's default.
-- **Rules:** a change applies from the next snooze. The cap stays at 3 snoozes per occurrence. How
-  It Nudges shows the length.
+- **Rules:**
+  - A change applies from the next snooze. The cap stays at 3 snoozes per occurrence. How It
+    Nudges shows the length.
+  - Choosing a gentler strength raises a snooze length that's shorter than the new strength's
+    default to that default, and the footer says so.
 
 ### Give-up limit
 
@@ -302,15 +315,22 @@ at least 44 pt.
   - **Confirm (Add, Save, Done):** disabled until the sheet is valid.
   - **Keyboard:** Return confirms when focus isn't in a field that has its own Return action. Escape
     cancels.
+  - **Exception, Filter My Day:** the filter applies as you change it, so there's nothing to
+    discard. The sheet has **Clear** (disabled while no filter is on) and **Done**, and no
+    **Cancel**. Escape closes it, like **Done**.
 
 ### Permission banner
 
 - **Use:** Now, Settings.
 - **Content:** one per missing permission (notifications, alarms or Time Sensitive). It says what
-  that means.
+  that means. When alarms and Time Sensitive are both off, both banners show. When notifications
+  are off, only that banner shows, because it already says what can still reach you.
 - **Actions:** **Open Settings** and **Got It**. **Got It** collapses the banner on Now to a
-  one-line row at the bottom of the screen. Settings keeps the full banner until the permission
-  changes.
+  one-line row at the bottom of the screen. When two banners are showing, each has its own **Got
+  It** and collapses to its own row, and the rows stack. Got It is remembered for each permission
+  until that permission changes; any change clears it, so a banner that comes back shows in full. A
+  collapsed row shows only while its banner would. Settings keeps the full banner until the
+  permission changes.
 - **Layout:** a banner never sits above the first nudge card's Done.
 
 ### Quiet-hours chip
@@ -340,8 +360,8 @@ at least 44 pt.
 ### Settings row
 
 - **Use:** Settings.
-- **Content:** icon tile, label, and a trailing status ("On", "Off", "On · Time Sensitive off") or a
-  chevron.
+- **Content:** icon tile, label, and a trailing status or a chevron. Notifications reads "On",
+  "Off" or "On · Time Sensitive off"; Alarms (iOS 26+) reads "On" or "Off".
 - **Rules:** **Send a Test Nudge** is disabled while notifications are off, with a footer explaining
   why.
 
@@ -383,16 +403,19 @@ Visual only; decorative, hidden from VoiceOver.
 | Quiet hours on | The chip reads "· on now". Coming Up rows due in quiet hours say "Quiet hours: first nudge at 7:00 AM". |
 | Quiet hours turned off | No chip |
 | A nudge starts while the app is open | The card appears, and VoiceOver makes one queued announcement ("Pay rent is nudging"). Focus doesn't move. A nudge count going up isn't announced. |
-| A card closes while the app is open (Done from a notification, the give-up limit, the next occurrence taking over) | The card leaves. If it had VoiceOver focus, focus moves to the next card's summary, or to the Nudging header, with an announcement of why ("Pay rent was marked done"). |
+| A card closes while the app is open (Done from a notification, the give-up limit, the next occurrence taking over) | The card leaves. If it had VoiceOver focus, focus follows the rule in [Interaction Primitives › Done is the climax](#interaction-primitives), with an announcement of why ("Pay rent was marked done"). |
 | Opened from a notification | Scrolled to that occurrence's card, with VoiceOver focus on its summary |
-| Notifications off (also Settings) | Red banner: "Notifications are off. Only Urgent nudges can reach you, as alarms. Gentle reminders can't reach you at all." If alarms are off too, it says that nothing can reach you. Cards mark the nudges that can't arrive. |
+| Notifications off, alarms on, iOS 26+ (also Settings) | Red banner: "Notifications are off. Only Urgent nudges can reach you, as alarms. Gentle reminders can't reach you at all." Cards mark the nudges that can't arrive. |
+| Notifications off, with alarms off or on iOS 18 (also Settings) | Red banner: "Notifications are off. Nudges can't reach you." Cards mark the nudges that can't arrive. |
 | Alarms off, iOS 26+ (also Settings) | Orange banner: "Alarms are off. Urgent nudges come as a chain of Time Sensitive notifications instead, which silent mode can mute." |
-| Time Sensitive off (also Settings) | Orange banner: "Time Sensitive is off. High nudges come as ordinary notifications, so a Focus can hold them." |
+| Alarms off and Time Sensitive off, iOS 26+ (also Settings) | Orange banner: "Alarms are off. Urgent nudges come as a chain of ordinary notifications instead, which silent mode can mute and a Focus can hold." The Time Sensitive banner shows too. |
+| Time Sensitive off, iOS 26+ (also Settings) | Orange banner: "Time Sensitive is off. High nudges come as ordinary notifications, so a Focus can hold them." |
+| Time Sensitive off, iOS 18 (also Settings) | Orange banner: "Time Sensitive is off. High and Urgent nudges come as ordinary notifications, so a Focus can hold them." |
 | Alarm limit reached (also Reminder details) | The Via label of the affected nudges reads "Notification: too many alarms scheduled". |
 | Snoozed (also Reminder details) | The card says "Snoozed until 8:35 AM, then …", and the snoozes left update. |
-| No snoozes left (also Reminder details) | Snooze is removed from the card, notification and alarm. Footer: "No snoozes left. Only Done stops it." |
+| No snoozes left, or the one extra nudge after Not Done at the limit (also Reminder details) | Snooze is removed from the card, notification and alarm. Footer: "No snoozes left. Only Done stops it." |
 | Carry-over (also Reminder details) | "↑ Starts higher" on the card and the Coming Up row |
-| Closed by an alarm's Stop (also My Day) | The row reads "Done (alarm stopped)" with **Not Done** until the next occurrence falls due. |
+| Closed by an alarm's Stop (also My Day) | The row reads "Done (alarm stopped)" with **Not Done** while Not Done applies ([brief §3](../product/brief.md#3-product-concepts)). |
 
 ### My Day
 
@@ -409,7 +432,7 @@ Visual only; decorative, hidden from VoiceOver.
 | No tags yet | "No Tags", explaining that tags are added on a reminder |
 | No match (All Tags) | "No reminder has all of these tags. Try Any Tag, or remove one." |
 | Edit mode | Rows show **Rename** and Delete. Tapping a row doesn't filter. |
-| Deleting a tag | Alert: "Delete #home?" / "It's removed from 3 reminders. They aren't deleted." |
+| Deleting a tag | Alert: "Delete #home?" / "It's removed from 3 reminders. They aren't deleted." With no reminders: "No reminders have this tag." The tag is also removed from the Tags filter and the My Day filter; a filter left with no tags turns off. |
 
 ### Search
 
@@ -423,7 +446,7 @@ Visual only; decorative, hidden from VoiceOver.
 | State | Treatment |
 |---|---|
 | No history | "No occurrences yet. The first one is created when it falls due." |
-| Latest occurrence done | **Not Done** shows until the next occurrence falls due. |
+| Latest occurrence done | **Not Done** shows while Not Done applies ([brief §3](../product/brief.md#3-product-concepts)). |
 | Paused | **Resume**, with the note "Pausing stops the nudging and clears any carry-over. Anything due while it's paused is skipped, not missed." |
 | Delete | Confirmation: "Delete "Pay rent"?" / "This deletes its history too, and cancels any nudges and alarms." |
 | Deleted while open (a notification action got there first) | "This reminder was deleted.", with Back |
@@ -435,8 +458,10 @@ Visual only; decorative, hidden from VoiceOver.
 | Editing while nudging | The footer says when each change applies. It warns when saving would close the occurrence as skipped. |
 | Notes at 2,000 characters | No more input is accepted. A footer counter appears from 1,800 characters ("1,950 of 2,000"). |
 | New tag name already used, ignoring case (Tags page) | The form checks the existing tag instead of creating a new one, and the footer says "Using #home". |
+| Typing a tag name (Tags page, Rename Tag) | The name follows [brief §3](../product/brief.md#3-product-concepts), Tag name: as you type, "dog walks" becomes #dog-walks. |
 | Unsaved changes, then Cancel | Confirmation: **Discard Changes** / **Keep Editing** |
 | Resuming a one-off whose time passed | Asks for a new time ("Choose a New Time"). |
+| Repeat Never with a start time that has passed | Inline error under Starts: "This time has passed. Choose a later time." **Add**/**Save** is disabled. An edit to a reminder that was already a one-off, keeping its time, can still be saved; resuming one, or changing a repeat to Never, can't. |
 
 ### Settings
 
@@ -444,19 +469,21 @@ Visual only; decorative, hidden from VoiceOver.
 |---|---|
 | Quiet hours start equals end | Inline error: "Quiet hours can't start and end at the same time." Not saved. |
 | Export Data | Writes a readable JSON record and opens the share sheet. The footer says it isn't a backup and can't be imported. |
-| Delete All Data | Alert: "Delete All Data?" / "This deletes every reminder, tag and its history, and cancels every nudge and alarm. It can't be undone." [ASSUMPTION: the mockup gives only the last sentence.] |
+| Delete All Data | Alert: "Delete All Data?" / "This deletes every reminder, tag and all history from this iPhone, and cancels every nudge and alarm. It can't be undone." On iOS 18: "…and cancels every nudge. It can't be undone." It deletes reminders, tags, history and Recent Searches, and clears the tag filters. Settings (quiet hours) and iOS permissions are kept. |
 
 ### Rename Tag
 
 | State | Treatment |
 |---|---|
 | Name already in use | Inline error: "You already have a tag with this name." **Save** is disabled. |
+| Typing | The same name rules as a new tag ([brief §3](../product/brief.md#3-product-concepts), Tag name). |
 
 ### Any
 
 | State | Treatment |
 |---|---|
 | First launch | Welcome, then the permission prompts. Denying either lands on Now with its banner. |
+| Launch after updating from iOS 18 to iOS 26 or later (alarm permission never asked) | The system's alarm prompt, once, before Now. No Welcome. Denying it lands on Now with the alarms-off banner. |
 | Loading | None. Data is local and loads with the view, so there are no spinners or skeletons. |
 
 ## Nudge Surfaces
@@ -468,9 +495,9 @@ section covers what the person sees and can do on each.
 | Surface | Content | Actions | Notes |
 |---|---|---|---|
 | **Notification** (Normal: ordinary; High: Time Sensitive) | App icon, title (bold), "Nudge 3 of 20 · High". The header says "Time Sensitive" for High and Urgent only. | **Done**, **Snooze 15 min** (while snoozes are left), on a long press; the system's **Clear** | Tapping it opens Now at the card. Clear is recorded in the history ("Notification cleared (still nudging)"); a banner flicked away isn't. With previews hidden, iOS shows only the app's name. |
-| **Notification chain** (Urgent on iOS 18, and Urgent with alarms off) | As above, but Time Sensitive, sent each time the occurrence enters Urgent: at once and then every minute, 10 in all. Each shows the current nudge number. | **Done**, **Snooze** | The card marks it "Notification chain". Silent mode can mute it. The rules are in [brief §4](../product/brief.md#4-how-nudges-reach-you). |
+| **Notification chain** (Urgent on iOS 18, and Urgent with alarms off) | As above, but Time Sensitive (see [brief §4](../product/brief.md#4-how-nudges-reach-you) for Time Sensitive off), sent each time the occurrence enters Urgent: at once and then every minute, 10 in all. Each shows the current nudge number. | **Done**, **Snooze** | The card marks it "Notification chain". Silent mode can mute it. The rules are in [brief §4](../product/brief.md#4-how-nudges-reach-you). |
 | **Alarm** (Urgent on iOS 26+) | The app's name and the title, tinted `{colors.accent-dark}` | **Snooze N min** (`clock`, filled with the tint) while snoozes are left; the system's **Stop** | Stop counts as Done, as onboarding and How It Nudges say. On the third snooze the app replaces the alarm with one that has no Snooze. The alarm also shows in StandBy and on a paired Apple Watch. |
-| **Done follow-up** (after Stop on an alarm, or on the Watch) | An ordinary notification: "Marked done: Blood-pressure pill. Not done yet?" | **Not Done**; tapping it opens the reminder | Sent at once. **Not Done** works until the next occurrence falls due; the app removes the notification the next time it runs after that, or at once when Not Done is used. |
+| **Done follow-up** (after Stop on an alarm, or on the Watch) | An ordinary notification: "Marked done: Blood-pressure pill. Not done yet?" | **Not Done**; tapping it opens the reminder | Sent at once. **Not Done** works while Not Done applies ([brief §3](../product/brief.md#3-product-concepts)); the app removes the notification the next time it runs after that, or at once when Not Done is used. |
 | **Live Activity** (after Snooze on an alarm) | Title (up to 2 lines), countdown, "Snoozed. Rings again at 8:35 AM." | **Done** | Designed by the app, in a widget extension. Before the first unlock, iOS shows its own countdown instead. |
 | **Keep-nudging notice** (the reserved slot) | An ordinary notification: "Open Nudge-inator to keep nudging." [ASSUMPTION: wording; brief §4 gives only the phrase] | Tapping it opens the app, which tops up the schedule | Sent when the scheduled nudges run out before the app has run again. |
 | **Over the app** (the iPhone is in use) | Notifications as banners. The alarm in the Dynamic Island, or as a banner at the top in landscape [To confirm on a device: the alarm as a banner in landscape]. | Same as on each surface | |
@@ -502,8 +529,10 @@ section covers what the person sees and can do on each.
      "Done 8:22 AM".
   3. The status message says "Done: Pay rent. Nudging stopped." (or, for a reminder with alarms,
      "Done: Pay rent. Its alarms are cancelled."), with **Undo**.
-  4. VoiceOver focus moves to the next card's summary, or to the Nudging header if none is left. It
-     never lands on another Done button.
+  4. VoiceOver focus moves to the title of the item now at the same position in that list (a
+     nudge card's summary, a My Day row, or an Assistive Access card), or to the one before it if it
+     was last, or to that section's header if none is left. Only reminder items count; My Day's Now and quiet-hours markers aren't items. It never lands on a Done button. This is
+     the one focus rule for an item that leaves or changes after Done.
 
   VoiceOver makes one announcement, the status message, posted with the layout change. There's no
   custom animation.
@@ -614,8 +643,7 @@ This section covers behavior. Contrast and color rules are in
   - **Heading:** "Nudge-inator".
   - **"Needs you now"** (or "Nothing needs you now"): a large card for each nudging reminder, with
     the title, the due time and large **Done** and **Snooze** buttons.
-  - **"Done today":** each reminder done today, with a large **Not done yet** button until its next
-    occurrence falls due.
+  - **"Done today":** each reminder done today, with a large **Not done yet** button while Not Done applies ([brief §3](../product/brief.md#3-product-concepts)).
   - **"Later today":** up to 4 rows, or "Nothing else today".
 - **Left out:** editing, tags, search, settings and history. Reminders are set up in the full app,
   by the person or a caregiver. Settings › Accessibility tells caregivers what Assistive Access
@@ -812,7 +840,7 @@ Priya is looking for a reminder whose title she doesn't remember.
 
 **Surfaces without a journey.** Their behavior is specified in State Patterns and Component
 Patterns, and in the mockup:
-- **Settings:** Quiet Hours, Time Zone, Send a Test Nudge, Open iOS Settings, Export Data, Delete
+- **Settings:** Quiet Hours, Send a Test Nudge, Open iOS Settings, Export Data, Delete
   All Data, How Nudges Work
 - **Tags:** Rename Tag and deleting a tag
 - **Reminder details:** Delete Reminder
@@ -825,20 +853,18 @@ Add a flow for any of these if TestFlight shows it's needed.
 **Assumptions:**
 - The wording of the alarm-limit fallback ([Via label](#via-label)).
 - The quiet-hours chip is a button; the mockup's chip is static ([Quiet-hours chip](#quiet-hours-chip)).
-- The Delete All Data alert's first sentence; the mockup gives only the last ([Settings](#settings)).
 - `.selection` haptics; the owner specified only Done ([Interaction Primitives](#interaction-primitives)).
 - The keep-nudging notice's wording ([Nudge Surfaces](#nudge-surfaces)).
 - The flows' protagonists ([Key Flows](#key-flows)).
 
-**Device checks:**
-- Token selection and deletion in the Tags tab's field ([Tag token field](#tag-token-field)).
-- AlarmKit doesn't report an alarm that rang out as a stop ([Nudge Surfaces › States](#states)).
-- The alarm as a banner over the app in landscape ([Nudge Surfaces](#nudge-surfaces)).
-- The alarm in the Dynamic Island over another app ([Key Flows](#key-flows), Flow 3).
-- Alarms, Time Sensitive notifications and the Live Activity under Assistive Access
-  ([Assistive Access](#assistive-access)).
-- Folding and unfolding the iPhone Duo, at both sizes ([Responsive & Platform](#responsive--platform)).
-- Restoring from a backup: whether nudging resumes before the app is opened (brief §10).
+**Device checks:** the one list is in
+[brief §10 › Device checklist](../product/brief.md#10-risks-and-decisions). The ones that can
+change this spine are the Tags tab's token field ([Tag token field](#tag-token-field)), an alarm
+that rings out ([Nudge Surfaces › States](#states)), the alarm over the app and in the Dynamic
+Island ([Nudge Surfaces](#nudge-surfaces), Flow 3), Assistive Access with alarms
+([Assistive Access](#assistive-access)), the iPhone Duo
+([Responsive & Platform](#responsive--platform)) and the
+accessibility [release gate](#accessibility-floor).
 
 **Architecture questions:** none. Filters across a relaunch were settled on 2026-10-03
 ([Information Architecture](#information-architecture)).

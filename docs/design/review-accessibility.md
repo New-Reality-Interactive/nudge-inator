@@ -1,5 +1,11 @@
 # Accessibility review: DESIGN.md + EXPERIENCE.md
 
+> **Historical.** This review ran on 2026-10-03, before its findings were applied. The findings
+> were applied to DESIGN.md and EXPERIENCE.md the same day (see [.memlog.md](.memlog.md), "Review
+> findings applied"), and the mockup was brought in line afterwards. Read the spines for current
+> behavior; this file records why they changed. The critical and high findings are
+> tracked in [validation-report.md › Resolution status](validation-report.md#resolution-status).
+
 Reviewed 2026-10-03 against Apple HIG (iOS 18/26/27), WCAG 2.2 AA and the App Store Accessibility
 Nutrition Label criteria. Scope: `DESIGN.md` and `EXPERIENCE.md`, with the brief, the mockup README
 (Accessibility, Color, Typography) and `.memlog.md` as context. Contrast numbers below were computed

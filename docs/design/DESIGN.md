@@ -222,8 +222,7 @@ Everything else is restraint: one accent, status colors with one meaning each, n
 celebration. Done is relief, not a reward.
 
 The [mockup](../mockups/2026-10-02-ux-review-changes/index.html) is the visual reference for every
-iPhone screen. [EXPERIENCE.md › Foundation](EXPERIENCE.md#foundation) sets precedence between the
-spines and the mockup, once.
+iPhone screen. Precedence is set once, in the [brief's introduction](../product/brief.md).
 
 ## Colors
 

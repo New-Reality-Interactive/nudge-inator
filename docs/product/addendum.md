@@ -7,10 +7,8 @@ updated: 2026-10-03
 
 Detail behind the [brief](brief.md) that later documents (PRD, UX, architecture) will need, but that
 doesn't belong in the brief itself. The rules in the brief started from the tags mockup. Which
-document wins where they differ is set once, in the brief's introduction: the nudging rules in brief
-§3, §4 and §10 win, the UX spines own how the app looks and behaves around them, and the mockup
-comes last. Technical decisions are in the
-[architecture spine](../architecture/ARCHITECTURE-SPINE.md).
+document wins where they differ is set once, in the [brief's introduction](brief.md). Technical
+decisions are in the [architecture spine](../architecture/ARCHITECTURE-SPINE.md).
 
 ## A. What the earlier brief had that this one drops
 
@@ -37,7 +35,7 @@ The earlier brief was never committed, so this list is the only record of it.
 | Normal nudges | Notification (`.active`), held by a Focus | Same | Same |
 | High nudges | Time Sensitive notification | Same | Same |
 | Urgent nudges | Notification chain (each time an occurrence enters Urgent: at once and then every minute, 10 in all; then the strength's interval) | AlarmKit alarm; the notification chain if alarms aren't allowed | Same as iOS 26 |
-| Alarm permission prompt | None | On first launch, after notifications | Same |
+| Alarm permission prompt | None | On first launch, after notifications; or, after updating from iOS 18, on the first launch on iOS 26 | Same |
 | AlarmKit | Not available | Available (iOS and iPadOS 26.0+) | Available |
 | Bars, tab bar and sheets | iOS 18 system look | Liquid Glass | Liquid Glass |
 | Scroll edge effects | System default for iOS 18 | As in the mockup | As in the mockup |
@@ -151,23 +149,27 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
   the alarm can't say **Done**. Stopping still runs the app's `stopIntent`.
 - **Buttons run the app's code.** An alarm is configured with a `stopIntent` and a `secondaryIntent`,
   both `LiveActivityIntent`s. Their `perform()` runs without opening the app unless
-  `openAppWhenRun` is set. Stop closes the occurrence as done and cancels the rest of its alarms
-  there. The secondary intent "is only available after first unlock", so a Snooze before the first
+  `openAppWhenRun` is set. The intents only record a command (Done or Snooze); the app's reconciler
+  does the rest, such as cancelling the occurrence's other alarms after Stop (architecture spine,
+  AD-12). The one exception is before the first unlock (AD-16). The secondary intent "is only available after first unlock", so a Snooze before the first
   unlock after a restart isn't seen by the app until it next runs.
 - **Snooze can be the system's countdown.** A secondary button with the `.countdown` behavior and a
   post-alert duration (`Alarm.CountdownDuration`'s `postAlert`) makes the system alert again after
   that time. That matches the reminder's snooze length (the strength's default or longer).
   - The alarm that rings again uses the presentation it was scheduled with, so it still has Snooze.
-    On the third snooze, once the snooze intent has run, the app cancels that alarm and schedules a
-    new one for the end of the snooze, with no secondary button, and the remaining alarms are
+    On the third snooze, once the snooze command is recorded, the reconciler cancels that alarm and
+    schedules a new one for the end of the snooze, with no secondary button, and the remaining alarms are
     scheduled without it.
   - The occurrence's later alarms are separate alarms, so each snooze has to move them past the
     snooze. Otherwise, for example, a Relentless alarm 2 minutes later would ring during a 5-minute
     snooze.
   - The system's countdown rings again whatever has happened meanwhile, and no app code runs when
     it does. So if the snooze would end after the next occurrence takes over, or inside quiet hours
-    for a reminder that doesn't ignore them, the app cancels the countdown once the snooze intent
-    has run, and schedules a fixed alarm at the right time, or none.
+    for a reminder that doesn't ignore them, the reconciler cancels the countdown once the snooze
+    command is recorded, and schedules a fixed alarm at the right time, or none.
+  - If a device shows that cancelling an alarm during its countdown fails, the snooze button
+    switches to the `.custom` behavior: the intent runs, and the app's own alarm replaces the
+    countdown (AD-12's fallback).
 - **Countdowns are Live Activities.** The countdown and paused states appear as a Live Activity, set
   up in a widget extension, as in the sample. Nudge-inator needs that extension even without Home
   Screen widgets. Apple warns that without it "the system may unexpectedly dismiss alarms and fail
@@ -175,8 +177,8 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
   `AlarmPresentation.Countdown`, which the system draws instead.
 - **Schedules:** `Alarm.Schedule.fixed(date)` for a one-off time, or `.relative` for a time of day
   with weekly repeats. Each Urgent nudge is a one-off, so it's `.fixed`. A fixed alarm "does not
-  change when device timezone changes", so alarms for reminders that follow the device's time zone
-  (the default; a reminder can instead stay in a chosen zone) are rescheduled when it changes.
+  change when device timezone changes", so alarms are rescheduled when it changes (reminders follow
+  the iPhone's time zone; brief §3).
 - **Where it shows:** the Lock Screen, the Dynamic Island and StandBy, and a paired Apple Watch,
   which the system forwards the alert to. Apple calls it a prominent alert and doesn't describe it
   as full screen. WWDC25 session 230 says the buttons' SF Symbols are used "when the alert is shown
@@ -223,10 +225,14 @@ Review and that testers can join by public link. The limits and time periods bel
 | Build expiry | 90 days after upload |
 
 - **Setup.** The Apple Developer Program, then an app record in App Store Connect with
-  the bundle ID. TestFlight doesn't need an App Store listing. In Xcode, add the Time Sensitive
-  Notifications capability (its entitlement is required to send Time Sensitive notifications), and
-  set `NSAlarmKitUsageDescription`, `NSSupportsLiveActivities` and `UISupportsAssistiveAccess` in
-  `Info.plist`.
+  the bundle ID. TestFlight doesn't need an App Store listing. In Xcode, add the capabilities and
+  `Info.plist` keys listed in the architecture spine's
+  [Structural Seed › Environments](../architecture/ARCHITECTURE-SPINE.md#structural-seed), which is
+  the one list. It includes the Time Sensitive Notifications entitlement (required to send Time
+  Sensitive notifications), `NSAlarmKitUsageDescription`, `NSSupportsLiveActivities`,
+  `UISupportsAssistiveAccess` and `UISupportsFullScreenInAssistiveAccess` (iOS 18's Assistive
+  Access view), and `UIBackgroundModes` with `fetch` plus `BGTaskSchedulerPermittedIdentifiers`
+  (the background top-up of scheduled nudges, AD-14).
 - **Builds.** Archive in Xcode and upload from the Organizer (Distribute App > App Store Connect).
   Set `ITSAppUsesNonExemptEncryption` to `NO` in `Info.plist`, since the app uses no encryption of
   its own; otherwise App Store Connect asks about it for every build.
