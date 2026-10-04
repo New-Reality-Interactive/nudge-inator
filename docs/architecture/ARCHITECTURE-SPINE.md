@@ -341,7 +341,7 @@ Every target may also import `os` for logging (AD-19).
 | Xcode | 27.0 (27A266a) |
 | Swift (language mode 6) | 6.4 |
 | iOS deployment target | 18.0 |
-| SwiftUI, UserNotifications, App Intents, BackgroundTasks, CryptoKit | iOS 18 SDK surface |
+| SwiftUI, UserNotifications, App Intents, BackgroundTasks, CryptoKit | API available on iOS 18 (the deployment target); built with the Xcode 27.0 SDK |
 | AlarmKit, ActivityKit (alarm Live Activity), AssistiveAccess scene | iOS 26.0+ |
 | GRDB.swift | 7.11.1 |
 | Swift Testing / XCTest | bundled with Xcode 27.0 |
