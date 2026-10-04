@@ -441,6 +441,8 @@ decision here:
 | Stop, Snooze and Done before the first unlock | Revisit AD-16's journal. |
 | Which process runs the alarm intents on iOS 26 (first spike) | Choose a fallback for AD-5. |
 | The 64-notification limit | Change AD-14's budget. |
+| Alarms with notifications off | If alarms don't ring, make AD-11's `alarmsAvailable` false while notifications are off. |
+| Whether the snooze intent runs with the `.countdown` behavior | If it doesn't, adoption (AD-6) counts every snooze; switch to AD-12's `.custom` fallback if that proves too late. |
 | Restoring from a backup | Revisit AD-15's restore detection. |
 | The engine's speed on the oldest iOS 18 iPhone | Revisit AD-14's horizon or cost. |
 

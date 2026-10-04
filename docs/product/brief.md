@@ -161,7 +161,8 @@ TestFlight. It's released on the App Store once the success measures are met (se
 - **Stopping an alarm is confirmed.** People stop alarms by reflex, and Stop counts as Done. So
   stopping the alarm marks it done, and the app sends an ordinary notification at once: "Marked
   done: Blood-pressure pill. Not done yet?", with **Not Done**. (The stop intent only records Done;
-  the app's reconciler sends the notification. See the architecture spine, AD-12.) Not Done stops
+  the app's reconciler sends the notification, except before the first unlock. See the
+  architecture spine, AD-12 and AD-16.) Not Done stops
   working on it once Not Done no longer applies ([§3](#3-product-concepts)), and the app removes it the next time it runs
   after that, or at once when Not Done is used. Stopping the alarm on a paired Watch does the same.
 - **The notification chain** (iOS 18, and whenever alarms aren't allowed) starts each time an
@@ -414,7 +415,7 @@ the App Store. The architecture spine and EXPERIENCE.md point here, and each ite
 decision or section it affects.
 
 - *Alarms and notifications*
-  - The AlarmKit alarm limit (risk above; AD-11's `alarmCapacity`).
+  - The AlarmKit alarm limit (risk above; AD-11 and AD-14's `alarmCapacity`).
   - The 64-notification limit on iOS 18, 26 and 27 (risk above; AD-14).
   - Cancelling an alarm during its snooze countdown, and reusing alarm IDs (AD-12, and its `.custom`
     fallback).
@@ -423,8 +424,10 @@ decision or section it affects.
   - On iOS 26, which process runs the alarm's and Live Activity's intents when the app isn't
     running: the app, or the widget extension (architecture spine's first spike; AD-5).
   - Stop, Snooze and Done before the first unlock: the journal and the follow-up (risk above;
-    AD-16).
-  - Alarms with notifications off (risk above).
+    AD-16). If Stop isn't recorded then, onboarding's "Stopping the alarm counts as Done" needs a
+    caveat.
+  - Alarms with notifications off (risk above; AD-11).
+  - Whether the alarm's snooze intent runs when Snooze uses the system countdown (AD-6, AD-12).
   - An alarm that rings out: AlarmKit doesn't report it as a stop
     ([EXPERIENCE › Nudge Surfaces](../design/EXPERIENCE.md#nudge-surfaces)).
   - How the alarm presents: on an unlocked iPhone, as a banner over the app in landscape, in the
