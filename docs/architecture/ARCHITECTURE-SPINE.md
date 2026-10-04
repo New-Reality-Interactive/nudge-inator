@@ -31,7 +31,7 @@ Precedence is set once, in the [brief's introduction](../product/brief.md). Reas
 notification or alarm fires, so nothing may depend on it. A pure engine computes, from stored facts
 and a clock, everything that is true now and everything that should be scheduled. A reconciler
 makes the system's pending notifications and alarms match that plan. Every change is a job on one
-serial queue: a command writes facts, then a reconcile follows.
+serial queue: a command writes facts, then a reconcile follows (a reconcile records only zone facts, AD-4).
 
 All code outside the app and widget targets lives in one Swift package, `NudgeKit`, so `package`
 access can hide the store's write API from everything but the shell.
@@ -128,14 +128,14 @@ Every target may also import `os` for logging (AD-19).
   - **Cleanup:** it removes delivered notifications, other than Done follow-ups, whose occurrence is closed or whose reminder no longer exists; a Done follow-up once Not Done no longer applies or has been used (brief §3); and delivered keep-nudging notices.
   - **Echoes:** `alarmUpdates` and `authorizationUpdates` that only echo the coordinator's last applied set are ignored.
   - **Triggers:**
-    - launch and foreground
+    - launch and foreground (from `scenePhase` or the `UIApplication` notifications; the iOS 27 SDK requires the scene life cycle, so never from `UIApplicationDelegate` life-cycle methods)
     - after every command
     - `BGAppRefreshTask`
     - significant time change and `NSSystemTimeZoneDidChange`
     - `NSCurrentLocaleDidChange`
     - AlarmKit `authorizationUpdates` and `alarmUpdates`
     - protected data becoming available
-  - **Exceptions:** Send a Test Nudge posts `test/…` directly and writes no events or ledger rows; `test/…` is outside the reconciler's namespace and never removed by it. Before the first unlock, `submit` posts `followup/<key>/<n>` itself (AD-16), under its planned ID; once the journal is replayed, the reconciler owns it like any other delivery.
+  - **Exceptions:** when the store fails to open for a reason other than lock, the shell cancels every pending notification and alarm (AD-16). Send a Test Nudge posts `test/…` directly and writes no events or ledger rows; `test/…` is outside the reconciler's namespace and never removed by it. Before the first unlock, `submit` posts `followup/<key>/<n>` itself (AD-16), under its planned ID; once the journal is replayed, the reconciler owns it like any other delivery.
 
 ### AD-7 — Deterministic, locale-independent identity [ADOPTED]
 
@@ -235,7 +235,7 @@ Every target may also import `os` for logging (AD-19).
 - **Binds:** history, export, restore detection
 - **Prevents:** history claiming a nudge was sent when it never was
 - **Rule:**
-  - **What's recorded:** every delivery the reconciler schedules gets a ledger row with its delivery ID, occurrence key, nudge index, urgency, channel, fire instant, `handedOverAt` and, for an alarm, its AlarmKit ID, set once the OS accepts the request. A planned nudge with no channel (notifications off, and no alarm for it) gets a row with channel `none`, and nothing is handed to the OS for it; it still counts toward the give-up limit (brief §4). A row's delivery ID, occurrence key, nudge index, urgency, channel, content and fire instant never change; only `state` and `handedOverAt` are updated. Replacing a delivery (a new instant, channel or content) marks its row `cancelled` and writes a new one, so ledger rows are unique on delivery ID plus row sequence, and AD-7's uniqueness is across plan items. Bookkeeping reads the ledger's `scheduled` rows to cancel them, mark them `lost` and write a channel-`none` row once per plan item: a channel-`none` item is matched against the ledger, never the OS. Before a row's fire instant, a permission change replans it like any other change. Every chain notification gets its own row, like any delivery, so lost and restore detection work the same for chains.
+  - **What's recorded:** every delivery the reconciler schedules gets a ledger row with its delivery ID, occurrence key, nudge index, urgency, channel, fire instant, `handedOverAt` and, for an alarm, its AlarmKit ID, set once the OS accepts the request. A planned nudge with no channel (notifications off, and no alarm for it) gets a row with channel `none`, and nothing is handed to the OS for it; it still counts toward the give-up limit (brief §4). A row's delivery ID, occurrence key, nudge index, urgency, channel, content and fire instant never change; only `state` and `handedOverAt` are updated. Replacing a delivery (a new instant, channel or content) marks its row `cancelled` and writes a new one, so ledger rows are unique on delivery ID plus row sequence, and AD-7's uniqueness is across plan items. Bookkeeping reads the ledger's `scheduled` rows to cancel them, mark them `lost` and write a channel-`none` row once per plan item: a channel-`none` item is matched against the ledger, never the OS. Before a row's fire instant, a permission change replans it like any other change. Every chain notification gets its own row, like any delivery, so lost and restore detection work the same for chains. `keep/…` and `test/…` requests get no row, since they belong to no occurrence.
   - **States:**
     - `scheduled`
     - `cancelled`: the reconciler removed it before its fire instant
@@ -250,9 +250,9 @@ Every target may also import `os` for logging (AD-19).
 - **Prevents:** schema drift between versions; a Stop or Done lost because it came before the first unlock
 - **Rule:**
   - **The database:** one SQLite database through GRDB, in its own folder in Application Support. The folder has file protection `completeUntilFirstUserAuthentication`, so the `-wal` and `-shm` files match. It's included in iCloud and computer backups.
-  - **Migrations:** only through numbered `DatabaseMigrator` migrations, each covered by a test that migrates a fixture from the previous version.
+  - **Migrations:** only through numbered `DatabaseMigrator` migrations, each covered by a test that migrates a fixture from the previous version. A database with a migration this build doesn't know (a newer TestFlight build ran first) is an open failure, below.
   - **Locked or failed:** the coordinator opens the database only when `UIApplication.isProtectedDataAvailable` is true. An open that fails while it's true is "any other open failure" below; the error code is never used to tell the two apart.
-  - **The journal:** while protected data is unavailable (before the first unlock), a command goes to an append-only journal file with protection `none`. It holds only the command kind, occurrence key, nudge index, `source` and `issuedAt`, never titles. If the command is a Stop, `submit` (in `NudgeShell`, in the app process) also posts `followup/<key>/<n>`. The stop intent passes the reminder's title from the alarm's `NudgeAlarmMetadata` as an argument that is never journaled (the alarm already shows the title, so this exposes nothing new), so the follow-up reads as EXPERIENCE gives it. On the first open, replay is one job, first in the queue. It runs each entry through `accepts` in order and writes the accepted rows. For each accepted `done(source: .alarm)` it writes the follow-up's ledger row (fire instant and `handedOverAt` set to the entry's `issuedAt`). Then it deletes the journal and runs one reconcile, so no reconcile sees a journaled command as missing (AD-6). A follow-up posted for a Stop that `accepts` rejected is removed by Cleanup, since Not Done doesn't apply. If the stop intent itself doesn't run before the first unlock (Apple documents this only for the secondary intent), the Stop isn't recorded: the alarm leaves `AlarmManager.alarms`, which AD-6 never reads as a command, and the occurrence keeps nudging.
+  - **The journal:** while protected data is unavailable (before the first unlock), a command goes to an append-only journal file with protection `none`. It holds only the command kind, occurrence key, nudge index, `source` and `issuedAt`, never titles. If the command is a Stop, `submit` (in `NudgeShell`, in the app process) also posts `followup/<key>/<n>`. The stop intent passes the reminder's title from the alarm's `NudgeAlarmMetadata` as an argument that is never journaled (the alarm already shows the title, so this exposes nothing new), so the follow-up reads as EXPERIENCE gives it. On the first open, replay is one job, first in the queue. It first renames the journal, so an entry appended meanwhile goes to a fresh file and is replayed next time. It runs each entry through `accepts` in order and writes the accepted rows. For each accepted `done(source: .alarm)` it writes the follow-up's ledger row (fire instant and `handedOverAt` set to the entry's `issuedAt`). Then it deletes the journal and runs one reconcile, so no reconcile sees a journaled command as missing (AD-6). A follow-up posted for a Stop that `accepts` rejected is removed by Cleanup, since Not Done doesn't apply. If the stop intent itself doesn't run before the first unlock (Apple documents this only for the secondary intent), the Stop isn't recorded: the alarm leaves `AlarmManager.alarms`, which AD-6 never reads as a command, and the occurrence keeps nudging.
   - **Any other open failure** (a failed migration, corruption): it's logged, nothing is journaled, and the coordinator runs no jobs. The shell cancels every pending notification and alarm, the one OS write allowed without the store, so nothing nudges that Done can't stop. The app shows the message in EXPERIENCE › State Patterns › Any.
   - **Delete All Data:** deletes every reminder, tag, occurrence, event, ledger row and Recent Search, and the journal, in one job, then reconciles to an empty plan. The tag filters turn off as Conventions › UI state says. It keeps what brief §3 keeps (settings), which here means quiet hours and their versions, zone facts, capability state and the `UserDefaults` flags.
 
@@ -303,7 +303,7 @@ Every target may also import `os` for logging (AD-19).
   - **One model:** a single app-wide `@Observable NudgeModel` holds the latest `Evaluation`. Views read derived state only from it.
   - **Same inputs as the reconciler:** `NudgeModel` evaluates only from the inputs the coordinator last published (facts, settings, the zone facts and the persisted capabilities), changing nothing but `now`. A zone or permission change reaches the screens through a reconcile.
   - **When it refreshes:**
-    - on store change
+    - on store change (through GRDB's `ValueObservation`, not `SharedValueObservation`, whose deadlock issue #1888 is open)
     - on foreground
     - at the evaluation's `nextChangeAt`
   - **Announcements:** the VoiceOver announcements in EXPERIENCE.md (a nudge starts, a card closes) come from diffing successive evaluations.
