@@ -133,7 +133,7 @@ Every target may also import `os` for logging (AD-19).
     - `NSCurrentLocaleDidChange`
     - AlarmKit `authorizationUpdates` and `alarmUpdates`
     - protected data becoming available
-  - **Exceptions:** two narrow ones, both outside the reconciler's namespace and never removed by it. Send a Test Nudge posts `test/…` directly and writes no events or ledger rows. When the store can't open before the first unlock, the stop intent posts `followup/<key>/<n>` itself (AD-16).
+  - **Exceptions:** Send a Test Nudge posts `test/…` directly and writes no events or ledger rows; `test/…` is outside the reconciler's namespace and never removed by it. Before the first unlock, the stop intent posts `followup/<key>/<n>` itself (AD-16), under its planned ID; once the journal is replayed, the reconciler owns it like any other delivery.
 
 ### AD-7 — Deterministic, locale-independent identity [ADOPTED]
 
@@ -255,7 +255,7 @@ Every target may also import `os` for logging (AD-19).
 - **Rule:**
   - **The database:** one SQLite database through GRDB, in its own folder in Application Support. The folder has file protection `completeUntilFirstUserAuthentication`, so the `-wal` and `-shm` files match. It's included in iCloud and computer backups.
   - **Migrations:** only through numbered `DatabaseMigrator` migrations, each covered by a test that migrates a fixture from the previous version.
-  - **The journal:** while protected data is unavailable (before the first unlock), a command goes to an append-only journal file with protection `none`. It holds only the command kind, occurrence key, nudge index, `source` and `issuedAt`, never titles. If the command is a Stop, the intent also posts `followup/<key>/<n>`, taking the reminder's title from the alarm's `NudgeAlarmMetadata` (the alarm already shows the title, so this exposes nothing new), so the follow-up reads as EXPERIENCE gives it. On the first open, the journal is replayed in order before any reconcile runs, then deleted, so a reconcile never sees a journaled command as missing (AD-6).
+  - **The journal:** while protected data is unavailable (before the first unlock), a command goes to an append-only journal file with protection `none`. It holds only the command kind, occurrence key, nudge index, `source` and `issuedAt`, never titles. If the command is a Stop, the intent also posts `followup/<key>/<n>`, taking the reminder's title from the alarm's `NudgeAlarmMetadata` (the alarm already shows the title, so this exposes nothing new), so the follow-up reads as EXPERIENCE gives it. On the first open, the journal is replayed in order before any reconcile runs, writing a ledger row for each follow-up the intent posted, then deleted, so a reconcile never sees a journaled command as missing (AD-6).
   - **Any other open failure** (a failed migration, corruption): it's logged, nothing is journaled, and the coordinator runs no jobs, so what's already scheduled is left alone. The app shows the message in EXPERIENCE › State Patterns › Any.
   - **Delete All Data:** deletes every reminder, tag, occurrence, event, ledger row and Recent Search, and the journal, in one job, then reconciles to an empty plan. The tag filters empty themselves (Conventions › UI state). It keeps settings (quiet hours and their versions, zone facts and capability state) and the `UserDefaults` flags, as brief §3 says.
 
