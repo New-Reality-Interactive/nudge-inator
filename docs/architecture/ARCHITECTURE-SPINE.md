@@ -314,7 +314,7 @@ graph TD
 | Naming | Domain types use the brief's words: `Reminder`, `ReminderConfig`, `Occurrence`, `Nudge`, `Strength`, `Urgency`, `Tag`, `QuietHours`, `GiveUpLimit`, `Snooze`. Never "alert level", "ping", "dismiss". |
 | IDs | Reminders and tags: UUID. Occurrences and deliveries: AD-7. |
 | Time | Instants stored as UTC `Date`. Wall-clock values as a `LocalDateTime`, read in the iPhone's current zone (AD-9). All date math in `NudgeCore` through an injected Gregorian `Calendar`. |
-| Durations | Integer minutes in the model and engine; `TimeInterval` only at the OS adapters. |
+| Durations | Integer seconds in the model and engine (brief §3 has 7.5- and 2.5-minute intervals); `TimeInterval` only at the OS adapters. |
 | Clock | One `Clock` protocol injected into the shell; `NudgeCore` takes `now` as a parameter. |
 | Errors | Adapter failures are logged and fold into `Capabilities`; they never surface as raw errors in UI. User-visible states are the spines' banners and Via labels. |
 | Tags | A tag's unique key is its name case-folded with Foundation (`.caseInsensitive`, no locale), stored in its own indexed column; never SQLite `NOCASE`. |
