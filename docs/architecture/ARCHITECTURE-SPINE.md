@@ -133,7 +133,7 @@ Every target may also import `os` for logging (AD-19).
     - `NSCurrentLocaleDidChange`
     - AlarmKit `authorizationUpdates` and `alarmUpdates`
     - protected data becoming available
-  - **Exceptions:** two narrow ones, both outside the reconciler's namespace and never removed by it. Send a Test Nudge posts `test/…` directly and writes no events or ledger rows. When the store can't open before the first unlock, the stop intent posts `followup/<key>` itself (AD-16).
+  - **Exceptions:** two narrow ones, both outside the reconciler's namespace and never removed by it. Send a Test Nudge posts `test/…` directly and writes no events or ledger rows. When the store can't open before the first unlock, the stop intent posts `followup/<key>/<n>` itself (AD-16).
 
 ### AD-7 — Deterministic, locale-independent identity [ADOPTED]
 
@@ -143,11 +143,12 @@ Every target may also import `os` for logging (AD-19).
   - **Occurrence key:** `OccurrenceKey` is `<lowercase reminder UUID>@<yyyyMMdd'T'HHmm>`, the due wall-clock time (reminders have no zone of their own; AD-9). It uses the Gregorian calendar and ASCII digits, independent of locale.
   - **Delivery IDs:**
     - `nudge/<key>/<n>`
-    - `chain/<key>/<startNudge>/<k>`
+    - `chain/<key>/<UTC yyyyMMdd'T'HHmm of the chain's start>/<k>`
     - `snooze/<key>/<n>/<s>`
-    - `followup/<key>`
+    - `followup/<key>/<n>`, where `n` is the stopped alarm's nudge index
     - `keep/<UTC yyyyMMdd'T'HHmm>`
     - `test/<UTC instant>`
+  - **Never reused:** every delivery ID is unique for the life of its occurrence, so a restarted chain or a second Stop after Not Done gets new IDs. A test checks uniqueness over a full simulated occurrence with snoozes, chains and Not Done.
   - **AlarmKit IDs:** UUIDv5 (RFC 9562) of the delivery ID, in a namespace UUID that is a literal constant in `NudgeCore`, computed with CryptoKit's SHA-1.
   - **One owner:** only `NudgeCore.DeliveryID` builds and parses IDs, with round-trip tests. Every notification's `userInfo` and every alarm's metadata carry the occurrence key and nudge index; an alarm's metadata also carries the reminder's title (AD-16).
   - **DST:** a wall time that doesn't exist resolves forward by the gap; a repeated wall time resolves to its first instance.
@@ -203,7 +204,7 @@ Every target may also import `os` for logging (AD-19).
   - **What the engine plans:**
     - **The post-snooze alarm,** `snooze/<key>/<n>/<s>`. It has a pre-alert countdown so the Live Activity shows. It has no secondary button when no snoozes remain. It's moved, or dropped, if the snooze would end after a takeover or inside quiet hours for a reminder that doesn't ignore them.
     - **The later alarms,** moved past the snooze.
-    - **The follow-up after Stop:** `followup/<key>` from a `done(source: .alarm)` event, sent at once.
+    - **The follow-up after Stop:** `followup/<key>/<n>` from a `done(source: .alarm)` event, sent at once.
   - **The system's countdown:** the reconciler cancels it, because AD-6 lets it remove that alarm once the snooze command is committed.
   - **Fallback:** if a device shows that cancelling during a countdown fails, the snooze button switches to `.custom` behavior: the intent runs and the engine's alarm replaces the countdown.
 
@@ -213,7 +214,7 @@ Every target may also import `os` for logging (AD-19).
 - **Prevents:** duplicate notifications in one minute and nudge counts that differ by OS
 - **Rule:**
   - **When a chain starts:** each time an occurrence enters or re-enters Urgent, as listed in brief §4 (the one list, including its exception for the extra nudge after Not Done at the limit, AD-4).
-  - **What it sends:** a `.timeSensitive` notification at once and every minute after, 10 in all. It ends early on Done, Snooze or the start of quiet hours.
+  - **What it sends:** a `.timeSensitive` notification at once and every minute after, 10 in all. Each one's nudge index is the nudge number it shows, taken from the plan item, never parsed from its ID. It ends early on Done, Snooze or the start of quiet hours.
   - **Nudges inside it:** the strength's Urgent nudges that fall inside a running chain still count on schedule but aren't sent separately. The chain notification at that minute shows the current nudge number.
   - **Limits:** chain repeats don't count toward the nudge limit, but their time counts toward the time limit.
 
@@ -254,7 +255,7 @@ Every target may also import `os` for logging (AD-19).
 - **Rule:**
   - **The database:** one SQLite database through GRDB, in its own folder in Application Support. The folder has file protection `completeUntilFirstUserAuthentication`, so the `-wal` and `-shm` files match. It's included in iCloud and computer backups.
   - **Migrations:** only through numbered `DatabaseMigrator` migrations, each covered by a test that migrates a fixture from the previous version.
-  - **The journal:** while protected data is unavailable (before the first unlock), a command goes to an append-only journal file with protection `none`. It holds only the command kind, occurrence key, nudge index, `source` and `issuedAt`, never titles. If the command is a Stop, the intent also posts `followup/<key>`, taking the reminder's title from the alarm's `NudgeAlarmMetadata` (the alarm already shows the title, so this exposes nothing new), so the follow-up reads as EXPERIENCE gives it. On the first open, the journal is replayed in order before any reconcile runs, then deleted, so a reconcile never sees a journaled command as missing (AD-6).
+  - **The journal:** while protected data is unavailable (before the first unlock), a command goes to an append-only journal file with protection `none`. It holds only the command kind, occurrence key, nudge index, `source` and `issuedAt`, never titles. If the command is a Stop, the intent also posts `followup/<key>/<n>`, taking the reminder's title from the alarm's `NudgeAlarmMetadata` (the alarm already shows the title, so this exposes nothing new), so the follow-up reads as EXPERIENCE gives it. On the first open, the journal is replayed in order before any reconcile runs, then deleted, so a reconcile never sees a journaled command as missing (AD-6).
   - **Any other open failure** (a failed migration, corruption): it's logged, nothing is journaled, and the coordinator runs no jobs, so what's already scheduled is left alone. The app shows the message in EXPERIENCE › State Patterns › Any.
   - **Delete All Data:** deletes every reminder, tag, occurrence, event, ledger row and Recent Search, and the journal, in one job, then reconciles to an empty plan. The tag filters empty themselves (Conventions › UI state). It keeps settings (quiet hours and their versions, zone facts and capability state) and the `UserDefaults` flags, as brief §3 says.
 
