@@ -77,7 +77,7 @@ Every target may also import `os` for logging (AD-19).
 
 - **Binds:** Occurrence, My Day counts, history, Siri, Assistive Access
 - **Prevents:** a status that's wrong because no code ran at the give-up limit or a takeover
-- **Rule:** the store holds facts only. Coming up, nudging, done, missed and skipped are computed by the engine. So is a reminder's status (Active, Paused or Completed, brief §3): Paused comes from the latest pause or resume event and wins over Completed; Completed comes from an active one-off whose occurrence has closed and hasn't been reopened or given a new time. No stored column caches a status.
+- **Rule:** the store holds facts only. Coming up, nudging, done, missed and skipped are computed by the engine. So is a reminder's status (Active, Paused or Completed), by brief §3's Completed row, from its pause and resume events and its occurrences. No stored column caches a status.
 
 ### AD-3 — Facts are immutable, versioned and carry their origin [ADOPTED]
 
@@ -87,7 +87,7 @@ Every target may also import `os` for logging (AD-19).
   - **Events are append-only rows:** done, not done, snooze, clear, pause, resume and skip-by-edit. Each records `issuedAt`, stamped by `CommandSubmitting.submit` from the shell's injected `Clock` when it's called, which every handler (delegate method, intent `perform`, view action) does first; journal replay keeps the entry's, and an adopted snooze takes the reconcile's `now`; the occurrence key, the nudge index the surface showed (for History only; the engine derives which nudge an event answers from `issuedAt`), and `source` (`app`, `notification`, `alarm` (either of the alarm's buttons; the command kind says which), `alarmCountdown`, `liveActivity`, `siri`, `assistiveAccess`).
   - **Order:** every projection, the engine's fold, History and Export order events by `issuedAt`, then by commit sequence.
   - **Versioned facts carry the instant they were saved:** a reminder's nudging configuration (`ReminderConfig`: schedule, repeat rule, strength, snooze length, give-up limits, Ignore Quiet Hours), quiet hours, and the device time zone. The coordinator writes a zone fact when it detects a change.
-  - **How versions apply:** the engine applies each version per brief §3. A new schedule applies from the next due time; strength, limit and Ignore Quiet Hours apply from the next nudge; a new snooze length applies from the next snooze. A version with a gentler strength already carries the raised snooze length and limit (brief §3), so the engine never sees a snooze length below the strength's default. Each past instant is evaluated with the quiet hours and zone in effect then.
+  - **How versions apply:** as brief §3's Edit row says. A version with a gentler strength is saved already carrying the raised snooze length and limit, so the engine never sees a snooze length below the strength's default or a limit below its minimum. Each past instant is evaluated with the quiet hours and zone in effect then.
   - **Mutable fields:** among a reminder's facts, only title, notes and tags. Tag names (Rename Tag) and Recent Searches are not facts.
   - **Deletion:** deleting a reminder deletes its versions, occurrences, events and ledger rows in one job; deleting a tag deletes it and its links to reminders. With Delete All Data (AD-16), these are the only removals of facts besides pruning (AD-15).
   - **Give-up time:** the time counted toward the limit leaves out the union of quiet, snoozed and closed intervals.
@@ -204,7 +204,7 @@ Every target may also import `os` for logging (AD-19).
 - **Rule:**
   - **Intents only submit commands:** the alarm's snooze and stop intents submit `snooze` and `done(source: .alarm)` and touch no OS API.
   - **What the engine plans:**
-    - **The post-snooze alarm,** `snooze/<key>/<n>/<s>`. It's an `Alarm.Schedule.fixed` alarm (AD-9) whose pre-alert countdown runs from the snooze's `issuedAt` to its fire instant, so the Live Activity shows for the whole snooze. The length is fixed by those two facts, so a reconcile never changes it. It's moved, or dropped, if the snooze would end after a takeover or inside quiet hours for a reminder that doesn't ignore them.
+    - **The post-snooze alarm,** `snooze/<key>/<n>/<s>`. It's an `Alarm.Schedule.fixed` alarm (AD-9) whose pre-alert countdown runs from the snooze's `issuedAt` to its fire instant, so the Live Activity shows for the whole snooze. The length is fixed by those two facts, so a reconcile never changes it. It's moved, or dropped, as brief §4's "A snooze never outlasts its occurrence" says.
     - **The later alarms,** moved past the snooze.
     - **The follow-up after Stop:** `followup/<key>/<n>` from a `done(source: .alarm)` event, sent at once, and planned only while Not Done applies to that occurrence.
   - **Every alarm's configuration:** its attributes carry the alert and countdown presentations (iOS draws the countdown itself before the first unlock), its `postAlert` is the reminder's snooze length, and it has no secondary button once its occurrence has no snoozes left (brief §4), so the diff replaces alarms already scheduled.
