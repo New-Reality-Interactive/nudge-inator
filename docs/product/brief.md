@@ -420,6 +420,8 @@ decision or section it affects.
     fallback).
   - Stop and Snooze after the app has been force-quit, including Stop on a paired Watch (risk
     above; AD-12).
+  - On iOS 26, which process runs the alarm's and Live Activity's intents when the app isn't
+    running: the app, or the widget extension (architecture spine's first spike; AD-5).
   - Stop, Snooze and Done before the first unlock: the journal and the follow-up (risk above;
     AD-16).
   - Alarms with notifications off (risk above).

@@ -103,7 +103,8 @@ graph TD
 - **Binds:** NudgeIntents, NudgeLiveActivity, NudgeWidgets, NudgeStore
 - **Prevents:** two processes writing one SQLite file
 - **Rule:**
-  - **Where intents run:** in the app process. The alarm's stop and secondary intents and the Live Activity's Done are `LiveActivityIntent`s. Siri and App Shortcuts intents run in the app target. Notification actions run in the app's `UNUserNotificationCenterDelegate`.
+  - **Where intents run:** in the app process. The alarm's stop and secondary intents and the Live Activity's Done are `LiveActivityIntent`s; on iOS 27 they set `allowedExecutionTargets` to the main app (inside an AD-18 wrapper). Siri and App Shortcuts intents run in the app process. Notification actions run in the app's `UNUserNotificationCenterDelegate`.
+  - **No coordinator, no effect:** an intent that finds no `CommandSubmitting` registered does nothing, so the occurrence keeps nudging. Whether iOS 26 ever runs these intents in the widget extension is settled by the first spike (Deferred).
   - **How intents reach the coordinator:** only through `CommandSubmitting` and `NudgeQuerying` (both `Sendable`, defined in `NudgeCore`). The app registers both with `AppDependencyManager` at launch.
   - **The widget:** links `NudgeLiveActivity` and `NudgeCore`, never `NudgeStore` or `NudgeShell`. It renders only from `AlarmAttributes<NudgeAlarmMetadata>`.
   - **Packaging:** every target that holds or uses intents declares an `AppIntentsPackage`.
@@ -414,7 +415,7 @@ nudge-inator/
 - **CI:** may need to download the iOS 18 simulator runtime.
 - **Infrastructure:** there is no server and no runtime infrastructure.
 
-**First spike:** App Intents declared in `NudgeKit` targets and used from both the app and the widget, with an `AppIntentsPackage` in each. If that fails, the fallback is a framework target.
+**First spike:** App Intents declared in `NudgeKit` targets and used from both the app and the widget, with an `AppIntentsPackage` in each. If that fails, the fallback is a framework target. The spike also records which process runs `NudgeLiveActivity`'s intents on iOS 26 and 27, with the app running and with it not running (WWDC26 session 345 says intents in a shared package may run in the extension when the app isn't running).
 
 **Device checklist** (not automatable): the one list is in
 [brief §10 › Device checklist](../product/brief.md#10-risks-and-decisions). The checks that can
@@ -456,6 +457,7 @@ limit (AD-14) and restoring from a backup (AD-15).
 - **Exact GRDB table and column names:** owned by the first migration.
 - **Encryption at rest beyond iOS data protection (SQLCipher):** not needed for v1.
 - **Release automation (fastlane, Xcode Cloud):** manual Organizer uploads until the TestFlight cadence needs more.
+- **Where iOS 26 runs the alarm and Live Activity intents:** settled by the first spike. If it runs them in the widget extension when the app isn't running, a fallback is chosen then; until then such a Stop or Snooze is lost and the occurrence keeps nudging (AD-5).
 - **Device-only unknowns** in the device checklist:
   - revisit AD-14 if the alarm limit is very low
   - revisit AD-12 if cancelling during a countdown fails
