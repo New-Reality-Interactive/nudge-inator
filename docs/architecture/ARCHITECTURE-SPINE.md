@@ -320,7 +320,7 @@ Every target may also import `os` for logging (AD-19).
 | Clock | One `Clock` protocol injected into the shell; `NudgeCore` takes `now` as a parameter. |
 | Errors | Adapter failures are logged and fold into `Capabilities`; they never surface as raw errors in UI. User-visible states are the spines' banners and Via labels. |
 | Tags | A tag's unique key is its name case-folded with Foundation (`.caseInsensitive`, no locale), stored in its own indexed column; never SQLite `NOCASE`. |
-| Strings | Every user-facing string, including notification, alarm, Live Activity, App Shortcut and accessibility text, is in a String Catalog with plural variants and positional arguments. The widget extension has its own catalog. Notification content is localized when scheduled. |
+| Strings | Every user-facing string, including notification, alarm, Live Activity, App Shortcut and accessibility text, is in a String Catalog with plural variants and positional arguments. The widget extension has its own catalog, and so does each `NudgeKit` target with user-facing text (`NudgeShell`, `NudgeIntents`, `NudgeLiveActivity`), which passes `bundle: .module` explicitly. App Shortcut phrases stay in the app target's `AppShortcuts.xcstrings`. Notification content is localized when scheduled. |
 | Formats | Dates, times and durations shown to people use the system formatters; IDs and export use fixed POSIX formats. |
 | UI state | Navigation per tab with `NavigationStack`. My Day's filter, match mode and chosen count, and the Tags tab's tokens and match mode, use `SceneStorage`. A tag filter is `off`, `tags(IDs, match)` or `noTags` (My Day only). Tag IDs that no longer exist are dropped whenever a `tags` filter is read, so deleting a tag or all data empties it in every scene (each scene has its own `SceneStorage`), and a `tags` filter with no tags left is off. Delete All Data also turns a `noTags` filter off in the scene it runs in. Recent Searches live in the database. Non-personal flags (onboarding done, banners acknowledged) live in `UserDefaults`. |
 | Search | Search (title, notes, tags), the Tags tab's tag search and Siri's entity queries use one `NudgeCore` matcher: Foundation case- and diacritic-insensitive comparison, no locale. |
@@ -463,7 +463,7 @@ decision here:
 | Assistive Access | App target scene (iOS 26) / full-screen view (iOS 18) | AD-18, AD-20, AD-4 |
 | Send a Test Nudge | NudgeShell | AD-6 exception |
 | Delete All Data, Recent Searches | NudgeStore | AD-16, Conventions › UI state |
-| Localization (brief §11 Q9) | String Catalogs in app and widget | Conventions › Strings |
+| Localization (brief §11 Q9) | String Catalogs in the app, the widget and each NudgeKit target with text | Conventions › Strings |
 | Testing on 18/26/27 (brief §11 Q10) | Swift Testing, XCTest, CI, device checklist | Conventions › Testing |
 | Filters across relaunch (brief §11 Q14) | SceneStorage | Conventions › UI state |
 | Privacy | All targets | AD-19 |
