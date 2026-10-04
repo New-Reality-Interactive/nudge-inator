@@ -118,7 +118,7 @@ Fixed phrases (verbatim copy):
 | Done by an alarm's Stop | "Done (alarm stopped)" |
 | Follow-up after Stop | "Marked done: Blood-pressure pill. Not done yet?" |
 | Privacy hint | "Notes and tags stay in the app. Notifications and alarms show the title, not these." |
-| Onboarding, and How It Nudges for any reminder with alarms | "Stopping the alarm counts as Done." |
+| Onboarding, and How It Nudges for any reminder with alarms | "Stopping the alarm counts as Done." [To confirm on a device: Stop before the first unlock is recorded.] |
 | History events | "Due", "Held for quiet hours until 7:00 AM", "Nudge 2 · Normal · notification", "Nudge 5 · Urgent · alarm", "Nudge 4 · Urgent · notification chain", "Snoozed 15 min (2 snoozes left)", "Notification cleared (still nudging)", "Marked not done (nudging again)", "Paused", "Resumed", "Nudge 3 · Normal · couldn't be sent (notifications off)", "Nudge 9 · High · couldn't be sent (the app wasn't opened)". The engine's internal step index ("level") never appears. |
 | History events, Done by source (AD-3 `source`) | `app`: "Done"; `notification`: "Done from the notification"; `alarm`: "Done (alarm stopped)"; `liveActivity`: "Done from the Lock Screen"; `siri`: "Done with Siri"; `assistiveAccess`: "Done in Assistive Access" |
 | Welcome, Urgent (iOS 26+) | "Urgent nudges ring as alarms" / "When it really matters, your iPhone rings and vibrates like an alarm, even on silent. Stopping the alarm counts as Done." |
@@ -497,7 +497,7 @@ section covers what the person sees and can do on each.
 |---|---|---|---|
 | **Notification** (Normal: ordinary; High: Time Sensitive) | App icon, title (bold), "Nudge 3 of 20 · High". The header says "Time Sensitive" for High and Urgent only. | **Done**, **Snooze 15 min** (while snoozes are left), on a long press; the system's **Clear** | Tapping it opens Now at the card. Clear is recorded in the history ("Notification cleared (still nudging)"); a banner flicked away isn't. With previews hidden, iOS shows only the app's name. |
 | **Notification chain** (Urgent on iOS 18, and Urgent with alarms off) | As above, but Time Sensitive (see [brief §4](../product/brief.md#4-how-nudges-reach-you) for Time Sensitive off), sent each time the occurrence enters Urgent: at once and then every minute, 10 in all. Each shows the current nudge number. | **Done**, **Snooze** | The card marks it "Notification chain". Silent mode can mute it. The rules are in [brief §4](../product/brief.md#4-how-nudges-reach-you). |
-| **Alarm** (Urgent on iOS 26+) | The app's name and the title, tinted `{colors.accent-dark}` | **Snooze N min** (`clock`, filled with the tint) while snoozes are left; the system's **Stop** | Stop counts as Done, as onboarding and How It Nudges say. On the third snooze the app replaces the alarm with one that has no Snooze. The alarm also shows in StandBy and on a paired Apple Watch. |
+| **Alarm** (Urgent on iOS 26+) | The app's name and the title, tinted `{colors.accent-dark}` | **Snooze N min** (`clock`, filled with the tint) while snoozes are left; the system's **Stop** | Stop counts as Done, as onboarding and How It Nudges say. After each snooze the app's own alarm rings at the snooze's end, without Snooze once none are left (architecture spine, AD-12). The alarm also shows in StandBy and on a paired Apple Watch. |
 | **Done follow-up** (after Stop on an alarm, or on the Watch) | An ordinary notification: "Marked done: Blood-pressure pill. Not done yet?" | **Not Done**; tapping it opens the reminder | Sent at once. **Not Done** works while Not Done applies ([brief §3](../product/brief.md#3-product-concepts)); the app removes the notification the next time it runs after that, or at once when Not Done is used. |
 | **Live Activity** (after Snooze on an alarm) | Title (up to 2 lines), countdown, "Snoozed. Rings again at 8:35 AM." | **Done** | Designed by the app, in a widget extension. Before the first unlock, iOS shows its own countdown instead. |
 | **Keep-nudging notice** (the reserved slot) | An ordinary notification: "Open Nudge-inator to keep nudging." [ASSUMPTION: wording; brief §4 gives only the phrase] | Tapping it opens the app, which tops up the schedule | Sent when the scheduled nudges run out before the app has run again. |
@@ -862,7 +862,7 @@ Add a flow for any of these if TestFlight shows it's needed.
 [brief §10 › Device checklist](../product/brief.md#10-risks-and-decisions). The ones that can
 change this spine are the Tags tab's token field ([Tag token field](#tag-token-field)), an alarm
 that rings out ([Nudge Surfaces › States](#states)), the alarm over the app and in the Dynamic
-Island ([Nudge Surfaces](#nudge-surfaces), Flow 3), Assistive Access with alarms
+Island ([Nudge Surfaces](#nudge-surfaces), Flow 3), Stop before the first unlock, which "Stopping the alarm counts as Done" depends on ([Voice and Tone](#voice-and-tone)), Assistive Access with alarms
 ([Assistive Access](#assistive-access)), the iPhone Duo
 ([Responsive & Platform](#responsive--platform)) and the
 accessibility [release gate](#accessibility-floor).

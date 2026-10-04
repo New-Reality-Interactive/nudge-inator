@@ -186,8 +186,9 @@ TestFlight. It's released on the App Store once the success measures are met (se
   An action from a notification, alarm or Live Activity whose occurrence has already closed does
   nothing.
 - **A snooze never outlasts its occurrence.** If a snooze on an alarm would end after the next
-  occurrence takes over, or inside quiet hours for a reminder that doesn't ignore them, the app
-  replaces the system's countdown with an alarm at the right time, or none.
+  occurrence takes over, or inside quiet hours for a reminder that doesn't ignore them, the app's
+  own alarm, which replaces the system's countdown after every snooze (architecture spine, AD-12),
+  rings at the right time, or not at all.
 - **When the system's limits are reached.** The app schedules within the limits in the table
   below, and tops up whenever it runs (see [§10](#10-risks-and-decisions) for what's still to
   confirm).
@@ -559,7 +560,8 @@ maps each one to its decisions under "Capability → Architecture Map".
 5. How Done and Snooze run from notifications, alarms, Siri and Shortcuts (App Intents), with or
    without the app open, and how an explicit Clear (`customDismissAction`) is recorded. For alarms: Snooze uses AlarmKit's own countdown, but an alarm
    that rings again keeps its buttons, so the third snooze has to replace that alarm with one
-   without Snooze, and every snooze has to move the occurrence's later alarms. iOS 27's `.clock`
+   without Snooze, and every snooze has to move the occurrence's later alarms. (Answered: every
+   snooze's countdown is replaced by the app's own alarm; architecture spine, AD-12.) iOS 27's `.clock`
    App Intents domain has a `snoozeAlarm` schema for Siri, but an app that adopts one schema in the
    domain has to support them all, including creating alarms, so it probably doesn't fit.
 6. How the alarm's Live Activity extension is set up, with the system countdown presentation as

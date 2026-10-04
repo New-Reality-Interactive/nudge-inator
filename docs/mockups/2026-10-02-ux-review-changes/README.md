@@ -339,8 +339,8 @@ There's no "Add Tag" button. You create tags while editing a reminder, where you
   "Stopping the alarm counts as Done". The nudge count and snoozes left can't appear on the alarm,
   so the nudging card in the app shows them. The mockup's layout, wording and colors for the system
   parts are an approximation.
-- **After Snooze on the alarm,** AlarmKit counts down and rings again when the time is up. The
-  countdown shows on the Lock Screen as the app's **Live Activity**: the title, the time left,
+- **After Snooze on the alarm,** a countdown runs until the alarm rings again (the app's own
+  alarm, per the next bullet). The countdown shows on the Lock Screen as the app's **Live Activity**: the title, the time left,
   "Snoozed. Rings again at 8:35 AM." and **Done** to stop it early. The app designs this view, in a
   widget extension. Before the first unlock after a restart, iOS shows its own countdown instead,
   from the alarm's countdown presentation.

@@ -204,10 +204,10 @@ Every target may also import `os` for logging (AD-19).
 - **Rule:**
   - **Intents only submit commands:** the alarm's snooze and stop intents submit `snooze` and `done(source: .alarm)` and touch no OS API.
   - **What the engine plans:**
-    - **The post-snooze alarm,** `snooze/<key>/<n>/<s>`. It's an `Alarm.Schedule.fixed` alarm (AD-9) whose pre-alert countdown runs from the snooze's `issuedAt` to its fire instant, so the Live Activity shows for the whole snooze. The length is fixed by those two facts, so a reconcile never changes it. It has no secondary button when no snoozes remain. It's moved, or dropped, if the snooze would end after a takeover or inside quiet hours for a reminder that doesn't ignore them.
+    - **The post-snooze alarm,** `snooze/<key>/<n>/<s>`. It's an `Alarm.Schedule.fixed` alarm (AD-9) whose pre-alert countdown runs from the snooze's `issuedAt` to its fire instant, so the Live Activity shows for the whole snooze. The length is fixed by those two facts, so a reconcile never changes it. It's moved, or dropped, if the snooze would end after a takeover or inside quiet hours for a reminder that doesn't ignore them.
     - **The later alarms,** moved past the snooze.
     - **The follow-up after Stop:** `followup/<key>/<n>` from a `done(source: .alarm)` event, sent at once, and planned only while Not Done applies to that occurrence.
-  - **Every alarm's configuration:** its attributes carry the alert and countdown presentations (iOS draws the countdown itself before the first unlock), and its `postAlert` is the reminder's snooze length.
+  - **Every alarm's configuration:** its attributes carry the alert and countdown presentations (iOS draws the countdown itself before the first unlock), its `postAlert` is the reminder's snooze length, and it has no secondary button once its occurrence has no snoozes left (brief §4), so the diff replaces alarms already scheduled.
   - **The system's countdown:** the reconciler cancels it, because AD-6 lets it remove that alarm once the snooze command is committed.
   - **Fallback:** if a device shows that cancelling during a countdown fails, the snooze button switches to `.custom` behavior: the intent runs and the engine's alarm replaces the countdown.
 
