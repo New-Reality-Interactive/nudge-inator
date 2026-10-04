@@ -89,6 +89,7 @@ Every target may also import `os` for logging (AD-19).
   - **Versioned facts carry the instant they were saved:** a reminder's nudging configuration (`ReminderConfig`: schedule, repeat rule, strength, snooze length, give-up limits, Ignore Quiet Hours), quiet hours, and the device time zone. The coordinator writes a zone fact when it detects a change.
   - **How versions apply:** the engine applies each version per brief §3. A new schedule applies from the next due time; strength, limit and Ignore Quiet Hours apply from the next nudge; a new snooze length applies from the next snooze. A version with a gentler strength already carries the raised snooze length and limit (brief §3), so the engine never sees a snooze length below the strength's default. Each past instant is evaluated with the quiet hours and zone in effect then.
   - **Mutable fields:** only title, notes and tags.
+  - **Deletion:** deleting a reminder deletes its versions, occurrences, events and ledger rows in one job; deleting a tag deletes it and its links to reminders. With Delete All Data (AD-16), these are the only removals besides pruning (AD-15).
   - **Give-up time:** the time counted toward the limit leaves out the union of quiet, snoozed and closed intervals.
 
 ### AD-4 — One serial queue for every write and every scheduling change [ADOPTED]
@@ -124,7 +125,7 @@ Every target may also import `os` for logging (AD-19).
   - **Which command answers an alarm:** any committed event on the alarm's occurrence with `issuedAt` at or after the alarm's fire instant (its `.fixed` date). Commands carry no delivery ID, so this holds for every source.
   - **Alarms in progress:** an alarm that is alerting or counting down for an open occurrence is never removed as extra until a command that answers it has been committed.
   - **Uncounted snoozes:** an alarm for an open occurrence that the reconciler sees in AlarmKit's `.countdown` state after its fire instant is a system snooze whose intent never ran (a Snooze before the first unlock). The engine's own post-snooze alarm counts down before its fire instant (AD-12), so it never qualifies. The reconciler adopts it only if no `snooze` that answers it is committed or still waiting in the queue (AD-4), so an intent that runs late isn't counted twice. It commits a `snooze` command with `source: .alarmCountdown` and `issuedAt` set to the alarm's fire instant, so it counts toward the 3 snoozes and the later alarms move past it. Each alarm alerts at its own instant, so repeat snoozes of one nudge stay distinct. Snoozes before the first unlock count at most once per alarm, because the reconciler sees only the countdown running when it runs. An alarm that's no longer in `AlarmManager.alarms` is never adopted: Apple deletes an alarm once it fires and stops, so its absence can't tell a Stop, a ring-out or a finished snooze apart.
-  - **Cleanup:** it removes delivered notifications whose occurrence is closed, expired Done follow-ups and delivered keep-nudging notices.
+  - **Cleanup:** it removes delivered notifications whose occurrence is closed or whose reminder no longer exists, expired Done follow-ups and delivered keep-nudging notices.
   - **Echoes:** `alarmUpdates` and `authorizationUpdates` that only echo the coordinator's last applied set are ignored.
   - **Triggers:**
     - launch and foreground
@@ -328,6 +329,7 @@ Every target may also import `os` for logging (AD-19).
 | Strings | Every user-facing string, including notification, alarm, Live Activity, App Shortcut and accessibility text, is in a String Catalog with plural variants and positional arguments. The widget extension has its own catalog. Notification content is localized when scheduled. |
 | Formats | Dates, times and durations shown to people use the system formatters; IDs and export use fixed POSIX formats. |
 | UI state | Navigation per tab with `NavigationStack`. My Day's filter, match mode and chosen count, and the Tags tab's tokens and match mode, use `SceneStorage`. A tag filter is `off`, `tags(IDs, match)` or `noTags` (My Day only). Tag IDs that no longer exist are dropped whenever a `tags` filter is read, so deleting a tag or all data empties it in every scene (each scene has its own `SceneStorage`), and a `tags` filter with no tags left is off. Delete All Data also turns a `noTags` filter off in the scene it runs in. Recent Searches live in the database. Non-personal flags (onboarding done, banners acknowledged) live in `UserDefaults`. |
+| Search | Search (title, notes, tags), the Tags tab's tag search and Siri's entity queries use one `NudgeCore` matcher: Foundation case- and diacritic-insensitive comparison, no locale. |
 | Siri | "The first" nudging reminder is `NudgeCore`'s order: highest urgency, then earliest due, then most nudges sent. |
 | Testing | `NudgeCore` and `NudgeStore` tests use Swift Testing with a fixed clock and fixed zones, including DST transitions, zone changes mid-occurrence and the 50 ms benchmark. UI tests use XCTest. Every test, `NudgeKit`'s included, runs with `xcodebuild test` on the iOS 18 and 26/27 simulators; there is no macOS test run, because AlarmKit, ActivityKit and `BGTaskScheduler` have no macOS. |
 | Export | JSON, `schemaVersion: 1`, ISO 8601 instants with offsets, IANA zone IDs, tags by name, reminders with their versions, occurrences with their statuses, events, and History's nudge lines (AD-15). File `nudge-inator-YYYY-MM-DD.json`. Not importable. |
@@ -466,6 +468,7 @@ decision here:
 | Testing on 18/26/27 (brief §11 Q10) | Swift Testing, XCTest, CI, device checklist | Conventions › Testing |
 | Filters across relaunch (brief §11 Q14) | SceneStorage | Conventions › UI state |
 | Privacy | All targets | AD-19 |
+| Keyboard shortcuts (brief §5) | App target | brief §5 |
 
 ## Deferred
 
