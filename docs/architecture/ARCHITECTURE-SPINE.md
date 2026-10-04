@@ -109,6 +109,7 @@ Every target may also import `os` for logging (AD-19).
 - **Prevents:** two processes writing one SQLite file
 - **Rule:**
   - **Where intents run:** in the app process. The alarm's stop and secondary intents and the Live Activity's Done are `LiveActivityIntent`s; on iOS 27 they set `allowedExecutionTargets` to the main app (inside an AD-18 wrapper). Siri and App Shortcuts intents run in the app process. Notification actions run in the app's `UNUserNotificationCenterDelegate`.
+  - **At launch:** the `UIApplicationDelegateAdaptor`'s `application(_:willFinishLaunchingWithOptions:)` creates the `Coordinator` synchronously and, before launch finishes, sets the `UNUserNotificationCenter` delegate, registers the `BGAppRefreshTask` handler, and registers `CommandSubmitting` and `NudgeQuerying` with `AppDependencyManager`. Apple requires the first two before launch ends, and a late third drops an intent (below). Nothing here waits for a scene.
   - **No coordinator, no effect:** an intent that finds no `CommandSubmitting` registered does nothing, so the occurrence keeps nudging. Whether iOS 26 ever runs these intents in the widget extension is settled by the First spike (Structural Seed).
   - **How intents reach the coordinator:** only through `CommandSubmitting` and `NudgeQuerying` (both `Sendable`, defined in `NudgeCore`). `submit` is `async` and returns the command's outcome only after its job, reconcile included, has finished. Every source awaits it before handing control back to iOS: an intent's `perform`, the notification delegate before its completion handler, background refresh before `setTaskCompleted`, inside a background task where the source allows one. The app registers both with `AppDependencyManager` at launch.
   - **The widget:** links `NudgeLiveActivity` and `NudgeCore`, never `NudgeStore` or `NudgeShell`. It renders only from `AlarmAttributes<NudgeAlarmMetadata>`.
@@ -128,7 +129,7 @@ Every target may also import `os` for logging (AD-19).
   - **Cleanup:** it removes delivered notifications, other than Done follow-ups, whose occurrence is closed or whose reminder no longer exists; a Done follow-up once Not Done no longer applies or has been used (brief §3); and delivered keep-nudging notices.
   - **Echoes:** `alarmUpdates` and `authorizationUpdates` that only echo the coordinator's last applied set are ignored.
   - **Triggers:**
-    - launch and foreground (from `scenePhase` or the `UIApplication` notifications; the iOS 27 SDK requires the scene life cycle, so never from `UIApplicationDelegate` life-cycle methods)
+    - launch and foreground (from `scenePhase` or the `UIApplication` notifications; the iOS 27 SDK requires the scene life cycle, so this trigger never comes from `UIApplicationDelegate` life-cycle methods, unlike AD-5's launch registrations)
     - after every command
     - `BGAppRefreshTask`
     - significant time change and `NSSystemTimeZoneDidChange`
