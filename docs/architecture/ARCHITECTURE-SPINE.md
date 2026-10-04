@@ -190,7 +190,7 @@ Every target may also import `os` for logging (AD-19).
 - **Binds:** engine plan, adapters, Via labels
 - **Prevents:** iOS 18 and a denied alarm permission taking different paths, or a channel decided outside the engine
 - **Rule:**
-  - **Who decides:** the engine picks each delivery's channel from `Capabilities`. The canonical fields are `notificationsAllowed`, `timeSensitiveAllowed`, `alarmsAvailable`, `alarmCapacity`, `protectedAlarms` (the count of alarms AD-6 protects, from the last reconcile) and `previewsHidden`, persisted together as capability state.
+  - **Who decides:** the engine picks each delivery's channel from `Capabilities`. The canonical fields are `notificationsAllowed`, `timeSensitiveAllowed`, `alarmsAvailable`, `alarmCapacity`, `protectedAlarms` (the count of alarms AD-6 protects, from the last reconcile) and `previewsHidden`, persisted together as capability state. With `notificationsAllowed` false, a delivery that would be a notification has channel `none` (AD-15).
   - **Time Sensitive off:** every `.timeSensitive` delivery in this spine is sent as `.active` when `timeSensitiveAllowed` is false (brief §4). This is the only place the spine states it.
   - **Normal:** an `.active` notification.
   - **High:** a `.timeSensitive` notification.
@@ -324,9 +324,9 @@ Every target may also import `os` for logging (AD-19).
 | Formats | Dates, times and durations shown to people use the system formatters; IDs and export use fixed POSIX formats. |
 | UI state | Navigation per tab with `NavigationStack`. My Day's filter, match mode and chosen count, and the Tags tab's tokens and match mode, use `SceneStorage`. A tag filter is `off`, `tags(IDs, match)` or `noTags` (My Day only). Tag IDs that no longer exist are dropped whenever a `tags` filter is read, so deleting a tag or all data empties it in every scene (each scene has its own `SceneStorage`), and a `tags` filter with no tags left is off. Delete All Data also turns a `noTags` filter off in the scene it runs in. Recent Searches live in the database. Non-personal flags (onboarding done, banners acknowledged) live in `UserDefaults`. |
 | Search | Search (title, notes, tags), the Tags tab's tag search and Siri's entity queries use one `NudgeCore` matcher: Foundation case- and diacritic-insensitive comparison, no locale. |
-| Siri | "The first" nudging reminder follows EXPERIENCE › Siri & Shortcuts' order, computed only in `NudgeCore`. |
+| Siri | "The first" nudging reminder follows EXPERIENCE › Siri & Shortcuts' order, computed only in `NudgeCore`, with remaining ties broken by reminder UUID. Siri's occurrence entity is identified by its `OccurrenceKey`. |
 | Testing | `NudgeCore` and `NudgeStore` tests use Swift Testing with a fixed clock and fixed zones, including DST transitions, zone changes mid-occurrence and the 50 ms benchmark (an XCTest `measure` test, since Swift Testing has no performance API). UI tests use XCTest, including on an iPad simulator running the iPhone app in both orientations (brief §11 Q10). Every test, `NudgeKit`'s included, runs with `xcodebuild test` on the iOS 18, 26 and 27 simulators; there is no macOS test run, because AlarmKit, ActivityKit and `BGTaskScheduler` have no macOS. |
-| Export | JSON, `schemaVersion: 1`, ISO 8601 instants with offsets, IANA zone IDs, tags by name, reminders with their versions, occurrences with their statuses, events, and History's nudge lines (AD-15). File `nudge-inator-YYYY-MM-DD.json`. Not importable. |
+| Export | JSON, `schemaVersion: 1`, the last 90 days up to now, ISO 8601 instants with the offset of the zone fact in effect at each, IANA zone IDs, tags by name, reminders with their versions, occurrences with their statuses, events, and History's nudge lines (AD-15). File `nudge-inator-YYYY-MM-DD.json`. Not importable. |
 
 ## Stack
 
@@ -448,7 +448,7 @@ decision here:
 | --- | --- | --- |
 | Strengths, urgency, give-up, quiet hours, carry-over, takeover, Pause, Not Done (brief §3) | NudgeCore engine | AD-1, AD-2, AD-3 |
 | Delivery and fallbacks, iOS 18 chain (brief §4) | NudgeCore plan, NudgeShell adapters | AD-11, AD-13, AD-14 |
-| System limits, plan horizon (brief §4, §11 Q4) | NudgeCore slot policy, Coordinator | AD-14 |
+| System limits, plan horizon, rescheduling after edits (brief §4, §11 Q4) | NudgeCore slot policy, Coordinator | AD-14, AD-3, AD-4, AD-6 |
 | Done, Snooze, Clear from notifications, alarms, Live Activity, Siri (brief §11 Q5, Q13) | Intents and delegate → Coordinator | AD-4, AD-5, AD-6, AD-12, AD-16, AD-17 |
 | First launch and the alarm prompt after an update (brief §6) | NudgeShell, app target | AD-11 |
 | Closing clears nudges, stale actions (brief §11 Q11) | Coordinator, reconciler | AD-6, AD-4, AD-8 |
