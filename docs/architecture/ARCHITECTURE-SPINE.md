@@ -40,7 +40,7 @@ access can hide the store's write API from everything but the shell.
 |---|---|---|---|
 | Core | `NudgeCore` | Domain types, the engine (`evaluate`, `accepts`, `prunable`, Siri order), `DeliveryID`, slot policy, export encoding, the `CommandSubmitting` and `NudgeQuerying` protocols | Foundation, CryptoKit |
 | Store | `NudgeStore` | GRDB schema, migrations, read projections (public), write API (`package` only), command journal | NudgeCore, GRDB |
-| Shell | `NudgeShell` | `Coordinator` (serial job queue, command handling, reconciler), notification and AlarmKit adapters, `Capabilities`, background refresh, notification delegate, Test Nudge | NudgeCore, NudgeStore, UserNotifications, AlarmKit, BackgroundTasks |
+| Shell | `NudgeShell` | `Coordinator` (serial job queue, command handling, reconciler), notification and AlarmKit adapters, `Capabilities`, background refresh, notification delegate, Test Nudge | NudgeCore, NudgeStore, NudgeLiveActivity, UserNotifications, AlarmKit, BackgroundTasks, Security, UIKit (AD-18) |
 | Live Activity | `NudgeLiveActivity` | `NudgeAlarmMetadata`, the alarm's stop, snooze and Live Activity Done intents | NudgeCore, AppIntents, AlarmKit |
 | Intents | `NudgeIntents` | Siri and App Shortcuts intents, App Entities and queries | NudgeCore, NudgeLiveActivity, AppIntents |
 | UI | `Nudge-inator` app target | SwiftUI scenes and views, `NudgeModel`, Assistive Access | all of the above |
@@ -59,8 +59,11 @@ graph TD
   Store --> Core
   Widget[NudgeWidgets extension] --> LA
   Widget --> Core
+  Shell --> LA
   Shell -. "implements CommandSubmitting, NudgeQuerying" .-> Core
 ```
+
+Every target may also import `os` for logging (AD-19).
 
 ## Invariants & Rules
 
@@ -270,18 +273,18 @@ graph TD
 
 ### AD-18 — The OS split lives in the shell and in named wrappers
 
-- **Binds:** NudgeShell, view modifiers, Assistive Access
+- **Binds:** NudgeShell, NudgeLiveActivity, NudgeWidgets, view modifiers, Assistive Access
 - **Prevents:** `#available` checks scattered through views and the engine
 - **Rule:**
   - **The engine:** `NudgeCore` never checks the OS. `Capabilities` (AD-11) is built in `NudgeShell`.
-  - **iOS 26-only APIs:** used only inside named wrappers in the app target:
+  - **AlarmKit and the alarm Live Activity (iOS 26+):** `NudgeShell` uses AlarmKit only inside its AlarmKit adapter, behind `@available(iOS 26, *)`. Every type in `NudgeLiveActivity`, and the widget's alarm Live Activity, is `@available(iOS 26, *)`.
+  - **Other iOS 26-only APIs:** used only inside named wrappers in the app target:
     - `tabBarMinimizeBehavior`
     - `navigationSubtitle`
-    - the `AssistiveAccess` scene
-    - AlarmKit
+    - the `AssistiveAccess` scene, as an `if #available` in the scene body (iOS 18 behavior: EXPERIENCE › Assistive Access)
 
-    `Tab(role: .search)` is iOS 18+ and is used directly.
-  - **UIKit:** used only for `UITabBarAppearance` on iOS 18.
+    `Tab(role: .search)` is iOS 18+ and is used directly. iOS 27-only APIs, such as `allowedExecutionTargets` (AD-5), sit behind `@available(iOS 27, *)` where they're declared.
+  - **UIKit:** used only for the app lifecycle (the `UIApplicationDelegateAdaptor` in the app target; the `UIApplication` notifications and the Settings URL in `NudgeShell`), `UIAccessibility.isAssistiveAccessEnabled`, and `UITabBarAppearance` on iOS 18.
   - **Layout:** decided by width and size class, never by device idiom or interface orientation. "Landscape" in the spines means compact vertical size class.
 
 ### AD-19 — Privacy floor
