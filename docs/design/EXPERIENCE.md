@@ -650,7 +650,7 @@ This section covers behavior. Contrast and color rules are in
   by the person or a caregiver. Settings › Accessibility tells caregivers what Assistive Access
   shows.
 - **By iOS version:** on iOS 26+ it's an `AssistiveAccess` scene, in the system's style. On iOS 18
-  the same view is shown full screen when `isAssistiveAccessEnabled` is on.
+  the same view is shown full screen when `AccessibilitySettings.isAssistiveAccessEnabled` is on.
 - [To confirm on a device: how alarms, Time Sensitive notifications and the Live Activity behave
   while Assistive Access is on.]
 

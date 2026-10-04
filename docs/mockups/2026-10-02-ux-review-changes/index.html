@@ -1929,7 +1929,7 @@ const EVENT_TEXT = {
   NUDGE_SENT: (d) => `Nudge ${d.attempt} · ${URGENCY[d.priority]} · ${d.via === "chain" ? "notification chain" : d.priority === 5 && d.via !== "notification" ? "alarm" : "notification"}`,
   SNOOZED: (d) => `Snoozed ${d.minutes} min (${plural(d.left, "snooze")} left)`,
   DISMISSED: () => "Notification cleared (still nudging)",
-  // One string per Done source (EXPERIENCE › Voice and Tone, AD-3 `source`).
+  // One string per Done source (EXPERIENCE › Voice and Tone, AD-3 `source`); Siri isn't simulated, so siri has no entry.
   ACKED: (d) => ({ alarm: "Done (alarm stopped)", liveActivity: "Done from the Lock Screen", notification: "Done from the notification", assistiveAccess: "Done in Assistive Access" })[d.from] ?? "Done",
   MISSED: (d) => closedWhy(d.reason, "MISSED"),
   SKIPPED: (d) => closedWhy(d.reason, "SKIPPED"),

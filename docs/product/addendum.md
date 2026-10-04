@@ -41,7 +41,7 @@ The earlier brief was never committed, so this list is the only record of it.
 | Scroll edge effects | System default for iOS 18 | As in the mockup | As in the mockup |
 | Tab bar shrinking in landscape (`tabBarMinimizeBehavior`, iPhone only) | Not available: the full tab bar stays | As in the mockup | Same |
 | My Day's date as a subtitle (`navigationSubtitle`) | Not available: the date stays in the content, as in portrait | As in the mockup | Same |
-| Assistive Access | `UISupportsFullScreenInAssistiveAccess`, with the app's own one-screen view when `isAssistiveAccessEnabled` | `AssistiveAccess` scene and `UISupportsAssistiveAccess`, in the system's Assistive Access style | Same |
+| Assistive Access | `UISupportsFullScreenInAssistiveAccess`, with the app's own one-screen view when `AccessibilitySettings.isAssistiveAccessEnabled` | `AssistiveAccess` scene and `UISupportsAssistiveAccess`, in the system's Assistive Access style | Same |
 | Search | A fifth tab, with its field under the title | A separate circle in the tab bar (`Tab(role: .search)`) | Same |
 | Sheet buttons | **Cancel**, **Add**, **Save**, **Done** as words | Symbols for the `.cancel` and `.confirm` button roles | Same |
 | Section headers | Capitals | Title case | Same |

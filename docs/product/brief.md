@@ -148,7 +148,8 @@ TestFlight. It's released on the App Store once the success measures are met (se
   button and a tint color. It shows the app's name, the reminder's title, **Snooze** (with its
   length, such as "Snooze 15 min", filled with the tint color) and the system's stop control. From
   iOS 26.1 the app can't label that control, so it can't say **Done**. Stopping the alarm runs the
-  app's code, which marks the occurrence done, and onboarding says so. The nudge count and snoozes
+  app's code, which marks the occurrence done, and onboarding says so (§10's device checklist
+  covers Stop before the first unlock). The nudge count and snoozes
   left can't appear on the alarm, so the app shows them on the nudging card. After a snooze, the
   countdown shows on the Lock Screen as the app's Live Activity, with **Done**.
 - **Where nudges appear depends on whether the iPhone is in use.** On a locked iPhone, the alarm
@@ -288,7 +289,7 @@ the layout:
 | **Settings** | Notification and alarm status, Open iOS Settings, Send a Test Nudge. Quiet hours (in the iPhone's time zone). Siri & Shortcuts. Export Data (a readable record, not a backup) and Delete All Data. **How Nudges Work** (strengths, urgency, Focus, quiet hours, alarms), the one help page every permission banner links to. About and Accessibility. |
 | **First launch** | Welcome, then the notification permission, then (on iOS 26 and later) the alarm permission. After an update from iOS 18, the alarm permission is asked once on the next launch. |
 | **Siri and Shortcuts** | "Mark my Nudge-inator nudge done", "Snooze Nudge-inator" and "What's nudging me in Nudge-inator?" (Apple requires the app's name in every App Shortcut phrase), from Siri, the Action button or a Home Screen shortcut. |
-| **Assistive Access** | One screen: what needs you now, with large Done and Snooze buttons; what's done today, with **Not done yet**; and what's later today. No editing, tags or settings. On iOS 26 and later it's an Assistive Access scene, drawn in the system's Assistive Access style. On iOS 18, where that scene doesn't exist, the app shows the same view full screen (`UISupportsFullScreenInAssistiveAccess`) when `isAssistiveAccessEnabled` is on. |
+| **Assistive Access** | One screen: what needs you now, with large Done and Snooze buttons; what's done today, with **Not done yet**; and what's later today. No editing, tags or settings. On iOS 26 and later it's an Assistive Access scene, drawn in the system's Assistive Access style. On iOS 18, where that scene doesn't exist, the app shows the same view full screen (`UISupportsFullScreenInAssistiveAccess`) when `AccessibilitySettings.isAssistiveAccessEnabled` is on. |
 
 **Not in this release:** an iPad layout (iPad runs the iPhone app), Android, Mac, an Apple Watch app (alarms still show on a paired Watch), Home Screen widgets (the Live Activity that
 AlarmKit uses for a snoozed alarm is included), sync between devices, accounts,
@@ -422,8 +423,8 @@ decision or section it affects.
     fallback).
   - Stop and Snooze after the app has been force-quit, including Stop on a paired Watch (risk
     above; AD-12).
-  - On iOS 26, which process runs the alarm's and Live Activity's intents when the app isn't
-    running: the app, or the widget extension (architecture spine's first spike; AD-5).
+  - Which process runs the alarm's and Live Activity's intents, on iOS 26 and 27, with the app
+    running and not running, on a TestFlight build (architecture spine's first spike; AD-5).
   - Stop, Snooze and Done before the first unlock: the journal and the follow-up (risk above;
     AD-16). If Stop isn't recorded then, onboarding's "Stopping the alarm counts as Done" needs a
     caveat.
@@ -489,9 +490,8 @@ decision or section it affects.
   be labelled.
 - **Export Data is a record, not a backup.** There's no Import in this release (see
   [§6](#6-features)). Device backups restore everything.
-- **First nudges get the notification slots first.** A reminder that never nudges is the worst
-  failure, so nudge 1 of every occurrence due in the next 24 hours is scheduled before anyone's
-  later nudges.
+- **First nudges get the notification slots first,** as §4's System limits table says. A reminder
+  that never nudges is the worst failure.
 
 **Decided in the UX review (2026-10-02),** so that the mockup shows only what the app can build on
 iOS 18, 26 and 27:
