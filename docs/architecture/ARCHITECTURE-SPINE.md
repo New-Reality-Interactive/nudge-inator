@@ -146,13 +146,13 @@ Every target may also import `os` for logging (AD-19).
   - **Delivery IDs:**
     - `nudge/<key>/<n>`
     - `chain/<key>/<UTC yyyyMMdd'T'HHmm of the chain's start>/<k>`
-    - `snooze/<key>/<n>/<s>`
+    - `snooze/<key>/<n>/<s>`, the alarm that ends snooze `s` and delivers nudge `n` (brief §3, Snooze: the next nudge)
     - `followup/<key>/<n>`, where `n` is the stopped alarm's nudge index
     - `keep/<UTC yyyyMMdd'T'HHmm>`
     - `test/<UTC instant>`
   - **Never reused:** every delivery ID is unique for the life of its occurrence, so a restarted chain or a second Stop after Not Done gets new IDs. A test checks uniqueness over a full simulated occurrence with snoozes, chains and Not Done.
   - **AlarmKit IDs:** UUIDv5 (RFC 9562) of the delivery ID, in a namespace UUID that is a literal constant in `NudgeCore`, computed with CryptoKit's SHA-1.
-  - **One owner:** only `NudgeCore.DeliveryID` builds and parses IDs, with round-trip tests. Every notification's `userInfo` and every alarm's metadata carry the occurrence key and nudge index; an alarm's metadata also carries the reminder's title (AD-16).
+  - **One owner:** only `NudgeCore.DeliveryID` builds and parses IDs, with round-trip tests. A delivery's nudge index always comes from its plan item, never parsed from its ID. Every notification's `userInfo` and every alarm's metadata carry the occurrence key and nudge index; an alarm's metadata also carries the reminder's title (AD-16).
   - **DST:** a wall time that doesn't exist resolves forward by the gap; a repeated wall time resolves to its first instance.
 
 ### AD-8 — Occurrences materialize once, with a frozen instant [ADOPTED]
@@ -217,7 +217,7 @@ Every target may also import `os` for logging (AD-19).
 - **Prevents:** duplicate notifications in one minute and nudge counts that differ by OS
 - **Rule:**
   - **When a chain starts:** each time an occurrence enters or re-enters Urgent, as listed in brief §4 (the one list, including its exception for the extra nudge after Not Done at the limit, AD-4).
-  - **What it sends:** a `.timeSensitive` notification at once and every minute after, 10 in all. Each one's nudge index is the nudge number it shows, taken from the plan item, never parsed from its ID. It ends early when brief §4 says, and whenever the occurrence closes (brief §4, Closing an occurrence clears its nudges).
+  - **What it sends:** a `.timeSensitive` notification at once and every minute after, 10 in all. Each one's nudge index is the nudge number it shows (AD-7). It ends early when brief §4 says, and whenever the occurrence closes (brief §4, Closing an occurrence clears its nudges).
   - **Nudges inside it:** the strength's Urgent nudges that fall inside a running chain still count on schedule but aren't sent separately. The chain notification at that minute shows the current nudge number.
   - **Limits:** chain repeats don't count toward the nudge limit, but their time counts toward the time limit.
 
