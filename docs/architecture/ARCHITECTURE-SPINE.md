@@ -71,7 +71,7 @@ Every target may also import `os` for logging (AD-19).
 
 - **Binds:** brief §3–§4, How It Nudges, the plan, history, Siri answers, tests
 - **Prevents:** the preview, the scheduler, the UI or Siri each encoding strengths, quiet hours, carry-over, give-up limits or the Siri order their own way
-- **Rule:** `NudgeCore` exposes `evaluate(facts, settings, capabilities, now, window) -> Evaluation`, holding the derived state of every occurrence in the window, with its closing reason and nudges counted, the ordered desired delivery plan, and `nextChangeAt` (the next instant any derived state changes). It reads no clock, OS API or database; `now` and the device zone are parameters. `evaluate` is the only fold over facts. The live model and the reconciler pass the default window, from the start of yesterday in the current zone through the plan horizon (AD-14), which covers My Day, Last 24 Hours and Assistive Access. History and Export pass a 90-day window and a reminder filter. Any code that needs a nudge time, urgency, status, count, channel, Siri order or "is this command allowed" gets it from `NudgeCore`. How It Nudges is `evaluate` on the form's draft.
+- **Rule:** `NudgeCore` exposes `evaluate(facts, settings, capabilities, now, window) -> Evaluation`, holding the derived state of every occurrence in the window, with its closing reason and nudges counted, each reminder's next due time (even past the window), the ordered desired delivery plan, and `nextChangeAt` (the next instant any derived state changes). It reads no clock, OS API or database; `now` and the zone facts are parameters. `evaluate` is the only fold over facts. The live model and the reconciler pass the default window, from the start of yesterday (in the latest zone fact's zone) through 8 days after `now`, which covers My Day, Coming Up, Last 24 Hours and Assistive Access; the 63-request budget (AD-14) cuts only the delivery plan, never the derived states. History and Export call it through `NudgeQuerying` with the coordinator's published inputs, a 90-day window and a reminder filter. Any code that needs a nudge time, urgency, status, count, channel, Siri order or "is this command allowed" gets it from `NudgeCore`. How It Nudges is `evaluate` on the form's draft.
 
 ### AD-2 — Occurrence status is derived, never written by a timer [ADOPTED]
 
@@ -234,7 +234,7 @@ Every target may also import `os` for logging (AD-19).
     The plan is cut to 63 requests, plus 1 keep-nudging request at the fire time of the first delivery left out, whether the budget or the horizon cut it.
   - **Alarms:** soonest first, up to `alarmCapacity`, which starts unknown (no limit). When AlarmKit throws `maximumLimitReached`, the reconciler persists the number that succeeded as `alarmCapacity`, then re-evaluates and re-diffs in the same job, so the overflow becomes notifications at once. A later reconcile tries one more alarm only when the plan wants more than `alarmCapacity`.
   - **Background refresh:** each reconcile requests a `BGAppRefreshTask` for the plan's earliest top-up time, and no later than 12 hours ahead.
-  - **What `evaluate` reads:** current and future versions, the facts in its window (AD-1), and each reminder's latest occurrence before the window with the facts since then (for carry-over and Not Done).
+  - **What `evaluate` reads:** every `ReminderConfig` version, quiet-hours version and zone fact in effect at any instant in its window or after it (AD-3 evaluates each instant with what was in effect then), the facts in its window (AD-1), each reminder's latest pause or resume event, and each reminder's latest occurrence before the window with the facts since then (for carry-over and Not Done).
   - **Cost:** an evaluate with the default window stays under 50 ms for 200 reminders on the oldest iPhone that runs iOS 18. A benchmark test holds it under 50 ms on the CI simulator, which only catches regressions; the device checklist confirms it on that iPhone.
 
 ### AD-15 — The ledger records what was handed over, and what was lost
@@ -307,7 +307,7 @@ Every target may also import `os` for logging (AD-19).
 - **Prevents:** screens refreshing statuses at different moments; missed announcements because nothing was written when a nudge started
 - **Rule:**
   - **One model:** a single app-wide `@Observable NudgeModel` holds the latest `Evaluation`. Views read derived state only from it.
-  - **Same inputs as the reconciler:** `NudgeModel` evaluates only from the inputs the coordinator last published (facts, settings, the latest zone fact and the persisted capabilities), changing nothing but `now`. A zone or permission change reaches the screens through a reconcile.
+  - **Same inputs as the reconciler:** `NudgeModel` evaluates only from the inputs the coordinator last published (facts, settings, the zone facts and the persisted capabilities), changing nothing but `now`. A zone or permission change reaches the screens through a reconcile.
   - **When it refreshes:**
     - on store change
     - on foreground
