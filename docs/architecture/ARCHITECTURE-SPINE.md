@@ -40,7 +40,7 @@ access can hide the store's write API from everything but the shell.
 |---|---|---|---|
 | Core | `NudgeCore` | Domain types, the engine (`evaluate`, `accepts`, `prunable`, Siri order), `DeliveryID`, slot policy, export encoding, the `CommandSubmitting` and `NudgeQuerying` protocols | Foundation, CryptoKit |
 | Store | `NudgeStore` | GRDB schema, migrations, read projections (public), write API (`package` only), command journal | NudgeCore, GRDB |
-| Shell | `NudgeShell` | `Coordinator` (serial job queue, command handling, reconciler), notification and AlarmKit adapters, `Capabilities`, background refresh, notification delegate, Test Nudge | NudgeCore, NudgeStore, NudgeLiveActivity, UserNotifications, AlarmKit, BackgroundTasks, Security, UIKit (AD-18) |
+| Shell | `NudgeShell` | `Coordinator` (serial job queue, command handling, reconciler), notification and AlarmKit adapters, `Capabilities`, background refresh, notification delegate, Test Nudge | NudgeCore, NudgeStore, NudgeLiveActivity, UserNotifications, AlarmKit, BackgroundTasks, UIKit (AD-18) |
 | Live Activity | `NudgeLiveActivity` | `NudgeAlarmMetadata`, the alarm's stop, snooze and Live Activity Done intents | NudgeCore, AppIntents, AlarmKit |
 | Intents | `NudgeIntents` | Siri and App Shortcuts intents, App Entities and queries | NudgeCore, NudgeLiveActivity, AppIntents |
 | UI | `Nudge-inator` app target | SwiftUI scenes and views, `NudgeModel`, Assistive Access | all of the above |
@@ -246,7 +246,7 @@ Every target may also import `os` for logging (AD-19).
     - `cancelled`: the reconciler removed it before its fire instant
     - `lost`: it vanished from the OS before its fire instant without the reconciler removing it
   - **History's nudge lines:** the nudges `evaluate` counted (AD-1), joined to ledger rows by nudge index, one line per nudge index (a chain's rows share one). A counted nudge past its instant reads as sent through the channel of its row that was handed over and isn't `cancelled` or `lost`. With a channel-`none` row instead, it couldn't be sent because notifications were off. With neither (cut by the budget, never handed over, or lost), it couldn't be sent because the app wasn't opened. Export uses the same lines.
-  - **Restore detection:** an install marker (Keychain, `ThisDeviceOnly`) that doesn't match the database's marks every future `scheduled` row `lost`, then replans.
+  - **Restore detection:** a marker file beside the database, excluded from backups (`isExcludedFromBackup`, set again each time it's written). A database with no marker was restored, from this iPhone's backup or another's, so every future `scheduled` row is marked `lost` and the plan is rebuilt; then the marker is written.
   - **Pruning:** facts and rows older than 90 days are pruned only where `NudgeCore.prunable` says they're inert. Reminder-level state (pause, current versions) and each reminder's latest occurrence with its facts are never prunable.
 
 ### AD-16 — Persistence: GRDB, one protected file, a journal for before the first unlock

@@ -431,7 +431,8 @@ decision or section it affects.
     Dynamic Island over another app, and in StandBy (risk above; EXPERIENCE Flow 3).
   - Alarms, Time Sensitive notifications and the Live Activity under Assistive Access
     ([EXPERIENCE › Assistive Access](../design/EXPERIENCE.md#assistive-access)).
-  - Restoring from a backup: whether nudging resumes before the app is opened (risk above; AD-15).
+  - Restoring from a backup, to the same iPhone and to a new one: whether nudging resumes before
+    the app is opened, and that the app detects the restore (risk above; AD-15).
   - The engine's speed: under 50 ms for 200 reminders on the oldest iPhone that runs iOS 18
     (AD-14).
 - *Screens*
