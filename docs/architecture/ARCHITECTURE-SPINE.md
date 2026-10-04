@@ -173,7 +173,7 @@ Every target may also import `os` for logging (AD-19).
 - **Rule:**
   - **One zone:** reminder times, quiet hours and My Day's "today" all use the iPhone's current time zone (brief §3, Reminder). `ReminderConfig` has no time zone field.
   - **On a zone change:** the coordinator records a zone fact and re-plans every projection.
-  - **OS triggers are absolute:** notification triggers are non-repeating `UNCalendarNotificationTrigger`s built from UTC date components; alarms are `Alarm.Schedule.fixed`. No request uses a repeating, wall-clock or relative trigger. Apple doesn't document that a trigger honors its components' time zone, so a simulator test checks `nextTriggerDate()` across a zone change.
+  - **OS triggers are absolute:** notification triggers are non-repeating `UNCalendarNotificationTrigger`s built from UTC date components; alarms are `Alarm.Schedule.fixed`. No request uses a repeating, wall-clock or relative trigger. A notification whose fire instant is at or before `now` when it's added (AD-6's at-once deliveries, Send a Test Nudge, AD-16's follow-up) uses a `nil` trigger, which Apple documents as delivering it right away; it's never pending, so the diff doesn't look for it there. Apple doesn't document that a trigger honors its components' time zone, so a simulator test checks `nextTriggerDate()` across a zone change.
 
 ### AD-10 — Repeat rules are a closed type that matches the form
 
