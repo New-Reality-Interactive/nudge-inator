@@ -40,8 +40,8 @@ access can hide the store's write API from everything but the shell.
 |---|---|---|---|
 | Core | `NudgeCore` | Domain types, `Command`, the `Capabilities` and `Clock` types, the engine (`evaluate`, `accepts`, `prunable`, which event answers an alarm, Siri order, the search matcher), `DeliveryID`, slot policy, export encoding, the `CommandSubmitting` and `NudgeQuerying` protocols | Foundation, CryptoKit |
 | Store | `NudgeStore` | GRDB schema, migrations, read projections (public), write API (`package` only), command journal | NudgeCore, GRDB |
-| Shell | `NudgeShell` | `Coordinator` (serial job queue, command handling, reconciler), notification and AlarmKit adapters, building `Capabilities`, background refresh, notification delegate, Test Nudge | NudgeCore, NudgeStore, NudgeLiveActivity, UserNotifications, AlarmKit, BackgroundTasks, UIKit (AD-18) |
-| Live Activity | `NudgeLiveActivity` | `NudgeAlarmMetadata`, the alarm's stop, snooze and Live Activity Done intents | NudgeCore, AppIntents, AlarmKit |
+| Shell | `NudgeShell` | `Coordinator` (serial job queue, command handling, reconciler), notification and AlarmKit adapters, building `Capabilities`, background refresh, notification delegate, Test Nudge | NudgeCore, NudgeStore, NudgeLiveActivity, UserNotifications, AlarmKit, BackgroundTasks, UIKit (AD-18), SwiftUI (for AlarmKit's `Color` tint only) |
+| Live Activity | `NudgeLiveActivity` | `NudgeAlarmMetadata`, the alarm's stop, snooze and Live Activity Done intents | NudgeCore, AppIntents, AlarmKit, SwiftUI (for `AlarmAttributes`) |
 | Intents | `NudgeIntents` | Siri and App Shortcuts intents, App Entities and queries | NudgeCore, NudgeLiveActivity, AppIntents |
 | UI | `Nudge-inator` app target | SwiftUI scenes and views, `NudgeModel`, Assistive Access | all of the above, plus Accessibility |
 | Widget | `NudgeWidgets` extension | The alarm's countdown Live Activity view | NudgeLiveActivity, NudgeCore, AlarmKit, ActivityKit, WidgetKit |
@@ -285,7 +285,7 @@ Every target may also import `os` for logging (AD-19).
 - **Prevents:** `#available` checks scattered through views and the engine
 - **Rule:**
   - **The engine:** `NudgeCore` never checks the OS. `Capabilities` (AD-11) is built in `NudgeShell`.
-  - **AlarmKit and the alarm Live Activity (iOS 26+):** `NudgeShell` uses AlarmKit only inside its AlarmKit adapter, behind `@available(iOS 26, *)`. Every type in `NudgeLiveActivity`, and the widget's alarm Live Activity, is `@available(iOS 26, *)`.
+  - **AlarmKit and the alarm Live Activity (iOS 26+):** `NudgeShell` uses AlarmKit only inside its AlarmKit adapter, behind `@available(iOS 26, *)`. The adapter builds every alarm's configuration (AD-12) with DESIGN's tint. Its alert presentation uses `init(title:secondaryButton:secondaryButtonBehavior:)` on iOS 26.1+; on 26.0, where that initializer doesn't exist, it uses the deprecated initializer with a stop button labelled like the system's, so the alarm looks the same. Every type in `NudgeLiveActivity`, and the widget's alarm Live Activity, is `@available(iOS 26, *)`.
   - **Other iOS 26-only APIs:** used only inside named wrappers in the app target:
     - `tabBarMinimizeBehavior`
     - `navigationSubtitle`
