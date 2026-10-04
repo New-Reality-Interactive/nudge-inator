@@ -233,7 +233,7 @@ Every target may also import `os` for logging (AD-19).
   - **Alarms:** soonest first, up to `alarmCapacity`, which starts unknown (no limit). When AlarmKit throws `maximumLimitReached`, the reconciler persists the number that succeeded as `alarmCapacity`, then re-evaluates and re-diffs in the same job, so the overflow becomes notifications at once. A later reconcile tries one more alarm only when the plan wants more than `alarmCapacity`.
   - **Background refresh:** each reconcile requests a `BGAppRefreshTask` for the plan's earliest top-up time, and no later than 12 hours ahead.
   - **What `evaluate` reads:** current and future versions, the facts in its window (AD-1), and each reminder's latest occurrence before the window with the facts since then (for carry-over and Not Done).
-  - **Cost:** an evaluate with the default window stays under 50 ms for 200 reminders on the oldest iPhone that runs iOS 18. A benchmark test enforces it.
+  - **Cost:** an evaluate with the default window stays under 50 ms for 200 reminders on the oldest iPhone that runs iOS 18. A benchmark test holds it under 50 ms on the CI simulator, which only catches regressions; the device checklist confirms it on that iPhone.
 
 ### AD-15 — The ledger records what was handed over, and what was lost
 

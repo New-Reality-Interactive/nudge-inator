@@ -432,6 +432,8 @@ decision or section it affects.
   - Alarms, Time Sensitive notifications and the Live Activity under Assistive Access
     ([EXPERIENCE › Assistive Access](../design/EXPERIENCE.md#assistive-access)).
   - Restoring from a backup: whether nudging resumes before the app is opened (risk above; AD-15).
+  - The engine's speed: under 50 ms for 200 reminders on the oldest iPhone that runs iOS 18
+    (AD-14).
 - *Screens*
   - Navigation bars at the accessibility sizes (above).
   - The selected tab's contrast on the system's glass pill (above; the accessibility release gate).
