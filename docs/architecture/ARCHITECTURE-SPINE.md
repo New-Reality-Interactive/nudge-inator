@@ -229,18 +229,17 @@ graph TD
   - **What `evaluate` reads:** current and future versions, the facts in its window (AD-1), and each reminder's latest occurrence before the window with the facts since then (for carry-over and Not Done).
   - **Cost:** an evaluate with the default window stays under 50 ms for 200 reminders on the oldest iPhone that runs iOS 18. A benchmark test enforces it.
 
-### AD-15 — The ledger records what was scheduled, and what was lost
+### AD-15 — The ledger records what was handed over, and what was lost
 
 - **Binds:** history, export, restore detection
 - **Prevents:** history claiming a nudge was sent when it never was
 - **Rule:**
-  - **What's recorded:** every delivery the reconciler schedules gets a ledger row with its delivery ID, occurrence key, nudge index, urgency, channel and fire instant. A planned nudge with no channel (notifications off, and no alarm for it) gets a row with channel `none`, and nothing is handed to the OS for it; it still counts toward the give-up limit (brief §4). Before a row's fire instant, a permission change replans it like any other change. At the first reconcile after its fire instant, a row still `scheduled` becomes `undeliverable` if no OS request was ever handed over for it; `cancelled` and `lost` rows keep their state. Every chain notification gets its own row, like any delivery, so lost and restore detection work the same for chains.
+  - **What's recorded:** every delivery the reconciler schedules gets a ledger row with its delivery ID, occurrence key, nudge index, urgency, channel, fire instant and `handedOverAt`, set once the OS accepts the request. A planned nudge with no channel (notifications off, and no alarm for it) gets a row with channel `none`, and nothing is handed to the OS for it; it still counts toward the give-up limit (brief §4). Before a row's fire instant, a permission change replans it like any other change. Every chain notification gets its own row, like any delivery, so lost and restore detection work the same for chains.
   - **States:**
     - `scheduled`
     - `cancelled`: the reconciler removed it before its fire instant
     - `lost`: it vanished from the OS before its fire instant without the reconciler removing it
-    - `undeliverable`: past its fire instant with no OS request ever handed over for it
-  - **History:** shows rows that are past their fire instant and still `scheduled`, and `undeliverable` rows. A chain's rows are grouped by nudge index, one line per nudge index.
+  - **History's nudge lines:** the nudges `evaluate` counted (AD-1), joined to ledger rows by nudge index, one line per nudge index (a chain's rows share one). A counted nudge past its instant reads as sent through the channel of its row that was handed over and isn't `cancelled` or `lost`. With a channel-`none` row instead, it couldn't be sent because notifications were off. With neither (cut by the budget, never handed over, or lost), it couldn't be sent because the app wasn't opened. Export uses the same lines.
   - **Restore detection:** an install marker (Keychain, `ThisDeviceOnly`) that doesn't match the database's marks every future `scheduled` row `lost`, then replans.
   - **Pruning:** facts and rows older than 90 days are pruned only where `NudgeCore.prunable` says they're inert. Reminder-level state (pause, current versions) and each reminder's latest occurrence with its facts are never prunable.
 
@@ -322,7 +321,7 @@ graph TD
 | UI state | Navigation per tab with `NavigationStack`. My Day's filter, match mode and chosen count, and the Tags tab's tokens and match mode, use `SceneStorage`; tag IDs that no longer exist are dropped whenever a filter is read, so deleting a tag or all data empties the filter in every scene (each scene has its own `SceneStorage`), and a filter with no tags left is off. Recent Searches live in the database. Non-personal flags (onboarding done, banners acknowledged) live in `UserDefaults`. |
 | Siri | "The first" nudging reminder is `NudgeCore`'s order: highest urgency, then earliest due, then most nudges sent. |
 | Testing | `NudgeCore` and `NudgeStore` tests use Swift Testing with a fixed clock and fixed zones, including DST transitions, zone changes mid-occurrence and the 50 ms benchmark. UI tests use XCTest. Every test, `NudgeKit`'s included, runs with `xcodebuild test` on the iOS 18 and 26/27 simulators; there is no macOS test run, because AlarmKit, ActivityKit and `BGTaskScheduler` have no macOS. |
-| Export | JSON, `schemaVersion: 1`, ISO 8601 instants with offsets, IANA zone IDs, tags by name, reminders with their versions, occurrences, events and sent ledger rows. File `nudge-inator-YYYY-MM-DD.json`. Not importable. |
+| Export | JSON, `schemaVersion: 1`, ISO 8601 instants with offsets, IANA zone IDs, tags by name, reminders with their versions, occurrences with their statuses, events, and History's nudge lines (AD-15). File `nudge-inator-YYYY-MM-DD.json`. Not importable. |
 
 ## Stack
 

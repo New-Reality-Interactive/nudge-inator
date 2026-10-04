@@ -51,6 +51,8 @@ mockup yet. Build them from the spines:
   simulate an OS update)
 - the **keep-nudging** notice
 - the alarm-limit Via label, "Notification: too many alarms scheduled"
+- the history line for a nudge the app couldn't schedule because it wasn't opened, "Nudge 9 · High ·
+  couldn't be sent (the app wasn't opened)"
 
 ## Product rules
 
