@@ -193,7 +193,7 @@ Every target may also import `os` for logging (AD-19).
   - **Time Sensitive off:** every `.timeSensitive` delivery in this spine is sent as `.active` when `timeSensitiveAllowed` is false (brief §4). This is the only place the spine states it.
   - **Normal:** an `.active` notification.
   - **High:** a `.timeSensitive` notification.
-  - **Urgent:** an AlarmKit alarm when `alarmsAvailable`; otherwise the notification chain (AD-13). `alarmsAvailable` is false on iOS 18 and whenever AlarmKit authorization isn't `.authorized`. When AlarmKit is available and authorization is `.notDetermined` (an iPhone updated from iOS 18), the shell asks once on launch (EXPERIENCE › State Patterns › Any). The one extra nudge after Not Done at the limit is the exception (AD-4).
+  - **Urgent:** an AlarmKit alarm when `alarmsAvailable`; otherwise the notification chain (AD-13). `alarmsAvailable` is false on iOS 18 and whenever AlarmKit authorization isn't `.authorized`. When AlarmKit is available, authorization is `.notDetermined` and the onboarding-done flag is set (an iPhone updated from iOS 18), the shell asks once on launch; otherwise onboarding asks (EXPERIENCE › State Patterns › Any). The one extra nudge after Not Done at the limit is the exception (AD-4).
   - **Past the alarm limit:** Urgent nudges beyond `alarmCapacity` come as one `.timeSensitive` notification each.
 
 ### AD-12 — Snooze and Stop are commands; the engine plans what follows
