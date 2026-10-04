@@ -262,11 +262,11 @@ Every target may also import `os` for logging (AD-19).
 - **Prevents:** Done asking for Face ID on one surface and not another
 - **Rule:**
   - **Categories:**
-    - `nudge`: Done and Snooze
+    - `nudge-<minutes>`, one per snooze length brief §3 allows (5, 10, 15 and 30), all registered at launch: Done and "Snooze N min". A notification action's title is fixed by its category, so the engine picks the category for the reminder's snooze length.
     - `nudge-final`: Done only
     - `followup`: Not Done
   - **No authentication:** no action is `.authenticationRequired` or `.foreground`, and no Siri intent needs authentication.
-  - **Clear:** `nudge` and `nudge-final` set `customDismissAction`. Recording a Clear is best effort: iOS reports only an explicit Clear.
+  - **Clear:** every `nudge-<minutes>` category and `nudge-final` set `customDismissAction`. Recording a Clear is best effort: iOS reports only an explicit Clear.
   - **Taps:** tapping a nudge opens Now at its occurrence; tapping a follow-up opens the reminder.
 
 ### AD-18 — The OS split lives in the shell and in named wrappers
