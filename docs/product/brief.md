@@ -174,7 +174,7 @@ TestFlight. It's released on the App Store once the success measures are met (se
     count and the give-up time are the same as with alarms. They aren't sent as extra
     notifications: the chain's notification for that minute shows the current nudge number.
   - The repeats don't count toward the nudge limit, but their time counts toward the time limit.
-  - Snooze, Done or the start of quiet hours ends the chain.
+  - Snooze, Done, the start of quiet hours or the occurrence closing ends the chain.
 - **Quiet hours apply at once.** Changing them reschedules the nudges and alarms of every open and
   coming-up occurrence, and so does turning a reminder's **Ignore Quiet Hours** on or off. A
   reminder that ignores quiet hours can ring alarms at night.
@@ -265,7 +265,7 @@ the layout:
   following the width. What's on screen survives folding and unfolding. Check it on a device at
   both sizes.
 - **iPad (v2).** In v1, iPad runs the iPhone app in a window whose layout follows its width, as
-  iOS 27's resizable windows do. Keyboard shortcuts (⌘N, ⌘F, ⌘1 to ⌘4) work with a hardware
+  iOS 27's resizable windows do. Keyboard shortcuts ([EXPERIENCE › Interaction Primitives](../design/EXPERIENCE.md#interaction-primitives) lists them) work with a hardware
   keyboard. v2 adds an iPad layout:
   - a two-column layout (`NavigationSplitView`) for Tags, Search and Settings
   - the tab bar floating at the top, as iPadOS 18 and later draw it, or as a sidebar
@@ -558,10 +558,10 @@ maps each one to its decisions under "Capability → Architecture Map".
 4. How notifications and alarms are scheduled within the system limits in §4, and how far ahead. How the slot order in §4 is kept as nudges fire, and
    how quiet hours, Ignore Quiet Hours and edits reschedule what's pending at once.
 5. How Done and Snooze run from notifications, alarms, Siri and Shortcuts (App Intents), with or
-   without the app open, and how an explicit Clear (`customDismissAction`) is recorded. For alarms: Snooze uses AlarmKit's own countdown, but an alarm
-   that rings again keeps its buttons, so the third snooze has to replace that alarm with one
-   without Snooze, and every snooze has to move the occurrence's later alarms. (Answered: every
-   snooze's countdown is replaced by the app's own alarm; architecture spine, AD-12.) iOS 27's `.clock`
+   without the app open, and how an explicit Clear (`customDismissAction`) is recorded. For alarms: how Snooze
+   is counted, how Snooze is removed once none are left, and how every snooze moves the
+   occurrence's later alarms. (Answered in the architecture spine, AD-12: every snooze's countdown
+   is replaced by the app's own alarm.) iOS 27's `.clock`
    App Intents domain has a `snoozeAlarm` schema for Siri, but an app that adopts one schema in the
    domain has to support them all, including creating alarms, so it probably doesn't fit.
 6. How the alarm's Live Activity extension is set up, with the system countdown presentation as
