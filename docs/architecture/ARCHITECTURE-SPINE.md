@@ -145,7 +145,7 @@ Every target may also import `os` for logging (AD-19).
   - **Occurrence key:** `OccurrenceKey` is `<lowercase reminder UUID>@<yyyyMMdd'T'HHmm>`, the due wall-clock time (reminders have no zone of their own; AD-9). It uses the Gregorian calendar and ASCII digits, independent of locale.
   - **Delivery IDs:**
     - `nudge/<key>/<n>`
-    - `chain/<key>/<UTC yyyyMMdd'T'HHmm of the chain's start>/<k>`
+    - `chain/<key>/<c>/<k>`, where `c` is the chain's ordinal within the occurrence, counted by the engine's fold
     - `snooze/<key>/<n>/<s>`, the alarm that ends snooze `s` and delivers nudge `n` (brief §3, Snooze: the next nudge)
     - `followup/<key>/<n>`, where `n` is the stopped alarm's nudge index
     - `keep/<UTC yyyyMMdd'T'HHmm>`
