@@ -419,6 +419,8 @@ nudge-inator/
   - `UIBackgroundModes` with `fetch`
   - `BGTaskSchedulerPermittedIdentifiers`
   - `ITSAppUsesNonExemptEncryption = NO`
+  - `PrivacyInfo.xcprivacy` in the app target: no tracking, no collected data, and `UserDefaults` declared with reason `CA92.1`. GRDB 7.11.1 ships its own manifest, which declares no required-reason APIs.
+  - App Store privacy label: Data Not Collected (AD-19)
 - **CI:** may need to download the iOS 18 simulator runtime.
 - **Infrastructure:** there is no server and no runtime infrastructure.
 
