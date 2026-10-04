@@ -303,6 +303,7 @@ Every target may also import `os` for logging (AD-19).
 - **Prevents:** screens refreshing statuses at different moments; missed announcements because nothing was written when a nudge started
 - **Rule:**
   - **One model:** a single app-wide `@Observable NudgeModel` holds the latest `Evaluation`. Views read derived state only from it.
+  - **Same inputs as the reconciler:** `NudgeModel` evaluates only from the inputs the coordinator last published (facts, settings, the latest zone fact and the persisted capabilities), changing nothing but `now`. A zone or permission change reaches the screens through a reconcile.
   - **When it refreshes:**
     - on store change
     - on foreground
