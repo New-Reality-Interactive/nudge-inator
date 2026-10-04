@@ -203,9 +203,10 @@ Every target may also import `os` for logging (AD-19).
 - **Rule:**
   - **Intents only submit commands:** the alarm's snooze and stop intents submit `snooze` and `done(source: .alarm)` and touch no OS API, except as in AD-16.
   - **What the engine plans:**
-    - **The post-snooze alarm,** `snooze/<key>/<n>/<s>`. It has a pre-alert countdown so the Live Activity shows. It has no secondary button when no snoozes remain. It's moved, or dropped, if the snooze would end after a takeover or inside quiet hours for a reminder that doesn't ignore them.
+    - **The post-snooze alarm,** `snooze/<key>/<n>/<s>`. It's an `Alarm.Schedule.fixed` alarm (AD-9) with a pre-alert countdown, so the Live Activity shows before it fires. It has no secondary button when no snoozes remain. It's moved, or dropped, if the snooze would end after a takeover or inside quiet hours for a reminder that doesn't ignore them.
     - **The later alarms,** moved past the snooze.
     - **The follow-up after Stop:** `followup/<key>/<n>` from a `done(source: .alarm)` event, sent at once.
+  - **Every alarm's configuration:** its attributes carry the alert and countdown presentations (iOS draws the countdown itself before the first unlock), and its `postAlert` is the reminder's snooze length.
   - **The system's countdown:** the reconciler cancels it, because AD-6 lets it remove that alarm once the snooze command is committed.
   - **Fallback:** if a device shows that cancelling during a countdown fails, the snooze button switches to `.custom` behavior: the intent runs and the engine's alarm replaces the countdown.
 

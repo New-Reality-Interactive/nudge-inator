@@ -174,7 +174,7 @@ which isn't in the repo. Checked against Apple's documentation on 2026-10-01.
   up in a widget extension, as in the sample. Nudge-inator needs that extension even without Home
   Screen widgets. Apple warns that without it "the system may unexpectedly dismiss alarms and fail
   to alert". Before the first unlock the Live Activity can't show, so the alarm also needs an
-  `AlarmPresentation.Countdown`, which the system draws instead.
+  `AlarmPresentation.Countdown`, which the system draws instead (architecture spine, AD-12).
 - **Schedules:** `Alarm.Schedule.fixed(date)` for a one-off time, or `.relative` for a time of day
   with weekly repeats. Each Urgent nudge is a one-off, so it's `.fixed`. A fixed alarm "does not
   change when device timezone changes", so alarms are rescheduled when it changes (reminders follow
