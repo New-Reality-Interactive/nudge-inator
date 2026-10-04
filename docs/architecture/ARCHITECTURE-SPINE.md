@@ -71,7 +71,7 @@ Every target may also import `os` for logging (AD-19).
 
 - **Binds:** brief §3–§4, How It Nudges, the plan, history, Siri answers, tests
 - **Prevents:** the preview, the scheduler, the UI or Siri each encoding strengths, quiet hours, carry-over, give-up limits or the Siri order their own way
-- **Rule:** `NudgeCore` exposes `evaluate(facts, settings, capabilities, now, window) -> Evaluation`, holding the derived state of every occurrence in the window, with its closing reason and nudges counted, and per reminder its status (AD-2), its next due time (even past the window), whether carry-over is pending, and its latest done occurrence with `notDoneUntil` (nil once Not Done no longer applies), whatever the window, the ordered desired delivery plan, and `nextChangeAt` (the next instant any derived state changes). It reads no clock, OS API or database; `now` and the zone facts are parameters. `evaluate` is the only fold over facts. The live model and the reconciler pass the default window, from the start of yesterday (in the latest zone fact's zone) through 8 days after `now`, which covers Now (Nudging, Coming Up, Last 24 Hours), My Day and Assistive Access. An occurrence is in the window if it's due in it, or is open or can still take Not Done at any instant in it, so one reopened days later is planned and shown; the 63-request budget (AD-14) cuts only the delivery plan, never the derived states. History and Export call it through `NudgeQuerying` with the coordinator's published inputs, a 90-day window and a reminder filter. Any code that needs a nudge time, urgency, status, count, channel, Siri order or "is this command allowed" gets it from `NudgeCore`. How It Nudges is `evaluate` on the form's draft.
+- **Rule:** `NudgeCore` exposes `evaluate(facts, settings, capabilities, now, window, jobWrites) -> Evaluation`, where `jobWrites` are the instants of writes committed in the current job (AD-6's at-once rule), holding the derived state of every occurrence in the window, with its closing reason and nudges counted, and per reminder its status (AD-2), its next due time (even past the window), whether carry-over is pending, and its latest done occurrence with `notDoneUntil` (nil once Not Done no longer applies), whatever the window, the ordered desired delivery plan, and `nextChangeAt` (the next instant any derived state changes). It reads no clock, OS API or database; `now` and the zone facts are parameters. `evaluate` is the only fold over facts. The live model and the reconciler pass the default window, from the start of yesterday (in the latest zone fact's zone) through 8 days after `now`, which covers Now (Nudging, Coming Up, Last 24 Hours), My Day and Assistive Access. An occurrence is in the window if it's due in it, or is open or can still take Not Done at any instant in it, so one reopened days later is planned and shown; the 63-request budget (AD-14) cuts only the delivery plan, never the derived states. History and Export call it through `NudgeQuerying` with the coordinator's published inputs, a 90-day window and a reminder filter. Any code that needs a nudge time, urgency, status, count, channel, Siri order or "is this command allowed" gets it from `NudgeCore`. How It Nudges is `evaluate` on the form's draft.
 
 ### AD-2 — Occurrence status is derived, never written by a timer [ADOPTED]
 
@@ -121,6 +121,15 @@ Every target may also import `os` for logging (AD-19).
 - **Binds:** UNUserNotificationCenter, AlarmManager, delivered notifications
 - **Prevents:** a view or intent scheduling something the plan doesn't contain, or leaving something the plan dropped
 - **Rule:**
+  - **Order inside a reconcile:**
+    1. Take `now` once, together with a snapshot of pending requests, delivered notifications and `AlarmManager.alarms`.
+    2. Read and persist capability state; write a zone fact if the zone changed.
+    3. Restore detection (AD-15).
+    4. Adoption (below): enqueue any adopted `snooze` without awaiting it.
+    5. `evaluate`, passing the instants of the writes committed in this job.
+    6. Materialize occurrences (AD-8).
+    7. Diff and apply. A pending request or alarm whose fire instant is at or before `now` is left alone, because it's firing.
+    8. Ledger rows, Cleanup, pruning, and the background refresh request.
   - **What the plan holds:** deliveries whose fire instant is after `now`. It also holds what a write in the same job made due at once. The engine places such a delivery at the instant of the fact that caused it, so the plan keeps deliveries with no ledger row whose fire instant equals the instant of a write committed in this job (a command's `issuedAt`, or a zone fact's saved instant). Examples are the Done follow-up, the nudge sent when an edit ends quiet hours early, and an occurrence an eastward zone change made due (AD-8). A nudge that fell due while the app was closed matches no write, so it isn't sent late. Checking for those rows is the only ledger read that decides what to schedule.
   - **The diff:** the reconcile job evaluates, then diffs the plan against pending requests and `AlarmManager.alarms` only. It adds what's missing, removes what's extra and replaces what changed. A plan item is matched by delivery ID, and it changed if anything handed to the OS for it differs: its fire instant and channel, and for a notification its interruption level, category and localized content (title and nudge line, as `previewsHidden` shapes them). An alarm's ID already covers its whole configuration (AD-7), so alarms are matched by ID alone and a change is one removal and one addition. Delivered notifications are never added or replaced; only Cleanup removes them.
   - **Which command answers an alarm:** any committed event other than a Clear on the alarm's occurrence with `issuedAt` at or after the alarm's fire instant. Commands carry no delivery ID, so this holds for every source. An alarm's fire instant is its ledger row's, matched by the AlarmKit ID the row records (AD-7): Apple doesn't document what `Alarm.schedule` reports once the system has snoozed an alarm.
@@ -369,10 +378,12 @@ sequenceDiagram
   Q->>DB: read facts
   Q->>Core: accepts? rows?
   Q->>DB: write the accepted rows (one transaction)
-  Q->>Core: evaluate(facts, settings, capabilities, now, window)
-  Q->>OS: read pending, delivered, alarms
+  Q->>OS: snapshot pending, delivered, alarms (with now)
+  Q->>DB: capability state, zone fact
+  Q->>Core: evaluate(facts, settings, capabilities, now, window, jobWrites)
+  Q->>DB: materialized occurrences
   Q->>OS: add / remove / replace the difference
-  Q->>DB: ledger rows, materialized occurrences, capability state
+  Q->>DB: ledger rows, Cleanup, pruning
   Q-->>Src: done (next job starts)
 ```
 
