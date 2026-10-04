@@ -161,7 +161,7 @@ Every target may also import `os` for logging (AD-19).
   - **When it's written:** the coordinator writes its row the first time either of these happens:
     - a command names its key
     - a reconcile finds that it's due, or that its first planned delivery is in the past
-  - **Its instant:** the due instant is frozen from that delivery's ledger row, or from the command's payload if there's no row. It is never recomputed.
+  - **Its instant:** when the row is written, the due instant is frozen by resolving the key's wall time in the latest zone fact (AD-7's DST rule). It is never recomputed. A ledger row's fire instant is not the due instant: quiet hours can hold nudge 1 past it.
 
 ### AD-9 — Time zones: everything follows the iPhone
 
