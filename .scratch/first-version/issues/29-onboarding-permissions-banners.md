@@ -9,12 +9,18 @@ First launch: a short onboarding explaining how nudges reach you (the mockup's F
 ## Docs basis
 
 - Alarm permission is requested by `requestAuthorization()`; denial makes every schedule attempt fail ([requestAuthorization()](https://developer.apple.com/documentation/alarmkit/alarmmanager/requestauthorization())). The system prompt shows the `NSAlarmKitUsageDescription` text ([key](https://developer.apple.com/documentation/bundleresources/information-property-list/nsalarmkitusagedescription)). Docs say to make clear in the UI that the alarm won't be scheduled when denied ([WWDC25-230](https://developer.apple.com/videos/play/wwdc2025/230)).
-- Onboarding wording and layout: HIG, not fetched here; check the mockup and the HIG "Onboarding" and "Privacy" pages via apple-rag-mcp before finalising.
+- **AlarmKit asks for itself.** If the app hasn't called `requestAuthorization()`, AlarmKit requests authorization on the first `schedule` call ([sample](https://developer.apple.com/documentation/alarmkit/scheduling-an-alarm-with-alarmkit)). Call it here, after the explanation, so the prompt never appears in the middle of scheduling a plan.
+- **Notifications:** request with `[.alert, .sound]` only (see ticket 17). Don't pass `.timeSensitive` (deprecated; it's the entitlement).
+- **HIG, Onboarding:** aim for "fast, fun, and optional". If people can skip it, don't show it again on later launches, and keep it findable later (that is the How It Nudges link in Settings). Make the permission request during onboarding only where it explains why and what it's for; this app's whole point needs the permissions, so asking here is reasonable ([Onboarding](https://developer.apple.com/design/human-interface-guidelines/onboarding)).
+- **HIG, Privacy, pre-alert screens:** a custom screen before a system prompt should have one button titled like "Continue" or "Next" (not "Allow", which can be mistaken for the system's allow button), and no way to close or cancel it without reaching the system prompt. No imagery of the system alert, no incentives ([Privacy](https://developer.apple.com/design/human-interface-guidelines/privacy)). The HIG's examples list camera, location and similar; notifications and alarms aren't named, so treat this as the safe default.
+- **HIG, Managing notifications:** Time Sensitive is for events "happening now or will happen within an hour"; the first Time Sensitive notification makes the system explain it and offer to turn it off, so the Time Sensitive banner must follow `timeSensitiveSetting`, not what was granted at onboarding.
+- Copy for the system prompt strings (`NSAlarmKitUsageDescription` already exists from ticket 01): brief, complete sentence, sentence case, active voice, ending with a period (HIG, Privacy).
 
 ## Acceptance criteria
 
 - [ ] First launch shows onboarding once; second launch does not.
-- [ ] The notification request happens before the alarm request, each only after its explanation screen.
+- [ ] The notification request happens before the alarm request, each only after its explanation screen, whose single button reads "Continue" (or "Next") and which has no close or cancel.
+- [ ] `requestAuthorization()` for alarms is called here; no schedule call can be the first thing that triggers the alarm prompt.
 - [ ] Denied alarms show the alarms banner; denied notifications show the notifications banner; both can show together.
 - [ ] Banners disappear when permission is granted (observe updates without relaunch).
 - [ ] How It Nudges values match the engine's ladder constants (read from the engine, not retyped).

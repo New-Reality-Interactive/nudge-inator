@@ -121,7 +121,7 @@ The first version builds an empty widget extension (AlarmKit expects one) but pu
 ## Further Notes
 
 - The alarm limit is undocumented. Apple gives only the `maximumLimitReached` error, so the limit has to be measured on a device before the chain length is settled. The Time Sensitive fallback covers hitting it.
-- Apple's docs say a custom secondary button runs its intent "without mutating the alarm state," which suggests the ring may continue after Open. Because of that, the Open intent should stop the alarm itself, and a device test must confirm the behavior. This is still open.
+- Apple's `secondaryButtonBehavior` docs say a custom secondary button can "execute an intent without mutating the alarm state," which suggests the ring may continue after Open. Because of that, the Open intent should stop the alarm itself, and a device test must confirm the behavior. This is still open.
 - The secondary intent is "only available after first unlock" since a restart. What happens on a locked phone is unconfirmed.
 - Alarms ring through every Focus, so a Firm or Relentless reminder with the switch on can ring after midnight. The 20-nudge limit bounds this to roughly 1 hour for Relentless, 1.5 hours for Firm and 6 hours for Gentle, which never rings.
 - The mockup README's "Stop counts as Done" rule is superseded by ADR 0001.

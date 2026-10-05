@@ -15,7 +15,7 @@ Turn on landscape for the iPhone app and make the shell adapt to it, so every sc
 
 Why here: the shell (21) is the last thing built before the screens (22 to 28) multiply the layouts to adapt. Doing it any later means revisiting every screen. Doing it earlier has nothing to adapt. It needs no engine, store or adapter work, so it doesn't wait on the spikes.
 
-Docs: <https://developer.apple.com/design/human-interface-guidelines/layout> (Adaptability, iOS), <https://developer.apple.com/documentation/bundleresources/information-property-list/uisupportedinterfaceorientations>. Verify tab bar behavior in landscape on iOS 26 with `apple-rag-mcp` before building it. The mockup's shrink-on-scroll tab bar may or may not match the system's.
+Docs: <https://developer.apple.com/design/human-interface-guidelines/layout> (Adaptability, iOS), <https://developer.apple.com/documentation/bundleresources/information-property-list/uisupportedinterfaceorientations>. The mockup's tab bar shrinks to the current tab while scrolling down in landscape. iOS 26 has this built in: `TabView { Tab("Now", systemImage: ...) { ... } }.tabBarMinimizeBehavior(.onScrollDown)` ([tabBarMinimizeBehavior(_:)](https://developer.apple.com/documentation/swiftui/view/tabbarminimizebehavior(_:)), iOS 26+; Apple's example says "on iPhone"). Use it rather than building a custom bar. The docs don't say whether it applies in portrait too, and the mockup shrinks only in landscape: check on the simulator, and if it also shrinks in portrait, either accept that and record it, or limit it to landscape (a size-class check, no fixed sizes). Don't rebuild the mockup's custom tab bar by hand.
 
 ## Acceptance criteria
 
@@ -23,6 +23,7 @@ Docs: <https://developer.apple.com/design/human-interface-guidelines/layout> (Ad
 - [ ] Every tab's empty state fits and stays readable in landscape, rotated left and rotated right, at the default and the largest Dynamic Type size.
 - [ ] Nothing sits under the Dynamic Island, notch or home indicator in either landscape direction.
 - [ ] Tab titles aren't truncated in landscape.
+- [ ] The tab bar uses `TabView` with `Tab` and `tabBarMinimizeBehavior`; what it does in portrait vs landscape is recorded in Comments.
 - [ ] Rotating keeps the selected tab and scroll position.
 - [ ] Simulator screenshots of each tab in both landscape directions are attached or described in Comments, compared with the mockup.
 - [ ] AGENTS.md has the adaptive layout rule. `scripts/test.sh` still passes.

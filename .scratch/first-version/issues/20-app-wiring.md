@@ -4,7 +4,7 @@ Status: ready-for-agent
 
 ## What to build
 
-The composition root. On launch, on foreground, on notification actions and on every user event, build the engine's inputs from the store, the clock and the adapters' permission states; feed the event; persist the resulting occurrence state; hand the plan to the notification and AlarmKit adapters. The "app opened" event runs reconciliation (ticket 07). Done from a notification action goes through here. Expose an observable app model the screens bind to.
+The composition root. On launch, on foreground, on notification actions and on every user event, build the engine's inputs from the store, the clock and the adapters' permission states; feed the event; persist the resulting occurrence state; hand the plan to the notification and AlarmKit adapters. The "app opened" event runs reconciliation (ticket 07) and tops up the notification plan to the adapter's pending cap (ticket 17: the system keeps only the soonest 64). Use SwiftUI's `scenePhase` for foreground, and set the `UNUserNotificationCenterDelegate` at launch, before the first notification call, or custom actions are never delivered. Done from a notification action goes through here. Expose an observable app model the screens bind to.
 
 ## Acceptance criteria
 
