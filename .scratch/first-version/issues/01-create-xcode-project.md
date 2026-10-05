@@ -26,13 +26,13 @@ Docs: <https://developer.apple.com/documentation/alarmkit/scheduling-an-alarm-wi
 ## Acceptance criteria
 
 - [ ] `xcodebuild -scheme <app> -destination 'generic/platform=iOS' build` succeeds.
-- [ ] Deployment target is iOS 26.0 and the device family is iPhone only.
+- [x] Deployment target is iOS 26.0 and the device family is iPhone only.
 - [ ] The widget extension target builds and is embedded in the app; the app and extension share an App Group (entitlement present in both).
-- [ ] The shared module compiles into both targets, and `scripts/test.sh` also builds the extension.
-- [ ] A placeholder test in the package and one in the app test target both exist and pass.
-- [ ] `scripts/test.sh` from a clean checkout runs both and exits 0; with a deliberately failing test it exits non-zero (check, then revert).
-- [ ] `NudgeEngine` has no `import` of any Apple framework (`Foundation` only, if needed), checked by a grep in `scripts/test.sh` or a comment-documented rule.
-- [ ] `Info.plist` has a non-empty `NSAlarmKitUsageDescription`.
-- [ ] README states the one command to run tests.
+- [x] The shared module compiles into both targets, and `scripts/test.sh` also builds the extension.
+- [x] A placeholder test in the package and one in the app test target both exist and pass.
+- [x] `scripts/test.sh` from a clean checkout runs both and exits 0; with a deliberately failing test it exits non-zero (check, then revert).
+- [x] `NudgeEngine` has no `import` of any Apple framework (`Foundation` only, if needed), checked by a grep in `scripts/test.sh` or a comment-documented rule.
+- [x] `Info.plist` has a non-empty `NSAlarmKitUsageDescription`.
+- [x] README states the one command to run tests.
 
 Blocked by: none

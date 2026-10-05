@@ -1,0 +1,79 @@
+name: NudgeInator
+options:
+  bundleIdPrefix: com.newrealityinteractive
+  deploymentTarget:
+    iOS: "26.0"
+  generateEmptyDirectories: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SDKROOT: iphoneos
+    SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+    SUPPORTS_MACCATALYST: NO
+    SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+packages:
+  NudgeEngine:
+    path: Packages/NudgeEngine
+  NudgeShared:
+    path: Packages/NudgeShared
+targets:
+  NudgeInator:
+    type: application
+    platform: iOS
+    sources: [App]
+    dependencies:
+      - package: NudgeEngine
+      - package: NudgeShared
+      - target: NudgeWidgets
+        embed: true
+    entitlements:
+      path: App/NudgeInator.entitlements
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: Nudge-inator
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        NSAlarmKitUsageDescription: "Nudge-inator rings an alarm to keep nudging you about a reminder until you mark it done."
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.newrealityinteractive.nudgeinator
+        TARGETED_DEVICE_FAMILY: "1"
+  NudgeWidgets:
+    type: app-extension
+    platform: iOS
+    sources: [NudgeWidgets]
+    dependencies:
+      - package: NudgeShared
+    entitlements:
+      path: NudgeWidgets/NudgeWidgets.entitlements
+    info:
+      path: NudgeWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Nudge-inator Widgets
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.newrealityinteractive.nudgeinator.widgets
+        TARGETED_DEVICE_FAMILY: "1"
+  NudgeInatorTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [NudgeInatorTests]
+    dependencies:
+      - target: NudgeInator
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.newrealityinteractive.nudgeinator.tests
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  NudgeInator:
+    build:
+      targets:
+        NudgeInator: all
+        NudgeWidgets: all
+        NudgeInatorTests: [test]
+    test:
+      targets: [NudgeInatorTests]
