@@ -35,4 +35,8 @@ Docs: <https://developer.apple.com/documentation/alarmkit/scheduling-an-alarm-wi
 - [x] `Info.plist` has a non-empty `NSAlarmKitUsageDescription`.
 - [x] README states the one command to run tests.
 
+## Deferred: entitlements
+
+The App Group and Time Sensitive entitlements are not added yet. They wait on approval into the Apple Developer Program. Until then both `.entitlements` files stay empty, and the "entitlement present in both" criterion above stays open. Apple's docs don't say whether these capabilities work with a free Personal Team, so check that on a device once approved. When approved: add `com.apple.security.application-groups` (`group.com.newrealityinteractive.nudgeinator`) to both entitlements files and `com.apple.developer.usernotifications.time-sensitive` to the app's, then tick the criterion.
+
 Blocked by: none
