@@ -8,10 +8,10 @@ Spec: `../spec.md`. Glossary: `/CONTEXT.md`.
 
 An empty Nudge-inator iPhone app that builds, plus a way to run all unit tests from one command, with no Xcode UI.
 
-- SwiftUI app target, **iOS 26.0 minimum**, iPhone only (no iPad, no iOS 18 variants).
+- SwiftUI app target, **iOS 26.1 minimum** (raised from 26.0: AlarmKit's non-deprecated `Alert` initializer is iOS 26.1+, and 26.1 is the oldest version the tests run on), iPhone only (no iPad, no iOS 18 variants).
 - The nudge engine lives in a **local Swift package** (`NudgeEngine`, no Apple framework imports, so it also builds and tests on macOS) with its own test target. The app target depends on it.
 - An app-level unit-test target for the code that does touch Apple frameworks (store, adapters).
-- `scripts/test.sh` runs the package tests (`swift test`) and the app tests (`xcodebuild test` against an iOS 26 simulator), prints a pass/fail summary and exits non-zero on any failure. The simulator is chosen by name from an env var with a default, not by a hard-coded UUID.
+- `scripts/test.sh` runs the package tests (`swift test`) and the app tests (`xcodebuild test` against iOS 26 simulators), prints a pass/fail summary and exits non-zero on any failure. The simulator is chosen by name from an env var with a default, not by a hard-coded UUID. The app tests run against **both** the iOS 26.1 and iOS 26.5 simulators (a list in an env var with that default); a missing runtime is a failure with an install hint.
 - A **widget extension target** (iOS 26, iPhone only), empty for now: no widgets and no Live Activity content. It exists because AlarmKit expects one (see "Extension decision"), and so a later version can add widgets without a project migration.
 - An **App Group** shared by the app and the extension (the store in ticket 16 will live in its container), and a small shared module (framework or package) for code both targets compile: the AlarmKit `AlarmMetadata` type and the Open intent (ticket 19). `NudgeEngine` stays pure and separate.
 - `NSAlarmKitUsageDescription` and the Time Sensitive capability are set up (needed by later tickets).
@@ -26,7 +26,7 @@ Docs: <https://developer.apple.com/documentation/alarmkit/scheduling-an-alarm-wi
 ## Acceptance criteria
 
 - [ ] `xcodebuild -scheme <app> -destination 'generic/platform=iOS' build` succeeds.
-- [x] Deployment target is iOS 26.0 and the device family is iPhone only.
+- [x] Deployment target is iOS 26.1 and the device family is iPhone only.
 - [ ] The widget extension target builds and is embedded in the app; the app and extension share an App Group (entitlement present in both).
 - [x] The shared module compiles into both targets, and `scripts/test.sh` also builds the extension.
 - [x] A placeholder test in the package and one in the app test target both exist and pass.

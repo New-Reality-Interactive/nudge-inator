@@ -8,7 +8,7 @@ I have reminders that matter, and an ordinary iOS reminder gets one notification
 
 ## Solution
 
-An iPhone app (iOS 26 and later) where each reminder has a strength (Gentle, Firm or Relentless). Once a reminder comes due it nudges on that strength's escalating schedule: ordinary notifications first, then Time Sensitive notifications, then AlarmKit alarms for Firm and Relentless. A per-reminder **Break through Focus** switch controls whether the nudges may get through a Focus. The alarm offers the system **Stop** (silence, and the ladder moves along) and an **Open** button that opens the reminder, where **Done** is the only way to end the nudging. The screens are as drawn in the mockup: Now, My Day, Tags and a minimal Settings.
+An iPhone app (iOS 26.1 and later) where each reminder has a strength (Gentle, Firm or Relentless). Once a reminder comes due it nudges on that strength's escalating schedule: ordinary notifications first, then Time Sensitive notifications, then AlarmKit alarms for Firm and Relentless. A per-reminder **Break through Focus** switch controls whether the nudges may get through a Focus. The alarm offers the system **Stop** (silence, and the ladder moves along) and an **Open** button that opens the reminder, where **Done** is the only way to end the nudging. The screens are as drawn in the mockup: Now, My Day, Tags and a minimal Settings.
 
 Vocabulary is in `CONTEXT.md`. The Stop and Open decision is in ADR 0001. The visual design is `docs/mockups/2026-10-02-ux-review-changes/` where this spec doesn't differ from it.
 
@@ -74,7 +74,7 @@ Vocabulary is in `CONTEXT.md`. The Stop and Open decision is in ADR 0001. The vi
 
 ## Implementation Decisions
 
-- **Platform.** iOS 26 and later only. No iOS 18 variants and no notification-chain fallback for missing AlarmKit.
+- **Platform.** iOS 26.1 and later only (26.1 is where AlarmKit's non-deprecated alert initializer starts, and it is the oldest version the tests run on). No iOS 18 variants and no notification-chain fallback for missing AlarmKit.
 - **Nudge engine (the main module).** A pure module with no framework dependencies. It turns reminders, the current time, permission states and events (Stop, Done, Edit, Pause, Resume, Delete, app opened) into occurrence state and a *schedule plan*: the list of alarms and notifications to have pending, each with its fire time, urgency and delivery kind. It owns all the rules below.
 - **Scheduler adapter.** A thin module that applies a schedule plan through AlarmKit and the user notification center, and reports permission states and scheduling errors back to the engine. The engine never calls Apple frameworks directly.
 - **Store.** Local persistence of reminders, tags and the state of each occurrence. No account, no server.

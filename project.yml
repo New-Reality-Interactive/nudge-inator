@@ -2,7 +2,7 @@ name: NudgeInator
 options:
   bundleIdPrefix: com.newrealityinteractive
   deploymentTarget:
-    iOS: "26.0"
+    iOS: "26.1"
   generateEmptyDirectories: true
 settings:
   base:

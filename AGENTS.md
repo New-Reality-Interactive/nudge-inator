@@ -21,7 +21,7 @@ For any iOS design, implementation or testing question, or any Xcode question, l
 
 ## Coding standards
 
-Nudge-inator is a Swift 6, SwiftUI, iPhone-only app (iOS 26.0 minimum) with a widget extension and two local packages. `project.yml` is the source of truth for the Xcode project: edit it, then run `xcodegen generate`. Never hand-edit the generated `.xcodeproj`.
+Nudge-inator is a Swift 6, SwiftUI, iPhone-only app (iOS 26.1 minimum) with a widget extension and two local packages. `project.yml` is the source of truth for the Xcode project: edit it, then run `xcodegen generate`. Never hand-edit the generated `.xcodeproj`.
 
 ### Structure
 
@@ -67,6 +67,7 @@ Apple's AlarmKit docs confirm that scheduling fails silently without a non-empty
 - Group related tests in a `struct` suite. Use parameterized `@Test(arguments:)` instead of `for` loops over cases.
 - Test names describe behavior, without a `test` prefix.
 - Engine logic is tested in `NudgeEngineTests` with no simulator. App-target tests cover only code that needs Apple frameworks.
+- Automated tests always run against **both** the iOS 26.1 and iOS 26.5 simulators (the oldest and newest we test on); `scripts/test.sh` does this. Don't narrow it to one version to get a pass. Simulators don't cover AlarmKit behavior, so device checks stay on a physical iPhone and record its iOS version.
 - Run everything with `scripts/test.sh` before committing. UI, VoiceOver and AlarmKit behavior can't be checked in unit tests, so mark those as device checks.
 
 ### Comments and style
