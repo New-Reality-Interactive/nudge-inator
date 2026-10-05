@@ -4,7 +4,7 @@ Status: ready-for-agent
 
 ## What to build
 
-A Delete event removes the reminder and cancels everything pending for it: the plan has no items for it, and any open occurrence is removed (not left as Missed). Tags it used are kept (tag rules in ticket 15). The confirmation dialog is a screen concern (ticket 24).
+A Delete event removes the reminder and cancels everything pending for it: the plan has no items for it, and any open occurrence is removed (not left as Missed). Tags it used are kept (tag rules in ticket 15). The confirmation dialog is a screen concern (ticket 25).
 
 ## Acceptance criteria
 

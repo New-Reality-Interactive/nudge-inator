@@ -8,7 +8,7 @@ Permission states are inputs to the engine (notifications: allowed / denied; ala
 
 - **Alarms denied**: Urgent nudges become Time Sensitive notifications (spec story 51).
 - **Time Sensitive off** (from the mockup README): High nudges become ordinary notifications.
-- **Notifications denied**: nothing is deliverable by notification; alarms (if allowed and Break through Focus is on) still plan. The engine exposes a "what can still reach you" summary the banners (ticket 28) read.
+- **Notifications denied**: nothing is deliverable by notification; alarms (if allowed and Break through Focus is on) still plan. The engine exposes a "what can still reach you" summary the banners (ticket 29) read.
 - Permission changes re-plan the remaining nudges.
 
 ## Acceptance criteria

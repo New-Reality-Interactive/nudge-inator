@@ -11,9 +11,9 @@ The form: Title, Notes, Tags (any number, create a tag inline, one word shown as
 ## Acceptance criteria
 
 - [ ] Saving with an empty title is blocked with a visible reason.
-- [ ] A new reminder with tags, Relentless and the switch on is saved and appears under Coming Up (needs ticket 23 to display; until then verify via the store in a UI/unit test).
+- [ ] A new reminder with tags, Relentless and the switch on is saved and appears under Coming Up (needs ticket 24 to display; until then verify via the store in a UI/unit test).
 - [ ] Typing `Home` when `#home` exists attaches the existing tag.
 - [ ] Editing a Nudging reminder's due time to the future shows the skip warning, and Cancel leaves it unchanged.
 - [ ] Form works with VoiceOver labels on every control and at the largest Dynamic Type size.
 
-Blocked by: 16, 21
+Blocked by: 16, 21, 22

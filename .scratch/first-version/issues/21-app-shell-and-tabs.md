@@ -6,7 +6,7 @@ Visual spec: `docs/mockups/2026-10-04-first-version/` (open `index.html`; the RE
 
 ## What to build
 
-Tab bar with Now, My Day, Tags and Settings in the mockup's order, placeholder content with empty states, the app tint, and the shared styles (Light, Dark, Dynamic Type, Bold Text). The + button entry point on Now and My Day is present but may be disabled until ticket 22.
+Tab bar with Now, My Day, Tags and Settings in the mockup's order, placeholder content with empty states, the app tint, and the shared styles (Light, Dark, Dynamic Type, Bold Text). The + button entry point on Now and My Day is present but may be disabled until ticket 23.
 
 ## Acceptance criteria
 

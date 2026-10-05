@@ -9,7 +9,7 @@ Extend the scheduler adapter to apply the plan's **alarm** items through `AlarmM
 - Alert-only `AlarmPresentation` with the reminder **title only**, the system Stop button, a custom secondary button **Open** (`secondaryButtonBehavior: .custom`) and the app's tint. No countdown or paused presentation. The `AlarmMetadata` type comes from the shared module (ticket 01).
 - A one-shot fixed schedule per alarm item; the alarm ID derives from occurrence and nudge number so a re-plan can cancel and replace.
 - `secondaryIntent` is the Open intent from ticket 19. Stop uses the system default (ADR 0001: Stop needs no app code; the later nudges are already pre-scheduled).
-- Authorization: request through `requestAuthorization()` when onboarding asks (ticket 28), read `authorizationState`, observe `authorizationUpdates`, report to the engine.
+- Authorization: request through `requestAuthorization()` when onboarding asks (ticket 29), read `authorizationState`, observe `authorizationUpdates`, report to the engine.
 - Scheduling errors: map `AlarmManager.AlarmError.maximumLimitReached` to the engine's "alarm limit" event (ticket 14) and apply the plan it returns.
 - Reconcile on launch using `alarms` / `alarmUpdates`: alarms no longer present have fired or been stopped.
 

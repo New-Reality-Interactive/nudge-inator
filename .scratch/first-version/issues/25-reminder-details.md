@@ -4,7 +4,7 @@ Status: ready-for-agent
 
 ## What to build
 
-Details screen with the reminder's title, notes, tags, due time, repeat, strength, Break through Focus and the current occurrence state. Actions: **Done** (when Nudging), Edit (opens ticket 22 form), Pause or Resume, and Delete with a confirmation. Reachable from Now, My Day, a tag's list, and the Open intent (ticket 19).
+Details screen with the reminder's title, notes, tags, due time, repeat, strength, Break through Focus and the current occurrence state. Actions: **Done** (when Nudging), Edit (opens ticket 23 form), Pause or Resume, and Delete with a confirmation. Reachable from Now, My Day, a tag's list, and the Open intent (ticket 19).
 
 ## Acceptance criteria
 
@@ -14,4 +14,4 @@ Details screen with the reminder's title, notes, tags, due time, repeat, strengt
 - [ ] A route-to-reminder entry point exists for ticket 19 and an unknown ID shows a "reminder not found" state.
 - [ ] Notes and tags appear here and nowhere in notification or alarm content.
 
-Blocked by: 22, 23
+Blocked by: 23, 24

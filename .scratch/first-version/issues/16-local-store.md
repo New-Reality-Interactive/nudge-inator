@@ -4,7 +4,7 @@ Status: ready-for-agent
 
 ## What to build
 
-Persist reminders, tags and each occurrence's state on the device (SwiftData or Core Data; pick one and record why in the ticket's Comments). No account, no server, no sync. The store file lives in the **App Group container** set up in ticket 01, so a widget extension can read it in a later version. The engine stays pure: the store maps to and from the engine's plain types. Include a "delete all data" operation (used by ticket 27).
+Persist reminders, tags and each occurrence's state on the device (SwiftData or Core Data; pick one and record why in the ticket's Comments). No account, no server, no sync. The store file lives in the **App Group container** set up in ticket 01, so a widget extension can read it in a later version. The engine stays pure: the store maps to and from the engine's plain types. Include a "delete all data" operation (used by ticket 28).
 
 ## Acceptance criteria
 

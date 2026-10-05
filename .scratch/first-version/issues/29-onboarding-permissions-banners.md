@@ -20,4 +20,4 @@ First launch: a short onboarding explaining how nudges reach you (the mockup's F
 - [ ] How It Nudges values match the engine's ladder constants (read from the engine, not retyped).
 - [ ] Matches the mockup's First launch screens.
 
-Blocked by: 20, 21
+Blocked by: 20, 21, 22

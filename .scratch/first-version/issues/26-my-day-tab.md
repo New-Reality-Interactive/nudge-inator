@@ -4,7 +4,7 @@ Status: ready-for-agent
 
 ## What to build
 
-Today's occurrences in time order with Done, Nudging, Missed and Left counts. Tapping a count filters the list to it (tap again clears). Tag filter with Match All / Match Any and No Tags. Swipe on a Nudging row for **Done**. Permission banners per the mockup (the banner view comes from ticket 28; leave a placeholder slot here).
+Today's occurrences in time order with Done, Nudging, Missed and Left counts. Tapping a count filters the list to it (tap again clears). Tag filter with Match All / Match Any and No Tags. Swipe on a Nudging row for **Done**. Permission banners per the mockup (the banner view comes from ticket 29; leave a placeholder slot here).
 
 ## Acceptance criteria
 
@@ -14,4 +14,4 @@ Today's occurrences in time order with Done, Nudging, Missed and Left counts. Ta
 - [ ] Swipe Done on a Nudging row closes it as Done; rows that are not Nudging have no Done swipe.
 - [ ] Matches the mockup's My Day screen at default and largest text size.
 
-Blocked by: 15, 23
+Blocked by: 15, 24

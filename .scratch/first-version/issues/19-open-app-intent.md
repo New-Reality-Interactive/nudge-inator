@@ -4,7 +4,7 @@ Status: ready-for-agent
 
 ## What to build
 
-The App Intent the alarm's **Open** button runs. It is defined in the shared module from ticket 01 so both the app and the extension compile it. It carries the alarm identifier (mapped to occurrence), opens the app (`openAppWhenRun = true`) on that reminder's details screen (ticket 24), where Done is. If ticket 02 showed Open does not silence the ring, the intent also stops the alarm (`AlarmManager.shared.stop(id:)`). If it showed the intent does not run, or does not open the app, on a locked phone, the behaviour required by the answer is implemented here (for example the alarm keeps ringing until unlocked, noted in the Open button's absence or in the details screen).
+The App Intent the alarm's **Open** button runs. It is defined in the shared module from ticket 01 so both the app and the extension compile it. It carries the alarm identifier (mapped to occurrence), opens the app (`openAppWhenRun = true`) on that reminder's details screen (ticket 25), where Done is. If ticket 02 showed Open does not silence the ring, the intent also stops the alarm (`AlarmManager.shared.stop(id:)`). If it showed the intent does not run, or does not open the app, on a locked phone, the behaviour required by the answer is implemented here (for example the alarm keeps ringing until unlocked, noted in the Open button's absence or in the details screen).
 
 ## Docs basis
 
@@ -23,4 +23,4 @@ The App Intent the alarm's **Open** button runs. It is defined in the shared mod
 - [ ] Behaviour matches ticket 02's recorded answers B and C (cite them in the code comment).
 - [ ] Device (human): tapping Open from the Lock Screen and from the Dynamic Island/banner lands on the reminder, and the ring state matches the spike.
 
-Blocked by: 02, 18, 24
+Blocked by: 02, 18, 25
