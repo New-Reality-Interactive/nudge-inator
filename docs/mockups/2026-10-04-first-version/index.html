@@ -13,9 +13,8 @@
    - One color, one meaning. Status colors are named by their job, and nothing else uses them:
      --accent: interactive (the app's AccentColor, Lagoon teal; see docs/design/DESIGN.md)
      --negative: danger, meaning nudging, Urgent, missed, errors, Off, and destructive actions (red)
-     --warning: escalating, meaning High urgency and "starts higher" (orange)
+     --warning: escalating, meaning High urgency (orange)
      --positive: done and on (green)
-     --quiet: quiet hours (indigo)
      Strength isn't a status, so it has no color.
    - Text in these colors uses accessible variants of the system hues (at least 4.5:1, and 7:1 with
      Increase Contrast), because several default system colors are below 4.5:1 as text.
@@ -35,10 +34,10 @@
   --separator: #c6c6c8; --system-gray: #8e8e93;
   --tertiary-system-fill: #ebebf0; --tertiary-system-fill-elevated: #ebebf0; --segment-selected: #ffffff;
   --accent: #04666b; --on-accent: #ffffff;
-  --negative: #d70015; --warning: #c93400; --positive: #1e7b34; --quiet: #3634a3; --neutral: #6c6c70;
+  --negative: #d70015; --warning: #c93400; --positive: #1e7b34; --neutral: #6c6c70;
   --badge-fill: #e9152d; --on-badge: #ffffff;
   --tile-blue: #1e6ef4; --tile-red: #e9152d; --tile-orange: #c55300; --tile-gray: #6c6c70; --tile-green: #008932;
-  --tile-teal: #008198; --tile-purple: #b02fc2; --tile-pink: #e7124d; --tile-brown: #956d51; --tile-yellow: #a16a00; --on-tile: #ffffff;
+  --on-tile: #ffffff;
   --bar: rgba(249, 249, 249, 0.8); --bar-solid: #f9f9f9; --alert: rgba(242, 242, 247, 0.98); --alert-solid: #f2f2f7;
   --material: rgba(245, 245, 250, 0.9); --material-solid: #f5f5fa; --material-text: #000000; --material-text2: #3a3a3c;
   --material-sep: rgba(60, 60, 67, 0.36); --material-red: #b00012; --hud: #ffffff;
@@ -57,7 +56,7 @@
       --separator: #38383a; --system-gray: #8e8e93;
       --tertiary-system-fill: #2c2c2e; --tertiary-system-fill-elevated: #3a3a3c; --segment-selected: #636366;
       --accent: #07dde6; --on-accent: #000000;
-      --negative: #ff6961; --warning: #ff9f0a; --positive: #30d158; --quiet: #9290ff; --neutral: #aeaeb2;
+      --negative: #ff6961; --warning: #ff9f0a; --positive: #30d158; --neutral: #aeaeb2;
       --badge-fill: #e9152d; --on-badge: #ffffff;
       --bar: rgba(22, 22, 24, 0.8); --bar-solid: #161618; --alert: rgba(44, 44, 46, 0.88); --alert-solid: #2c2c2e;
       --material: rgba(30, 30, 32, 0.78); --material-solid: #1e1e20; --material-text: #ffffff; --material-text2: #aeaeb2;
@@ -76,7 +75,7 @@
     --separator: #38383a; --system-gray: #8e8e93;
     --tertiary-system-fill: #2c2c2e; --tertiary-system-fill-elevated: #3a3a3c; --segment-selected: #636366;
     --accent: #07dde6; --on-accent: #000000;
-    --negative: #ff6961; --warning: #ff9f0a; --positive: #30d158; --quiet: #9290ff; --neutral: #aeaeb2;
+    --negative: #ff6961; --warning: #ff9f0a; --positive: #30d158; --neutral: #aeaeb2;
     --badge-fill: #e9152d; --on-badge: #ffffff;
     --bar: rgba(22, 22, 24, 0.8); --bar-solid: #161618; --alert: rgba(44, 44, 46, 0.88); --alert-solid: #2c2c2e;
     --material: rgba(30, 30, 32, 0.78); --material-solid: #1e1e20; --material-text: #ffffff; --material-text2: #aeaeb2;
@@ -88,7 +87,7 @@
 :root[data-contrast="more"] {
   --secondary-label: #3c3c43; --tertiary-label: rgba(60, 60, 67, 0.5); --placeholder-text: #3c3c43;
   --separator: #8e8e93; --system-gray: #6c6c70; --tertiary-system-fill: #e9e9ee; --tertiary-system-fill-elevated: #e9e9ee;
-  --accent: #04474a; --negative: #9e0010; --warning: #8f2800; --positive: #145a22; --quiet: #2b2a8c; --neutral: #3c3c43;
+  --accent: #04474a; --negative: #9e0010; --warning: #8f2800; --positive: #145a22; --neutral: #3c3c43;
   --badge-fill: #b00012;
   --material: rgba(245, 245, 250, 0.96); --material-red: #9e0010; --alert: rgba(242, 242, 247, 0.98); --bar: rgba(249, 249, 249, 0.96);
   --glass: rgba(255, 255, 255, 0.96); --glass-edge: #8e8e93; --glass-selected: rgba(120, 120, 128, 0.28);
@@ -97,7 +96,7 @@
   :root[data-contrast="more"]:not([data-theme="light"]) {
     --secondary-label: #d1d1d6; --tertiary-label: rgba(235, 235, 245, 0.5); --placeholder-text: #d1d1d6;
       --separator: #636366; --system-gray: #aeaeb2; --tertiary-system-fill: #2c2c2e; --tertiary-system-fill-elevated: #1c1c1e; --segment-selected: #48484a;
-      --accent: #a5fafe; --negative: #ffa39c; --warning: #ffb340; --positive: #5de07b; --quiet: #b8b6ff; --neutral: #d1d1d6;
+      --accent: #a5fafe; --negative: #ffa39c; --warning: #ffb340; --positive: #5de07b; --neutral: #d1d1d6;
       --material: rgba(30, 30, 32, 0.95); --material-red: #ffa39c; --alert: rgba(44, 44, 46, 0.98); --bar: rgba(22, 22, 24, 0.96);
       --glass: rgba(44, 44, 46, 0.96); --glass-edge: #aeaeb2; --glass-selected: rgba(120, 120, 128, 0.44);
   }
@@ -105,7 +104,7 @@
 :root[data-contrast="more"][data-theme="dark"] {
   --secondary-label: #d1d1d6; --tertiary-label: rgba(235, 235, 245, 0.5); --placeholder-text: #d1d1d6;
     --separator: #636366; --system-gray: #aeaeb2; --tertiary-system-fill: #2c2c2e; --tertiary-system-fill-elevated: #1c1c1e; --segment-selected: #48484a;
-    --accent: #a5fafe; --negative: #ffa39c; --warning: #ffb340; --positive: #5de07b; --quiet: #b8b6ff; --neutral: #d1d1d6;
+    --accent: #a5fafe; --negative: #ffa39c; --warning: #ffb340; --positive: #5de07b; --neutral: #d1d1d6;
     --material: rgba(30, 30, 32, 0.95); --material-red: #ffa39c; --alert: rgba(44, 44, 46, 0.98); --bar: rgba(22, 22, 24, 0.96);
     --glass: rgba(44, 44, 46, 0.96); --glass-edge: #aeaeb2; --glass-selected: rgba(120, 120, 128, 0.44);
 }
@@ -439,8 +438,6 @@ button.cell:active, a.cell:active { background: var(--tertiary-system-fill); }
 .sec-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 8px 2px 16px; }
 .sec-bar .sec-h { margin: 0; }
 .cell .s mark { background: none; color: var(--label); font-weight: var(--semibold); }
-.note-quiet { color: var(--quiet); }
-.note-carry { color: var(--warning); }
 .note-warn { color: var(--negative); }
 
 .cap { font: var(--caption1); letter-spacing: var(--caption1-track); display: inline-flex; align-items: center; gap: 4px; font-weight: var(--semibold); padding: 1px 8px 1px 6px; border-radius: 99px; border: 1px solid var(--system-gray); color: var(--secondary-label); white-space: nowrap; }
@@ -524,16 +521,14 @@ select.menu:disabled { color: var(--secondary-label); background-image: none; }
 .nudgecard { position: relative; background: var(--secondary-system-grouped-background); border-radius: 12px; padding: 14px 16px; border-left: 5px solid var(--c); }
 .nudgecard + .nudgecard, .swipe + .swipe { margin-top: 12px; }
 /* Swipe actions: the row slides over its action, which fills the space it leaves. Done uses the
-   green of done, Snooze the teal of the Lagoon accent (something tappable); both are tile colors, which keep white
-   text at 4.5:1. */
+   green of done, a tile color that keeps white text at 4.5:1. */
 .swipe { position: relative; overflow: hidden; border-radius: 12px; }
 li > .swipe { border-radius: 0; }
 .swipe-row { position: relative; z-index: 1; background: var(--secondary-system-grouped-background); touch-action: pan-y; }
 .swipe.dragging .swipe-row { user-select: none; -webkit-user-select: none; }
 .swipe-act { font: var(--footnote); letter-spacing: var(--footnote-track); font-weight: var(--semibold); position: absolute; top: 0; bottom: 0; width: 50%; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 0 22px; border: 0; color: #fff; cursor: pointer; visibility: hidden; }
-.swipe-act.lead { left: 0; align-items: flex-start; background: var(--tile-teal); }
 .swipe-act.trail { right: 0; align-items: flex-end; background: var(--tile-green); }
-.swipe[data-dir="lead"] .swipe-act.lead, .swipe[data-dir="trail"] .swipe-act.trail { visibility: visible; }
+.swipe[data-dir="trail"] .swipe-act.trail { visibility: visible; }
 .nudgecard.u-Normal { --c: var(--neutral); } .nudgecard.u-High { --c: var(--warning); } .nudgecard.u-Urgent { --c: var(--negative); }
 .nudgecard h3 { font: var(--headline); letter-spacing: var(--headline-track); margin: 6px 0 2px; font-weight: var(--semibold); }
 .nudgecard p { font: var(--subhead); letter-spacing: var(--subhead-track); margin: 2px 0; color: var(--secondary-label); }
@@ -551,7 +546,6 @@ li > .swipe { border-radius: 0; }
 .banner p { font: var(--subhead); letter-spacing: var(--subhead-track); margin: 0 0 8px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 16px 18px; }
 .chip { font: var(--footnote); letter-spacing: var(--footnote-track); display: inline-flex; gap: 5px; align-items: center; background: var(--secondary-system-grouped-background); border-radius: 99px; padding: 5px 11px; }
-.chip.quiet { color: var(--quiet); }
 /* Tags tab: the chosen tags, each a capsule that removes it. They're tappable, so they use the
    accent color, and 44 pt tall like every other button. */
 .tokens { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: -4px 16px 14px; }
@@ -574,7 +568,6 @@ li > .swipe { border-radius: 0; }
 .count-label { font: var(--caption1); letter-spacing: var(--caption1-track); color: var(--secondary-label); }
 .counts .bad b { color: var(--negative); } .counts .good b { color: var(--positive); }
 .marker { font: var(--footnote); letter-spacing: var(--footnote-track); display: flex; gap: 8px; align-items: center; padding: 6px 16px; font-weight: var(--semibold); color: var(--label); }
-.marker.quiet { color: var(--quiet); }
 .marker::after { content: ""; flex: 1; height: 1px; background: currentColor; opacity: 0.6; }
 .filterrow { display: flex; justify-content: space-between; align-items: center; margin: 0 16px 12px; gap: 8px; }
 .filterrow select { min-height: 44px; background: var(--tertiary-system-fill); border: 0; border-radius: 99px; padding: 6px 30px 6px 14px; color: var(--accent); font-weight: var(--semibold); appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%), linear-gradient(135deg, var(--accent) 50%, transparent 50%); background-position: right 15px center, right 10px center; background-size: 5px 5px; background-repeat: no-repeat; max-width: 100%; }
@@ -647,18 +640,6 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .feature-title { display: block; }
 .feature-text { font: var(--subhead); letter-spacing: var(--subhead-track); color: var(--secondary-label); }
 
-/* Assistive Access */
-.aa-h1 { font: var(--large-title); letter-spacing: var(--large-title-track); font-weight: var(--bold); margin: 12px 16px 20px; }
-.aa-h1:focus { outline: none; }
-.aa-sec { font: var(--title2); letter-spacing: var(--title2-track); font-weight: var(--bold); margin: 0 16px 12px; }
-.aa-list { list-style: none; margin: 0 16px 28px; padding: 0; display: grid; gap: 14px; }
-.aa-card { background: var(--secondary-system-grouped-background); border-radius: 22px; padding: 20px; display: grid; gap: 14px; }
-.aa-title { font: var(--title1); letter-spacing: var(--title1-track); font-weight: var(--bold); margin: 0; overflow-wrap: anywhere; }
-.aa-btn { font: var(--title2); letter-spacing: var(--title2-track); font-weight: var(--bold); display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 64px; border: 0; border-radius: 18px; background: var(--accent); color: var(--on-accent); cursor: pointer; }
-.aa-btn.secondary { background: var(--tertiary-system-fill); color: var(--accent); }
-.aa-row { font: var(--title3); letter-spacing: var(--title3-track); display: flex; gap: 16px; flex-wrap: wrap; align-items: baseline; background: var(--secondary-system-grouped-background); border-radius: 16px; padding: 16px 20px; }
-.aa-time { font-weight: var(--semibold); font-variant-numeric: tabular-nums; }
-
 /* ============ Lock Screen and alarm (system UI, simulated) ============ */
 .lock { position: absolute; inset: 0; z-index: 60; color: #fff; background: radial-gradient(circle at 30% 20%, #3b4c8f, #16163a 60%, #0b0b18); display: flex; flex-direction: column; }
 .lock-top { text-align: center; padding-top: 64px; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3); }
@@ -710,16 +691,6 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .island-alert .abtn { font: var(--body); letter-spacing: var(--body-track); font-weight: var(--semibold); min-height: 44px; padding: 8px 18px; }
 .island-alert .abtn.sys-stop { background: #3a3a3c; }
 :root[data-contrast="more"] .island-alert { box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45), inset 0 0 0 1px #8e8e93; }
-/* The Live Activity after a snooze is the app's own design (a widget extension), on the Lock Screen. */
-.activity { width: 100%; text-align: left; border-radius: 22px; padding: 14px 16px; background: var(--material); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); color: var(--material-text); display: grid; gap: 10px; }
-.activity .ahead { display: flex; align-items: center; gap: 10px; }
-.activity .ahead .appicon { width: 30px; height: 30px; border-radius: 7px; background: linear-gradient(160deg, #0a8f96, #04474a); display: grid; place-items: center; color: #fff; flex: none; }
-.activity-title { font: var(--headline); letter-spacing: var(--headline-track); font-weight: var(--semibold); margin: 0; overflow-wrap: anywhere; flex: 1; min-width: 0; }
-.activity-title:focus { outline: none; }
-.activity .count { font: var(--title1); letter-spacing: var(--title1-track); font-weight: var(--bold); font-variant-numeric: tabular-nums; }
-.activity .arow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.activity .asub { font: var(--subhead); letter-spacing: var(--subhead-track); color: var(--material-text2); margin: 0; }
-.activity .abtn { font: var(--body); letter-spacing: var(--body-track); min-height: 44px; padding: 6px 18px; }
 /* ============ Overrides, after the rules they change ============ */
 /* Increase Contrast outlines tinted controls, so their shape doesn't rely on a faint fill. */
 :root[data-contrast="more"] .btn.bordered, :root[data-contrast="more"] .seg, :root[data-contrast="more"] .stepper, :root[data-contrast="more"] .pill-input, :root[data-contrast="more"] .token { box-shadow: inset 0 0 0 1px var(--system-gray); }
@@ -805,7 +776,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .device[data-orient="landscape"] .count-label { font: var(--subhead); letter-spacing: var(--subhead-track); }
 :root[data-type^="ax"] .device[data-orient="landscape"] .counts { display: grid; grid-template-columns: repeat(2, 1fr); }
 :root[data-type^="ax"] .device[data-orient="landscape"] .count { flex-wrap: wrap; border-radius: 16px; }
-/* A nudge card that's wide enough (about 540 pt, as in landscape) puts Done and Snooze beside its
+/* A nudge card that's wide enough (about 540 pt, as in landscape) puts Done beside its
    text instead of under it. It's based on the card's width, not the orientation, so a narrow
    column keeps the stacked card. At accessibility sizes it always stacks. */
 .nudgecard { container-type: inline-size; }
@@ -1229,9 +1200,9 @@ function seed() {
     { id: "r12", tagIds: [], title: "Call Grandma", body: null, dtstart: "2026-06-07T17:00", rrule: "FREQ=WEEKLY;BYDAY=SU", strength: "gentle", status: "PAUSED", nextOccurrenceAt: null },
   ];
   occurrences = [
-    { id: "o1", reminderId: "r1", scheduledFor: "2026-09-28T07:30", level: 2, attempts: 3, snoozes: 0, state: "NUDGING", nextNudgeAt: "2026-09-28T08:22:30", closedAt: null, closeReason: null,
+    { id: "o1", reminderId: "r1", scheduledFor: "2026-09-28T07:30", level: 2, attempts: 3, state: "NUDGING", nextNudgeAt: "2026-09-28T08:22:30", closedAt: null, closeReason: null,
       events: [ev("SCHEDULED", "2026-09-28T07:30"), ev("NUDGE_SENT", "2026-09-28T07:30", { attempt: 1, level: 0, priority: 3 }), ev("NUDGE_SENT", "2026-09-28T08:00", { attempt: 2, level: 1, priority: 3 }), ev("NUDGE_SENT", "2026-09-28T08:15", { attempt: 3, level: 2, priority: 4 })] },
-    { id: "o3", reminderId: "r7", scheduledFor: "2026-09-28T08:10", level: 1, attempts: 2, snoozes: 0, state: "NUDGING", nextNudgeAt: "2026-09-28T08:25", closedAt: null, closeReason: null,
+    { id: "o3", reminderId: "r7", scheduledFor: "2026-09-28T08:10", level: 1, attempts: 2, state: "NUDGING", nextNudgeAt: "2026-09-28T08:25", closedAt: null, closeReason: null,
       events: [ev("SCHEDULED", "2026-09-28T08:10"), ev("NUDGE_SENT", "2026-09-28T08:10", { attempt: 1, level: 0, priority: 4 }), ev("NUDGE_SENT", "2026-09-28T08:20", { attempt: 2, level: 1, priority: 4 })] },
     { id: "o4", reminderId: "r2", scheduledFor: "2026-09-28T06:30", level: 0, attempts: 1, state: "ACKED", closedAt: "2026-09-28T07:04",
       events: [ev("SCHEDULED", "2026-09-28T06:30"), ev("NUDGE_SENT", "2026-09-28T07:00", { attempt: 1, level: 0, priority: 3 }), ev("ACKED", "2026-09-28T07:04")] },
@@ -2400,7 +2371,7 @@ function answerAlert(i) {
 
 /* A short confirmation at the top of the screen. It stays until the next tap or key press rather
    than vanishing on a timer, so no one has to read it in a hurry (HIG, Accessibility > Cognitive).
-   What it says is also shown on the screen itself, such as a card's "Snoozed until". */
+   What it says is also shown on the screen itself, such as a status label. */
 function hud(msg) {
   const h = document.getElementById("hud");
   h.textContent = "";
@@ -2529,7 +2500,7 @@ const phoneScale = () => { const scr = document.getElementById("screen"); return
 function setSwipe(row, x) {
   row.style.transform = x ? `translateX(${x}px)` : "";
   row.dataset.x = x;
-  row.parentElement.dataset.dir = x < 0 ? "trail" : x > 0 ? "lead" : "";
+  row.parentElement.dataset.dir = x < 0 ? "trail" : "";
 }
 function closeSwipes(except) { main.querySelectorAll(".swipe-row[data-x]").forEach((r) => { if (r !== except) setSwipe(r, 0); }); }
 main.addEventListener("pointerdown", (e) => {
@@ -2550,7 +2521,7 @@ main.addEventListener("pointermove", (e) => {
     swipe.row.parentElement.classList.add("dragging");
   }
   let x = swipe.base + dx;
-  if (x > 0 && !swipe.row.parentElement.querySelector(".lead")) x = 0;
+  if (x > 0) x = 0;
   swipe.x = x;
   setSwipe(swipe.row, x);
 });
@@ -2739,18 +2710,18 @@ document.addEventListener("click", (e) => {
    rows today keeps focus on the right one. */
 function nextFocusAfterAck(occId, el) {
   const sw = el?.closest(".swipe");
-  const item = sw?.querySelector(".nudgecard") || el?.closest(".nudgecard, .aa-card, li")
+  const item = sw?.querySelector(".nudgecard") || el?.closest(".nudgecard, li")
     || main.querySelector(`.nudgecard [data-ack="${occId}"]`)?.closest(".nudgecard");
   const h1 = () => main.querySelector("h1");
   if (!item) return h1;
-  const kind = item.matches(".nudgecard") ? "card" : item.matches(".aa-card") ? "aa" : "row";
+  const kind = item.matches(".nudgecard") ? "card" : "row";
   const listIdx = kind === "row" ? [...main.querySelectorAll("ul")].indexOf(item.parentElement) : -1;
-  // Only items with a title count; My Day's Now and quiet-hours markers aren't items.
-  const titleOf = (x) => x.querySelector("[data-open], .aa-title");
-  const pool = () => (kind === "card" ? [...main.querySelectorAll(".nudgecard")] : kind === "aa" ? [...main.querySelectorAll(".aa-card")]
+  // Only items with a title count; My Day's Now marker isn't an item.
+  const titleOf = (x) => x.querySelector("[data-open]");
+  const pool = () => (kind === "card" ? [...main.querySelectorAll(".nudgecard")]
     : [...(main.querySelectorAll("ul")[listIdx]?.children || [])]).filter(titleOf);
   const i = pool().indexOf(item);
-  const header = { card: "#h-nudge", aa: "#aa-now", row: null }[kind];
+  const header = { card: "#h-nudge", row: null }[kind];
   return () => { const p = pool(), t = p[i] || p[i - 1]; return (t && titleOf(t)) || (header && main.querySelector(header)) || h1(); };
 }
 
