@@ -2,6 +2,8 @@ Status: ready-for-agent
 
 # Settings tab
 
+Design spec: `docs/design/DESIGN.md` (Components: Settings row). Where it and the mockup disagree, see its Precedence note.
+
 ## What to build
 
 Minimal Settings: status rows for notifications, alarms and Time Sensitive (from the adapters, with a way to open iOS Settings when denied: `UIApplication.openNotificationSettingsURLString` (iOS 16+) deep links to the app's notification settings, where the notification and Time Sensitive switches live; `UIApplication.openSettingsURLString` opens the app's page in Settings, which is the one to use for alarms. Pass the URL to `UIApplication.shared.open`. The docs say AlarmKit authorization can be changed in the Settings app but don't name the screen: check on a device which link lands where), **Send a Test Nudge** (a real nudge through the adapters, so the person can check it works), and **Delete All Data** (confirmation, then ticket 16's delete-all and cancel of everything pending). Also a link to How It Nudges (ticket 29).

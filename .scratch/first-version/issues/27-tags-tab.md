@@ -2,6 +2,8 @@ Status: ready-for-agent
 
 # Tags tab
 
+Design spec: `docs/design/DESIGN.md` (Components: Tags, Settings row). Where it and the mockup disagree, see its Precedence note.
+
 ## What to build
 
 Tags only. A list of tags, each with counts of reminders, due today and nudging. **+** adds a tag. Edit mode renames or deletes a tag; deleting warns how many reminders use it and never deletes those reminders. Tapping a tag pushes a screen of that tag's reminders; its **+** opens the New Reminder form (ticket 23) with that tag already chosen. No multi-tag filtering here.

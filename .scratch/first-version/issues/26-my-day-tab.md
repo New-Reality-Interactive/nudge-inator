@@ -2,6 +2,8 @@ Status: ready-for-agent
 
 # My Day tab
 
+Design spec: `docs/design/DESIGN.md` (Components: Counts, Reminder row, Swipe actions, Tags). Where it and the mockup disagree, see its Precedence note.
+
 ## What to build
 
 Today's occurrences in time order with Done, Nudging, Missed and Left counts. Tapping a count filters the list to it (tap again clears). Tag filter with Match All / Match Any and No Tags. Swipe on a Nudging row for **Done**. Permission banners per the mockup (the banner view comes from ticket 29; leave a placeholder slot here).

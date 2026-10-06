@@ -4,6 +4,8 @@ Status: ready-for-agent
 
 Visual spec: mockup New Reminder and Edit screens.
 
+Design spec: `docs/design/DESIGN.md` (Components: Buttons, Tags, Sheet bar buttons). Where it and the mockup disagree, see its Precedence note.
+
 ## What to build
 
 The form: Title, Notes, Tags (any number, create a tag inline, one word shown as `#name`, case-insensitive unique), start date and time, Repeat (the seven presets), Strength (Gentle, Firm, Relentless) and the **Break through Focus** switch. Save creates or edits through the app model (ticket 20). Editing a Nudging reminder shows the engine's preview warning before applying when the edit would skip the occurrence (ticket 12). The new reminder appears on the screen the person came from.

@@ -4,6 +4,8 @@ Status: ready-for-agent
 
 Visual spec: `docs/mockups/2026-10-04-first-version/` (open `index.html`, set **Orientation** to Landscape; the README describes it).
 
+Design spec: `docs/design/DESIGN.md` (Layout & Spacing). Where it and the mockup disagree, see its Precedence note.
+
 ## What to build
 
 Turn on landscape for the iPhone app and make the shell adapt to it, so every screen built after this one starts out landscape-aware instead of being reworked later. Ticket 01 left the app portrait-only on purpose (the spikes don't need landscape). Apple's HIG says people "expect your experience to work well and remain familiar when they rotate their device," and that a portrait-only app is for experiences that need it. Nudge-inator doesn't.

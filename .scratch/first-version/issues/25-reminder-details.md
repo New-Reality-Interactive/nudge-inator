@@ -2,6 +2,8 @@ Status: ready-for-agent
 
 # Reminder details
 
+Design spec: `docs/design/DESIGN.md` (Components: Reminder row, Via label, Buttons). Where it and the mockup disagree, see its Precedence note.
+
 ## What to build
 
 Details screen with the reminder's title, notes, tags, due time, repeat, strength, Break through Focus and the current occurrence state. Actions: **Done** (when Nudging), Edit (opens ticket 23 form), Pause or Resume, and Delete with a confirmation. Reachable from Now, My Day, a tag's list, and the Open intent (ticket 19).

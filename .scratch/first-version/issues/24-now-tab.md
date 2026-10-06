@@ -2,6 +2,8 @@ Status: ready-for-agent
 
 # Now tab
 
+Design spec: `docs/design/DESIGN.md` (Components: Nudge card, Nudge meter, Status label). Where it and the mockup disagree, see its Precedence note.
+
 ## What to build
 
 Nudging cards each with the title, nudge count and urgency, and a **Done** button; Coming Up (next 7 days); Last 24 Hours. Data comes from the app model (queries from ticket 15). Tapping a card opens the reminder details (ticket 25). Done ends the occurrence and removes the card.

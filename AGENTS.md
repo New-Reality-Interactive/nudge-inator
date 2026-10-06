@@ -12,6 +12,10 @@ Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `
 
 Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
 
+### Design system
+
+Colors, type, spacing, shapes and components are in `docs/design/DESIGN.md`. UI stories meet it; screen layout is the mockup under `docs/mockups/`.
+
 ## Apple platform questions
 
 For any iOS design, implementation or testing question, or any Xcode question, look it up with the `apple-rag-mcp` tools before answering or deciding: `search` first, then `fetch` for a full page. Don't answer from memory.

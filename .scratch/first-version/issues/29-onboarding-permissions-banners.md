@@ -2,6 +2,8 @@ Status: ready-for-agent
 
 # Onboarding, permission prompts and banners
 
+Design spec: `docs/design/DESIGN.md` (Components: Permission banner, How It Nudges). Where it and the mockup disagree, see its Precedence note.
+
 ## What to build
 
 First launch: a short onboarding explaining how nudges reach you (the mockup's First launch and How It Nudges), then the notification permission request, then the alarm permission request, each with a reason before the system prompt. Banners: notifications denied (red, says what can still reach you), alarms denied ("Urgent nudges now come as Time Sensitive notifications"). **How It Nudges** page previews the ladder per strength. Banners appear on Now and My Day.
