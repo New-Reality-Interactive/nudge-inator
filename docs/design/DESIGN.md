@@ -182,7 +182,7 @@ components:
 This is the design contract for implementation stories. A story that draws UI cites a section here
 and meets it. It was extracted from the 2026-10-03 design doc and pruned to the
 [first-version spec](../../.scratch/first-version/spec.md). Vocabulary comes from
-[CONTEXT.md](../../CONTEXT.md): say Done, Nudging, Missed, Strength and Urgency, not synonyms.
+[GLOSSARY.md](../../GLOSSARY.md): say Done, Nudging, Missed, Strength and Urgency, not synonyms.
 
 **Precedence.** This doc owns tokens and rules: colors, type, spacing, shapes, and "one color, one
 meaning". The [mockup](../mockups/2026-10-04-first-version/index.html) owns how each screen is

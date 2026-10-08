@@ -10,7 +10,7 @@ I have reminders that matter, and an ordinary iOS reminder gets one notification
 
 An iPhone app (iOS 26.1 and later) where each reminder has a strength (Gentle, Firm or Relentless). Once a reminder comes due it nudges on that strength's escalating schedule: ordinary notifications first, then Time Sensitive notifications, then AlarmKit alarms for Firm and Relentless. A per-reminder **Break through Focus** switch controls whether the nudges may get through a Focus. The alarm offers the system **Stop** (silence, and the ladder moves along) and an **Open** button that opens the reminder, where **Done** is the only way to end the nudging. The screens are as drawn in the mockup: Now, My Day, Tags and a minimal Settings.
 
-Vocabulary is in `CONTEXT.md`. The Stop and Open decision is in ADR 0001. The visual design is `docs/mockups/2026-10-02-ux-review-changes/` where this spec doesn't differ from it.
+Vocabulary is in `GLOSSARY.md`. The Stop and Open decision is in ADR 0001. The visual design is `docs/mockups/2026-10-02-ux-review-changes/` where this spec doesn't differ from it.
 
 ## User Stories
 

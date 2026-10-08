@@ -8,7 +8,7 @@ Open [`index.html`](index.html) in a browser. It's a single file with no depende
 it shows a phone with **Mockup controls** beside it, in portrait or landscape. On a phone the app
 fills the screen and the controls are below it.
 
-This mockup matches the decisions in [CONTEXT.md](../../../CONTEXT.md),
+This mockup matches the decisions in [GLOSSARY.md](../../../GLOSSARY.md),
 [ADR 0001](../../adr/0001-stop-silences-done-is-deliberate.md) and the
 [first-version spec](../../../.scratch/first-version/spec.md). It was made from the
 [2026-10-02 mockup](../archive/2026-10-02-ux-review-changes/README.md), which is archived and

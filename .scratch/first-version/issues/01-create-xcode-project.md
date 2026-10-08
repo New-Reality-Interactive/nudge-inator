@@ -2,7 +2,7 @@ Status: ready-for-agent
 
 # Create the Xcode project with a scripted test run
 
-Spec: `../spec.md`. Glossary: `/CONTEXT.md`.
+Spec: `../spec.md`. Glossary: `/GLOSSARY.md`.
 
 ## What to build
 

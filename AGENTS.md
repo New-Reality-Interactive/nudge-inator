@@ -10,7 +10,7 @@ Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `
 
 ### Domain docs
 
-Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+Single-context: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
 
 ### Design system
 
@@ -31,7 +31,7 @@ Nudge-inator is a Swift 6, SwiftUI, iPhone-only app (iOS 26.1 minimum) with a wi
 
 - `Packages/NudgeEngine` is pure Swift: no Apple framework imports, `Foundation` at most. `scripts/test.sh` enforces this. Anything that touches Apple frameworks (AlarmKit, store, adapters) lives in the app target, behind a type the engine can use without importing the framework.
 - `Packages/NudgeShared` holds only code that both the app and the widget extension compile (AlarmKit `AlarmMetadata`, the Open intent).
-- Use the domain terms in `CONTEXT.md` for type and function names. Don't invent synonyms.
+- Use the domain terms in `GLOSSARY.md` for type and function names. Don't invent synonyms.
 
 ### Swift
 
