@@ -34,6 +34,9 @@ Docs: <https://developer.apple.com/documentation/alarmkit/scheduling-an-alarm-wi
 - [x] `NudgeEngine` has no `import` of any Apple framework (`Foundation` only, if needed), checked by a grep in `scripts/test.sh` or a comment-documented rule.
 - [x] `Info.plist` has a non-empty `NSAlarmKitUsageDescription`.
 - [x] README states the one command to run tests.
+- [x] The app target bundles the Icon Composer file `App/AppIcon.icon`, and `ASSETCATALOG_COMPILER_APPICON_NAME` in `project.yml` is `AppIcon`. There is no `AppIcon` asset catalog.
+- [x] On the iPhone 15 simulator, the icon looks right in the Default, Dark, Clear and Tinted Home Screen appearances.
+- [ ] Device check: the icon looks right on a physical iPhone in all four appearances, in a folder and at small sizes (Spotlight, Settings). Record the iOS version.
 
 ## Deferred: entitlements
 
