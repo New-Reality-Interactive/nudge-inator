@@ -7,6 +7,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "6.0"
+    DEVELOPMENT_TEAM: B9QHGF334U
+    CODE_SIGN_STYLE: Automatic
     SDKROOT: iphoneos
     SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
     SUPPORTS_MACCATALYST: NO
@@ -28,6 +30,10 @@ targets:
         embed: true
     entitlements:
       path: App/NudgeInator.entitlements
+      properties:
+        com.apple.developer.usernotifications.time-sensitive: true
+        com.apple.security.application-groups:
+          - group.com.newrealityinteractive.nudgeinator
     info:
       path: App/Info.plist
       properties:
@@ -48,6 +54,9 @@ targets:
       - package: NudgeShared
     entitlements:
       path: NudgeWidgets/NudgeWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.newrealityinteractive.nudgeinator
     info:
       path: NudgeWidgets/Info.plist
       properties:

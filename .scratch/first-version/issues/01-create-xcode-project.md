@@ -27,7 +27,7 @@ Docs: <https://developer.apple.com/documentation/alarmkit/scheduling-an-alarm-wi
 
 - [ ] `xcodebuild -scheme <app> -destination 'generic/platform=iOS' build` succeeds.
 - [x] Deployment target is iOS 26.1 and the device family is iPhone only.
-- [ ] The widget extension target builds and is embedded in the app; the app and extension share an App Group (entitlement present in both).
+- [x] The widget extension target builds and is embedded in the app; the app and extension share an App Group (entitlement present in both).
 - [x] The shared module compiles into both targets, and `scripts/test.sh` also builds the extension.
 - [x] A placeholder test in the package and one in the app test target both exist and pass.
 - [x] `scripts/test.sh` from a clean checkout runs both and exits 0; with a deliberately failing test it exits non-zero (check, then revert).
@@ -38,8 +38,10 @@ Docs: <https://developer.apple.com/documentation/alarmkit/scheduling-an-alarm-wi
 - [x] On the iPhone 15 simulator, the icon looks right in the Default, Dark, Clear and Tinted Home Screen appearances.
 - [ ] Device check: the icon looks right on a physical iPhone in all four appearances, in a folder and at small sizes (Spotlight, Settings). Record the iOS version.
 
-## Deferred: entitlements
+## Entitlements and signing
 
-The App Group and Time Sensitive entitlements are not added yet. They wait on approval into the Apple Developer Program. Until then both `.entitlements` files stay empty, and the "entitlement present in both" criterion above stays open. Apple's docs don't say whether these capabilities work with a free Personal Team, so check that on a device once approved. When approved: add `com.apple.security.application-groups` (`group.com.newrealityinteractive.nudgeinator`) to both entitlements files and `com.apple.developer.usernotifications.time-sensitive` to the app's, then tick the criterion.
+Added after approval into the Apple Developer Program (team `B9QHGF334U`, New Reality Interactive, LLC). `project.yml` declares the entitlements under each target's `entitlements.properties`, because `xcodegen generate` rewrites the `.entitlements` files from there: `com.apple.security.application-groups` (`group.com.newrealityinteractive.nudgeinator`) in the app and the extension, and `com.apple.developer.usernotifications.time-sensitive` in the app. Signing is automatic with `DEVELOPMENT_TEAM` set in the project's base settings.
+
+The signed `generic/platform=iOS` build (first criterion) still fails with "Your team has no devices from which to generate a provisioning profile". An unsigned build (`CODE_SIGNING_ALLOWED=NO`) succeeds, so signing is the only blocker. To close it: connect the iPhone, turn on Developer Mode, open Xcode so the device is registered, then run the build with `-allowProvisioningUpdates` so Xcode registers the App IDs, the App Group and Time Sensitive. Apple's docs don't say how these capabilities behave on a device until then, so the device check covers them too.
 
 Blocked by: none
