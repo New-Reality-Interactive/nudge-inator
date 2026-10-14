@@ -12,12 +12,20 @@ _Avoid_: Task, alarm
 One due instance of a reminder. A reminder has at most one open occurrence at a time.
 _Avoid_: Instance, run
 
+**Repeat**:
+How often a reminder comes due again: Never, one of six presets, or a custom rule in the RRULE format.
+_Avoid_: Recurrence (RRULE is the stored format, not a word for the screen)
+
 **Nudge**:
 One alert sent while an occurrence is open: an alarm or a notification.
 _Avoid_: Ping, alert
 
 **Nudging**:
 The state of an occurrence that has come due and is not yet done.
+
+**Locked**:
+The state of a Nudging reminder's due time, repeat, strength and Break through Focus. They can't be edited until the occurrence closes. Title, notes and tags stay editable.
+_Avoid_: Frozen, read-only
 
 **Done**:
 The explicit act that closes an occurrence. Stopping an alarm does not mean Done; it only silences that nudge.

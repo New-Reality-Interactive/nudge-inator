@@ -43,7 +43,7 @@ API facts to build the spike with (checked against Apple's docs, Oct 2026):
 - [ ] B: written answer "Open silences / does not silence the ring", and, if it does not, whether `stop(id:)` inside the intent silences it.
 - [ ] C: written answer for both locked cases (after first unlock; before first unlock), describing what the person sees and whether the app opens on the reminder.
 - [ ] D, E and F: yes/no with notes. D records whether the extension made any difference (if not, say so; the extension stays anyway, decided in ticket 01).
-- [ ] The answers are summarised at the top of `## Answer` in a form tickets 14, 18 and 19 can quote (chain length recommendation, Open-intent behaviour, locked-phone behaviour).
+- [ ] The answers are summarised at the top of `## Answer` in a form tickets 15, 19 and 20 can quote (chain length recommendation, Open-intent behaviour, locked-phone behaviour).
 - [ ] Device model and iOS build number recorded, plus whether a simulator pass was tried and what it showed.
 
 Blocked by: 01

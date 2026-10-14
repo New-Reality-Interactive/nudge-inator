@@ -13,7 +13,7 @@ An empty Nudge-inator iPhone app that builds, plus a way to run all unit tests f
 - An app-level unit-test target for the code that does touch Apple frameworks (store, adapters).
 - `scripts/test.sh` runs the package tests (`swift test`) and the app tests (`xcodebuild test` against iOS 26 simulators), prints a pass/fail summary and exits non-zero on any failure. The simulator is chosen by name from an env var with a default, not by a hard-coded UUID. The app tests run against **both** the iOS 26.1 and iOS 26.5 simulators (a list in an env var with that default); a missing runtime is a failure with an install hint.
 - A **widget extension target** (iOS 26, iPhone only), empty for now: no widgets and no Live Activity content. It exists because AlarmKit expects one (see "Extension decision"), and so a later version can add widgets without a project migration.
-- An **App Group** shared by the app and the extension (the store in ticket 16 will live in its container), and a small shared module (framework or package) for code both targets compile: the AlarmKit `AlarmMetadata` type and the Open intent (ticket 19). `NudgeEngine` stays pure and separate.
+- An **App Group** shared by the app and the extension (the store in ticket 17 will live in its container), and a small shared module (framework or package) for code both targets compile: the AlarmKit `AlarmMetadata` type and the Open intent (ticket 20). `NudgeEngine` stays pure and separate.
 - `NSAlarmKitUsageDescription` and the Time Sensitive capability are set up (needed by later tickets).
 - Keep the project definition reproducible: either a checked-in `project.yml` for XcodeGen (installed at `/usr/local/bin/xcodegen`) or a hand-kept `.xcodeproj`. Pick one and note it in a short `README` section.
 

@@ -484,6 +484,14 @@ button.cell:active, a.cell:active { background: var(--tertiary-system-fill); }
 .stepper button { font: var(--title3); letter-spacing: var(--title3-track); border: 0; background: none; min-width: 2.875rem; min-height: 2rem; cursor: pointer; color: var(--label); }
 .stepper button + button { border-left: 1px solid var(--separator); }
 .stepper button:disabled { color: var(--secondary-label); opacity: 0.5; }
+/* A nudging reminder's locked fields (ADR 0002): dimmed, with a lock glyph and the reason as text. */
+.switch:disabled { opacity: 0.5; cursor: default; }
+.seg:disabled { opacity: 0.5; }
+.seg:disabled input { cursor: default; }
+.pill-input:disabled { color: var(--secondary-label); }
+.cell:disabled { cursor: default; }
+.cell:disabled .main { color: var(--secondary-label); }
+.lockglyph { display: inline-flex; vertical-align: -2px; color: var(--secondary-label); }
 
 .pill-input { background: var(--tertiary-system-fill); border: 0; border-radius: 7px; padding: 6px 10px; color: var(--label); max-width: 100%; }
 .plain-input { width: 100%; border: 0; background: none; padding: 0; color: var(--label); }
@@ -873,6 +881,11 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <button type="button" class="cbtn" id="c-onboard">First launch</button>
     </fieldset>
     <fieldset>
+      <legend>Proposed behavior</legend>
+      <label><input type="checkbox" id="c-lockedit"> Lock nudging reminders</label>
+      <p class="why" id="c-lockedit-why"></p>
+    </fieldset>
+    <fieldset>
       <legend>Permissions (iOS Settings)</legend>
       <label><input type="checkbox" id="c-perm-n" checked> Notifications allowed</label>
       <label><input type="checkbox" id="c-perm-a" checked> Alarms allowed</label>
@@ -1190,7 +1203,8 @@ function seed() {
     { id: "r7", tagIds: ["money", "home"], title: "Reply to Alex about the lease", body: "They need an answer before 10.", dtstart: "2026-09-28T08:10", rrule: null, strength: "relentless", status: "ACTIVE", nextOccurrenceAt: null },
     { id: "r2", tagIds: ["health", "morning"], title: "Morning meds", body: "Blue pill + vitamin D", dtstart: "2026-03-01T06:30", rrule: "FREQ=DAILY", strength: "gentle", status: "ACTIVE", nextOccurrenceAt: "2026-09-29T06:30" },
     { id: "r6", tagIds: ["health", "work"], title: "Stretch break", body: null, dtstart: "2026-09-01T10:00", rrule: "FREQ=DAILY", strength: "firm", status: "ACTIVE", nextOccurrenceAt: "2026-09-28T10:00" },
-    { id: "r3", tagIds: ["home"], title: "Water the plants", body: null, dtstart: "2026-03-30T18:00", rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "gentle", breakThrough: false, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T18:00" },
+    // A custom repeat: every 3 days isn't one of the presets.
+    { id: "r3", tagIds: ["home"], title: "Water the plants", body: null, dtstart: "2026-03-29T18:00", rrule: "FREQ=DAILY;INTERVAL=3", repeatCustom: true, strength: "gentle", breakThrough: false, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T18:00" },
     { id: "r4", tagIds: ["money", "home"], title: "Pay rent", body: "Transfer to the landlord's account.", dtstart: "2026-01-01T09:00", rrule: "FREQ=MONTHLY;BYMONTHDAY=1", strength: "relentless", status: "ACTIVE", nextOccurrenceAt: "2026-10-01T09:00" },
     { id: "r5", tagIds: ["health", "appointments"], title: "Dentist appointment", body: "Bring the insurance card.", dtstart: "2026-10-02T13:15", rrule: null, strength: "firm", status: "ACTIVE", nextOccurrenceAt: "2026-10-02T13:15" },
     { id: "r8", tagIds: ["money", "travel"], title: "Renew passport", body: null, dtstart: "2026-09-10T09:00", rrule: null, strength: "firm", status: "COMPLETED", nextOccurrenceAt: null },
@@ -1212,8 +1226,8 @@ function seed() {
       events: [ev("SCHEDULED", "2026-09-21T07:30"), ev("NUDGE_SENT", "2026-09-21T07:30", { attempt: 1, level: 0, priority: 3 }), ev("ACKED", "2026-09-21T07:52")] },
     { id: "o5", reminderId: "r2", scheduledFor: "2026-09-27T06:30", level: 0, attempts: 1, state: "ACKED", closedAt: "2026-09-27T07:11" },
     { id: "o7", reminderId: "r6", scheduledFor: "2026-09-27T14:00", level: 0, attempts: 1, state: "ACKED", closedAt: "2026-09-27T14:06" },
-    { id: "o8", reminderId: "r3", scheduledFor: "2026-09-24T18:00", level: 0, attempts: 1, state: "ACKED", closedAt: "2026-09-24T18:21" },
-    { id: "o9", reminderId: "r3", scheduledFor: "2026-09-21T18:00", level: 4, attempts: 20, state: "MISSED", closedAt: "2026-09-22T11:00", closeReason: "cap" },
+    { id: "o8", reminderId: "r3", scheduledFor: "2026-09-25T18:00", level: 0, attempts: 1, state: "ACKED", closedAt: "2026-09-25T18:21" },
+    { id: "o9", reminderId: "r3", scheduledFor: "2026-09-22T18:00", level: 4, attempts: 20, state: "MISSED", closedAt: "2026-09-23T11:00", closeReason: "cap" },
     { id: "o10", reminderId: "r4", scheduledFor: "2026-09-01T09:00", level: 2, attempts: 3, state: "ACKED", closedAt: "2026-09-01T09:16",
       events: [ev("SCHEDULED", "2026-09-01T09:00"), ev("NUDGE_SENT", "2026-09-01T09:00", { attempt: 1, level: 0, priority: 4 }), ev("NUDGE_SENT", "2026-09-01T09:10", { attempt: 2, level: 1, priority: 4 }), ev("NUDGE_SENT", "2026-09-01T09:15", { attempt: 3, level: 2, priority: 4 }), ev("ACKED", "2026-09-01T09:16")] },
     { id: "o12", reminderId: "r11", scheduledFor: "2026-09-28T07:00", level: 0, attempts: 1, state: "ACKED", closedAt: "2026-09-28T07:18",
@@ -1233,7 +1247,7 @@ const tagsOf = (r) => sortTags(r.tagIds.map(tagById).filter(Boolean));
 function tagLine(r, hl = []) {
   return tagsOf(r).map((t) => (hl.includes(t.id) ? `<mark>#${esc(t.name)}</mark>` : `#${esc(t.name)}`)).join(" ");
 }
-/* Tag-name rules: brief §3, Limits and defaults, "Tag name". */
+/* Tag names: one word, shown as "#name", unique ignoring case (GLOSSARY.md, Tag). */
 // Slices by whole characters, so an emoji is never cut in half.
 const cleanTag = (s) => s.trim().replace(/^#/, "").replace(/\s+/g, "-").replace(/^-+|-+$/g, "");
 /* As you type: one leading # is dropped and spaces become hyphens, keeping the caret in place. */
@@ -1265,14 +1279,21 @@ function parseRRule(s) {
   const r = { freq: p.FREQ, interval: Number(p.INTERVAL || 1) };
   if (p.BYDAY) r.byday = p.BYDAY.split(",");
   if (p.BYMONTHDAY) r.bymonthday = Number(p.BYMONTHDAY);
+  if (p.BYMONTH) r.bymonth = Number(p.BYMONTH);
+  if (p.COUNT) r.count = Number(p.COUNT);
+  // UNTIL as a date (YYYYMMDD): the last day it can fall on, inclusive.
+  if (p.UNTIL) r.until = new Date(Number(p.UNTIL.slice(0, 4)), Number(p.UNTIL.slice(4, 6)) - 1, Number(p.UNTIL.slice(6, 8)));
   if (p.BYHOUR) r.byhour = p.BYHOUR.split(",").map(Number);
   if (p.BYMINUTE) r.byminute = p.BYMINUTE.split(",").map(Number);
   // BYTIME: the mockup's own field for Custom's "several times a day", as HH:MM.
   if (p.BYTIME) r.bytime = p.BYTIME.split(",");
   return r;
 }
-function dayMatches(r, start, d) {
+/* `clamp` is for the presets: a day the month doesn't have (the 31st, or 29 February) falls on its
+   last day. A custom rule follows RFC 5545 instead and skips that month (ADR 0003). */
+function dayMatches(r, start, d, clamp = true) {
   const monthDiff = (x) => (x.getFullYear() - start.getFullYear()) * 12 + x.getMonth() - start.getMonth();
+  const onDay = (want) => d.getDate() === (want === -1 ? lastDay(d) : clamp ? Math.min(want, lastDay(d)) : want);
   switch (r.freq) {
     case "DAILY": return dayDiff(start, d) % r.interval === 0;
     case "WEEKLY": {
@@ -1280,18 +1301,39 @@ function dayMatches(r, start, d) {
       const days = r.byday ?? [BYDAY[start.getDay()]];
       return (dayDiff(monday(start), monday(d)) / 7) % r.interval === 0 && days.includes(BYDAY[d.getDay()]);
     }
-    // A day the month doesn't have (the 31st, or 29 February) falls on its last day (brief §3, Reminder).
-    case "MONTHLY": return monthDiff(d) % r.interval === 0 && d.getDate() === Math.min(r.bymonthday ?? start.getDate(), lastDay(d));
-    default: return (d.getFullYear() - start.getFullYear()) % r.interval === 0 && d.getMonth() === start.getMonth() && d.getDate() === Math.min(start.getDate(), lastDay(d));
+    case "MONTHLY": {
+      if (monthDiff(d) % r.interval !== 0) return false;
+      // "4MO" is the fourth Monday, "-1MO" the last Monday.
+      const nth = r.byday && /^(-?\d)(\w\w)$/.exec(r.byday[0]);
+      if (nth) return BYDAY[d.getDay()] === nth[2] && (nth[1] === "-1" ? d.getDate() + 7 > lastDay(d) : Math.ceil(d.getDate() / 7) === Number(nth[1]));
+      return onDay(r.bymonthday ?? start.getDate());
+    }
+    default: return (d.getFullYear() - start.getFullYear()) % r.interval === 0 && d.getMonth() === (r.bymonth ?? start.getMonth() + 1) - 1 && onDay(r.bymonthday ?? start.getDate());
   }
 }
 function lastDay(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); }
-function timesOnDay(rem, day) {
+/* When a rule with COUNT ends: its last time. Cached, since it walks the days from the start. */
+const countEnds = new Map();
+function countEnd(rem, r) {
+  const key = `${rem.dtstart}|${rem.rrule}|${!rem.repeatCustom}`;
+  if (countEnds.has(key)) return countEnds.get(key);
+  const start = L(rem.dtstart), day = dateOnly(start);
+  let n = 0, last = null;
+  // Long enough for the longest rule the Custom page allows: every 10 years, 30 times.
+  for (let i = 0; i < 366 * (MAX_EVERY.YEARLY * COUNT_MAX + 1) && n < r.count; i++, day.setDate(day.getDate() + 1)) {
+    for (const t of timesOnDay(rem, day, false)) { if (n < r.count) { last = t; n++; } }
+  }
+  countEnds.set(key, last);
+  return last;
+}
+function timesOnDay(rem, day, limit = true) {
   const start = L(rem.dtstart);
   if (!rem.rrule) return dayDiff(start, day) === 0 ? [start] : [];
   if (dateOnly(day) < dateOnly(start)) return [];
   const r = parseRRule(rem.rrule);
-  if (!dayMatches(r, start, day)) return [];
+  if (!dayMatches(r, start, day, !rem.repeatCustom)) return [];
+  if (limit && r.until && dateOnly(day) > r.until) return [];
+  if (limit && r.count) { const end = countEnd(rem, r); if (!end || dateOnly(day) > dateOnly(end)) return []; }
   const hours = r.byhour ?? [start.getHours()], mins = r.byminute ?? [start.getMinutes()];
   const hms = r.bytime ? r.bytime.map((t) => t.split(":").map(Number)) : hours.flatMap((h) => mins.map((m) => [h, m]));
   return hms.map(([h, m]) => { const d = new Date(day); d.setHours(h, m, 0, 0); return d; })
@@ -1301,7 +1343,8 @@ function nextOccurrence(rem, after = NOW) {
   const start = L(rem.dtstart);
   if (!rem.rrule) return start > after ? start : null;
   const day = dateOnly(start > after ? start : after);
-  for (let i = 0; i < 800; i++) {
+  // Long enough for a custom "every 10 years" rule.
+  for (let i = 0; i < 366 * 11; i++) {
     const t = timesOnDay(rem, day).find((x) => x > after);
     if (t) return t;
     day.setDate(day.getDate() + 1);
@@ -1315,19 +1358,36 @@ function scheduleText(rem) {
   const times = r.bytime ? listJoin(r.bytime.map((t) => hmOf(t))) : r.byhour ? listJoin(r.byhour.flatMap((h) => (r.byminute ?? [s.getMinutes()]).map((m) => hmOf(`${pad(h)}:${pad(m)}`)))) : hm(s);
   // "Every day", or "Every 2 days" when the interval is more than 1.
   const every = (unit) => (n > 1 ? `Every ${n} ${unit}s` : `Every ${unit}`);
-  switch (r.freq) {
-    case "DAILY": return `${every("day")} at ${times}`;
-    case "WEEKLY": {
-      const days = r.byday ?? [BYDAY[s.getDay()]];
-      if (n === 1 && days.join() === "MO,TU,WE,TH,FR") return `Every weekday at ${times}`;
-      const names = listJoin(days.map((d) => LONGDAY[BYDAY.indexOf(d)]));
-      return n > 1 ? `${every("week")} on ${names} at ${times}` : `Every ${names} at ${times}`;
+  // A preset moves a missing day to the month's last day; a custom rule skips that month (ADR 0003).
+  const missing = (what) => (rem.repeatCustom ? ` (skipped in ${what} without one)` : ` (the last day in ${what} without one)`);
+  const ends = r.count ? `, ${r.count} times` : r.until ? `, until ${shortDate(r.until)}` : "";
+  return `${repeatPhrase()} at ${times}${ends}`;
+  function repeatPhrase() {
+    switch (r.freq) {
+      case "DAILY": return every("day");
+      case "WEEKLY": {
+        const days = (r.byday ?? [BYDAY[s.getDay()]]).slice().sort((a, b) => WEEK_ORDER.indexOf(a) - WEEK_ORDER.indexOf(b));
+        if (n === 1 && days.join() === "MO,TU,WE,TH,FR") return "Every weekday";
+        const names = listJoin(days.map((d) => LONGDAY[BYDAY.indexOf(d)]));
+        return n > 1 ? `${every("week")} on ${names}` : `Every ${names}`;
+      }
+      case "MONTHLY": {
+        const nth = r.byday && /^(-?\d)(\w\w)$/.exec(r.byday[0]);
+        if (nth) return `${every("month")} on the ${NTH_WORD[nth[1]]} ${LONGDAY[BYDAY.indexOf(nth[2])]}`;
+        if (r.bymonthday === -1) return `${every("month")} on the last day`;
+        const md = r.bymonthday ?? s.getDate();
+        return `${every("month")} on the ${ord(md)}${md > 28 ? missing("months") : ""}`;
+      }
+      default: {
+        const m = (r.bymonth ?? s.getMonth() + 1) - 1, md = r.bymonthday ?? s.getDate();
+        return `${every("year")} on ${md} ${LONGMON[m]}${m === 1 && md === 29 ? (rem.repeatCustom ? " (skipped in years without one)" : " (28 February in years without one)") : ""}`;
+      }
     }
-    // A day some months don't have falls on the last day (brief §3, Reminder). The wording is true for any interval.
-    case "MONTHLY": { const md = r.bymonthday ?? s.getDate(); return `${every("month")} on the ${ord(md)}${md > 28 ? " (the last day in months without one)" : ""} at ${times}`; }
-    default: return `${every("year")} on ${s.getDate()} ${LONGMON[s.getMonth()]}${s.getMonth() === 1 && s.getDate() === 29 ? " (28 February in years without one)" : ""} at ${times}`;
   }
 }
+/* Weekdays in the order the Custom page lists them, Monday first. */
+const WEEK_ORDER = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+const NTH_WORD = { 1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth", "-1": "last" };
 /* A time today: what happened to it, or what will. */
 function itemStatus(r, at, occ) {
   if (occ) return occ.state;
@@ -1660,9 +1720,10 @@ const isAX = () => (document.documentElement.dataset.type || "").startsWith("ax"
 /* A choice of a few options: a segmented control, or at the accessibility sizes a menu (SwiftUI's
    Picker with the .menu style), because a segmented control stays on one line and would cut its
    labels off. `attr` is the data attribute the form reads. */
-function choice({ id, name, labelId, options, value, attr = "", style = "" }) {
-  if (isAX()) return `<select class="menu" id="${id}" name="${name}" ${attr} aria-labelledby="${labelId}">${options.map(([k, t]) => `<option value="${k}" ${k === value ? "selected" : ""}>${t}</option>`).join("")}</select>`;
-  return `<fieldset class="seg" aria-labelledby="${labelId}"${style ? ` style="${style}"` : ""}>${options.map(([k, t]) => `<label><input type="radio" name="${name}" ${attr} value="${k}" ${k === value ? "checked" : ""}><span>${t}</span></label>`).join("")}</fieldset>`;
+function choice({ id, name, labelId, options, value, attr = "", style = "", disabled = false }) {
+  const off = disabled ? " disabled" : "";
+  if (isAX()) return `<select class="menu" id="${id}" name="${name}" ${attr} aria-labelledby="${labelId}"${off}>${options.map(([k, t]) => `<option value="${k}" ${k === value ? "selected" : ""}>${t}</option>`).join("")}</select>`;
+  return `<fieldset class="seg" aria-labelledby="${labelId}"${style ? ` style="${style}"` : ""}${off}>${options.map(([k, t]) => `<label><input type="radio" name="${name}" ${attr} value="${k}" ${k === value ? "checked" : ""}><span>${t}</span></label>`).join("")}</fieldset>`;
 }
 /* A choice inside a list section: the segmented control fills the row; the menu sits in a row with
    its label, as in a Form. */
@@ -1766,7 +1827,7 @@ function viewRem(id) {
     <li><div class="cell"><span class="main">Repeats</span><span class="trail">${esc(scheduleText(r))}</span></div></li>
     <li><div class="cell"><span class="main">Next</span><span class="trail">${nextText}</span></div></li>
     <li><div class="cell"><span class="main">Break Through Focus</span><span class="trail">${btOf(r) ? "On" : "Off"}</span></div></li>
-  </ul></div>
+  </ul>${lockedNow(id) ? `<p class="sec-f">${LOCK_GLYPH} ${LOCK_NOTE}</p>` : ""}</div>
   <h2 class="sec-h"><span>How It Nudges</span></h2>
   <div class="sec"><ol class="list ladder" aria-label="Nudge schedule">${rows.map((x) => ladderRow(x, btOf(r))).join("")}${takeoverRow(sim)}</ol>
     <p class="sec-f">${sim.takeover ? `The next one takes over after ${fmtDur(sim.giveUpAt)}, at nudge ${sim.nudges.length}` : `Gives up after ${fmtDur(sim.giveUpAt)}, at nudge ${sim.nudges.length}`} (limit: ${cap.maxAttempts} nudges or ${fmtDur(cap.maxDurationMinutes)}). Stopping an alarm only quiets it: the next nudge still comes, and only Done ends the reminder.</p>
@@ -1838,7 +1899,7 @@ const PRESETS = [
   ["never", "Never"], ["daily", "Every Day"], ["weekdays", "Every Weekday"], ["weekly", "Every Week"],
   ["biweekly", "Every 2 Weeks"], ["monthly", "Every Month"], ["yearly", "Every Year"],
 ];
-/* A one-off can't be saved with a start time that has passed (brief §3, Edit). The one exception
+/* A one-off can't be saved with a start time that has passed. The one exception
    is an edit to a reminder that was already a one-off and keeps its time, such as a rename. It
    doesn't cover resuming (which needs a new time) or turning a repeat into a one-off. */
 function pastOneOff(x) {
@@ -1849,6 +1910,7 @@ function pastOneOff(x) {
 function ruleFor(x) {
   const d = L(x.dtstart);
   switch (x.repeat) {
+    case "custom": return customRule(x);
     case "daily": return "FREQ=DAILY";
     case "weekdays": return "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR";
     case "weekly": return `FREQ=WEEKLY;BYDAY=${BYDAY[d.getDay()]}`;
@@ -1865,12 +1927,87 @@ function draftFor(r) {
     dtstart: "2026-09-28T09:00", repeat: "never", strength: "firm", breakThrough: true };
   if (!r) return base;
   const x = { ...base, title: r.title, body: r.body || "", tagIds: [...r.tagIds], dtstart: r.dtstart.slice(0, 16), strength: r.strength, breakThrough: btOf(r) };
-  // Every rule the app stores is one of the presets.
-  const preset = r.rrule && PRESETS.find(([k]) => k !== "never" && ruleFor({ ...x, repeat: k }) === r.rrule);
-  x.repeat = preset ? preset[0] : "never";
+  const preset = r.rrule && !r.repeatCustom && PRESETS.find(([k]) => k !== "never" && ruleFor({ ...x, repeat: k }) === r.rrule);
+  x.repeat = preset ? preset[0] : r.rrule ? "custom" : "never";
+  if (x.repeat === "custom") x.custom = customFromRule(r.rrule, x);
   return x;
 }
-const repeatLabel = (x) => PRESETS.find(([k]) => k === x.repeat)[1];
+const repeatLabel = (x) => (x.repeat === "custom" ? "Custom" : PRESETS.find(([k]) => k === x.repeat)[1]);
+/* The draft as a reminder, for the schedule text, the next times and How It Nudges. */
+const draftRem = (x) => ({ dtstart: x.dtstart, rrule: ruleFor(x), repeatCustom: x.repeat === "custom" });
+
+/* ---- Custom repeat ----
+   The Custom page builds a rule from plain choices: how often, which days, and when it ends. The
+   person never sees RRULE; the app stores the rule (ADR 0003). Everything that depends on a date
+   (the day of the month, the nth weekday, the day of the year) comes from the start date, so
+   there's nothing extra to pick. */
+const FREQS = [["DAILY", "Daily"], ["WEEKLY", "Weekly"], ["MONTHLY", "Monthly"], ["YEARLY", "Yearly"]];
+const FREQ_UNIT = { DAILY: "day", WEEKLY: "week", MONTHLY: "month", YEARLY: "year" };
+const MAX_EVERY = { DAILY: 30, WEEKLY: 12, MONTHLY: 12, YEARLY: 10 };
+const COUNT_MIN = 2, COUNT_MAX = 30;
+const dateField = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+/* The ways a monthly repeat can fall, given the start date: on its day, on its nth weekday, on the
+   last such weekday (only when the start is in the month's last week), or on the last day. */
+function monthlyOptions(d) {
+  const day = BYDAY[d.getDay()], name = LONGDAY[d.getDay()], nth = Math.ceil(d.getDate() / 7);
+  const opts = [["day", `On the ${ord(d.getDate())}`, `BYMONTHDAY=${d.getDate()}`]];
+  if (nth <= 4) opts.push(["weekday", `On the ${NTH_WORD[nth]} ${name}`, `BYDAY=${nth}${day}`]);
+  if (d.getDate() + 7 > lastDay(d)) opts.push(["lastweekday", `On the last ${name}`, `BYDAY=-1${day}`]);
+  opts.push(["last", "On the last day", "BYMONTHDAY=-1"]);
+  return opts;
+}
+/* A custom repeat that starts out as the chosen preset, so Custom begins from what's there. */
+function customFrom(x, preset = x.repeat) {
+  const d = L(x.dtstart), until = new Date(d); until.setMonth(until.getMonth() + 3);
+  const c = { freq: "WEEKLY", interval: 1, days: [BYDAY[d.getDay()]], monthly: "day", ends: "never", count: 10, until: dateField(until) };
+  const seed = { daily: { freq: "DAILY" }, weekdays: { days: ["MO", "TU", "WE", "TH", "FR"] }, biweekly: { interval: 2 }, monthly: { freq: "MONTHLY" }, yearly: { freq: "YEARLY" } }[preset];
+  return { ...c, ...seed };
+}
+function customFromRule(rule, x) {
+  const r = parseRRule(rule), c = customFrom(x, "never");
+  c.freq = r.freq; c.interval = r.interval;
+  if (r.freq === "WEEKLY" && r.byday) c.days = r.byday;
+  if (r.freq === "MONTHLY") {
+    const nth = r.byday && /^(-?\d)/.exec(r.byday[0]);
+    c.monthly = nth ? (nth[1] === "-1" ? "lastweekday" : "weekday") : r.bymonthday === -1 ? "last" : "day";
+  }
+  if (r.count) { c.ends = "count"; c.count = r.count; }
+  if (r.until) { c.ends = "until"; c.until = dateField(r.until); }
+  return c;
+}
+function customRule(x) {
+  const c = x.custom, d = L(x.dtstart), parts = [`FREQ=${c.freq}`];
+  if (c.interval > 1) parts.push(`INTERVAL=${c.interval}`);
+  if (c.freq === "WEEKLY") parts.push(`BYDAY=${WEEK_ORDER.filter((k) => c.days.includes(k)).join(",")}`);
+  // A choice the new start date doesn't offer (the last Monday, say) falls back to the day of the month.
+  if (c.freq === "MONTHLY") { const opts = monthlyOptions(d); parts.push((opts.find(([k]) => k === c.monthly) || opts[0])[2]); }
+  if (c.freq === "YEARLY") parts.push(`BYMONTH=${d.getMonth() + 1};BYMONTHDAY=${d.getDate()}`);
+  if (c.ends === "count") parts.push(`COUNT=${c.count}`);
+  if (c.ends === "until") parts.push(`UNTIL=${c.until.replaceAll("-", "")}`);
+  return parts.join(";");
+}
+/* The next `n` times a draft falls due, from now or its start. */
+function upcoming(rem, n) {
+  const out = [];
+  let after = new Date(Math.max(NOW, L(rem.dtstart)) - 1);
+  while (out.length < n) { const t = nextOccurrence(rem, after); if (!t) break; out.push(t); after = t; }
+  return out;
+}
+const untilTooEarly = (x) => x.repeat === "custom" && x.custom.ends === "until" && x.custom.until < x.dtstart.slice(0, 10);
+/* A custom repeat whose end has already passed, so it would never fall due again. */
+const noTimesLeft = (x) => x.repeat === "custom" && !untilTooEarly(x) && !upcoming(draftRem(x), 1).length;
+const repeatBlocks = (x) => untilTooEarly(x) || noTimesLeft(x);
+
+/* ---- Locked while nudging (ADR 0002) ---- */
+const LOCK_NOTE = "Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them.";
+const LOCK_GLYPH = `<span class="lockglyph" aria-hidden="true">${I("lock", 15)}</span>`;
+const nudgingNow = (id) => !!id && openOccs().some((o) => o.reminderId === id);
+/* The lock is behind the "Lock nudging reminders" mockup control, so the form can be compared with
+   and without it. Off, a nudging reminder edits as before: changes apply from the next nudge, and a
+   one-off's new time closes it as skipped. */
+let lockOn = false;
+const lockedNow = (id) => lockOn && nudgingNow(id);
+
 function openEditor(editId = null) {
   const r = editId && remById(editId);
   // newTags are tags made in this sheet; they're kept only if it's saved with them chosen.
@@ -1903,14 +2040,18 @@ function sheetNav(left, title, right) {
 function editorMain(sh) {
   const x = sh.draft, editing = !!sh.editId, r = editing && remById(sh.editId);
   const cap = DEFAULT_CAP;
-  const sum = nudgeSummary(x.strength, cap, takeoverAfter({ dtstart: x.dtstart, rrule: ruleFor(x) }), x.breakThrough);
-  const o = editing && openOccs().find((y) => y.reminderId === r.id);
-  const canSave = x.title.trim().length > 0 && !pastOneOff(x);
+  const sum = nudgeSummary(x.strength, cap, takeoverAfter(draftRem(x)), x.breakThrough);
+  // While it's nudging, the start, repeat, strength and switch are locked (ADR 0002). Title, notes
+  // and tags stay editable.
+  const locked = editing && lockedNow(r.id);
+  const o = editing && !locked && openOccs().find((y) => y.reminderId === r.id);
+  const lock = (ids = "") => (locked ? ` disabled aria-describedby="${`${ids} f-lock-h`.trim()}"` : ids ? ` aria-describedby="${ids}"` : "");
+  const glyph = locked ? ` ${LOCK_GLYPH}` : "";
+  const canSave = x.title.trim().length > 0 && !pastOneOff(x) && !repeatBlocks(x);
   const confirm = confirmButton("data-sheet-save", editing ? "Save" : "Add", canSave);
-  // While it's nudging, the form says when each change applies, and warns when saving would close it.
-  const closes = o && closesOnEdit(o, r, x.dtstart);
-  const closeNote = { time: "Its time changed, so saving closes this one as skipped." }[closes];
-  const editNote = `<p class="sec-f" style="margin:0 32px 14px">${o ? "This reminder is nudging now. " : ""}A new schedule applies from the next time it's due. A new strength or Break Through Focus setting applies from the next nudge${o ? `, and the nudge count carries on from ${o.attempts}` : ""}.${closeNote ? ` <strong>${closeNote}</strong>` : ""}</p>`;
+  const editNote = locked
+    ? `<p class="sec-f" id="f-lock-h" style="margin:0 32px 14px">${LOCK_GLYPH} <strong>Nudging now.</strong> ${LOCK_NOTE} A new title shows from the next nudge.</p>`
+    : unlockedNote(o, o && closesOnEdit(o, r, x.dtstart));
   const gentle = x.strength === "gentle";
   const btText = x.breakThrough
     ? `High nudges are Time Sensitive${gentle ? "" : " and Urgent nudges ring as alarms"}, so a Focus can't hold them.${gentle ? " Gentle never reaches Urgent, so it never rings." : ""}`
@@ -1925,15 +2066,15 @@ function editorMain(sh) {
     </ul><p class="sec-f" id="f-body-h">${canSave ? "" : "Add a title to save. "}Notes and tags stay in the app. Notifications and alarms show the title, not these.</p></div>
 
     <div class="sec"><ul class="list">
-      <li><div class="formrow"><label for="f-dt">Starts</label><input type="datetime-local" class="pill-input" id="f-dt" data-f="dtstart" value="${esc(x.dtstart)}" aria-describedby="f-dt-h"></div></li>
-      <li><button type="button" class="cell" data-sheet-page="repeat"><span class="main">Repeat</span><span class="trail">${esc(repeatLabel(x))}</span>${chev}</button></li>
-    </ul>${pastOneOff(x) ? `<p class="errtext" role="alert">This time has passed. Choose a later time.</p>` : ""}<p class="sec-f" id="f-dt-h">${scheduleText({ dtstart: x.dtstart, rrule: ruleFor(x) })}.</p></div>
+      <li><div class="formrow"><label for="f-dt">Starts${glyph}</label><input type="datetime-local" class="pill-input" id="f-dt" data-f="dtstart" value="${esc(x.dtstart)}"${lock("f-dt-h")}></div></li>
+      <li><button type="button" class="cell" data-sheet-page="repeat"${lock()}><span class="main">Repeat</span><span class="trail">${esc(repeatLabel(x))}${glyph}</span>${locked ? "" : chev}</button></li>
+    </ul>${pastOneOff(x) ? `<p class="errtext" role="alert">This time has passed. Choose a later time.</p>` : ""}${untilTooEarly(x) ? `<p class="errtext" role="alert">The repeat ends before it starts. Change its end date.</p>` : ""}${noTimesLeft(x) ? `<p class="errtext" role="alert">The repeat has already ended. Change when it ends.</p>` : ""}<p class="sec-f" id="f-dt-h">${esc(scheduleText(draftRem(x)))}.</p></div>
 
-    <h3 class="sec-h" id="l-strength">Strength</h3>
-    <div class="sec">${choiceRow("Strength", { id: "f-strength", name: "strength", labelId: "l-strength", attr: 'data-f="strength"', options: Object.keys(PROFILES).map((k) => [k, NAME[k]]), value: x.strength })}<p class="sec-f">${PROFILES[x.strength].blurb} Gives up after ${DEFAULT_CAP.maxAttempts} nudges or ${fmtDur(DEFAULT_CAP.maxDurationMinutes)}, whichever comes first.</p></div>
+    <h3 class="sec-h" id="l-strength"><span>Strength${glyph}</span></h3>
+    <div class="sec">${choiceRow("Strength", { id: "f-strength", name: "strength", labelId: "l-strength", attr: `data-f="strength"${locked ? ' aria-describedby="f-lock-h"' : ""}`, options: Object.keys(PROFILES).map((k) => [k, NAME[k]]), value: x.strength, disabled: locked })}<p class="sec-f">${PROFILES[x.strength].blurb} Gives up after ${DEFAULT_CAP.maxAttempts} nudges or ${fmtDur(DEFAULT_CAP.maxDurationMinutes)}, whichever comes first.</p></div>
 
     <div class="sec"><ul class="list">
-      <li><div class="formrow"><label for="f-bt">Break Through Focus</label><input type="checkbox" class="switch" id="f-bt" data-f="breakThrough" ${x.breakThrough ? "checked" : ""} aria-describedby="f-bt-h"></div></li>
+      <li><div class="formrow"><label for="f-bt">Break Through Focus${glyph}</label><input type="checkbox" class="switch" id="f-bt" data-f="breakThrough" ${x.breakThrough ? "checked" : ""}${lock("f-bt-h")}></div></li>
     </ul><p class="sec-f" id="f-bt-h">${btText}</p></div>
 
     <h3 class="sec-h">How It Nudges</h3>
@@ -1944,11 +2085,54 @@ function editorMain(sh) {
 function editorRepeat(sh) {
   const x = sh.draft;
   const option = ([k, t]) => `<li role="none"><button type="button" class="cell" role="radio" aria-checked="${x.repeat === k}" data-repeat="${k}"><span class="main">${esc(t)}</span>${x.repeat === k ? CHECK : ""}</button></li>`;
+  // Custom sits in its own section, as in Calendar, and opens its page.
+  const custom = x.repeat === "custom";
   return `${sheetNav(sheetBack("main", "Back"), "Repeat", "")}
   <div class="sheet-body" tabindex="-1">
     <div role="radiogroup" aria-label="Repeat">
     <div class="sec"><ul class="list" role="none">${PRESETS.map(option).join("")}</ul></div>
+    <div class="sec"><ul class="list" role="none"><li role="none"><button type="button" class="cell" role="radio" aria-checked="${custom}" data-repeat="custom" aria-describedby="f-custom-h"><span class="main">Custom</span>${custom ? CHECK : ""}${chev}</button></li></ul>
+    <p class="sec-f" id="f-custom-h">${custom ? `${esc(scheduleText(draftRem(x)))}.` : "Every few days, chosen weekdays, the last day of the month, or a repeat that ends."}</p></div>
     </div>
+  </div>`;
+}
+/* The Custom repeat page. A summary on top says what the choices add up to, and the next three
+   times show it, so nobody has to know how the rule is written. */
+function editorCustom(sh) {
+  const x = sh.draft, c = x.custom, d = L(x.dtstart), rem = draftRem(x);
+  const unit = FREQ_UNIT[c.freq], next = upcoming(rem, 3);
+  const stepper = (id, text, field, v, min, max) => `<li><div class="formrow"><span class="lbl" id="${id}">${text}</span><span class="stepper" role="group" aria-labelledby="${id}">
+      <button type="button" data-cstep="${field}:-1" aria-label="Decrease" ${v <= min ? "disabled" : ""}>−</button><button type="button" data-cstep="${field}:1" aria-label="Increase" ${v >= max ? "disabled" : ""}>+</button></span></div></li>`;
+  const check = (attr, k, label, on, role = "checkbox") => `<li role="none"><button type="button" class="cell" role="${role}" aria-checked="${on}" ${attr}="${k}"><span class="main">${label}</span>${on ? CHECK : ""}</button></li>`;
+  let on = "";
+  if (c.freq === "WEEKLY") {
+    on = `<h3 class="sec-h" id="l-on">On</h3><div class="sec"><ul class="list" role="group" aria-labelledby="l-on">${WEEK_ORDER.map((k) => check("data-cday", k, LONGDAY[BYDAY.indexOf(k)], c.days.includes(k))).join("")}</ul>
+      <p class="sec-f">Choose one or more days.</p></div>`;
+  } else if (c.freq === "MONTHLY") {
+    const opts = monthlyOptions(d), pick = (opts.find(([k]) => k === c.monthly) || opts[0])[0];
+    on = `<h3 class="sec-h" id="l-on">On</h3><div class="sec"><ul class="list" role="radiogroup" aria-labelledby="l-on">${opts.map(([k, t]) => check("data-cmonthly", k, t, k === pick, "radio")).join("")}</ul>
+      <p class="sec-f">${pick === "day" && d.getDate() > 28 ? `Months without a ${ord(d.getDate())} are skipped. Choose On the last day to get every month. ` : ""}These follow the start date. Change it to pick another day.</p></div>`;
+  }
+  const yearly = c.freq === "YEARLY" ? `<p class="sec-f">On ${d.getDate()} ${LONGMON[d.getMonth()]}, from the start date. Change it to pick another day.</p>` : "";
+  const endRow = c.ends === "count" ? stepper("l-count", `After ${c.count} times`, "count", c.count, COUNT_MIN, COUNT_MAX)
+    : c.ends === "until" ? `<li><div class="formrow"><label for="c-until">End Date</label><input type="date" class="pill-input" id="c-until" data-cf="until" min="${x.dtstart.slice(0, 10)}" value="${esc(c.until)}"></div></li>` : "";
+  // A yearly repeat reaches into later years, so those dates carry their year.
+  const nextDay = (t) => `${dayLabel(t)}${t.getFullYear() !== NOW.getFullYear() ? ` ${t.getFullYear()}` : ""}`;
+  const nextRows = next.map((t) => `<li><div class="cell"><span class="main">${nextDay(t)}</span><span class="trail">${hm(t)}</span></div></li>`).join("");
+  const nextNote = !next.length ? `<p class="errtext" role="alert">This repeat has no times left. Change when it ends.</p>`
+    : next.length < 3 ? `<p class="sec-f">Then it ends.</p>` : "";
+  return `${sheetNav(sheetBack("repeat", "Repeat"), "Custom", "")}
+  <div class="sheet-body" tabindex="-1">
+    <p class="sec-f" style="margin:0 32px 14px" aria-live="polite"><strong>${esc(scheduleText(rem))}.</strong></p>
+    <h3 class="sec-h" id="l-freq">Frequency</h3>
+    <div class="sec">${choiceRow("Frequency", { id: "c-freq", name: "c-freq", labelId: "l-freq", attr: 'data-cf="freq"', options: FREQS, value: c.freq })}
+      <ul class="list" style="margin-top:10px">${stepper("l-every", c.interval > 1 ? `Every ${c.interval} ${unit}s` : `Every ${unit}`, "interval", c.interval, 1, MAX_EVERY[c.freq])}</ul>${yearly}</div>
+    ${on}
+    <h3 class="sec-h" id="l-ends">Ends</h3>
+    <div class="sec">${choiceRow("Ends", { id: "c-ends", name: "c-ends", labelId: "l-ends", attr: 'data-cf="ends"', options: [["never", "Never"], ["count", "After"], ["until", "On Date"]], value: c.ends })}
+      ${endRow ? `<ul class="list" style="margin-top:10px">${endRow}</ul>` : ""}${untilTooEarly(x) ? `<p class="errtext" role="alert">Choose an end date after the start.</p>` : ""}</div>
+    <h3 class="sec-h" id="l-next">Next Times</h3>
+    <div class="sec">${nextRows ? `<ul class="list" aria-labelledby="l-next">${nextRows}</ul>` : ""}${nextNote}</div>
   </div>`;
 }
 /* Every tag the sheet can offer: the saved ones and any made in this sheet. */
@@ -1980,6 +2164,9 @@ function addDraftTag() {
 /* An edit moves the next occurrence only if the schedule changed; a completed reminder given a
    future time becomes active again. */
 function updateReminder(r, fields) {
+  // The locked fields of a nudging reminder keep their values, as the engine rejects changing them
+  // (ADR 0002). The form disables them, so this only backs that up.
+  if (lockedNow(r.id)) Object.assign(fields, lockedFields(r));
   const scheduleChanged = r.dtstart !== fields.dtstart || r.rrule !== fields.rrule;
   const o = openOccs().find((y) => y.reminderId === r.id);
   const closes = o && closesOnEdit(o, r, fields.dtstart);
@@ -1991,15 +2178,21 @@ function updateReminder(r, fields) {
     if (r.status === "COMPLETED" && n) r.status = "ACTIVE";
   }
   if (closes && !r.rrule && !r.nextOccurrenceAt) r.status = "COMPLETED";
-  // A paused reminder has no next time until Resume (brief §3, Pause).
+  // A paused reminder has no next time until Resume.
   if (r.status === "PAUSED") r.nextOccurrenceAt = null;
   hud(closes ? "Changes saved. This one closed as skipped." : "Changes saved");
   return r;
 }
-/* Changing a one-off reminder's time closes the open occurrence as skipped. Any other edit, such as a
-   new strength, applies from the next nudge, and the count carries on. */
+const lockedFields = (r) => ({ dtstart: r.dtstart, rrule: r.rrule, repeatCustom: !!r.repeatCustom, strength: r.strength, breakThrough: btOf(r) });
+/* With the lock off: changing a one-off reminder's time closes the open occurrence as skipped. Any
+   other edit, such as a new strength, applies from the next nudge, and the count carries on. */
 function closesOnEdit(o, r, dtstart) {
   return !r.rrule && dtstart !== r.dtstart.slice(0, 16) ? "time" : null;
+}
+/* The note at the top of the Edit form when nothing is locked. */
+function unlockedNote(o, closes) {
+  const closeNote = { time: "Its time changed, so saving closes this one as skipped." }[closes];
+  return `<p class="sec-f" style="margin:0 32px 14px">${o ? "This reminder is nudging now. " : ""}A new schedule applies from the next time it's due. A new strength or Break Through Focus setting applies from the next nudge${o ? `, and the nudge count carries on from ${o.attempts}` : ""}.${closeNote ? ` <strong>${closeNote}</strong>` : ""}</p>`;
 }
 function createReminder(fields) {
   const r = { id: `r${Date.now()}`, ...fields, status: "ACTIVE" };
@@ -2013,7 +2206,7 @@ function saveEditor() {
   const sh = state.sheet, x = sh.draft;
   if (!x.title.trim()) return;
   for (const t of sh.newTags) if (x.tagIds.includes(t.id)) tags.push(t);
-  const fields = { title: x.title.trim(), body: x.body.trim() || null, tagIds: x.tagIds.filter(tagById), dtstart: x.dtstart, rrule: ruleFor(x), strength: x.strength, breakThrough: x.breakThrough };
+  const fields = { title: x.title.trim(), body: x.body.trim() || null, tagIds: x.tagIds.filter(tagById), dtstart: x.dtstart, rrule: ruleFor(x), repeatCustom: x.repeat === "custom", strength: x.strength, breakThrough: x.breakThrough };
   const r = sh.editId ? updateReminder(remById(sh.editId), fields) : createReminder(fields);
   state.sheet = null;
   const top = state.stacks[state.tab].at(-1);
@@ -2414,7 +2607,7 @@ function tabButton([k, ic], nudging) {
 function tabBar(nudging) {
   return `<div class="tabgroup glass">${TABS.map((t) => tabButton(t, nudging)).join("")}</div>`;
 }
-const EDITOR_PAGES = { repeat: editorRepeat, tags: editorTags, main: editorMain };
+const EDITOR_PAGES = { repeat: editorRepeat, custom: editorCustom, tags: editorTags, main: editorMain };
 function sheetContent(sh) {
   if (sh.kind === "editor") return EDITOR_PAGES[sh.page](sh);
   if (sh.kind === "dayfilter") return dayFilterSheet();
@@ -2590,6 +2783,10 @@ function updateControls() {
   document.getElementById("c-notif-why").textContent = notifWhy(n);
   document.getElementById("c-alarm-why").textContent = alarmWhy(a);
   document.querySelectorAll('[name="c-orient"]').forEach((r) => { r.disabled = narrow.matches; });
+  document.getElementById("c-lockedit").checked = lockOn;
+  document.getElementById("c-lockedit-why").textContent = lockOn
+    ? "Edit any nudging reminder: its start, repeat, strength and Break Through Focus are locked until Done or Pause. Title, notes and tags still change. Other reminders edit normally."
+    : "Off: every reminder edits normally, nudging or not. Turn on to see the proposed lock (ADR 0002) when you edit a nudging reminder.";
 }
 
 /* ================= Events =================
@@ -2666,7 +2863,22 @@ const CLICK = {
   cleardayfilter: () => { state.dayFilter = newDayFilter(); refresh(state.sheet ? "sheet" : "[data-dayfilter]"); announce(dayNews()); },
   sheetSave: () => saveFromSheet(),
   sheetPage: (v) => { state.sheet.page = v; state.focus = "sheet"; render(); },
-  repeat: (v) => { state.sheet.draft.repeat = v; state.focus = `[data-repeat="${v}"]`; render(); },
+  repeat: (v) => {
+    const x = state.sheet.draft;
+    if (v !== "custom") { x.repeat = v; state.focus = `[data-repeat="${v}"]`; render(); return; }
+    // Custom starts from the preset that was chosen, or from the custom repeat it already has.
+    if (x.repeat !== "custom") x.custom = customFrom(x);
+    x.repeat = "custom";
+    state.sheet.page = "custom"; state.focus = "sheet"; render();
+  },
+  cstep: (v) => {
+    const c = state.sheet.draft.custom, [f, step] = v.split(":");
+    const [min, max] = f === "count" ? [COUNT_MIN, COUNT_MAX] : [1, MAX_EVERY[c.freq]];
+    c[f] = Math.min(max, Math.max(min, c[f] + Number(step)));
+    stepperFocus(`[data-cstep="${v}"]`);
+  },
+  cday: (v) => { const c = state.sheet.draft.custom; c.days = toggleDay(c, v); refresh(`[data-cday="${v}"]`); },
+  cmonthly: (v) => { state.sheet.draft.custom.monthly = v; refresh(`[data-cmonthly="${v}"]`); },
   tagSave: () => saveTag(),
   onboardNext: () => { state.sheet = null; render(); askPermissions(); },
   alertBtn: (v) => answerAlert(Number(v)),
@@ -2704,7 +2916,7 @@ document.addEventListener("click", (e) => {
   pressed = t;
   if (key) CLICK[key](t.dataset[key], t);
 });
-/* Focus after Done (EXPERIENCE › Interaction Primitives, Done is the climax): the title of the item
+/* Focus after Done: the title of the item
    now at the same position in that list, else the one before it, else the section's header. Never a
    Done button. Call it before the item is removed; it works by position, so a reminder with several
    rows today keeps focus on the right one. */
@@ -2740,13 +2952,22 @@ function onDraftField(t) {
   if (t.tagName === "TEXTAREA" || t.type === "text") {
     // Typing doesn't rebuild the field being typed in; only the Add button and its hint change.
     const btn = document.querySelector("[data-sheet-save]");
-    if (btn) btn.disabled = !x.title.trim() || pastOneOff(x);
+    if (btn) btn.disabled = !x.title.trim() || pastOneOff(x) || repeatBlocks(x);
     const hint = document.getElementById("f-body-h");
     if (hint) hint.textContent = `${x.title.trim() ? "" : "Add a title to save. "}Notes and tags stay in the app. Notifications and alarms show the title, not these.`;
     return;
   }
   if (t.type === "datetime-local") return; // re-rendered on change, so typing a date isn't interrupted
   state.focus = t.type === "radio" ? `[data-f="${t.dataset.f}"][value="${t.value}"]` : `#${t.id}`;
+  render();
+}
+/* A choice on the Custom repeat page. The end date is re-rendered on change, so typing isn't interrupted. */
+function onCustomField(t) {
+  const c = state.sheet.draft.custom, f = t.dataset.cf;
+  if (t.type === "date") { if (t.value) c.until = t.value; return; }
+  c[f] = t.value;
+  if (f === "freq") c.interval = Math.min(c.interval, MAX_EVERY[c.freq]);
+  state.focus = t.type === "radio" ? `[data-cf="${f}"][value="${t.value}"]` : `#${t.id}`;
   render();
 }
 function onTagField(t) {
@@ -2761,6 +2982,7 @@ function onTagField(t) {
 document.addEventListener("input", (e) => {
   const t = e.target;
   if (t.dataset.f && state.sheet) onDraftField(t);
+  else if (t.dataset.cf && state.sheet) onCustomField(t);
   else if (t.dataset.t && state.sheet) onTagField(t);
   else if (t.id === "f-newtag" && state.sheet) {
     // Typing doesn't rebuild the field; only the Add button changes.
@@ -2781,6 +3003,7 @@ document.addEventListener("keydown", (e) => {
 });
 const CHANGE = {
   "f-dt": () => { if (state.sheet) refresh("#f-dt"); },
+  "c-until": () => { if (state.sheet) refresh("#c-until"); },
 };
 document.addEventListener("change", (e) => CHANGE[e.target.id]?.(e.target));
 document.addEventListener("keydown", (e) => {
@@ -2801,6 +3024,19 @@ function syncPermControls() {
 document.getElementById("c-notif").addEventListener("click", () => { state.alert = null; showNotification("nudge"); });
 document.getElementById("c-alarm").addEventListener("click", () => { state.alert = null; showAlarm(); });
 document.getElementById("c-onboard").addEventListener("click", () => { state.system = null; state.alert = null; state.sheet = { kind: "onboard", ret: document.activeElement }; state.focus = "sheet"; render(); });
+/* Turns the proposed lock on or off. An Edit form that's open re-renders in place; turning the lock
+   on puts back any locked field already changed in it, as the app would never have allowed that. */
+document.getElementById("c-lockedit").addEventListener("change", (e) => {
+  lockOn = e.target.checked;
+  const sh = state.sheet;
+  if (lockOn && sh?.kind === "editor" && lockedNow(sh.editId)) {
+    const kept = draftFor(remById(sh.editId));
+    for (const k of ["dtstart", "repeat", "custom", "strength", "breakThrough"]) sh.draft[k] = kept[k];
+    if (sh.page === "repeat" || sh.page === "custom") sh.page = "main";
+  }
+  state.keepScroll = true;
+  render();
+});
 document.getElementById("c-perm-n").addEventListener("change", (e) => { perm.notifications = e.target.checked; state.keepScroll = true; render(); });
 document.getElementById("c-perm-a").addEventListener("change", (e) => { perm.alarms = e.target.checked; state.keepScroll = true; render(); });
 document.getElementById("c-perm-t").addEventListener("change", (e) => { perm.timeSensitive = e.target.checked; state.keepScroll = true; render(); });
@@ -2815,6 +3051,7 @@ document.getElementById("c-reset").addEventListener("click", () => {
   document.getElementById("c-perm-n").checked = true;
   document.getElementById("c-perm-a").checked = true;
   document.getElementById("c-perm-t").checked = true;
+  lockOn = false;
   Object.assign(state, { tab: "now", stacks: { now: [], day: [], tags: [], settings: [] }, dayFilter: newDayFilter(), dayStatus: null, tagEdit: false, tabMin: false, sheet: null, system: null, alert: null });
   nav();
   hud("Mockup reset");
@@ -2840,7 +3077,7 @@ followSetting("(prefers-reduced-transparency: reduce)", "c-transparency", "trans
    Apple's lists of iPhones compatible with iOS 26 and iOS 27). The XS, XS Max and XR stop at iOS 18;
    the 17 series, Air and 17e start at iOS 26; the 18 Pro and 18 Pro Max start at iOS 27. The 17e
    and 18 Pro Max sizes come from Apple's pixel resolutions at 3x; the 18 Pro is assumed to match the
-   17 Pro. The iPhone Duo is left out until its sizes are known (see the brief, §10). */
+   17 Pro. The iPhone Duo is left out until its sizes are known. */
 const DEVICES = [
   { id: "se", w: 375, h: 667, cut: "none", safe: 0, models: [["iPhone SE (2nd and 3rd generation)", 18]] },
   { id: "mini", w: 375, h: 812, cut: "notch", notch: 162, safe: 44, models: [["iPhone XS", 18, 18], ["iPhone 11 Pro", 18], ["iPhone 12 mini", 18], ["iPhone 13 mini", 18]] },

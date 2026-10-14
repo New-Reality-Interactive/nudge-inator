@@ -9,7 +9,9 @@ it shows a phone with **Mockup controls** beside it, in portrait or landscape. O
 fills the screen and the controls are below it.
 
 This mockup matches the decisions in [GLOSSARY.md](../../../GLOSSARY.md),
-[ADR 0001](../../adr/0001-stop-silences-done-is-deliberate.md) and the
+[ADR 0001](../../adr/0001-stop-silences-done-is-deliberate.md),
+[ADR 0002](../../adr/0002-lock-due-time-repeat-strength-while-nudging.md),
+[ADR 0003](../../adr/0003-custom-repeat-is-an-rrule-subset.md) and the
 [first-version spec](../../../.scratch/first-version/spec.md). It was made from the
 [2026-10-02 mockup](../archive/2026-10-02-ux-review-changes/README.md), which is archived and
 describes the fuller product. Where the two differ, this one is the first version.
@@ -23,10 +25,29 @@ describes the fuller product. Where the two differ, this one is the first versio
 | **Tags** | Your tags with counts. **+** adds a tag, Edit renames or deletes them, and choosing a tag opens its reminders (whose **+** makes a reminder with that tag) |
 | **Settings** | Notification and alarm status, **Send a Test Nudge**, **Delete All Data** |
 
-The **+** button opens the New Reminder form: title, notes, tags, start time, repeat (Never, Every
-Day, Every Weekday, Every Week, Every 2 Weeks, Every Month, Every Year), strength, and the **Break
-Through Focus** switch. **How It Nudges** previews every nudge. Reminder details have Edit, Pause or
-Resume, and Delete.
+The **+** button opens the New Reminder form: title, notes, tags, start time, repeat, strength, and
+the **Break Through Focus** switch. **How It Nudges** previews every nudge. Reminder details have
+Edit, Pause or Resume, and Delete.
+
+**Repeat** offers Never, Every Day, Every Weekday, Every Week, Every 2 Weeks, Every Month and Every
+Year, and then **Custom**, which opens its own page. Custom starts from the preset you had chosen
+and has plain choices only:
+
+- **Frequency** (Daily, Weekly, Monthly, Yearly) and a stepper: "Every 2 weeks".
+- **On:** weekdays for a weekly repeat. A monthly repeat offers choices taken from the start date,
+  such as "On the 28th", "On the fourth Monday", "On the last Monday" or "On the last day".
+- **Ends:** Never, after a number of times, or on a date.
+- A summary sentence at the top ("Every 2 weeks on Monday and Wednesday at 9:00 AM, 5 times.") and
+  the **Next Times** it falls due.
+
+The app stores the result as an RRULE (ADR 0003), but nothing on screen shows one. "Water the plants"
+repeats every 3 days, as an example of a custom repeat.
+
+**Editing while nudging** works normally unless **Lock nudging reminders** is on in the mockup
+controls. With it on, a nudging reminder's start, repeat, strength and Break Through Focus are locked
+(ADR 0002). The Edit form shows them dimmed with a lock and says why: mark it Done or pause it to
+change them. Title, notes and tags stay editable, and its details say the same under Schedule.
+Reminders that aren't nudging always edit normally.
 
 ## How nudging works here
 
@@ -58,11 +79,13 @@ Resume, and Delete.
 ## What's different from the archived mockup
 
 Left out of the first version: Snooze, Not Done and Undo, the Clear log, the Done follow-up
-notification, quiet hours and Ignore Quiet Hours, carry-over ("Starts higher"), Custom repeats, the
+notification, quiet hours and Ignore Quiet Hours, carry-over ("Starts higher"), the
 give-up and snooze-length controls, the Search tab, filtering all reminders by several tags at once, history search, Export Data, Siri and Shortcuts,
 Assistive Access, the Live Activity countdown, and the iOS 18 and iOS 27 variants.
 
 Changed: the alarm's secondary button is **Open**, not Snooze, and Stop no longer counts as Done.
+Custom repeats are back with a smaller set of choices (no "several times a day"). The proposed lock
+on a nudging reminder's schedule can be turned on in the mockup controls.
 
 ## Mockup controls
 
@@ -73,6 +96,10 @@ These are not part of the app:
 - **Next Urgent nudge** shows the alarm. **Stop** returns to the app, still nudging. **Open** goes to
   the reminder. With alarms not allowed it shows the first notification of the chain.
 - **First launch** shows onboarding and the permission prompts.
+- **Lock nudging reminders** turns on the proposed lock (ADR 0002). Then edit any nudging reminder,
+  such as "Take the bins out" or "Reply to Alex about the lease" on Now, to see its locked fields.
+  Off, every reminder edits as before: changes apply from the next nudge, and changing a one-off's
+  time closes it as skipped. An Edit form that's open updates when you flip it. Reset turns it off.
 - **Permissions** (notifications, alarms, Time Sensitive), **24-Hour Time**, **Appearance**, **Text
   Size** (all 12 Dynamic Type sizes), **Bold Text**, **Increase Contrast** and **Reduce
   Transparency** stand in for iOS Settings.
@@ -94,7 +121,16 @@ The mockup draws the system's alarm and notifications as an approximation. These
 
 ## How it was checked
 
-In headless Chrome, a script clicked through every tab, every reminder's details, the New and Edit
+On 2026-10-13, a headless Chrome script checked the Custom page and the lock: Custom from a preset,
+weekdays, the interval, each monthly choice, yearly, both ways of ending, Next Times, saving and
+reopening a custom repeat, the 31st skipping short months for Custom and moving to the last day for
+the preset, **Lock nudging reminders** off (a nudging one-off edits freely and a new time skips it)
+and on (any nudging reminder locks its fields, one that isn't nudging doesn't, and flipping it with
+the form open updates the form), and Reset turning it off. The console had no errors, and
+screenshots of the Repeat page, the Custom page (weekly and monthly), and the locked form (default
+text size and AX3) were checked by eye.
+
+Earlier, in headless Chrome, a script clicked through every tab, every reminder's details, the New and Edit
 Reminder forms (including the Break Through Focus switch, the Repeat and Tags pages, and saving),
 a notification and its Done action, the alarm's Stop and Open, the notification chain, the test
 nudge, Pause, Resume, Delete, both My Day filters, adding, renaming and deleting a tag, a tag's reminders, a new reminder from a tag, landscape and reset, and the

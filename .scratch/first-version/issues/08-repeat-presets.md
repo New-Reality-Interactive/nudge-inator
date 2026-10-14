@@ -4,7 +4,7 @@ Status: ready-for-agent
 
 ## What to build
 
-Presets: Never, Every Day, Every Weekday, Every Week, Every 2 Weeks, Every Month, Every Year (no Custom). Given a due time and a preset, the engine computes the next occurrence's due time and opens a new occurrence when it comes due. Calendar and time zone are injected (default current calendar) so tests are deterministic.
+Presets: Never, Every Day, Every Weekday, Every Week, Every 2 Weeks, Every Month, Every Year. Custom rules are ticket 09. Each preset is a value of the engine's repeat-rule type (the type ticket 09 parses a custom rule into), so presets and Custom share one next-due computation and the store holds one kind of value. The month-end and leap-day clamping below belongs to the presets only (ADR 0003). Given a due time and a repeat rule, the engine computes the next occurrence's due time and opens a new occurrence when it comes due. Calendar and time zone are injected (default current calendar) so tests are deterministic.
 
 ## Acceptance criteria
 
@@ -15,5 +15,6 @@ Presets: Never, Every Day, Every Weekday, Every Week, Every 2 Weeks, Every Month
 - [ ] Every 2 Weeks and Every Week keep the weekday and time of day.
 - [ ] A time-of-day across a DST change keeps the local time of day.
 - [ ] The next occurrence starts at nudge 1 when its due time arrives.
+- [ ] Each preset is a repeat-rule value, and there is one next-due code path that ticket 09's custom rules reuse.
 
 Blocked by: 03

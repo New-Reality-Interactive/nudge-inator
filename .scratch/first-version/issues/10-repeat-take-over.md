@@ -13,5 +13,7 @@ If the next occurrence of a repeating reminder falls due while the previous one 
 - [ ] The new occurrence's first plan item is nudge 1 at its due time, at the lowest urgency, regardless of where the old one was.
 - [ ] The old occurrence's pending items are gone from the plan.
 - [ ] When the previous is already Done or Missed, no take-over reason is recorded.
+- [ ] Take-over uses the next due time of any repeat rule, preset or custom (test an every-2-days custom rule as well as Every Day).
+- [ ] The last occurrence of a custom rule that ends (COUNT or UNTIL) has nothing to take it over: it closes by Done or the give-up limit only.
 
-Blocked by: 06, 08
+Blocked by: 06, 08, 09

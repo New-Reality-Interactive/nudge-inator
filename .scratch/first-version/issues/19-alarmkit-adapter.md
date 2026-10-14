@@ -10,10 +10,10 @@ Extend the scheduler adapter to apply the plan's **alarm** items through `AlarmM
 - Build the configuration with `AlarmManager.AlarmConfiguration.alarm(schedule:attributes:stopIntent:secondaryIntent:sound:)` (iOS 26.0+, "behaves like a traditional alarm"), then `AlarmManager.shared.schedule(id:configuration:)`. Don't use the countdown-style `init`.
 - **Minimum is iOS 26.1**, so use `AlarmPresentation.Alert(title:secondaryButton:secondaryButtonBehavior:)` (iOS 26.1+; the system provides the Stop button). Don't use the deprecated `init(title:stopButton:...)`, and don't copy Apple's sample's `stopButton:` argument. No `#available` branch is needed.
 - A one-shot schedule per alarm item: `Alarm.Schedule.fixed(Date)` (not relative to the time zone). The alarm ID derives from occurrence and nudge number so a re-plan can cancel and replace.
-- `secondaryIntent` is the Open intent from ticket 19, and its type is `(any LiveActivityIntent)?`. Stop uses the system default (ADR 0001: Stop needs no app code; the later nudges are already pre-scheduled).
+- `secondaryIntent` is the Open intent from ticket 20, and its type is `(any LiveActivityIntent)?`. Stop uses the system default (ADR 0001: Stop needs no app code; the later nudges are already pre-scheduled).
 - Remove not-yet-fired alarms with `cancel(id:)` ("deletes the alarm from the system"). `stop(id:)` is for a ringing alarm and deletes a one-shot.
-- Authorization: request through `requestAuthorization()` when onboarding asks (ticket 29), read `authorizationState`, observe `authorizationUpdates`, report to the engine. If the app never asks, AlarmKit asks by itself on the first `schedule` call, so make sure onboarding has asked first (or the prompt appears mid-plan).
-- Scheduling errors: map `AlarmManager.AlarmError.maximumLimitReached` to the engine's "alarm limit" event (ticket 14) and apply the plan it returns.
+- Authorization: request through `requestAuthorization()` when onboarding asks (ticket 31), read `authorizationState`, observe `authorizationUpdates`, report to the engine. If the app never asks, AlarmKit asks by itself on the first `schedule` call, so make sure onboarding has asked first (or the prompt appears mid-plan).
+- Scheduling errors: map `AlarmManager.AlarmError.maximumLimitReached` to the engine's "alarm limit" event (ticket 15) and apply the plan it returns.
 - Reconcile on launch using `alarms` (it `throws`) and `alarmUpdates` (an async sequence of the current `[Alarm]` whenever one alerts, snoozes or dismisses): a scheduled alarm missing from `alarms` has fired or been stopped. Persist what you scheduled in the store to compare against, as Apple's docs advise.
 
 ## Docs basis
@@ -40,4 +40,4 @@ Extend the scheduler adapter to apply the plan's **alarm** items through `AlarmM
 - [ ] Denied authorization is reported to the engine as "alarms denied" and no schedule call is made.
 - [ ] Device (human): a scheduled alarm rings through silent mode and a Focus, shows title only, Stop silences it, and the next planned alarm still rings on time.
 
-Blocked by: 02, 14, 17
+Blocked by: 02, 15, 18

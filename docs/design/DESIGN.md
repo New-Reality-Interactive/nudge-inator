@@ -279,7 +279,7 @@ buttons keep their default size. Counts and times are numerals through the syste
 - **One column on every iPhone.** In landscape, content is centered at `{spacing.readable-width}`;
   backgrounds run to the edges and controls stay in the safe areas.
 - **Width, not model.** A nudge card at least `{spacing.wide-card}` wide puts its actions in a side
-  column. Landscape work: ticket 22.
+  column. Landscape work: ticket 23.
 - **Accessibility sizes stack** rows, form rows and nudge cards vertically and let text wrap. How-to
   rules: [AGENTS.md › Accessibility](../../AGENTS.md).
 
@@ -320,7 +320,7 @@ except in the tab and navigation bars. Verify names against the mockup.
 | Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `line.3.horizontal.decrease` |
 | Tabs | `bell` (Now), `calendar` (My Day), `tag` (Tags), `gearshape` (Settings) |
 | Urgency | `arrow.up` (High), `alarm` (Urgent) |
-| Status | `checkmark.circle.fill` (Done), `bell.slash`, `clock`, `exclamationmark.triangle` |
+| Status | `checkmark.circle.fill` (Done), `bell.slash`, `clock`, `exclamationmark.triangle`, `lock` (a field locked while nudging, always beside its reason as text) |
 
 ### Nudge card
 - **Token:** `nudge-card`. **Container:** `{colors.cell}`, `{rounded.card}`, 5 pt leading stripe in
@@ -402,7 +402,7 @@ except in the tab and navigation bars. Verify names against the mockup.
 - **Type:** `Font` text styles (`.headline`, `.subheadline`, ...) with `.weight(...)` where the role
   says so. No `.system(size:)`.
 - **Constants:** radii, spacing and sizes from the frontmatter live in one shared `enum` in the app
-  target. Don't repeat literals in views. Ticket 21 creates these once.
+  target. Don't repeat literals in views. Ticket 22 creates these once.
 - **Reuse:** a component with a token is one reusable SwiftUI view or `ButtonStyle`, with a `#Preview`.
 
 ## Deferred to a later version

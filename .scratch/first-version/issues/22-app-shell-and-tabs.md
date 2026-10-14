@@ -8,7 +8,7 @@ Design spec: `docs/design/DESIGN.md` (Colors, Typography, Layout & Spacing, Mapp
 
 ## What to build
 
-Tab bar (SwiftUI `TabView` with `Tab(_:systemImage:)`, as in Apple's `tabBarMinimizeBehavior` example) with Now, My Day, Tags and Settings in the mockup's order, placeholder content with empty states, the app tint, and the shared styles (Light, Dark, Dynamic Type, Bold Text). The + button entry point on Now and My Day is present but may be disabled until ticket 23.
+Tab bar (SwiftUI `TabView` with `Tab(_:systemImage:)`, as in Apple's `tabBarMinimizeBehavior` example) with Now, My Day, Tags and Settings in the mockup's order, placeholder content with empty states, the app tint, and the shared styles (Light, Dark, Dynamic Type, Bold Text). The + button entry point on Now and My Day is present but may be disabled until ticket 24.
 
 Also create the shared design constants once (asset-catalog color sets with Increased Contrast variants, `Color` statics, the radii and spacing `enum`), as described in DESIGN.md › Mapping to code.
 
