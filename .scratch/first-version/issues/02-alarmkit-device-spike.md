@@ -2,7 +2,7 @@ Status: ready-for-human
 
 # AlarmKit device spike: alarm limit, Open silencing, Open on a locked phone
 
-Throwaway. A tiny debug screen (or a separate throwaway app) run on a **physical iPhone on iOS 26** for the final answers. Record the answers under `## Answer` in this file; do not carry the spike code into the product.
+Throwaway. A tiny debug screen (or a separate throwaway app) run on a **physical iPhone** for the final answers. The test iPhone is an iPhone 15 on **iOS 27.0.1**; if it has been updated since, record the version it runs. Record the answers under `## Answer` in this file; do not carry the spike code into the product.
 
 ## Simulator pass first (optional, untested)
 

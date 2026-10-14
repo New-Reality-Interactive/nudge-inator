@@ -25,7 +25,7 @@ Docs: <https://developer.apple.com/documentation/alarmkit/scheduling-an-alarm-wi
 
 ## Acceptance criteria
 
-- [ ] `xcodebuild -scheme <app> -destination 'generic/platform=iOS' build` succeeds.
+- [x] `xcodebuild -scheme <app> -destination 'generic/platform=iOS' build` succeeds.
 - [x] Deployment target is iOS 26.1 and the device family is iPhone only.
 - [x] The widget extension target builds and is embedded in the app; the app and extension share an App Group (entitlement present in both).
 - [x] The shared module compiles into both targets, and `scripts/test.sh` also builds the extension.
@@ -36,12 +36,12 @@ Docs: <https://developer.apple.com/documentation/alarmkit/scheduling-an-alarm-wi
 - [x] README states the one command to run tests.
 - [x] The app target bundles the Icon Composer file `App/AppIcon.icon`, and `ASSETCATALOG_COMPILER_APPICON_NAME` in `project.yml` is `AppIcon`. There is no `AppIcon` asset catalog.
 - [x] On the iPhone 15 simulator, the icon looks right in the Default, Dark, Clear and Tinted Home Screen appearances.
-- [ ] Device check: the icon looks right on a physical iPhone in all four appearances, in a folder and at small sizes (Spotlight, Settings). Record the iOS version.
+- [x] Device check: the icon looks right on a physical iPhone in all four appearances, in a folder and at small sizes (Spotlight, Settings). Record the iOS version. (iPhone 15, iOS 27.0.1: looks right in all of them.)
 
 ## Entitlements and signing
 
 Added after approval into the Apple Developer Program (team `B9QHGF334U`, New Reality Interactive, LLC). `project.yml` declares the entitlements under each target's `entitlements.properties`, because `xcodegen generate` rewrites the `.entitlements` files from there: `com.apple.security.application-groups` (`group.com.newrealityinteractive.nudgeinator`) in the app and the extension, and `com.apple.developer.usernotifications.time-sensitive` in the app. Signing is automatic with `DEVELOPMENT_TEAM` set in the project's base settings.
 
-The signed `generic/platform=iOS` build (first criterion) still fails with "Your team has no devices from which to generate a provisioning profile". An unsigned build (`CODE_SIGNING_ALLOWED=NO`) succeeds, so signing is the only blocker. To close it: connect the iPhone, turn on Developer Mode, open Xcode so the device is registered, then run the build with `-allowProvisioningUpdates` so Xcode registers the App IDs, the App Group and Time Sensitive. Apple's docs don't say how these capabilities behave on a device until then, so the device check covers them too.
+The signed `generic/platform=iOS` build succeeds after registering an iPhone 15 on iOS 27.0.1 (connect it, turn on Developer Mode, then build once with `-allowProvisioningUpdates -allowProvisioningDeviceRegistration` so Xcode registers the device, App IDs, App Group and Time Sensitive). `codesign -d --entitlements` on the signed app and extension shows team `B9QHGF334U`, the App Group in both, and Time Sensitive in the app. The app installs and launches on that iPhone.
 
 Blocked by: none

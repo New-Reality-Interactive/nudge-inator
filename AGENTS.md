@@ -27,6 +27,10 @@ For any iOS design, implementation or testing question, or any Xcode question, l
 
 Nudge-inator is a Swift 6, SwiftUI, iPhone-only app (iOS 26.1 minimum) with a widget extension and two local packages. `project.yml` is the source of truth for the Xcode project: edit it, then run `xcodegen generate`. Never hand-edit the generated `.xcodeproj`.
 
+### Toolchain
+
+The project builds with **Xcode 26.6 and the iOS 26.5 SDK**, the newest the development Mac (Intel) can run: Apple's Xcode 27 release notes say "Xcode 27 will only install and run on Apple silicon Macs." So there is no iOS 27 SDK or simulator here. Don't use iOS 27-only APIs, don't add an iOS 27 simulator to the test matrix, and don't raise the SDK or tooling past 26.x. Physical-device checks can still run on a newer iOS (Xcode 26.6 installs on an iOS 27 iPhone). Revisit this when the project moves to an Apple silicon Mac.
+
 ### Structure
 
 - `Packages/NudgeEngine` is pure Swift: no Apple framework imports, `Foundation` at most. `scripts/test.sh` enforces this. Anything that touches Apple frameworks (AlarmKit, store, adapters) lives in the app target, behind a type the engine can use without importing the framework.
@@ -71,7 +75,7 @@ Apple's AlarmKit docs confirm that scheduling fails silently without a non-empty
 - Group related tests in a `struct` suite. Use parameterized `@Test(arguments:)` instead of `for` loops over cases.
 - Test names describe behavior, without a `test` prefix.
 - Engine logic is tested in `NudgeEngineTests` with no simulator. App-target tests cover only code that needs Apple frameworks.
-- Automated tests always run against **both** the iOS 26.1 and iOS 26.5 simulators (the oldest and newest we test on); `scripts/test.sh` does this. Don't narrow it to one version to get a pass. Simulators don't cover AlarmKit behavior, so device checks stay on a physical iPhone and record its iOS version.
+- Automated tests always run against **both** the iOS 26.1 and iOS 26.5 simulators (the minimum, and the newest this Mac's Xcode supports; see Toolchain); `scripts/test.sh` does this. Don't narrow it to one version to get a pass. Simulators don't cover AlarmKit behavior, so device checks stay on a physical iPhone and record its iOS version.
 - Run everything with `scripts/test.sh` before committing. UI, VoiceOver and AlarmKit behavior can't be checked in unit tests, so mark those as device checks.
 
 ### Comments and style
