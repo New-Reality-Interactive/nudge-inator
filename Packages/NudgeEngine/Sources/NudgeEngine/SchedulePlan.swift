@@ -12,16 +12,8 @@ public struct SchedulePlan: Equatable, Sendable {
         public var urgency: Urgency
         public var title: String
 
-        /// How the nudge reaches the phone. Only Urgent rings as an alarm, and Gentle never
-        /// reaches Urgent. Ticket 05 adds Break through Focus off and the fallbacks; until then
-        /// this is the switch-on mapping.
-        public var deliveryKind: DeliveryKind {
-            switch urgency {
-            case .normal: .notification
-            case .high: .timeSensitiveNotification
-            case .urgent: .alarm
-            }
-        }
+        /// How the nudge reaches the phone. Adapters act on this, not on the urgency.
+        public var deliveryKind: DeliveryKind
 
         /// The notification body, for example "Nudge 3 of 20 · High".
         public var body: String {
