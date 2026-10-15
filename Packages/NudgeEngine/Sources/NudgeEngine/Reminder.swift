@@ -31,4 +31,6 @@ public struct Reminder: Identifiable, Equatable, Sendable {
 /// How hard a reminder nudges.
 public enum Strength: Equatable, Sendable {
     case gentle
+    case firm
+    case relentless
 }
