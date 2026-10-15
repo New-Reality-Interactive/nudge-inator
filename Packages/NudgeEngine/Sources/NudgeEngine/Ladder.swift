@@ -1,8 +1,13 @@
 import Foundation
 
-/// The give-up limit. Ticket 06 builds the rest of it (the 24-hour span and closing as Missed).
+/// The give-up limit: 20 nudges or 24 hours after the due time, whichever comes first. Fixed,
+/// with no editor.
 public enum GiveUpLimit {
     public static let nudgeCount = 20
+    /// With today's ladders every strength reaches nudge 20 well inside this (Gentle, the
+    /// slowest, gives up at +8 h 4 min 4 s). It is enforced anyway, so a retuned ladder can't
+    /// nudge past a day.
+    public static let span: TimeInterval = 24 * 60 * 60
 }
 
 /// One strength's ladder: how the waits shrink and where urgency rises. Every number a strength
@@ -50,13 +55,25 @@ extension Strength {
         return max(ladder.floor, eased).rounded()
     }
 
-    /// When each nudge fires, from nudge 1 at the due time up to the give-up limit.
-    func nudgeTimes(from dueTime: Date) -> [Date] {
+    /// When each nudge fires, from nudge 1 at the due time up to the give-up limit: at most
+    /// `GiveUpLimit.nudgeCount` nudges, each before `span` has passed.
+    func nudgeTimes(from dueTime: Date, within span: TimeInterval) -> [Date] {
         var times = [dueTime]
         while times.count < GiveUpLimit.nudgeCount {
-            times.append(times[times.count - 1] + interval(afterNudge: times.count))
+            let next = times[times.count - 1] + interval(afterNudge: times.count)
+            guard next < dueTime + span else { break }
+            times.append(next)
         }
         return times
+    }
+
+    /// When an occurrence due at `dueTime` gives up: one wait after its last nudge, when the next
+    /// would have fired, as the mockup's `simulate` does. That leaves the person a full wait to
+    /// answer the last nudge before it counts as Missed. If `span` ends sooner, it gives up then.
+    func giveUpTime(from dueTime: Date, within span: TimeInterval) -> Date {
+        let nudgeTimes = nudgeTimes(from: dueTime, within: span)
+        let nextNudgeTime = nudgeTimes[nudgeTimes.count - 1] + interval(afterNudge: nudgeTimes.count)
+        return min(nextNudgeTime, dueTime + span)
     }
 
     /// The urgency of a nudge, as in the mockup's How It Nudges table.

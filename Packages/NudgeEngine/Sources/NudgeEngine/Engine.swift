@@ -15,11 +15,19 @@ public protocol SchedulerAdapter {
 public struct Engine {
     private let clock: any EngineClock
     private let scheduler: any SchedulerAdapter
+    private let giveUpSpan: TimeInterval
     private var reminders: [Reminder] = []
 
     public init(clock: any EngineClock, scheduler: any SchedulerAdapter) {
+        self.init(clock: clock, scheduler: scheduler, giveUpSpan: GiveUpLimit.span)
+    }
+
+    /// Lets tests shorten the give-up span, the only way to see it win over the nudge count with
+    /// today's ladders. Internal because the spec fixes the limit.
+    init(clock: any EngineClock, scheduler: any SchedulerAdapter, giveUpSpan: TimeInterval) {
         self.clock = clock
         self.scheduler = scheduler
+        self.giveUpSpan = giveUpSpan
     }
 
     public mutating func update(reminders: [Reminder]) {
@@ -29,10 +37,11 @@ public struct Engine {
 
     /// Every reminder's whole ladder, even before it is due. The app gets no callback when a
     /// notification or alarm fires, so the chain must already be pending for nudging to go on
-    /// while the app stays closed.
+    /// while the app stays closed. A Missed occurrence has nothing left to send.
     private func plan() -> SchedulePlan {
-        SchedulePlan(items: reminders.flatMap { reminder in
-            reminder.strength.nudgeTimes(from: reminder.dueTime).enumerated().map { index, fireTime in
+        SchedulePlan(items: reminders.flatMap { reminder -> [SchedulePlan.Item] in
+            if case .missed = latestOccurrence(for: reminder.id)?.state { return [] }
+            return reminder.strength.nudgeTimes(from: reminder.dueTime, within: giveUpSpan).enumerated().map { index, fireTime in
                 let urgency = reminder.strength.urgency(ofNudge: index + 1)
                 return SchedulePlan.Item(
                     reminderID: reminder.id,
@@ -61,10 +70,22 @@ public struct Engine {
 
     /// The reminder's open occurrence, or `nil` if it has none.
     public func openOccurrence(for reminderID: Reminder.ID) -> Occurrence? {
+        guard let occurrence = latestOccurrence(for: reminderID),
+              case .nudging = occurrence.state
+        else { return nil }
+        return occurrence
+    }
+
+    /// The reminder's latest occurrence, open or closed, or `nil` before its first due time.
+    public func latestOccurrence(for reminderID: Reminder.ID) -> Occurrence? {
         guard let reminder = reminders.first(where: { $0.id == reminderID }),
               clock.now >= reminder.dueTime
         else { return nil }
-        let sent = reminder.strength.nudgeTimes(from: reminder.dueTime).filter { $0 <= clock.now }.count
+        let nudgeTimes = reminder.strength.nudgeTimes(from: reminder.dueTime, within: giveUpSpan)
+        if clock.now >= reminder.strength.giveUpTime(from: reminder.dueTime, within: giveUpSpan) {
+            return Occurrence(state: .missed(reason: .giveUpLimit))
+        }
+        let sent = nudgeTimes.filter { $0 <= clock.now }.count
         return Occurrence(state: .nudging(nudgeNumber: sent))
     }
 }
