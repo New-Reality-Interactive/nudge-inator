@@ -109,6 +109,15 @@ struct GentleLadderTests {
         #expect(item.body == body)
     }
 
+    @Test(arguments: 1...20)
+    func gentleNeverReachesUrgent(nudgeNumber: Int) throws {
+        clock.now = dueTime
+        _ = engine()
+        let item = try #require(scheduler.lastPlan?.items.first { $0.nudgeNumber == nudgeNumber })
+        #expect(item.urgency != .urgent)
+        #expect(item.deliveryKind != .alarm)
+    }
+
     @Test func planItemsCarryNothingFromNotesOrTags() {
         let withPrivateDetails = Reminder(
             title: "Morning meds",

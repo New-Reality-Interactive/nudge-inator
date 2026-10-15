@@ -12,12 +12,14 @@ public struct SchedulePlan: Equatable, Sendable {
         public var urgency: Urgency
         public var title: String
 
-        /// How the nudge reaches the phone. Gentle never reaches Urgent, so it is never an alarm.
-        /// Ticket 05 adds Break through Focus off; until then this is the switch-on mapping.
+        /// How the nudge reaches the phone. Only Urgent rings as an alarm, and Gentle never
+        /// reaches Urgent. Ticket 05 adds Break through Focus off and the fallbacks; until then
+        /// this is the switch-on mapping.
         public var deliveryKind: DeliveryKind {
             switch urgency {
             case .normal: .notification
             case .high: .timeSensitiveNotification
+            case .urgent: .alarm
             }
         }
 
@@ -33,18 +35,22 @@ public enum DeliveryKind: Equatable, Sendable {
     /// An ordinary notification, which a Focus can hold.
     case notification
     case timeSensitiveNotification
+    /// An AlarmKit alarm, which sounds through silent mode and Focus.
+    case alarm
 }
 
 /// A nudge's place on its strength's ladder.
 public enum Urgency: Equatable, Sendable {
     case normal
     case high
+    case urgent
 
     /// The word shown in a notification.
     public var name: String {
         switch self {
         case .normal: "Normal"
         case .high: "High"
+        case .urgent: "Urgent"
         }
     }
 }
