@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 
 # Repeat presets and next-due times
 
@@ -8,13 +8,37 @@ Presets: Never, Every Day, Every Weekday, Every Week, Every 2 Weeks, Every Month
 
 ## Acceptance criteria
 
-- [ ] Never: one occurrence only; after it closes there is no next.
-- [ ] Every Weekday skips Saturday and Sunday (Friday → Monday).
-- [ ] Every Month from the 31st lands on the last day of shorter months and returns to the 31st when possible (state the rule in the test).
-- [ ] Every Year from 29 Feb lands on 28 Feb in non-leap years.
-- [ ] Every 2 Weeks and Every Week keep the weekday and time of day.
-- [ ] A time-of-day across a DST change keeps the local time of day.
-- [ ] The next occurrence starts at nudge 1 when its due time arrives.
-- [ ] Each preset is a repeat-rule value, and there is one next-due code path that ticket 09's custom rules reuse.
+- [x] Never: one occurrence only; after it closes there is no next.
+- [x] Every Weekday skips Saturday and Sunday (Friday → Monday).
+- [x] Every Month from the 31st lands on the last day of shorter months and returns to the 31st when possible (state the rule in the test).
+- [x] Every Year from 29 Feb lands on 28 Feb in non-leap years.
+- [x] Every 2 Weeks and Every Week keep the weekday and time of day.
+- [x] A time-of-day across a DST change keeps the local time of day.
+- [x] The next occurrence starts at nudge 1 when its due time arrives.
+- [x] Each preset is a repeat-rule value, and there is one next-due code path that ticket 09's custom rules reuse.
 
 Blocked by: 03
+
+## Comments
+
+**The repeat-rule type is `RepeatRule`** (`Packages/NudgeEngine/Sources/NudgeEngine/RepeatRule.swift`), a struct whose fields are the RRULE parts of ADR 0003: `frequency` (`FREQ`: `.daily`, `.weekly`, `.monthly`, `.yearly`), `interval` (`INTERVAL`, default 1), `weekdays` (`BYDAY`, a `Set<Weekday>`; `nil` means the first due time's weekday), `monthDay` (`BYMONTHDAY`; `nil` means the first due time's day) and `month` (`BYMONTH`, 1–12; `nil` means the first due time's month). Never is no rule (`Reminder.repeatRule == nil`), as in the mockup (`!rem.rrule`) and the glossary ("Never, one of six presets, or a custom rule"). The six presets are static values: `.everyDay`, `.everyWeekday` (weekly, Monday–Friday), `.everyWeek`, `.everyTwoWeeks` (weekly, interval 2), `.everyMonth`, `.everyYear`. COUNT and UNTIL aren't there yet. Ticket 09 adds them as one more optional field with the parser, and they slot in as a cut-off on the same due-time walk. `BYDAY` with an ordinal ("4MO", "-1MO", for monthly) and `BYMONTHDAY=-1` aren't modelled either. Ticket 09 will need to widen `weekdays` to carry an ordinal and to read a negative `monthDay` as counting from the month's end.
+
+**How presets clamp: one field, `missingDay`.** It isn't an RRULE part. It is what tells a preset from a custom rule with the same parts (the mockup passes `clamp = !rem.repeatCustom`). `.lastDayOfMonth` means a day the month doesn't have (the 31st, 29 February) falls on the month's last day. Every Month and Every Year use it. `.skip` follows RFC 5545 and leaves that month out. It is the init's default, so whatever ticket 09's parser builds skips unless it says otherwise. `aMonthlyRuleThatSkipsHasNoOccurrenceInAMonthWithoutItsDay` shows both policies on one code path. The store (ticket 17) keeps the whole value, `missingDay` included.
+
+**`Reminder.dueTime` is the first due time** (the mockup's `dtstart`). Every later due time is worked out from it: the time of day, and the weekday, day of month and month when the rule doesn't name them. The month-end rule anchors on the first due time, never on the occurrence before. So Every Month from 31 October falls on 30 November and 28 February, and goes back to the 31st in December and March (`everyMonthFromTheThirtyFirstFallsOnTheLastDayOfShorterMonths`). Every Year from 29 February 2028 falls on 28 February in 2029–2031 and on the 29th in 2032.
+
+**One next-due code path.** `RepeatRule` has one day predicate (`isDue(on:)`, the mockup's `dayMatches`) and one walk (`dueTimes(from:by:)`) that steps a day at a time forwards or backwards from a date. It never goes before the first due day and is bounded at 366 × 11 days, as in the mockup's `nextOccurrence`, so a rule with no date in range reports none. `latestDueTime(atOrBefore:)` and `nextDueTime(after:)` both use the walk. Weeks start on Monday (RRULE's default `WKST`) whatever the calendar's first weekday. Months are counted as year × 12 + month, as the mockup's `monthDiff` does.
+
+**Following the mockup, the first due time counts only if the rule falls on it.** Every Weekday with a Saturday first due time first nudges on Monday. RFC 5545 counts `DTSTART` as the first instance anyway. The New Reminder form (ticket 24) and the Custom editor (ticket 25) should keep the due time on a day the rule allows, or this needs a decision. Not tested here.
+
+**Which occurrence is the latest: the one with the latest due time at or before now.** `latestOccurrence(for:)` works it out from the rule and the clock, and `Occurrence` now carries its `dueTime`. A closed occurrence (Done or Missed) stays the latest until the next due time arrives. Then the next one is the latest and starts at nudge 1 (`nextOccurrenceStartsAtNudgeOneWhenItsDueTimeArrives`). Done is keyed by the occurrence's own due time, so Done on one day leaves the next day open (`doneClosesOnlyItsOwnOccurrence`, `doneOnALaterOccurrenceClosesThatOccurrence`). The second test caught `markDone` still recording `Reminder.dueTime`.
+
+**The overlap before take-over (ticket 10).** If the next occurrence fell due while the last was still Nudging, the engine would report only the new one, at nudge 1. The old one would just stop being reported, with no Missed reason recorded. Recording "the next one took over" and cutting the old ladder at the new due time are ticket 10's work. With today's ladders the overlap can't happen: the shortest preset gap is a day, and every strength gives up within 8 h 4 min 4 s (Gentle). Ticket 10's first criterion ("an every-day Relentless reminder left Nudging past 24 hours") can't happen with today's constants, since Relentless gives up at +51 min 30 s. Ticket 10 will need a shortened gap (a custom rule can't go below daily) or a widened ladder in the test, or a rewording of the criterion.
+
+**What the plan holds for a repeating reminder: two ladders at most.** The open occurrence's ladder (if one is Nudging), then the whole ladder of the next occurrence to come due, even if that's tomorrow. The app gets no callback when a nudge fires (ticket 03), so without the second ladder someone who never opens the app would get nothing after the first occurrence. Before the first due time, "next" is the first occurrence, so a not-yet-due reminder still plans one ladder. A Never reminder plans at most one, as before. Against the 64-notification cap this is up to 40 items per reminder. But the adapter keeps the soonest 64 (ticket 18), and the next occurrence's items are always later than the open one's, so the cap drops the next ladder first and the app tops it up on foreground (ticket 21). Planning further ahead than one occurrence was rejected, because it would only add items the cap throws away.
+
+**Time zone injection: a public `timeZone:` parameter on `Engine.init`, default `.autoupdatingCurrent`.** The internal `init(clock:scheduler:giveUpSpan:timeZone:)` takes it too. It is public, not test-only, because the app may want to pass it. The engine evaluates rules in a Gregorian calendar set to that time zone, not in the person's own calendar: RRULE is Gregorian, and in, say, the Hebrew calendar Every Month would fall on different days. The local time of day is set on each due day (`date(bySettingHour:…)`), so 9:00 stays 9:00 across a DST change: 25 h from Saturday to Sunday in November and 23 h in March in New York (`timeOfDayAcrossADSTChangeKeepsTheLocalTime`). Not checked: whether a `Calendar` built with `TimeZone.autoupdatingCurrent` follows a time-zone change while the app runs. Ticket 21 should check it on a device or re-create the engine on `NSSystemTimeZoneDidChange`. Also untested: a time of day in a spring-forward gap (2:30 on the March change). Foundation picks a time for it, and no preset test lands there.
+
+**Tests** are in `RepeatPresetTests.swift`. They use the fake clock and scheduler and New York local times, so nothing depends on the Mac's time zone. Red first: the next occurrence at nudge 1 (no rule, no `Occurrence.dueTime`), the next ladder after Done (the plan held nothing after Done), Every Weekday, Every Week / Every 2 Weeks, Every Month, Every Year, and Done on a later occurrence. These passed on their first run and stay as acceptance coverage: Never (unchanged behavior), DST (the per-day hour setting already kept local time), the skip policy (built with Every Month), Done closing only its own occurrence, and the two-ladder plan while nudging. The plan slice was written as open + next in one step, so the while-nudging test came after its code.
+
+**Left alone:** the RRULE parser, COUNT and UNTIL, ordinal BYDAY and negative BYMONTHDAY (ticket 09); take-over and its Missed reason (ticket 10); Pause, Resume and Skipped (11); Delete (12); the lock (13); the fallbacks (14, 15); the store (17); the adapters (18–20); and the repeat summary text and every other UI.
