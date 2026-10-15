@@ -13,10 +13,12 @@ public protocol SchedulerAdapter {
 
 /// The nudge engine: reminders and the clock in, occurrence state and a schedule plan out.
 public struct Engine {
-    private let clock: any EngineClock
+    let clock: any EngineClock
     private let scheduler: any SchedulerAdapter
     private let giveUpSpan: TimeInterval
-    private let calendar: Calendar
+    let calendar: Calendar
+    /// Formats the times and dates in a repeat's summary.
+    let locale: Locale
     private var reminders: [Reminder] = []
     /// Done is the one occurrence fact the clock can't work out, so the engine records it. An
     /// occurrence is its reminder at one due time, so Done on one day's occurrence of a repeat
@@ -28,9 +30,15 @@ public struct Engine {
         var dueTime: Date
     }
 
-    /// `timeZone` is where repeats keep their local time of day.
-    public init(clock: any EngineClock, scheduler: any SchedulerAdapter, timeZone: TimeZone = .autoupdatingCurrent) {
-        self.init(clock: clock, scheduler: scheduler, giveUpSpan: GiveUpLimit.span, timeZone: timeZone)
+    /// `timeZone` is where repeats keep their local time of day. `locale` formats the times and
+    /// dates in a repeat's summary, including the 12- or 24-hour clock.
+    public init(
+        clock: any EngineClock,
+        scheduler: any SchedulerAdapter,
+        timeZone: TimeZone = .autoupdatingCurrent,
+        locale: Locale = .autoupdatingCurrent
+    ) {
+        self.init(clock: clock, scheduler: scheduler, giveUpSpan: GiveUpLimit.span, timeZone: timeZone, locale: locale)
     }
 
     /// Lets tests shorten the give-up span, the only way to see it win over the nudge count with
@@ -39,7 +47,8 @@ public struct Engine {
         clock: any EngineClock,
         scheduler: any SchedulerAdapter,
         giveUpSpan: TimeInterval,
-        timeZone: TimeZone = .autoupdatingCurrent
+        timeZone: TimeZone = .autoupdatingCurrent,
+        locale: Locale = .autoupdatingCurrent
     ) {
         self.clock = clock
         self.scheduler = scheduler
@@ -49,6 +58,7 @@ public struct Engine {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
         self.calendar = calendar
+        self.locale = locale
     }
 
     public mutating func update(reminders: [Reminder]) {
@@ -104,6 +114,19 @@ public struct Engine {
         case .high: return .timeSensitiveNotification
         case .urgent: return .alarm
         }
+    }
+
+    /// The next `count` due times at or after now, fewer if the repeat ends: what the Custom page
+    /// previews (the mockup's `upcoming`). The reminder needn't be one the engine holds, so a
+    /// draft can be previewed.
+    public func upcomingDueTimes(of reminder: Reminder, count: Int) -> [Date] {
+        var dueTimes: [Date] = []
+        var after = Date(timeIntervalSinceReferenceDate: clock.now.timeIntervalSinceReferenceDate.nextDown)
+        while dueTimes.count < count, let next = reminder.nextDueTime(after: after, calendar: calendar) {
+            dueTimes.append(next)
+            after = next
+        }
+        return dueTimes
     }
 
     /// The reminder's open occurrence, or `nil` if it has none.
