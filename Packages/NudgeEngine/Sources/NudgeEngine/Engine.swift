@@ -33,15 +33,30 @@ public struct Engine {
     private func plan() -> SchedulePlan {
         SchedulePlan(items: reminders.flatMap { reminder in
             reminder.strength.nudgeTimes(from: reminder.dueTime).enumerated().map { index, fireTime in
-                SchedulePlan.Item(
+                let urgency = reminder.strength.urgency(ofNudge: index + 1)
+                return SchedulePlan.Item(
                     reminderID: reminder.id,
                     nudgeNumber: index + 1,
                     fireTime: fireTime,
-                    urgency: reminder.strength.urgency(ofNudge: index + 1),
-                    title: reminder.title
+                    urgency: urgency,
+                    title: reminder.title,
+                    deliveryKind: deliveryKind(of: urgency, for: reminder)
                 )
             }
         })
+    }
+
+    /// The spec's Delivery by urgency rule. It lives here rather than on the plan item because
+    /// the alarms-denied and alarm-limit fallbacks (tickets 14 and 15) depend on system state the
+    /// engine knows and an item doesn't. Break through Focus off changes only the delivery kind:
+    /// the urgency, and so the notification text, stays on the ladder.
+    private func deliveryKind(of urgency: Urgency, for reminder: Reminder) -> DeliveryKind {
+        guard reminder.breakThroughFocus else { return .notification }
+        switch urgency {
+        case .normal: return .notification
+        case .high: return .timeSensitiveNotification
+        case .urgent: return .alarm
+        }
     }
 
     /// The reminder's open occurrence, or `nil` if it has none.

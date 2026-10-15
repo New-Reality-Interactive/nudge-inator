@@ -10,6 +10,8 @@ public struct Reminder: Identifiable, Equatable, Sendable {
     public var tags: [String]
     public var dueTime: Date
     public var strength: Strength
+    /// On unless the person turns it off, as in the mockup's New Reminder form.
+    public var breakThroughFocus: Bool
 
     public init(
         id: UUID = UUID(),
@@ -17,7 +19,8 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         notes: String = "",
         tags: [String] = [],
         dueTime: Date,
-        strength: Strength
+        strength: Strength,
+        breakThroughFocus: Bool = true
     ) {
         self.id = id
         self.title = title
@@ -25,6 +28,7 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         self.tags = tags
         self.dueTime = dueTime
         self.strength = strength
+        self.breakThroughFocus = breakThroughFocus
     }
 }
 
