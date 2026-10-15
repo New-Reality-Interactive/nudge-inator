@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 
 # Create the Xcode project with a scripted test run
 
