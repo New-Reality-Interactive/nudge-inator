@@ -6,7 +6,8 @@ import NudgeShared
 struct NudgeInatorApp: App {
     var body: some Scene {
         WindowGroup {
-            Text("Nudge-inator")
+            // PROTOTYPE: ticket 02 spike screen; main keeps the plain Text.
+            SpikeView(model: SpikeModel(label: "Nudge", tint: .orange))
         }
     }
 }

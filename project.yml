@@ -67,6 +67,23 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.newrealityinteractive.nudgeinator.widgets
         TARGETED_DEVICE_FAMILY: "1"
+  # PROTOTYPE: ticket 02 spike twin app, prototype branch only.
+  NudgeSpikeTwin:
+    type: application
+    platform: iOS
+    sources: [App/PrototypeAlarmSpike, PrototypeSpikeTwin]
+    dependencies:
+      - package: NudgeShared
+    info:
+      path: PrototypeSpikeTwin/Info.plist
+      properties:
+        CFBundleDisplayName: Spike Twin
+        UILaunchScreen: {}
+        NSAlarmKitUsageDescription: "Spike twin schedules test alarms."
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.newrealityinteractive.nudgeinator.spiketwin
+        TARGETED_DEVICE_FAMILY: "1"
   NudgeInatorTests:
     type: bundle.unit-test
     platform: iOS
@@ -87,3 +104,7 @@ schemes:
         NudgeInatorTests: [test]
     test:
       targets: [NudgeInatorTests]
+  NudgeSpikeTwin:
+    build:
+      targets:
+        NudgeSpikeTwin: all

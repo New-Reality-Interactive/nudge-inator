@@ -15,3 +15,10 @@ struct EmptyWidget: Widget {
         EmptyWidgetConfiguration()
     }
 }
+
+// PROTOTYPE: ticket 02 spike. Lets the extension find the Open intent compiled into NudgeShared.
+import AppIntents
+
+struct SpikeWidgetIntentsPackage: AppIntentsPackage {
+    static var includedPackages: [any AppIntentsPackage.Type] { [NudgeSharedIntents.self] }
+}
