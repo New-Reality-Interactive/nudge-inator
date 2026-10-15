@@ -27,4 +27,12 @@ The simulator is chosen by name: `SIMULATOR_NAME` (default `iPhone 17`). The iOS
 
 ## Signing
 
-Device builds need a development team. Set `DEVELOPMENT_TEAM` in `project.yml`, and register the App Group above for both bundle IDs. Simulator builds and tests need neither.
+Device builds sign automatically with the team in `project.yml` (`DEVELOPMENT_TEAM`, New Reality Interactive). The entitlements are declared there too: the App Group above in the app and the widget extension, and Time Sensitive notifications in the app. Don't edit the `.entitlements` files, because `xcodegen generate` rewrites them from `project.yml`.
+
+The first device build on a new Mac or iPhone needs the phone connected with Developer Mode on (Settings > Privacy & Security), then:
+
+```sh
+xcodebuild -scheme NudgeInator -destination 'generic/platform=iOS' -allowProvisioningUpdates -allowProvisioningDeviceRegistration build
+```
+
+That registers the iPhone with the team and creates the App IDs, the App Group and the Time Sensitive capability, so none of them need setting up by hand on the developer website. Simulator builds and tests need no signing.

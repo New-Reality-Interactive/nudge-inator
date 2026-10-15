@@ -12,8 +12,23 @@ failed=()
 
 step() { echo; echo "==> $1"; }
 
+# Prints every import of a module other than Foundation in the .swift files under $1. Matches the
+# whole import grammar (attributes such as @preconcurrency, Swift 6 access levels such as
+# `public import`, and kinds such as `import struct X.Y`), so none of those forms slips past.
+non_foundation_imports() {
+  perl -MFile::Find -e '
+    my $import = qr/^\s*(?:@\w+(?:\([^)]*\))?\s+)*(?:(?:public|package|internal|fileprivate|private)\s+)?import\s+(?:(?:typealias|struct|class|enum|protocol|let|var|func)\s+)?(\w+)/;
+    find(sub {
+      return unless /\.swift\z/;
+      open(my $fh, "<", $_) or die "$File::Find::name: $!\n";
+      while (<$fh>) { print "$File::Find::name:$.: $_" if /$import/ && $1 ne "Foundation" }
+      close $fh;
+    }, shift);
+  ' "$1"
+}
+
 step "NudgeEngine imports no Apple framework (Foundation only)"
-if grep -rnE '^\s*(@testable\s+)?import\s+' Packages/NudgeEngine/Sources | grep -vE 'import\s+Foundation\s*$'; then
+if non_foundation_imports Packages/NudgeEngine/Sources | grep .; then
   echo "FAIL: NudgeEngine sources may only import Foundation" >&2
   failed+=("engine-imports")
 fi
