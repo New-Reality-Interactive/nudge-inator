@@ -65,7 +65,7 @@ private extension RepeatRule {
             return (interval > 1 ? "\(every) on \(names)" : "Every \(names)") + inMonths
         case .monthly:
             let monthDays = noDayParts ? first.day.map { [$0] } : monthDays
-            return "\(every) on \(days(weekdays: weekdays, monthDays: monthDays))" + inMonths + note(monthDays: monthDays, months: nil)
+            return "\(every) on \(days(weekdays: weekdays, monthDays: monthDays))" + inMonths + note(monthDays: monthDays, months: months)
         case .yearly:
             let monthDays = noDayParts ? first.day.map { [$0] } : monthDays
             let months = noDayParts ? self.months ?? first.month.map { [$0] } : self.months
@@ -85,7 +85,7 @@ private extension RepeatRule {
         if let monthDays {
             return Self.list(Self.sorted(monthDays).map(Self.monthDayName)) + of + condition(weekdays: weekdays, monthDays: nil)
         }
-        return Self.list(Self.sorted(weekdays ?? []).map { Self.weekdayName($0, every: true) }) + of
+        return Self.list((weekdays ?? []).sorted().map { Self.weekdayName($0, every: true) }) + of
     }
 
     /// A limit on the days: " when it's a Monday or Friday", " when it's the 1st or the 15th".
@@ -93,7 +93,7 @@ private extension RepeatRule {
         var options: [String] = []
         if let monthDays { options.append(Self.sorted(monthDays).map(Self.monthDayName).joined(separator: " or ")) }
         if let weekdays {
-            let names = Self.sorted(weekdays).map { Self.weekdayName($0, every: false) }
+            let names = weekdays.sorted().map { Self.weekdayName($0, every: false) }
             options.append(names.first.map { first in
                 (first.hasPrefix("the") ? "" : "a ") + names.joined(separator: " or ")
             } ?? "")
@@ -112,7 +112,9 @@ private extension RepeatRule {
         // The fewest days any of the rule's months has: 28, unless it names only longer months.
         let shortest = months.map { $0.map(Self.fewestDays).min() ?? 28 } ?? 28
         let lacksDay = monthDays?.contains { abs($0) > shortest } == true
-        let lacksWeekday = weekdays?.contains { abs($0.ordinal ?? 0) == 5 } == true && (frequency == .monthly || months != nil)
+        // A month has four or five of each weekday, and a year 52 or 53.
+        let ordinalsSomeLack = frequency == .yearly && months == nil ? 53 : 5
+        let lacksWeekday = weekdays?.contains { abs($0.ordinal ?? 0) >= ordinalsSomeLack } == true
         guard lacksDay || lacksWeekday else { return "" }
         let period = frequency == .yearly ? "years" : "months"
         switch missingDay {
@@ -133,11 +135,6 @@ private extension RepeatRule {
         case .yearly: "year"
         }
         return interval > 1 ? "Every \(interval) \(unit)s" : "Every \(unit)"
-    }
-
-    /// Monday first, then by ordinal, as the Custom page lists them.
-    static func sorted(_ weekdays: Set<WeekdayNumber>) -> [WeekdayNumber] {
-        weekdays.sorted { ($0.weekday.mondayFirstIndex, $0.ordinal ?? 0) < ($1.weekday.mondayFirstIndex, $1.ordinal ?? 0) }
     }
 
     /// The days of the month, then the days counted back from its end.

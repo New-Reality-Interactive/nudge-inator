@@ -4,11 +4,21 @@ import Foundation
 /// ADR 0003. A reminder with no repeat rule repeats Never.
 public struct RepeatRule: Equatable, Sendable {
     /// RRULE's `FREQ`.
-    public enum Frequency: Hashable, Sendable {
+    public enum Frequency: Hashable, CaseIterable, Sendable {
         case daily
         case weekly
         case monthly
         case yearly
+
+        /// How RRULE text spells it.
+        var code: String {
+            switch self {
+            case .daily: "DAILY"
+            case .weekly: "WEEKLY"
+            case .monthly: "MONTHLY"
+            case .yearly: "YEARLY"
+            }
+        }
     }
 
     /// What a rule does in a month without its day (the 31st, or 29 February).
@@ -26,11 +36,25 @@ public struct RepeatRule: Equatable, Sendable {
 
         /// 0 for Monday to 6 for Sunday: the order RRULE's default week and the Custom page use.
         var mondayFirstIndex: Int { (rawValue + 5) % 7 }
+
+        /// How RRULE text spells it.
+        var code: String {
+            switch self {
+            case .sunday: "SU"
+            case .monday: "MO"
+            case .tuesday: "TU"
+            case .wednesday: "WE"
+            case .thursday: "TH"
+            case .friday: "FR"
+            case .saturday: "SA"
+            }
+        }
     }
 
     /// One `BYDAY` entry, RFC 5545's `weekdaynum`: a weekday, and for monthly and yearly rules an
     /// optional ordinal within the month or year (`1MO` the first Monday, `-1FR` the last Friday).
-    public struct WeekdayNumber: Hashable, Sendable {
+    /// They sort Monday first, then by ordinal, as the Custom page lists them.
+    public struct WeekdayNumber: Hashable, Comparable, Sendable {
         public var weekday: Weekday
         /// `nil` is every such weekday. Negative counts back from the end.
         public var ordinal: Int?
@@ -38,6 +62,10 @@ public struct RepeatRule: Equatable, Sendable {
         public init(_ weekday: Weekday, ordinal: Int? = nil) {
             self.weekday = weekday
             self.ordinal = ordinal
+        }
+
+        public static func < (lhs: Self, rhs: Self) -> Bool {
+            (lhs.weekday.mondayFirstIndex, lhs.ordinal ?? 0) < (rhs.weekday.mondayFirstIndex, rhs.ordinal ?? 0)
         }
     }
 
@@ -79,13 +107,13 @@ public struct RepeatRule: Equatable, Sendable {
         missingDay: MissingDay = .skip
     ) {
         guard interval >= 1 else { return nil }
-        self.init(validFrequency: frequency, interval: interval, weekdays: weekdays, monthDays: monthDays, months: months, end: end, missingDay: missingDay)
+        self.init(frequency, checkedInterval: interval, weekdays: weekdays, monthDays: monthDays, months: months, end: end, missingDay: missingDay)
     }
 
-    /// For the presets and the parser, which have already checked the parts.
+    /// For the presets and the parser, which have already checked that `interval` is at least 1.
     init(
-        validFrequency frequency: Frequency,
-        interval: Int = 1,
+        _ frequency: Frequency,
+        checkedInterval interval: Int = 1,
         weekdays: Set<WeekdayNumber>? = nil,
         monthDays: Set<Int>? = nil,
         months: Set<Int>? = nil,
@@ -101,54 +129,55 @@ public struct RepeatRule: Equatable, Sendable {
         self.missingDay = missingDay
     }
 
-    public static let everyDay = RepeatRule(validFrequency: .daily)
-    public static let everyWeekday = RepeatRule(validFrequency: .weekly, weekdays: Set([Weekday.monday, .tuesday, .wednesday, .thursday, .friday].map { WeekdayNumber($0) }))
-    public static let everyWeek = RepeatRule(validFrequency: .weekly)
-    public static let everyTwoWeeks = RepeatRule(validFrequency: .weekly, interval: 2)
-    public static let everyMonth = RepeatRule(validFrequency: .monthly, missingDay: .lastDayOfMonth)
-    public static let everyYear = RepeatRule(validFrequency: .yearly, missingDay: .lastDayOfMonth)
+    public static let everyDay = RepeatRule(.daily)
+    public static let everyWeekday = RepeatRule(.weekly, weekdays: Set([Weekday.monday, .tuesday, .wednesday, .thursday, .friday].map { WeekdayNumber($0) }))
+    public static let everyWeek = RepeatRule(.weekly)
+    public static let everyTwoWeeks = RepeatRule(.weekly, checkedInterval: 2)
+    public static let everyMonth = RepeatRule(.monthly, missingDay: .lastDayOfMonth)
+    public static let everyYear = RepeatRule(.yearly, missingDay: .lastDayOfMonth)
 }
 
 extension RepeatRule {
-    /// How far a search for a due time looks, as in the mockup's `nextOccurrence`: long enough
-    /// for a custom "every 10 years" rule. A rule with no due time in it has no next occurrence.
-    private static let searchDays = 366 * 11
+    /// How many days a search looks at before it gives up, about 11 years' worth, as in the
+    /// mockup's `nextOccurrence`. A jump past a period the interval or the months rule out costs
+    /// one step, so a rare rule (every 20 years, or 29 February on a Monday) still reaches dates
+    /// decades away. A rule with no due time within it has no next occurrence.
+    private static let searchSteps = 366 * 11
 
     /// The latest due time at or before `date`, or `nil` if `date` is before the first due time.
     /// After the rule's end, that is its last due time.
     func latestDueTime(atOrBefore date: Date, firstDueTime: Date, calendar: Calendar) -> Date? {
         guard date >= firstDueTime else { return nil }
-        let date = min(date, lastPossibleDueTime(firstDueTime: firstDueTime, calendar: calendar) ?? date)
+        if case .count(let count) = end {
+            return countedDueTimes(count, firstDueTime: firstDueTime, calendar: calendar).prefix { $0 <= date }.last
+        }
+        let date = min(date, untilBound(firstDueTime: firstDueTime, calendar: calendar) ?? date)
         return dueTimes(from: date, by: -1, firstDueTime: firstDueTime, calendar: calendar).first { $0 <= date }
     }
 
     /// The first due time after `date`, or `nil` if there is none: the rule has ended, or the
     /// search found nothing.
     func nextDueTime(after date: Date, firstDueTime: Date, calendar: Calendar) -> Date? {
-        guard let next = nextDueTimeIgnoringEnd(after: date, firstDueTime: firstDueTime, calendar: calendar) else { return nil }
-        guard let last = lastPossibleDueTime(firstDueTime: firstDueTime, calendar: calendar) else { return next }
-        return next <= last ? next : nil
+        if case .count(let count) = end {
+            return countedDueTimes(count, firstDueTime: firstDueTime, calendar: calendar).first { $0 > date }
+        }
+        let next = dueTimes(from: max(date, firstDueTime), by: 1, firstDueTime: firstDueTime, calendar: calendar).first { $0 > date }
+        guard let next, let until = untilBound(firstDueTime: firstDueTime, calendar: calendar) else { return next }
+        return next <= until ? next : nil
     }
 
-    private func nextDueTimeIgnoringEnd(after date: Date, firstDueTime: Date, calendar: Calendar) -> Date? {
-        dueTimes(from: max(date, firstDueTime), by: 1, firstDueTime: firstDueTime, calendar: calendar).first { $0 > date }
+    /// A `COUNT` rule's due times in order from the first, which counts as one (RFC 5545). Walked
+    /// only as far as the caller reads, never to the end of a huge `COUNT`.
+    private func countedDueTimes(_ count: Int, firstDueTime: Date, calendar: Calendar) -> some Sequence<Date> {
+        dueTimes(from: firstDueTime, by: 1, firstDueTime: firstDueTime, calendar: calendar).prefix(count)
     }
 
-    /// The latest moment a due time can fall at under `COUNT` or `UNTIL`, or `nil` if the rule
-    /// doesn't end. Never before the first due time, which always counts (RFC 5545).
-    private func lastPossibleDueTime(firstDueTime: Date, calendar: Calendar) -> Date? {
+    /// The latest moment a due time can fall at under `UNTIL`, or `nil` without one. Never before
+    /// the first due time, which always counts (RFC 5545).
+    private func untilBound(firstDueTime: Date, calendar: Calendar) -> Date? {
         switch end {
-        case nil:
+        case nil, .count:
             return nil
-        case .count(let count):
-            // Each step is its own bounded search, so a long COUNT of rare dates still ends, and
-            // a rule that runs out of dates ends at its last one.
-            var last = firstDueTime
-            for _ in 1..<max(count, 1) {
-                guard let next = nextDueTimeIgnoringEnd(after: last, firstDueTime: firstDueTime, calendar: calendar) else { break }
-                last = next
-            }
-            return last
         case let .untilDate(year, month, day):
             guard let untilDay = calendar.date(from: DateComponents(year: year, month: month, day: day)),
                   let dayAfter = calendar.date(byAdding: .day, value: 1, to: untilDay)
@@ -160,17 +189,20 @@ extension RepeatRule {
     }
 
     /// Due times from the day of `date`, forwards (`step` 1) or backwards (-1), never before the
-    /// first due time and no further than the search horizon. Every repeat, preset or custom,
-    /// goes through here.
+    /// first due time. The step budget starts again after each due time, so each is its own
+    /// bounded search. Every repeat, preset or custom, goes through here.
     private func dueTimes(from date: Date, by step: Int, firstDueTime: Date, calendar: Calendar) -> some Sequence<Date> {
         let walk = DayWalk(rule: self, firstDueTime: firstDueTime, calendar: calendar)
-        let start = calendar.startOfDay(for: date)
-        let horizon = calendar.date(byAdding: .day, value: step * Self.searchDays, to: start) ?? start
         let time = calendar.dateComponents([.hour, .minute, .second], from: firstDueTime)
-        let days = sequence(state: Optional(start)) { (next: inout Date?) -> Date? in
-            while let day = next, day >= walk.firstDay, step > 0 ? day < horizon : day > horizon {
-                next = walk.nextCandidate(after: day, by: step)
-                if walk.isDue(on: day) { return day }
+        let start: Date? = calendar.startOfDay(for: date)
+        let days = sequence(state: (day: start, stepsLeft: Self.searchSteps)) { state -> Date? in
+            while let day = state.day, day >= walk.firstDay, state.stepsLeft > 0 {
+                state.day = walk.nextCandidate(after: day, by: step)
+                state.stepsLeft -= 1
+                if walk.isDue(on: day) {
+                    state.stepsLeft = Self.searchSteps
+                    return day
+                }
             }
             return nil
         }
@@ -221,7 +253,7 @@ private struct DayWalk {
         // RFC 5545: "The DTSTART property value always counts as the first occurrence."
         if day == firstDay { return true }
         let date = calendar.dateComponents([.year, .month, .day, .weekday], from: day)
-        guard isInIntervalPeriod(day, date) else { return false }
+        guard periods(to: day, date) % rule.interval == 0 else { return false }
         if let months, !months.contains(date.month ?? 0) { return false }
         let lastDay = calendar.range(of: .day, in: .month, for: day)?.count ?? 31
         if let monthDays, !monthDays.contains(where: { isMonthDay($0, date.day ?? 0, lastDay: lastDay) }) { return false }
@@ -241,33 +273,44 @@ private struct DayWalk {
 
     private func jump(from day: Date, by step: Int) -> Date? {
         let date = calendar.dateComponents([.year, .month], from: day)
-        if !isInIntervalPeriod(day, date) {
+        let remainder = periods(to: day, date) % rule.interval
+        if remainder != 0 {
+            // Straight to the nearest period the interval allows, however large the interval.
+            let periods = step > 0 ? rule.interval - remainder : remainder
             switch rule.frequency {
-            case .daily: break
-            case .weekly: return beyondWeek(of: day, by: step)
-            case .monthly: return beyond(.month, of: day, by: step)
-            case .yearly: return beyond(.year, of: day, by: step)
+            case .daily: return calendar.date(byAdding: .day, value: step * periods, to: day)
+            case .weekly: return beyondWeek(of: day, by: step, weeks: periods)
+            case .monthly: return beyond(.month, of: day, by: step, periods: periods)
+            case .yearly: return beyond(.year, of: day, by: step, periods: periods)
             }
         }
-        if let months, !months.contains(date.month ?? 0) { return beyond(.month, of: day, by: step) }
+        if let months, !months.contains(date.month ?? 0) { return beyond(.month, of: day, by: step, periods: 1) }
         return calendar.date(byAdding: .day, value: step, to: day)
     }
 
-    /// The first day of the next month or year, or the last day of the one before.
-    private func beyond(_ component: Calendar.Component, of day: Date, by step: Int) -> Date? {
-        guard let period = calendar.dateInterval(of: component, for: day) else { return calendar.date(byAdding: .day, value: step, to: day) }
-        return step > 0 ? period.end : calendar.date(byAdding: .day, value: -1, to: period.start)
+    /// The first day of the month or year `periods` on, or the last day of the one `periods` back.
+    private func beyond(_ component: Calendar.Component, of day: Date, by step: Int, periods: Int) -> Date? {
+        guard let period = calendar.dateInterval(of: component, for: day) else { return nil }
+        if step > 0 { return calendar.date(byAdding: component, value: periods - 1, to: period.end) }
+        return calendar.date(byAdding: component, value: -(periods - 1), to: period.start)
+            .flatMap { calendar.date(byAdding: .day, value: -1, to: $0) }
     }
 
-    /// The next Monday, or the Sunday before: weeks start on Monday, RRULE's default `WKST`.
-    private func beyondWeek(of day: Date, by step: Int) -> Date? {
-        let daysSinceMonday = (calendar.component(.weekday, from: day) + 5) % 7
-        return calendar.date(byAdding: .day, value: step > 0 ? 7 - daysSinceMonday : -(daysSinceMonday + 1), to: day)
+    /// The Monday `weeks` weeks on, or the Sunday ending the week `weeks` back: weeks start on
+    /// Monday, RRULE's default `WKST`.
+    private func beyondWeek(of day: Date, by step: Int, weeks: Int) -> Date? {
+        let daysSinceMonday = daysSinceMonday(of: day)
+        let days = step > 0 ? 7 - daysSinceMonday + 7 * (weeks - 1) : -(daysSinceMonday + 1) - 7 * (weeks - 1)
+        return calendar.date(byAdding: .day, value: days, to: day)
     }
 
-    /// Whether `day` is in a day, week, month or year that the interval counts from the first.
-    private func isInIntervalPeriod(_ day: Date, _ date: DateComponents) -> Bool {
-        let periods = switch rule.frequency {
+    private func daysSinceMonday(of day: Date) -> Int {
+        RepeatRule.Weekday(rawValue: calendar.component(.weekday, from: day))?.mondayFirstIndex ?? 0
+    }
+
+    /// How many days, weeks, months or years `day` is after the first, as the interval counts.
+    private func periods(to day: Date, _ date: DateComponents) -> Int {
+        switch rule.frequency {
         case .daily: calendar.dateComponents([.day], from: firstDay, to: day).day ?? 0
         case .weekly: weeks(from: firstDay, to: day)
         // Counted by the calendar month, as the mockup's `monthDiff` does, so the count never
@@ -275,7 +318,6 @@ private struct DayWalk {
         case .monthly: ((date.year ?? 0) - (first.year ?? 0)) * 12 + (date.month ?? 0) - (first.month ?? 0)
         case .yearly: (date.year ?? 0) - (first.year ?? 0)
         }
-        return periods % rule.interval == 0
     }
 
     /// Whether day `day` of a month with `lastDay` days is the rule's month day `wanted`. A day the
@@ -310,8 +352,7 @@ private struct DayWalk {
     /// Whole weeks between the weeks holding two days, whatever the calendar's own first weekday.
     private func weeks(from start: Date, to end: Date) -> Int {
         func monday(of day: Date) -> Date {
-            let daysSinceMonday = (calendar.component(.weekday, from: day) + 5) % 7
-            return calendar.date(byAdding: .day, value: -daysSinceMonday, to: day) ?? day
+            calendar.date(byAdding: .day, value: -daysSinceMonday(of: day), to: day) ?? day
         }
         return (calendar.dateComponents([.day], from: monday(of: start), to: monday(of: end)).day ?? 0) / 7
     }

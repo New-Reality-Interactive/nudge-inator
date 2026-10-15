@@ -52,13 +52,10 @@ extension RepeatRule {
         }
 
         guard let frequencyText = parts["FREQ"] else { throw .missingFrequency }
-        let frequency: Frequency = switch frequencyText.uppercased() {
-        case "DAILY": .daily
-        case "WEEKLY": .weekly
-        case "MONTHLY": .monthly
-        case "YEARLY": .yearly
-        case let code where ["HOURLY", "MINUTELY", "SECONDLY"].contains(code): throw .subDailyFrequency(code)
-        default: throw .invalidValue(part: "FREQ", value: frequencyText)
+        let code = frequencyText.uppercased()
+        guard let frequency = Frequency.allCases.first(where: { $0.code == code }) else {
+            if ["HOURLY", "MINUTELY", "SECONDLY"].contains(code) { throw .subDailyFrequency(code) }
+            throw .invalidValue(part: "FREQ", value: frequencyText)
         }
 
         let interval = try parts["INTERVAL"].map { value throws(ParseError) in
@@ -66,7 +63,7 @@ extension RepeatRule {
         } ?? 1
 
         if let start = parts["WKST"] {
-            guard let weekday = Self.weekdayCodes[start.uppercased()] else { throw .invalidValue(part: "WKST", value: start) }
+            guard let weekday = Self.weekday(code: start) else { throw .invalidValue(part: "WKST", value: start) }
             guard weekday == .monday else { throw .unsupportedWeekStart(start.uppercased()) }
         }
 
@@ -97,21 +94,18 @@ extension RepeatRule {
         if let count = parts["COUNT"] { end = .count(try Self.number(count, part: "COUNT", in: 1...Int.max)) }
         if let until = parts["UNTIL"] { end = try Self.until(until) }
 
-        self.init(validFrequency: frequency, interval: interval, weekdays: weekdays, monthDays: monthDays, months: months, end: end)
+        self.init(frequency, checkedInterval: interval, weekdays: weekdays, monthDays: monthDays, months: months, end: end)
     }
 
     /// The rule as RRULE text, which `init(rrule:)` reads back as an equal rule. Parts come in the
     /// mockup's order, weekdays Monday first, numbers ascending, and `INTERVAL=1` is left out.
     /// `missingDay` is not part of RRULE, so a preset's text reads back as the skipping rule: the
-    /// store keeps whether a rule is a preset alongside its text.
+    /// store keeps `missingDay` alongside the text.
     public var rrule: String {
-        var parts = ["FREQ=" + Self.frequencyCodes[frequency, default: ""]]
+        var parts = ["FREQ=" + frequency.code]
         if interval != 1 { parts.append("INTERVAL=\(interval)") }
         if let weekdays {
-            let sorted = weekdays.sorted { ($0.weekday.mondayFirstIndex, $0.ordinal ?? 0) < ($1.weekday.mondayFirstIndex, $1.ordinal ?? 0) }
-            let codes = sorted.map { number in
-                (number.ordinal.map(String.init) ?? "") + (Self.weekdayCodes.first { $0.value == number.weekday }?.key ?? "")
-            }
+            let codes = weekdays.sorted().map { (number: WeekdayNumber) in (number.ordinal.map(String.init) ?? "") + number.weekday.code }
             parts.append("BYDAY=" + codes.joined(separator: ","))
         }
         if let months { parts.append("BYMONTH=" + months.sorted().map(String.init).joined(separator: ",")) }
@@ -128,8 +122,6 @@ extension RepeatRule {
         return parts.joined(separator: ";")
     }
 
-    private static let frequencyCodes: [Frequency: String] = [.daily: "DAILY", .weekly: "WEEKLY", .monthly: "MONTHLY", .yearly: "YEARLY"]
-
     /// `number` zero-padded to `width` digits.
     private static func digits(_ number: Int?, _ width: Int) -> String {
         let text = String(number ?? 0)
@@ -140,9 +132,9 @@ extension RepeatRule {
     private static let unsupportedParts: Set = ["BYSETPOS", "BYWEEKNO", "BYYEARDAY", "BYHOUR", "BYMINUTE", "BYSECOND"]
     private static let otherProperties: Set = ["DTSTART", "EXDATE", "RDATE"]
 
-    static let weekdayCodes: [String: Weekday] = [
-        "SU": .sunday, "MO": .monday, "TU": .tuesday, "WE": .wednesday, "TH": .thursday, "FR": .friday, "SA": .saturday,
-    ]
+    private static func weekday(code: some StringProtocol) -> Weekday? {
+        Weekday.allCases.first { $0.code == code.uppercased() }
+    }
 
     /// A whole number in `range`, with an optional sign as RFC 5545 allows. `whole` is the part's
     /// full value, which the error reports when this is one item of a list.
@@ -167,7 +159,7 @@ extension RepeatRule {
 
     /// `MO`, `1MO`, `+1MO` or `-1MO`. RFC 5545's ordinal is 1 to 53 either way.
     private static func weekdayNumber(_ text: Substring, part value: String) throws(ParseError) -> WeekdayNumber {
-        guard let weekday = weekdayCodes[text.suffix(2).uppercased()] else { throw .invalidValue(part: "BYDAY", value: value) }
+        guard let weekday = weekday(code: text.suffix(2)) else { throw .invalidValue(part: "BYDAY", value: value) }
         let ordinal = text.dropLast(2)
         if ordinal.isEmpty { return WeekdayNumber(weekday) }
         let number = try number(ordinal, part: "BYDAY", whole: value, in: -53...53)
@@ -212,7 +204,7 @@ extension RepeatRule {
     }
 
     /// RRULE's dates are Gregorian, and a date-time UNTIL is in UTC.
-    static let utcCalendar: Calendar = {
+    private static let utcCalendar: Calendar = {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = .gmt
         return calendar
