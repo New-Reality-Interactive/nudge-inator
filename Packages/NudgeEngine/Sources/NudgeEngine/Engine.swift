@@ -74,7 +74,7 @@ public struct Engine {
         SchedulePlan(items: reminders.flatMap { reminder -> [SchedulePlan.Item] in
             var dueTimes: [Date] = []
             if let open = openOccurrence(for: reminder.id) { dueTimes.append(open.dueTime) }
-            if let next = nextDueTime(of: reminder) { dueTimes.append(next) }
+            if let next = reminder.nextDueTime(after: clock.now, calendar: calendar) { dueTimes.append(next) }
             return dueTimes.flatMap { ladder(of: reminder, dueAt: $0) }
         })
     }
@@ -117,7 +117,7 @@ public struct Engine {
     /// The reminder's latest occurrence, open or closed, or `nil` before its first due time.
     public func latestOccurrence(for reminderID: Reminder.ID) -> Occurrence? {
         guard let reminder = reminders.first(where: { $0.id == reminderID }),
-              let dueTime = latestDueTime(of: reminder)
+              let dueTime = reminder.latestDueTime(atOrBefore: clock.now, calendar: calendar)
         else { return nil }
         if doneOccurrences.contains(OccurrenceKey(reminderID: reminderID, dueTime: dueTime)) {
             return Occurrence(dueTime: dueTime, state: .done)
@@ -128,19 +128,5 @@ public struct Engine {
         }
         let sent = nudgeTimes.filter { $0 <= clock.now }.count
         return Occurrence(dueTime: dueTime, state: .nudging(nudgeNumber: sent))
-    }
-
-    private func latestDueTime(of reminder: Reminder) -> Date? {
-        guard let rule = reminder.repeatRule else {
-            return clock.now >= reminder.dueTime ? reminder.dueTime : nil
-        }
-        return rule.latestDueTime(atOrBefore: clock.now, firstDueTime: reminder.dueTime, calendar: calendar)
-    }
-
-    private func nextDueTime(of reminder: Reminder) -> Date? {
-        guard let rule = reminder.repeatRule else {
-            return clock.now < reminder.dueTime ? reminder.dueTime : nil
-        }
-        return rule.nextDueTime(after: clock.now, firstDueTime: reminder.dueTime, calendar: calendar)
     }
 }

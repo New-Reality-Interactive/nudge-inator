@@ -57,6 +57,7 @@ struct RepeatPresetTests {
         engine.markDone(reminder.id)
 
         let items = try #require(scheduler.lastPlan).items
+        // Firm's whole ladder: 20 nudges, all inside the 24-hour span.
         #expect(items.count == 20)
         #expect(items.first?.nudgeNumber == 1)
         #expect(items.first?.fireTime == Self.local(2026, 10, 16))
@@ -143,8 +144,8 @@ struct RepeatPresetTests {
 
     /// Every Month is a rule like any custom one; only its missing-day policy differs. The same
     /// parts with RFC 5545's skip (what ticket 09's parser produces) pass over 30 November.
-    @Test func aMonthlyRuleThatSkipsHasNoOccurrenceInAMonthWithoutItsDay() {
-        let skipping = RepeatRule(frequency: .monthly, missingDay: .skip)
+    @Test func aMonthlyRuleThatSkipsHasNoOccurrenceInAMonthWithoutItsDay() throws {
+        let skipping = try #require(RepeatRule(frequency: .monthly, missingDay: .skip))
         #expect(RepeatRule.everyMonth == RepeatRule(frequency: .monthly, missingDay: .lastDayOfMonth))
         let reminder = Reminder(title: "Pay the rent", dueTime: Self.local(2026, 10, 31), repeatRule: skipping, strength: .firm)
 
@@ -152,6 +153,27 @@ struct RepeatPresetTests {
         #expect(engine(for: reminder).latestOccurrence(for: reminder.id)?.dueTime == Self.local(2026, 10, 31))
         clock.now = Self.local(2026, 12, 31, 12)
         #expect(engine(for: reminder).latestOccurrence(for: reminder.id)?.dueTime == Self.local(2026, 12, 31))
+    }
+
+    /// The presets' next-due path honours `INTERVAL` for every frequency, daily included, so a
+    /// custom "every 3 days" from 15 October falls due on the 18th and the 21st, not the 16th.
+    @Test(arguments: [
+        (Self.local(2026, 10, 17, 12), Self.local(2026, 10, 15)),
+        (Self.local(2026, 10, 18, 12), Self.local(2026, 10, 18)),
+        (Self.local(2026, 10, 21, 12), Self.local(2026, 10, 21)),
+    ])
+    func aDailyRuleWithAnIntervalFallsDueEveryIntervalDays(now: Date, latestDueTime: Date) throws {
+        let everyThreeDays = try #require(RepeatRule(frequency: .daily, interval: 3))
+        let reminder = Reminder(title: "Water the plants", dueTime: Self.local(2026, 10, 15), repeatRule: everyThreeDays, strength: .gentle)
+        clock.now = now
+
+        #expect(engine(for: reminder).latestOccurrence(for: reminder.id)?.dueTime == latestDueTime)
+    }
+
+    /// `INTERVAL` must be at least 1 (RFC 5545), so a rule with 0 or less can't be made.
+    @Test(arguments: [0, -1])
+    func aRuleNeedsAnIntervalOfAtLeastOne(interval: Int) {
+        #expect(RepeatRule(frequency: .daily, interval: interval) == nil)
     }
 
     @Test func doneClosesOnlyItsOwnOccurrence() {

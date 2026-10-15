@@ -37,8 +37,22 @@ public struct RepeatRule: Equatable, Sendable {
     /// Not part of RRULE: it is what tells a preset from a custom rule with the same parts.
     public var missingDay: MissingDay
 
-    public init(
+    /// `nil` if `interval` is below 1, which RFC 5545 doesn't allow.
+    public init?(
         frequency: Frequency,
+        interval: Int = 1,
+        weekdays: Set<Weekday>? = nil,
+        monthDay: Int? = nil,
+        month: Int? = nil,
+        missingDay: MissingDay = .skip
+    ) {
+        guard interval >= 1 else { return nil }
+        self.init(validFrequency: frequency, interval: interval, weekdays: weekdays, monthDay: monthDay, month: month, missingDay: missingDay)
+    }
+
+    /// For the presets, whose parts are known to be valid, so they need no unwrapping.
+    private init(
+        validFrequency frequency: Frequency,
         interval: Int = 1,
         weekdays: Set<Weekday>? = nil,
         monthDay: Int? = nil,
@@ -53,12 +67,12 @@ public struct RepeatRule: Equatable, Sendable {
         self.missingDay = missingDay
     }
 
-    public static let everyDay = RepeatRule(frequency: .daily)
-    public static let everyWeekday = RepeatRule(frequency: .weekly, weekdays: [.monday, .tuesday, .wednesday, .thursday, .friday])
-    public static let everyWeek = RepeatRule(frequency: .weekly)
-    public static let everyTwoWeeks = RepeatRule(frequency: .weekly, interval: 2)
-    public static let everyMonth = RepeatRule(frequency: .monthly, missingDay: .lastDayOfMonth)
-    public static let everyYear = RepeatRule(frequency: .yearly, missingDay: .lastDayOfMonth)
+    public static let everyDay = RepeatRule(validFrequency: .daily)
+    public static let everyWeekday = RepeatRule(validFrequency: .weekly, weekdays: [.monday, .tuesday, .wednesday, .thursday, .friday])
+    public static let everyWeek = RepeatRule(validFrequency: .weekly)
+    public static let everyTwoWeeks = RepeatRule(validFrequency: .weekly, interval: 2)
+    public static let everyMonth = RepeatRule(validFrequency: .monthly, missingDay: .lastDayOfMonth)
+    public static let everyYear = RepeatRule(validFrequency: .yearly, missingDay: .lastDayOfMonth)
 }
 
 extension RepeatRule {
@@ -93,7 +107,7 @@ extension RepeatRule {
     private func isDue(on day: Date, firstDay: Date, calendar: Calendar) -> Bool {
         switch frequency {
         case .daily:
-            return true
+            return (calendar.dateComponents([.day], from: firstDay, to: day).day ?? 0) % interval == 0
         case .weekly:
             let weekday = calendar.component(.weekday, from: day)
             let days = weekdays.map { Set($0.map(\.rawValue)) } ?? [calendar.component(.weekday, from: firstDay)]
@@ -102,8 +116,8 @@ extension RepeatRule {
             // Counted by the calendar month, as the mockup's `monthDiff` does, so the count never
             // depends on how Foundation measures a month elapsed between two different days.
             let first = calendar.dateComponents([.year, .month], from: firstDay)
-            let this = calendar.dateComponents([.year, .month], from: day)
-            let months = ((this.year ?? 0) - (first.year ?? 0)) * 12 + (this.month ?? 0) - (first.month ?? 0)
+            let current = calendar.dateComponents([.year, .month], from: day)
+            let months = ((current.year ?? 0) - (first.year ?? 0)) * 12 + (current.month ?? 0) - (first.month ?? 0)
             return months % interval == 0 && isOnMonthDay(day, firstDay: firstDay, calendar: calendar)
         case .yearly:
             let years = calendar.component(.year, from: day) - calendar.component(.year, from: firstDay)
