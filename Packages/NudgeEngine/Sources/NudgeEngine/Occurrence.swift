@@ -1,5 +1,8 @@
+import Foundation
+
 /// One due instance of a reminder.
 public struct Occurrence: Equatable, Sendable {
+    public var dueTime: Date
     public var state: OccurrenceState
 }
 

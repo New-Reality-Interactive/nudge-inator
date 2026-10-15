@@ -8,7 +8,10 @@ public struct Reminder: Identifiable, Equatable, Sendable {
     public var notes: String
     /// Private to the app: never carried into a schedule plan.
     public var tags: [String]
+    /// The first due time. A repeating reminder's later due times are worked out from it.
     public var dueTime: Date
+    /// `nil` repeats Never.
+    public var repeatRule: RepeatRule?
     public var strength: Strength
     /// On unless the person turns it off, as in the mockup's New Reminder form.
     public var breakThroughFocus: Bool
@@ -19,6 +22,7 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         notes: String = "",
         tags: [String] = [],
         dueTime: Date,
+        repeatRule: RepeatRule? = nil,
         strength: Strength,
         breakThroughFocus: Bool = true
     ) {
@@ -27,8 +31,23 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         self.notes = notes
         self.tags = tags
         self.dueTime = dueTime
+        self.repeatRule = repeatRule
         self.strength = strength
         self.breakThroughFocus = breakThroughFocus
+    }
+}
+
+extension Reminder {
+    /// The latest occurrence's due time at or before `date`, or `nil` before the first one.
+    func latestDueTime(atOrBefore date: Date, calendar: Calendar) -> Date? {
+        guard let repeatRule else { return date >= dueTime ? dueTime : nil }
+        return repeatRule.latestDueTime(atOrBefore: date, firstDueTime: dueTime, calendar: calendar)
+    }
+
+    /// The next occurrence's due time after `date`, or `nil` if there is none.
+    func nextDueTime(after date: Date, calendar: Calendar) -> Date? {
+        guard let repeatRule else { return date < dueTime ? dueTime : nil }
+        return repeatRule.nextDueTime(after: date, firstDueTime: dueTime, calendar: calendar)
     }
 }
 
