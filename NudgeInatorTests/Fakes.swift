@@ -89,12 +89,11 @@ final class FakeNotificationCenter: UserNotificationCenter {
 /// Records what the notification adapter reports, as the app model will receive it (ticket 21).
 @MainActor
 final class FakeNotificationEvents: NotificationAdapterEvents {
-    private(set) var doneReminderIDs: [Reminder.ID] = []
-
+    private(set) var dones: [DeliveredNudge] = []
     private(set) var schedulingErrors: [any Error] = []
 
-    func markDone(_ reminderID: Reminder.ID) {
-        doneReminderIDs.append(reminderID)
+    func markDone(_ reminderID: Reminder.ID, nudgeFiredAt fireTime: Date) {
+        dones.append(DeliveredNudge(reminderID: reminderID, fireTime: fireTime))
     }
 
     func schedulingFailed(_ error: any Error) {

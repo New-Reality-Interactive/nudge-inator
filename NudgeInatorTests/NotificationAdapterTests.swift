@@ -9,6 +9,12 @@ import UserNotifications
 @MainActor
 struct NotificationAdapterTests {
     static let pills = UUID(uuidString: "6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C")!
+    /// The request identifiers of the pills' nudges at 9:10, 9:20, 9:30 and 9:45 in New York
+    /// (EDT), which are 13:10, 13:20, 13:30 and 13:45 UTC.
+    static let pillsAt0910 = "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792156200000"
+    static let pillsAt0920 = "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792156800000"
+    static let pillsAt0930 = "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792157400000"
+    static let pillsAt0945 = "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792158300000"
 
     let clock = FakeClock(now: NewYork.local(2026, 10, 16, 9))
     let center = FakeNotificationCenter()
@@ -53,12 +59,7 @@ struct NotificationAdapterTests {
         await adapter.waitUntilApplied()
 
         let requests = pending()
-        // 9:10, 9:30 and 9:45 in New York (EDT) are 13:10, 13:30 and 13:45 UTC.
-        #expect(requests.map(\.identifier) == [
-            "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792156200000",
-            "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792157400000",
-            "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792158300000",
-        ])
+        #expect(requests.map(\.identifier) == [Self.pillsAt0910, Self.pillsAt0930, Self.pillsAt0945])
         #expect(requests.map { ($0.trigger as? UNTimeIntervalNotificationTrigger)?.timeInterval } == [600, 1800, 2700])
         #expect(requests.map { ($0.trigger as? UNTimeIntervalNotificationTrigger)?.repeats } == [false, false, false])
         #expect(requests.map(\.content.title) == ["Take the pills", "Take the pills", "Take the pills"])
@@ -104,8 +105,9 @@ struct NotificationAdapterTests {
         ])
     }
 
-    /// Mirrors the delegate: it reads the reminder ID from the delivered request's `userInfo`.
-    @Test func theDoneActionReportsDoneForTheNotificationsReminder() async throws {
+    /// Mirrors the delegate: it reads the nudge from the delivered request's `userInfo`. The fire
+    /// time goes along so the engine can tell an earlier occurrence's banner from today's.
+    @Test func theDoneActionReportsDoneForTheNotificationsNudge() async throws {
         let adapter = adapter()
         let events = FakeNotificationEvents()
         adapter.events = events
@@ -115,10 +117,24 @@ struct NotificationAdapterTests {
 
         adapter.handleResponse(
             actionIdentifier: NotificationAdapter.doneActionIdentifier,
-            reminderID: NotificationAdapter.reminderID(in: delivered.content.userInfo)
+            nudge: NotificationAdapter.deliveredNudge(in: delivered.content.userInfo)
         )
 
-        #expect(events.doneReminderIDs == [Self.pills])
+        #expect(events.dones == [DeliveredNudge(reminderID: Self.pills, fireTime: NewYork.local(2026, 10, 16, 9, 10))])
+    }
+
+    /// The Done action can launch the app in the background, and the response may come before the
+    /// app model is listening (ticket 21). It waits rather than being lost.
+    @Test func aDoneBeforeAnyoneListensIsReportedOnceSomeoneDoes() {
+        let adapter = adapter()
+        let events = FakeNotificationEvents()
+        let nudge = DeliveredNudge(reminderID: Self.pills, fireTime: NewYork.local(2026, 10, 16, 9, 10))
+
+        adapter.handleResponse(actionIdentifier: NotificationAdapter.doneActionIdentifier, nudge: nudge)
+        adapter.events = events
+        adapter.events = events
+
+        #expect(events.dones == [nudge])
     }
 
     @Test(arguments: [
@@ -130,9 +146,12 @@ struct NotificationAdapterTests {
         let events = FakeNotificationEvents()
         adapter.events = events
 
-        adapter.handleResponse(actionIdentifier: actionIdentifier, reminderID: Self.pills.uuidString)
+        adapter.handleResponse(
+            actionIdentifier: actionIdentifier,
+            nudge: DeliveredNudge(reminderID: Self.pills, fireTime: NewYork.local(2026, 10, 16, 9, 10))
+        )
 
-        #expect(events.doneReminderIDs.isEmpty)
+        #expect(events.dones.isEmpty)
     }
 
     /// `UNAuthorizationOptions.timeSensitive` is deprecated: the entitlement and the interruption
@@ -216,7 +235,7 @@ struct NotificationAdapterTests {
             let content = request.content
             let text = [content.title, content.subtitle, content.body] + content.userInfo.values.map { "\($0)" }
             #expect(!text.contains { $0.localizedStandardContains("With food") || $0.localizedStandardContains("health") })
-            #expect(content.userInfo.count == 1)
+            #expect(Set(content.userInfo.keys.compactMap { $0 as? String }) == ["reminderID", "fireTime"])
         }
     }
 
@@ -254,7 +273,7 @@ struct NotificationAdapterTests {
         adapter.apply(SchedulePlan(items: [second]))
         await adapter.waitUntilApplied()
 
-        #expect(pending().map(\.identifier) == ["nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792157400000"])
+        #expect(pending().map(\.identifier) == [Self.pillsAt0930])
     }
 
     @Test func anEmptyPlanRemovesEveryRequestOfTheAdaptersAndLeavesOthers() async throws {
@@ -281,7 +300,7 @@ struct NotificationAdapterTests {
         ]))
         await adapter.waitUntilApplied()
 
-        #expect(pending().map(\.identifier) == ["nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792156800000"])
+        #expect(pending().map(\.identifier) == [Self.pillsAt0920])
     }
 
     @Test func atMostTheSoonestSixtyFourNotificationsArePending() async throws {
@@ -305,6 +324,22 @@ struct NotificationAdapterTests {
 
         let intervals = center.pending.compactMap { ($0.trigger as? UNTimeIntervalNotificationTrigger)?.timeInterval }
         #expect(intervals.sorted() == (4...67).map { TimeInterval($0 * 60) })
+    }
+
+    /// The system's 64 counts every pending request, so one the adapter didn't make takes a place.
+    @Test func anotherPendingRequestLeavesRoomForSixtyThreeNudges() async throws {
+        let adapter = adapter()
+        try await center.add(UNNotificationRequest(identifier: "test-nudge", content: UNNotificationContent(), trigger: nil))
+        let items = (1...70).map { minute in
+            nudge(1, at: clock.now + TimeInterval(minute * 60), .normal, .notification, of: UUID())
+        }
+
+        adapter.apply(SchedulePlan(items: items))
+        await adapter.waitUntilApplied()
+
+        let intervals = center.pending.compactMap { ($0.trigger as? UNTimeIntervalNotificationTrigger)?.timeInterval }
+        #expect(center.pending.count == 64)
+        #expect(intervals.sorted() == (1...63).map { TimeInterval($0 * 60) })
     }
 
     @Test func aNewTitleReplacesThePendingRequestsContent() async throws {
@@ -352,7 +387,7 @@ struct NotificationAdapterTests {
         ]))
         await adapter.waitUntilApplied()
 
-        #expect(pending().map(\.identifier) == ["nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792157400000"])
+        #expect(pending().map(\.identifier) == [Self.pillsAt0930])
     }
 }
 

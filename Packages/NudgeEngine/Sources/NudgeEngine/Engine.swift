@@ -212,6 +212,13 @@ public struct Engine {
         applyPlan()
     }
 
+    /// Done from a delivered nudge, which fired at `fireTime`. It closes the open occurrence only
+    /// if that nudge was one of its own.
+    public mutating func markDone(_ reminderID: Reminder.ID, nudgeFiredAt fireTime: Date) {
+        guard let occurrence = openOccurrence(for: reminderID), fireTime >= occurrence.dueTime else { return }
+        markDone(reminderID)
+    }
+
     /// Stops the reminder nudging without losing it. Its open occurrence, if any, closes as Skipped,
     /// and so does anything that falls due until Resume (the mockup's PAUSE_NOTE). With nothing
     /// open, Pause only marks the reminder paused. Pausing a paused reminder is ignored.
