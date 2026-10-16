@@ -45,7 +45,7 @@ struct GiveUpLimitTests {
     /// +2 h 18 min 45 s, +2 h 44 min 4 s); nudge 6 would be at +3 h 4 min 4 s, past the span.
     @Test func gentleTimeWinsWithThreeHourSpanAfterNudgeFiveAndClosesAsMissedAtThreeHours() throws {
         let reminder = Reminder(title: "Water the plants", dueTime: dueTime, strength: .gentle)
-        var engine = Engine(clock: clock, scheduler: scheduler, giveUpSpan: 3 * 60 * 60)
+        var engine = Engine(clock: clock, scheduler: scheduler, giveUpLimit: GiveUpLimit(nudgeCount: 20, span: 3 * 60 * 60))
         engine.update(reminders: [reminder])
 
         #expect(try #require(scheduler.lastPlan).items.map(\.nudgeNumber) == Array(1...5))
