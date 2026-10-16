@@ -29,6 +29,8 @@ final class FakeScheduler: SchedulerAdapter {
 
     /// The last plan's alarms past the limit, soonest first: the ones that would fail with
     /// `maximumLimitReached`. Only nudges not yet fired count, since an adapter skips the rest.
+    /// It looks like the engine's own cap on purpose, but stays separate: it stands in for the
+    /// system, so a test can disagree with the engine.
     func alarmsPastLimit(at now: Date) -> [SchedulePlan.Item] {
         guard let alarmLimit, let lastPlan else { return [] }
         let alarms = lastPlan.items

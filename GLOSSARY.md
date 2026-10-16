@@ -51,7 +51,7 @@ A nudge's place on its strength's ladder: Normal, High or Urgent. Urgency decide
 A weaker way of delivering a nudge when a permission is missing or the alarm limit is reached. Alarms denied, or past the alarm limit: Urgent nudges come as Time Sensitive notifications. Time Sensitive off: High nudges, and Urgent ones that fall back, are ordinary notifications. Notifications denied: only alarms can still arrive.
 
 **Alarm limit**:
-How many alarms can be pending at once: the system's, which AlarmKit reports only as the `maximumLimitReached` error, and the engine's own cap of 4,000, what ticket 02 measured scheduling. An Urgent nudge past it falls back and is marked "too many alarms scheduled".
+How many alarms can be pending at once: the system's, which AlarmKit reports only as the `maximumLimitReached` error, and the engine's own cap of 4,000 alarms yet to ring, what ticket 02 measured scheduling. An Urgent nudge past it falls back and is marked "too many alarms scheduled".
 
 **Reach**:
 What can still reach the person with the permissions they've given: how a nudge of each urgency arrives, or that it can't. The permission banners say it.
