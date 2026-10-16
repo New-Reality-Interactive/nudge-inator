@@ -4,14 +4,13 @@ import Foundation
 public struct PermissionStates: Equatable, Sendable {
     public var notifications: NotificationPermission
     public var alarms: AlarmPermission
-    /// The app's Time Sensitive setting, which the person can turn off on its own.
-    public var timeSensitive: Bool
+    public var timeSensitive: TimeSensitiveSetting
 
     /// The defaults are a fresh install before anything is denied, as in the mockup's `perm`.
     public init(
         notifications: NotificationPermission = .allowed,
         alarms: AlarmPermission = .notDetermined,
-        timeSensitive: Bool = true
+        timeSensitive: TimeSensitiveSetting = .on
     ) {
         self.notifications = notifications
         self.alarms = alarms
@@ -19,15 +18,25 @@ public struct PermissionStates: Equatable, Sendable {
     }
 }
 
+/// No not-determined state: until the person answers the prompt, nothing is denied, and the
+/// engine plans the same as allowed.
 public enum NotificationPermission: Equatable, Sendable {
     case allowed
     case denied
 }
 
+/// Not determined plans as allowed, since the alarm prompt may not have been shown yet (ticket 31).
 public enum AlarmPermission: Equatable, Sendable {
     case allowed
     case denied
     case notDetermined
+}
+
+/// The app's Time Sensitive setting (`timeSensitiveSetting`), which the person can turn off on its
+/// own after the first Time Sensitive notification, whatever they allowed at onboarding.
+public enum TimeSensitiveSetting: Equatable, Sendable {
+    case on
+    case off
 }
 
 /// What can still reach the person: how a nudge of each urgency arrives with Break through Focus

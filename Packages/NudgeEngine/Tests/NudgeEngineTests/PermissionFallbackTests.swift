@@ -10,10 +10,18 @@ struct PermissionFallbackTests {
     let clock = FakeClock(now: NewYork.local(2026, 10, 16))
     let scheduler = FakeScheduler()
 
-    func planItems(for strength: Strength, permissions: PermissionStates) throws -> [SchedulePlan.Item] {
-        let reminder = Reminder(title: "Take the bins out", dueTime: dueTime, strength: strength)
+    func engine(permissions: PermissionStates, holding reminders: [Reminder] = []) -> Engine {
         var engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone, permissions: permissions)
-        engine.update(reminders: [reminder])
+        if !reminders.isEmpty { engine.update(reminders: reminders) }
+        return engine
+    }
+
+    func reminder(_ strength: Strength, breakThroughFocus: Bool = true) -> Reminder {
+        Reminder(title: "Take the bins out", dueTime: dueTime, strength: strength, breakThroughFocus: breakThroughFocus)
+    }
+
+    func planItems(for strength: Strength, permissions: PermissionStates) throws -> [SchedulePlan.Item] {
+        _ = engine(permissions: permissions, holding: [reminder(strength)])
         return try #require(scheduler.lastPlan).items
     }
 
@@ -30,7 +38,7 @@ struct PermissionFallbackTests {
         (.relentless, [DeliveryKind](repeating: .notification, count: 3) + [DeliveryKind](repeating: .alarm, count: 17)),
     ])
     func timeSensitiveOffSendsHighNudgesAsOrdinaryNotifications(strength: Strength, kinds: [DeliveryKind]) throws {
-        let items = try planItems(for: strength, permissions: PermissionStates(timeSensitive: false))
+        let items = try planItems(for: strength, permissions: PermissionStates(timeSensitive: .off))
         #expect(items.map(\.deliveryKind) == kinds)
     }
 
@@ -50,18 +58,28 @@ struct PermissionFallbackTests {
     /// The notifications banner's "Only Urgent nudges can reach you, as alarms".
     @Test func notificationsDeniedReachSaysOnlyUrgentNudgesRingAsAlarms() {
         let permissions = PermissionStates(notifications: .denied, alarms: .allowed)
-        let engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone, permissions: permissions)
-        #expect(engine.reach == Reach(normal: nil, high: nil, urgent: .alarm))
+        #expect(engine(permissions: permissions).reach == Reach(normal: nil, high: nil, urgent: .alarm))
+    }
+
+    static let everythingDenied = PermissionStates(notifications: .denied, alarms: .denied, timeSensitive: .off)
+
+    @Test(arguments: [Strength.gentle, .firm, .relentless])
+    func everythingDeniedPlansNothing(strength: Strength) throws {
+        #expect(try planItems(for: strength, permissions: Self.everythingDenied).isEmpty)
     }
 
     /// The notifications banner's "Nudges can't reach you".
-    @Test(arguments: [Strength.gentle, .firm, .relentless])
-    func everythingDeniedPlansNothingAndReachSaysNothingCanReachYou(strength: Strength) throws {
-        let permissions = PermissionStates(notifications: .denied, alarms: .denied, timeSensitive: false)
-        let items = try planItems(for: strength, permissions: permissions)
-        #expect(items.isEmpty)
-        let engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone, permissions: permissions)
-        #expect(engine.reach == Reach(normal: nil, high: nil, urgent: nil))
+    @Test func everythingDeniedReachSaysNothingCanReachYou() {
+        #expect(engine(permissions: Self.everythingDenied).reach == Reach(normal: nil, high: nil, urgent: nil))
+    }
+
+    /// The ladder moves on whether or not a nudge can be delivered, so the occurrence still counts
+    /// its nudges and reaches its give-up limit on time; the banner says why nothing arrives.
+    @Test func nudgesThatCantBeDeliveredStillCountAlongTheLadder() {
+        let bins = reminder(.relentless)
+        let engine = engine(permissions: Self.everythingDenied, holding: [bins])
+        clock.now = NewYork.local(2026, 10, 16, 9, 20)
+        #expect(engine.latestOccurrence(for: bins.id)?.state == .nudging(nudgeNumber: 5))
     }
 
     /// Each of the mockup's `permBanner` cases, from what reaches the person.
@@ -72,13 +90,12 @@ struct PermissionFallbackTests {
         // Alarms off: "a chain of Time Sensitive notifications instead".
         (PermissionStates(alarms: .denied), Reach(normal: .notification, high: .timeSensitiveNotification, urgent: .timeSensitiveNotification)),
         // Alarms and Time Sensitive off: "a chain of ordinary notifications instead".
-        (PermissionStates(alarms: .denied, timeSensitive: false), Reach(normal: .notification, high: .notification, urgent: .notification)),
+        (PermissionStates(alarms: .denied, timeSensitive: .off), Reach(normal: .notification, high: .notification, urgent: .notification)),
         // Time Sensitive off: "High nudges come as ordinary notifications".
-        (PermissionStates(alarms: .allowed, timeSensitive: false), Reach(normal: .notification, high: .notification, urgent: .alarm)),
+        (PermissionStates(alarms: .allowed, timeSensitive: .off), Reach(normal: .notification, high: .notification, urgent: .alarm)),
     ])
     func reachFollowsThePermissions(permissions: PermissionStates, reach: Reach) {
-        let engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone, permissions: permissions)
-        #expect(engine.reach == reach)
+        #expect(engine(permissions: permissions).reach == reach)
     }
 
     /// Relentless nudges at 9:00, 9:10, 9:15, 9:17:30 and 9:19:30, so by 9:20 nudges 4 and 5 have
@@ -86,9 +103,7 @@ struct PermissionFallbackTests {
     /// exactly at the change (9:19:30) counts as delivered, as with an Edit's title.
     @Test(arguments: [NewYork.local(2026, 10, 16, 9, 20), NewYork.local(2026, 10, 16, 9, 19) + 30])
     func denyingAlarmsMidOccurrenceChangesOnlyNudgesNotYetDelivered(changedAt: Date) throws {
-        let reminder = Reminder(title: "Take the bins out", dueTime: dueTime, strength: .relentless)
-        var engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone, permissions: PermissionStates(alarms: .allowed))
-        engine.update(reminders: [reminder])
+        var engine = engine(permissions: PermissionStates(alarms: .allowed), holding: [reminder(.relentless)])
 
         clock.now = changedAt
         engine.update(permissions: PermissionStates(alarms: .denied))
@@ -102,10 +117,8 @@ struct PermissionFallbackTests {
     /// Relentless's nudges 1–3 (9:00, 9:10, 9:15) fired while notifications were denied, so they
     /// reached no one. Allowing notifications at 9:16 doesn't bring them back.
     @Test func nudgesThatPassedWhileNotificationsWereDeniedStayOutOfThePlan() throws {
-        let reminder = Reminder(title: "Take the bins out", dueTime: dueTime, strength: .relentless)
         let denied = PermissionStates(notifications: .denied, alarms: .allowed)
-        var engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone, permissions: denied)
-        engine.update(reminders: [reminder])
+        var engine = engine(permissions: denied, holding: [reminder(.relentless)])
 
         clock.now = NewYork.local(2026, 10, 16, 9, 16)
         engine.update(permissions: PermissionStates(alarms: .allowed))
@@ -114,28 +127,27 @@ struct PermissionFallbackTests {
         #expect(items.map(\.nudgeNumber) == Array(4...20))
     }
 
-    /// Alarms denied at 9:16 and allowed again at 9:20: nudges 4 and 5 (9:17:30, 9:19:30) came
-    /// as Time Sensitive notifications in between, and nudges 6–20 ring again.
+    /// Alarms denied at 9:18 and allowed again at 9:20. Nudge 4 (9:17:30) rang before either
+    /// change, so it keeps the first states; nudge 5 (9:19:30) came as a Time Sensitive
+    /// notification in between; nudges 6–20 ring again.
     @Test func allowingAlarmsAgainRestoresAlarmsForNudgesNotYetDelivered() throws {
-        let reminder = Reminder(title: "Take the bins out", dueTime: dueTime, strength: .relentless)
-        var engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone, permissions: PermissionStates(alarms: .allowed))
-        engine.update(reminders: [reminder])
+        var engine = engine(permissions: PermissionStates(alarms: .allowed), holding: [reminder(.relentless)])
 
-        clock.now = NewYork.local(2026, 10, 16, 9, 16)
+        clock.now = NewYork.local(2026, 10, 16, 9, 18)
         engine.update(permissions: PermissionStates(alarms: .denied))
         clock.now = NewYork.local(2026, 10, 16, 9, 20)
         engine.update(permissions: PermissionStates(alarms: .allowed))
 
         let items = try #require(scheduler.lastPlan).items
-        #expect(items.map(\.deliveryKind) == [DeliveryKind](repeating: .timeSensitiveNotification, count: 5)
+        #expect(items.map(\.deliveryKind) == [DeliveryKind](repeating: .timeSensitiveNotification, count: 3)
+            + [.alarm, .timeSensitiveNotification]
             + [DeliveryKind](repeating: .alarm, count: 15))
     }
 
     /// The adapter may report the same states on every foreground; with nothing to act on, the
     /// engine applies no plan.
     @Test func reportingUnchangedPermissionsAppliesNoPlan() {
-        var engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone, permissions: PermissionStates(alarms: .denied))
-        engine.update(reminders: [Reminder(title: "Take the bins out", dueTime: dueTime, strength: .firm)])
+        var engine = engine(permissions: PermissionStates(alarms: .denied), holding: [reminder(.firm)])
 
         engine.update(permissions: PermissionStates(alarms: .denied))
 
@@ -146,13 +158,11 @@ struct PermissionFallbackTests {
     /// notification, never an alarm, so with notifications denied nothing is left.
     @Test(arguments: [
         (PermissionStates(alarms: .allowed), [DeliveryKind](repeating: .notification, count: 20)),
-        (PermissionStates(alarms: .denied, timeSensitive: false), [DeliveryKind](repeating: .notification, count: 20)),
+        (PermissionStates(alarms: .denied, timeSensitive: .off), [DeliveryKind](repeating: .notification, count: 20)),
         (PermissionStates(notifications: .denied, alarms: .allowed), []),
     ])
     func switchOffSendsOrdinaryNotificationsWhateverThePermissions(permissions: PermissionStates, kinds: [DeliveryKind]) throws {
-        let reminder = Reminder(title: "Take the bins out", dueTime: dueTime, strength: .relentless, breakThroughFocus: false)
-        var engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone, permissions: permissions)
-        engine.update(reminders: [reminder])
+        _ = engine(permissions: permissions, holding: [reminder(.relentless, breakThroughFocus: false)])
         #expect(try #require(scheduler.lastPlan).items.map(\.deliveryKind) == kinds)
     }
 }

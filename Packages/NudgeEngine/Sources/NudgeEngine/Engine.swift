@@ -53,7 +53,7 @@ public struct Engine {
     /// Earlier permission states, oldest first, with when the app reported a change. A nudge that
     /// fired before the change was delivered under the old states, so its plan item keeps that
     /// delivery. App-wide, so not in a reminder's `History`.
-    private var replacedPermissions: [ReplacedPermissions] = []
+    private var replacedPermissions: [Replaced<PermissionStates>] = []
     private var reminders: [Reminder] = []
     /// What the engine records about each reminder because the clock can't work it out. Delete
     /// clears it in one go.
@@ -71,17 +71,7 @@ public struct Engine {
         var pauseSpans: [PauseSpan] = []
         /// Earlier titles, oldest first, with when an Edit replaced them. A nudge that fired before
         /// the Edit was delivered with the old title, so its plan item keeps it.
-        var replacedTitles: [ReplacedTitle] = []
-    }
-
-    private struct ReplacedPermissions {
-        var permissions: PermissionStates
-        var replacedAt: Date
-    }
-
-    private struct ReplacedTitle {
-        var title: String
-        var replacedAt: Date
+        var replacedTitles: [Replaced<String>] = []
     }
 
     private struct PauseSpan {
@@ -141,10 +131,14 @@ public struct Engine {
 
     /// The permission states the scheduler adapter reports, at launch and whenever they change.
     /// Nudges not yet delivered take the new delivery; ones already delivered keep theirs. States
-    /// that match the current ones change nothing, so they're ignored.
+    /// that match the current ones change nothing, so they're ignored. The change counts from when
+    /// the app hears of it, not when the person made it in Settings, which the app can't know.
     public mutating func update(permissions: PermissionStates) {
         guard permissions != self.permissions else { return }
-        replacedPermissions.append(ReplacedPermissions(permissions: self.permissions, replacedAt: clock.now))
+        // No plan item fires more than the give-up span before now, so older records can't apply.
+        let oldestFireTime = clock.now - giveUpLimit.span
+        replacedPermissions.removeAll { $0.replacedAt < oldestFireTime }
+        replacedPermissions.append(Replaced(value: self.permissions, replacedAt: clock.now))
         self.permissions = permissions
         scheduler.apply(plan())
     }
@@ -207,7 +201,7 @@ public struct Engine {
             histories[edited.id, default: History()].closedOccurrences[latest.dueTime] = latest.state
         }
         if edited.title != current.title {
-            histories[edited.id, default: History()].replacedTitles.append(ReplacedTitle(title: current.title, replacedAt: clock.now))
+            histories[edited.id, default: History()].replacedTitles.append(Replaced(value: current.title, replacedAt: clock.now))
         }
         reminders = reminders.map { $0.id == edited.id ? edited : $0 }
         scheduler.apply(plan())
@@ -255,7 +249,11 @@ public struct Engine {
         let nudgeTimes = reminder.strength.nudgeTimes(from: dueTime, within: giveUpLimit)
         return nudgeTimes.prefix { $0 < takeOverTime ?? .distantFuture }.enumerated().compactMap { index, fireTime in
             let urgency = reminder.strength.urgency(ofNudge: index + 1)
-            guard let deliveryKind = deliveryKind(of: urgency, breakThroughFocus: reminder.breakThroughFocus, permissions: permissions(firingAt: fireTime)) else { return nil }
+            guard let deliveryKind = deliveryKind(
+                of: urgency,
+                breakThroughFocus: reminder.breakThroughFocus,
+                permissions: permissions(firingAt: fireTime)
+            ) else { return nil }
             return SchedulePlan.Item(
                 reminderID: reminder.id,
                 nudgeNumber: index + 1,
@@ -270,14 +268,14 @@ public struct Engine {
     /// The title a nudge firing at `fireTime` carries: the one it was delivered with if it fired
     /// before an Edit replaced it, otherwise the reminder's own.
     private func title(of reminder: Reminder, firingAt fireTime: Date) -> String {
-        histories[reminder.id]?.replacedTitles.first { fireTime <= $0.replacedAt }?.title ?? reminder.title
+        histories[reminder.id]?.replacedTitles.value(firingAt: fireTime) ?? reminder.title
     }
 
     /// The permission states a nudge firing at `fireTime` is delivered under: the ones in force
     /// when it fired, if a change came after, otherwise the current ones. A nudge firing exactly
     /// at a change counts as delivered, as with titles.
     private func permissions(firingAt fireTime: Date) -> PermissionStates {
-        replacedPermissions.first { fireTime <= $0.replacedAt }?.permissions ?? permissions
+        replacedPermissions.value(firingAt: fireTime) ?? permissions
     }
 
     /// The spec's Delivery by urgency rule, with the weaker fallbacks for denied permissions, or
@@ -285,7 +283,8 @@ public struct Engine {
     /// the fallbacks depend on system state the engine knows and an item doesn't. Break through
     /// Focus off changes only the delivery kind: the urgency, and so the notification text, stays
     /// on the ladder. Alarms not determined plan as allowed, since the prompt may not have been
-    /// shown yet.
+    /// shown yet. The alarm-limit fallback (ticket 15) should come in here too, so an overflow
+    /// nudge also follows notifications denied and Time Sensitive off.
     private func deliveryKind(of urgency: Urgency, breakThroughFocus: Bool, permissions: PermissionStates) -> DeliveryKind? {
         if breakThroughFocus, urgency == .urgent, permissions.alarms != .denied { return .alarm }
         guard permissions.notifications == .allowed else { return nil }
@@ -293,7 +292,7 @@ public struct Engine {
         switch urgency {
         case .normal: return .notification
         // Urgent with alarms denied falls back to High's delivery, ordinary if Time Sensitive is off.
-        case .high, .urgent: return permissions.timeSensitive ? .timeSensitiveNotification : .notification
+        case .high, .urgent: return permissions.timeSensitive == .on ? .timeSensitiveNotification : .notification
         }
     }
 
@@ -373,5 +372,19 @@ public struct Engine {
         }
         let sent = nudgeTimes.filter { $0 <= clock.now }.count
         return Occurrence(dueTime: dueTime, state: .nudging(nudgeNumber: sent))
+    }
+}
+
+/// A value a change replaced, and when. A nudge firing at or before `replacedAt` was delivered with it.
+private struct Replaced<Value> {
+    var value: Value
+    var replacedAt: Date
+}
+
+private extension Array {
+    /// The value in force when a nudge fired at `fireTime`: the first one replaced at or after it,
+    /// so a nudge firing exactly at a change keeps the old value. `nil` if no change came after.
+    func value<Value>(firingAt fireTime: Date) -> Value? where Element == Replaced<Value> {
+        first { fireTime <= $0.replacedAt }?.value
     }
 }
