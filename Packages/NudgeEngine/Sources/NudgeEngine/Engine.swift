@@ -115,6 +115,19 @@ public struct Engine {
         scheduler.apply(plan())
     }
 
+    /// Removes the reminder and cancels everything pending for it. Its occurrences go with it, not
+    /// left as Missed, as the mockup's `deleteReminder` drops them. Its Done and pause records go
+    /// too, so a reminder that comes back under the same ID inherits no Done, Skipped or Paused.
+    /// They go even when the engine no longer holds the reminder, since `update(reminders:)` may
+    /// have dropped it first; with nothing to remove from the plan, no plan is re-applied.
+    public mutating func delete(_ reminderID: Reminder.ID) {
+        doneOccurrences = doneOccurrences.filter { $0.reminderID != reminderID }
+        pauseSpans[reminderID] = nil
+        guard reminder(reminderID) != nil else { return }
+        reminders.removeAll { $0.id == reminderID }
+        scheduler.apply(plan())
+    }
+
     private func reminder(_ reminderID: Reminder.ID) -> Reminder? {
         reminders.first { $0.id == reminderID }
     }
