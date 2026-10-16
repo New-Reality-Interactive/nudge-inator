@@ -24,9 +24,9 @@ struct TagSummaryTests {
         clock.now = NewYork.local(2026, 10, 16, 6)
 
         #expect(engine.tagSummaries() == [
-            TagSummary(tag: home, reminders: 3, dueToday: 2, nudging: 2),
-            TagSummary(tag: money, reminders: 2, dueToday: 1, nudging: 1),
-            TagSummary(tag: travel, reminders: 0, dueToday: 0, nudging: 0),
+            TagSummary(tag: home, reminderCount: 3, dueTodayCount: 2, nudgingCount: 2),
+            TagSummary(tag: money, reminderCount: 2, dueTodayCount: 1, nudgingCount: 1),
+            TagSummary(tag: travel, reminderCount: 0, dueTodayCount: 0, nudgingCount: 0),
         ])
     }
 }

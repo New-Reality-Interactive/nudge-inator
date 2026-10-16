@@ -67,21 +67,37 @@ struct MyDayTests {
         #expect(items.first?.dueTime == NewYork.local(2026, 10, 16, 6, 30))
     }
 
+    /// A Done row reads "Done at 7:04 after 1 nudge" in the mockup, so the row can look up when and
+    /// after how many nudges its occurrence closed.
+    @Test func aDoneItemsCloseCanBeReadBack() throws {
+        let engine = engineAtOnePM()
+        let item = try #require(engine.myDay().items.first)
+
+        let closed = try #require(engine.closedOccurrence(of: item.reminderID, dueAt: item.dueTime))
+
+        #expect(closed.closedAt == NewYork.local(2026, 10, 16, 7, 4))
+        #expect(closed.nudgesSent == 1)
+    }
+
+    @Test(arguments: [(MyDayCount.done, 2), (.nudging, 1), (.missed, 1), (.left, 3)])
+    func countsEachStatus(count: MyDayCount, expected: Int) {
+        #expect(engineAtOnePM().myDay().count(of: count) == expected)
+    }
+
     /// Nine items, seven counted: the Skipped stretch break and paused Grandma are in no count, so
     /// a pause isn't counted against the person.
-    @Test(arguments: [(MyDayCount.done, 2), (.nudging, 1), (.missed, 1), (.left, 3)])
-    func countsEachStatusAndLeavesSkippedAndPausedOut(count: MyDayCount, expected: Int) {
+    @Test func skippedAndPausedItemsAreInNoCount() {
         let myDay = engineAtOnePM().myDay()
 
-        #expect(myDay.count(of: count) == expected)
+        #expect(myDay.items.count == 9)
         #expect(MyDayCount.allCases.map(myDay.count(of:)).reduce(0, +) == 7)
     }
 
     @Test func choosingACountListsOnlyItsItemsInTimeOrder() {
         let myDay = engineAtOnePM().myDay()
 
-        #expect(myDay.items(in: .missed).map(\.reminderID) == [standUp.id])
-        #expect(myDay.items(in: .left).map(\.reminderID) == [status, plants, bins].map(\.id))
+        #expect(myDay.items(countedIn: .missed).map(\.reminderID) == [standUp.id])
+        #expect(myDay.items(countedIn: .left).map(\.reminderID) == [status, plants, bins].map(\.id))
     }
 
     /// Only the stretch break has both #health and #work; four have one of them; Alex and Grandma
@@ -102,6 +118,30 @@ struct MyDayTests {
         let myDay = engineAtOnePM().myDay(tagFilter: .matchAny([home.id]))
 
         #expect(myDay.count(of: count) == expected)
+    }
+
+    /// A store that hands back a reminder still holding a deleted tag's ID: the reminder has no
+    /// tags as far as the filters go.
+    @Test func aDeletedTagsIDLeftOnAReminderCountsAsNoTag() {
+        var engine = engineAtOnePM()
+        let staleAlex = { var alex = alex; alex.tagIDs = [Tag(name: "gone").id]; return alex }()
+        engine.update(reminders: engine.reminders.map { $0.id == alex.id ? staleAlex : $0 })
+
+        #expect(engine.myDay(tagFilter: .noTags).items.map(\.reminderID) == [alex, grandma].map(\.id))
+    }
+
+    /// Meds were Done at 7:04, then moved to 21:00 at 13:00. The Edit applies from the next
+    /// occurrence, so today has both: the Done one stays counted, and 21:00 is still to come.
+    @Test func anEditThatMovesTheDueTimeKeepsTodaysDoneOccurrence() throws {
+        var engine = engineAtOnePM()
+        var evening = meds
+        evening.dueTime = NewYork.local(2026, 10, 1, 21)
+        try engine.edit(evening)
+
+        let myDay = engine.myDay(tagFilter: .matchAll([health.id]))
+
+        #expect(myDay.items.filter { $0.reminderID == meds.id }.map(\.status) == [.due(.done), .left])
+        #expect(myDay.count(of: .done) == 1)
     }
 
     /// The filter sheet open with no tag checked filters nothing.

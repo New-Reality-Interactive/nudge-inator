@@ -34,11 +34,11 @@ extension Tag {
     /// Whether two names are the same tag. Folded with no locale, so the answer doesn't change
     /// with the person's language.
     static func isSameName(_ a: String, _ b: String) -> Bool {
-        sortKey(a) == sortKey(b)
+        foldedName(a) == foldedName(b)
     }
 
-    /// The name folded for comparing, with no locale.
-    static func sortKey(_ name: String) -> String {
+    /// The name folded for comparing and sorting, with no locale.
+    static func foldedName(_ name: String) -> String {
         name.folding(options: .caseInsensitive, locale: nil)
     }
 }
@@ -47,11 +47,11 @@ extension Tag {
 /// how many are nudging. A reminder with several tags counts under each.
 public struct TagSummary: Equatable, Sendable {
     public var tag: Tag
-    public var reminders: Int
+    public var reminderCount: Int
     /// Items on My Day, whatever their status.
-    public var dueToday: Int
+    public var dueTodayCount: Int
     /// Reminders with an open occurrence, whenever it fell due, as the Now tab counts them.
-    public var nudging: Int
+    public var nudgingCount: Int
 }
 
 extension Engine {
@@ -60,14 +60,14 @@ extension Engine {
         let today = myDay().items.map(\.reminderID)
         let nudging = Set(nudgingOccurrences().map(\.reminderID))
         return tags
-            .sorted { (Tag.sortKey($0.name), $0.id.uuidString) < (Tag.sortKey($1.name), $1.id.uuidString) }
+            .sorted { (Tag.foldedName($0.name), $0.id.uuidString) < (Tag.foldedName($1.name), $1.id.uuidString) }
             .map { tag in
                 let tagged = taggedReminders(tag.id).map(\.id)
                 return TagSummary(
                     tag: tag,
-                    reminders: tagged.count,
-                    dueToday: today.count { tagged.contains($0) },
-                    nudging: tagged.count { nudging.contains($0) }
+                    reminderCount: tagged.count,
+                    dueTodayCount: today.count { tagged.contains($0) },
+                    nudgingCount: tagged.count { nudging.contains($0) }
                 )
             }
     }
@@ -88,7 +88,8 @@ extension Engine {
         tags[index].name = try validName(name, for: tagID)
     }
 
-    /// The reminders with the tag, in the store's order: a tag's screen on the Tags tab.
+    /// The reminders with the tag, in the store's order: a tag's screen on the Tags tab. Not
+    /// `reminders(taggedWith:)`, which the `reminders` property would hide at the call site.
     public func taggedReminders(_ tagID: Tag.ID) -> [Reminder] {
         reminders.filter { $0.tagIDs.contains(tagID) }
     }

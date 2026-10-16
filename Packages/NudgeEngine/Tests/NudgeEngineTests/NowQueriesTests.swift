@@ -47,8 +47,8 @@ struct NowQueriesTests {
         let comingUp = engine.comingUp()
 
         #expect(comingUp == [
-            UpcomingDueTime(reminderID: meds.id, dueTime: NewYork.local(2026, 10, 17, 8)),
-            UpcomingDueTime(reminderID: daySeven.id, dueTime: NewYork.local(2026, 10, 23, 9)),
+            ComingUpItem(reminderID: meds.id, dueTime: NewYork.local(2026, 10, 17, 8)),
+            ComingUpItem(reminderID: daySeven.id, dueTime: NewYork.local(2026, 10, 23, 9)),
         ])
     }
 
@@ -59,7 +59,18 @@ struct NowQueriesTests {
         let daySeven = Reminder(title: "Day seven", dueTime: NewYork.local(2026, 11, 6, 9), strength: .firm)
         let engine = engine(holding: [daySeven])
 
-        #expect(engine.comingUp() == [UpcomingDueTime(reminderID: daySeven.id, dueTime: NewYork.local(2026, 11, 6, 9))])
+        #expect(engine.comingUp() == [ComingUpItem(reminderID: daySeven.id, dueTime: NewYork.local(2026, 11, 6, 9))])
+    }
+
+    /// Two due at the same time go by title, as on My Day, whatever their IDs.
+    @Test func comingUpBreaksTiesByTitle() throws {
+        clock.now = NewYork.local(2026, 10, 16, 9)
+        let dueTime = NewYork.local(2026, 10, 17, 8)
+        let water = Reminder(id: try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000001")), title: "Water the plants", dueTime: dueTime, strength: .gentle)
+        let feed = Reminder(id: try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000002")), title: "Feed the cat", dueTime: dueTime, strength: .gentle)
+        let engine = engine(holding: [water, feed])
+
+        #expect(engine.comingUp().map(\.reminderID) == [feed.id, water.id])
     }
 
     /// A paused reminder has nothing coming up until Resume: its due times are Skipped.
@@ -76,7 +87,8 @@ struct NowQueriesTests {
     /// 13:00 on Friday. Relentless gives up 51 min 30 s after its due time. Meds were Done at 7:04,
     /// the stand-up gave up at 10:21:30, and Thursday's call gave up at exactly 13:00, 24 hours
     /// ago, so it's in. Thursday's earlier call gave up at 12:51:30, so it's out. Alex is still
-    /// nudging. Newest first, by when each closed.
+    /// nudging. Newest first, by when each closed. Gentle's second nudge would have come at 7:30,
+    /// so meds were Done after one; each give-up came after all 20.
     @Test func lastTwentyFourHoursListsWhatClosedInThePast24HoursNewestFirst() {
         let meds = Reminder(title: "Morning meds", dueTime: NewYork.local(2026, 10, 16, 6, 30), strength: .gentle)
         let standUp = Reminder(title: "Team stand-up", dueTime: NewYork.local(2026, 10, 16, 9, 30), strength: .relentless)
@@ -96,24 +108,28 @@ struct NowQueriesTests {
             ClosedOccurrence(
                 reminderID: standUp.id,
                 occurrence: Occurrence(dueTime: NewYork.local(2026, 10, 16, 9, 30), state: .missed(reason: .giveUpLimit)),
-                closedAt: NewYork.local(2026, 10, 16, 10, 21) + 30
+                closedAt: NewYork.local(2026, 10, 16, 10, 21) + 30,
+                nudgesSent: 20
             ),
             ClosedOccurrence(
                 reminderID: meds.id,
                 occurrence: Occurrence(dueTime: NewYork.local(2026, 10, 16, 6, 30), state: .done),
-                closedAt: NewYork.local(2026, 10, 16, 7, 4)
+                closedAt: NewYork.local(2026, 10, 16, 7, 4),
+                nudgesSent: 1
             ),
             ClosedOccurrence(
                 reminderID: edgeCall.id,
                 occurrence: Occurrence(dueTime: NewYork.local(2026, 10, 15, 12, 8) + 30, state: .missed(reason: .giveUpLimit)),
-                closedAt: NewYork.local(2026, 10, 15, 13)
+                closedAt: NewYork.local(2026, 10, 15, 13),
+                nudgesSent: 20
             ),
         ])
     }
 
     /// With the give-up limit widened, each 9:00 occurrence nudges until the next takes it over.
     /// Thursday's closed at 9:00 on Friday, so it's in; Wednesday's closed at 9:00 on Thursday, 28
-    /// hours ago, so it's out. Friday's is still nudging.
+    /// hours ago, so it's out. Friday's is still nudging. Firm nudged at +0, +30, +45 and +52.5 min,
+    /// then every 5 minutes up to +1,437.5 min, the last before the take-over: 4 + 277 = 281.
     @Test func aTakenOverOccurrenceClosedWhenTheNextFellDue() {
         let widened = GiveUpLimit(nudgeCount: 10_000, span: 72 * 60 * 60)
         let pills = Reminder(title: "Take the pills", dueTime: NewYork.local(2026, 10, 14), repeatRule: .everyDay, strength: .firm)
@@ -125,14 +141,16 @@ struct NowQueriesTests {
             ClosedOccurrence(
                 reminderID: pills.id,
                 occurrence: Occurrence(dueTime: NewYork.local(2026, 10, 15), state: .missed(reason: .nextTookOver)),
-                closedAt: NewYork.local(2026, 10, 16)
+                closedAt: NewYork.local(2026, 10, 16),
+                nudgesSent: 281
             ),
         ])
     }
 
     /// The stretch break was nudging when paused at 10:10, so it closed then. Grandma was paused at
     /// 16:00 on Thursday, before her 17:00 call, which closed as it fell due, as the mockup's
-    /// Skipped `o13` does. Wednesday's call gave up at 1:04 on Thursday, before the window.
+    /// Skipped `o13` does, with no nudge sent. The stretch break's second nudge would have come at
+    /// 10:30. Wednesday's call gave up at 1:04 on Thursday, before the window.
     @Test func aSkippedOccurrenceClosedAtThePauseOrAtItsDueTimeIfThatCameWhilePaused() {
         let stretch = Reminder(title: "Stretch break", dueTime: NewYork.local(2026, 10, 16, 10), strength: .firm)
         let grandma = Reminder(title: "Call Grandma", dueTime: NewYork.local(2026, 10, 1, 17), repeatRule: .everyDay, strength: .gentle)
@@ -148,14 +166,57 @@ struct NowQueriesTests {
             ClosedOccurrence(
                 reminderID: stretch.id,
                 occurrence: Occurrence(dueTime: NewYork.local(2026, 10, 16, 10), state: .skipped(reason: .paused)),
-                closedAt: NewYork.local(2026, 10, 16, 10, 10)
+                closedAt: NewYork.local(2026, 10, 16, 10, 10),
+                nudgesSent: 1
             ),
             ClosedOccurrence(
                 reminderID: grandma.id,
                 occurrence: Occurrence(dueTime: NewYork.local(2026, 10, 15, 17), state: .skipped(reason: .paused)),
-                closedAt: NewYork.local(2026, 10, 15, 17)
+                closedAt: NewYork.local(2026, 10, 15, 17),
+                nudgesSent: 0
             ),
         ])
+    }
+
+    /// Every day at 9:00, Done at 9:05, then moved to 18:00 at 9:30. The Edit applies from the next
+    /// occurrence (ADR 0002), so this morning's Done stays in the last 24 hours, and no 18:00
+    /// occurrence before the Edit is made up: yesterday's would have given up at 20:17:30.
+    @Test func anEditThatMovesTheDueTimeKeepsWhatClosedAndMakesNothingUp() throws {
+        let pills = Reminder(title: "Take the pills", dueTime: NewYork.local(2026, 10, 1), repeatRule: .everyDay, strength: .firm)
+        var engine = engine(holding: [pills])
+        clock.now = NewYork.local(2026, 10, 16, 9, 5)
+        engine.markDone(pills.id)
+        clock.now = NewYork.local(2026, 10, 16, 9, 30)
+        var evening = pills
+        evening.dueTime = NewYork.local(2026, 10, 1, 18)
+        try engine.edit(evening)
+        clock.now = NewYork.local(2026, 10, 16, 13)
+
+        #expect(engine.closedInLast24Hours() == [
+            ClosedOccurrence(
+                reminderID: pills.id,
+                occurrence: Occurrence(dueTime: NewYork.local(2026, 10, 16), state: .done),
+                closedAt: NewYork.local(2026, 10, 16, 9, 5),
+                nudgesSent: 1
+            ),
+        ])
+        #expect(engine.latestOccurrence(for: pills.id) == Occurrence(dueTime: NewYork.local(2026, 10, 16), state: .done))
+    }
+
+    /// Every day at 9:00, Relentless: yesterday's gave up at 9:51:30. Made Firm at 9:30 today, the
+    /// clock alone would have yesterday's giving up at 11:17:30, so the Edit fixes it as it was.
+    @Test func anEditThatChangesTheStrengthKeepsEarlierCloseTimes() throws {
+        let pills = Reminder(title: "Take the pills", dueTime: NewYork.local(2026, 10, 1), repeatRule: .everyDay, strength: .relentless)
+        var engine = engine(holding: [pills])
+        clock.now = NewYork.local(2026, 10, 16, 9, 5)
+        engine.markDone(pills.id)
+        clock.now = NewYork.local(2026, 10, 16, 9, 30)
+        var firmer = pills
+        firmer.strength = .firm
+        try engine.edit(firmer)
+        clock.now = NewYork.local(2026, 10, 16, 9, 40)
+
+        #expect(engine.closedInLast24Hours().map(\.closedAt) == [NewYork.local(2026, 10, 16, 9, 5), NewYork.local(2026, 10, 15, 9, 51) + 30])
     }
 
     /// The stand-up gave up at 10:21:30. Edited to Gentle at 11:00, the clock alone would now have
