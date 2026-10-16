@@ -113,4 +113,24 @@ struct DeleteReminderTests {
         #expect(!engine.isPaused(pills.id))
         #expect(engine.latestOccurrence(for: pills.id)?.state == .nudging(nudgeNumber: 2))
     }
+
+    /// An Edit while Nudging keeps the old title on nudges already delivered. That record goes with
+    /// Delete, so a reminder added back under the same ID carries only its own title, passed
+    /// nudges included.
+    @Test func aReminderAddedBackAfterDeleteDoesNotInheritItsEarlierTitles() throws {
+        clock.now = NewYork.local(2026, 10, 15, 9, 40)
+        var engine = engine(for: [pills])
+        var edited = pills
+        edited.title = "Take the vitamins"
+        try engine.edit(edited)
+
+        engine.delete(pills.id)
+        var addedBack = pills
+        addedBack.title = "Water the plants"
+        engine.update(reminders: [addedBack])
+
+        let items = try #require(scheduler.lastPlan).items
+        #expect(!items.isEmpty)
+        #expect(items.allSatisfy { $0.title == "Water the plants" })
+    }
 }

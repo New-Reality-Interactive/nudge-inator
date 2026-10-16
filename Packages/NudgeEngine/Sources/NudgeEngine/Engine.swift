@@ -17,6 +17,30 @@ public enum ResumeError: Error, Equatable, Sendable {
     case needsNewDueTime
 }
 
+/// A reminder field that can't be edited while the reminder is Nudging (ADR 0002).
+public enum LockedField: Hashable, CaseIterable, Sendable {
+    case dueTime
+    case repeatRule
+    case strength
+    case breakThroughFocus
+
+    /// Whether `edited` gives this field a different value from `current`.
+    func isChanged(from current: Reminder, to edited: Reminder) -> Bool {
+        switch self {
+        case .dueTime: current.dueTime != edited.dueTime
+        case .repeatRule: current.repeatRule != edited.repeatRule
+        case .strength: current.strength != edited.strength
+        case .breakThroughFocus: current.breakThroughFocus != edited.breakThroughFocus
+        }
+    }
+}
+
+/// Why the engine turned down an Edit.
+public enum EditError: Error, Equatable, Sendable {
+    /// The Edit changed these fields, which are Locked while the reminder is Nudging.
+    case locked(Set<LockedField>)
+}
+
 /// The nudge engine: reminders and the clock in, occurrence state and a schedule plan out.
 public struct Engine {
     let clock: any EngineClock
@@ -26,24 +50,34 @@ public struct Engine {
     /// Formats the times and dates in a repeat's summary.
     let locale: Locale
     private var reminders: [Reminder] = []
-    /// Done is the one occurrence fact the clock can't work out, so the engine records it. An
-    /// occurrence is its reminder at one due time, so Done on one day's occurrence of a repeat
-    /// leaves the next day's open.
-    private var doneOccurrences: Set<OccurrenceKey> = []
-    /// Every pause of each reminder, oldest first, the last still open while it's paused. Like
-    /// Done, the clock can't work them out. An occurrence still open during a pause is Skipped, so
-    /// a due time that passed while paused never comes back as Nudging after Resume.
-    private var pauseSpans: [Reminder.ID: [PauseSpan]] = [:]
+    /// What the engine records about each reminder because the clock can't work it out. Delete
+    /// clears it in one go.
+    private var histories: [Reminder.ID: History] = [:]
+
+    private struct History {
+        /// Occurrences whose state is fixed, by due time. Done is the one the clock can never work
+        /// out. An occurrence already Missed or Skipped when an Edit is applied is fixed too, since
+        /// the clock would now work it out from the edited fields. Keyed by due time, so Done on
+        /// one day's occurrence of a repeat leaves the next day's open.
+        var closedOccurrences: [Date: OccurrenceState] = [:]
+        /// Every pause, oldest first, the last still open while it's paused. An occurrence still
+        /// open during a pause is Skipped, so a due time that passed while paused never comes back
+        /// as Nudging after Resume.
+        var pauseSpans: [PauseSpan] = []
+        /// Earlier titles, oldest first, with when an Edit replaced them. A nudge that fired before
+        /// the Edit was delivered with the old title, so its plan item keeps it.
+        var replacedTitles: [ReplacedTitle] = []
+    }
+
+    private struct ReplacedTitle {
+        var title: String
+        var replacedAt: Date
+    }
 
     private struct PauseSpan {
         var start: Date
         /// `nil` until Resume.
         var end: Date?
-    }
-
-    private struct OccurrenceKey: Hashable {
-        var reminderID: Reminder.ID
-        var dueTime: Date
     }
 
     /// `timeZone` is where repeats keep their local time of day. `locale` formats the times and
@@ -78,6 +112,8 @@ public struct Engine {
         self.locale = locale
     }
 
+    /// Replaces the whole list: App opened, and the store's reload. It reports what is already
+    /// true, so it isn't checked against the lock. The edit form sends `edit(_:)` instead.
     public mutating func update(reminders: [Reminder]) {
         self.reminders = reminders
         scheduler.apply(plan())
@@ -89,7 +125,7 @@ public struct Engine {
     /// neither is something to tell the person about.
     public mutating func markDone(_ reminderID: Reminder.ID) {
         guard let occurrence = openOccurrence(for: reminderID) else { return }
-        doneOccurrences.insert(OccurrenceKey(reminderID: reminderID, dueTime: occurrence.dueTime))
+        histories[reminderID, default: History()].closedOccurrences[occurrence.dueTime] = .done
         scheduler.apply(plan())
     }
 
@@ -98,7 +134,7 @@ public struct Engine {
     /// open, Pause only marks the reminder paused. Pausing a paused reminder is ignored.
     public mutating func pause(_ reminderID: Reminder.ID) {
         guard !isPaused(reminderID) else { return }
-        pauseSpans[reminderID, default: []].append(PauseSpan(start: clock.now))
+        histories[reminderID, default: History()].pauseSpans.append(PauseSpan(start: clock.now))
         scheduler.apply(plan())
     }
 
@@ -108,24 +144,49 @@ public struct Engine {
     /// reminder isn't locked, so the screen sends the person to edit the due time, and Resume then
     /// succeeds (ADR 0002). Resume on a reminder that isn't paused is ignored.
     public mutating func resume(_ reminderID: Reminder.ID) throws(ResumeError) {
-        guard isPaused(reminderID), var spans = pauseSpans[reminderID], let reminder = reminder(reminderID) else { return }
+        guard isPaused(reminderID), let reminder = reminder(reminderID), let last = histories[reminderID]?.pauseSpans.indices.last
+        else { return }
         guard reminder.nextDueTime(after: clock.now, calendar: calendar) != nil else { throw .needsNewDueTime }
-        spans[spans.count - 1].end = clock.now
-        pauseSpans[reminderID] = spans
+        let now = clock.now
+        histories[reminderID]?.pauseSpans[last].end = now
         scheduler.apply(plan())
     }
 
     /// Removes the reminder and cancels everything pending for it. Its occurrences go with it, not
-    /// left as Missed, as the mockup's `deleteReminder` drops them. Its Done and pause records go
-    /// too, so a reminder that comes back under the same ID inherits no Done, Skipped or Paused.
-    /// They go even when the engine no longer holds the reminder, since `update(reminders:)` may
+    /// left as Missed, as the mockup's `deleteReminder` drops them. Its history goes too (Done,
+    /// pauses, earlier titles), so a reminder that comes back under the same ID inherits no Done,
+    /// Skipped, Paused or old title. It goes even when the engine no longer holds the reminder, since `update(reminders:)` may
     /// have dropped it first; with nothing to remove from the plan, no plan is re-applied.
     public mutating func delete(_ reminderID: Reminder.ID) {
-        doneOccurrences = doneOccurrences.filter { $0.reminderID != reminderID }
-        pauseSpans[reminderID] = nil
+        histories[reminderID] = nil
         guard reminder(reminderID) != nil else { return }
         reminders.removeAll { $0.id == reminderID }
         scheduler.apply(plan())
+    }
+
+    /// Applies the person's changes to a reminder the engine holds. An Edit that changes a Locked
+    /// field is rejected whole, naming the fields it changed, so nothing is half applied. An
+    /// accepted Edit applies from the next occurrence: one that has already closed stays as it
+    /// closed, even if a slower strength would still be nudging it. Edit of a reminder the engine
+    /// doesn't hold is ignored.
+    public mutating func edit(_ edited: Reminder) throws(EditError) {
+        guard let current = reminder(edited.id) else { return }
+        let changed = lockedFields(of: edited.id).filter { $0.isChanged(from: current, to: edited) }
+        guard changed.isEmpty else { throw .locked(changed) }
+        if let latest = latestOccurrence(for: edited.id), latest.state.isClosed {
+            histories[edited.id, default: History()].closedOccurrences[latest.dueTime] = latest.state
+        }
+        if edited.title != current.title {
+            histories[edited.id, default: History()].replacedTitles.append(ReplacedTitle(title: current.title, replacedAt: clock.now))
+        }
+        reminders = reminders.map { $0.id == edited.id ? edited : $0 }
+        scheduler.apply(plan())
+    }
+
+    /// The fields an Edit can't change now: all four while the reminder has a Nudging occurrence,
+    /// none otherwise. The form and the details screen read the lock from here, not their own rule.
+    public func lockedFields(of reminderID: Reminder.ID) -> Set<LockedField> {
+        openOccurrence(for: reminderID) == nil ? [] : Set(LockedField.allCases)
     }
 
     private func reminder(_ reminderID: Reminder.ID) -> Reminder? {
@@ -134,7 +195,7 @@ public struct Engine {
 
     /// Whether the reminder is paused, so the screen offers Resume rather than Pause.
     public func isPaused(_ reminderID: Reminder.ID) -> Bool {
-        pauseSpans[reminderID]?.last.map { $0.end == nil } ?? false
+        histories[reminderID]?.pauseSpans.last.map { $0.end == nil } ?? false
     }
 
     /// The whole ladder of each reminder's open occurrence and of its next one, even before they
@@ -169,10 +230,16 @@ public struct Engine {
                 nudgeNumber: index + 1,
                 fireTime: fireTime,
                 urgency: urgency,
-                title: reminder.title,
+                title: title(of: reminder, firingAt: fireTime),
                 deliveryKind: deliveryKind(of: urgency, for: reminder)
             )
         }
+    }
+
+    /// The title a nudge firing at `fireTime` carries: the one it was delivered with if it fired
+    /// before an Edit replaced it, otherwise the reminder's own.
+    private func title(of reminder: Reminder, firingAt fireTime: Date) -> String {
+        histories[reminder.id]?.replacedTitles.first { fireTime <= $0.replacedAt }?.title ?? reminder.title
     }
 
     /// The spec's Delivery by urgency rule. It lives here rather than on the plan item because
@@ -233,15 +300,15 @@ public struct Engine {
     /// The occurrence's state from the clock. `takeOverTime` is when the next occurrence fell
     /// due, or `nil` if it hasn't yet (or the repeat has no next).
     private func occurrence(of reminder: Reminder, dueAt dueTime: Date, takenOverAt takeOverTime: Date?) -> Occurrence {
-        if doneOccurrences.contains(OccurrenceKey(reminderID: reminder.id, dueTime: dueTime)) {
-            return Occurrence(dueTime: dueTime, state: .done)
+        if let closed = histories[reminder.id]?.closedOccurrences[dueTime] {
+            return Occurrence(dueTime: dueTime, state: closed)
         }
         let nudgeTimes = reminder.strength.nudgeTimes(from: dueTime, within: giveUpLimit)
         let giveUpTime = reminder.strength.giveUpTime(from: dueTime, after: nudgeTimes, within: giveUpLimit)
         // The first pause that ends at or after the due time is the first the occurrence could be
         // open in. If it hadn't closed by then, it's Skipped: the Nudging one that Pause closes, any
         // due while paused, and one an edit while paused moved to before the pause.
-        if let pause = pauseSpans[reminder.id]?.first(where: { dueTime <= $0.end ?? .distantFuture }),
+        if let pause = histories[reminder.id]?.pauseSpans.first(where: { dueTime <= $0.end ?? .distantFuture }),
            min(giveUpTime, takeOverTime ?? giveUpTime) > pause.start {
             return Occurrence(dueTime: dueTime, state: .skipped(reason: .paused))
         }
