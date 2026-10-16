@@ -15,6 +15,11 @@ public struct SchedulePlan: Equatable, Sendable {
         /// How the nudge reaches the phone. Adapters act on this, not on the urgency.
         public var deliveryKind: DeliveryKind
 
+        /// The nudge would have rung as an alarm, but the system's alarm limit was reached, so it
+        /// falls back to a notification. The screens say so ("Notification: too many alarms
+        /// scheduled"); the notification itself carries only the title and body.
+        public var isPastAlarmLimit: Bool
+
         /// The notification body, for example "Nudge 3 of 20 · High".
         public var body: String {
             "Nudge \(nudgeNumber) of \(GiveUpLimit.shipped.nudgeCount) · \(urgency.name)"
