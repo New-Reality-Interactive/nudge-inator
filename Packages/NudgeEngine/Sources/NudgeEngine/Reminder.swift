@@ -6,8 +6,9 @@ public struct Reminder: Identifiable, Equatable, Sendable {
     public var title: String
     /// Private to the app: never carried into a schedule plan.
     public var notes: String
-    /// Private to the app: never carried into a schedule plan.
-    public var tags: [String]
+    /// The reminder's tags, by ID, so a rename reaches every reminder with the tag. Private to the
+    /// app: never carried into a schedule plan.
+    public var tagIDs: [Tag.ID]
     /// The first due time. A repeating reminder's later due times are worked out from it.
     public var dueTime: Date
     /// `nil` repeats Never.
@@ -20,7 +21,7 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         id: UUID = UUID(),
         title: String,
         notes: String = "",
-        tags: [String] = [],
+        tagIDs: [Tag.ID] = [],
         dueTime: Date,
         repeatRule: RepeatRule? = nil,
         strength: Strength,
@@ -29,7 +30,7 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         self.id = id
         self.title = title
         self.notes = notes
-        self.tags = tags
+        self.tagIDs = tagIDs
         self.dueTime = dueTime
         self.repeatRule = repeatRule
         self.strength = strength

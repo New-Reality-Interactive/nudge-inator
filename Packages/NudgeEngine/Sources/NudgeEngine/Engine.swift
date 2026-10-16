@@ -45,7 +45,7 @@ public enum EditError: Error, Equatable, Sendable {
 public struct Engine {
     let clock: any EngineClock
     private let scheduler: any SchedulerAdapter
-    private let giveUpLimit: GiveUpLimit
+    let giveUpLimit: GiveUpLimit
     private let alarmLimit: AlarmLimit
     let calendar: Calendar
     /// Formats the times and dates in a repeat's summary.
@@ -55,17 +55,19 @@ public struct Engine {
     /// fired before the change was delivered under the old states, so its plan item keeps that
     /// delivery. App-wide, so not in a reminder's `History`.
     private var replacedPermissions: [Replaced<PermissionStates>] = []
-    private var reminders: [Reminder] = []
+    public private(set) var reminders: [Reminder] = []
+    /// Every tag, whether or not a reminder uses it.
+    public internal(set) var tags: [Tag] = []
     /// What the engine records about each reminder because the clock can't work it out. Delete
     /// clears it in one go.
     private var histories: [Reminder.ID: History] = [:]
 
     private struct History {
-        /// Occurrences whose state is fixed, by due time. Done is the one the clock can never work
-        /// out. An occurrence already Missed or Skipped when an Edit is applied is fixed too, since
-        /// the clock would now work it out from the edited fields. Keyed by due time, so Done on
-        /// one day's occurrence of a repeat leaves the next day's open.
-        var closedOccurrences: [Date: OccurrenceState] = [:]
+        /// Occurrences whose state is fixed, by due time, with when they closed. Done is the one the
+        /// clock can never work out. An occurrence already Missed or Skipped when an Edit is applied
+        /// is fixed too, since the clock would now work it out from the edited fields. Keyed by due
+        /// time, so Done on one day's occurrence of a repeat leaves the next day's open.
+        var closedOccurrences: [Date: Closing] = [:]
         /// Every pause, oldest first, the last still open while it's paused. An occurrence still
         /// open during a pause is Skipped, so a due time that passed while paused never comes back
         /// as Nudging after Resume.
@@ -84,6 +86,11 @@ public struct Engine {
         func isPastAlarmLimit(firingAt fireTime: Date) -> Bool {
             reportedAlarmLimitFireTimes.contains(fireTime) || alarmCapFireTimes.contains(fireTime)
         }
+    }
+
+    private struct Closing {
+        var state: OccurrenceState
+        var closedAt: Date
     }
 
     private struct PauseSpan {
@@ -144,6 +151,26 @@ public struct Engine {
         applyPlan()
     }
 
+    /// Replaces the whole tag list: App opened, and the store's reload. Like `update(reminders:)`,
+    /// it reports what is already true, so the names aren't checked.
+    public mutating func update(tags: [Tag]) {
+        self.tags = tags
+    }
+
+    /// Removes the tag and takes it off every reminder, which stays. Returns how many reminders
+    /// used it. The store makes the same change to what it saved (ticket 17). Tags never reach a
+    /// schedule plan, so none is applied.
+    @discardableResult
+    public mutating func deleteTag(_ tagID: Tag.ID) -> Int {
+        tags.removeAll { $0.id == tagID }
+        var used = 0
+        for index in reminders.indices where reminders[index].tagIDs.contains(tagID) {
+            reminders[index].tagIDs.removeAll { $0 == tagID }
+            used += 1
+        }
+        return used
+    }
+
     /// The permission states the scheduler adapter reports, at launch and whenever they change.
     /// Nudges not yet delivered take the new delivery; ones already delivered keep theirs. States
     /// that match the current ones change nothing, so they're ignored. The change counts from when
@@ -179,7 +206,7 @@ public struct Engine {
     /// neither is something to tell the person about.
     public mutating func markDone(_ reminderID: Reminder.ID) {
         guard let occurrence = openOccurrence(for: reminderID) else { return }
-        histories[reminderID, default: History()].closedOccurrences[occurrence.dueTime] = .done
+        histories[reminderID, default: History()].closedOccurrences[occurrence.dueTime] = Closing(state: .done, closedAt: clock.now)
         applyPlan()
     }
 
@@ -227,8 +254,9 @@ public struct Engine {
         guard let current = reminder(edited.id) else { return }
         let changed = lockedFields(of: edited.id).filter { $0.isChanged(from: current, to: edited) }
         guard changed.isEmpty else { throw .locked(changed) }
-        if let latest = latestOccurrence(for: edited.id), latest.state.isClosed {
-            histories[edited.id, default: History()].closedOccurrences[latest.dueTime] = latest.state
+        if let dueTime = current.latestDueTime(atOrBefore: clock.now, calendar: calendar),
+           case let latest = occurrence(of: current, dueAt: dueTime, takenOverAt: nil), let closedAt = latest.closedAt {
+            histories[edited.id, default: History()].closedOccurrences[dueTime] = Closing(state: latest.occurrence.state, closedAt: closedAt)
         }
         // The system's answer was about fire times the moved ladder no longer has. A new time
         // landing on an old one would otherwise come marked with no report.
@@ -418,13 +446,19 @@ public struct Engine {
               let dueTime = reminder.latestDueTime(atOrBefore: clock.now, calendar: calendar)
         else { return nil }
         // Its next due time is after now by definition, so nothing has taken it over yet.
-        return occurrence(of: reminder, dueAt: dueTime, takenOverAt: nil)
+        return occurrence(of: reminder, dueAt: dueTime, takenOverAt: nil).occurrence
     }
 
     /// The reminder's occurrence due at `dueTime`, as it stands now, or `nil` if `dueTime` isn't
     /// one of its due times or hasn't come yet. `latestOccurrence(for:)` gives only the newest,
     /// so this is how an earlier one, such as one the next took over, is read back.
     public func occurrence(of reminderID: Reminder.ID, dueAt dueTime: Date) -> Occurrence? {
+        occurrenceWithCloseTime(of: reminderID, dueAt: dueTime)?.occurrence
+    }
+
+    /// `occurrence(of:dueAt:)` with when it closed, `nil` while it is Nudging. Done's time is
+    /// recorded; the others' come from the clock.
+    func occurrenceWithCloseTime(of reminderID: Reminder.ID, dueAt dueTime: Date) -> (occurrence: Occurrence, closedAt: Date?)? {
         guard dueTime <= clock.now,
               let reminder = reminder(reminderID),
               reminder.latestDueTime(atOrBefore: dueTime, calendar: calendar) == dueTime
@@ -433,30 +467,35 @@ public struct Engine {
         return occurrence(of: reminder, dueAt: dueTime, takenOverAt: next.flatMap { $0 <= clock.now ? $0 : nil })
     }
 
-    /// The occurrence's state from the clock. `takeOverTime` is when the next occurrence fell
-    /// due, or `nil` if it hasn't yet (or the repeat has no next).
-    private func occurrence(of reminder: Reminder, dueAt dueTime: Date, takenOverAt takeOverTime: Date?) -> Occurrence {
+    /// The occurrence's state from the clock, and when it closed. `takeOverTime` is when the next
+    /// occurrence fell due, or `nil` if it hasn't yet (or the repeat has no next).
+    private func occurrence(
+        of reminder: Reminder,
+        dueAt dueTime: Date,
+        takenOverAt takeOverTime: Date?
+    ) -> (occurrence: Occurrence, closedAt: Date?) {
         if let closed = histories[reminder.id]?.closedOccurrences[dueTime] {
-            return Occurrence(dueTime: dueTime, state: closed)
+            return (Occurrence(dueTime: dueTime, state: closed.state), closed.closedAt)
         }
         let nudgeTimes = reminder.strength.nudgeTimes(from: dueTime, within: giveUpLimit)
         let giveUpTime = reminder.strength.giveUpTime(from: dueTime, after: nudgeTimes, within: giveUpLimit)
         // The first pause that ends at or after the due time is the first the occurrence could be
         // open in. If it hadn't closed by then, it's Skipped: the Nudging one that Pause closes, any
         // due while paused, and one an edit while paused moved to before the pause.
+        // It closes when the pause starts, or at its due time if that came while paused.
         if let pause = histories[reminder.id]?.pauseSpans.first(where: { dueTime <= $0.end ?? .distantFuture }),
            min(giveUpTime, takeOverTime ?? giveUpTime) > pause.start {
-            return Occurrence(dueTime: dueTime, state: .skipped(reason: .paused))
+            return (Occurrence(dueTime: dueTime, state: .skipped(reason: .paused)), max(dueTime, pause.start))
         }
         // A tie goes to the next occurrence, as in the mockup's `simulate` (`takeover: t >= until`).
         if let takeOverTime, takeOverTime <= giveUpTime {
-            return Occurrence(dueTime: dueTime, state: .missed(reason: .nextTookOver))
+            return (Occurrence(dueTime: dueTime, state: .missed(reason: .nextTookOver)), takeOverTime)
         }
         if clock.now >= giveUpTime {
-            return Occurrence(dueTime: dueTime, state: .missed(reason: .giveUpLimit))
+            return (Occurrence(dueTime: dueTime, state: .missed(reason: .giveUpLimit)), giveUpTime)
         }
         let sent = nudgeTimes.filter { $0 <= clock.now }.count
-        return Occurrence(dueTime: dueTime, state: .nudging(nudgeNumber: sent))
+        return (Occurrence(dueTime: dueTime, state: .nudging(nudgeNumber: sent)), nil)
     }
 }
 

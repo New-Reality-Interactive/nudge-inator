@@ -43,3 +43,7 @@ final class FakeScheduler: SchedulerAdapter {
         appliedPlans.append(plan)
     }
 }
+
+/// Swift Testing has its own `Tag` (for labelling tests); in these tests `Tag` is always the
+/// engine's.
+typealias Tag = NudgeEngine.Tag

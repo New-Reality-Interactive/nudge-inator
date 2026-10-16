@@ -16,10 +16,6 @@ public enum OccurrenceState: Equatable, Sendable {
     case missed(reason: MissedReason)
     /// Closed without Done, and not counted against the person as Missed is.
     case skipped(reason: SkippedReason)
-
-    var isClosed: Bool {
-        if case .nudging = self { false } else { true }
-    }
 }
 
 /// Why an occurrence closed as Missed.
