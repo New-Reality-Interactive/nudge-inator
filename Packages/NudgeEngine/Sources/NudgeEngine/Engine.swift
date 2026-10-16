@@ -46,6 +46,7 @@ public struct Engine {
     let clock: any EngineClock
     private let scheduler: any SchedulerAdapter
     private let giveUpLimit: GiveUpLimit
+    private let alarmLimit: AlarmLimit
     let calendar: Calendar
     /// Formats the times and dates in a repeat's summary.
     let locale: Locale
@@ -72,6 +73,17 @@ public struct Engine {
         /// Earlier titles, oldest first, with when an Edit replaced them. A nudge that fired before
         /// the Edit was delivered with the old title, so its plan item keeps it.
         var replacedTitles: [Replaced<String>] = []
+        /// Fire times of nudges whose alarm the system turned down with its alarm limit. Kept until
+        /// they fire: ticket 02 couldn't show that an alarm that rang frees a slot.
+        var reportedAlarmLimitFireTimes: Set<Date> = []
+        /// Fire times of nudges past the engine's own cap when a plan was applied. The engine knows
+        /// its own count, so ones yet to fire are worked out again for each plan; ones that fired
+        /// keep the delivery they had.
+        var alarmCapFireTimes: Set<Date> = []
+
+        func isPastAlarmLimit(firingAt fireTime: Date) -> Bool {
+            reportedAlarmLimitFireTimes.contains(fireTime) || alarmCapFireTimes.contains(fireTime)
+        }
     }
 
     private struct PauseSpan {
@@ -99,13 +111,15 @@ public struct Engine {
         )
     }
 
-    /// Lets tests change the give-up limit. A shorter span is the only way to see it win over the
-    /// nudge count with today's ladders, and a wider limit the only way to keep an every-day
-    /// reminder Nudging until the next one takes over. Internal because the spec fixes the limit.
+    /// Lets tests change the give-up limit and the alarm limit. A shorter span is the only way to
+    /// see it win over the nudge count with today's ladders, and a wider limit the only way to keep
+    /// an every-day reminder Nudging until the next one takes over. A small alarm limit is the only
+    /// way to reach it without thousands of reminders. Internal because both limits are fixed.
     init(
         clock: any EngineClock,
         scheduler: any SchedulerAdapter,
         giveUpLimit: GiveUpLimit,
+        alarmLimit: AlarmLimit = .shipped,
         timeZone: TimeZone = .autoupdatingCurrent,
         locale: Locale = .autoupdatingCurrent,
         permissions: PermissionStates = PermissionStates()
@@ -113,6 +127,7 @@ public struct Engine {
         self.clock = clock
         self.scheduler = scheduler
         self.giveUpLimit = giveUpLimit
+        self.alarmLimit = alarmLimit
         // Gregorian whatever the person's own calendar, because RRULE (RFC 5545) is: in, say, the
         // Hebrew calendar Every Month would fall on different days.
         var calendar = Calendar(identifier: .gregorian)
@@ -126,7 +141,7 @@ public struct Engine {
     /// true, so it isn't checked against the lock. The edit form sends `edit(_:)` instead.
     public mutating func update(reminders: [Reminder]) {
         self.reminders = reminders
-        scheduler.apply(plan())
+        applyPlan()
     }
 
     /// The permission states the scheduler adapter reports, at launch and whenever they change.
@@ -140,7 +155,22 @@ public struct Engine {
         replacedPermissions.removeAll { $0.replacedAt < oldestFireTime }
         replacedPermissions.append(Replaced(value: self.permissions, replacedAt: clock.now))
         self.permissions = permissions
-        scheduler.apply(plan())
+        applyPlan()
+    }
+
+    /// The scheduler adapter's report that the alarm for the reminder's nudge firing at
+    /// `fireTime` failed with the system's alarm limit (`maximumLimitReached`). That nudge falls
+    /// back to a Time Sensitive notification marked `isPastAlarmLimit`; the rest of the ladder
+    /// stays as it is. It stays a notification until it fires, even after other alarms ring, since
+    /// ticket 02 couldn't show that a slot frees up. An Edit that moves the ladder forgets it. A report the
+    /// plan has no alarm for (not held, already fallen back, already fired) is ignored, since the
+    /// adapter can send one stale after a re-plan.
+    public mutating func markAlarmLimitReached(_ reminderID: Reminder.ID, firingAt fireTime: Date) {
+        guard fireTime > clock.now, plan().items.contains(where: {
+            $0.reminderID == reminderID && $0.fireTime == fireTime && $0.deliveryKind == .alarm
+        }) else { return }
+        histories[reminderID, default: History()].reportedAlarmLimitFireTimes.insert(fireTime)
+        applyPlan()
     }
 
     /// Closes the reminder's open occurrence as Done and cancels everything pending for it. Done
@@ -150,7 +180,7 @@ public struct Engine {
     public mutating func markDone(_ reminderID: Reminder.ID) {
         guard let occurrence = openOccurrence(for: reminderID) else { return }
         histories[reminderID, default: History()].closedOccurrences[occurrence.dueTime] = .done
-        scheduler.apply(plan())
+        applyPlan()
     }
 
     /// Stops the reminder nudging without losing it. Its open occurrence, if any, closes as Skipped,
@@ -159,7 +189,7 @@ public struct Engine {
     public mutating func pause(_ reminderID: Reminder.ID) {
         guard !isPaused(reminderID) else { return }
         histories[reminderID, default: History()].pauseSpans.append(PauseSpan(start: clock.now))
-        scheduler.apply(plan())
+        applyPlan()
     }
 
     /// Brings a paused reminder back at its next due time after now. Due times that passed while it
@@ -173,7 +203,7 @@ public struct Engine {
         guard reminder.nextDueTime(after: clock.now, calendar: calendar) != nil else { throw .needsNewDueTime }
         let now = clock.now
         histories[reminderID]?.pauseSpans[last].end = now
-        scheduler.apply(plan())
+        applyPlan()
     }
 
     /// Removes the reminder and cancels everything pending for it. Its occurrences go with it, not
@@ -185,7 +215,7 @@ public struct Engine {
         histories[reminderID] = nil
         guard reminder(reminderID) != nil else { return }
         reminders.removeAll { $0.id == reminderID }
-        scheduler.apply(plan())
+        applyPlan()
     }
 
     /// Applies the person's changes to a reminder the engine holds. An Edit that changes a Locked
@@ -200,11 +230,18 @@ public struct Engine {
         if let latest = latestOccurrence(for: edited.id), latest.state.isClosed {
             histories[edited.id, default: History()].closedOccurrences[latest.dueTime] = latest.state
         }
+        // The system's answer was about fire times the moved ladder no longer has. A new time
+        // landing on an old one would otherwise come marked with no report.
+        if [LockedField.dueTime, .repeatRule, .strength].contains(where: { $0.isChanged(from: current, to: edited) }),
+           let reported = histories[edited.id]?.reportedAlarmLimitFireTimes {
+            let now = clock.now
+            histories[edited.id]?.reportedAlarmLimitFireTimes = reported.filter { $0 <= now }
+        }
         if edited.title != current.title {
             histories[edited.id, default: History()].replacedTitles.append(Replaced(value: current.title, replacedAt: clock.now))
         }
         reminders = reminders.map { $0.id == edited.id ? edited : $0 }
-        scheduler.apply(plan())
+        applyPlan()
     }
 
     /// The fields an Edit can't change now: all four while the reminder has a Nudging occurrence,
@@ -220,6 +257,35 @@ public struct Engine {
     /// Whether the reminder is paused, so the screen offers Resume rather than Pause.
     public func isPaused(_ reminderID: Reminder.ID) -> Bool {
         histories[reminderID]?.pauseSpans.last.map { $0.end == nil } ?? false
+    }
+
+    /// Hands the plan to the scheduler, with the alarms past the engine's alarm limit fallen back.
+    private mutating func applyPlan() {
+        pruneAlarmLimitRecords()
+        fallBackAlarmsPastTheCap()
+        scheduler.apply(plan())
+    }
+
+    /// No plan item fires more than the give-up span before now, so older records can't apply.
+    /// The cap's records for nudges yet to fire go too, for `fallBackAlarmsPastTheCap` to redo.
+    private mutating func pruneAlarmLimitRecords() {
+        let oldestFireTime = clock.now - giveUpLimit.span
+        let now = clock.now
+        for (id, history) in histories {
+            histories[id]?.reportedAlarmLimitFireTimes = history.reportedAlarmLimitFireTimes.filter { $0 >= oldestFireTime }
+            histories[id]?.alarmCapFireTimes = history.alarmCapFireTimes.filter { oldestFireTime <= $0 && $0 <= now }
+        }
+    }
+
+    /// Keeps the soonest alarms yet to ring within the engine's alarm limit and records the rest.
+    /// Ties go by reminder ID, so the order the store lists reminders in doesn't decide.
+    private mutating func fallBackAlarmsPastTheCap() {
+        let alarms = plan().items
+            .filter { $0.deliveryKind == .alarm && $0.fireTime > clock.now }
+            .sorted { ($0.fireTime, $0.reminderID.uuidString) < ($1.fireTime, $1.reminderID.uuidString) }
+        for item in alarms.dropFirst(alarmLimit.pendingAlarms) {
+            histories[item.reminderID, default: History()].alarmCapFireTimes.insert(item.fireTime)
+        }
     }
 
     /// The whole ladder of each reminder's open occurrence and of its next one, even before they
@@ -249,10 +315,11 @@ public struct Engine {
         let nudgeTimes = reminder.strength.nudgeTimes(from: dueTime, within: giveUpLimit)
         return nudgeTimes.prefix { $0 < takeOverTime ?? .distantFuture }.enumerated().compactMap { index, fireTime in
             let urgency = reminder.strength.urgency(ofNudge: index + 1)
-            guard let deliveryKind = deliveryKind(
+            guard let delivery = delivery(
                 of: urgency,
                 breakThroughFocus: reminder.breakThroughFocus,
-                permissions: permissions(firingAt: fireTime)
+                permissions: permissions(firingAt: fireTime),
+                alarmLimitReached: histories[reminder.id]?.isPastAlarmLimit(firingAt: fireTime) ?? false
             ) else { return nil }
             return SchedulePlan.Item(
                 reminderID: reminder.id,
@@ -260,7 +327,8 @@ public struct Engine {
                 fireTime: fireTime,
                 urgency: urgency,
                 title: title(of: reminder, firingAt: fireTime),
-                deliveryKind: deliveryKind
+                deliveryKind: delivery.kind,
+                isPastAlarmLimit: delivery.isPastAlarmLimit
             )
         }
     }
@@ -278,20 +346,37 @@ public struct Engine {
         replacedPermissions.value(firingAt: fireTime) ?? permissions
     }
 
-    /// The spec's Delivery by urgency rule, with the weaker fallbacks for denied permissions, or
-    /// `nil` when nothing can deliver the nudge. It lives here rather than on the plan item because
-    /// the fallbacks depend on system state the engine knows and an item doesn't. Break through
-    /// Focus off changes only the delivery kind: the urgency, and so the notification text, stays
-    /// on the ladder. Alarms not determined plan as allowed, since the prompt may not have been
-    /// shown yet. The alarm-limit fallback (ticket 15) should come in here too, so an overflow
-    /// nudge also follows notifications denied and Time Sensitive off.
-    private func deliveryKind(of urgency: Urgency, breakThroughFocus: Bool, permissions: PermissionStates) -> DeliveryKind? {
-        if breakThroughFocus, urgency == .urgent, permissions.alarms != .denied { return .alarm }
+    /// The spec's Delivery by urgency rule, with the weaker fallbacks for denied permissions and
+    /// the alarm limit, or `nil` when nothing can deliver the nudge. It lives here rather than on
+    /// the plan item because the fallbacks depend on system state the engine knows and an item
+    /// doesn't. Break through Focus off changes only the delivery kind: the urgency, and so the
+    /// notification text, stays on the ladder. Alarms not determined plan as allowed, since the
+    /// prompt may not have been shown yet. Past the alarm limit, an Urgent nudge takes the
+    /// alarms-denied fallback, so it also follows notifications denied and Time Sensitive off. It
+    /// is marked only when it would otherwise ring: with alarms denied or the switch off, that is
+    /// the reason it's a notification, and the screens say so instead.
+    private func delivery(
+        of urgency: Urgency,
+        breakThroughFocus: Bool,
+        permissions: PermissionStates,
+        alarmLimitReached: Bool
+    ) -> (kind: DeliveryKind, isPastAlarmLimit: Bool)? {
+        if breakThroughFocus, urgency == .urgent, permissions.alarms != .denied {
+            guard alarmLimitReached else { return (.alarm, false) }
+            return notificationKind(of: urgency, breakThroughFocus: breakThroughFocus, permissions: permissions)
+                .map { ($0, true) }
+        }
+        return notificationKind(of: urgency, breakThroughFocus: breakThroughFocus, permissions: permissions)
+            .map { ($0, false) }
+    }
+
+    /// How a nudge that doesn't ring arrives, or `nil` with notifications denied.
+    private func notificationKind(of urgency: Urgency, breakThroughFocus: Bool, permissions: PermissionStates) -> DeliveryKind? {
         guard permissions.notifications == .allowed else { return nil }
         guard breakThroughFocus else { return .notification }
         switch urgency {
         case .normal: return .notification
-        // Urgent with alarms denied falls back to High's delivery, ordinary if Time Sensitive is off.
+        // Urgent that falls back takes High's delivery, ordinary if Time Sensitive is off.
         case .high, .urgent: return permissions.timeSensitive == .on ? .timeSensitiveNotification : .notification
         }
     }
@@ -300,9 +385,9 @@ public struct Engine {
     /// engine holds, as the banners say it (ticket 31).
     public var reach: Reach {
         Reach(
-            normal: deliveryKind(of: .normal, breakThroughFocus: true, permissions: permissions),
-            high: deliveryKind(of: .high, breakThroughFocus: true, permissions: permissions),
-            urgent: deliveryKind(of: .urgent, breakThroughFocus: true, permissions: permissions)
+            normal: delivery(of: .normal, breakThroughFocus: true, permissions: permissions, alarmLimitReached: false)?.kind,
+            high: delivery(of: .high, breakThroughFocus: true, permissions: permissions, alarmLimitReached: false)?.kind,
+            urgent: delivery(of: .urgent, breakThroughFocus: true, permissions: permissions, alarmLimitReached: false)?.kind
         )
     }
 
