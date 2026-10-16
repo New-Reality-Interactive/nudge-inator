@@ -49,6 +49,11 @@ public struct Engine {
     let calendar: Calendar
     /// Formats the times and dates in a repeat's summary.
     let locale: Locale
+    private var permissions: PermissionStates
+    /// Earlier permission states, oldest first, with when the app reported a change. A nudge that
+    /// fired before the change was delivered under the old states, so its plan item keeps that
+    /// delivery. App-wide, so not in a reminder's `History`.
+    private var replacedPermissions: [ReplacedPermissions] = []
     private var reminders: [Reminder] = []
     /// What the engine records about each reminder because the clock can't work it out. Delete
     /// clears it in one go.
@@ -69,6 +74,11 @@ public struct Engine {
         var replacedTitles: [ReplacedTitle] = []
     }
 
+    private struct ReplacedPermissions {
+        var permissions: PermissionStates
+        var replacedAt: Date
+    }
+
     private struct ReplacedTitle {
         var title: String
         var replacedAt: Date
@@ -86,9 +96,17 @@ public struct Engine {
         clock: any EngineClock,
         scheduler: any SchedulerAdapter,
         timeZone: TimeZone = .autoupdatingCurrent,
-        locale: Locale = .autoupdatingCurrent
+        locale: Locale = .autoupdatingCurrent,
+        permissions: PermissionStates = PermissionStates()
     ) {
-        self.init(clock: clock, scheduler: scheduler, giveUpLimit: .shipped, timeZone: timeZone, locale: locale)
+        self.init(
+            clock: clock,
+            scheduler: scheduler,
+            giveUpLimit: .shipped,
+            timeZone: timeZone,
+            locale: locale,
+            permissions: permissions
+        )
     }
 
     /// Lets tests change the give-up limit. A shorter span is the only way to see it win over the
@@ -99,7 +117,8 @@ public struct Engine {
         scheduler: any SchedulerAdapter,
         giveUpLimit: GiveUpLimit,
         timeZone: TimeZone = .autoupdatingCurrent,
-        locale: Locale = .autoupdatingCurrent
+        locale: Locale = .autoupdatingCurrent,
+        permissions: PermissionStates = PermissionStates()
     ) {
         self.clock = clock
         self.scheduler = scheduler
@@ -110,12 +129,23 @@ public struct Engine {
         calendar.timeZone = timeZone
         self.calendar = calendar
         self.locale = locale
+        self.permissions = permissions
     }
 
     /// Replaces the whole list: App opened, and the store's reload. It reports what is already
     /// true, so it isn't checked against the lock. The edit form sends `edit(_:)` instead.
     public mutating func update(reminders: [Reminder]) {
         self.reminders = reminders
+        scheduler.apply(plan())
+    }
+
+    /// The permission states the scheduler adapter reports, at launch and whenever they change.
+    /// Nudges not yet delivered take the new delivery; ones already delivered keep theirs. States
+    /// that match the current ones change nothing, so they're ignored.
+    public mutating func update(permissions: PermissionStates) {
+        guard permissions != self.permissions else { return }
+        replacedPermissions.append(ReplacedPermissions(permissions: self.permissions, replacedAt: clock.now))
+        self.permissions = permissions
         scheduler.apply(plan())
     }
 
@@ -223,15 +253,16 @@ public struct Engine {
     /// `takeOverTime` is the next due time, `nil` if the repeat has none.
     private func ladder(of reminder: Reminder, dueAt dueTime: Date, takenOverAt takeOverTime: Date?) -> [SchedulePlan.Item] {
         let nudgeTimes = reminder.strength.nudgeTimes(from: dueTime, within: giveUpLimit)
-        return nudgeTimes.prefix { $0 < takeOverTime ?? .distantFuture }.enumerated().map { index, fireTime in
+        return nudgeTimes.prefix { $0 < takeOverTime ?? .distantFuture }.enumerated().compactMap { index, fireTime in
             let urgency = reminder.strength.urgency(ofNudge: index + 1)
+            guard let deliveryKind = deliveryKind(of: urgency, breakThroughFocus: reminder.breakThroughFocus, permissions: permissions(firingAt: fireTime)) else { return nil }
             return SchedulePlan.Item(
                 reminderID: reminder.id,
                 nudgeNumber: index + 1,
                 fireTime: fireTime,
                 urgency: urgency,
                 title: title(of: reminder, firingAt: fireTime),
-                deliveryKind: deliveryKind(of: urgency, for: reminder)
+                deliveryKind: deliveryKind
             )
         }
     }
@@ -242,17 +273,38 @@ public struct Engine {
         histories[reminder.id]?.replacedTitles.first { fireTime <= $0.replacedAt }?.title ?? reminder.title
     }
 
-    /// The spec's Delivery by urgency rule. It lives here rather than on the plan item because
-    /// the alarms-denied and alarm-limit fallbacks (tickets 14 and 15) depend on system state the
-    /// engine knows and an item doesn't. Break through Focus off changes only the delivery kind:
-    /// the urgency, and so the notification text, stays on the ladder.
-    private func deliveryKind(of urgency: Urgency, for reminder: Reminder) -> DeliveryKind {
-        guard reminder.breakThroughFocus else { return .notification }
+    /// The permission states a nudge firing at `fireTime` is delivered under: the ones in force
+    /// when it fired, if a change came after, otherwise the current ones. A nudge firing exactly
+    /// at a change counts as delivered, as with titles.
+    private func permissions(firingAt fireTime: Date) -> PermissionStates {
+        replacedPermissions.first { fireTime <= $0.replacedAt }?.permissions ?? permissions
+    }
+
+    /// The spec's Delivery by urgency rule, with the weaker fallbacks for denied permissions, or
+    /// `nil` when nothing can deliver the nudge. It lives here rather than on the plan item because
+    /// the fallbacks depend on system state the engine knows and an item doesn't. Break through
+    /// Focus off changes only the delivery kind: the urgency, and so the notification text, stays
+    /// on the ladder. Alarms not determined plan as allowed, since the prompt may not have been
+    /// shown yet.
+    private func deliveryKind(of urgency: Urgency, breakThroughFocus: Bool, permissions: PermissionStates) -> DeliveryKind? {
+        if breakThroughFocus, urgency == .urgent, permissions.alarms != .denied { return .alarm }
+        guard permissions.notifications == .allowed else { return nil }
+        guard breakThroughFocus else { return .notification }
         switch urgency {
         case .normal: return .notification
-        case .high: return .timeSensitiveNotification
-        case .urgent: return .alarm
+        // Urgent with alarms denied falls back to High's delivery, ordinary if Time Sensitive is off.
+        case .high, .urgent: return permissions.timeSensitive ? .timeSensitiveNotification : .notification
         }
+    }
+
+    /// What can still reach the person with the permissions they've given, whatever reminders the
+    /// engine holds, as the banners say it (ticket 31).
+    public var reach: Reach {
+        Reach(
+            normal: deliveryKind(of: .normal, breakThroughFocus: true, permissions: permissions),
+            high: deliveryKind(of: .high, breakThroughFocus: true, permissions: permissions),
+            urgent: deliveryKind(of: .urgent, breakThroughFocus: true, permissions: permissions)
+        )
     }
 
     /// The next `count` due times at or after now, fewer if the repeat ends: what the Custom page
