@@ -60,7 +60,7 @@ public struct Engine {
     public internal(set) var tags: [Tag] = []
     /// What the engine records about each reminder because the clock can't work it out. Delete
     /// clears it in one go.
-    private var histories: [Reminder.ID: History] = [:]
+    private var records: [Reminder.ID: History] = [:]
 
     private struct History {
         /// Occurrences whose state is fixed, by due time, with how they closed. Done is the one the
@@ -93,13 +93,25 @@ public struct Engine {
         func isPastAlarmLimit(firingAt fireTime: Date) -> Bool {
             reportedAlarmLimitFireTimes.contains(fireTime) || alarmCapFireTimes.contains(fireTime)
         }
-    }
 
+        /// The records the store saves. The alarm-limit records aren't among them: the adapter's
+        /// next report rebuilds the system's, and the cap's are worked out again on every plan.
+        var reminderHistory: ReminderHistory {
+            ReminderHistory(
+                closedOccurrences: closedOccurrences,
+                editAppliesAfter: editAppliesAfter,
+                pauseSpans: pauseSpans,
+                replacedTitles: replacedTitles
+            )
+        }
 
-    private struct PauseSpan {
-        var start: Date
-        /// `nil` until Resume.
-        var end: Date?
+        /// Takes the store's records and keeps the alarm-limit ones, which it doesn't save.
+        mutating func replaceSaved(with history: ReminderHistory) {
+            closedOccurrences = history.closedOccurrences
+            editAppliesAfter = history.editAppliesAfter
+            pauseSpans = history.pauseSpans
+            replacedTitles = history.replacedTitles
+        }
     }
 
     /// `timeZone` is where repeats keep their local time of day. `locale` formats the times and
@@ -160,6 +172,22 @@ public struct Engine {
         self.tags = tags
     }
 
+    /// What the store saves about each reminder because the clock can't work it out (ticket 17).
+    /// The app saves it with the reminders and tags after every event.
+    public var histories: [Reminder.ID: ReminderHistory] {
+        records.mapValues(\.reminderHistory)
+    }
+
+    /// The store's saved histories, handed back at launch. They replace what the store saves for
+    /// every reminder; the alarm-limit records, which it doesn't save, stay. Like `update(tags:)`
+    /// it applies no plan: at launch send it before `update(reminders:)`, which plans once with
+    /// the history in place.
+    public mutating func update(histories: [Reminder.ID: ReminderHistory]) {
+        for id in Set(records.keys).union(histories.keys) {
+            records[id, default: History()].replaceSaved(with: histories[id] ?? ReminderHistory())
+        }
+    }
+
     /// Removes the tag and takes it off every reminder, which stays. Returns how many reminders
     /// used it. The store makes the same change to what it saved (ticket 17). Tags never reach a
     /// schedule plan, so none is applied.
@@ -199,7 +227,7 @@ public struct Engine {
         guard fireTime > clock.now, plan().items.contains(where: {
             $0.reminderID == reminderID && $0.fireTime == fireTime && $0.deliveryKind == .alarm
         }) else { return }
-        histories[reminderID, default: History()].reportedAlarmLimitFireTimes.insert(fireTime)
+        records[reminderID, default: History()].reportedAlarmLimitFireTimes.insert(fireTime)
         applyPlan()
     }
 
@@ -211,7 +239,7 @@ public struct Engine {
         guard let occurrence = openOccurrence(for: reminderID),
               case let .nudging(nudgeNumber) = occurrence.state
         else { return }
-        histories[reminderID, default: History()].closedOccurrences[occurrence.dueTime] = Closing(
+        records[reminderID, default: History()].closedOccurrences[occurrence.dueTime] = Closing(
             state: .done,
             closedAt: clock.now,
             nudgesSent: nudgeNumber
@@ -224,7 +252,7 @@ public struct Engine {
     /// open, Pause only marks the reminder paused. Pausing a paused reminder is ignored.
     public mutating func pause(_ reminderID: Reminder.ID) {
         guard !isPaused(reminderID) else { return }
-        histories[reminderID, default: History()].pauseSpans.append(PauseSpan(start: clock.now))
+        records[reminderID, default: History()].pauseSpans.append(PauseSpan(start: clock.now))
         applyPlan()
     }
 
@@ -234,11 +262,11 @@ public struct Engine {
     /// reminder isn't locked, so the screen sends the person to edit the due time, and Resume then
     /// succeeds (ADR 0002). Resume on a reminder that isn't paused is ignored.
     public mutating func resume(_ reminderID: Reminder.ID) throws(ResumeError) {
-        guard isPaused(reminderID), let reminder = reminder(reminderID), let last = histories[reminderID]?.pauseSpans.indices.last
+        guard isPaused(reminderID), let reminder = reminder(reminderID), let last = records[reminderID]?.pauseSpans.indices.last
         else { return }
         guard reminder.nextDueTime(after: clock.now, calendar: calendar) != nil else { throw .needsNewDueTime }
         let now = clock.now
-        histories[reminderID]?.pauseSpans[last].end = now
+        records[reminderID]?.pauseSpans[last].end = now
         applyPlan()
     }
 
@@ -248,7 +276,7 @@ public struct Engine {
     /// Skipped, Paused or old title. It goes even when the engine no longer holds the reminder, since `update(reminders:)` may
     /// have dropped it first; with nothing to remove from the plan, no plan is re-applied.
     public mutating func delete(_ reminderID: Reminder.ID) {
-        histories[reminderID] = nil
+        records[reminderID] = nil
         guard reminder(reminderID) != nil else { return }
         reminders.removeAll { $0.id == reminderID }
         applyPlan()
@@ -268,18 +296,18 @@ public struct Engine {
             let latest = latestOccurrence(for: current.id)?.dueTime
             for dueTime in [latest].compactMap(\.self) + dueTimes(of: current, in: earliestListedDueTime...now) {
                 if let closing = reading(of: current.id, dueAt: dueTime)?.closing {
-                    histories[edited.id, default: History()].closedOccurrences[dueTime] = closing
+                    records[edited.id, default: History()].closedOccurrences[dueTime] = closing
                 }
             }
-            if let latest { histories[edited.id, default: History()].editAppliesAfter = latest }
+            if let latest { records[edited.id, default: History()].editAppliesAfter = latest }
             // The system's answer was about fire times the moved ladder no longer has. A new time
             // landing on an old one would otherwise come marked with no report.
-            if let reported = histories[edited.id]?.reportedAlarmLimitFireTimes {
-                histories[edited.id]?.reportedAlarmLimitFireTimes = reported.filter { $0 <= now }
+            if let reported = records[edited.id]?.reportedAlarmLimitFireTimes {
+                records[edited.id]?.reportedAlarmLimitFireTimes = reported.filter { $0 <= now }
             }
         }
         if edited.title != current.title {
-            histories[edited.id, default: History()].replacedTitles.append(Replaced(value: current.title, replacedAt: clock.now))
+            records[edited.id, default: History()].replacedTitles.append(Replaced(value: current.title, replacedAt: clock.now))
         }
         reminders = reminders.map { $0.id == edited.id ? edited : $0 }
         applyPlan()
@@ -297,7 +325,7 @@ public struct Engine {
 
     /// Whether the reminder is paused, so the screen offers Resume rather than Pause.
     public func isPaused(_ reminderID: Reminder.ID) -> Bool {
-        histories[reminderID]?.pauseSpans.last.map { $0.end == nil } ?? false
+        records[reminderID]?.pauseSpans.last.map { $0.end == nil } ?? false
     }
 
     /// Hands the plan to the scheduler, with the alarms past the engine's alarm limit fallen back.
@@ -312,9 +340,9 @@ public struct Engine {
     private mutating func pruneAlarmLimitRecords() {
         let oldestFireTime = clock.now - giveUpLimit.span
         let now = clock.now
-        for (id, history) in histories {
-            histories[id]?.reportedAlarmLimitFireTimes = history.reportedAlarmLimitFireTimes.filter { $0 >= oldestFireTime }
-            histories[id]?.alarmCapFireTimes = history.alarmCapFireTimes.filter { oldestFireTime <= $0 && $0 <= now }
+        for (id, history) in records {
+            records[id]?.reportedAlarmLimitFireTimes = history.reportedAlarmLimitFireTimes.filter { $0 >= oldestFireTime }
+            records[id]?.alarmCapFireTimes = history.alarmCapFireTimes.filter { oldestFireTime <= $0 && $0 <= now }
         }
     }
 
@@ -325,7 +353,7 @@ public struct Engine {
             .filter { $0.deliveryKind == .alarm && $0.fireTime > clock.now }
             .sorted { ($0.fireTime, $0.reminderID.uuidString) < ($1.fireTime, $1.reminderID.uuidString) }
         for item in alarms.dropFirst(alarmLimit.pendingAlarms) {
-            histories[item.reminderID, default: History()].alarmCapFireTimes.insert(item.fireTime)
+            records[item.reminderID, default: History()].alarmCapFireTimes.insert(item.fireTime)
         }
     }
 
@@ -360,7 +388,7 @@ public struct Engine {
                 of: urgency,
                 breakThroughFocus: reminder.breakThroughFocus,
                 permissions: permissions(firingAt: fireTime),
-                alarmLimitReached: histories[reminder.id]?.isPastAlarmLimit(firingAt: fireTime) ?? false
+                alarmLimitReached: records[reminder.id]?.isPastAlarmLimit(firingAt: fireTime) ?? false
             ) else { return nil }
             return SchedulePlan.Item(
                 reminderID: reminder.id,
@@ -377,7 +405,7 @@ public struct Engine {
     /// The title a nudge firing at `fireTime` carries: the one it was delivered with if it fired
     /// before an Edit replaced it, otherwise the reminder's own.
     private func title(of reminder: Reminder, firingAt fireTime: Date) -> String {
-        histories[reminder.id]?.replacedTitles.value(firingAt: fireTime) ?? reminder.title
+        records[reminder.id]?.replacedTitles.value(firingAt: fireTime) ?? reminder.title
     }
 
     /// The permission states a nudge firing at `fireTime` is delivered under: the ones in force
@@ -458,7 +486,7 @@ public struct Engine {
         guard let reminder = reminder(reminderID) else { return nil }
         let now = clock.now
         let computed = reminder.latestDueTime(atOrBefore: now, calendar: calendar).flatMap { isBeforeScheduleChange($0, of: reminderID) ? nil : $0 }
-        let recorded = histories[reminderID]?.closedOccurrences.keys.filter { $0 <= now }.max()
+        let recorded = records[reminderID]?.closedOccurrences.keys.filter { $0 <= now }.max()
         guard let dueTime = [computed, recorded].compactMap(\.self).max() else { return nil }
         // Its next due time is after now by definition, so nothing has taken it over yet.
         return occurrence(of: reminder, dueAt: dueTime, takenOverAt: nil).occurrence
@@ -467,7 +495,7 @@ public struct Engine {
     /// The reminder's due times in `range`, its fields' and the fixed ones', oldest first. Read
     /// each with `reading(of:dueAt:)`, which drops the ones an Edit means never happened.
     func dueTimes(of reminder: Reminder, in range: ClosedRange<Date>) -> [Date] {
-        var dueTimes = Set(histories[reminder.id]?.closedOccurrences.keys.filter(range.contains) ?? [])
+        var dueTimes = Set(records[reminder.id]?.closedOccurrences.keys.filter(range.contains) ?? [])
         var after = range.lowerBound.justBefore
         while let dueTime = reminder.nextDueTime(after: after, calendar: calendar), dueTime <= range.upperBound {
             dueTimes.insert(dueTime)
@@ -483,7 +511,7 @@ public struct Engine {
     }
 
     private func isBeforeScheduleChange(_ dueTime: Date, of reminderID: Reminder.ID) -> Bool {
-        histories[reminderID]?.editAppliesAfter.map { dueTime <= $0 } ?? false
+        records[reminderID]?.editAppliesAfter.map { dueTime <= $0 } ?? false
     }
 
     /// The reminder's occurrence due at `dueTime`, as it stands now, or `nil` if `dueTime` isn't
@@ -497,7 +525,7 @@ public struct Engine {
     /// the others' come from the clock.
     func reading(of reminderID: Reminder.ID, dueAt dueTime: Date) -> (occurrence: Occurrence, closing: Closing?)? {
         guard dueTime <= clock.now, let reminder = reminder(reminderID) else { return nil }
-        let isFixed = histories[reminderID]?.closedOccurrences[dueTime] != nil
+        let isFixed = records[reminderID]?.closedOccurrences[dueTime] != nil
         guard isFixed || (reminder.latestDueTime(atOrBefore: dueTime, calendar: calendar) == dueTime
             && !isBeforeScheduleChange(dueTime, of: reminderID))
         else { return nil }
@@ -515,7 +543,7 @@ public struct Engine {
         func closed(_ closing: Closing) -> (occurrence: Occurrence, closing: Closing?) {
             (Occurrence(dueTime: dueTime, state: closing.state), closing)
         }
-        if let closing = histories[reminder.id]?.closedOccurrences[dueTime] {
+        if let closing = records[reminder.id]?.closedOccurrences[dueTime] {
             return closed(closing)
         }
         let nudgeTimes = reminder.strength.nudgeTimes(from: dueTime, within: giveUpLimit)
@@ -524,7 +552,7 @@ public struct Engine {
         // open in. If it hadn't closed by then, it's Skipped: the Nudging one that Pause closes, any
         // due while paused, and one an edit while paused moved to before the pause.
         // It closes when the pause starts, or at its due time if that came while paused.
-        if let pause = histories[reminder.id]?.pauseSpans.first(where: { dueTime <= $0.end ?? .distantFuture }),
+        if let pause = records[reminder.id]?.pauseSpans.first(where: { dueTime <= $0.end ?? .distantFuture }),
            min(giveUpTime, takeOverTime ?? giveUpTime) > pause.start {
             // Nothing was sent if it fell due while paused.
             let sent = dueTime > pause.start ? 0 : nudgeTimes.count { $0 <= pause.start }
@@ -545,17 +573,31 @@ public struct Engine {
 }
 
 /// How an occurrence closed: its state, when, and after how many nudges.
-struct Closing {
-    var state: OccurrenceState
-    var closedAt: Date
-    var nudgesSent: Int
+public struct Closing: Equatable, Sendable {
+    public var state: OccurrenceState
+    public var closedAt: Date
+    public var nudgesSent: Int
+
+    public init(state: OccurrenceState, closedAt: Date, nudgesSent: Int) {
+        self.state = state
+        self.closedAt = closedAt
+        self.nudgesSent = nudgesSent
+    }
 }
 
 /// A value a change replaced, and when. A nudge firing at or before `replacedAt` was delivered with it.
-private struct Replaced<Value> {
-    var value: Value
-    var replacedAt: Date
+public struct Replaced<Value> {
+    public var value: Value
+    public var replacedAt: Date
+
+    public init(value: Value, replacedAt: Date) {
+        self.value = value
+        self.replacedAt = replacedAt
+    }
 }
+
+extension Replaced: Equatable where Value: Equatable {}
+extension Replaced: Sendable where Value: Sendable {}
 
 private extension Array {
     /// The value in force when a nudge fired at `fireTime`: the first one replaced at or after it,
