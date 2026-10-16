@@ -3,8 +3,13 @@ import SwiftData
 
 /// A reminder as SwiftData saves it. The store maps it to and from the engine's `Reminder`, so
 /// the engine stays free of SwiftData.
+/// A saved record with the engine value's ID.
+protocol IdentifiedRecord {
+    var id: UUID { get }
+}
+
 @Model
-final class ReminderRecord {
+final class ReminderRecord: IdentifiedRecord {
     @Attribute(.unique) var id: UUID
     /// The reminder's place in the list, which a relationship-free fetch doesn't keep.
     var position: Int
@@ -19,6 +24,8 @@ final class ReminderRecord {
     /// The repeat's `missingDay`, which RRULE has no part for: it is what tells a preset from the
     /// custom rule with the same parts.
     var repeatMissingDay: String?
+    /// The exact instant of an UNTIL that ends at a time. RRULE text keeps only whole seconds.
+    var repeatUntilTime: Date?
     var strength: String
     var breakThroughFocus: Bool
     /// Its history goes with it: Delete clears a reminder's whole history (ticket 12).
@@ -45,7 +52,7 @@ final class ReminderRecord {
 
 /// A tag as SwiftData saves it.
 @Model
-final class TagRecord {
+final class TagRecord: IdentifiedRecord {
     @Attribute(.unique) var id: UUID
     var position: Int
     var name: String
@@ -78,29 +85,34 @@ final class ClosedOccurrenceRecord {
     }
 }
 
-/// One pause of a reminder. A relationship has no order, so the store sorts by `start` to read
-/// them back oldest first.
+/// One pause of a reminder.
 @Model
 final class PauseSpanRecord {
     var reminder: ReminderRecord?
+    /// Its place in the history, oldest first. A relationship has no order, and two pauses can
+    /// start in the same instant (Pause, Resume, Pause), where only the order says which is open.
+    var position: Int
     var start: Date
     var end: Date?
 
-    init(start: Date, end: Date?) {
+    init(position: Int, start: Date, end: Date?) {
+        self.position = position
         self.start = start
         self.end = end
     }
 }
 
-/// An earlier title, with when an Edit replaced it. Sorted by `replacedAt` to read back oldest
-/// first.
+/// An earlier title, with when an Edit replaced it.
 @Model
 final class ReplacedTitleRecord {
     var reminder: ReminderRecord?
+    /// Its place in the history, oldest first, as for `PauseSpanRecord`.
+    var position: Int
     var title: String
     var replacedAt: Date
 
-    init(title: String, replacedAt: Date) {
+    init(position: Int, title: String, replacedAt: Date) {
+        self.position = position
         self.title = title
         self.replacedAt = replacedAt
     }

@@ -9,11 +9,23 @@ struct StoredData: Equatable {
     var histories: [Reminder.ID: ReminderHistory]
 }
 
-/// Why the store couldn't read what it saved.
+/// Why the store turned down a save or couldn't read what it saved.
 enum StoreError: Error, Equatable {
+    /// A saved field the store reads back into the engine's values.
+    enum Field: Equatable, Sendable {
+        case repeatRule
+        case repeatMissingDay
+        case strength
+        case occurrenceState
+        case closedOccurrenceDueTime
+    }
+
     /// A saved value the store can't map back to the engine's, such as RRULE text that no longer
     /// parses. Read as an error rather than dropped, so nothing is lost quietly.
-    case unreadable(field: String, value: String)
+    case unreadable(field: Field, value: String)
+    /// A save that lists a reminder or tag ID twice. The engine's lists aren't checked, so the
+    /// store turns it down rather than write two records for one ID.
+    case duplicateID(UUID)
 }
 
 /// Where the store file lives.
@@ -30,7 +42,7 @@ enum StoreLocation {
 /// sync. `@MainActor` because it uses the container's main context, and the app model that
 /// calls it is `@MainActor` too.
 @MainActor
-final class ReminderStore {
+struct ReminderStore {
     private let container: ModelContainer
     private var context: ModelContext { container.mainContext }
 
@@ -60,9 +72,12 @@ final class ReminderStore {
 
     nonisolated static let appGroupIdentifier = "group.com.newrealityinteractive.nudgeinator"
 
-    /// Replaces what the store holds with `data`.
+    /// Replaces what the store holds with `data`: what it leaves out is deleted. A history whose
+    /// reminder isn't in `data` isn't saved, since it would have nothing to belong to; the engine
+    /// keeps one only for a reminder `update(reminders:)` dropped without Delete (ticket 12).
     func save(_ data: StoredData) throws {
-        var reminderRecords = Dictionary(uniqueKeysWithValues: try context.fetch(FetchDescriptor<ReminderRecord>()).map { ($0.id, $0) })
+        try Self.checkUnique(data.reminders.map(\.id) + data.tags.map(\.id))
+        var reminderRecords = try recordsByID(of: ReminderRecord.self)
         for (position, reminder) in data.reminders.enumerated() {
             let record = reminderRecords.removeValue(forKey: reminder.id) ?? {
                 let record = ReminderRecord(id: reminder.id, position: position)
@@ -74,7 +89,7 @@ final class ReminderStore {
         }
         reminderRecords.values.forEach(context.delete)
 
-        var tagRecords = Dictionary(uniqueKeysWithValues: try context.fetch(FetchDescriptor<TagRecord>()).map { ($0.id, $0) })
+        var tagRecords = try recordsByID(of: TagRecord.self)
         for (position, tag) in data.tags.enumerated() {
             if let record = tagRecords.removeValue(forKey: tag.id) {
                 record.position = position
@@ -85,6 +100,20 @@ final class ReminderStore {
         }
         tagRecords.values.forEach(context.delete)
         try context.save()
+    }
+
+    /// Throws for the first ID listed twice. Reminder and tag IDs are both UUIDs, so one list does.
+    private static func checkUnique(_ ids: [UUID]) throws {
+        var seen: Set<UUID> = []
+        for id in ids where !seen.insert(id).inserted {
+            throw StoreError.duplicateID(id)
+        }
+    }
+
+    /// Every saved record of a type, by ID. The ID is unique in the schema, so a clash can't
+    /// happen; if it ever did, the first record wins rather than the app crashing.
+    private func recordsByID<Record: PersistentModel & IdentifiedRecord>(of type: Record.Type) throws -> [UUID: Record] {
+        Dictionary(try context.fetch(FetchDescriptor<Record>()).map { ($0.id, $0) }) { first, _ in first }
     }
 
     /// Settings' Delete All Data (ticket 30): every reminder, tag and history record. The caller
@@ -101,7 +130,7 @@ final class ReminderStore {
 
     /// Deletes the reminder and, through the cascade, its whole history. Call it with
     /// `engine.delete` (ticket 12): a reminder added back under the same ID inherits nothing.
-    func deleteReminder(_ reminderID: Reminder.ID) throws {
+    func delete(_ reminderID: Reminder.ID) throws {
         // Fetched and deleted one by one, as `save` does, so the cascade delete rule applies; the
         // docs show it only for that path.
         try context.fetch(FetchDescriptor<ReminderRecord>(predicate: #Predicate { $0.id == reminderID })).forEach(context.delete)
@@ -133,9 +162,11 @@ final class ReminderStore {
             )
         }
         record.pauseSpans.forEach(context.delete)
-        record.pauseSpans = history.pauseSpans.map { PauseSpanRecord(start: $0.start, end: $0.end) }
+        record.pauseSpans = history.pauseSpans.enumerated().map { PauseSpanRecord(position: $0, start: $1.start, end: $1.end) }
         record.replacedTitles.forEach(context.delete)
-        record.replacedTitles = history.replacedTitles.map { ReplacedTitleRecord(title: $0.value, replacedAt: $0.replacedAt) }
+        record.replacedTitles = history.replacedTitles.enumerated().map {
+            ReplacedTitleRecord(position: $0, title: $1.value, replacedAt: $1.replacedAt)
+        }
         record.editAppliesAfter = history.editAppliesAfter
     }
 
@@ -146,10 +177,10 @@ final class ReminderStore {
         return StoredData(
             reminders: try reminders.map { try $0.reminder() },
             tags: tags.map { Tag(id: $0.id, name: $0.name) },
-            histories: Dictionary(uniqueKeysWithValues: try reminders.compactMap { record in
+            histories: Dictionary(try reminders.compactMap { record in
                 let history = try record.history()
                 return history == ReminderHistory() ? nil : (record.id, history)
-            })
+            }) { first, _ in first }
         )
     }
 }
@@ -163,6 +194,7 @@ private extension ReminderRecord {
         dueTime = reminder.dueTime
         repeatRule = reminder.repeatRule?.rrule
         repeatMissingDay = reminder.repeatRule.map { $0.missingDay.storedValue }
+        repeatUntilTime = if case .untilTime(let time) = reminder.repeatRule?.end { time } else { nil }
         strength = reminder.strength.storedValue
         breakThroughFocus = reminder.breakThroughFocus
     }
@@ -182,17 +214,17 @@ private extension ReminderRecord {
 
     func history() throws -> ReminderHistory {
         ReminderHistory(
-            closedOccurrences: Dictionary(uniqueKeysWithValues: try closedOccurrences.map { record in
+            closedOccurrences: try Dictionary(try closedOccurrences.map { record in
                 let closing = Closing(
                     state: try OccurrenceState(storedValue: record.state, nudgeNumber: record.nudgeNumber),
                     closedAt: record.closedAt,
                     nudgesSent: record.nudgesSent
                 )
                 return (record.dueTime, closing)
-            }),
+            }) { _, _ in throw StoreError.unreadable(field: .closedOccurrenceDueTime, value: "two closings for one due time") },
             editAppliesAfter: editAppliesAfter,
-            pauseSpans: pauseSpans.sorted { $0.start < $1.start }.map { PauseSpan(start: $0.start, end: $0.end) },
-            replacedTitles: replacedTitles.sorted { $0.replacedAt < $1.replacedAt }.map { Replaced(value: $0.title, replacedAt: $0.replacedAt) }
+            pauseSpans: pauseSpans.sorted { $0.position < $1.position }.map { PauseSpan(start: $0.start, end: $0.end) },
+            replacedTitles: replacedTitles.sorted { $0.position < $1.position }.map { Replaced(value: $0.title, replacedAt: $0.replacedAt) }
         )
     }
 
@@ -202,15 +234,19 @@ private extension ReminderRecord {
         do {
             rule = try RepeatRule(rrule: repeatRule)
         } catch {
-            throw StoreError.unreadable(field: "repeatRule", value: repeatRule)
+            throw StoreError.unreadable(field: .repeatRule, value: repeatRule)
         }
         rule.missingDay = try RepeatRule.MissingDay(storedValue: repeatMissingDay ?? "")
+        // RRULE text keeps UNTIL to the second; the exact instant is saved beside it.
+        if case .untilTime = rule.end, let repeatUntilTime { rule.end = .untilTime(repeatUntilTime) }
         return rule
     }
 }
 
 /// The engine's enums as the strings the store saves. Spelled out here rather than taken from
-/// case names, so renaming a case in the engine can't change what's on disk.
+/// case names, so renaming a case in the engine can't change what's on disk. Each has a switch
+/// both ways: the engine's enums aren't `CaseIterable`, so the writing switch is the only one the
+/// compiler checks for a new case, and the round-trip tests cover every case of the reading one.
 private extension Strength {
     var storedValue: String {
         switch self {
@@ -225,7 +261,7 @@ private extension Strength {
         case "gentle": self = .gentle
         case "firm": self = .firm
         case "relentless": self = .relentless
-        default: throw StoreError.unreadable(field: "strength", value: storedValue)
+        default: throw StoreError.unreadable(field: .strength, value: storedValue)
         }
     }
 }
@@ -242,7 +278,7 @@ private extension RepeatRule.MissingDay {
         switch storedValue {
         case "skip": self = .skip
         case "lastDayOfMonth": self = .lastDayOfMonth
-        default: throw StoreError.unreadable(field: "repeatMissingDay", value: storedValue)
+        default: throw StoreError.unreadable(field: .repeatMissingDay, value: storedValue)
         }
     }
 }
@@ -270,7 +306,7 @@ private extension OccurrenceState {
         case ("missed.giveUpLimit", _): self = .missed(reason: .giveUpLimit)
         case ("missed.nextTookOver", _): self = .missed(reason: .nextTookOver)
         case ("skipped.paused", _): self = .skipped(reason: .paused)
-        default: throw StoreError.unreadable(field: "state", value: storedValue)
+        default: throw StoreError.unreadable(field: .occurrenceState, value: storedValue)
         }
     }
 }
