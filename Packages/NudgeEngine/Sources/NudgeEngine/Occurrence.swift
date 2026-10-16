@@ -14,6 +14,8 @@ public enum OccurrenceState: Equatable, Sendable {
     case done
     /// Closed without Done.
     case missed(reason: MissedReason)
+    /// Closed without Done, and not counted against the person as Missed is.
+    case skipped(reason: SkippedReason)
 }
 
 /// Why an occurrence closed as Missed.
@@ -22,4 +24,10 @@ public enum MissedReason: Equatable, Sendable {
     case giveUpLimit
     /// The next occurrence of its repeat fell due while it was still Nudging.
     case nextTookOver
+}
+
+/// Why an occurrence closed as Skipped.
+public enum SkippedReason: Equatable, Sendable {
+    /// Its reminder was paused while it was Nudging, or it fell due while the reminder was paused.
+    case paused
 }
