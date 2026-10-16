@@ -47,6 +47,12 @@ _Avoid_: Priority, level
 **Urgency**:
 A nudge's place on its strength's ladder: Normal, High or Urgent. Urgency decides how the nudge is delivered.
 
+**Fallback**:
+A weaker way of delivering a nudge when a permission is missing. Alarms denied: Urgent nudges come as Time Sensitive notifications. Time Sensitive off: High nudges, and Urgent ones that fall back, are ordinary notifications. Notifications denied: only alarms can still arrive.
+
+**Reach**:
+What can still reach the person with the permissions they've given: how a nudge of each urgency arrives, or that it can't. The permission banners say it.
+
 **Give-up limit**:
 The number of nudges or span of time after which an open occurrence stops nudging and closes as Missed.
 
