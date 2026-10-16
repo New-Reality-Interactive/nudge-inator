@@ -119,15 +119,17 @@ struct GentleLadderTests {
     }
 
     @Test func planItemsCarryNothingFromNotesOrTags() {
+        let health = Tag(name: "health")
         let withPrivateDetails = Reminder(
             title: "Morning meds",
             notes: "Blue pill and vitamin D",
-            tags: ["health"],
+            tagIDs: [health.id],
             dueTime: dueTime,
             strength: .gentle
         )
         clock.now = dueTime
         var engine = Engine(clock: clock, scheduler: scheduler)
+        engine.update(tags: [health])
         engine.update(reminders: [withPrivateDetails])
 
         let items = scheduler.lastPlan?.items ?? []
@@ -136,6 +138,7 @@ struct GentleLadderTests {
             #expect(item.title == "Morning meds")
             #expect(!item.body.contains("pill"))
             #expect(!item.body.contains("health"))
+            #expect(!item.body.contains(health.id.uuidString))
         }
     }
 

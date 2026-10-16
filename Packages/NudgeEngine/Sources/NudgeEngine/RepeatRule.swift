@@ -182,7 +182,7 @@ extension RepeatRule {
             guard let untilDay = calendar.date(from: DateComponents(year: year, month: month, day: day)),
                   let dayAfter = calendar.date(byAdding: .day, value: 1, to: untilDay)
             else { return firstDueTime }
-            return max(firstDueTime, Date(timeIntervalSinceReferenceDate: dayAfter.timeIntervalSinceReferenceDate.nextDown))
+            return max(firstDueTime, dayAfter.justBefore)
         case .untilTime(let time):
             return max(firstDueTime, time)
         }

@@ -105,13 +105,15 @@ struct LockWhileNudgingTests {
 
         var edited = pills
         edited.notes = "Behind the coffee"
-        edited.tags = ["home"]
+        let home = Tag(name: "home")
+        engine.update(tags: [home])
+        edited.tagIDs = [home.id]
         try engine.edit(edited)
 
         #expect(scheduler.appliedPlans.count == plansBefore + 1)
         let texts = try #require(scheduler.lastPlan).items.flatMap { [$0.title, $0.body] }
         #expect(!texts.isEmpty)
-        #expect(texts.allSatisfy { !$0.contains("coffee") && !$0.contains("home") })
+        #expect(texts.allSatisfy { !$0.contains("coffee") && !$0.contains("home") && !$0.contains(home.id.uuidString) })
     }
 
     /// The Edit rejected at 9:40 is accepted once Done closes the occurrence at 9:50. Relentless
