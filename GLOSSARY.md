@@ -53,6 +53,14 @@ The number of nudges or span of time after which an open occurrence stops nudgin
 **Missed**:
 How an occurrence closes when it hits its give-up limit, or when the next occurrence takes over while it is still nudging.
 
+**Paused**:
+The state of a reminder that has stopped nudging without being lost. Pause closes its Nudging occurrence as Skipped, and anything due while it is paused is Skipped too. Resume brings it back at its next future due time.
+_Avoid_: Disabled, suspended
+
+**Skipped**:
+How an occurrence closes when its reminder is paused while it is Nudging, or when it falls due while the reminder is paused. It isn't counted as Missed.
+_Avoid_: Cancelled
+
 **Tag**:
 A one-word label (`#home`) on a reminder, used only to filter. Never shown in alerts.
 

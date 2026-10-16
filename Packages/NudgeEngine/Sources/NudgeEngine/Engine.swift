@@ -11,6 +11,12 @@ public protocol SchedulerAdapter {
     func apply(_ plan: SchedulePlan)
 }
 
+/// Why the engine turned down a Resume.
+public enum ResumeError: Error, Equatable, Sendable {
+    /// The reminder has no due time after now to resume at.
+    case needsNewDueTime
+}
+
 /// The nudge engine: reminders and the clock in, occurrence state and a schedule plan out.
 public struct Engine {
     let clock: any EngineClock
@@ -24,6 +30,16 @@ public struct Engine {
     /// occurrence is its reminder at one due time, so Done on one day's occurrence of a repeat
     /// leaves the next day's open.
     private var doneOccurrences: Set<OccurrenceKey> = []
+    /// Every pause of each reminder, oldest first, the last still open while it's paused. Like
+    /// Done, the clock can't work them out. An occurrence still open during a pause is Skipped, so
+    /// a due time that passed while paused never comes back as Nudging after Resume.
+    private var pauseSpans: [Reminder.ID: [PauseSpan]] = [:]
+
+    private struct PauseSpan {
+        var start: Date
+        /// `nil` until Resume.
+        var end: Date?
+    }
 
     private struct OccurrenceKey: Hashable {
         var reminderID: Reminder.ID
@@ -77,6 +93,37 @@ public struct Engine {
         scheduler.apply(plan())
     }
 
+    /// Stops the reminder nudging without losing it. Its open occurrence, if any, closes as Skipped,
+    /// and so does anything that falls due until Resume (the mockup's PAUSE_NOTE). With nothing
+    /// open, Pause only marks the reminder paused. Pausing a paused reminder is ignored.
+    public mutating func pause(_ reminderID: Reminder.ID) {
+        guard !isPaused(reminderID) else { return }
+        pauseSpans[reminderID, default: []].append(PauseSpan(start: clock.now))
+        scheduler.apply(plan())
+    }
+
+    /// Brings a paused reminder back at its next due time after now. Due times that passed while it
+    /// was paused stay Skipped. With no future due time (a Never whose due time has passed, or a
+    /// repeat that ended) it throws `needsNewDueTime` and the reminder stays paused: a paused
+    /// reminder isn't locked, so the screen sends the person to edit the due time, and Resume then
+    /// succeeds (ADR 0002). Resume on a reminder that isn't paused is ignored.
+    public mutating func resume(_ reminderID: Reminder.ID) throws(ResumeError) {
+        guard isPaused(reminderID), var spans = pauseSpans[reminderID], let reminder = reminder(reminderID) else { return }
+        guard reminder.nextDueTime(after: clock.now, calendar: calendar) != nil else { throw .needsNewDueTime }
+        spans[spans.count - 1].end = clock.now
+        pauseSpans[reminderID] = spans
+        scheduler.apply(plan())
+    }
+
+    private func reminder(_ reminderID: Reminder.ID) -> Reminder? {
+        reminders.first { $0.id == reminderID }
+    }
+
+    /// Whether the reminder is paused, so the screen offers Resume rather than Pause.
+    public func isPaused(_ reminderID: Reminder.ID) -> Bool {
+        pauseSpans[reminderID]?.last.map { $0.end == nil } ?? false
+    }
+
     /// The whole ladder of each reminder's open occurrence and of its next one, even before they
     /// are due. The app gets no callback when a notification or alarm fires, so the chain must
     /// already be pending for nudging to go on, and for the next occurrence to start, while the
@@ -84,6 +131,7 @@ public struct Engine {
     /// stops where the occurrence after it falls due and takes over.
     private func plan() -> SchedulePlan {
         SchedulePlan(items: reminders.flatMap { reminder -> [SchedulePlan.Item] in
+            if isPaused(reminder.id) { return [] }
             var items: [SchedulePlan.Item] = []
             let next = reminder.nextDueTime(after: clock.now, calendar: calendar)
             if let open = openOccurrence(for: reminder.id) {
@@ -150,7 +198,7 @@ public struct Engine {
 
     /// The reminder's latest occurrence, open or closed, or `nil` before its first due time.
     public func latestOccurrence(for reminderID: Reminder.ID) -> Occurrence? {
-        guard let reminder = reminders.first(where: { $0.id == reminderID }),
+        guard let reminder = reminder(reminderID),
               let dueTime = reminder.latestDueTime(atOrBefore: clock.now, calendar: calendar)
         else { return nil }
         // Its next due time is after now by definition, so nothing has taken it over yet.
@@ -162,7 +210,7 @@ public struct Engine {
     /// so this is how an earlier one, such as one the next took over, is read back.
     public func occurrence(of reminderID: Reminder.ID, dueAt dueTime: Date) -> Occurrence? {
         guard dueTime <= clock.now,
-              let reminder = reminders.first(where: { $0.id == reminderID }),
+              let reminder = reminder(reminderID),
               reminder.latestDueTime(atOrBefore: dueTime, calendar: calendar) == dueTime
         else { return nil }
         let next = reminder.nextDueTime(after: dueTime, calendar: calendar)
@@ -177,6 +225,13 @@ public struct Engine {
         }
         let nudgeTimes = reminder.strength.nudgeTimes(from: dueTime, within: giveUpLimit)
         let giveUpTime = reminder.strength.giveUpTime(from: dueTime, after: nudgeTimes, within: giveUpLimit)
+        // The first pause that ends at or after the due time is the first the occurrence could be
+        // open in. If it hadn't closed by then, it's Skipped: the Nudging one that Pause closes, any
+        // due while paused, and one an edit while paused moved to before the pause.
+        if let pause = pauseSpans[reminder.id]?.first(where: { dueTime <= $0.end ?? .distantFuture }),
+           min(giveUpTime, takeOverTime ?? giveUpTime) > pause.start {
+            return Occurrence(dueTime: dueTime, state: .skipped(reason: .paused))
+        }
         // A tie goes to the next occurrence, as in the mockup's `simulate` (`takeover: t >= until`).
         if let takeOverTime, takeOverTime <= giveUpTime {
             return Occurrence(dueTime: dueTime, state: .missed(reason: .nextTookOver))
