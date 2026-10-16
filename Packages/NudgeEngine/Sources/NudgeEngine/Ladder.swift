@@ -1,13 +1,15 @@
 import Foundation
 
 /// The give-up limit: 20 nudges or 24 hours after the due time, whichever comes first. Fixed,
-/// with no editor.
-public enum GiveUpLimit {
-    public static let nudgeCount = 20
-    /// With today's ladders every strength reaches nudge 20 well inside this (Gentle, the
-    /// slowest, gives up at +8 h 4 min 4 s). It is enforced anyway, so a retuned ladder can't
-    /// nudge past a day.
-    public static let span: TimeInterval = 24 * 60 * 60
+/// with no editor; only tests use another.
+public struct GiveUpLimit: Equatable, Sendable {
+    public var nudgeCount: Int
+    public var span: TimeInterval
+
+    /// With today's ladders every strength reaches nudge 20 well inside 24 hours (Gentle, the
+    /// slowest, gives up at +8 h 4 min 4 s). The span is enforced anyway, so a retuned ladder
+    /// can't nudge past a day.
+    public static let shipped = GiveUpLimit(nudgeCount: 20, span: 24 * 60 * 60)
 }
 
 /// One strength's ladder: how the waits shrink and where urgency rises. Every number a strength
@@ -56,12 +58,12 @@ extension Strength {
     }
 
     /// When each nudge fires, from nudge 1 at the due time up to the give-up limit: at most
-    /// `GiveUpLimit.nudgeCount` nudges, each before `span` has passed.
-    func nudgeTimes(from dueTime: Date, within span: TimeInterval) -> [Date] {
+    /// the limit's nudge count, each before its span has passed.
+    func nudgeTimes(from dueTime: Date, within limit: GiveUpLimit) -> [Date] {
         var times = [dueTime]
-        while times.count < GiveUpLimit.nudgeCount {
+        while times.count < limit.nudgeCount {
             let next = times[times.count - 1] + interval(afterNudge: times.count)
-            guard next < dueTime + span else { break }
+            guard next < dueTime + limit.span else { break }
             times.append(next)
         }
         return times
@@ -69,11 +71,12 @@ extension Strength {
 
     /// When an occurrence due at `dueTime` gives up: one wait after its last nudge, when the next
     /// would have fired, as the mockup's `simulate` does. That leaves the person a full wait to
-    /// answer the last nudge before it counts as Missed. If `span` ends sooner, it gives up then.
-    func giveUpTime(from dueTime: Date, within span: TimeInterval) -> Date {
-        let nudgeTimes = nudgeTimes(from: dueTime, within: span)
+    /// answer the last nudge before it counts as Missed. If the span ends sooner, it gives up
+    /// then. `nudgeTimes` is the occurrence's `nudgeTimes(from:within:)`, which the caller has
+    /// already worked out.
+    func giveUpTime(from dueTime: Date, after nudgeTimes: [Date], within limit: GiveUpLimit) -> Date {
         let nextNudgeTime = nudgeTimes[nudgeTimes.count - 1] + interval(afterNudge: nudgeTimes.count)
-        return min(nextNudgeTime, dueTime + span)
+        return min(nextNudgeTime, dueTime + limit.span)
     }
 
     /// The urgency of a nudge, as in the mockup's How It Nudges table.

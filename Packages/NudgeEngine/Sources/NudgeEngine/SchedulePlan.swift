@@ -17,7 +17,7 @@ public struct SchedulePlan: Equatable, Sendable {
 
         /// The notification body, for example "Nudge 3 of 20 · High".
         public var body: String {
-            "Nudge \(nudgeNumber) of \(GiveUpLimit.nudgeCount) · \(urgency.name)"
+            "Nudge \(nudgeNumber) of \(GiveUpLimit.shipped.nudgeCount) · \(urgency.name)"
         }
     }
 }

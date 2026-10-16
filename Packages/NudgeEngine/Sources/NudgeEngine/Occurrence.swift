@@ -20,4 +20,6 @@ public enum OccurrenceState: Equatable, Sendable {
 public enum MissedReason: Equatable, Sendable {
     /// It reached the give-up limit.
     case giveUpLimit
+    /// The next occurrence of its repeat fell due while it was still Nudging.
+    case nextTookOver
 }
