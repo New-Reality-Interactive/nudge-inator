@@ -8,7 +8,8 @@ import SwiftData
 /// saves to a temporary file, drops the store, and reads it back through a new one.
 @MainActor
 struct ReminderStoreTests {
-    let fileURL = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).store")
+    let storeFile = TemporaryStoreFile()
+    var fileURL: URL { storeFile.url }
 
     func store() throws -> ReminderStore {
         try ReminderStore(location: .file(fileURL))
@@ -106,13 +107,20 @@ struct ReminderStoreTests {
         #expect(ReminderStore.configuration(for: .inMemory).isStoredInMemoryOnly)
     }
 
-    /// The simulator gives the test host its App Group container, so the path can be asserted.
+    /// The simulator and the iPhone give the test host its App Group container, so the path can be
+    /// asserted. On the iPhone the store's path starts `/private/var` and the container's `/var`,
+    /// the same directory (`/var` links to it). `resolvingSymlinksInPath()` strips `/private` only
+    /// from a file that exists, and the store file isn't created here, so the prefix goes by hand.
     @Test func theAppStoreLivesInTheAppGroupContainer() throws {
         let container = try #require(FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: ReminderStore.appGroupIdentifier))
 
         let url = ReminderStore.configuration(for: .appGroup).url
 
-        #expect(url.standardizedFileURL.path().hasPrefix(container.standardizedFileURL.path()))
+        func withoutPrivate(_ url: URL) -> String {
+            let path = url.standardizedFileURL.path()
+            return path.hasPrefix("/private/") ? String(path.dropFirst("/private".count)) : path
+        }
+        #expect(withoutPrivate(url).hasPrefix(withoutPrivate(container)))
     }
 
     /// Pauses and titles come back oldest first, the order the engine reads them in.

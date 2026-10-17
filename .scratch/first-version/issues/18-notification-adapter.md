@@ -38,7 +38,7 @@ A thin adapter in the app target that applies the engine's schedule plan for **n
 - [x] Never more than 64 requests are pending after applying any plan (fake center, several reminders with full ladders); the soonest 64 are kept.
 - [x] Authorization is requested with `.alert` and `.sound` only.
 - [x] The Done action has empty options and the category is attached to every request.
-- [ ] Device (human, or noted as pending): Done from a banner and from the Lock Screen reaches the engine; Time Sensitive nudge shows during a Focus that allows Time Sensitive; pending limit recorded.
+- [ ] Device (human, or noted as pending): Done from a banner and from the Lock Screen reaches the engine; Time Sensitive nudge shows during a Focus that allows Time Sensitive; pending limit recorded. *(Pending limit recorded on the iPhone: 64. The other two are still pending; see Comments.)*
 
 Blocked by: 14, 17
 
@@ -142,10 +142,23 @@ Blocked by: 14, 17
 - **The store:** Apple warns that "users can respond to actions while the device is locked", when files with `complete` protection are unreadable. The store saved after a Done needs protection no stronger than `completeUntilFirstUserAuthentication`.
 - **Delivered notifications:** Done cancels pending requests, through the next plan, but leaves delivered banners in Notification Center. The engine now ignores a stale Done. Clearing delivered banners is not asked for.
 
-**Device checks: pending, not run on the iPhone.** Record the iOS version when they are run.
+**Device run (2026-10-16), Brian's iPhone: iPhone 15, iOS 27.0.1, wired, Xcode 26.6.** Every app test ran on the phone under AGENTS.md's new rule: a test on the iPhone leaves it as it found it.
+- **Before:** Nudge-inator was not installed.
+- **After:** it was uninstalled, which also cleared its notification permission, pending requests and App Group data. `xcrun devicectl device info apps` showed the same empty list as before.
+- **Result:** 44 of 44 app tests pass on the phone.
+- **Device check 3, the pending limit: done.** `PendingLimitDeviceCheck` adds 70 requests a day out, latest first, under per-run identifiers.
+  - The center accepted all 70 with no error: "64 of 70 requests pending, 0 refused".
+  - It kept exactly the soonest 64 and dropped the rest silently.
+  - So `pendingLimit = 64` stands. Dropped requests don't report an error, so the cap is the only guard.
+  - The check removes its requests, and waits until they're gone, at the end of the test. Its suite's `deinit` removes them again in case the test fails. It needs notification permission, so on a fresh install it shows the prompt. Uninstalling afterwards resets the permission.
+  - It is skipped on the simulators.
+- **Found on the phone: a test bug, not an app bug.** Ticket 17's `theAppStoreLivesInTheAppGroupContainer` failed. On the iPhone, the store path starts `/private/var` and the container path starts `/var`, and `/var` links to `/private/var`. The simulators never showed this. `resolvingSymlinksInPath()` doesn't help, because it strips `/private` only from a file that exists. The test now drops the prefix by hand.
+- **The store tests left files behind.** `ReminderStoreTests` and `StoredOccurrenceTests` left a `.store` file, plus SQLite's `-wal` and `-shm` files, in the temporary directory for every test. They now hold a `TemporaryStoreFile`, which deletes all three when Swift Testing releases the suite instance after each test (`releasingTheFileDeletesItAndItsSideFiles`, red first).
+
+**Device checks still pending.** Record the iOS version when they are run. Checks 1, 2 and 5 need ticket 21's wiring, because nothing in the app schedules notifications yet.
 1. **Done reaches the engine** from a banner and from the Lock Screen, without unlocking.
 2. **A Time Sensitive nudge shows during a Focus** that allows Time Sensitive notifications, and an ordinary nudge is held.
-3. **The pending limit.** Schedule requests until they stop appearing in `pendingNotificationRequests()`. Confirm 64 and that the soonest are kept, record it, and adjust `pendingLimit` if needed.
+3. ~~The pending limit~~: done, see above.
 4. **Interval triggers.** Check that one survives a reboot before it fires and fires on time. The docs don't say.
 5. **A nudge in the foreground** shows as a banner (`willPresent`).
 

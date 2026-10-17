@@ -100,3 +100,14 @@ final class FakeNotificationEvents: NotificationAdapterEvents {
         schedulingErrors.append(error)
     }
 }
+
+/// A store file in the temporary directory, deleted with SQLite's side files when released.
+final class TemporaryStoreFile: Sendable {
+    let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).store")
+
+    deinit {
+        for suffix in ["", "-wal", "-shm"] {
+            try? FileManager.default.removeItem(at: URL(filePath: url.path() + suffix))
+        }
+    }
+}
