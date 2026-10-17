@@ -4,21 +4,29 @@ import SwiftUI
 /// filter and the rows.
 struct MyDayTab: View {
     let state: ScreenState
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     var body: some View {
+        // In compact height (landscape) the date moves into the bar as the title's subtitle, as in
+        // the mockup, leaving the room to the list.
+        let dateInBar = verticalSizeClass == .compact
+        let date = Text(Date.now, format: .dateTime.weekday(.wide).day().month(.wide))
         NavigationStack {
             TabScreen(state: state) {
                 List {
                     Section {
                         EmptyRow(text: Text("Nothing is due today.", comment: "My Day: the list when nothing is due today."))
                     } header: {
-                        Text(Date.now, format: .dateTime.weekday(.wide).day().month(.wide))
-                            .subheadStyle()
-                            .textCase(nil)
+                        if !dateInBar {
+                            date
+                                .subheadStyle()
+                                .textCase(nil)
+                        }
                     }
                 }
             }
             .navigationTitle(Text(AppTab.myDay.title))
+            .navigationSubtitle(dateInBar ? date : Text(verbatim: ""))
             .toolbar {
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
             }
