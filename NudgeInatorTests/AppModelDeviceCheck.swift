@@ -104,10 +104,11 @@ final class NudgeActionDeviceCheck {
         notificationIDs.formUnion(pending.map(\.identifier).filter { $0.hasPrefix(prefix) })
     }
 
-    /// Waits up to `limit` for the person to choose Done on the reminder's notification.
-    func waitForDone(on reminder: Reminder, in model: AppModel, limit: Duration = .seconds(240)) async throws -> Bool {
-        let deadline = ContinuousClock.now + limit
-        while ContinuousClock.now < deadline {
+    /// Waits for the person to choose Done on the reminder's first nudge, giving up a minute
+    /// after it fires, so a missed or wrong tap ends the run soon rather than leaving it waiting.
+    func waitForDone(on reminder: Reminder, in model: AppModel) async throws -> Bool {
+        let deadline = reminder.dueTime + 60
+        while Date.now < deadline {
             if model.engine.latestOccurrence(for: reminder.id)?.state == .done { return true }
             try await Task.sleep(for: .milliseconds(250))
         }
@@ -122,8 +123,9 @@ final class NudgeActionDeviceCheck {
     }
 
     /// Checks 5 and 1 (banner): keep the app in front, unlocked. A banner reading "Nudge-inator
-    /// banner check" shows about a minute in; pull it down and choose Done.
-    @Test(.timeLimit(.minutes(5)))
+    /// banner check" shows about a minute in; pull it down and choose Done (tapping it opens
+    /// the app, which isn't Done). It fails a minute after the banner if no Done arrives.
+    @Test(.timeLimit(.minutes(3)))
     func doneFromABannerWithTheAppInFrontReachesTheModelAndTheStore() async throws {
         let model = try await launchedModel()
         let reminder = Reminder(title: "Nudge-inator banner check", dueTime: .now + 60, strength: .gentle, breakThroughFocus: false)
@@ -137,13 +139,13 @@ final class NudgeActionDeviceCheck {
         #expect(saved.histories[reminder.id]?.closedOccurrences[reminder.dueTime]?.state == .done)
     }
 
-    /// Check 1 (Lock Screen): lock the phone as soon as the run starts. About 90 seconds in,
+    /// Check 1 (Lock Screen): lock the phone as soon as the run starts. About 45 seconds in,
     /// "Nudge-inator Lock Screen check" arrives; long-press it and choose Done without unlocking.
-    /// Then unlock, so the run can finish.
-    @Test(.timeLimit(.minutes(5)))
+    /// Then unlock, so the run can finish. It fails a minute after the nudge if no Done arrives.
+    @Test(.timeLimit(.minutes(3)))
     func doneFromTheLockScreenReachesTheModelAndTheStore() async throws {
         let model = try await launchedModel()
-        let reminder = Reminder(title: "Nudge-inator Lock Screen check", dueTime: .now + 90, strength: .gentle, breakThroughFocus: false)
+        let reminder = Reminder(title: "Nudge-inator Lock Screen check", dueTime: .now + 45, strength: .gentle, breakThroughFocus: false)
         await add(reminder, to: model)
 
         let done = try await waitForDone(on: reminder, in: model)
@@ -155,14 +157,16 @@ final class NudgeActionDeviceCheck {
     }
 
     /// Check 2: turn on a Focus that doesn't allow Nudge-inator but allows Time Sensitive
-    /// notifications, then lock the phone. About 90 seconds in, two nudges are delivered at once:
+    /// notifications, then lock the phone. About 45 seconds in, two nudges are delivered at once:
     /// "Nudge-inator Time Sensitive check" should show, and "Nudge-inator held check" should be
-    /// held. Note what you saw, unlock, and turn the Focus off. Gentle's nudge 5 is its first
+    /// held. Choosing Done on the first is fine. Note what you saw, unlock, and turn the Focus
+    /// off. The Focus must allow Time Sensitive notifications (its Apps › Time Sensitive
+    /// Notifications): with it off, the first run here showed nothing. Gentle's nudge 5 is its first
     /// High one, so that reminder fell due 2 h 44 min 4 s before it.
-    @Test(.timeLimit(.minutes(5)))
+    @Test(.timeLimit(.minutes(3)))
     func aTimeSensitiveNudgeIsDeliveredBesideAnOrdinaryOneDuringAFocus() async throws {
         let model = try await launchedModel()
-        let fireTime = Date.now + 90
+        let fireTime = Date.now + 45
         let gentleNudgeFive: TimeInterval = 3600 + 2700 + 2025 + 1519
         let timeSensitive = Reminder(title: "Nudge-inator Time Sensitive check", dueTime: fireTime - gentleNudgeFive, strength: .gentle)
         let ordinary = Reminder(title: "Nudge-inator held check", dueTime: fireTime, strength: .gentle, breakThroughFocus: false)
@@ -179,10 +183,12 @@ final class NudgeActionDeviceCheck {
         // Held or shown, both are in Notification Center once they fire; what the person saw is the check.
         try await Task.sleep(for: .seconds(fireTime.timeIntervalSinceNow + 30))
         let delivered = await center.deliveredNotifications().map(\.request.content.title)
-        print("Focus check: delivered \(delivered.filter { $0.hasPrefix("Nudge-inator") })")
+        // Choosing Done on a nudge takes it out of Notification Center, and is proof it arrived.
+        let timeSensitiveDone = model.engine.latestOccurrence(for: timeSensitive.id)?.state == .done
+        print("Focus check: delivered \(delivered.filter { $0.hasPrefix("Nudge-inator") }), Time Sensitive Done: \(timeSensitiveDone)")
         await cleanUp(model)
 
-        #expect(delivered.contains(timeSensitive.title))
+        #expect(delivered.contains(timeSensitive.title) || timeSensitiveDone)
         #expect(delivered.contains(ordinary.title))
     }
 

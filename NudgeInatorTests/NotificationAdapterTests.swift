@@ -123,6 +123,20 @@ struct NotificationAdapterTests {
         #expect(events.dones == [DeliveredNudge(reminderID: Self.pills, fireTime: NewYork.local(2026, 10, 16, 9, 10))])
     }
 
+    /// The engine closes the occurrence only if the nudge fired at or after its due time, so the
+    /// fire time must come back exactly. Real due times have fractions of a second; on the iPhone
+    /// a Done was ignored because the fire time came back a hair early (ticket 21).
+    @Test(arguments: [0.1234567, 0.5, 0.999_999_9, 0.000_000_1])
+    func aDeliveredNudgeCarriesItsFireTimeExactly(fraction: Double) async throws {
+        let adapter = adapter()
+        let fireTime = NewYork.local(2026, 10, 16, 9, 10) + fraction
+        adapter.apply(SchedulePlan(items: [nudge(1, at: fireTime, .normal, .notification)]))
+        await adapter.waitUntilApplied()
+        let delivered = try #require(pending().only)
+
+        #expect(NotificationAdapter.deliveredNudge(in: delivered.content.userInfo)?.fireTime == fireTime)
+    }
+
     /// The Done action can launch the app in the background, and the response may come before the
     /// app model is listening (ticket 21). It waits rather than being lost.
     @Test func aDoneBeforeAnyoneListensIsReportedOnceSomeoneDoes() async {
