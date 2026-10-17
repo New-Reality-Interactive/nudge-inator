@@ -46,19 +46,33 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
 
     weak var events: (any AlarmAdapterEvents)?
 
+    /// AlarmKit's authorization, as the adapter last learned it: read once, before any prompt,
+    /// then taken from the prompt's answer and from AlarmKit's updates. Reading it around a
+    /// prompt froze the iPhone (see `SystemAlarmManager.readAuthorizationState()`). `nil` until
+    /// then, or if that one read didn't answer in time.
+    private var authorization: AlarmManager.AuthorizationState?
+    /// The one read, which every caller waits for. It is never repeated: a read that didn't
+    /// answer may still be stuck in AlarmKit.
+    private var authorizationRead: Task<AlarmManager.AuthorizationState?, Never>?
+    /// How long launch waits for that read before going on without it.
+    private let authorizationReadLimit: Duration
+
     init(
         manager: any AlarmManaging,
         clock: any EngineClock,
-        openIntent: @escaping (SchedulePlan.Item) -> (any LiveActivityIntent)? = { _ in nil }
+        openIntent: @escaping (SchedulePlan.Item) -> (any LiveActivityIntent)? = { _ in nil },
+        authorizationReadLimit: Duration = .seconds(2)
     ) {
         self.manager = manager
         self.clock = clock
         self.openIntent = openIntent
+        self.authorizationReadLimit = authorizationReadLimit
         let updates = manager.authorizationUpdates()
         // Weak, so the observation doesn't keep the adapter alive. The app keeps one adapter for
         // its whole life (ticket 21), so the task isn't cancelled.
         Task { [weak self] in
-            for await _ in updates {
+            for await state in updates {
+                self?.authorization = state
                 self?.events?.alarmAuthorizationChanged()
             }
         }
@@ -105,7 +119,7 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
                 .sorted { ($0.fireTime, $0.reminderID.uuidString) < ($1.fireTime, $1.reminderID.uuidString) }
                 .map { (item: $0, id: Self.alarmID(for: $0)) }
                 .filter { seen.insert($0.id).inserted && !existing.contains($0.id) }
-            if manager.authorizationState == .denied {
+            if await currentAuthorization() == .denied {
                 if !missing.isEmpty {
                     firstError = firstError ?? AlarmAdapterError.alarmsNotAllowed
                 }
@@ -146,16 +160,17 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
     /// `states` with the alarms field read from AlarmKit. Notifications and Time Sensitive are the
     /// notification adapter's, so ticket 21 chains the two:
     /// `await notifications.permissions(updating: alarms.permissions(updating: states))`.
-    func permissions(updating states: PermissionStates) -> PermissionStates {
+    func permissions(updating states: PermissionStates) async -> PermissionStates {
         var states = states
-        switch manager.authorizationState {
+        switch await currentAuthorization() {
         case .authorized:
             states.alarms = .allowed
         case .denied:
             states.alarms = .denied
         // The engine plans it as allowed (ticket 14), and onboarding asks before any alarm is
-        // scheduled (ticket 31), or AlarmKit would prompt by itself mid-plan.
-        case .notDetermined:
+        // scheduled (ticket 31), or AlarmKit would prompt by itself mid-plan. A read that didn't
+        // answer counts as not asked yet, until an update says otherwise.
+        case .notDetermined, nil:
             states.alarms = .notDetermined
         @unknown default:
             states.alarms = .notDetermined
@@ -163,10 +178,39 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
         return states
     }
 
+    /// The state as last learned, or the one read's answer if nothing has been learned yet.
+    private func currentAuthorization() async -> AlarmManager.AuthorizationState? {
+        if let authorization { return authorization }
+        let read = authorizationRead ?? Task { await readAuthorizationWithinLimit() }
+        authorizationRead = read
+        let answer = await read.value
+        // An update or the prompt's answer may have come while the read waited; it is newer.
+        if authorization == nil { authorization = answer }
+        return authorization
+    }
+
+    /// The read, or `nil` if it doesn't answer within the limit. The read's own task is left
+    /// running: AlarmKit's call can't be cancelled.
+    private func readAuthorizationWithinLimit() async -> AlarmManager.AuthorizationState? {
+        let manager = manager
+        let limit = authorizationReadLimit
+        return await withCheckedContinuation { continuation in
+            let first = FirstAnswer(continuation)
+            Task { first.resume(with: await manager.readAuthorizationState()) }
+            Task {
+                try? await Task.sleep(for: limit)
+                first.resume(with: nil)
+            }
+        }
+    }
+
     /// Shows the AlarmKit prompt, when onboarding asks (ticket 31). Returns whether the person
     /// allowed alarms. Apple: it asks only "if it hasn't been requested before".
+    /// The answer becomes the state, with no read after it: that read is what froze the iPhone.
     func requestAuthorization() async throws -> Bool {
-        try await manager.requestAuthorization() == .authorized
+        let answer = try await manager.requestAuthorization()
+        authorization = answer
+        return answer == .authorized
     }
 
     /// Returns once every plan handed to `apply(_:)` so far has reached the manager, including
@@ -230,5 +274,20 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
             ? AlarmPresentation.Alert(title: title, secondaryButton: openButton, secondaryButtonBehavior: .custom)
             : AlarmPresentation.Alert(title: title)
         return AlarmAttributes(presentation: AlarmPresentation(alert: alert), metadata: NudgeAlarmMetadata(), tintColor: alarmTint)
+    }
+}
+
+/// Resumes a continuation with whichever answer comes first, once.
+@MainActor
+private final class FirstAnswer<Value: Sendable> {
+    private var continuation: CheckedContinuation<Value, Never>?
+
+    init(_ continuation: CheckedContinuation<Value, Never>) {
+        self.continuation = continuation
+    }
+
+    func resume(with value: Value) {
+        continuation?.resume(returning: value)
+        continuation = nil
     }
 }

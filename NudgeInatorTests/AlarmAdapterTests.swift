@@ -278,12 +278,12 @@ struct AlarmAdapterTests {
     func alarmKitsAuthorizationBecomesTheEnginesAlarmPermission(
         state: AlarmManager.AuthorizationState,
         alarms: AlarmPermission
-    ) {
+    ) async {
         let adapter = adapter()
         manager.authorizationState = state
         let others = PermissionStates(notifications: .denied, alarms: .allowed, timeSensitive: .off)
 
-        let states = adapter.permissions(updating: others)
+        let states = await adapter.permissions(updating: others)
 
         #expect(states == PermissionStates(notifications: .denied, alarms: alarms, timeSensitive: .off))
     }
@@ -297,7 +297,7 @@ struct AlarmAdapterTests {
             clock: clock,
             scheduler: adapter,
             timeZone: NewYork.timeZone,
-            permissions: adapter.permissions(updating: PermissionStates())
+            permissions: await adapter.permissions(updating: PermissionStates())
         )
 
         engine.update(reminders: [
@@ -395,7 +395,58 @@ struct AlarmAdapterTests {
         }
 
         #expect(events.authorizationChanges == 1)
-        #expect(adapter.permissions(updating: PermissionStates()).alarms == .denied)
+        #expect(await adapter.permissions(updating: PermissionStates()).alarms == .denied)
+    }
+
+    /// AlarmKit's state read is a synchronous call to the system, and right after a prompt is
+    /// answered it froze the iPhone's main thread for 69 s, once for good (ticket 22's device
+    /// runs). So the adapter reads it once, before any prompt, and then takes the state from
+    /// AlarmKit's updates.
+    @Test func afterAnUpdateTheStateIsNotReadAgain() async throws {
+        let adapter = adapter()
+        let events = FakeAlarmEvents()
+        adapter.events = events
+        #expect(await adapter.permissions(updating: PermissionStates()).alarms == .notDetermined)
+
+        manager.changeAuthorization(to: .authorized)
+        for _ in 0..<100 where events.authorizationChanges == 0 {
+            await Task.yield()
+        }
+        let afterUpdate = await adapter.permissions(updating: PermissionStates())
+        adapter.apply(SchedulePlan(items: [nudge(4, at: NewYork.local(2026, 10, 16, 9, 10))]))
+        await adapter.waitUntilApplied()
+
+        #expect(afterUpdate.alarms == .allowed)
+        #expect(manager.scheduled.count == 1)
+        #expect(manager.authorizationReads == 1)
+    }
+
+    /// The prompt's answer is the state: reading it straight after is what froze the iPhone.
+    @Test func theAnswerToThePromptIsUsedWithoutReadingTheState() async throws {
+        let adapter = adapter()
+        manager.promptAnswer = .denied
+
+        _ = try await adapter.requestAuthorization()
+
+        #expect(await adapter.permissions(updating: PermissionStates()).alarms == .denied)
+        #expect(manager.authorizationReads == 0)
+    }
+
+    /// A read that never answers (the iPhone's worst case) can't hold up launch: after the time
+    /// limit the state counts as not determined, and AlarmKit's updates fill it in.
+    @Test func aStateReadThatNeverAnswersDoesNotHoldUpThePermissions() async throws {
+        let adapter = AlarmAdapter(manager: manager, clock: clock, authorizationReadLimit: .milliseconds(50))
+        manager.authorizationReadHangs = true
+
+        #expect(await adapter.permissions(updating: PermissionStates()).alarms == .notDetermined)
+
+        manager.changeAuthorization(to: .authorized)
+        var alarms = AlarmPermission.notDetermined
+        for _ in 0..<100 where alarms != .allowed {
+            await Task.yield()
+            alarms = await adapter.permissions(updating: PermissionStates()).alarms
+        }
+        #expect(alarms == .allowed)
     }
 
     /// Privacy: alarms carry only the title. Every field of each alarm's attributes is checked,

@@ -80,6 +80,8 @@ The app ships in English, but every string a person sees goes through a String C
 
 Apple's AlarmKit docs confirm that scheduling fails silently without a non-empty `NSAlarmKitUsageDescription`, and that the app must handle the `denied` authorization state in its UI. The docs don't say how alert-only alarms behave with the empty widget extension present. Ticket 02 checks that on a device. Don't assume it works.
 
+Never read `AlarmManager.authorizationState` directly. It is a synchronous call to the system's alarm service, and on the iPhone, read on the main thread right after the prompt was answered, it froze the app for 69 s, and once for good (ticket 22). Apple's docs don't say it can block. `AlarmAdapter` reads it once at launch, off the main thread with a time limit, and then takes the state from `requestAuthorization()`'s answer and from `authorizationUpdates`. Ask the adapter (`permissions(updating:)`) for the state instead.
+
 ### Testing
 
 - Write new tests with Swift Testing (`import Testing`, `@Test`, `#expect`, `#require`), not XCTest. Use XCTest only for UI automation or performance tests, which Swift Testing doesn't support.

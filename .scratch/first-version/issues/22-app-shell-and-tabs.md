@@ -115,14 +115,13 @@ The decisions:
 - **Smells:** repeated buttons and subhead styles, now `DisabledAddButton` and `subheadStyle()`; unlabeled helpers; a formatter built on every call.
 - New engine tests cover 30 February, three month days, a 6th-to-last weekday, both kinds of day-plus-weekday condition, and the en_US day and month.
 
-**Tests:** `scripts/test.sh` passes. The engine has 204 tests, and the app has 112 on each of the iOS 26.1 and 26.5 simulators.
+**Tests:** `scripts/test.sh` passes. The engine has 204 tests, and the app has 115 on each of the iOS 26.1 and 26.5 simulators (112 before the AlarmKit fix below).
 
 **Device run (2026-10-17), Brian's iPhone: iPhone 15, iOS 27.0.1, wired, Xcode 26.6.**
 - **Before:** Nudge-inator was not installed. **After:** it was uninstalled, and `xcrun devicectl device info apps` lists no Nudge-inator.
 - **All 112 app tests pass on the phone.** The checks that need a person (ring, notification actions) were skipped, as they are by default.
-  - **The first run** (`TEST_RUNNER_NUDGE_FRESH_INSTALL=1`) stalled in `AlarmDeviceCheck` for 12 minutes, inside AlarmKit's `requestAuthorization()`. Brian had tapped Allow on the prompt he was shown. Ticket 21's first run stalled the same way. The run was stopped.
-  - **The second run** (permissions already granted) passed everything, `AlarmDeviceCheck` included.
-  - Brian saw a different approval prompt in the first run than in the second, as he did on ticket 21. Unconfirmed reading: the prompt answered in the first run wasn't AlarmKit's, and AlarmKit's prompt showed only in the second run. Ticket 31 requests alarm authorization for real, so check there which prompt appears when, and whether `requestAuthorization()` returns once it's answered.
+  - **The first run** (`TEST_RUNNER_NUDGE_FRESH_INSTALL=1`) stalled in `AlarmDeviceCheck` for 12 minutes after Brian allowed alarms. Ticket 21's first run stalled the same way. The run was stopped.
+  - **The second run** (permissions already granted) passed everything. Brian saw a different prompt than in the first run: "'Nudge-inator' Would Like to Send You Notifications", from `PendingLimitDeviceCheck`, against AlarmKit's "Allow 'Nudge-inator' to schedule alarms and timers?" in the first run. That check asked whenever the permission wasn't determined, ignoring `TEST_RUNNER_NUDGE_FRESH_INSTALL`. It now asks only on a fresh-install run, as AGENTS.md's device rule says.
 - **Manual checks Brian ran with the app installed: all passed.**
   1. **Launch:** it opens on Now, with four tabs and their titles and symbols, an empty state on each, and the + dimmed on Now, My Day and Tags.
   2. **The selected tab on the glass bar** is readable in light, dark, and both with Increase Contrast. This is DESIGN.md's device check for the tab bar.
@@ -141,3 +140,21 @@ The decisions:
 - tag creation, which enables + on Tags;
 - onboarding and banners (31);
 - the Open intent (20).
+
+**The stall, investigated on the iPhone (2026-10-17, iPhone 15, iOS 27.0.1), and fixed.**
+- **Ticket 21's crash report** (22:33, killed after the stall) shows the main thread stuck not in `requestAuthorization()` but on the next line, reading `AlarmManager.authorizationState`. AlarmKit implements that getter as a synchronous call to the system's alarm service (`xpc_connection_send_message_with_reply_sync` on its `com.apple.alarmkit.xpc.Authorization` queue).
+- **Fresh-install runs with a timeline:**
+  - Probe calls alone, or in the full order, with Brian tapping Allow: `requestAuthorization()` returned `authorized` in about 8 s, and AlarmKit's update came at the same moment.
+  - The original code, with the prompt left unanswered: nothing blocked, and the prompt stayed up after the test process ended. The system owns it.
+  - The original code, answered: the main thread froze in the `authorizationState` read for 69 s, which then returned a stale `notDetermined` as the update reported `authorized`.
+  - The original code, Brian tapping at once: `requestAuthorization()` returned after 0.64 s, then the read froze the main thread for over 3 minutes, and the update stream (listening off the main thread) delivered nothing. Settings showed Alarms on, so iOS had recorded the answer.
+  - The prompt's timing wasn't the cause. Apple's page for `authorizationState` says nothing about blocking.
+- **The fix:**
+  - `AlarmManaging.readAuthorizationState()` reads the property on a background thread.
+  - `AlarmAdapter` reads it once (at launch, before any prompt), giving up after 2 s, and never again. After that the state comes from `requestAuthorization()`'s answer and from `authorizationUpdates`.
+  - `permissions(updating:)` is now `async`.
+  - The production code read the property on the main thread on every plan and right after each authorization change, so this was a latent freeze for ticket 31's onboarding, not only a test problem.
+  - New tests: an update needs no read, the prompt's answer needs no read, and a read that never answers doesn't hold up launch (a fake that counts reads).
+  - AGENTS.md › AlarmKit now says never to read the property directly, and ticket 31 has the note.
+- **Verified:** a fresh-install `xcodebuild test` run with both prompts. `requestAuthorization()` returned allowed 4.1 s after asking, `AlarmDeviceCheck` passed 0.2 s later, and all 115 app tests passed. Afterwards the app was uninstalled.
+- **Still pending (ticket 31):** whether a change made in Settings while the app is suspended arrives through `authorizationUpdates` on return, since the adapter no longer re-reads the state.

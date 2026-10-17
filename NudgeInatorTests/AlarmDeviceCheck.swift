@@ -31,11 +31,13 @@ class AlarmDeviceCheckSuite {
     func adapter() async throws -> AlarmAdapter {
         let manager = SystemAlarmManager()
         let adapter = AlarmAdapter(manager: manager, clock: clock)
-        if manager.authorizationState == .notDetermined,
+        // Through the adapter, which reads AlarmKit's state once, off the main thread, and then
+        // takes the prompt's answer: reading it straight after the prompt froze the iPhone.
+        if await adapter.permissions(updating: PermissionStates()).alarms == .notDetermined,
            ProcessInfo.processInfo.environment["NUDGE_FRESH_INSTALL"] == "1" {
             _ = try await adapter.requestAuthorization()
         }
-        try #require(manager.authorizationState == .authorized, "Allow alarms for Nudge-inator, or set TEST_RUNNER_NUDGE_FRESH_INSTALL=1 on a fresh install")
+        try #require(await adapter.permissions(updating: PermissionStates()).alarms == .allowed, "Allow alarms for Nudge-inator, or set TEST_RUNNER_NUDGE_FRESH_INSTALL=1 on a fresh install")
         try #require(try manager.alarms().isEmpty, "Nudge-inator already holds alarms; the check would cancel them")
         return adapter
     }
