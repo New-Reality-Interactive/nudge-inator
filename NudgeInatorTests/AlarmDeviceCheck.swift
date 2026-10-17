@@ -8,6 +8,11 @@ import Testing
 /// alarms they schedule, under reminder IDs made for the run, and cancel them even when they fail
 /// (AGENTS.md: tests on the iPhone leave it as they found it). An apply cancels every alarm of the
 /// app's that isn't in the plan, so each check first requires the app to hold no alarms.
+///
+/// The checks need alarms allowed. They show the AlarmKit prompt only when the run says the app
+/// wasn't installed before it (`TEST_RUNNER_NUDGE_FRESH_INSTALL=1`), since uninstalling afterwards
+/// is what resets the permission. Otherwise they leave the permission alone and fail if it isn't
+/// already allowed.
 @MainActor
 class AlarmDeviceCheckSuite {
     let reminderID = UUID()
@@ -26,10 +31,11 @@ class AlarmDeviceCheckSuite {
     func adapter() async throws -> AlarmAdapter {
         let manager = SystemAlarmManager()
         let adapter = AlarmAdapter(manager: manager, clock: clock)
-        if manager.authorizationState == .notDetermined {
+        if manager.authorizationState == .notDetermined,
+           ProcessInfo.processInfo.environment["NUDGE_FRESH_INSTALL"] == "1" {
             _ = try await adapter.requestAuthorization()
         }
-        try #require(manager.authorizationState == .authorized, "Allow alarms for Nudge-inator to run this check")
+        try #require(manager.authorizationState == .authorized, "Allow alarms for Nudge-inator, or set TEST_RUNNER_NUDGE_FRESH_INSTALL=1 on a fresh install")
         try #require(try manager.alarms().isEmpty, "Nudge-inator already holds alarms; the check would cancel them")
         return adapter
     }
@@ -51,10 +57,6 @@ class AlarmDeviceCheckSuite {
         let alarms = try AlarmManager.shared.alarms
         return ids.map { id in alarms.first { $0.id == id }?.state }
     }
-}
-
-struct SystemClock: EngineClock {
-    var now: Date { .now }
 }
 
 @MainActor

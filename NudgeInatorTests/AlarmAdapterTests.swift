@@ -376,7 +376,7 @@ struct AlarmAdapterTests {
         isAllowed: Bool
     ) async throws {
         let adapter = adapter()
-        manager.answer = answer
+        manager.promptAnswer = answer
 
         #expect(try await adapter.requestAuthorization() == isAllowed)
         #expect(manager.authorizationRequests == 1)
@@ -444,6 +444,69 @@ struct AlarmAdapterTests {
         #expect(!scheduledIDs.isEmpty)
         #expect(manager.scheduled.isEmpty)
         #expect(Set(manager.cancelledIDs) == scheduledIDs)
+    }
+
+    /// Review: at its fire time an alarm can still read `scheduled` for a moment before it rings.
+    /// The plan still holds it (ticket 13), so a re-plan then must not cancel it.
+    @Test func anAlarmAtItsFireTimeThatHasntRungYetIsNotCancelled() async throws {
+        let adapter = adapter()
+        let due = nudge(4, at: NewYork.local(2026, 10, 16, 9, 10))
+        adapter.apply(SchedulePlan(items: [due]))
+        await adapter.waitUntilApplied()
+        clock.now = due.fireTime
+
+        adapter.apply(SchedulePlan(items: [due]))
+        await adapter.waitUntilApplied()
+
+        #expect(manager.cancelledIDs.isEmpty)
+        #expect(manager.scheduled.count == 1)
+    }
+
+    /// Review: a plan replaced while it is still scheduling stops, rather than scheduling the rest
+    /// of what the newer plan has dropped (ticket 02's bulk-scheduling caution).
+    @Test func aPlanReplacedPartWayThroughStopsScheduling() async throws {
+        let adapter = adapter()
+        manager.whileScheduling = { [manager] in
+            manager.whileScheduling = nil
+            adapter.apply(SchedulePlan(items: []))
+        }
+
+        adapter.apply(SchedulePlan(items: [
+            nudge(4, at: NewYork.local(2026, 10, 16, 9, 10)),
+            nudge(5, at: NewYork.local(2026, 10, 16, 9, 15)),
+            nudge(6, at: NewYork.local(2026, 10, 16, 9, 18)),
+        ]))
+        await adapter.waitUntilApplied()
+
+        #expect(manager.scheduleCalls.count == 1)
+        #expect(manager.scheduled.isEmpty)
+    }
+
+    /// Review: the same nudge twice in a plan is one alarm.
+    @Test func theSameNudgeTwiceInAPlanIsScheduledOnce() async throws {
+        let adapter = adapter()
+        let item = nudge(4, at: NewYork.local(2026, 10, 16, 9, 10))
+
+        adapter.apply(SchedulePlan(items: [item, item]))
+        await adapter.waitUntilApplied()
+
+        #expect(manager.scheduleCalls.count == 1)
+    }
+
+    /// Review: a cancel AlarmKit turns down leaves a stale alarm to ring, so it is reported too.
+    @Test func aRefusedCancelIsReported() async throws {
+        let adapter = adapter()
+        let events = FakeAlarmEvents()
+        adapter.events = events
+        adapter.apply(SchedulePlan(items: [nudge(4, at: NewYork.local(2026, 10, 16, 9, 10))]))
+        await adapter.waitUntilApplied()
+        manager.cancelError = CocoaError(.featureUnsupported)
+
+        adapter.apply(SchedulePlan(items: []))
+        await adapter.waitUntilApplied()
+
+        let error = try #require(events.schedulingErrors.only as? CocoaError)
+        #expect(error.code == .featureUnsupported)
     }
 
     /// Ticket 20 passes its Open intent in. The button runs it (`.custom`) for the nudge that rang.

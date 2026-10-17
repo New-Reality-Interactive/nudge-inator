@@ -40,8 +40,9 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
     /// The latest apply. The manager's `schedule` is async but `apply(_:)` isn't, so each apply
     /// runs in a task that waits for the one before, and plans reach the manager in the order given.
     private var applying: Task<Void, Never>?
-    /// How many plans `apply(_:)` has been handed, so a waiting apply can tell it's been replaced.
-    private var planCount = 0
+    /// The number of the latest plan handed to `apply(_:)`, so a waiting apply can tell it's been
+    /// replaced.
+    private var latestPlanNumber = 0
 
     weak var events: (any AlarmAdapterEvents)?
 
@@ -65,15 +66,15 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
 
     func apply(_ plan: SchedulePlan) {
         let previous = applying
-        planCount += 1
-        let number = planCount
+        latestPlanNumber += 1
+        let planNumber = latestPlanNumber
         applying = Task {
             await previous?.value
             // A newer plan came while this one waited, so it would only redo work the newer one
             // undoes: each limit report re-plans, and without this the plans it supersedes would
             // try every overflowing alarm again (ticket 02's bulk-scheduling caution).
-            guard number == planCount else { return }
-            let alarms: [ScheduledAlarm]
+            guard planNumber == latestPlanNumber else { return }
+            let alarms: [AlarmSnapshot]
             do {
                 alarms = try manager.alarms()
             } catch {
@@ -82,43 +83,64 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
             }
             let existing = Set(alarms.map(\.id))
             let now = clock.now
-            let wanted = plan.items
-                .filter { $0.deliveryKind == .alarm && $0.fireTime > now }
-                .sorted { ($0.fireTime, $0.reminderID.uuidString) < ($1.fireTime, $1.reminderID.uuidString) }
-            let wantedIDs = Set(wanted.map(Self.alarmID(for:)))
-            // Only alarms yet to ring: a re-plan must never silence one that is ringing. Stop and
-            // Open end a ring, and a one-shot deletes itself once stopped.
-            for alarm in alarms where alarm.state == .scheduled && !wantedIDs.contains(alarm.id) {
-                try? manager.cancel(id: alarm.id)
-            }
-            if manager.authorizationState == .denied {
-                if !wanted.isEmpty {
-                    events?.schedulingFailed(AlarmAdapterError.alarmsNotAllowed)
-                }
-                return
-            }
+            let planned = plan.items.filter { $0.deliveryKind == .alarm }
+            // The plan's passed nudges count as kept too: at its fire time an alarm can read
+            // `scheduled` for a moment before it rings, and cancelling it then would lose it.
+            let plannedIDs = Set(planned.map(Self.alarmID(for:)))
             // One report per plan: a refusal would otherwise come once for each alarm.
             var firstError: (any Error)?
-            for item in wanted where !existing.contains(Self.alarmID(for: item)) {
-                let intent = openIntent(item)
+            // Only alarms yet to ring: a re-plan must never silence one that is ringing. Stop and
+            // Open end a ring, and a one-shot deletes itself once stopped.
+            for alarm in alarms where alarm.state == .scheduled && !plannedIDs.contains(alarm.id) {
                 do {
-                    try await manager.schedule(
-                        id: Self.alarmID(for: item),
-                        schedule: .fixed(item.fireTime),
-                        attributes: Self.attributes(for: item, hasOpenButton: intent != nil),
-                        secondaryIntent: intent
-                    )
-                } catch AlarmManager.AlarmError.maximumLimitReached {
-                    // Each one: a slot can free up between alarms if another app's go.
-                    events?.markAlarmLimitReached(item.reminderID, firingAt: item.fireTime)
+                    try manager.cancel(id: alarm.id)
                 } catch {
                     firstError = firstError ?? error
                 }
+            }
+            // Passed nudges were delivered (ticket 13). The same nudge twice is one alarm.
+            var seen: Set<Alarm.ID> = []
+            let missing = planned
+                .filter { $0.fireTime > now }
+                .sorted { ($0.fireTime, $0.reminderID.uuidString) < ($1.fireTime, $1.reminderID.uuidString) }
+                .map { (item: $0, id: Self.alarmID(for: $0)) }
+                .filter { seen.insert($0.id).inserted && !existing.contains($0.id) }
+            if manager.authorizationState == .denied {
+                if !missing.isEmpty {
+                    firstError = firstError ?? AlarmAdapterError.alarmsNotAllowed
+                }
+            } else if let error = await schedule(missing, planNumber: planNumber) {
+                firstError = firstError ?? error
             }
             if let firstError {
                 events?.schedulingFailed(firstError)
             }
         }
+    }
+
+    /// Schedules soonest first, and returns the first error other than the alarm limit. Stops if a
+    /// newer plan arrives meanwhile, such as the engine's answer to a limit report or a Done, so it
+    /// doesn't schedule what that plan has dropped.
+    private func schedule(_ alarms: [(item: SchedulePlan.Item, id: Alarm.ID)], planNumber: Int) async -> (any Error)? {
+        var firstError: (any Error)?
+        for (item, id) in alarms {
+            guard planNumber == latestPlanNumber else { break }
+            let intent = openIntent(item)
+            do {
+                try await manager.schedule(
+                    id: id,
+                    schedule: .fixed(item.fireTime),
+                    attributes: Self.attributes(for: item, hasOpenButton: intent != nil),
+                    secondaryIntent: intent
+                )
+            } catch AlarmManager.AlarmError.maximumLimitReached {
+                // Each one: a slot can free up between alarms if another app's go.
+                events?.markAlarmLimitReached(item.reminderID, firingAt: item.fireTime)
+            } catch {
+                firstError = firstError ?? error
+            }
+        }
+        return firstError
     }
 
     /// `states` with the alarms field read from AlarmKit. Notifications and Time Sensitive are the
@@ -180,7 +202,8 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
     ]
 
     /// DESIGN.md's `alarm-tint`: `accent-dark`, #07DDE6, the one colour pinned to a single variant. The
-    /// alert draws it on the title and Open button whatever the appearance.
+    /// alert draws it on the title and Open button whatever the appearance. Written out here because
+    /// the app has no asset catalog yet; it moves to a colour set when one arrives (ticket 22).
     static let alarmTint = Color(.sRGB, red: 0x07 / 255, green: 0xDD / 255, blue: 0xE6 / 255)
 
     /// Unlocked, the alert shows only the symbol; locked, the full-width button shows the text too

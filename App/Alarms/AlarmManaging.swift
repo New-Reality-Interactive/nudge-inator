@@ -2,8 +2,9 @@ import AlarmKit
 import AppIntents
 import NudgeShared
 
-/// The parts of an `Alarm` the adapter reads. Tests can't make an `Alarm`: it has no public init.
-struct ScheduledAlarm: Equatable, Sendable {
+/// The parts of an `Alarm` the adapter reads, in any state. Tests can't make an `Alarm`: it has no
+/// public init.
+struct AlarmSnapshot: Equatable, Sendable {
     var id: Alarm.ID
     var state: Alarm.State
 }
@@ -21,7 +22,7 @@ protocol AlarmManaging: AnyObject {
         secondaryIntent: (any LiveActivityIntent)?
     ) async throws
     func cancel(id: Alarm.ID) throws
-    func alarms() throws -> [ScheduledAlarm]
+    func alarms() throws -> [AlarmSnapshot]
     var authorizationState: AlarmManager.AuthorizationState { get }
     func requestAuthorization() async throws -> AlarmManager.AuthorizationState
     func authorizationUpdates() -> AsyncStream<AlarmManager.AuthorizationState>
@@ -51,8 +52,8 @@ final class SystemAlarmManager: AlarmManaging {
         try AlarmManager.shared.cancel(id: id)
     }
 
-    func alarms() throws -> [ScheduledAlarm] {
-        try AlarmManager.shared.alarms.map { ScheduledAlarm(id: $0.id, state: $0.state) }
+    func alarms() throws -> [AlarmSnapshot] {
+        try AlarmManager.shared.alarms.map { AlarmSnapshot(id: $0.id, state: $0.state) }
     }
 
     var authorizationState: AlarmManager.AuthorizationState {

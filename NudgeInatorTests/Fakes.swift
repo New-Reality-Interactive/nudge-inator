@@ -1,10 +1,15 @@
-import Foundation
-import NudgeEngine
-import UserNotifications
 import AlarmKit
 import AppIntents
+import Foundation
+import NudgeEngine
 import NudgeShared
+import UserNotifications
 @testable import NudgeInator
+
+/// The real time, for device checks.
+struct SystemClock: EngineClock {
+    var now: Date { .now }
+}
 
 /// A clock the test sets by hand, so no test depends on real time.
 final class FakeClock: EngineClock {
@@ -150,6 +155,7 @@ final class FakeAlarmManager: AlarmManaging {
     ) async throws {
         let alarm = Scheduled(id: id, schedule: schedule, attributes: attributes, secondaryIntent: secondaryIntent)
         scheduleCalls.append(alarm)
+        defer { whileScheduling?() }
         if let scheduleError { throw scheduleError }
         if let alarmLimit, scheduled.count >= alarmLimit {
             throw AlarmManager.AlarmError.maximumLimitReached
@@ -165,7 +171,13 @@ final class FakeAlarmManager: AlarmManaging {
         }
     }
 
+    /// When set, every `cancel(id:)` throws it and nothing is cancelled.
+    var cancelError: (any Error)?
+    /// Runs after each `schedule` call, as if something happened while AlarmKit was busy.
+    var whileScheduling: (() -> Void)?
+
     func cancel(id: Alarm.ID) throws {
+        if let cancelError { throw cancelError }
         cancelledIDs.append(id)
         scheduled.removeAll { $0.id == id }
     }
@@ -173,21 +185,21 @@ final class FakeAlarmManager: AlarmManaging {
     /// When set, `alarms()` throws it.
     var alarmsError: (any Error)?
 
-    func alarms() throws -> [ScheduledAlarm] {
+    func alarms() throws -> [AlarmSnapshot] {
         if let alarmsError { throw alarmsError }
-        return scheduled.map { ScheduledAlarm(id: $0.id, state: $0.state) }
+        return scheduled.map { AlarmSnapshot(id: $0.id, state: $0.state) }
     }
 
     var authorizationState = AlarmManager.AuthorizationState.notDetermined
 
     /// What the person answers when `requestAuthorization()` shows the prompt.
-    var answer = AlarmManager.AuthorizationState.authorized
+    var promptAnswer = AlarmManager.AuthorizationState.authorized
     private(set) var authorizationRequests = 0
 
     func requestAuthorization() async throws -> AlarmManager.AuthorizationState {
         authorizationRequests += 1
         if authorizationState == .notDetermined {
-            authorizationState = answer
+            authorizationState = promptAnswer
         }
         return authorizationState
     }
@@ -219,11 +231,17 @@ extension Collection {
 @MainActor
 final class FakeAlarmEvents: AlarmAdapterEvents {
     var engine: Engine?
-    private(set) var limitReports: [DeliveredNudge] = []
+    /// A nudge whose alarm AlarmKit turned down with `maximumLimitReached`.
+    struct LimitReport: Equatable {
+        var reminderID: Reminder.ID
+        var fireTime: Date
+    }
+
+    private(set) var limitReports: [LimitReport] = []
     private(set) var schedulingErrors: [any Error] = []
 
     func markAlarmLimitReached(_ reminderID: Reminder.ID, firingAt fireTime: Date) {
-        limitReports.append(DeliveredNudge(reminderID: reminderID, fireTime: fireTime))
+        limitReports.append(LimitReport(reminderID: reminderID, fireTime: fireTime))
         engine?.markAlarmLimitReached(reminderID, firingAt: fireTime)
     }
 
