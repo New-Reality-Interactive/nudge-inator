@@ -174,12 +174,12 @@ Blocked by: 02, 15, 18
   - **Uninstalling resets the alarm permission:** a fresh install with no prompt read `notDetermined`. Only the alarms survive an uninstall (see above).
   - To get round the prompt, the run granted the permission with Sleep off (`AlarmDeviceCheck`, two alarms a day out, cancelled), kept the app installed, then turned Sleep on for the ring. The app was uninstalled afterwards.
 
-**Device checks still pending.** Record the iOS version when they are run.
+**Device checks.** Record the iOS version when they are run.
 1. ~~The acceptance criterion's Focus part, on a locked phone~~: done, see above.
-2. **Open:** ticket 20.
-3. **The alarm limit and slot reuse:** still unknown (ticket 02 A).
+2. **Open:** moved to ticket 20, whose criteria include it.
+3. **The alarm limit and slot reuse: answered as not measurable.** Ticket 02 A scheduled 4,000 alarms without a `maximumLimitReached`, so no limit was reached and slot reuse can't be observed. The fallback stays as the safety net.
 4. ~~Sleep Focus~~: done, see above.
-5. **The AlarmKit prompt under Sleep Focus** (ticket 31): it didn't show on the first attempt. Recheck it with onboarding.
+5. **The AlarmKit prompt under Sleep Focus:** moved to ticket 31's criteria. It didn't show on the first attempt; recheck it with onboarding.
 
 **For ticket 20.**
 - Pass the intent in with `AlarmAdapter(manager:clock:openIntent:)`, for example `{ OpenIntent(reminderID: $0.reminderID, fireTime: $0.fireTime) }`.

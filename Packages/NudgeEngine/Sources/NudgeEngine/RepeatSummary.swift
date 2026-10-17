@@ -15,7 +15,7 @@ extension Engine {
 /// its placeholders hold, so a translation can reorder them; words that agree with each other
 /// (an ordinal and its weekday, "a" and its weekdays) are in the same string. A summary nests
 /// these templates, as RFC 5545 rules combine.
-private struct RepeatSummaryWriter {
+struct RepeatSummaryWriter {
     let locale: Locale
     let calendar: Calendar
     let now: Date
@@ -302,7 +302,7 @@ private struct RepeatSummaryWriter {
     }
 
     /// "1st", "2nd", "11th", "23rd" in English: Foundation's ordinal numbers for the locale.
-    private func ordinalNumber(_ number: Int) -> String {
+    func ordinalNumber(_ number: Int) -> String {
         ordinals.string(from: number as NSNumber) ?? number.formatted(.number.locale(locale))
     }
 
@@ -318,7 +318,7 @@ private struct RepeatSummaryWriter {
         return date.formatted(Date.FormatStyle(locale: locale, calendar: utc, timeZone: .gmt).day().month(.wide))
     }
 
-    private func name(_ weekday: RepeatRule.Weekday) -> String {
+    func name(_ weekday: RepeatRule.Weekday) -> String {
         weekdayNames[weekday.rawValue - 1]
     }
 

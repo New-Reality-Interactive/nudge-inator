@@ -30,6 +30,7 @@ struct ReminderFormSheet: View {
                 switch page {
                 case .tags: TagsPage(form: form)
                 case .repeat: RepeatPage(form: form)
+                case .custom: CustomRepeatPage(form: form)
                 }
             }
             .toolbar { toolbar }
@@ -84,6 +85,7 @@ struct ReminderFormSheet: View {
 enum ReminderFormPage: Hashable {
     case tags
     case `repeat`
+    case custom
 }
 
 /// The note at the top of the Edit form: why the schedule is locked, or when changes apply.
@@ -186,6 +188,18 @@ private struct ScheduleSection: View {
                          comment: "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled.")
                         .foregroundStyle(Color.negative)
                 }
+                switch form.repeatBlock {
+                case .endsBeforeStart:
+                    Text("The repeat ends before it starts. Change its end date.",
+                         comment: "Under the reminder form's start when a custom repeat's end date is before the start, so Save is disabled.")
+                        .foregroundStyle(Color.negative)
+                case .noTimesLeft:
+                    Text("The repeat has already ended. Change when it ends.",
+                         comment: "Under the reminder form's start when a custom repeat has no times left, so Save is disabled.")
+                        .foregroundStyle(Color.negative)
+                case .noTitle, .pastTime, nil:
+                    EmptyView()
+                }
                 RepeatSummarySentence(summary: form.repeatSummary)
             }
         }
@@ -233,12 +247,13 @@ private struct StrengthSection: View {
             } label: {
                 LockableLabel(isLocked: isLocked) { label }
             }
-            .strengthPickerStyle(isMenu: dynamicTypeSize.isAccessibilitySize)
+            .segmentedPickerStyle(isMenu: dynamicTypeSize.isAccessibilitySize)
             .lockedWhileNudging(isLocked)
         } header: {
             if !dynamicTypeSize.isAccessibilitySize {
+                // VoiceOver reads the segments without the picker's label (device check, ticket
+                // 25), so the heading names them. At accessibility sizes the menu carries it.
                 LockableLabel(isLocked: isLocked) { label }
-                    .accessibilityHidden(true)
             }
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
@@ -293,7 +308,7 @@ private struct LockableLabel<Content: View>: View {
 }
 
 /// DESIGN.md's `lock`, always beside its reason as text, so VoiceOver skips it.
-private struct LockGlyph: View {
+struct LockGlyph: View {
     var body: some View {
         Image(systemName: "lock")
             .foregroundStyle(Color(uiColor: .secondaryLabel))
@@ -303,9 +318,9 @@ private struct LockGlyph: View {
 
 extension View {
     /// The mockup's segmented control, which becomes a menu at accessibility sizes so the names
-    /// aren't cut short.
+    /// aren't cut short: Strength, and the Custom page's Frequency and Ends.
     @ViewBuilder
-    fileprivate func strengthPickerStyle(isMenu: Bool) -> some View {
+    func segmentedPickerStyle(isMenu: Bool) -> some View {
         if isMenu {
             pickerStyle(.menu)
         } else {

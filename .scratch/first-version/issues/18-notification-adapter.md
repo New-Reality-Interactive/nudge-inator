@@ -38,7 +38,7 @@ A thin adapter in the app target that applies the engine's schedule plan for **n
 - [x] Never more than 64 requests are pending after applying any plan (fake center, several reminders with full ladders); the soonest 64 are kept.
 - [x] Authorization is requested with `.alert` and `.sound` only.
 - [x] The Done action has empty options and the category is attached to every request.
-- [ ] Device (human, or noted as pending): Done from a banner and from the Lock Screen reaches the engine; Time Sensitive nudge shows during a Focus that allows Time Sensitive; pending limit recorded. *(Pending limit recorded on the iPhone: 64. The other two are still pending; see Comments.)*
+- [x] Device (human, or noted as pending): Done from a banner and from the Lock Screen reaches the engine; Time Sensitive nudge shows during a Focus that allows Time Sensitive; pending limit recorded. *(All three done on the iPhone, iOS 27.0.1: pending limit 64, and the 2026-10-17 run in Comments.)*
 
 Blocked by: 14, 17
 
@@ -155,11 +155,19 @@ Blocked by: 14, 17
 - **Found on the phone: a test bug, not an app bug.** Ticket 17's `theAppStoreLivesInTheAppGroupContainer` failed. On the iPhone, the store path starts `/private/var` and the container path starts `/var`, and `/var` links to `/private/var`. The simulators never showed this. `resolvingSymlinksInPath()` doesn't help, because it strips `/private` only from a file that exists. The test now drops the prefix by hand.
 - **The store tests left files behind.** `ReminderStoreTests` and `StoredOccurrenceTests` left a `.store` file, plus SQLite's `-wal` and `-shm` files, in the temporary directory for every test. They now hold a `TemporaryStoreFile`, which deletes all three when Swift Testing releases the suite instance after each test (`releasingTheFileDeletesItAndItsSideFiles`, red first).
 
-**Device checks still pending.** Record the iOS version when they are run. Checks 1, 2 and 5 need ticket 21's wiring, because nothing in the app schedules notifications yet.
-1. **Done reaches the engine** from a banner and from the Lock Screen, without unlocking.
-2. **A Time Sensitive nudge shows during a Focus** that allows Time Sensitive notifications, and an ordinary nudge is held.
+**Device checks.** Record the iOS version when they are run.
+1. ~~**Done reaches the engine** from a banner and from the Lock Screen, without unlocking~~: done, see the 2026-10-17 run below.
+2. ~~**A Time Sensitive nudge shows during a Focus** that allows Time Sensitive notifications, and an ordinary nudge is held~~: done, see below.
 3. ~~The pending limit~~: done, see above.
-4. **Interval triggers.** Check that one survives a reboot before it fires and fires on time. The docs don't say.
-5. **A nudge in the foreground** shows as a banner (`willPresent`).
+4. ~~**Interval triggers** survive a reboot~~: done (2026-10-17, iPhone 15, iOS 27.0.1). A Gentle reminder was saved for 17:08, the phone restarted and was unlocked, and the nudge arrived at 17:08 without the app being opened. Done was chosen after unlocking.
+5. ~~**A nudge in the foreground** shows as a banner (`willPresent`)~~: done, see below.
 
-**Left alone:** AlarmKit (19), the Open intent (20), wiring and the foreground refill (21), every UI including the banners (31) and Settings (30), and the device checks above.
+**Device run (2026-10-17), Brian's iPhone: iPhone 15, iOS 27.0.1, wired, Xcode 26.6.** These are the opt-in `NudgeActionDeviceCheck` tests (`TEST_RUNNER_NUDGE_ACTION_CHECK=1`), run one at a time with Brian at the phone. Ticket 21 wired them through the app's own model.
+- **Before:** Nudge-inator was not installed. An earlier attempt matched no test, but it launched the app and its prompt vanished unanswered. **After:** it was uninstalled, and `xcrun devicectl device info apps` lists no Nudge-inator.
+- **Checks 5 and 1, banner** (`doneFromABannerWithTheAppInFrontReachesTheModelAndTheStore`): passed in 64 s, from a fresh install with notifications allowed at the prompt. With the app in front, the nudge showed as a banner, and Done from it reached the model and the store. Brian confirmed it looked right.
+- **Check 1, Lock Screen** (`doneFromTheLockScreenReachesTheModelAndTheStore`): passed in 57 s. Done was chosen on the Lock Screen without unlocking and reached the model and the store. Brian confirmed it.
+- **Check 2, Focus** (`aTimeSensitiveNudgeIsDeliveredBesideAnOrdinaryOneDuringAFocus`): passed in 75 s, during a Focus that held Nudge-inator and allowed Time Sensitive notifications.
+  - The test logged `delivered ["Nudge-inator held check"], Time Sensitive Done: true`.
+  - Brian saw the Time Sensitive nudge on the Lock Screen and chose Done on it. The ordinary one was held: delivered to Notification Center, not shown.
+
+**Left alone:** AlarmKit (19), the Open intent (20), wiring and the foreground refill (21), every UI including the banners (31) and Settings (30), and the device checks above, all done.

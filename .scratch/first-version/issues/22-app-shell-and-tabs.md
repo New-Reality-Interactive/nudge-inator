@@ -129,9 +129,9 @@ The decisions:
   4. **The largest accessibility text size:** tab titles stay whole, text wraps, and Coming Up and Next 7 days stack.
   5. **VoiceOver:** each tab reads its name. The + reads "New Reminder, dimmed" on Now and My Day, and "New Tag, dimmed" on Tags.
 
-**Device checks still pending:**
-- Ticket 21's pending checks (App opened on a cold launch, a Done before the first unlock, interval triggers across a reboot) are unchanged. The empty shell doesn't show a plan yet, so check 1 waits for ticket 26's screens.
-- The alarm's tint now comes from the color set. The value is the same, and the unit test pins it, but nobody watched an alarm ring this time. Ticket 20 or the next ring check can confirm it.
+**Device checks:**
+- Ticket 21's checks: the reboot check is done, the cold launch moved to ticket 26, and a Done before the first unlock is ticket 32.
+- ~~The alarm's tint now comes from the color set~~: done (2026-10-17, iPhone 15, iOS 27.0.1). `AlarmRingDeviceCheck` rang two alarms on time, both teal and showing only the title.
 
 **Left alone:**
 - landscape (23);
@@ -157,4 +157,4 @@ The decisions:
   - New tests: an update needs no read, the prompt's answer needs no read, and a read that never answers doesn't hold up launch (a fake that counts reads).
   - AGENTS.md › AlarmKit now says never to read the property directly, and ticket 31 has the note.
 - **Verified:** a fresh-install `xcodebuild test` run with both prompts. `requestAuthorization()` returned allowed 4.1 s after asking, `AlarmDeviceCheck` passed 0.2 s later, and all 115 app tests passed. Afterwards the app was uninstalled.
-- **Still pending (ticket 31):** whether a change made in Settings while the app is suspended arrives through `authorizationUpdates` on return, since the adapter no longer re-reads the state.
+- **Moved to ticket 31's criteria:** whether a change made in Settings while the app is suspended arrives through `authorizationUpdates` on return, since the adapter no longer re-reads the state.

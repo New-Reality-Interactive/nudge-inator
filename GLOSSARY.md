@@ -12,6 +12,10 @@ _Avoid_: Task, alarm
 One due instance of a reminder. A reminder has at most one open occurrence at a time.
 _Avoid_: Instance, run
 
+**Start**:
+A reminder's first due time, as the form's Starts row sets it. A repeat's later due times are worked out from it.
+_Avoid_: DTSTART (the RRULE term, never on screen)
+
 **Repeat**:
 How often a reminder comes due again: Never, one of six presets, or a custom rule in the RRULE format.
 _Avoid_: Recurrence (RRULE is the stored format, not a word for the screen)

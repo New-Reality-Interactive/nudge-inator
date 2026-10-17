@@ -5,7 +5,7 @@
       "comment" : "Now: under the title. The placeholder is today's short date, such as \"Sat 17 Oct\"."
     },
     "%@." : {
-      "comment" : "A repeat summary as a sentence, under the reminder form's Starts and under the Repeat page's Custom row. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\"."
+      "comment" : "A repeat summary as a sentence, under the reminder form's Starts and under the Repeat page's Custom row. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".\nTop of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\"."
     },
     "**All clear.** Nothing needs you right now." : {
       "comment" : "Now: the Nudging section when nothing is nudging."
@@ -22,6 +22,32 @@
     "Add a title to save." : {
       "comment" : "Under the reminder form's title when it is empty, so Save is disabled."
     },
+    "After" : {
+      "comment" : "The Custom repeat page's Ends choice: it ends after a number of times."
+    },
+    "After %lld times" : {
+      "comment" : "The Custom repeat page's stepper: how many times it falls due before it ends.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "After %lld time"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "After %lld times"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Break Through Focus" : {
       "comment" : "The reminder form's switch: whether its nudges get through a Focus."
     },
@@ -31,11 +57,20 @@
     "Cancel" : {
       "comment" : "The form's cancel button (an xmark)."
     },
+    "Choose an end date after the start." : {
+      "comment" : "Under the Custom repeat page's end date when it is before the start, so Save is disabled."
+    },
+    "Choose one or more days." : {
+      "comment" : "Under the Custom repeat page's weekdays."
+    },
     "Coming Up" : {
       "comment" : "Now: section header for reminders due soon."
     },
     "Custom" : {
-      "comment" : "The Repeat page's row that opens the custom repeat page.\nThe reminder form's Repeat row when the repeat is a custom rule."
+      "comment" : "The Repeat page's row that opens the custom repeat page.\nThe reminder form's Repeat row when the repeat is a custom rule.\nTitle of the Custom repeat page."
+    },
+    "Daily" : {
+      "comment" : "The Custom repeat page's frequency."
     },
     "Discard Changes" : {
       "comment" : "Throws away the reminder form's changes and closes it."
@@ -48,6 +83,104 @@
     },
     "Edit Reminder" : {
       "comment" : "Title of the form that edits a reminder."
+    },
+    "End Date" : {
+      "comment" : "The Custom repeat page's last day the repeat can fall due."
+    },
+    "Ends" : {
+      "comment" : "The Custom repeat page's choice of when the repeat ends."
+    },
+    "Every %lld days" : {
+      "comment" : "The Custom repeat page's stepper for a daily repeat. Singular: \"Every day\".",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld days"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Every %lld months" : {
+      "comment" : "The Custom repeat page's stepper for a monthly repeat. Singular: \"Every month\".",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every month"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld months"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Every %lld weeks" : {
+      "comment" : "The Custom repeat page's stepper for a weekly repeat. Singular: \"Every week\".",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every week"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld weeks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Every %lld years" : {
+      "comment" : "The Custom repeat page's stepper for a yearly repeat. Singular: \"Every year\".",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every year"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld years"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "Every 10 min, down to every 2. Rings as an alarm from nudge 4." : {
       "comment" : "Under the reminder form's strength when Relentless is chosen."
@@ -81,6 +214,9 @@
     },
     "Firm" : {
       "comment" : "Strength name."
+    },
+    "Frequency" : {
+      "comment" : "The Custom repeat page's choice of Daily, Weekly, Monthly or Yearly."
     },
     "Gentle" : {
       "comment" : "Strength name: the reminder nudges gently."
@@ -123,11 +259,14 @@
     "Last 24 Hours" : {
       "comment" : "Now: section header for occurrences closed in the last 24 hours."
     },
+    "Monthly" : {
+      "comment" : "The Custom repeat page's frequency."
+    },
     "My Day" : {
       "comment" : "Tab bar: the tab with today's reminders in time order"
     },
     "Never" : {
-      "comment" : "Repeat preset, on the Repeat page and the form's Repeat row: the reminder doesn't repeat."
+      "comment" : "Repeat preset, on the Repeat page and the form's Repeat row: the reminder doesn't repeat.\nThe Custom repeat page's Ends choice: it repeats for ever."
     },
     "New Reminder" : {
       "comment" : "Title of the form that makes a reminder.\nToolbar button (a plus) that opens the New Reminder form."
@@ -137,6 +276,9 @@
     },
     "Next 7 days" : {
       "comment" : "Now: how far ahead the Coming Up section looks."
+    },
+    "Next Times" : {
+      "comment" : "Header of the Custom repeat page's next three due times."
     },
     "No Tags" : {
       "comment" : "Tags: title when there are no tags yet."
@@ -171,6 +313,15 @@
     "Nudging now. Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge." : {
       "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging: the note at the top of the form, without its bold."
     },
+    "On" : {
+      "comment" : "Header of the Custom repeat page's days: the weekdays, or the day of the month."
+    },
+    "On %@, from the start date. Change it to pick another day." : {
+      "comment" : "Under the Custom repeat page's frequency when it's yearly. The placeholder is the start's day and month, such as \"28 October\"."
+    },
+    "On Date" : {
+      "comment" : "The Custom repeat page's Ends choice: it ends on a date."
+    },
     "One word. Spaces become hyphens. A reminder can have as many tags as you like." : {
       "comment" : "Under the Tags page's New Tag field."
     },
@@ -201,11 +352,38 @@
     "Tap + to add a tag, or add tags to a reminder when you create or edit it." : {
       "comment" : "Tags: how to add a tag when there are none."
     },
+    "The repeat ends before it starts. Change its end date." : {
+      "comment" : "Under the reminder form's start when a custom repeat's end date is before the start, so Save is disabled."
+    },
+    "The repeat has already ended. Change when it ends." : {
+      "comment" : "Under the reminder form's start when a custom repeat has no times left, so Save is disabled."
+    },
+    "Then it ends." : {
+      "comment" : "Under the Custom repeat page's Next Times when fewer than three are left."
+    },
+    "These follow the start date. Change it to pick another day." : {
+      "comment" : "Under the Custom repeat page's monthly days."
+    },
+    "This repeat has no times left. Change when it ends." : {
+      "comment" : "Under the Custom repeat page's Next Times when the repeat has ended."
+    },
     "This time has passed. Choose a later time." : {
       "comment" : "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled."
     },
     "Title" : {
       "comment" : "The reminder form's title field, which must be filled in."
+    },
+    "Today" : {
+      "comment" : "The Custom repeat page's Next Times: a due time today."
+    },
+    "Tomorrow" : {
+      "comment" : "The Custom repeat page's Next Times: a due time tomorrow."
+    },
+    "Weekly" : {
+      "comment" : "The Custom repeat page's frequency."
+    },
+    "Yearly" : {
+      "comment" : "The Custom repeat page's frequency."
     },
     "Your Tags" : {
       "comment" : "The Tags page's section header above every tag."

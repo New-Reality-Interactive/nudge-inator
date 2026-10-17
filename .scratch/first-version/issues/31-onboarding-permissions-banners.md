@@ -27,6 +27,7 @@ First launch: a short onboarding explaining how nudges reach you (the mockup's F
 - [ ] `requestAuthorization()` for alarms is called here; no schedule call can be the first thing that triggers the alarm prompt.
 - [ ] Denied alarms show the alarms banner; denied notifications show the notifications banner; both can show together.
 - [ ] Banners disappear when permission is granted (observe updates without relaunch).
+- [ ] Device (human): a permission changed in Settings while the app is suspended reaches it through `authorizationUpdates` on return, and its banner updates. The AlarmKit prompt from onboarding shows under Sleep Focus. *(Moved here from tickets 19 and 22.)*
 - [ ] How It Nudges values match the engine's ladder constants (read from the engine, not retyped).
 - [ ] Matches the mockup's First launch screens.
 

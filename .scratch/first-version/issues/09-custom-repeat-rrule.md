@@ -94,7 +94,7 @@ Defaults come from the first due time only when the rule has no BYDAY and no BYM
   - Every Month gets "(the last day in months without one)", and Every Year from 29 February gets "(28 February in years without one)".
   - The note appears only when a month the rule falls in can lack the day: positive or negative days past the shortest month's length, and ordinals of 5 or more.
 - **Combinations beyond the Custom page** read as "Every month on the 13th when it's a Friday", "Every Thursday in June, July and August", and "Every year on the first Monday of the year".
-- **Device check (ticket 21):** whether `Locale.autoupdatingCurrent` reflects the iPhone's 24-Hour Time switch. Apple's `Date.FormatStyle` docs confirm only that the locale sets the hour style. A `@hours=h23` locale does give "09:00" on the Mac.
+- **Device check (ticket 21), done (2026-10-17, iPhone 15, iOS 27.0.1):** with 24-Hour Time on, the form's summary read "Once, Today at 18:00" and the Custom page's times were 24-hour too. This checked whether `Locale.autoupdatingCurrent` reflects the iPhone's 24-Hour Time switch. Apple's `Date.FormatStyle` docs confirm only that the locale sets the hour style. A `@hours=h23` locale does give "09:00" on the Mac.
 
 **TDD notes.**
 - **Red first:** the parser slices, rejection reasons, the serializer, `upcomingDueTimes`, the first due time off the rule, COUNT, the backward jump that skipped an off-rule first due day (found while writing the jumps), the summary slices, and each review fix.

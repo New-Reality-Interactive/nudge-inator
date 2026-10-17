@@ -377,4 +377,207 @@ struct ReminderFormTests {
         #expect(form.save(to: model) == false)
         #expect(model.engine.reminders.count == 1)
     }
+
+    /// Monday 19 October 2026 at 9:00, after the clock's 15 October.
+    static let monday = NewYork.local(2026, 10, 19)
+
+    @Test func choosingCustomAfterAPresetStartsFromThatPreset() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.dueTime = Self.monday
+        form.repeatPreset = .everyTwoWeeks
+
+        form.chooseCustom()
+
+        #expect(form.repeatPreset == nil)
+        #expect(form.customRepeat == model.engine.customRepeat(from: .everyTwoWeeks, startingAt: Self.monday))
+        #expect(form.repeatRule?.rrule == "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO")
+    }
+
+    /// Every 2 weeks from Monday 19 October skips the week of the 26th.
+    @Test func theCustomPagesChoicesUpdateTheSummaryAndTheNextTimes() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.title = "Water the plants"
+        form.dueTime = Self.monday
+        form.repeatPreset = .everyTwoWeeks
+        form.chooseCustom()
+
+        form.customRepeat?.toggle(.wednesday)
+        #expect(form.upcomingDueTimes == [Self.monday, NewYork.local(2026, 10, 21), NewYork.local(2026, 11, 2)])
+
+        form.customRepeat?.ending = .afterCount
+        form.customRepeat?.count = 2
+        #expect(form.upcomingDueTimes == [Self.monday, NewYork.local(2026, 10, 21)])
+        let expected = Reminder(title: "Water the plants", dueTime: Self.monday,
+                                repeatRule: try RepeatRule(rrule: "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE;COUNT=2"), strength: .firm)
+        #expect(form.repeatSummary == model.engine.repeatSummary(of: expected))
+        #expect(form.upcomingDueTimes == model.engine.upcomingDueTimes(of: expected, count: 3))
+    }
+
+    /// Wednesday 28 October is October's last Wednesday; 18 November isn't November's.
+    @Test func aMonthlyChoiceANewStartDoesntOfferFallsBackToItsDayOfTheMonth() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.dueTime = NewYork.local(2026, 10, 28)
+        form.repeatPreset = .everyMonth
+        form.chooseCustom()
+        form.customRepeat?.monthlyDay = .lastWeekdayOfMonth
+        #expect(form.repeatRule?.rrule == "FREQ=MONTHLY;BYDAY=-1WE")
+
+        form.dueTime = NewYork.local(2026, 11, 18)
+
+        #expect(form.repeatRule?.rrule == "FREQ=MONTHLY;BYMONTHDAY=18")
+    }
+
+    @Test func aCustomRepeatThatEndsBeforeItStartsCantBeSaved() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.title = "Water the plants"
+        form.dueTime = Self.monday
+        form.chooseCustom()
+        form.customRepeat?.ending = .onDate
+        form.customRepeat?.endDate = NewYork.local(2026, 10, 18)
+
+        #expect(form.repeatBlock == .endsBeforeStart)
+        #expect(form.saveBlock == .endsBeforeStart)
+        #expect(form.save(to: model) == false)
+
+        form.customRepeat?.endDate = Self.monday
+        #expect(form.saveBlock == nil)
+        #expect(form.save(to: model))
+    }
+
+    /// Daily from 1 October, three times, so it ended on the 3rd. Kept as it was, it can still be
+    /// renamed, as a kept start can (decision 4, ticket 25).
+    @Test func aChangedCustomRepeatWithNoTimesLeftCantBeSaved() async throws {
+        let model = try await launchedModel()
+        let ended = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 1, 9),
+                             repeatRule: try RepeatRule(rrule: "FREQ=DAILY;COUNT=3"), strength: .gentle)
+        model.add(ended)
+        let form = try editForm(of: ended.id, on: model)
+        #expect(form.upcomingDueTimes.isEmpty)
+        #expect(form.saveBlock == nil)
+
+        form.customRepeat?.count = 5
+        #expect(form.repeatBlock == .noTimesLeft)
+        #expect(form.saveBlock == .noTimesLeft)
+
+        form.customRepeat?.count = 30
+        #expect(form.saveBlock == nil)
+        form.title = "Water the ferns"
+        #expect(form.save(to: model))
+    }
+
+    @Test func aSavedCustomRepeatReopensWithItsChoicesAndAPresetReplacesIt() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.title = "Pay the cleaner"
+        form.dueTime = NewYork.local(2026, 10, 28)
+        form.chooseCustom()
+        form.customRepeat?.frequency = .monthly
+        form.customRepeat?.monthlyDay = .lastWeekdayOfMonth
+        form.customRepeat?.ending = .afterCount
+        form.customRepeat?.count = 5
+        #expect(form.save(to: model))
+        let saved = try #require(model.engine.reminders.only)
+        #expect(saved.repeatRule?.rrule == "FREQ=MONTHLY;BYDAY=-1WE;COUNT=5")
+
+        let edit = try editForm(of: saved.id, on: model)
+        #expect(edit.repeatPreset == nil)
+        #expect(edit.customRepeat?.frequency == .monthly)
+        #expect(edit.customRepeat?.monthlyDay == .lastWeekdayOfMonth)
+        #expect(edit.customRepeat?.ending == .afterCount)
+        #expect(edit.customRepeat?.count == 5)
+        #expect(edit.hasChanges == false)
+
+        edit.repeatPreset = .everyWeek
+        #expect(edit.customRepeat == nil)
+        #expect(edit.save(to: model))
+        #expect(model.engine.reminders.only?.repeatRule == .everyWeek)
+    }
+
+    /// Decision 5, ticket 25: the page shows what it can of a rule it has no controls for, and
+    /// the rule stays as saved until a choice or the start changes.
+    @Test func aRuleThePageCantShowIsKeptUntilAChoiceChanges() async throws {
+        let model = try await launchedModel()
+        let summer = Reminder(title: "Water the lawn", dueTime: Self.monday,
+                              repeatRule: try RepeatRule(rrule: "FREQ=WEEKLY;BYDAY=MO;BYMONTH=6,7;COUNT=50"), strength: .gentle)
+        model.add(summer)
+        let form = try editForm(of: summer.id, on: model)
+        #expect(form.repeatRule == summer.repeatRule)
+        #expect(form.hasChanges == false)
+
+        form.title = "Water the grass"
+        #expect(form.save(to: model))
+        #expect(model.engine.reminders.only?.repeatRule == summer.repeatRule)
+
+        let again = try editForm(of: summer.id, on: model)
+        again.customRepeat?.toggle(.friday)
+        #expect(again.repeatRule?.rrule == "FREQ=WEEKLY;BYDAY=MO,FR;COUNT=30")
+    }
+
+    /// Each Custom page control, set through the form from Every Week on Wednesday 28 October.
+    @Test(arguments: [
+        ("daily every 3", "FREQ=DAILY;INTERVAL=3"),
+        ("monthly last Wednesday", "FREQ=MONTHLY;BYDAY=-1WE"),
+        ("monthly fourth Wednesday", "FREQ=MONTHLY;BYDAY=4WE"),
+        ("monthly last day", "FREQ=MONTHLY;BYMONTHDAY=-1"),
+        ("yearly every 2", "FREQ=YEARLY;INTERVAL=2;BYMONTH=10;BYMONTHDAY=28"),
+        ("until 1 December", "FREQ=WEEKLY;BYDAY=WE;UNTIL=20261201"),
+    ])
+    func eachCustomPageControlBuildsItsRule(control: String, rrule: String) async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.dueTime = NewYork.local(2026, 10, 28)
+        form.repeatPreset = .everyWeek
+        form.chooseCustom()
+
+        switch control {
+        case "daily every 3":
+            form.customRepeat?.frequency = .daily
+            form.customRepeat?.interval = 3
+        case "monthly last Wednesday":
+            form.customRepeat?.frequency = .monthly
+            form.customRepeat?.monthlyDay = .lastWeekdayOfMonth
+        case "monthly fourth Wednesday":
+            form.customRepeat?.frequency = .monthly
+            form.customRepeat?.monthlyDay = .weekdayOfMonth
+        case "monthly last day":
+            form.customRepeat?.frequency = .monthly
+            form.customRepeat?.monthlyDay = .lastDay
+        case "yearly every 2":
+            form.customRepeat?.frequency = .yearly
+            form.customRepeat?.interval = 2
+        default:
+            form.customRepeat?.ending = .onDate
+            form.customRepeat?.endDate = NewYork.local(2026, 12, 1, 0)
+        }
+
+        #expect(form.repeatRule?.rrule == rrule)
+        #expect(form.repeatSummary == model.engine.repeatSummary(of: Reminder(
+            title: "", dueTime: form.dueTime, repeatRule: try RepeatRule(rrule: rrule), strength: .firm)))
+    }
+
+    /// RFC 5545 counts the first due time, so moving the start to a day that isn't chosen adds
+    /// that one day (ticket 09's decision), as Next Times shows.
+    @Test func aWeeklyStartOnADayThatIsntChosenStillFallsDue() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.dueTime = Self.monday
+        form.repeatPreset = .everyWeek
+        form.chooseCustom()
+
+        form.dueTime = NewYork.local(2026, 10, 20)
+
+        #expect(form.upcomingDueTimes == [NewYork.local(2026, 10, 20), NewYork.local(2026, 10, 26), NewYork.local(2026, 11, 2)])
+    }
+
+    /// The clock is at 15 October 2026.
+    @Test(arguments: [(NewYork.local(2026, 12, 31), false), (NewYork.local(2027, 1, 1), true)])
+    func aNextTimeShowsItsYearOnlyWhenItIsntThisYear(dueTime: Date, showsYear: Bool) async throws {
+        let model = try await launchedModel()
+
+        #expect(newForm(on: model).showsYear(of: dueTime) == showsYear)
+    }
 }
