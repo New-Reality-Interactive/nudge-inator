@@ -95,6 +95,13 @@ Never read `AlarmManager.authorizationState` directly. It is a synchronous call 
 - Run everything with `scripts/test.sh` before committing. UI, VoiceOver and AlarmKit behavior can't be checked in unit tests, so mark those as device checks.
 - Any test run on the physical iPhone is safe and leaves the phone exactly as it found it. Each test undoes everything it changed: pending and delivered notifications, scheduled alarms, stored data, and the app's own state. The cleanup runs even when the test fails, so put it in a `defer` or in a class or actor suite's `deinit`, which Swift Testing runs after each test. A test acts only on what it created, found by its own identifiers, and leaves the person's reminders, notifications from other apps, and system settings (permissions, Focus, Time Sensitive) as they were. If a test can't undo something, make it a manual device check instead. Before a device run, note whether the app is installed (`xcrun devicectl device info apps`). If it wasn't, uninstall it afterwards, which also resets its permissions. If it was, keep it and its data.
 - Uninstalling does **not** remove the app's AlarmKit alarms on a device (iPhone 15, iOS 27.0.1; it does in the simulator). Ticket 02's spike left 4,001 behind that survived two uninstalls. So a device test cancels every alarm it schedules, and doesn't assume a fresh install holds none: an apply cancels every alarm of the app's that isn't in its plan, so `AlarmDeviceCheck` first requires the app to hold no alarms. A device test shows a permission prompt only when the run says the app wasn't installed (`TEST_RUNNER_NUDGE_FRESH_INSTALL=1`), since uninstalling is what resets the answer.
+- When closing an acceptance criterion needs device checks that need the person, walk them through one check at a time, so none is missed. For each check:
+  1. Say what it checks, what they'll do and when (prompts to answer, what to tap), and the longest it can take.
+  2. Confirm the `-only-testing` filter matches that one test without touching the phone. Swift Testing's identifier ends in `()`. A run that matches no test still launches the app, and a prompt it shows vanishes when the run ends.
+  3. Wait for their go, then run it.
+  4. Report the result and confirm it with them before the next check.
+
+  If a run doesn't do what you said it would, stop and explain before running anything else. Once the last check is done, list every check and its result, so the person can see none is left.
 
 ### Comments and style
 
