@@ -63,8 +63,9 @@ private struct FrequencySection: View {
             }
         } header: {
             if !dynamicTypeSize.isAccessibilitySize {
+                // VoiceOver reads the segments without the picker's label (device check, ticket
+                // 25), so the heading names them. At accessibility sizes the menu carries it.
                 Text("Frequency", comment: "The Custom repeat page's choice of Daily, Weekly, Monthly or Yearly.")
-                    .accessibilityHidden(true)
             }
         } footer: {
             if choices.frequency == .yearly {
@@ -155,14 +156,18 @@ private struct EndsSection: View {
                     Text("After \(choices.count) times", comment: "The Custom repeat page's stepper: how many times it falls due before it ends.")
                 }
             case .onDate:
-                DatePicker(selection: $choices.endDate, in: Calendar.autoupdatingCurrent.startOfDay(for: start)..., displayedComponents: .date) {
+                // No earlier than the start. An end date already before it (the start moved
+                // later) stays in range, or the picker would show the start in its place while
+                // the rule kept the old date (device check, ticket 25); the reason below says why.
+                let startDay = Calendar.autoupdatingCurrent.startOfDay(for: start)
+                DatePicker(selection: $choices.endDate, in: min(startDay, choices.endDate)..., displayedComponents: .date) {
                     Text("End Date", comment: "The Custom repeat page's last day the repeat can fall due.")
                 }
             }
         } header: {
             if !dynamicTypeSize.isAccessibilitySize {
+                // Read by VoiceOver, as Frequency's heading is.
                 Text("Ends", comment: "The Custom repeat page's choice of when the repeat ends.")
-                    .accessibilityHidden(true)
             }
         } footer: {
             if endsBeforeStart {
