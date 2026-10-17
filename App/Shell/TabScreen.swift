@@ -57,8 +57,7 @@ struct EmptyRow: View {
     }
 }
 
-/// A toolbar + whose sheet a later ticket builds, so it is shown but disabled: New Reminder
-/// (ticket 24) on Now and My Day, New Tag on Tags.
+/// A toolbar + whose sheet a later ticket builds, so it is shown but disabled: New Tag on Tags.
 struct DisabledAddButton: View {
     /// What the + adds, for VoiceOver.
     let label: Text
@@ -76,10 +75,27 @@ struct DisabledAddButton: View {
     }
 }
 
-/// The + that opens the New Reminder form, on Now and My Day.
+/// The + that opens the New Reminder form, on Now and My Day. Saving it lands back here, so the
+/// new reminder shows on the screen the person came from. It is disabled until the store has been
+/// read, since the model drops events before then, and without a model (previews, the test host).
 struct NewReminderButton: View {
+    @Environment(AppModel.self) private var model: AppModel?
+    @State private var form: ReminderForm?
+
     var body: some View {
-        DisabledAddButton(label: Text("New Reminder", comment: "Toolbar button (a plus) that opens the New Reminder form."))
+        Button {
+            if let model { form = ReminderForm(engine: model.engine, now: { .now }) }
+        } label: {
+            Label {
+                Text("New Reminder", comment: "Toolbar button (a plus) that opens the New Reminder form.")
+            } icon: {
+                Image(systemName: "plus")
+            }
+        }
+        .disabled(model == nil || ScreenState(model: model) != .ready)
+        .sheet(item: $form) { form in
+            ReminderFormSheet(form: form, isEditing: false)
+        }
     }
 }
 
