@@ -146,8 +146,8 @@ The summary is compared with the engine's own output, whose wording `RepeatSumma
   7. VoiceOver reads a label on every control, and "selected" on chosen rows.
   8. At the largest text size, in portrait and landscape, rows stack, Strength is a menu, nothing is cut short, and landscape is full-screen and centered.
 
-**Device checks still pending** (record the iOS version when they are run):
-- **The lock on a nudging reminder on the phone (ticket 27, which adds Edit):** the note at the top, and VoiceOver reading the lock note as the hint of each disabled control, including the segmented Strength picker, whose segments may not carry it. The docs don't say a disabled control's hint is read.
+**Device checks** (record the iOS version when they are run):
+- **Moved to ticket 27's criteria, which adds Edit:** the lock on a nudging reminder on the phone: the note at the top, and VoiceOver reading the lock note as the hint of each disabled control, including the segmented Strength picker, whose segments may not carry it. The docs don't say a disabled control's hint is read.
 - **Custom opening ticket 25's page:** done in ticket 25 (screenshots, and on the iPhone, iOS 27.0.1).
 
 **Tooling (added at the user's request):** `scripts/test.sh` no longer passes `-quiet`, which hid Swift Testing's lines. `xcodebuild_logged` keeps each run's full output in `.build/test-logs/` (`engine-macos.log`, `app-ios-<os>.log`) and prints only each run's count, the failed tests, errors and the verdict, so one run shows "204 tests" for the engine and "139 tests" for each iOS version. On a failure it also prints the log's path.

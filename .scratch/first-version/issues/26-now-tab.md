@@ -15,5 +15,6 @@ Nudging cards each with the title, nudge count and urgency, and a **Done** butto
 - [ ] A Missed occurrence appears under Last 24 Hours with its reason ("the next one took over" distinct).
 - [ ] Empty state when nothing is nudging.
 - [ ] Matches the mockup's Now screen (screenshot comparison noted in Comments).
+- [ ] Device (human): on a cold launch, the first `.active` refills the plan (`initial: true`), and Now shows it. *(Moved here from ticket 21, whose empty screens couldn't show a plan.)*
 
 Blocked by: 21, 24

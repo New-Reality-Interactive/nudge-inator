@@ -140,10 +140,12 @@ The decisions:
     - The test then marked the second run failed, because Done takes a nudge out of Notification Center. Done now counts as proof it arrived; that change wasn't re-run on the phone.
     - **For ticket 31:** a Focus doesn't let Time Sensitive nudges through unless that setting is on, so the banners or How It Nudges could say so.
 
-**Device checks still pending.** Record the iOS version when they are run.
-1. **App opened on a cold launch** (`initial: true`): check, on a real launch, that the first `.active` refills the plan. Ticket 22's screens will make it visible.
+**Device checks.** Record the iOS version when they are run.
+1. **App opened on a cold launch** (`initial: true`): moved to ticket 26's criteria, since Now is what makes the plan visible.
 2. **A Done before the first unlock after a restart:** the store is shut then. The Done is lost and the occurrence keeps nudging. Apple suggests saving such changes "temporarily" and merging them later. That is not built; it needs a decision.
-3. **Ticket 18's check 4, interval triggers across a reboot:** still pending.
+3. ~~**Ticket 18's check 4, interval triggers across a reboot**~~: done (2026-10-17, iPhone 15, iOS 27.0.1), see ticket 18.
+4. ~~**The 24-Hour Time switch** (ticket 09)~~: done (2026-10-17, iPhone 15, iOS 27.0.1): the app's times follow it.
+5. **Noted while checking ticket 25 (a design question, not a check):** after a time-zone change a repeat keeps its moment, not its wall-clock time. A Saturday 6:00 PM start in Central time showed "Every Saturday at 8:00 AM" in Tokyo, with the weekday still Saturday. Whether a traveller's repeats should keep local time is a later decision.
 
 **Left alone:**
 - the Open intent itself (20);

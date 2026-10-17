@@ -151,11 +151,11 @@ This matches the mockup's layout. One difference: the summary's "until Sun, Jan 
   - iOS has no checkbox or radio trait.
   - The summary is one static-text element holding the whole sentence. This was checked in the iOS 26.5 simulator's accessibility tree, which VoiceOver reads from.
 
-**Device checks still pending** (record the iOS version when they are run):
-- The summary heard on the phone with VoiceOver. The simulator's accessibility tree has it as one element.
-- The Strength picker in the form may have the same hidden-heading problem as Frequency and Ends (ticket 24 hides its header the same way). Check that VoiceOver names the Strength segments.
-- The lock on the Repeat and Custom pages when a reminder starts nudging while they're open. This needs Edit's entry point (ticket 27).
-- Whether `Calendar.autoupdatingCurrent` and the engine's time zone agree after the person travels (ticket 21's note), since the end date is split by the engine's calendar.
+**Device checks, done (2026-10-17, iPhone 15, iOS 27.0.1):**
+- **The summary** is read by VoiceOver as one element: "Every Saturday at 6 PM, heading".
+- **The Strength picker** had the same unnamed-segments problem as Frequency and Ends. Its heading is now read too, and VoiceOver says "Strength" before the segments.
+- **A time-zone change** while the app ran (to Tokyo) left the end date right: October 30 read "until Fri, Oct 30". The repeat kept its moment, not its wall-clock time; that question is noted in ticket 21.
+- **The lock on the Repeat and Custom pages** moved to ticket 27's criteria, since it needs Edit's entry point.
 
 **Left alone:**
 - typing RRULE text, sub-daily repeats, and BYSETPOS and the rest outside the subset;

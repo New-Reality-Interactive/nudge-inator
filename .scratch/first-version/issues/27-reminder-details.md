@@ -17,5 +17,6 @@ Details screen with the reminder's title, notes, tags, due time, repeat (the eng
 - [ ] Delete asks for confirmation; Cancel keeps it; Confirm removes it and its pending items.
 - [ ] A route-to-reminder entry point exists for ticket 20 and an unknown ID shows a "reminder not found" state.
 - [ ] Notes and tags appear here and nowhere in notification or alarm content.
+- [ ] Device (human): editing a Nudging reminder shows the lock note at the top, and VoiceOver reads the lock note as the hint of each disabled control, the Strength segments included. The Repeat and Custom pages lock, with the note, if the reminder starts nudging while they're open. *(Moved here from tickets 24 and 25, which have no Edit entry point.)*
 
 Blocked by: 09, 24, 26

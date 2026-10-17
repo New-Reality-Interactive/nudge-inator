@@ -159,7 +159,7 @@ Blocked by: 14, 17
 1. ~~**Done reaches the engine** from a banner and from the Lock Screen, without unlocking~~: done, see the 2026-10-17 run below.
 2. ~~**A Time Sensitive nudge shows during a Focus** that allows Time Sensitive notifications, and an ordinary nudge is held~~: done, see below.
 3. ~~The pending limit~~: done, see above.
-4. **Interval triggers, still pending.** Check that one survives a reboot before it fires and fires on time. The docs don't say. Not part of the acceptance criteria.
+4. ~~**Interval triggers** survive a reboot~~: done (2026-10-17, iPhone 15, iOS 27.0.1). A Gentle reminder was saved for 17:08, the phone restarted and was unlocked, and the nudge arrived at 17:08 without the app being opened. Done was chosen after unlocking.
 5. ~~**A nudge in the foreground** shows as a banner (`willPresent`)~~: done, see below.
 
 **Device run (2026-10-17), Brian's iPhone: iPhone 15, iOS 27.0.1, wired, Xcode 26.6.** These are the opt-in `NudgeActionDeviceCheck` tests (`TEST_RUNNER_NUDGE_ACTION_CHECK=1`), run one at a time with Brian at the phone. Ticket 21 wired them through the app's own model.
@@ -170,4 +170,4 @@ Blocked by: 14, 17
   - The test logged `delivered ["Nudge-inator held check"], Time Sensitive Done: true`.
   - Brian saw the Time Sensitive nudge on the Lock Screen and chose Done on it. The ordinary one was held: delivered to Notification Center, not shown.
 
-**Left alone:** AlarmKit (19), the Open intent (20), wiring and the foreground refill (21), every UI including the banners (31) and Settings (30), and the reboot check above.
+**Left alone:** AlarmKit (19), the Open intent (20), wiring and the foreground refill (21), every UI including the banners (31) and Settings (30), and the device checks above, all done.
