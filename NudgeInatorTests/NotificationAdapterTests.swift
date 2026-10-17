@@ -115,7 +115,7 @@ struct NotificationAdapterTests {
         await adapter.waitUntilApplied()
         let delivered = try #require(pending().only)
 
-        adapter.handleResponse(
+        await adapter.handleResponse(
             actionIdentifier: NotificationAdapter.doneActionIdentifier,
             nudge: NotificationAdapter.deliveredNudge(in: delivered.content.userInfo)
         )
@@ -125,14 +125,17 @@ struct NotificationAdapterTests {
 
     /// The Done action can launch the app in the background, and the response may come before the
     /// app model is listening (ticket 21). It waits rather than being lost.
-    @Test func aDoneBeforeAnyoneListensIsReportedOnceSomeoneDoes() {
+    @Test func aDoneBeforeAnyoneListensIsReportedOnceSomeoneDoes() async {
         let adapter = adapter()
         let events = FakeNotificationEvents()
         let nudge = DeliveredNudge(reminderID: Self.pills, fireTime: NewYork.local(2026, 10, 16, 9, 10))
 
-        adapter.handleResponse(actionIdentifier: NotificationAdapter.doneActionIdentifier, nudge: nudge)
+        await adapter.handleResponse(actionIdentifier: NotificationAdapter.doneActionIdentifier, nudge: nudge)
         adapter.events = events
         adapter.events = events
+        for _ in 0..<100 where events.dones.isEmpty {
+            await Task.yield()
+        }
 
         #expect(events.dones == [nudge])
     }
@@ -141,12 +144,12 @@ struct NotificationAdapterTests {
         UNNotificationDefaultActionIdentifier,
         UNNotificationDismissActionIdentifier,
     ])
-    func openingOrDismissingANotificationIsNotDone(actionIdentifier: String) {
+    func openingOrDismissingANotificationIsNotDone(actionIdentifier: String) async {
         let adapter = adapter()
         let events = FakeNotificationEvents()
         adapter.events = events
 
-        adapter.handleResponse(
+        await adapter.handleResponse(
             actionIdentifier: actionIdentifier,
             nudge: DeliveredNudge(reminderID: Self.pills, fireTime: NewYork.local(2026, 10, 16, 9, 10))
         )

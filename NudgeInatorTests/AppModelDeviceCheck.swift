@@ -9,34 +9,27 @@ import UserNotifications
 /// can choose Done on a notification without unlocking (Apple: "users can respond to actions
 /// while the device is locked"), and the model saves after it. SwiftData has no file-protection
 /// setting; Core Data's and the system's documented default is `completeUntilFirstUserAuthentication`.
-/// It writes a store of its own in the App Group container, and deletes it with SQLite's side
-/// files (AGENTS.md: tests on the iPhone leave it as they found it).
+/// It writes a store of its own in the App Group container, which its `TemporaryStoreFile`
+/// deletes with SQLite's side files (AGENTS.md: tests on the iPhone leave it as they found it).
 @MainActor
 @Suite(.enabled(if: DeviceCheck.isPhysicalDevice, "Data protection applies only on an iPhone"))
-final class StoreProtectionDeviceCheck {
-    let url: URL? = FileManager.default
-        .containerURL(forSecurityApplicationGroupIdentifier: ReminderStore.appGroupIdentifier)?
-        .appending(path: "device-check-\(UUID().uuidString).store")
-
-    deinit {
-        guard let url else { return }
-        for suffix in ["", "-wal", "-shm"] {
-            try? FileManager.default.removeItem(at: URL(filePath: url.path() + suffix))
-        }
-    }
+struct StoreProtectionDeviceCheck {
+    let storeFile = FileManager.default
+        .containerURL(forSecurityApplicationGroupIdentifier: ReminderStore.appGroupIdentifier)
+        .map { TemporaryStoreFile(in: $0) }
 
     @Test func theStoreStaysReadableOnALockedPhoneAfterTheFirstUnlock() throws {
-        let url = try #require(url, "No App Group container")
-        let store = try ReminderStore(location: .file(url))
+        let storeFile = try #require(storeFile, "No App Group container")
+        let store = try ReminderStore(location: .file(storeFile.url))
         try store.save(StoredData(
             reminders: [Reminder(title: "Nudge-inator device check", dueTime: .now + 86_400, strength: .gentle)],
             tags: [],
             histories: [:]
         ))
 
-        for suffix in ["", "-wal", "-shm"] {
-            let file = URL(filePath: url.path() + suffix)
-            guard FileManager.default.fileExists(atPath: file.path()) || suffix.isEmpty else { continue }
+        let written = storeFile.files.filter { FileManager.default.fileExists(atPath: $0.path()) }
+        #expect(written.first == storeFile.url)
+        for file in written {
             let protection = try file.resourceValues(forKeys: [.fileProtectionKey]).fileProtection
             print("Store protection: \(file.lastPathComponent) \(protection.map(\.rawValue) ?? "nil")")
             #expect(protection == .completeUntilFirstUserAuthentication || protection == URLFileProtection.none)
@@ -44,16 +37,18 @@ final class StoreProtectionDeviceCheck {
     }
 }
 
-/// Ticket 18's device checks 1, 2 and 5, which need the wiring: a real app model over the real
-/// notification center and alarm manager, with a store of its own. Opt-in, since each waits for
-/// a person: `TEST_RUNNER_NUDGE_ACTION_CHECK=1 xcodebuild test ... -only-testing:NudgeInatorTests/NudgeActionDeviceCheck/<test>`
-/// Run one test at a time and follow its comment. Only Gentle reminders, which never ring, so
-/// no alarm is scheduled and no AlarmKit prompt appears.
+/// Ticket 18's device checks 1, 2 and 5, which need the wiring: the app's own model
+/// (`AppDelegate.makeModel`) over the real notification center and alarm manager, with a store
+/// of its own. Opt-in, since each waits for a person:
+/// `TEST_RUNNER_NUDGE_ACTION_CHECK=1 xcodebuild test ... -only-testing:NudgeInatorTests/NudgeActionDeviceCheck/<test>`
+/// Run one test at a time and follow its comment. Only Gentle reminders, which never ring, so no
+/// alarm is scheduled and no AlarmKit prompt appears.
 ///
-/// Cleanup: each test deletes its reminders, which removes their pending nudges, and removes the
-/// notifications it delivered. If a test fails first, `deinit` removes them, and cancels any
-/// alarm the app holds: the check requires it held none, so they are all its own. Notification
-/// permission is asked for only when the run says the app wasn't installed
+/// Cleanup acts only on what the check made (AGENTS.md). Each test deletes its reminders, which
+/// removes their pending nudges, then removes the ones delivered, by the identifiers recorded
+/// when they were scheduled. `deinit` removes them again in case a test failed first, and
+/// cancels the app's alarms only once the check has seen it held none, so any are its own.
+/// Notification permission is asked for only when the run says the app wasn't installed
 /// (`TEST_RUNNER_NUDGE_FRESH_INSTALL=1`); uninstalling afterwards resets it.
 @MainActor
 @Suite(.enabled(
@@ -63,39 +58,39 @@ final class StoreProtectionDeviceCheck {
 final class NudgeActionDeviceCheck {
     let storeFile = TemporaryStoreFile()
     private(set) var reminderIDs: [Reminder.ID] = []
+    /// The identifiers of every nudge the check's reminders had pending.
+    private(set) var notificationIDs: Set<String> = []
+    /// Set once the check has seen the app held no alarms, so every alarm it holds after is the check's.
+    private(set) var ownsEveryAlarm = false
 
+    // Nonisolated, as every deinit is: it reads only Sendable values and calls the system's
+    // synchronous removals, which Apple says are safe from any thread.
     deinit {
-        let prefixes = reminderIDs.map { "nudge.\($0.uuidString)." }
-        Task {
-            let center = UNUserNotificationCenter.current()
-            let pending = await center.pendingNotificationRequests().map(\.identifier)
-            let delivered = await center.deliveredNotifications().map(\.request.identifier)
-            let ours = (pending + delivered).filter { id in prefixes.contains { id.hasPrefix($0) } }
-            center.removePendingNotificationRequests(withIdentifiers: ours)
-            center.removeDeliveredNotifications(withIdentifiers: ours)
-        }
+        Self.remove(notificationIDs)
+        guard ownsEveryAlarm else { return }
         for alarm in (try? AlarmManager.shared.alarms) ?? [] {
+            try? AlarmManager.shared.stop(id: alarm.id)
             try? AlarmManager.shared.cancel(id: alarm.id)
         }
     }
 
-    /// A launched model with notifications allowed and none of the app's alarms scheduled.
+    nonisolated private static func remove(_ identifiers: Set<String>) {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: Array(identifiers))
+        center.removeDeliveredNotifications(withIdentifiers: Array(identifiers))
+    }
+
+    /// The app's model, launched, with notifications allowed and none of the app's alarms scheduled.
     func launchedModel() async throws -> AppModel {
-        let clock = SystemClock()
-        let notifications = NotificationAdapter(center: SystemNotificationCenter(), clock: clock)
         let center = UNUserNotificationCenter.current()
         if await center.notificationSettings().authorizationStatus == .notDetermined,
            ProcessInfo.processInfo.environment["NUDGE_FRESH_INSTALL"] == "1" {
-            _ = try await notifications.requestAuthorization()
+            _ = try await center.requestAuthorization(options: [.alert, .sound])
         }
         try #require(await center.notificationSettings().authorizationStatus == .authorized, "Allow notifications for Nudge-inator, or set TEST_RUNNER_NUDGE_FRESH_INSTALL=1 on a fresh install")
         try #require(try AlarmManager.shared.alarms.isEmpty, "Nudge-inator already holds alarms; the check would cancel them")
-        let model = AppModel(
-            clock: clock,
-            store: Result { try ReminderStore(location: .file(storeFile.url)) },
-            notifications: notifications,
-            alarms: AlarmAdapter(manager: SystemAlarmManager(), clock: clock)
-        )
+        ownsEveryAlarm = true
+        let model = AppDelegate.makeModel { [storeFile] in try ReminderStore(location: .file(storeFile.url)) }
         await model.launch()
         return model
     }
@@ -104,6 +99,9 @@ final class NudgeActionDeviceCheck {
         reminderIDs.append(reminder.id)
         model.add(reminder)
         await model.waitUntilApplied()
+        let prefix = "nudge.\(reminder.id.uuidString)."
+        let pending = await UNUserNotificationCenter.current().pendingNotificationRequests()
+        notificationIDs.formUnion(pending.map(\.identifier).filter { $0.hasPrefix(prefix) })
     }
 
     /// Waits up to `limit` for the person to choose Done on the reminder's notification.
@@ -116,14 +114,11 @@ final class NudgeActionDeviceCheck {
         return false
     }
 
-    /// Deletes the reminders, which removes their pending nudges, and their delivered ones.
+    /// Deletes the reminders through the model, as the app would, then the nudges they delivered.
     func cleanUp(_ model: AppModel) async {
-        let prefixes = reminderIDs.map { "nudge.\($0.uuidString)." }
         for id in reminderIDs { model.delete(id) }
         await model.waitUntilApplied()
-        let center = UNUserNotificationCenter.current()
-        let delivered = await center.deliveredNotifications().map(\.request.identifier)
-        center.removeDeliveredNotifications(withIdentifiers: delivered.filter { id in prefixes.contains { id.hasPrefix($0) } })
+        Self.remove(notificationIDs)
     }
 
     /// Checks 5 and 1 (banner): keep the app in front, unlocked. A banner reading "Nudge-inator
@@ -175,14 +170,13 @@ final class NudgeActionDeviceCheck {
         await add(ordinary, to: model)
 
         let center = UNUserNotificationCenter.current()
-        let pending = await center.pendingNotificationRequests()
-        let first = pending.filter { $0.identifier.hasPrefix("nudge.\(timeSensitive.id.uuidString).") }
-            .min { ($0.trigger as? UNTimeIntervalNotificationTrigger)?.nextTriggerDate() ?? .distantFuture
-                < ($1.trigger as? UNTimeIntervalNotificationTrigger)?.nextTriggerDate() ?? .distantFuture }
+        let first = await center.pendingNotificationRequests()
+            .filter { $0.identifier.hasPrefix("nudge.\(timeSensitive.id.uuidString).") }
+            .min { Self.fireDate(of: $0) < Self.fireDate(of: $1) }
         #expect(first?.content.interruptionLevel == .timeSensitive)
         #expect(first?.content.body == "Nudge 5 of 20 · High")
 
-        // Delivered or not, both are in Notification Center once they fire; held is what the person sees.
+        // Held or shown, both are in Notification Center once they fire; what the person saw is the check.
         try await Task.sleep(for: .seconds(fireTime.timeIntervalSinceNow + 30))
         let delivered = await center.deliveredNotifications().map(\.request.content.title)
         print("Focus check: delivered \(delivered.filter { $0.hasPrefix("Nudge-inator") })")
@@ -190,5 +184,9 @@ final class NudgeActionDeviceCheck {
 
         #expect(delivered.contains(timeSensitive.title))
         #expect(delivered.contains(ordinary.title))
+    }
+
+    private static func fireDate(of request: UNNotificationRequest) -> Date {
+        (request.trigger as? UNTimeIntervalNotificationTrigger)?.nextTriggerDate() ?? .distantFuture
     }
 }

@@ -20,14 +20,14 @@ struct AppModelTests {
 
     /// A model before launch, as the app delegate builds it, over new adapters on the shared fakes.
     func model(store: ReminderStore) -> (model: AppModel, notifications: NotificationAdapter) {
-        model(opening: .success(store))
+        model(openingStoreWith: { store })
     }
 
-    func model(opening store: Result<ReminderStore, any Error>) -> (model: AppModel, notifications: NotificationAdapter) {
+    func model(openingStoreWith openStore: @escaping () throws -> ReminderStore) -> (model: AppModel, notifications: NotificationAdapter) {
         let notifications = NotificationAdapter(center: center, clock: clock)
         let model = AppModel(
             clock: clock,
-            store: store,
+            openStore: openStore,
             notifications: notifications,
             alarms: AlarmAdapter(manager: manager, clock: clock),
             timeZone: NewYork.timeZone
@@ -42,8 +42,8 @@ struct AppModelTests {
     }
 
     /// What the notification center's delegate hands the adapter when the person chooses Done.
-    func chooseDone(on notifications: NotificationAdapter, nudgeFiredAt fireTime: Date) {
-        notifications.handleResponse(
+    func chooseDone(on notifications: NotificationAdapter, nudgeFiredAt fireTime: Date) async {
+        await notifications.handleResponse(
             actionIdentifier: NotificationAdapter.doneActionIdentifier,
             nudge: DeliveredNudge(reminderID: call.id, fireTime: fireTime)
         )
@@ -125,6 +125,52 @@ struct AppModelTests {
         #expect(center.pending.allSatisfy { $0.content.interruptionLevel == .timeSensitive })
     }
 
+    /// App opened reads the permissions while an authorization change reads them too. The reads
+    /// overlap, and here the later one finishes first: the change must still win. Alarms allowed
+    /// again is the case nothing else corrects: with them denied, the adapter's refusal would
+    /// start another read.
+    @Test func permissionReadsTakeEffectInTheOrderTheyStarted() async throws {
+        manager.authorizationState = .denied
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+        model.add(call)
+        await model.waitUntilApplied()
+        center.holdsSettingsReads = true
+
+        let opened = Task { await model.appOpened() }
+        await yield(until: center.heldSettingsReadCount == 1)
+        manager.changeAuthorization(to: .authorized)
+        await yield(until: false)
+        repeat {
+            center.releaseLatestSettingsRead()
+            await yield(until: false)
+        } while center.heldSettingsReadCount > 0
+        await opened.value
+        await model.waitUntilApplied()
+
+        #expect(model.engine.reach.urgent == .alarm)
+        #expect(manager.scheduled.count == 17)
+    }
+
+    /// Lets the model's and adapters' tasks run, up to 200 turns or until `condition` holds.
+    func yield(until condition: @autoclosure () -> Bool) async {
+        for _ in 0..<200 where !condition() {
+            await Task.yield()
+        }
+    }
+
+    /// Settings' status rows (ticket 30) need not determined, which `reach` doesn't say, and the
+    /// banners (ticket 31) must follow a change without a relaunch.
+    @Test func thePermissionStatesFollowWhatTheAdaptersRead() async throws {
+        center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .disabled)
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+        #expect(model.permissions == PermissionStates(notifications: .allowed, alarms: .notDetermined, timeSensitive: .off))
+
+        manager.changeAuthorization(to: .denied)
+        await waitUntil(model) { model.permissions.alarms == .denied }
+
+        #expect(model.permissions == PermissionStates(notifications: .allowed, alarms: .denied, timeSensitive: .off))
+    }
+
     /// The app hears notifications were turned off only when the center turns a request down.
     @Test func notificationsTurnedOffAreReadAgainWhenTheCenterRefusesARequest() async throws {
         let model = await launchedModel(store: try ReminderStore(location: .inMemory))
@@ -145,7 +191,7 @@ struct AppModelTests {
         clock.now = NewYork.local(2026, 10, 15, 9, 12)
         await model.appOpened()
 
-        chooseDone(on: notifications, nudgeFiredAt: NewYork.local(2026, 10, 15, 9, 10))
+        await chooseDone(on: notifications, nudgeFiredAt: NewYork.local(2026, 10, 15, 9, 10))
         await model.waitUntilApplied()
 
         #expect(model.engine.latestOccurrence(for: call.id)?.state == .done)
@@ -316,7 +362,7 @@ struct AppModelTests {
     struct StoreWontOpen: Error {}
 
     @Test func aStoreThatWontOpenLeavesTheAdaptersAlone() async throws {
-        let model = model(opening: .failure(StoreWontOpen())).model
+        let model = model(openingStoreWith: { throw StoreWontOpen() }).model
         await model.launch()
         await model.appOpened()
         model.add(call)
@@ -329,6 +375,32 @@ struct AppModelTests {
         #expect(error is StoreWontOpen)
         #expect(center.added.isEmpty)
         #expect(manager.scheduleCalls.isEmpty)
+    }
+
+    /// Before the first unlock after a restart, data protection keeps the file shut, and a Done
+    /// action can launch the app then. App opened comes once the phone is unlocked, so it tries
+    /// again.
+    @Test func appOpenedTriesAStoreThatCouldntBeOpenedAgain() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        try store.save(StoredData(reminders: [call], tags: [], histories: [:]))
+        var attempts = 0
+        let model = model(openingStoreWith: {
+            attempts += 1
+            if attempts == 1 { throw StoreWontOpen() }
+            return store
+        }).model
+        await model.launch()
+
+        await model.appOpened()
+        await model.waitUntilApplied()
+
+        guard case .ready = model.launchState else {
+            Issue.record("Launched as \(model.launchState)")
+            return
+        }
+        #expect(model.engine.reminders == [call])
+        #expect(center.pending.count == 3)
+        #expect(manager.scheduled.count == 17)
     }
 
     /// Writes a strength the store can't map back, as a bad schema change might.
@@ -368,6 +440,25 @@ struct AppModelTests {
     /// foreground hand the real adapters a plan that cancels the device checks' alarms.
     @Test func theAppDoesntBuildItsModelWhenItHostsTests() {
         #expect(AppDelegate.isHostingTests)
+    }
+
+    /// Apple: the response handler returning tells the system "you are done processing the
+    /// user's response", and the Done action launches the app in the background, so it can be
+    /// suspended straight after. The Done must be saved and applied by then.
+    @Test func aDoneFromANotificationIsSavedAndAppliedBeforeTheResponseHandlerReturns() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        let first = await launchedModel(store: store)
+        first.add(call)
+        await first.waitUntilApplied()
+        clock.now = NewYork.local(2026, 10, 15, 9, 12)
+        let (model, notifications) = model(store: store)
+
+        await chooseDone(on: notifications, nudgeFiredAt: NewYork.local(2026, 10, 15, 9, 10))
+
+        #expect(try store.load().histories[call.id]?.closedOccurrences[call.dueTime]?.state == .done)
+        #expect(center.pending.isEmpty)
+        #expect(manager.scheduled.isEmpty)
+        withExtendedLifetime(model) {}
     }
 
     /// Ticket 20's Open intent calls `showReminder`; Done on the details screen is then the same
@@ -424,7 +515,7 @@ struct AppModelTests {
         clock.now = NewYork.local(2026, 10, 15, 9, 12)
         let (model, notifications) = model(store: store)
 
-        chooseDone(on: notifications, nudgeFiredAt: NewYork.local(2026, 10, 15, 9, 10))
+        await chooseDone(on: notifications, nudgeFiredAt: NewYork.local(2026, 10, 15, 9, 10))
         await model.launch()
         await model.waitUntilApplied()
 

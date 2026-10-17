@@ -7,7 +7,10 @@ import NudgeEngine
 protocol NotificationAdapterEvents: AnyObject {
     /// The person chose Done on a nudge's notification. Send it on with
     /// `Engine.markDone(_:nudgeFiredAt:)`, which ignores a banner left from an earlier occurrence.
-    func markDone(_ reminderID: Reminder.ID, nudgeFiredAt fireTime: Date)
+    /// Return only once it is saved and applied: the response handler waits for it, and Apple
+    /// says its return tells the system "you are done processing the user's response", after
+    /// which an app the action launched in the background can be suspended.
+    func markDone(_ reminderID: Reminder.ID, nudgeFiredAt fireTime: Date) async
     /// The center turned a request down. `notificationsNotAllowed` means the person turned
     /// notifications off, so read `permissions(updating:)` again and hand them to the engine.
     func schedulingFailed(_ error: any Error)
@@ -51,7 +54,7 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     private var unreportedDones: [DeliveredNudge] = []
 
     weak var events: (any NotificationAdapterEvents)? {
-        didSet { reportDones() }
+        didSet { Task { await reportDones() } }
     }
 
     init(center: any UserNotificationCenter, clock: any EngineClock) {
@@ -151,11 +154,13 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         try await center.requestAuthorization(options: [.alert, .sound])
     }
 
-    /// The person's response to a delivered notification, from the center's delegate.
-    func handleResponse(actionIdentifier: String, nudge: DeliveredNudge?) {
+    /// The person's response to a delivered notification, from the center's delegate. Returns
+    /// once `events` has handled a Done, or straight away if no one is listening yet, in which
+    /// case the Done waits for `events` to be set.
+    func handleResponse(actionIdentifier: String, nudge: DeliveredNudge?) async {
         guard actionIdentifier == Self.doneActionIdentifier, let nudge else { return }
         unreportedDones.append(nudge)
-        reportDones()
+        await reportDones()
     }
 
     /// Returns once every plan handed to `apply(_:)` so far has reached the center.
@@ -163,12 +168,13 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         await applying?.value
     }
 
-    private func reportDones() {
+    private func reportDones() async {
         guard let events else { return }
+        // Taken before the first wait, so a second call meanwhile doesn't report them again.
         let dones = unreportedDones
         unreportedDones.removeAll()
         for done in dones {
-            events.markDone(done.reminderID, nudgeFiredAt: done.fireTime)
+            await events.markDone(done.reminderID, nudgeFiredAt: done.fireTime)
         }
     }
 

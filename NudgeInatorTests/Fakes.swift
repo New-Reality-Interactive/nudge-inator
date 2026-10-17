@@ -79,8 +79,21 @@ final class FakeNotificationCenter: UserNotificationCenter {
         self.delegate = delegate
     }
 
+    /// When set, each `notificationSettings()` waits for `releaseLatestSettingsRead()`, so a test
+    /// can choose the order overlapping reads finish in.
+    var holdsSettingsReads = false
+    private var heldSettingsReads: [CheckedContinuation<Void, Never>] = []
+    var heldSettingsReadCount: Int { heldSettingsReads.count }
+
+    func releaseLatestSettingsRead() {
+        heldSettingsReads.popLast()?.resume()
+    }
+
     func notificationSettings() async -> NotificationSettingsSnapshot {
-        settings
+        if holdsSettingsReads {
+            await withCheckedContinuation { heldSettingsReads.append($0) }
+        }
+        return settings
     }
 
     func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool {
@@ -95,7 +108,7 @@ final class FakeNotificationEvents: NotificationAdapterEvents {
     private(set) var dones: [DeliveredNudge] = []
     private(set) var schedulingErrors: [any Error] = []
 
-    func markDone(_ reminderID: Reminder.ID, nudgeFiredAt fireTime: Date) {
+    func markDone(_ reminderID: Reminder.ID, nudgeFiredAt fireTime: Date) async {
         dones.append(DeliveredNudge(reminderID: reminderID, fireTime: fireTime))
     }
 
@@ -104,13 +117,23 @@ final class FakeNotificationEvents: NotificationAdapterEvents {
     }
 }
 
-/// A store file in the temporary directory, deleted with SQLite's side files when released.
+/// A store file, in the temporary directory unless given another, deleted with SQLite's side
+/// files when released.
 final class TemporaryStoreFile: Sendable {
-    let url = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).store")
+    let url: URL
+
+    /// The store and the side files SQLite makes beside it.
+    var files: [URL] {
+        ["", "-wal", "-shm"].map { URL(filePath: url.path() + $0) }
+    }
+
+    init(in directory: URL = FileManager.default.temporaryDirectory) {
+        url = directory.appending(path: "\(UUID().uuidString).store")
+    }
 
     deinit {
-        for suffix in ["", "-wal", "-shm"] {
-            try? FileManager.default.removeItem(at: URL(filePath: url.path() + suffix))
+        for file in files {
+            try? FileManager.default.removeItem(at: file)
         }
     }
 }

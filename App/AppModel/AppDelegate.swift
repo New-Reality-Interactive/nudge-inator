@@ -30,11 +30,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 
-    private static func makeModel() -> AppModel {
+    /// The real wiring. The device checks pass a store of their own.
+    static func makeModel(openStore: @escaping () throws -> ReminderStore = { try ReminderStore(location: .appGroup) }) -> AppModel {
         let clock = SystemClock()
         return AppModel(
             clock: clock,
-            store: Result { try ReminderStore(location: .appGroup) },
+            openStore: openStore,
             notifications: NotificationAdapter(center: SystemNotificationCenter(), clock: clock),
             alarms: AlarmAdapter(manager: SystemAlarmManager(), clock: clock)
         )

@@ -13,7 +13,7 @@ struct NudgeInatorApp: App {
         }
         // App opened (ticket 07): read from the App, the phase is `.active` while any scene is.
         // Repeats cost nothing, since both adapters change only what differs from the plan.
-        .onChange(of: scenePhase) {
+        .onChange(of: scenePhase, initial: true) {
             guard scenePhase == .active, let model = appDelegate.model else { return }
             Task { await model.appOpened() }
         }

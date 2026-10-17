@@ -15,6 +15,9 @@ final class AppModel {
     /// next one that works makes up for it. The event itself stands: its plan has already
     /// reached the adapters.
     private(set) var saveError: (any Error)?
+    /// What the adapters last read, for Settings' status rows (ticket 30), which show not
+    /// determined. The banners (ticket 31) read `engine.reach`.
+    private(set) var permissions = PermissionStates()
 
     enum LaunchState {
         case launching
@@ -27,9 +30,11 @@ final class AppModel {
     }
 
     private let clock: any EngineClock
-    /// What opening the store gave: the app delegate opens it, and a file that won't open is
-    /// reported at launch like one that can't be read.
-    private let store: Result<ReminderStore, any Error>
+    /// Opens the store at launch. A file that won't open is reported like one that can't be
+    /// read, and App opened tries again.
+    private let openStore: () throws -> ReminderStore
+    /// The store, once it has opened.
+    private var store: ReminderStore?
     private let notifications: NotificationAdapter
     private let alarms: AlarmAdapter
     private let scheduler: CombinedSchedulerAdapter
@@ -37,19 +42,22 @@ final class AppModel {
 
     init(
         clock: any EngineClock,
-        store: Result<ReminderStore, any Error>,
+        openStore: @escaping () throws -> ReminderStore,
         notifications: NotificationAdapter,
         alarms: AlarmAdapter,
         timeZone: TimeZone = .autoupdatingCurrent
     ) {
         self.clock = clock
-        self.store = store
+        self.openStore = openStore
         self.notifications = notifications
         self.alarms = alarms
         self.timeZone = timeZone
         scheduler = CombinedSchedulerAdapter(adapters: [notifications, alarms])
         // Never handed an event before `launch()` replaces it, so it never applies a plan.
         engine = Engine(clock: clock, scheduler: scheduler, timeZone: timeZone)
+        // Here rather than after launch, so no report is missed: each one waits for launch.
+        notifications.events = self
+        alarms.events = self
     }
 
     /// The one launch, which the app delegate starts and App opened waits for.
@@ -69,33 +77,37 @@ final class AppModel {
     private func load() async {
         let stored: StoredData
         do {
-            stored = try store.get().load()
+            let store = try store ?? openStore()
+            self.store = store
+            stored = try store.load()
         } catch {
             Self.logger.error("The store couldn't be read: \(error, privacy: .public)")
             launchState = .storeUnreadable(error)
             return
         }
         let permissions = await currentPermissions()
+        self.permissions = permissions
         var engine = Engine(clock: clock, scheduler: scheduler, timeZone: timeZone, permissions: permissions)
         engine.update(tags: stored.tags)
         engine.update(histories: stored.histories)
         engine.update(reminders: stored.reminders)
         self.engine = engine
         launchState = .ready
-        // Last, so a Done the adapter held from a background launch reaches the loaded engine.
-        alarms.events = self
-        notifications.events = self
     }
 
     /// App opened (ticket 07): permissions read again, then a fresh plan, which also refills the
     /// notifications past the 64 the system keeps pending (ticket 18).
     func appOpened() async {
-        await launch()
-        let permissions = await currentPermissions()
-        perform {
-            $0.update(permissions: permissions)
-            $0.update(reminders: $0.reminders)
+        // Before the first unlock after a restart, data protection keeps the store shut, and a
+        // Done action can launch the app then. Opened, the phone is unlocked: try again.
+        if case .storeUnreadable = launchState {
+            launching = nil
+            launchState = .launching
         }
+        await launch()
+        refreshPermissions()
+        await permissionsRefresh?.value
+        perform { $0.update(reminders: $0.reminders) }
     }
 
     /// Where the app was asked to go from outside its screens. The tab shell (ticket 22) follows
@@ -164,16 +176,20 @@ final class AppModel {
         await notifications.waitUntilApplied()
     }
 
-    /// The latest re-read of the permissions an adapter's report started.
+    /// The latest re-read of the permissions, from App opened or an adapter's report.
     private var permissionsRefresh: Task<Void, Never>?
 
     /// Reads both adapters' permissions again and hands them to the engine, which re-plans if
-    /// they changed. Each read waits for the one before, so the latest states win.
+    /// they changed. Each read waits for the one before, so reads that overlap can't finish out
+    /// of order and put older states back. Each waits for launch too, so a change reported
+    /// while the store is read isn't dropped.
     private func refreshPermissions() {
         let previous = permissionsRefresh
         permissionsRefresh = Task {
             await previous?.value
+            await launch()
             let permissions = await currentPermissions()
+            self.permissions = permissions
             perform { $0.update(permissions: permissions) }
         }
     }
@@ -191,10 +207,9 @@ final class AppModel {
         _ event: (inout Engine) throws(Failure) -> Void,
         storeChange: ((ReminderStore) throws -> Void)? = nil
     ) throws(Failure) {
-        guard case .ready = launchState else { return }
+        guard case .ready = launchState, let store else { return }
         try event(&engine)
         do {
-            let store = try store.get()
             try storeChange?(store)
             try store.save(StoredData(reminders: engine.reminders, tags: engine.tags, histories: engine.histories))
             saveError = nil
@@ -212,8 +227,12 @@ extension AppModel {
 extension AppModel: NotificationAdapterEvents, AlarmAdapterEvents {
     /// Done from a notification: the same path as Done in the app, but it closes the occurrence
     /// only if the nudge was its own (ticket 18), not a banner left from an earlier one.
-    func markDone(_ reminderID: Reminder.ID, nudgeFiredAt fireTime: Date) {
+    /// It launches first if it has to (the action launches the app in the background), and
+    /// returns once the Done is saved and applied, for the response handler to wait on.
+    func markDone(_ reminderID: Reminder.ID, nudgeFiredAt fireTime: Date) async {
+        await launch()
         perform { $0.markDone(reminderID, nudgeFiredAt: fireTime) }
+        await waitUntilApplied()
     }
 
     /// The plan the engine hands back reaches both adapters, with that nudge as a notification.
