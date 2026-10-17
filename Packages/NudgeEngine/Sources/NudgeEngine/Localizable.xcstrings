@@ -275,6 +275,9 @@
     "High" : {
       "comment" : "Urgency: a nudge that has escalated, as in \"Nudge 3 of 20 · High\"."
     },
+    "Months without a %@ are skipped. Choose On the last day to get every month." : {
+      "comment" : "Under the Custom repeat page's monthly days when the start is the 29th to the 31st. The placeholder is the ordinal day, such as \"31st\". \"On the last day\" is the choice's title."
+    },
     "Normal" : {
       "comment" : "Urgency: a nudge on the first rung of its ladder, as in \"Nudge 1 of 20 · Normal\"."
     },

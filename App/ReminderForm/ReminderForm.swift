@@ -16,6 +16,10 @@ final class ReminderForm: Identifiable {
     var customRepeat: CustomRepeat?
     /// Never (`nil`) or a preset's rule, while the repeat isn't custom.
     private var presetRule: RepeatRule?
+    /// A custom rule as it was set, with the choices it was read into and the start then. The
+    /// page has no control for some parts of a rule (BYMONTH, say), so the rule is kept as it
+    /// came until a choice or the start changes (decision 5, ticket 25).
+    private var setCustomRule: (rule: RepeatRule, choices: CustomRepeat, dueTime: Date)?
     var strength = Strength.firm
     var breakThroughFocus = true
 
@@ -97,13 +101,19 @@ final class ReminderForm: Identifiable {
     /// monthly choice a new start doesn't offer falls back to the day of the month. Setting a
     /// rule that isn't a preset's reads it into the Custom page's choices.
     var repeatRule: RepeatRule? {
-        get { customRepeat.map { currentEngine().repeatRule(for: $0, startingAt: dueTime) } ?? presetRule }
+        get {
+            guard let customRepeat else { return presetRule }
+            if let setCustomRule, setCustomRule.choices == customRepeat, setCustomRule.dueTime == dueTime { return setCustomRule.rule }
+            return currentEngine().repeatRule(for: customRepeat, startingAt: dueTime)
+        }
         set {
             if let preset = RepeatPreset(newValue) {
                 presetRule = preset.rule
                 customRepeat = nil
-            } else {
-                customRepeat = currentEngine().customRepeat(from: newValue, startingAt: dueTime)
+            } else if let newValue {
+                let choices = currentEngine().customRepeat(from: newValue, startingAt: dueTime)
+                customRepeat = choices
+                setCustomRule = (newValue, choices, dueTime)
             }
         }
     }
@@ -120,6 +130,16 @@ final class ReminderForm: Identifiable {
     var monthlyDays: [(day: CustomRepeat.MonthlyDay, title: String)] {
         let engine = currentEngine()
         return engine.monthlyDays(startingAt: dueTime).map { ($0, engine.title(of: $0, startingAt: dueTime)) }
+    }
+
+    /// Under a monthly choice of the 29th to the 31st: such months are skipped. From the engine.
+    var skippedMonthsNote: String? {
+        customRepeat.flatMap { currentEngine().skippedMonthsNote(of: $0, startingAt: dueTime) }
+    }
+
+    /// A weekday's name for the Custom page, in the engine's locale.
+    func name(of weekday: RepeatRule.Weekday) -> String {
+        currentEngine().name(of: weekday)
     }
 
     /// The monthly choice the rule uses for the start, which the Custom page checks.
@@ -140,10 +160,22 @@ final class ReminderForm: Identifiable {
         currentEngine().repeatSummary(of: draft(tagIDs: tagIDs))
     }
 
+    /// How many due times the Custom page's Next Times shows.
+    static let nextTimesCount = 3
+
     /// The Custom page's Next Times: the draft's next three due times from the engine, fewer if
     /// the repeat ends first.
     var upcomingDueTimes: [Date] {
-        currentEngine().upcomingDueTimes(of: draft(tagIDs: tagIDs), count: 3)
+        currentEngine().upcomingDueTimes(of: draft(tagIDs: tagIDs), count: Self.nextTimesCount)
+    }
+
+    /// The time now, by the form's clock, for Next Times' Today and Tomorrow.
+    var currentTime: Date { now() }
+
+    /// Whether a Next Times date carries its year: only when it isn't this year, as the mockup's
+    /// `nextDay`.
+    func showsYear(of dueTime: Date) -> Bool {
+        !Calendar.autoupdatingCurrent.isDate(dueTime, equalTo: now(), toGranularity: .year)
     }
 
     /// The fields the engine won't let an Edit change now (ticket 13). Read from the engine, so

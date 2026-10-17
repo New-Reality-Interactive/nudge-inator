@@ -9,18 +9,29 @@ struct CheckmarkRow: View {
 
     var body: some View {
         Button(action: choose) {
-            HStack {
-                title
-                    .foregroundStyle(Color(uiColor: .label))
-                Spacer()
-                if isChecked {
-                    Image(systemName: "checkmark")
-                        .foregroundStyle(Color.accentColor)
-                        .accessibilityHidden(true)
-                }
-            }
+            CheckmarkLabel(title: title, isChecked: isChecked)
         }
         .accessibilityAddTraits(isChecked ? .isSelected : [])
+    }
+}
+
+/// A choice's title with a checkmark when it's chosen: a `CheckmarkRow`'s, or the Repeat page's
+/// Custom link's. Whatever holds it marks it selected for VoiceOver.
+struct CheckmarkLabel: View {
+    let title: Text
+    let isChecked: Bool
+
+    var body: some View {
+        HStack {
+            title
+                .foregroundStyle(Color(uiColor: .label))
+            Spacer()
+            if isChecked {
+                Image(systemName: "checkmark")
+                    .foregroundStyle(Color.accentColor)
+                    .accessibilityHidden(true)
+            }
+        }
     }
 }
 

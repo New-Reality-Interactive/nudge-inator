@@ -9,7 +9,9 @@ struct CustomRepeatPage: View {
     @Bindable var form: ReminderForm
 
     var body: some View {
+        let isLocked = form.lockedFields.contains(.repeatRule)
         Form {
+            if isLocked { RepeatLockSection() }
             if let choices = Binding($form.customRepeat) {
                 Section {
                 } header: {
@@ -18,14 +20,18 @@ struct CustomRepeatPage: View {
                         .foregroundStyle(Color(uiColor: .label))
                         .textCase(nil)
                 }
-                FrequencySection(choices: choices, start: form.dueTime)
-                switch choices.wrappedValue.frequency {
-                case .weekly: WeekdaysSection(choices: choices)
-                case .monthly: MonthlySection(form: form, choices: choices)
-                case .daily, .yearly: EmptyView()
+                Group {
+                    FrequencySection(choices: choices, start: form.dueTime)
+                    switch choices.wrappedValue.frequency {
+                    case .weekly: WeekdaysSection(form: form)
+                    case .monthly: MonthlySection(form: form)
+                    case .daily, .yearly: EmptyView()
+                    }
+                    EndsSection(choices: choices, start: form.dueTime, endsBeforeStart: form.repeatBlock == .endsBeforeStart)
                 }
-                EndsSection(choices: choices, start: form.dueTime, endsBeforeStart: form.repeatBlock == .endsBeforeStart)
-                NextTimesSection(dueTimes: form.upcomingDueTimes)
+                // The reminder may start nudging while the page is open (ticket 13).
+                .lockedWhileNudging(isLocked)
+                NextTimesSection(form: form)
             }
         }
         .centeredInReadableColumn()
@@ -72,7 +78,7 @@ private struct FrequencySection: View {
 
 /// A weekly repeat's days, Monday first. The last chosen day can't be taken off.
 private struct WeekdaysSection: View {
-    @Binding var choices: CustomRepeat
+    @Bindable var form: ReminderForm
 
     /// Monday first, as the mockup's `WEEK_ORDER`, whatever the locale's first weekday.
     private static let order: [RepeatRule.Weekday] = [.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday]
@@ -80,13 +86,13 @@ private struct WeekdaysSection: View {
     var body: some View {
         Section {
             ForEach(Self.order, id: \.self) { weekday in
-                let isChosen = choices.weekdays.contains(weekday)
-                CheckmarkRow(title: Text(verbatim: Calendar.autoupdatingCurrent.standaloneWeekdaySymbols[weekday.rawValue - 1]),
-                             isChecked: isChosen) {
-                    choices.toggle(weekday)
+                CheckmarkRow(title: Text(verbatim: form.name(of: weekday)),
+                             isChecked: form.customRepeat?.weekdays.contains(weekday) == true) {
+                    form.customRepeat?.toggle(weekday)
                 }
-                // Each day turns on and off on its own, as a checkbox does; SwiftUI has no
-                // checkbox trait on iOS, so it's a toggle that is selected while chosen.
+                // Each day turns on and off on its own, as a checkbox does. Apple's docs give
+                // SwiftUI on iOS no checkbox trait (the checkbox toggle style is macOS only), so
+                // it's a toggle that is selected while chosen. What VoiceOver says is a device check.
                 .accessibilityAddTraits(.isToggle)
             }
         } header: {
@@ -99,8 +105,7 @@ private struct WeekdaysSection: View {
 
 /// A monthly repeat's day: the ones the start offers, so there's nothing else to pick.
 private struct MonthlySection: View {
-    let form: ReminderForm
-    @Binding var choices: CustomRepeat
+    @Bindable var form: ReminderForm
 
     var body: some View {
         let chosen = form.chosenMonthlyDay
@@ -108,32 +113,20 @@ private struct MonthlySection: View {
             ForEach(form.monthlyDays, id: \.day) { monthlyDay in
                 // The person's choice of one, read as "selected" as the Repeat page's presets are.
                 CheckmarkRow(title: Text(verbatim: monthlyDay.title), isChecked: monthlyDay.day == chosen) {
-                    choices.monthlyDay = monthlyDay.day
+                    form.customRepeat?.monthlyDay = monthlyDay.day
                 }
             }
         } header: {
             Text("On", comment: "Header of the Custom repeat page's days: the weekdays, or the day of the month.")
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
-                let day = Calendar.autoupdatingCurrent.component(.day, from: form.dueTime)
-                if chosen == .dayOfMonth, day > 28 {
-                    let ordinal = Self.ordinal(day)
-                    Text("Months without a \(ordinal) are skipped. Choose On the last day to get every month.",
-                         comment: "Under the Custom repeat page's monthly days when the start is the 29th to the 31st. The placeholder is the ordinal day, such as \"31st\".")
+                if let note = form.skippedMonthsNote {
+                    Text(verbatim: note)
                 }
                 Text("These follow the start date. Change it to pick another day.",
                      comment: "Under the Custom repeat page's monthly days.")
             }
         }
-    }
-}
-
-extension MonthlySection {
-    /// "31st" in English: Foundation's ordinal numbers for the locale.
-    fileprivate static func ordinal(_ number: Int) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .ordinal
-        return formatter.string(from: number as NSNumber) ?? number.formatted()
     }
 }
 
@@ -182,15 +175,16 @@ private struct EndsSection: View {
 
 /// The next three times it falls due, and whether it ends before then.
 private struct NextTimesSection: View {
-    let dueTimes: [Date]
+    let form: ReminderForm
 
     var body: some View {
+        let dueTimes = form.upcomingDueTimes
         Section {
             ForEach(dueTimes, id: \.self) { dueTime in
                 LabeledContent {
                     Text(dueTime, format: .dateTime.hour().minute())
                 } label: {
-                    Self.day(of: dueTime)
+                    day(of: dueTime)
                 }
                 .accessibilityElement(children: .combine)
             }
@@ -200,7 +194,7 @@ private struct NextTimesSection: View {
             if dueTimes.isEmpty {
                 Text("This repeat has no times left. Change when it ends.", comment: "Under the Custom repeat page's Next Times when the repeat has ended.")
                     .foregroundStyle(Color.negative)
-            } else if dueTimes.count < 3 {
+            } else if dueTimes.count < ReminderForm.nextTimesCount {
                 Text("Then it ends.", comment: "Under the Custom repeat page's Next Times when fewer than three are left.")
             }
         }
@@ -208,13 +202,14 @@ private struct NextTimesSection: View {
 
     /// "Today", "Tomorrow", or the short date, with the year when it isn't this year, as the
     /// mockup's `nextDay`.
-    private static func day(of date: Date) -> Text {
+    private func day(of date: Date) -> Text {
         let calendar = Calendar.autoupdatingCurrent
-        if calendar.isDateInToday(date) { return Text("Today", comment: "The Custom repeat page's Next Times: a due time today.") }
-        if calendar.isDateInTomorrow(date) { return Text("Tomorrow", comment: "The Custom repeat page's Next Times: a due time tomorrow.") }
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: form.currentTime), to: calendar.startOfDay(for: date)).day
+        if days == 0 { return Text("Today", comment: "The Custom repeat page's Next Times: a due time today.") }
+        if days == 1 { return Text("Tomorrow", comment: "The Custom repeat page's Next Times: a due time tomorrow.") }
         let style = Date.FormatStyle().weekday(.abbreviated).day().month(.abbreviated)
         // Formatted for the locale already.
-        return Text(verbatim: date.formatted(calendar.isDate(date, equalTo: .now, toGranularity: .year) ? style : style.year()))
+        return Text(verbatim: date.formatted(form.showsYear(of: date) ? style.year() : style))
     }
 }
 
@@ -257,4 +252,10 @@ extension RepeatRule.Frequency {
         CustomRepeatPage(form: .previewCustom(from: .everyTwoWeeks))
     }
     .environment(\.dynamicTypeSize, .accessibility5)
+}
+
+#Preview("Locked while nudging") {
+    NavigationStack {
+        CustomRepeatPage(form: .previewNudging())
+    }
 }

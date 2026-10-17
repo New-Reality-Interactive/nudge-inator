@@ -70,7 +70,7 @@ extension Engine {
         let frequency = rule?.frequency ?? .weekly
         var choices = CustomRepeat(
             frequency: frequency,
-            interval: rule?.interval ?? 1,
+            interval: (rule?.interval ?? 1).clamped(to: CustomRepeat.intervals(for: frequency)),
             weekdays: frequency == .weekly ? rule?.weekdays.map { Set($0.map(\.weekday)) } ?? [startWeekday(of: start)] : [startWeekday(of: start)],
             monthlyDay: frequency == .monthly ? rule.map(monthlyDay(of:)) ?? .dayOfMonth : .dayOfMonth,
             ending: .never,
@@ -81,7 +81,7 @@ extension Engine {
         case nil: break
         case .count(let count):
             choices.ending = .afterCount
-            choices.count = count
+            choices.count = count.clamped(to: CustomRepeat.counts)
         case let .untilDate(year, month, day):
             choices.ending = .onDate
             choices.endDate = calendar.date(from: DateComponents(year: year, month: month, day: day)) ?? choices.endDate
@@ -122,8 +122,9 @@ extension Engine {
         case .never: break
         case .afterCount: rule.end = .count(choices.count)
         case .onDate:
-            let end = calendar.dateComponents([.year, .month, .day], from: choices.endDate)
-            rule.end = .untilDate(year: end.year ?? 0, month: end.month ?? 0, day: end.day ?? 0)
+            let end = choices.endDate
+            rule.end = .untilDate(year: calendar.component(.year, from: end), month: calendar.component(.month, from: end),
+                                  day: calendar.component(.day, from: end))
         }
         return rule
     }
@@ -181,12 +182,30 @@ extension Engine {
         }
     }
 
+    /// Under a monthly choice of a day some months lack (the 29th to the 31st), which RFC 5545
+    /// skips (ADR 0003): "Months without a 31st are skipped. Choose On the last day to get every
+    /// month." `nil` for any other choice.
+    public func skippedMonthsNote(of choices: CustomRepeat, startingAt start: Date) -> String? {
+        let day = calendar.component(.day, from: start)
+        guard monthlyDay(of: choices, startingAt: start) == .dayOfMonth, day > 28 else { return nil }
+        let ordinal = RepeatSummaryWriter(locale: locale, calendar: calendar, now: clock.now).ordinalNumber(day)
+        return String(localized: "Months without a \(ordinal) are skipped. Choose On the last day to get every month.", bundle: .module, locale: locale,
+                      comment: "Under the Custom repeat page's monthly days when the start is the 29th to the 31st. The placeholder is the ordinal day, such as \"31st\". \"On the last day\" is the choice's title.")
+    }
+
+    /// A weekday's name in the engine's locale, as the Custom page lists it.
+    public func name(of weekday: RepeatRule.Weekday) -> String {
+        RepeatSummaryWriter(locale: locale, calendar: calendar, now: clock.now).name(weekday)
+    }
+
     /// Which of its weekday in the month a day is: the 22nd is the fourth.
     private func weekdayOrdinal(ofDay day: Int) -> Int {
         (day + 6) / 7
     }
 
     private func startWeekday(of start: Date) -> RepeatRule.Weekday {
+        // A Gregorian weekday is 1 to 7, Sunday first, as `Weekday`'s raw values, so the
+        // fallback is never used.
         RepeatRule.Weekday(rawValue: calendar.component(.weekday, from: start)) ?? .monday
     }
 }

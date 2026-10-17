@@ -199,4 +199,41 @@ struct CustomRepeatChoicesTests {
 
         #expect(rrule(of: engine.customRepeat(from: rule, startingAt: Self.monday)) == "FREQ=WEEKLY;INTERVAL=3;BYDAY=MO,FR;COUNT=4")
     }
+
+    /// The steppers can't show a value outside their limits, so a rule from elsewhere is read in
+    /// within them.
+    @Test(arguments: [
+        ("FREQ=DAILY;INTERVAL=40", 30, 10),
+        ("FREQ=WEEKLY;BYDAY=MO;COUNT=50", 1, 30),
+        ("FREQ=WEEKLY;BYDAY=MO;COUNT=1", 1, 2),
+    ])
+    func aRestoredRuleIsReadInWithinTheSteppersLimits(rrule: String, interval: Int, count: Int) throws {
+        let choices = engine.customRepeat(from: try RepeatRule(rrule: rrule), startingAt: Self.monday)
+
+        #expect(choices.interval == interval)
+        #expect(choices.count == count)
+    }
+
+    /// In en_US. A day some months lack is skipped (ADR 0003), so the page says so.
+    @Test(arguments: [
+        (31, CustomRepeat.MonthlyDay.dayOfMonth, "Months without a 31st are skipped. Choose On the last day to get every month." as String?),
+        (29, .dayOfMonth, "Months without a 29th are skipped. Choose On the last day to get every month."),
+        (28, .dayOfMonth, nil),
+        (31, .lastDay, nil),
+        (31, .lastWeekdayOfMonth, nil),
+    ])
+    func aMonthlyDaySomeMonthsLackSaysTheyAreSkipped(startDay: Int, monthlyDay: CustomRepeat.MonthlyDay, note: String?) {
+        let engine = Engine(clock: clock, scheduler: FakeScheduler(), timeZone: NewYork.timeZone, locale: Locale(identifier: "en_US"))
+        let start = NewYork.local(2026, 10, startDay)
+        var choices = engine.customRepeat(from: .everyMonth, startingAt: start)
+        choices.monthlyDay = monthlyDay
+
+        #expect(engine.skippedMonthsNote(of: choices, startingAt: start) == note)
+    }
+
+    @Test func weekdayNamesFollowTheEnginesLocale() {
+        let engine = Engine(clock: clock, scheduler: FakeScheduler(), timeZone: NewYork.timeZone, locale: Locale(identifier: "fr_FR"))
+
+        #expect(engine.name(of: .monday) == "lundi")
+    }
 }

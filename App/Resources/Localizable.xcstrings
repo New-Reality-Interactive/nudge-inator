@@ -262,9 +262,6 @@
     "Monthly" : {
       "comment" : "The Custom repeat page's frequency."
     },
-    "Months without a %@ are skipped. Choose On the last day to get every month." : {
-      "comment" : "Under the Custom repeat page's monthly days when the start is the 29th to the 31st. The placeholder is the ordinal day, such as \"31st\"."
-    },
     "My Day" : {
       "comment" : "Tab bar: the tab with today's reminders in time order"
     },

@@ -307,7 +307,7 @@ private struct LockableLabel<Content: View>: View {
 }
 
 /// DESIGN.md's `lock`, always beside its reason as text, so VoiceOver skips it.
-private struct LockGlyph: View {
+struct LockGlyph: View {
     var body: some View {
         Image(systemName: "lock")
             .foregroundStyle(Color(uiColor: .secondaryLabel))
