@@ -44,9 +44,12 @@ public struct SchedulePlan: Equatable, Sendable {
             self.isPastAlarmLimit = isPastAlarmLimit
         }
 
-        /// The notification body, for example "Nudge 3 of 20 · High".
+        /// The notification body, for example "Nudge 3 of 20 · High", in the app's language.
         public var body: String {
-            "Nudge \(nudgeNumber) of \(GiveUpLimit.shipped.nudgeCount) · \(urgency.name)"
+            let limit = GiveUpLimit.shipped.nudgeCount
+            let urgency = urgency.name
+            return String(localized: "Nudge \(nudgeNumber) of \(limit) · \(urgency)", bundle: .module,
+                          comment: "Notification body: never the notes or tags. 1: which nudge this is. 2: the most nudges an occurrence gets. 3: the urgency, such as High.")
         }
     }
 }
@@ -66,12 +69,12 @@ public enum Urgency: Equatable, Sendable {
     case high
     case urgent
 
-    /// The word shown in a notification.
+    /// The urgency's word, in the app's language, as a notification and the screens show it.
     public var name: String {
         switch self {
-        case .normal: "Normal"
-        case .high: "High"
-        case .urgent: "Urgent"
+        case .normal: String(localized: "Normal", bundle: .module, comment: "Urgency: a nudge on the first rung of its ladder, as in \"Nudge 1 of 20 · Normal\".")
+        case .high: String(localized: "High", bundle: .module, comment: "Urgency: a nudge that has escalated, as in \"Nudge 3 of 20 · High\".")
+        case .urgent: String(localized: "Urgent", bundle: .module, comment: "Urgency: a nudge at the top of its ladder, which may ring as an alarm, as in \"Nudge 4 of 20 · Urgent\".")
         }
     }
 }

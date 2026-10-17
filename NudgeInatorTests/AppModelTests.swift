@@ -490,6 +490,36 @@ struct AppModelTests {
         #expect(model.route == .now)
     }
 
+    /// The tab shell takes the route once it has followed it, so the same Open isn't followed again.
+    @Test func takingTheRouteHandsItOverOnce() async throws {
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+        model.add(call)
+        model.showReminder(call.id)
+
+        #expect(model.takeRoute() == .reminderDetails(call.id))
+        #expect(model.route == nil)
+        #expect(model.takeRoute() == nil)
+    }
+
+    /// What the tabs show for each launch state (ticket 22): nothing that claims "All clear"
+    /// before the store is read, and a message when it can't be.
+    @Test func theScreensFollowTheLaunchState() async throws {
+        let launching = model(store: try ReminderStore(location: .inMemory)).model
+        #expect(ScreenState(model: launching) == .loading)
+
+        await launching.launch()
+        #expect(ScreenState(model: launching) == .ready)
+
+        let unreadable = model(openingStoreWith: { throw StoreWontOpen() }).model
+        await unreadable.launch()
+        #expect(ScreenState(model: unreadable) == .storeUnreadable)
+    }
+
+    /// The app hosting tests, and previews, have no model: the tabs still draw.
+    @Test func withoutAModelTheScreensAreReady() {
+        #expect(ScreenState(model: nil) == .ready)
+    }
+
     /// The app delegate starts launch and the scene's first `.active` sends App opened, in either
     /// order: App opened waits for the one launch.
     @Test func appOpenedBeforeLaunchLaunchesFirstAndPlans() async throws {

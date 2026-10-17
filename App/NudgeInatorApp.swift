@@ -7,8 +7,7 @@ struct NudgeInatorApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // Ticket 22's tab shell replaces this and reads the model from the environment.
-            Text("Nudge-inator")
+            RootView()
                 .environment(appDelegate.model)
         }
         // App opened (ticket 07): read from the App, the phase is `.active` while any scene is.

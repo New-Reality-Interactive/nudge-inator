@@ -35,11 +35,14 @@ final class PendingLimitDeviceCheck {
 
     @Test func theCenterKeepsTheSoonestSixtyFourPendingRequests() async throws {
         let center = UNUserNotificationCenter.current()
-        if await center.notificationSettings().authorizationStatus == .notDetermined {
+        // Only on a run that says the app wasn't installed, which uninstalls it afterwards and so
+        // resets the answer (AGENTS.md › Testing).
+        if await center.notificationSettings().authorizationStatus == .notDetermined,
+           ProcessInfo.processInfo.environment["NUDGE_FRESH_INSTALL"] == "1" {
             _ = try await center.requestAuthorization(options: [.alert, .sound])
         }
         let status = await center.notificationSettings().authorizationStatus
-        try #require(status == .authorized || status == .provisional, "Allow notifications for Nudge-inator to run this check")
+        try #require(status == .authorized || status == .provisional, "Allow notifications for Nudge-inator, or set TEST_RUNNER_NUDGE_FRESH_INSTALL=1 on a fresh install")
 
         // A day out, so none is delivered during the check. Added latest first, so "soonest" and
         // "first added" can't be confused.

@@ -208,7 +208,20 @@ final class FakeAlarmManager: AlarmManaging {
         return scheduled.map { AlarmSnapshot(id: $0.id, state: $0.state) }
     }
 
+    /// The system's authorization state, which `readAuthorizationState()` returns.
     var authorizationState = AlarmManager.AuthorizationState.notDetermined
+    /// How many times the adapter read the state, the call that froze the iPhone.
+    private(set) var authorizationReads = 0
+    /// When set, `readAuthorizationState()` never answers, as on the iPhone.
+    var authorizationReadHangs = false
+
+    func readAuthorizationState() async -> AlarmManager.AuthorizationState {
+        authorizationReads += 1
+        if authorizationReadHangs {
+            try? await Task.sleep(for: .seconds(3600))
+        }
+        return authorizationState
+    }
 
     /// What the person answers when `requestAuthorization()` shows the prompt.
     var promptAnswer = AlarmManager.AuthorizationState.authorized

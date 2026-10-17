@@ -32,6 +32,8 @@ struct RepeatSummaryTests {
         ("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", NewYork.local(2026, 10, 12), british, "Every weekday at 9:00"),
         ("FREQ=WEEKLY;BYDAY=FR,MO", NewYork.local(2026, 10, 12), british, "Every Monday and Friday at 9:00"),
         ("FREQ=WEEKLY;BYDAY=SU,MO,WE", NewYork.local(2026, 10, 12), british, "Every Monday, Wednesday and Sunday at 9:00"),
+        // Lists follow the locale's own rules: American English has the serial comma.
+        ("FREQ=WEEKLY;BYDAY=SU,MO,WE", NewYork.local(2026, 10, 12), american, "Every Monday, Wednesday, and Sunday at 9:00\u{202F}AM"),
         ("FREQ=WEEKLY", NewYork.local(2026, 10, 15), british, "Every Thursday at 9:00"),
         ("FREQ=WEEKLY;INTERVAL=2", NewYork.local(2026, 10, 15), british, "Every 2 weeks on Thursday at 9:00"),
         ("FREQ=DAILY;COUNT=1", NewYork.local(2026, 10, 15), british, "Every day at 9:00, once"),
@@ -73,6 +75,13 @@ struct RepeatSummaryTests {
         ("FREQ=MONTHLY;BYMONTH=1,4;BYMONTHDAY=31", NewYork.local(2027, 1, 31), "Every month on the 31st in January and April (skipped in months without one) at 9:00"),
         ("FREQ=MONTHLY;BYDAY=6MO", NewYork.local(2026, 10, 15), "Every month on the 6th Monday (skipped in months without one) at 9:00"),
         ("FREQ=WEEKLY;BYMONTH=6,7,8", NewYork.local(2027, 6, 3), "Every Thursday in June, July and August at 9:00"),
+        // Review fixes (ticket 22): a day no month has stays that day, not the next month's, and
+        // three or more days read as one list.
+        ("FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=30", NewYork.local(2027, 1, 1), "Every year on the 30th of February (skipped in years without one) at 9:00"),
+        ("FREQ=DAILY;BYMONTHDAY=1,5,15", NewYork.local(2026, 11, 1), "Every day when it's the 1st, the 5th or the 15th at 9:00"),
+        ("FREQ=MONTHLY;BYDAY=-6MO", NewYork.local(2026, 10, 15), "Every month on the 6th-to-last Monday (skipped in months without one) at 9:00"),
+        ("FREQ=MONTHLY;BYMONTHDAY=1;BYDAY=MO,FR", NewYork.local(2026, 10, 15), "Every month on the 1st when it's a Monday or Friday at 9:00"),
+        ("FREQ=DAILY;BYMONTHDAY=13;BYDAY=FR", NewYork.local(2026, 11, 13), "Every day when it's the 13th and a Friday at 9:00"),
     ])
     func daysOfTheMonthAndYearAndMonthLimitsReadAsTheMockupWordsThem(rrule: String, firstDueTime: Date, text: String) throws {
         #expect(try summary(rrule, from: firstDueTime) == text)
@@ -90,6 +99,12 @@ struct RepeatSummaryTests {
     func presetsSayWhereAMissingDayGoes(preset: RepeatRule, firstDueTime: Date, text: String) {
         let reminder = Reminder(title: "Pay the rent", dueTime: firstDueTime, repeatRule: preset, strength: .firm)
         #expect(summary(of: reminder) == text)
+    }
+
+    /// A day and month follow the locale's order, in the note too (review fix, ticket 22).
+    @Test func aDayAndMonthFollowTheLocale() {
+        let reminder = Reminder(title: "Pay the rent", dueTime: NewYork.local(2028, 2, 29), repeatRule: .everyYear, strength: .firm)
+        #expect(summary(of: reminder, locale: Self.american) == "Every year on February 29 (February 28 in years without one) at 9:00\u{202F}AM")
     }
 
     /// Never says when its one due time is, relative to now (Thursday 15 October 2026 at 8:00).

@@ -33,8 +33,32 @@ if non_foundation_imports Packages/NudgeEngine/Sources | grep .; then
   failed+=("engine-imports")
 fi
 
-step "swift test (NudgeEngine)"
-(cd Packages/NudgeEngine && swift test) || failed+=("package-tests")
+# xcodebuild, not `swift test`: SwiftPM's command line copies the engine's String Catalog without
+# compiling it, so every string would fall back to its key and plural variants would never apply.
+step "xcodebuild test (NudgeEngine, macOS)"
+(cd Packages/NudgeEngine && xcodebuild test -scheme NudgeEngine -destination 'platform=macOS' \
+  -derivedDataPath .build/xcode -quiet) || failed+=("package-tests")
+
+scratch="$(mktemp -d)"
+trap 'rm -rf "$scratch"' EXIT
+
+# Only the color sets: the catalog may hold other assets the script doesn't write.
+step "The color sets match DESIGN.md"
+colors="$scratch/Assets.xcassets"
+colors_ok=true
+scripts/generate-color-sets.sh "$colors" > /dev/null || colors_ok=false
+for set in "$colors"/*.colorset App/Resources/Assets.xcassets/*.colorset; do
+  name="$(basename "$set")"
+  diff -r "$colors/$name" "App/Resources/Assets.xcassets/$name" || colors_ok=false
+done
+if ! $colors_ok; then
+  echo "FAIL: run scripts/generate-color-sets.sh, then update ColorSetTests" >&2
+  failed+=("color-sets")
+fi
+
+# The app build adds Info.plist keys it finds to InfoPlist.xcstrings. A change means a key (and
+# its comment) wasn't committed.
+cp App/Resources/InfoPlist.xcstrings "$scratch/InfoPlist.xcstrings"
 
 step "xcodegen generate"
 xcodegen generate --quiet || failed+=("xcodegen")
@@ -49,8 +73,16 @@ for os in $SIMULATOR_OSES; do
   step "xcodebuild test (app + widget extension) on $SIMULATOR_NAME, iOS $os"
   xcodebuild test -project NudgeInator.xcodeproj -scheme NudgeInator \
     -destination "platform=iOS Simulator,name=$SIMULATOR_NAME,OS=$os" \
-    -quiet || failed+=("app-tests-$os")
+    -derivedDataPath .build/derived -quiet || failed+=("app-tests-$os")
 done
+
+# The app build also builds NudgeEngine, so its .stringsdata covers both catalogs.
+step "The String Catalogs hold every string the code shows"
+scripts/sync-strings.sh --check .build/derived || failed+=("string-catalogs")
+if ! diff "$scratch/InfoPlist.xcstrings" App/Resources/InfoPlist.xcstrings; then
+  echo "FAIL: the build added Info.plist keys to App/Resources/InfoPlist.xcstrings: give each a comment and commit it" >&2
+  failed+=("infoplist-strings")
+fi
 
 echo
 if [ ${#failed[@]} -eq 0 ]; then

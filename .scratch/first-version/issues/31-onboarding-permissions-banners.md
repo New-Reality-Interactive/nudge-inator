@@ -18,6 +18,8 @@ First launch: a short onboarding explaining how nudges reach you (the mockup's F
 - **HIG, Managing notifications:** Time Sensitive is for events "happening now or will happen within an hour"; the first Time Sensitive notification makes the system explain it and offer to turn it off, so the Time Sensitive banner must follow `timeSensitiveSetting`, not what was granted at onboarding.
 - Copy for the system prompt strings (`NSAlarmKitUsageDescription` already exists from ticket 01): brief, complete sentence, sentence case, active voice, ending with a period (HIG, Privacy).
 
+- **Don't read `AlarmManager.authorizationState` around the prompt** (found in ticket 22). Reading it on the main thread right after the prompt was answered froze the app for 69 s, and once for good. Use the adapter: `requestAuthorization()` returns the answer and records it, and `permissions(updating:)` gives the state without reading AlarmKit again. Ticket 22's device run also left a check for here: whether a change made in Settings while the app is suspended arrives through `authorizationUpdates` when it returns, since the adapter no longer re-reads the state.
+
 ## Acceptance criteria
 
 - [ ] First launch shows onboarding once; second launch does not.

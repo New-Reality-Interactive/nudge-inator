@@ -126,6 +126,12 @@ final class AppModel {
         route = engine.reminders.contains { $0.id == reminderID } ? .reminderDetails(reminderID) : .now
     }
 
+    /// The route, which is then cleared: the tab shell follows each one once.
+    func takeRoute() -> Route? {
+        defer { route = nil }
+        return route
+    }
+
     func add(_ reminder: Reminder) {
         perform { $0.update(reminders: $0.reminders + [reminder]) }
     }
