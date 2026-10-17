@@ -38,7 +38,7 @@ Extend the scheduler adapter to apply the plan's **alarm** items through `AlarmM
 - [x] Replacing a plan cancels alarms not in the new plan and schedules the new ones.
 - [x] A simulated `maximumLimitReached` is reported to the engine and the returned plan is applied.
 - [x] Denied authorization is reported to the engine as "alarms denied" and no schedule call is made.
-- [ ] Device (human): a scheduled alarm rings through silent mode and a Focus, shows title only, Stop silences it, and the next planned alarm still rings on time.
+- [x] Device (human): a scheduled alarm rings through silent mode and a Focus, shows title only, Stop silences it, and the next planned alarm still rings on time.
 
 Blocked by: 02, 15, 18
 
@@ -163,11 +163,17 @@ Blocked by: 02, 15, 18
   - The first rang out loud, showing only "Nudge-inator ring check", 0.06 s after its time. Brian stopped it with Stop.
   - The second still rang, 0.23 s after its time.
   - Both were gone afterwards.
+- **The ring check again, locked and in a Focus: passed.** The phone was in silent mode with a one-hour Focus on, and locked before the first alarm. The app was installed fresh with `TEST_RUNNER_NUDGE_FRESH_INSTALL=1` and uninstalled afterwards.
+  - Both alarms rang out loud as full-screen alerts, each showing only "Nudge-inator ring check" with the system slide to stop. There was no Open button, as expected until ticket 20.
+  - The first rang 0.14 s after its time. Brian slid to stop it, and the phone stayed locked.
+  - The second still rang, 0.21 s after its time. Slide to stop left the phone locked too.
+  - Both were gone afterwards, so the acceptance criterion is ticked. Sleep Focus wasn't tried; the spec says alarms ring through every Focus.
 
 **Device checks still pending.** Record the iOS version when they are run.
-1. **The acceptance criterion's Focus part, on a locked phone,** which is why it stays unticked. Run `AlarmRingDeviceCheck` again with a Focus on and the phone locked. Ticket 02's check 5 already saw alert-only alarms ring through silent mode and Do Not Disturb while locked, but not through this adapter.
+1. ~~The acceptance criterion's Focus part, on a locked phone~~: done, see above.
 2. **Open:** ticket 20.
 3. **The alarm limit and slot reuse:** still unknown (ticket 02 A).
+4. **Sleep Focus:** not tried. Run `AlarmRingDeviceCheck` with Sleep on if it matters.
 
 **For ticket 20.**
 - Pass the intent in with `AlarmAdapter(manager:clock:openIntent:)`, for example `{ OpenIntent(reminderID: $0.reminderID, fireTime: $0.fireTime) }`.
