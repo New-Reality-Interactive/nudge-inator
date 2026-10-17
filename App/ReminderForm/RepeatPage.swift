@@ -2,8 +2,8 @@ import NudgeEngine
 import SwiftUI
 
 /// The form's Repeat page, as the mockup's: Never and the six presets, then Custom in its own section,
-/// as in Calendar. Custom opens ticket 25's page; until then its row is disabled, but a reminder
-/// that already has a custom rule shows it checked with the engine's summary.
+/// as in Calendar, which opens the Custom page. With a custom rule Custom is checked, with the
+/// engine's summary under it.
 struct RepeatPage: View {
     @Bindable var form: ReminderForm
 
@@ -17,10 +17,19 @@ struct RepeatPage: View {
                 }
             }
             Section {
-                // Ticket 25 makes this push the Custom page.
-                CheckmarkRow(title: Text("Custom", comment: "The Repeat page's row that opens the custom repeat page."),
-                             isChecked: form.repeatPreset == nil) {}
-                    .disabled(true)
+                let isCustom = form.repeatPreset == nil
+                NavigationLink(value: ReminderFormPage.custom) {
+                    HStack {
+                        Text("Custom", comment: "The Repeat page's row that opens the custom repeat page.")
+                        Spacer()
+                        if isCustom {
+                            Image(systemName: "checkmark")
+                                .foregroundStyle(Color.accentColor)
+                                .accessibilityHidden(true)
+                        }
+                    }
+                }
+                .accessibilityAddTraits(isCustom ? .isSelected : [])
             } footer: {
                 if form.repeatPreset == nil {
                     RepeatSummarySentence(summary: form.repeatSummary)

@@ -21,6 +21,14 @@ extension ReminderForm {
                       repeatRule: RepeatRule(frequency: .daily, interval: 3), strength: .gentle, breakThroughFocus: false))
     }
 
+    /// A New Reminder form whose repeat is Custom, started from a preset.
+    static func previewCustom(from preset: RepeatPreset) -> ReminderForm {
+        let form = preview()
+        form.repeatPreset = preset
+        form.chooseCustom()
+        return form
+    }
+
     private static func edit(_ reminder: Reminder) -> ReminderForm {
         var engine = Engine(clock: PreviewClock(), scheduler: PreviewScheduler())
         engine.update(reminders: [reminder])

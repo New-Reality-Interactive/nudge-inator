@@ -289,6 +289,27 @@
         }
       }
     },
+    "On the %@" : {
+      "comment" : "Custom repeat page: a monthly repeat on the start's day of the month. The placeholder is the ordinal number, such as \"28th\"."
+    },
+    "On the first %@" : {
+      "comment" : "Custom repeat page: a monthly repeat on the first of the start's weekday. The placeholder is the weekday."
+    },
+    "On the fourth %@" : {
+      "comment" : "Custom repeat page: a monthly repeat on the fourth of the start's weekday. The placeholder is the weekday."
+    },
+    "On the last %@" : {
+      "comment" : "Custom repeat page: a monthly repeat on the last of the start's weekday in each month. The placeholder is the weekday."
+    },
+    "On the last day" : {
+      "comment" : "Custom repeat page: a monthly repeat on the last day of each month."
+    },
+    "On the second %@" : {
+      "comment" : "Custom repeat page: a monthly repeat on the second of the start's weekday. The placeholder is the weekday."
+    },
+    "On the third %@" : {
+      "comment" : "Custom repeat page: a monthly repeat on the third of the start's weekday. The placeholder is the weekday."
+    },
     "Once, %@ at %@" : {
       "comment" : "Repeat summary of a reminder that doesn't repeat. 1: Today, Tomorrow, Yesterday or a short date. 2: its time.",
       "localizations" : {
