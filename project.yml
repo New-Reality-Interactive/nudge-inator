@@ -43,7 +43,7 @@ targets:
       properties:
         CFBundleDisplayName: Nudge-inator
         UILaunchScreen: {}
-        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         NSAlarmKitUsageDescription: "Nudge-inator rings an alarm to keep nudging you about a reminder until you mark it done."
     settings:
       base:

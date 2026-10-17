@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 
 # Landscape support in the app shell
 
@@ -21,13 +21,31 @@ Docs: <https://developer.apple.com/design/human-interface-guidelines/layout> (Ad
 
 ## Acceptance criteria
 
-- [ ] `UISupportedInterfaceOrientations` in the generated `Info.plist` has Portrait, Landscape Left and Landscape Right and nothing else, and the device family is still iPhone only.
-- [ ] Every tab's empty state fits and stays readable in landscape, rotated left and rotated right, at the default and the largest Dynamic Type size.
-- [ ] Nothing sits under the Dynamic Island, notch or home indicator in either landscape direction.
-- [ ] Tab titles aren't truncated in landscape.
-- [ ] The tab bar uses `TabView` with `Tab` and `tabBarMinimizeBehavior`; what it does in portrait vs landscape is recorded in Comments.
-- [ ] Rotating keeps the selected tab and scroll position.
-- [ ] Simulator screenshots of each tab in both landscape directions are attached or described in Comments, compared with the mockup.
-- [ ] AGENTS.md has the adaptive layout rule. `scripts/test.sh` still passes.
+- [x] `UISupportedInterfaceOrientations` in the generated `Info.plist` has Portrait, Landscape Left and Landscape Right and nothing else, and the device family is still iPhone only.
+- [x] Every tab's empty state fits and stays readable in landscape, rotated left and rotated right, at the default and the largest Dynamic Type size.
+- [x] Nothing sits under the Dynamic Island, notch or home indicator in either landscape direction.
+- [x] Tab titles aren't truncated in landscape.
+- [x] The tab bar uses `TabView` with `Tab` and `tabBarMinimizeBehavior`; what it does in portrait vs landscape is recorded in Comments.
+- [x] Rotating keeps the selected tab and scroll position.
+- [x] Simulator screenshots of each tab in both landscape directions are attached or described in Comments, compared with the mockup.
+- [x] AGENTS.md has the adaptive layout rule. `scripts/test.sh` still passes.
 
 Blocked by: 22
+
+## Comments
+
+**Decisions (2026-10-17), settled with the user before coding.** Apple's docs, read through apple-rag, confirm: the three orientation keys; `tabBarMinimizeBehavior(.onScrollDown)` is iOS 26 and works "on only iPhone", and the docs are silent on portrait vs landscape; `navigationSubtitle` is iOS 26.0+; a sheet over a vertically compact view "uses a full-screen-cover appearance by default" (`presentationCompactAdaptation`); `XCUIDevice.orientation` rotates the device under test.
+
+1. **Orientations:** Portrait, Landscape Left, Landscape Right; upside-down off. `OrientationTests` reads `Bundle(for: AppDelegate.self).infoDictionary` and checks `UISupportedInterfaceOrientations` is exactly those three and `UIDeviceFamily == [1]`.
+2. **Adaptive rule:** size classes and geometry, never screen sizes. `TabScreen` applies `centeredInReadableColumn()` (App/Design/ReadableWidth.swift) to each tab's content when ready. It adds safe-area padding of `ReadableColumn.margin(availableWidth:)`, measured with `onGeometryChange`. Padding, not a frame or `contentMargins`: a frame cut the background, and `contentMargins` didn't move a List's sections. The measured width is already inside the safe areas (750 pt with 62 pt insets on the iPhone 17 simulator), so the insets are not subtracted again.
+3. **Titles:** large in portrait; the system makes them inline in compact height with no code. My Day shows its date as `navigationSubtitle` in compact height (`verticalSizeClass == .compact`) and as the list header in portrait.
+4. **Tab bar:** the system `TabView` with `.tabBarMinimizeBehavior(.onScrollDown)`, unchanged from ticket 22. On the simulator it did not minimize in portrait or in landscape with these short, empty tabs, so the simulator shows neither; on the phone it did minimize (see Device).
+5. **Sheets and forms:** the system default, full-screen in compact height, matching the mockup. Later tickets must not pass `presentationCompactAdaptation(.none)`.
+6. **Test seams:** `OrientationTests` (Info.plist) and `ReadableColumnTests` (the margin, against hand-worked values). Not tested on the constant `readableWidth == 672`: it already existed and passes, so it could not go red. Layout, safe areas, truncation, rotation and the subtitle are screenshot and device checks.
+7. **AGENTS.md:** one rule in the SwiftUI part.
+
+**Screenshots** (iPhone 17 simulators, a throwaway XCUITest rotating with `XCUIDevice.orientation`, deleted afterwards). iOS 26.5, light, each tab in portrait, Landscape Left and Landscape Right at the default text size, and the four tabs at accessibility-xxxl in Landscape Left. Compared with the mockup: inline title, tab bar beside its titles as a floating pill, content centered at 672 with the background to the edges, and My Day's date as a subtitle all match. The mockup's pill shrinks to the current tab while scrolling; the simulator's did not (item 4). The iOS 26.1 simulator ran the test suite but was not screenshotted. Rotating Now (scrolled) and My Day (selected) kept the tab and the scroll position on a round trip.
+
+**Device (iPhone 15, iOS 27.0.1).** The app tests passed on the phone from a fresh install (118 tests; two permission prompts), run per AGENTS.md's device rule. **Manual checks, done by Brian on the phone (all passed, reported without details):** rotate both ways with the Dynamic Island on each side and nothing under it or the home indicator; the largest text size in landscape; the tab bar minimizing; and that My Day's portrait empty subtitle adds no extra line. The tab bar minimized on the device (Brian: "It did minimize"); it minimized in both portrait and landscape. Accepted as the system's behavior, as agreed before coding; no size-class limit.
+
+**Code review** (standards and spec, two agents). Fixed: the modifier was renamed from `readableWidth()` (it clashed with `Design.Spacing.readableWidth`) to `centeredInReadableColumn()`; a landscape preview for My Day; the AGENTS.md line shortened; a margin test added. One finding, to subtract the safe-area insets from the measured width, was wrong (it collapsed the margin to zero); the measured width is already inside the safe areas, and a screenshot confirmed it. Not changed: the empty subtitle in portrait (no extra line in the screenshot; device check).

@@ -15,6 +15,7 @@ struct TabScreen<Content: View>: View {
             StoreUnreadableView()
         case .ready:
             content()
+                .centeredInReadableColumn()
         }
     }
 }

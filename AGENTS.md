@@ -54,6 +54,7 @@ Apple's "Managing model data in your app" and WWDC23 "Discover Observation in Sw
 - Keep `body` cheap and free of side effects. Move logic into the model or the engine.
 - Keep views small. Extract a subview when a `body` stops fitting on one screen.
 - Add a `#Preview` for each non-trivial view.
+- The app turns to landscape, so lay out with size classes, safe areas and `ScrollView`/`List`, never fixed screen sizes. Put a screen's content in `TabScreen`, which centers it at `Design.Spacing.readableWidth`, and leave sheets to the system's full-screen adaptation in compact height.
 
 ### Accessibility
 
