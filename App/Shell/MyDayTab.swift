@@ -47,3 +47,8 @@ struct MyDayTab: View {
     MyDayTab(state: .ready)
         .environment(\.dynamicTypeSize, .accessibility5)
 }
+
+#Preview("Landscape") {
+    MyDayTab(state: .ready)
+        .previewInterfaceOrientation(.landscapeLeft)
+}
