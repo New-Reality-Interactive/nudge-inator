@@ -390,8 +390,3 @@ struct NotificationAdapterTests {
         #expect(pending().map(\.identifier) == [Self.pillsAt0930])
     }
 }
-
-private extension Collection {
-    /// The one element, or `nil` if there are none or several.
-    var only: Element? { count == 1 ? first : nil }
-}
