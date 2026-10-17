@@ -4,6 +4,11 @@ import Foundation
 public struct SchedulePlan: Equatable, Sendable {
     public var items: [Item]
 
+    /// Public so the app's adapter tests can hand an adapter a plan without running the engine.
+    public init(items: [Item]) {
+        self.items = items
+    }
+
     /// One planned nudge. It carries only the reminder's title, never its notes or tags.
     public struct Item: Equatable, Sendable {
         public var reminderID: Reminder.ID
@@ -20,6 +25,24 @@ public struct SchedulePlan: Equatable, Sendable {
         /// notification. The screens say so ("Notification: too many alarms scheduled"); the
         /// notification itself carries only the title and body.
         public var isPastAlarmLimit: Bool
+
+        public init(
+            reminderID: Reminder.ID,
+            nudgeNumber: Int,
+            fireTime: Date,
+            urgency: Urgency,
+            title: String,
+            deliveryKind: DeliveryKind,
+            isPastAlarmLimit: Bool = false
+        ) {
+            self.reminderID = reminderID
+            self.nudgeNumber = nudgeNumber
+            self.fireTime = fireTime
+            self.urgency = urgency
+            self.title = title
+            self.deliveryKind = deliveryKind
+            self.isPastAlarmLimit = isPastAlarmLimit
+        }
 
         /// The notification body, for example "Nudge 3 of 20 · High".
         public var body: String {

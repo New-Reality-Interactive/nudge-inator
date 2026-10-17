@@ -8,7 +8,8 @@ import NudgeEngine
 /// the file in a new store, and hands what it reads to a new engine at the same clock.
 @MainActor
 struct StoredOccurrenceTests {
-    let fileURL = FileManager.default.temporaryDirectory.appending(path: "\(UUID().uuidString).store")
+    let storeFile = TemporaryStoreFile()
+    var fileURL: URL { storeFile.url }
     let clock = FakeClock(now: .distantPast)
     let scheduler = FakeScheduler()
     /// Thursday 15 October 2026 at 9:00, once. Firm nudges at 9:00, 9:30, 9:45 and 9:52:30.

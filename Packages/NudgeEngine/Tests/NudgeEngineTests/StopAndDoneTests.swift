@@ -90,6 +90,33 @@ struct StopAndDoneTests {
         #expect(items.map(\.nudgeNumber) == Array(1...20))
     }
 
+    /// A notification's Done is for the occurrence that nudge belonged to. Yesterday's banner left
+    /// in Notification Center must not close today's occurrence.
+    @Test func doneFromANudgeOfAnEarlierOccurrenceIsIgnored() throws {
+        let reminder = Reminder(title: "Take the pills", dueTime: dueTime, repeatRule: .everyDay, strength: .relentless)
+        var engine = Engine(clock: clock, scheduler: scheduler)
+        engine.update(reminders: [reminder])
+        let tomorrow = dueTime + 24 * 60 * 60
+
+        clock.now = tomorrow + 5 * 60
+        engine.markDone(reminder.id, nudgeFiredAt: dueTime + 10 * 60)
+
+        #expect(engine.latestOccurrence(for: reminder.id)?.state == .nudging(nudgeNumber: 1))
+    }
+
+    @Test(arguments: [0, 2 * 60])
+    func doneFromANudgeOfTheOpenOccurrenceClosesIt(secondsAfterDue: Int) throws {
+        let reminder = Reminder(title: "Take the pills", dueTime: dueTime, repeatRule: .everyDay, strength: .relentless)
+        var engine = Engine(clock: clock, scheduler: scheduler)
+        engine.update(reminders: [reminder])
+        let tomorrow = dueTime + 24 * 60 * 60
+
+        clock.now = tomorrow + 5 * 60
+        engine.markDone(reminder.id, nudgeFiredAt: tomorrow + TimeInterval(secondsAfterDue))
+
+        #expect(engine.latestOccurrence(for: reminder.id)?.state == .done)
+    }
+
     /// The spec offers Done only on a nudging occurrence. Before the due time there is none, so
     /// Done is ignored and the occurrence still nudges when it comes due.
     @Test func doneBeforeTheDueTimeIsIgnored() throws {
