@@ -115,7 +115,7 @@ struct NotificationAdapterTests {
         await adapter.waitUntilApplied()
         let delivered = try #require(pending().only)
 
-        adapter.handleResponse(
+        await adapter.handleResponse(
             actionIdentifier: NotificationAdapter.doneActionIdentifier,
             nudge: NotificationAdapter.deliveredNudge(in: delivered.content.userInfo)
         )
@@ -123,16 +123,33 @@ struct NotificationAdapterTests {
         #expect(events.dones == [DeliveredNudge(reminderID: Self.pills, fireTime: NewYork.local(2026, 10, 16, 9, 10))])
     }
 
+    /// The engine closes the occurrence only if the nudge fired at or after its due time, so the
+    /// fire time must come back exactly. Real due times have fractions of a second; on the iPhone
+    /// a Done was ignored because the fire time came back a hair early (ticket 21).
+    @Test(arguments: [0.1234567, 0.5, 0.999_999_9, 0.000_000_1])
+    func aDeliveredNudgeCarriesItsFireTimeExactly(fraction: Double) async throws {
+        let adapter = adapter()
+        let fireTime = NewYork.local(2026, 10, 16, 9, 10) + fraction
+        adapter.apply(SchedulePlan(items: [nudge(1, at: fireTime, .normal, .notification)]))
+        await adapter.waitUntilApplied()
+        let delivered = try #require(pending().only)
+
+        #expect(NotificationAdapter.deliveredNudge(in: delivered.content.userInfo)?.fireTime == fireTime)
+    }
+
     /// The Done action can launch the app in the background, and the response may come before the
     /// app model is listening (ticket 21). It waits rather than being lost.
-    @Test func aDoneBeforeAnyoneListensIsReportedOnceSomeoneDoes() {
+    @Test func aDoneBeforeAnyoneListensIsReportedOnceSomeoneDoes() async {
         let adapter = adapter()
         let events = FakeNotificationEvents()
         let nudge = DeliveredNudge(reminderID: Self.pills, fireTime: NewYork.local(2026, 10, 16, 9, 10))
 
-        adapter.handleResponse(actionIdentifier: NotificationAdapter.doneActionIdentifier, nudge: nudge)
+        await adapter.handleResponse(actionIdentifier: NotificationAdapter.doneActionIdentifier, nudge: nudge)
         adapter.events = events
         adapter.events = events
+        for _ in 0..<100 where events.dones.isEmpty {
+            await Task.yield()
+        }
 
         #expect(events.dones == [nudge])
     }
@@ -141,12 +158,12 @@ struct NotificationAdapterTests {
         UNNotificationDefaultActionIdentifier,
         UNNotificationDismissActionIdentifier,
     ])
-    func openingOrDismissingANotificationIsNotDone(actionIdentifier: String) {
+    func openingOrDismissingANotificationIsNotDone(actionIdentifier: String) async {
         let adapter = adapter()
         let events = FakeNotificationEvents()
         adapter.events = events
 
-        adapter.handleResponse(
+        await adapter.handleResponse(
             actionIdentifier: actionIdentifier,
             nudge: DeliveredNudge(reminderID: Self.pills, fireTime: NewYork.local(2026, 10, 16, 9, 10))
         )

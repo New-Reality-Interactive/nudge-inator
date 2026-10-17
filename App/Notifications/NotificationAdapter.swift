@@ -7,7 +7,10 @@ import NudgeEngine
 protocol NotificationAdapterEvents: AnyObject {
     /// The person chose Done on a nudge's notification. Send it on with
     /// `Engine.markDone(_:nudgeFiredAt:)`, which ignores a banner left from an earlier occurrence.
-    func markDone(_ reminderID: Reminder.ID, nudgeFiredAt fireTime: Date)
+    /// Return only once it is saved and applied: the response handler waits for it, and Apple
+    /// says its return tells the system "you are done processing the user's response", after
+    /// which an app the action launched in the background can be suspended.
+    func markDone(_ reminderID: Reminder.ID, nudgeFiredAt fireTime: Date) async
     /// The center turned a request down. `notificationsNotAllowed` means the person turned
     /// notifications off, so read `permissions(updating:)` again and hand them to the engine.
     func schedulingFailed(_ error: any Error)
@@ -37,6 +40,9 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     private static let identifierPrefix = "nudge."
     /// Where a request keeps its nudge, so Done needn't parse the identifier.
     nonisolated private static let reminderIDKey = "reminderID"
+    /// Seconds since 2001, `Date`'s own value, so the fire time comes back exactly. Seconds since
+    /// 1970 lose a fraction of a second on the way, and the engine then read the Done as one for
+    /// an earlier occurrence and ignored it (ticket 21's device check).
     nonisolated private static let fireTimeKey = "fireTime"
 
     private let center: any UserNotificationCenter
@@ -51,7 +57,7 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     private var unreportedDones: [DeliveredNudge] = []
 
     weak var events: (any NotificationAdapterEvents)? {
-        didSet { reportDones() }
+        didSet { Task { await reportDones() } }
     }
 
     init(center: any UserNotificationCenter, clock: any EngineClock) {
@@ -76,7 +82,7 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
               let reminderID = UUID(uuidString: text),
               let seconds = userInfo[fireTimeKey] as? TimeInterval
         else { return nil }
-        return DeliveredNudge(reminderID: reminderID, fireTime: Date(timeIntervalSince1970: seconds))
+        return DeliveredNudge(reminderID: reminderID, fireTime: Date(timeIntervalSinceReferenceDate: seconds))
     }
 
     func apply(_ plan: SchedulePlan) {
@@ -151,11 +157,13 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         try await center.requestAuthorization(options: [.alert, .sound])
     }
 
-    /// The person's response to a delivered notification, from the center's delegate.
-    func handleResponse(actionIdentifier: String, nudge: DeliveredNudge?) {
+    /// The person's response to a delivered notification, from the center's delegate. Returns
+    /// once `events` has handled a Done, or straight away if no one is listening yet, in which
+    /// case the Done waits for `events` to be set.
+    func handleResponse(actionIdentifier: String, nudge: DeliveredNudge?) async {
         guard actionIdentifier == Self.doneActionIdentifier, let nudge else { return }
         unreportedDones.append(nudge)
-        reportDones()
+        await reportDones()
     }
 
     /// Returns once every plan handed to `apply(_:)` so far has reached the center.
@@ -163,12 +171,13 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         await applying?.value
     }
 
-    private func reportDones() {
+    private func reportDones() async {
         guard let events else { return }
+        // Taken before the first wait, so a second call meanwhile doesn't report them again.
         let dones = unreportedDones
         unreportedDones.removeAll()
         for done in dones {
-            events.markDone(done.reminderID, nudgeFiredAt: done.fireTime)
+            await events.markDone(done.reminderID, nudgeFiredAt: done.fireTime)
         }
     }
 
@@ -180,7 +189,7 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         content.categoryIdentifier = Self.categoryIdentifier
         content.userInfo = [
             Self.reminderIDKey: item.reminderID.uuidString,
-            Self.fireTimeKey: item.fireTime.timeIntervalSince1970,
+            Self.fireTimeKey: item.fireTime.timeIntervalSinceReferenceDate,
         ]
         let trigger = UNTimeIntervalNotificationTrigger(
             timeInterval: item.fireTime.timeIntervalSince(now),
@@ -212,6 +221,12 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
 /// `didReceive` "your app never responds to custom actions". Not the adapter itself, because the
 /// center may call it off the main actor; `Sendable` since its one property is a `weak let` to a
 /// main-actor class.
+///
+/// The completion-handler forms, each calling its handler from the main actor. With the async
+/// forms the handler ran on whatever thread the method returned on, and on the iPhone a nudge
+/// arriving with the app in front crashed it: "Call must be made on main thread", inside UIKit
+/// (ticket 21's device check). Apple's docs don't say which thread the handler needs. The async
+/// forms can't be made `@MainActor` instead: the center's arguments aren't `Sendable`.
 final class NotificationResponder: NSObject, UNUserNotificationCenterDelegate, Sendable {
     weak let adapter: NotificationAdapter?
 
@@ -219,17 +234,30 @@ final class NotificationResponder: NSObject, UNUserNotificationCenterDelegate, S
         self.adapter = adapter
     }
 
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+    /// The handler is called only once a Done is saved and applied: Apple says it tells the
+    /// system "you are done", and the app may be suspended after it.
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping @Sendable () -> Void
+    ) {
+        // Read here: `userInfo` isn't `Sendable`, these are.
         let actionIdentifier = response.actionIdentifier
         let nudge = NotificationAdapter.deliveredNudge(in: response.notification.request.content.userInfo)
-        await adapter?.handleResponse(actionIdentifier: actionIdentifier, nudge: nudge)
+        Task { @MainActor [adapter] in
+            await adapter?.handleResponse(actionIdentifier: actionIdentifier, nudge: nudge)
+            completionHandler()
+        }
     }
 
     /// Without this, a nudge that fires while the app is open isn't shown at all.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification
-    ) async -> UNNotificationPresentationOptions {
-        [.banner, .list, .sound]
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping @Sendable (UNNotificationPresentationOptions) -> Void
+    ) {
+        Task { @MainActor in
+            completionHandler([.banner, .list, .sound])
+        }
     }
 }
