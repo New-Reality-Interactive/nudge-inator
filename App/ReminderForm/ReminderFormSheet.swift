@@ -251,8 +251,9 @@ private struct StrengthSection: View {
             .lockedWhileNudging(isLocked)
         } header: {
             if !dynamicTypeSize.isAccessibilitySize {
+                // VoiceOver reads the segments without the picker's label (device check, ticket
+                // 25), so the heading names them. At accessibility sizes the menu carries it.
                 LockableLabel(isLocked: isLocked) { label }
-                    .accessibilityHidden(true)
             }
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
