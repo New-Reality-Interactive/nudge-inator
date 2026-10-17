@@ -33,8 +33,18 @@ if non_foundation_imports Packages/NudgeEngine/Sources | grep .; then
   failed+=("engine-imports")
 fi
 
-step "swift test (NudgeEngine)"
-(cd Packages/NudgeEngine && swift test) || failed+=("package-tests")
+# xcodebuild, not `swift test`: SwiftPM's command line copies the engine's String Catalog without
+# compiling it, so every string would fall back to its key and plural variants would never apply.
+step "xcodebuild test (NudgeEngine, macOS)"
+(cd Packages/NudgeEngine && xcodebuild test -scheme NudgeEngine -destination 'platform=macOS' \
+  -derivedDataPath .build/xcode -quiet) || failed+=("package-tests")
+
+step "The color sets match DESIGN.md"
+colors="$(mktemp -d)/Assets.xcassets"
+if ! { scripts/generate-color-sets.sh "$colors" > /dev/null && diff -r "$colors" App/Resources/Assets.xcassets; }; then
+  echo "FAIL: run scripts/generate-color-sets.sh, then update ColorSetTests" >&2
+  failed+=("color-sets")
+fi
 
 step "xcodegen generate"
 xcodegen generate --quiet || failed+=("xcodegen")
@@ -49,8 +59,12 @@ for os in $SIMULATOR_OSES; do
   step "xcodebuild test (app + widget extension) on $SIMULATOR_NAME, iOS $os"
   xcodebuild test -project NudgeInator.xcodeproj -scheme NudgeInator \
     -destination "platform=iOS Simulator,name=$SIMULATOR_NAME,OS=$os" \
-    -quiet || failed+=("app-tests-$os")
+    -derivedDataPath .build/derived -quiet || failed+=("app-tests-$os")
 done
+
+# The app build also builds NudgeEngine, so its .stringsdata covers both catalogs.
+step "The String Catalogs hold every string the code shows"
+scripts/sync-strings.sh --check .build/derived || failed+=("string-catalogs")
 
 echo
 if [ ${#failed[@]} -eq 0 ]; then

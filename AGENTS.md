@@ -65,6 +65,17 @@ Apple's SwiftUI accessibility docs and the WWDC accessibility sessions confirm t
 - Any custom gesture needs an equivalent `accessibilityAction` or a real `Button`.
 - Don't use color as the only signal.
 
+### Localization
+
+The app ships in English, but every string a person sees goes through a String Catalog, so another language needs only translations. Apple's "Discover String Catalogs" (WWDC23) and "Explore localization with Xcode" (WWDC25) confirm the following:
+
+- The app's strings are in `App/Resources/Localizable.xcstrings` and `InfoPlist.xcstrings`. NudgeEngine's (notification bodies, repeat summaries) are in its own catalog, read with `bundle: .module`.
+- In views, pass string literals to SwiftUI (`Text`, `Button`, `navigationTitle`, `accessibilityLabel`). Text held outside a view is a `LocalizedStringResource`, never a `String`. Elsewhere use `String(localized:)`.
+- Give each string a `comment:` that says where it shows and what each placeholder holds.
+- Whole sentences with placeholders, never fragments glued together. Counts use plural variants in the catalog. Names, lists, ordinals, dates and times come from Foundation's formatters in the locale, never hand-written English.
+- Text the person wrote (a reminder's title) is never translated. Mark its catalog entry "Don't translate".
+- Command-line builds don't update the catalogs. After adding or changing a string, run `scripts/sync-strings.sh .build/derived` (after `scripts/test.sh`, or any build into that folder), then fill in plural variants. `scripts/test.sh` fails if a catalog is out of date.
+
 ### AlarmKit
 
 Apple's AlarmKit docs confirm that scheduling fails silently without a non-empty `NSAlarmKitUsageDescription`, and that the app must handle the `denied` authorization state in its UI. The docs don't say how alert-only alarms behave with the empty widget extension present. Ticket 02 checks that on a device. Don't assume it works.

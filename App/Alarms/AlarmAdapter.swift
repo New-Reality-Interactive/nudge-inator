@@ -202,21 +202,32 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
     ]
 
     /// DESIGN.md's `alarm-tint`: `accent-dark`, #07DDE6, the one colour pinned to a single variant. The
-    /// alert draws it on the title and Open button whatever the appearance. Written out here because
-    /// the app has no asset catalog yet; it moves to a colour set when one arrives (ticket 22).
-    static let alarmTint = Color(.sRGB, red: 0x07 / 255, green: 0xDD / 255, blue: 0xE6 / 255)
+    /// alert draws it on the title and Open button whatever the appearance. It is the `AccentColor`
+    /// set's dark, standard-contrast value, resolved here into a plain colour: the system draws the
+    /// alert in its own process, and the docs don't say a named colour from the app's catalog
+    /// resolves there. `ColorSetTests` guards the set, so the fallback never applies.
+    static let alarmTint: Color = {
+        let pinned = UITraitCollection {
+            $0.userInterfaceStyle = .dark
+            $0.accessibilityContrast = .normal
+        }
+        guard let accent = UIColor(named: "AccentColor", in: .main, compatibleWith: pinned) else { return .accentColor }
+        return Color(uiColor: accent.resolvedColor(with: pinned))
+    }()
 
     /// Unlocked, the alert shows only the symbol; locked, the full-width button shows the text too
     /// (ticket 02 E). Black is DESIGN.md's `on-accent-dark`, the text colour on the tint.
-    private static let openButton = AlarmButton(text: "Open", textColor: .black, systemImageName: "arrow.up.forward.app")
+    private static let openButton = AlarmButton(text: LocalizedStringResource("Open", comment: "Alarm button: opens the app on the reminder, where Done is. Shown on the Lock Screen; keep it short."), textColor: .black, systemImageName: "arrow.up.forward.app")
 
     /// The title only (Privacy) and the system Stop button, which `Alert(title:secondaryButton:...)`
     /// supplies (iOS 26.1+). No countdown or paused presentation.
     private static func attributes(for item: SchedulePlan.Item, hasOpenButton: Bool) -> AlarmAttributes<NudgeAlarmMetadata> {
-        // Interpolated, so the title is an argument and never looked up as a localization key.
+        // Interpolated, so the title is an argument and never looked up as a localization key. The
+        // catalog marks the "%@" it extracts as not to be translated.
+        let title = LocalizedStringResource("\(item.title)", comment: "The alarm's title: the reminder's own title, shown as the person wrote it. Not translated.")
         let alert = hasOpenButton
-            ? AlarmPresentation.Alert(title: "\(item.title)", secondaryButton: openButton, secondaryButtonBehavior: .custom)
-            : AlarmPresentation.Alert(title: "\(item.title)")
+            ? AlarmPresentation.Alert(title: title, secondaryButton: openButton, secondaryButtonBehavior: .custom)
+            : AlarmPresentation.Alert(title: title)
         return AlarmAttributes(presentation: AlarmPresentation(alert: alert), metadata: NudgeAlarmMetadata(), tintColor: alarmTint)
     }
 }

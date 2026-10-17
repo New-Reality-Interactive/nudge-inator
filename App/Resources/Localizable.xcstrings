@@ -1,0 +1,76 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@" : {
+      "comment" : "The alarm's title: the reminder's own title, shown as the person wrote it. Not translated.",
+      "shouldTranslate" : false
+    },
+    "%@ · Nothing is nudging you" : {
+      "comment" : "Now: under the title. The placeholder is today's short date, such as \"Sat 17 Oct\"."
+    },
+    "**All clear.** Nothing needs you right now." : {
+      "comment" : "Now: the Nudging section when nothing is nudging."
+    },
+    "Can't Open Your Reminders" : {
+      "comment" : "Title shown when the app can't read its stored reminders, for example before the first unlock after a restart."
+    },
+    "Coming Up" : {
+      "comment" : "Now: section header for reminders due soon."
+    },
+    "Done" : {
+      "comment" : "Notification action: marks the reminder Done and stops its nudges."
+    },
+    "Last 24 Hours" : {
+      "comment" : "Now: section header for occurrences closed in the last 24 hours."
+    },
+    "My Day" : {
+      "comment" : "Tab bar: the tab with today's reminders in time order"
+    },
+    "New Reminder" : {
+      "comment" : "Toolbar button (a plus) that opens the New Reminder form."
+    },
+    "New Tag" : {
+      "comment" : "Toolbar button (a plus) on Tags that adds a tag."
+    },
+    "Next 7 days" : {
+      "comment" : "Now: how far ahead the Coming Up section looks."
+    },
+    "No Tags" : {
+      "comment" : "Tags: title when there are no tags yet."
+    },
+    "Nothing closed yet today." : {
+      "comment" : "Now: the Last 24 Hours section when no occurrence closed in that time."
+    },
+    "Nothing is due today." : {
+      "comment" : "My Day: the list when nothing is due today."
+    },
+    "Nothing scheduled this week." : {
+      "comment" : "Now: the Coming Up section when nothing is due in the next 7 days."
+    },
+    "Now" : {
+      "comment" : "Tab bar: the tab with what's nudging you now, coming up and closed lately"
+    },
+    "Nudging" : {
+      "comment" : "Now: section header for the reminders nudging you now."
+    },
+    "Open" : {
+      "comment" : "Alarm button: opens the app on the reminder, where Done is. Shown on the Lock Screen; keep it short."
+    },
+    "Settings" : {
+      "comment" : "Tab bar: the app's settings tab"
+    },
+    "Tags" : {
+      "comment" : "Tab bar: the tab listing your tags"
+    },
+    "Tap + to add a tag, or add tags to a reminder when you create or edit it." : {
+      "comment" : "Tags: how to add a tag when there are none."
+    },
+    "Your reminders are still on this iPhone, and nudges already scheduled will still come. Unlock your iPhone, then open Nudge-inator again." : {
+      "comment" : "Explains the unreadable store: nothing is lost, and reopening the app tries again."
+    },
+    "Your reminders stay on this iPhone. There's no account and no server, and nothing syncs to other devices." : {
+      "comment" : "Settings: the privacy note under Your Data."
+    }
+  },
+  "version" : "1.0"
+}

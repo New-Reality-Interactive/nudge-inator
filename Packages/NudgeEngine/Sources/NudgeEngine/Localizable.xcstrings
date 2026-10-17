@@ -1,0 +1,332 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ (28 February in years without one)" : {
+      "comment" : "Repeat summary: a yearly preset on 29 February, which moves to the 28th in other years. The placeholder is the repeat."
+    },
+    "%@ (skipped in months without one)" : {
+      "comment" : "Repeat summary: a custom monthly repeat on a day some months lack. The placeholder is the repeat."
+    },
+    "%@ (skipped in years without one)" : {
+      "comment" : "Repeat summary: a custom yearly repeat on a day some years lack. The placeholder is the repeat."
+    },
+    "%@ (the last day in months without one)" : {
+      "comment" : "Repeat summary: a monthly preset on a day some months lack, which moves to their last day. The placeholder is the repeat."
+    },
+    "%@ (the last day in years without one)" : {
+      "comment" : "Repeat summary: a yearly preset on a day some years lack, which moves to the month's last day. The placeholder is the repeat."
+    },
+    "%@ at %@" : {
+      "comment" : "Repeat summary. 1: what the rule falls on, such as \"Every 2 weeks on Monday\". 2: the time.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "%@ at %@, %@" : {
+      "comment" : "Repeat summary of a repeat that ends after some times. 1: what the rule falls on. 2: the time. 3: how many times, such as \"5 times\" or \"once\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ at %2$@, %3$@"
+          }
+        }
+      }
+    },
+    "%@ at %@, until %@" : {
+      "comment" : "Repeat summary of a repeat with an end date. 1: what the rule falls on. 2: the time. 3: the last date, short.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ at %2$@, until %3$@"
+          }
+        }
+      }
+    },
+    "%@ at %@, until %@ at %@" : {
+      "comment" : "Repeat summary of a repeat that ends at a time. 1: what the rule falls on. 2: the time. 3: the last date, short. 4: the time it ends.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ at %2$@, until %3$@ at %4$@"
+          }
+        }
+      }
+    },
+    "%@ in %@" : {
+      "comment" : "Repeat summary: a repeat limited to some months. 1: the repeat, such as \"Every day\". 2: the months, such as \"January and July\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ in %2$@"
+          }
+        }
+      }
+    },
+    "%@ of %@" : {
+      "comment" : "Repeat summary. 1: days, such as \"the last Monday\". 2: the months or period they're in, such as \"May\" or \"the year\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ of %2$@"
+          }
+        }
+      }
+    },
+    "%@ on %@" : {
+      "comment" : "Repeat summary. 1: how often, such as \"Every 2 weeks\". 2: the days it falls on, such as \"Monday and Wednesday\" or \"the 15th\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ on %2$@"
+          }
+        }
+      }
+    },
+    "%@ when it's %@" : {
+      "comment" : "Repeat summary: a limit on the days. 1: the repeat, such as \"Every day\". 2: the days it's limited to, such as \"a Monday or Friday\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ when it's %2$@"
+          }
+        }
+      }
+    },
+    "%@-to-last" : {
+      "comment" : "Repeat summary: counted from the end, as in \"the 6th-to-last day\". The placeholder is the ordinal number, such as \"6th\"."
+    },
+    "%lld times" : {
+      "comment" : "Repeat summary: how many times a repeat happens before it ends. Singular: \"once\".",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "once"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld times"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Every %@" : {
+      "comment" : "Repeat summary of a weekly repeat. The placeholder is the weekdays, such as \"Monday and Friday\"."
+    },
+    "Every %lld days" : {
+      "comment" : "Repeat summary: how often a reminder repeats. Singular: \"Every day\".",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every day"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld days"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Every %lld months" : {
+      "comment" : "Repeat summary: how often a reminder repeats. Singular: \"Every month\".",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every month"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld months"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Every %lld weeks" : {
+      "comment" : "Repeat summary: how often a reminder repeats. Singular: \"Every week\".",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every week"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld weeks"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Every %lld years" : {
+      "comment" : "Repeat summary: how often a reminder repeats. Singular: \"Every year\".",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every year"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Every %lld years"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Every weekday" : {
+      "comment" : "Repeat summary: a repeat on Monday to Friday."
+    },
+    "High" : {
+      "comment" : "Urgency: a nudge that has escalated, as in \"Nudge 3 of 20 · High\"."
+    },
+    "Normal" : {
+      "comment" : "Urgency: a nudge on the first rung of its ladder, as in \"Nudge 1 of 20 · Normal\"."
+    },
+    "Nudge %lld of %lld · %@" : {
+      "comment" : "Notification body: never the notes or tags. 1: which nudge this is. 2: the most nudges an occurrence gets. 3: the urgency, such as High.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Nudge %1$lld of %2$lld · %3$@"
+          }
+        }
+      }
+    },
+    "Once, %@ at %@" : {
+      "comment" : "Repeat summary of a reminder that doesn't repeat. 1: Today, Tomorrow, Yesterday or a short date. 2: its time.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Once, %1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "Today" : {
+      "comment" : "Repeat summary: a one-off reminder's day, as in \"Once, Today at 9:00\"."
+    },
+    "Tomorrow" : {
+      "comment" : "Repeat summary: a one-off reminder's day, as in \"Once, Tomorrow at 9:00\"."
+    },
+    "Urgent" : {
+      "comment" : "Urgency: a nudge at the top of its ladder, which may ring as an alarm, as in \"Nudge 4 of 20 · Urgent\"."
+    },
+    "Yesterday" : {
+      "comment" : "Repeat summary: a one-off reminder's day, as in \"Once, Yesterday at 9:00\"."
+    },
+    "a %@" : {
+      "comment" : "Repeat summary: the weekdays in a condition, as in \"when it's a Monday or Friday\". The placeholder is the weekdays."
+    },
+    "every %@" : {
+      "comment" : "Repeat summary: each of a weekday in a month or year, as in \"Every month on every Monday\"."
+    },
+    "every month" : {
+      "comment" : "Repeat summary: the months a yearly repeat's days are in, as in \"the 1st of every month\"."
+    },
+    "fifth" : {
+      "comment" : "Repeat summary: the fifth of a weekday, as in \"the fifth Monday\"."
+    },
+    "fifth-to-last" : {
+      "comment" : "Repeat summary: counted from the end, as in \"the fifth-to-last day\"."
+    },
+    "first" : {
+      "comment" : "Repeat summary: the first of a weekday, as in \"the first Monday\"."
+    },
+    "fourth" : {
+      "comment" : "Repeat summary: the fourth of a weekday, as in \"the fourth Monday\"."
+    },
+    "fourth-to-last" : {
+      "comment" : "Repeat summary: counted from the end, as in \"the fourth-to-last day\"."
+    },
+    "last" : {
+      "comment" : "Repeat summary: the last of a weekday or day, as in \"the last Monday\" or \"the last day\"."
+    },
+    "second" : {
+      "comment" : "Repeat summary: the second of a weekday, as in \"the second Monday\"."
+    },
+    "second-to-last" : {
+      "comment" : "Repeat summary: counted from the end, as in \"the second-to-last day\"."
+    },
+    "the %@" : {
+      "comment" : "Repeat summary: a day of the month, as in \"Every month on the 15th\". The placeholder is the ordinal number, such as \"15th\"."
+    },
+    "the %@ %@" : {
+      "comment" : "Repeat summary: one weekday of a month or year. 1: which one, such as \"first\", \"last\" or \"6th\". 2: the weekday.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "the %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "the %@ day" : {
+      "comment" : "Repeat summary: a day counted from the end of the month. The placeholder is which one, such as \"last\" or \"second-to-last\"."
+    },
+    "the year" : {
+      "comment" : "Repeat summary: the period a yearly repeat's weekday counts in, as in \"the first Monday of the year\"."
+    },
+    "third" : {
+      "comment" : "Repeat summary: the third of a weekday, as in \"the third Monday\"."
+    },
+    "third-to-last" : {
+      "comment" : "Repeat summary: counted from the end, as in \"the third-to-last day\"."
+    }
+  },
+  "version" : "1.0"
+}

@@ -66,7 +66,7 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         // Empty options: .foreground would open the app and .authenticationRequired would need an
         // unlocked phone, and Done should run from the Lock Screen. One action, since the system
         // shows only two when space is short.
-        let done = UNNotificationAction(identifier: Self.doneActionIdentifier, title: "Done", options: [])
+        let done = UNNotificationAction(identifier: Self.doneActionIdentifier, title: String(localized: "Done", comment: "Notification action: marks the reminder Done and stops its nudges."), options: [])
         center.setNotificationCategories([
             UNNotificationCategory(identifier: Self.categoryIdentifier, actions: [done], intentIdentifiers: []),
         ])

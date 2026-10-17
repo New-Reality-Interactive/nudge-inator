@@ -32,6 +32,8 @@ struct RepeatSummaryTests {
         ("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", NewYork.local(2026, 10, 12), british, "Every weekday at 9:00"),
         ("FREQ=WEEKLY;BYDAY=FR,MO", NewYork.local(2026, 10, 12), british, "Every Monday and Friday at 9:00"),
         ("FREQ=WEEKLY;BYDAY=SU,MO,WE", NewYork.local(2026, 10, 12), british, "Every Monday, Wednesday and Sunday at 9:00"),
+        // Lists follow the locale's own rules: American English has the serial comma.
+        ("FREQ=WEEKLY;BYDAY=SU,MO,WE", NewYork.local(2026, 10, 12), american, "Every Monday, Wednesday, and Sunday at 9:00\u{202F}AM"),
         ("FREQ=WEEKLY", NewYork.local(2026, 10, 15), british, "Every Thursday at 9:00"),
         ("FREQ=WEEKLY;INTERVAL=2", NewYork.local(2026, 10, 15), british, "Every 2 weeks on Thursday at 9:00"),
         ("FREQ=DAILY;COUNT=1", NewYork.local(2026, 10, 15), british, "Every day at 9:00, once"),

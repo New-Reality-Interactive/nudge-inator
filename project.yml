@@ -4,6 +4,7 @@ options:
   deploymentTarget:
     iOS: "26.1"
   generateEmptyDirectories: true
+  developmentLanguage: en
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -13,6 +14,9 @@ settings:
     SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
     SUPPORTS_MACCATALYST: NO
     SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+    # Every string a person sees is in a String Catalog; the compiler extracts them (scripts/sync-strings.sh).
+    SWIFT_EMIT_LOC_STRINGS: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
 packages:
   NudgeEngine:
     path: Packages/NudgeEngine
@@ -45,6 +49,9 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.newrealityinteractive.nudgeinator
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        # The Color statics are written by hand in App/Design/DesignColors.swift.
+        ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: NO
         TARGETED_DEVICE_FAMILY: "1"
   NudgeWidgets:
     type: app-extension
