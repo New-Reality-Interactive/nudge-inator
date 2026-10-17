@@ -14,7 +14,7 @@
       }
     },
     "CFBundleName" : {
-      "comment" : "Bundle name",
+      "comment" : "The bundle's short name (the product name). The Home Screen shows CFBundleDisplayName instead. Not translated.",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
@@ -23,7 +23,8 @@
             "value" : "NudgeInator"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "NSAlarmKitUsageDescription" : {
       "comment" : "The reason in the system prompt that asks to allow alarms. A brief, complete sentence.",

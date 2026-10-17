@@ -11,8 +11,11 @@
 # the key has one, else x-ic, else x. So badge (no dark) keeps badge-ic in dark high contrast, and
 # a tile (one value) is the same everywhere.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+# An output path is taken from where the script was run, before moving to the repo root.
 out="${1:-App/Resources/Assets.xcassets}"
+case "$out" in /*) ;; *) out="$PWD/$out" ;; esac
+cd "$(dirname "$0")/.."
+if [ -z "${1:-}" ]; then out="$PWD/App/Resources/Assets.xcassets"; fi
 
 perl -e '
   use strict; use warnings;

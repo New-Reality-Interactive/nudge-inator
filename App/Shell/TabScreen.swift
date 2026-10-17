@@ -30,9 +30,16 @@ struct StoreUnreadableView: View {
                 Image(systemName: "exclamationmark.triangle")
             }
         } description: {
-            Text("Your reminders are still on this iPhone, and nudges already scheduled will still come. Unlock your iPhone, then open Nudge-inator again.",
-                 comment: "Explains the unreadable store: nothing is lost, and reopening the app tries again.")
+            Text("Your reminders are still on this iPhone, and nudges already scheduled will still come. Unlock your iPhone, then open \(Self.appName) again.",
+                 comment: "Explains the unreadable store: nothing is lost, and reopening the app tries again. The placeholder is the app's name.")
         }
+    }
+
+    /// The name under the app's icon, in the app's language (InfoPlist.xcstrings).
+    private static var appName: String {
+        Bundle.main.localizedInfoDictionary?["CFBundleDisplayName"] as? String
+            ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+            ?? ""
     }
 }
 
@@ -43,24 +50,43 @@ struct EmptyRow: View {
     var body: some View {
         text
             .font(.body)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color(uiColor: .secondaryLabel))
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity)
     }
 }
 
-/// The + that opens the New Reminder form, disabled until that form exists (ticket 24).
-struct NewReminderButton: View {
+/// A toolbar + whose sheet a later ticket builds, so it is shown but disabled: New Reminder
+/// (ticket 24) on Now and My Day, New Tag on Tags.
+struct DisabledAddButton: View {
+    /// What the + adds, for VoiceOver.
+    let label: Text
+
     var body: some View {
         Button {
         } label: {
             Label {
-                Text("New Reminder", comment: "Toolbar button (a plus) that opens the New Reminder form.")
+                label
             } icon: {
                 Image(systemName: "plus")
             }
         }
         .disabled(true)
+    }
+}
+
+/// The + that opens the New Reminder form, on Now and My Day.
+struct NewReminderButton: View {
+    var body: some View {
+        DisabledAddButton(label: Text("New Reminder", comment: "Toolbar button (a plus) that opens the New Reminder form."))
+    }
+}
+
+extension View {
+    /// The mockup's subhead under a screen's title: today's date and the like.
+    func subheadStyle() -> some View {
+        font(.subheadline)
+            .foregroundStyle(Color(uiColor: .secondaryLabel))
     }
 }
 

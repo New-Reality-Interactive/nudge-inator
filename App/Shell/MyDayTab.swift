@@ -13,8 +13,7 @@ struct MyDayTab: View {
                         EmptyRow(text: Text("Nothing is due today.", comment: "My Day: the list when nothing is due today."))
                     } header: {
                         Text(Date.now, format: .dateTime.weekday(.wide).day().month(.wide))
-                            .font(.subheadline)
-                            .foregroundStyle(Color(uiColor: .secondaryLabel))
+                            .subheadStyle()
                             .textCase(nil)
                     }
                 }

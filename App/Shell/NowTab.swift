@@ -41,8 +41,7 @@ private struct NowHeader: View {
         VStack(alignment: .leading, spacing: Design.Spacing.s3) {
             Text("\(Date.now, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated)) · Nothing is nudging you",
                  comment: "Now: under the title. The placeholder is today's short date, such as \"Sat 17 Oct\".")
-                .font(.subheadline)
-                .foregroundStyle(Color(uiColor: .secondaryLabel))
+                .subheadStyle()
             Text("Nudging", comment: "Now: section header for the reminders nudging you now.")
                 .font(.title3.bold())
                 // The label color, as the mockup's big section header: a list header's own

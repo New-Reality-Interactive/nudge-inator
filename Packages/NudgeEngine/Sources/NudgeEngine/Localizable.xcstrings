@@ -1,8 +1,16 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "%@ (28 February in years without one)" : {
-      "comment" : "Repeat summary: a yearly preset on 29 February, which moves to the 28th in other years. The placeholder is the repeat."
+    "%@ (%@ in years without one)" : {
+      "comment" : "Repeat summary: a yearly preset on 29 February, which moves to the 28th in other years. 1: the repeat. 2: the day it moves to, such as \"28 February\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ (%2$@ in years without one)"
+          }
+        }
+      }
     },
     "%@ (skipped in months without one)" : {
       "comment" : "Repeat summary: a custom monthly repeat on a day some months lack. The placeholder is the repeat."
@@ -72,7 +80,7 @@
       }
     },
     "%@ of %@" : {
-      "comment" : "Repeat summary. 1: days, such as \"the last Monday\". 2: the months or period they're in, such as \"May\" or \"the year\".",
+      "comment" : "Repeat summary: a yearly repeat's days in some months. 1: the days, such as \"the last Monday\". 2: the months, such as \"May\".",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -81,6 +89,12 @@
           }
         }
       }
+    },
+    "%@ of every month" : {
+      "comment" : "Repeat summary: a yearly repeat's days in each month. The placeholder is the days, such as \"the 1st\"."
+    },
+    "%@ of the year" : {
+      "comment" : "Repeat summary: a yearly repeat's weekdays counted in the year. The placeholder is the days, such as \"the first Monday\"."
     },
     "%@ on %@" : {
       "comment" : "Repeat summary. 1: how often, such as \"Every 2 weeks\". 2: the days it falls on, such as \"Monday and Wednesday\" or \"the 15th\".",
@@ -94,7 +108,7 @@
       }
     },
     "%@ when it's %@" : {
-      "comment" : "Repeat summary: a limit on the days. 1: the repeat, such as \"Every day\". 2: the days it's limited to, such as \"a Monday or Friday\".",
+      "comment" : "Repeat summary: a repeat limited to some days. 1: the repeat, such as \"Every day\". 2: the days, such as \"the 1st or the 15th\" or \"the first Monday\".",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -104,8 +118,38 @@
         }
       }
     },
-    "%@-to-last" : {
-      "comment" : "Repeat summary: counted from the end, as in \"the 6th-to-last day\". The placeholder is the ordinal number, such as \"6th\"."
+    "%@ when it's %@ and %@" : {
+      "comment" : "Repeat summary: a repeat limited to days that are also certain weekdays. 1: the repeat. 2: the days, such as \"the 13th\". 3: the weekdays, such as \"the first Monday\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ when it's %2$@ and %3$@"
+          }
+        }
+      }
+    },
+    "%@ when it's %@ and a %@" : {
+      "comment" : "Repeat summary: a repeat limited to days that are also certain weekdays. 1: the repeat. 2: the days, such as \"the 13th\". 3: the weekdays, such as \"Friday\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ when it's %2$@ and a %3$@"
+          }
+        }
+      }
+    },
+    "%@ when it's a %@" : {
+      "comment" : "Repeat summary: a repeat limited to some weekdays. 1: the repeat, such as \"Every day\". 2: the weekdays, such as \"Monday or Friday\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ when it's a %2$@"
+          }
+        }
+      }
     },
     "%lld times" : {
       "comment" : "Repeat summary: how many times a repeat happens before it ends. Singular: \"once\".",
@@ -268,44 +312,14 @@
     "Yesterday" : {
       "comment" : "Repeat summary: a one-off reminder's day, as in \"Once, Yesterday at 9:00\"."
     },
-    "a %@" : {
-      "comment" : "Repeat summary: the weekdays in a condition, as in \"when it's a Monday or Friday\". The placeholder is the weekdays."
-    },
     "every %@" : {
       "comment" : "Repeat summary: each of a weekday in a month or year, as in \"Every month on every Monday\"."
-    },
-    "every month" : {
-      "comment" : "Repeat summary: the months a yearly repeat's days are in, as in \"the 1st of every month\"."
-    },
-    "fifth" : {
-      "comment" : "Repeat summary: the fifth of a weekday, as in \"the fifth Monday\"."
-    },
-    "fifth-to-last" : {
-      "comment" : "Repeat summary: counted from the end, as in \"the fifth-to-last day\"."
-    },
-    "first" : {
-      "comment" : "Repeat summary: the first of a weekday, as in \"the first Monday\"."
-    },
-    "fourth" : {
-      "comment" : "Repeat summary: the fourth of a weekday, as in \"the fourth Monday\"."
-    },
-    "fourth-to-last" : {
-      "comment" : "Repeat summary: counted from the end, as in \"the fourth-to-last day\"."
-    },
-    "last" : {
-      "comment" : "Repeat summary: the last of a weekday or day, as in \"the last Monday\" or \"the last day\"."
-    },
-    "second" : {
-      "comment" : "Repeat summary: the second of a weekday, as in \"the second Monday\"."
-    },
-    "second-to-last" : {
-      "comment" : "Repeat summary: counted from the end, as in \"the second-to-last day\"."
     },
     "the %@" : {
       "comment" : "Repeat summary: a day of the month, as in \"Every month on the 15th\". The placeholder is the ordinal number, such as \"15th\"."
     },
     "the %@ %@" : {
-      "comment" : "Repeat summary: one weekday of a month or year. 1: which one, such as \"first\", \"last\" or \"6th\". 2: the weekday.",
+      "comment" : "Repeat summary: one weekday of a year, counted from its start. 1: the ordinal number, such as \"6th\". 2: the weekday.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -315,17 +329,64 @@
         }
       }
     },
-    "the %@ day" : {
-      "comment" : "Repeat summary: a day counted from the end of the month. The placeholder is which one, such as \"last\" or \"second-to-last\"."
+    "the %@-to-last %@" : {
+      "comment" : "Repeat summary: one weekday counted from the end of a month or year. 1: the ordinal number, such as \"6th\". 2: the weekday.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "the %1$@-to-last %2$@"
+          }
+        }
+      }
     },
-    "the year" : {
-      "comment" : "Repeat summary: the period a yearly repeat's weekday counts in, as in \"the first Monday of the year\"."
+    "the %@-to-last day" : {
+      "comment" : "Repeat summary: a day counted from the end of the month. The placeholder is the ordinal number, such as \"6th\"."
     },
-    "third" : {
-      "comment" : "Repeat summary: the third of a weekday, as in \"the third Monday\"."
+    "the fifth %@" : {
+      "comment" : "Repeat summary: the fifth of a weekday in a month or year. The placeholder is the weekday."
     },
-    "third-to-last" : {
-      "comment" : "Repeat summary: counted from the end, as in \"the third-to-last day\"."
+    "the fifth-to-last %@" : {
+      "comment" : "Repeat summary: a weekday counted from the end of a month or year. The placeholder is the weekday."
+    },
+    "the fifth-to-last day" : {
+      "comment" : "Repeat summary: a day counted from the end of the month."
+    },
+    "the first %@" : {
+      "comment" : "Repeat summary: the first of a weekday in a month or year. The placeholder is the weekday."
+    },
+    "the fourth %@" : {
+      "comment" : "Repeat summary: the fourth of a weekday in a month or year. The placeholder is the weekday."
+    },
+    "the fourth-to-last %@" : {
+      "comment" : "Repeat summary: a weekday counted from the end of a month or year. The placeholder is the weekday."
+    },
+    "the fourth-to-last day" : {
+      "comment" : "Repeat summary: a day counted from the end of the month."
+    },
+    "the last %@" : {
+      "comment" : "Repeat summary: the last of a weekday in a month or year. The placeholder is the weekday."
+    },
+    "the last day" : {
+      "comment" : "Repeat summary: the last day of the month."
+    },
+    "the second %@" : {
+      "comment" : "Repeat summary: the second of a weekday in a month or year. The placeholder is the weekday."
+    },
+    "the second-to-last %@" : {
+      "comment" : "Repeat summary: a weekday counted from the end of a month or year. The placeholder is the weekday."
+    },
+    "the second-to-last day" : {
+      "comment" : "Repeat summary: a day counted from the end of the month."
+    },
+    "the third %@" : {
+      "comment" : "Repeat summary: the third of a weekday in a month or year. The placeholder is the weekday."
+    },
+    "the third-to-last %@" : {
+      "comment" : "Repeat summary: a weekday counted from the end of a month or year. The placeholder is the weekday."
+    },
+    "the third-to-last day" : {
+      "comment" : "Repeat summary: a day counted from the end of the month."
     }
   },
   "version" : "1.0"

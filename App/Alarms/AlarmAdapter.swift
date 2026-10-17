@@ -222,9 +222,10 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
     /// The title only (Privacy) and the system Stop button, which `Alert(title:secondaryButton:...)`
     /// supplies (iOS 26.1+). No countdown or paused presentation.
     private static func attributes(for item: SchedulePlan.Item, hasOpenButton: Bool) -> AlarmAttributes<NudgeAlarmMetadata> {
-        // Interpolated, so the title is an argument and never looked up as a localization key. The
-        // catalog marks the "%@" it extracts as not to be translated.
-        let title = LocalizedStringResource("\(item.title)", comment: "The alarm's title: the reminder's own title, shown as the person wrote it. Not translated.")
+        // Interpolated, so the title is an argument and never looked up as a localization key. Its
+        // own table, Untranslated.xcstrings, marks the "%@" it extracts as not to be translated,
+        // which leaves "%@" in the main table free for strings that are.
+        let title = LocalizedStringResource("\(item.title)", table: "Untranslated", comment: "The alarm's title: the reminder's own title, shown as the person wrote it. Not translated.")
         let alert = hasOpenButton
             ? AlarmPresentation.Alert(title: title, secondaryButton: openButton, secondaryButtonBehavior: .custom)
             : AlarmPresentation.Alert(title: title)

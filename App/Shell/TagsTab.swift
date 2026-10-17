@@ -20,16 +20,8 @@ struct TagsTab: View {
             .navigationTitle(Text(AppTab.tags.title))
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                    } label: {
-                        Label {
-                            Text("New Tag", comment: "Toolbar button (a plus) on Tags that adds a tag.")
-                        } icon: {
-                            Image(systemName: "plus")
-                        }
-                    }
-                    // The New Tag sheet comes with tag creation in a later ticket.
-                    .disabled(true)
+                    // Enabled with tag creation, in a later ticket.
+                    DisabledAddButton(label: Text("New Tag", comment: "Toolbar button (a plus) on Tags that adds a tag."))
                 }
             }
         }

@@ -1,0 +1,10 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@" : {
+      "comment" : "The alarm's title: the reminder's own title, shown as the person wrote it. Not translated.",
+      "shouldTranslate" : false
+    }
+  },
+  "version" : "1.0"
+}

@@ -1,10 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "%@" : {
-      "comment" : "The alarm's title: the reminder's own title, shown as the person wrote it. Not translated.",
-      "shouldTranslate" : false
-    },
     "%@ · Nothing is nudging you" : {
       "comment" : "Now: under the title. The placeholder is today's short date, such as \"Sat 17 Oct\"."
     },
@@ -65,8 +61,8 @@
     "Tap + to add a tag, or add tags to a reminder when you create or edit it." : {
       "comment" : "Tags: how to add a tag when there are none."
     },
-    "Your reminders are still on this iPhone, and nudges already scheduled will still come. Unlock your iPhone, then open Nudge-inator again." : {
-      "comment" : "Explains the unreadable store: nothing is lost, and reopening the app tries again."
+    "Your reminders are still on this iPhone, and nudges already scheduled will still come. Unlock your iPhone, then open %@ again." : {
+      "comment" : "Explains the unreadable store: nothing is lost, and reopening the app tries again. The placeholder is the app's name."
     },
     "Your reminders stay on this iPhone. There's no account and no server, and nothing syncs to other devices." : {
       "comment" : "Settings: the privacy note under Your Data."
