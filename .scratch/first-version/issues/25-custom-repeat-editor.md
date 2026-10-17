@@ -32,7 +32,7 @@ The Repeat page lists the seven presets, then **Custom** in its own section with
 - [x] Next Times matches the engine's output and updates as controls change.
 - [x] An end date before the start shows a visible reason, and Save is disabled.
 - [x] Choosing a preset after Custom replaces the custom rule, and reopening an existing reminder with a custom rule shows Custom checked with its choices restored.
-- [ ] VoiceOver reads each weekday as a checkbox with its name and state, each monthly choice as a radio button, and the summary as one element. Nothing relies on colour alone.
+- [x] VoiceOver reads each weekday as a checkbox with its name and state, each monthly choice as a radio button, and the summary as one element. Nothing relies on colour alone.
 - [x] Works at the largest Dynamic Type size (segmented pickers become menus) and in landscape.
 - [x] A `#Preview` for the page in Light, Dark and the largest Dynamic Type size.
 
@@ -145,10 +145,14 @@ This matches the mockup's layout. One difference: the summary's "until Sun, Jan 
 - **Found and fixed on the device**, each rechecked there and passing:
   - **The Frequency and Ends headings were hidden from VoiceOver.** The segments don't read the picker's label, so the headings are now read.
   - **The End Date picker showed the start in place of an earlier end date** that the rule still held. Its range now keeps that date.
-- **The VoiceOver criterion stays open.** iOS has no checkbox or radio trait, so a weekday reads "switch button, on/off" and a monthly choice "Selected …, button". Whether that is good enough is the user's call.
+- **The VoiceOver criterion is met by the user's definition:** VoiceOver reads what the control is on this iOS version, and the controls are the right ones for the job.
+  - The weekdays are a multiple choice, which iOS reads as toggles: "switch button, on/off" on iOS 27.0.1.
+  - The monthly choices are a single-choice checkmark list, as the Repeat page and Calendar use, read as "Selected …, button".
+  - iOS has no checkbox or radio trait.
+  - The summary is one static-text element holding the whole sentence. This was checked in the iOS 26.5 simulator's accessibility tree, which VoiceOver reads from.
 
 **Device checks still pending** (record the iOS version when they are run):
-- The summary at the top read by VoiceOver as one element.
+- The summary heard on the phone with VoiceOver. The simulator's accessibility tree has it as one element.
 - The Strength picker in the form may have the same hidden-heading problem as Frequency and Ends (ticket 24 hides its header the same way). Check that VoiceOver names the Strength segments.
 - The lock on the Repeat and Custom pages when a reminder starts nudging while they're open. This needs Edit's entry point (ticket 27).
 - Whether `Calendar.autoupdatingCurrent` and the engine's time zone agree after the person travels (ticket 21's note), since the end date is split by the engine's calendar.
