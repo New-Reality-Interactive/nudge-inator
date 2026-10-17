@@ -4,6 +4,8 @@
 
 Issues and specs are local markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
 
+A ticket is `resolved` only when every acceptance criterion is ticked. While one is open, its `Status:` stays as it was. Say which criterion is open and why, and resolve it with the user: meet it, or agree a change to it (reworded, or moved to a named ticket) and record that agreement in Comments.
+
 ### Triage labels
 
 Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
