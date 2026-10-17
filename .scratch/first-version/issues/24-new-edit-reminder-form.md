@@ -17,7 +17,7 @@ The form: Title, Notes, Tags (any number, create a tag inline, one word shown as
 - [x] Typing `Home` when `#home` exists attaches the existing tag.
 - [x] Editing a Nudging reminder shows due time, Repeat, Strength and the switch disabled with the reason as text (not colour alone), and Title, Notes and Tags still save.
 - [x] Editing a paused, finished or not-yet-due reminder shows every field enabled.
-- [ ] **Custom** on the Repeat page opens the ticket 25 page, and with a custom rule the Repeat row reads Custom and the footer gives its summary.
+- [x] **Custom** on the Repeat page opens the ticket 25 page, and with a custom rule the Repeat row reads Custom and the footer gives its summary.
 - [x] Form works with VoiceOver labels on every control and at the largest Dynamic Type size.
 
 Blocked by: 13, 17, 22, 23
@@ -148,7 +148,7 @@ The summary is compared with the engine's own output, whose wording `RepeatSumma
 
 **Device checks still pending** (record the iOS version when they are run):
 - **The lock on a nudging reminder on the phone (ticket 27, which adds Edit):** the note at the top, and VoiceOver reading the lock note as the hint of each disabled control, including the segmented Strength picker, whose segments may not carry it. The docs don't say a disabled control's hint is read.
-- **Custom opening ticket 25's page:** this criterion stays open for ticket 25. The rest of it is done: with a custom rule, the Repeat row reads Custom and the footer gives the engine's summary (unit test and preview).
+- **Custom opening ticket 25's page:** done in ticket 25 (screenshots, and on the iPhone, iOS 27.0.1).
 
 **Tooling (added at the user's request):** `scripts/test.sh` no longer passes `-quiet`, which hid Swift Testing's lines. `xcodebuild_logged` keeps each run's full output in `.build/test-logs/` (`engine-macos.log`, `app-ios-<os>.log`) and prints only each run's count, the failed tests, errors and the verdict, so one run shows "204 tests" for the engine and "139 tests" for each iOS version. On a failure it also prints the log's path.
 
