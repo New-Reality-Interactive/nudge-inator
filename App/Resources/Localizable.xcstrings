@@ -5,7 +5,7 @@
       "comment" : "Now: under the title. The placeholder is today's short date, such as \"Sat 17 Oct\"."
     },
     "%@." : {
-      "comment" : "Under the Repeat page's Custom row when the repeat is custom. The placeholder is the repeat summary.\nUnder the reminder form's Starts and Repeat. The placeholder is the repeat summary, such as \"Every 3 days at 9:00 AM\"."
+      "comment" : "A repeat summary as a sentence, under the reminder form's Starts and under the Repeat page's Custom row. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\"."
     },
     "**All clear.** Nothing needs you right now." : {
       "comment" : "Now: the Nudging section when nothing is nudging."
@@ -168,8 +168,8 @@
     "Nudging" : {
       "comment" : "Now: section header for the reminders nudging you now."
     },
-    "Nudging now. Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them." : {
-      "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging."
+    "Nudging now. Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge." : {
+      "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging: the note at the top of the form, without its bold."
     },
     "One word. Spaces become hyphens. A reminder can have as many tags as you like." : {
       "comment" : "Under the Tags page's New Tag field."

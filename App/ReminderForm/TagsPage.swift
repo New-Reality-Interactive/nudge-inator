@@ -35,7 +35,8 @@ struct TagsPage: View {
                     EmptyRow(text: Text("No tags yet. Add one above.", comment: "The Tags page's list when there are no tags."))
                 }
                 ForEach(sortedTags) { tag in
-                    TagRow(tag: tag, isChosen: form.tagIDs.contains(tag.id)) {
+                    // The person's own tag name, never translated.
+                    CheckmarkRow(title: Text(verbatim: "#\(tag.name)"), isChecked: form.tagIDs.contains(tag.id)) {
                         form.toggleTag(tag.id)
                     }
                 }
@@ -57,30 +58,6 @@ struct TagsPage: View {
         form.addTag(named: newTag)
         newTag = ""
         isNewTagFocused = true
-    }
-}
-
-/// A tag on the Tags page: `#name`, with a checkmark when it's chosen.
-private struct TagRow: View {
-    let tag: Tag
-    let isChosen: Bool
-    let toggle: () -> Void
-
-    var body: some View {
-        Button(action: toggle) {
-            HStack {
-                // The person's own tag name, never translated.
-                Text(verbatim: "#\(tag.name)")
-                    .foregroundStyle(Color(uiColor: .label))
-                Spacer()
-                if isChosen {
-                    Image(systemName: "checkmark")
-                        .foregroundStyle(Color.accentColor)
-                        .accessibilityHidden(true)
-                }
-            }
-        }
-        .accessibilityAddTraits(isChosen ? .isSelected : [])
     }
 }
 

@@ -7,8 +7,6 @@ import SwiftUI
 /// model; without one (previews) it is disabled.
 struct ReminderFormSheet: View {
     @Bindable var form: ReminderForm
-    /// Whether this is the Edit form, for the title and Save's label.
-    let isEditing: Bool
     @Environment(AppModel.self) private var model: AppModel?
     @Environment(\.dismiss) private var dismiss
     @State private var isConfirmingDiscard = false
@@ -16,7 +14,7 @@ struct ReminderFormSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                if isEditing { EditNoteSection(isLocked: !form.lockedFields.isEmpty) }
+                if form.isEditing { EditNoteSection(isLocked: !form.lockedFields.isEmpty) }
                 WhatSection(form: form)
                 ScheduleSection(form: form)
                 StrengthSection(form: form)
@@ -24,7 +22,7 @@ struct ReminderFormSheet: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .centeredInReadableColumn()
-            .navigationTitle(isEditing
+            .navigationTitle(form.isEditing
                 ? Text("Edit Reminder", comment: "Title of the form that edits a reminder.")
                 : Text("New Reminder", comment: "Title of the form that makes a reminder."))
             .navigationBarTitleDisplayMode(.inline)
@@ -70,7 +68,7 @@ struct ReminderFormSheet: View {
                 if let model, form.save(to: model) { dismiss() }
             } label: {
                 Label {
-                    isEditing
+                    form.isEditing
                         ? Text("Save", comment: "The Edit Reminder form's confirm button (a checkmark).")
                         : Text("Add", comment: "The New Reminder form's confirm button (a checkmark).")
                 } icon: {
@@ -127,11 +125,11 @@ private struct WhatSection: View {
             }
             .focused($isTitleFocused)
             .submitLabel(.done)
-            // A vertical field takes Return as a new line; the title is one line that wraps, so
-            // Return ends editing instead, as the mockup's "done" key.
+            // A vertical field takes Return as a new line. Return at the end ends editing instead,
+            // as the mockup's "done" key; the form saves any pasted line breaks as spaces.
             .onChange(of: form.title) { _, title in
-                guard title.contains(where: \.isNewline) else { return }
-                form.title = title.filter { !$0.isNewline }
+                guard title.last?.isNewline == true else { return }
+                form.title.removeLast()
                 isTitleFocused = false
             }
             TextField(text: $form.notes, axis: .vertical) {
@@ -188,7 +186,7 @@ private struct ScheduleSection: View {
                          comment: "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled.")
                         .foregroundStyle(Color.negative)
                 }
-                Text("\(form.repeatSummary).", comment: "Under the reminder form's Starts and Repeat. The placeholder is the repeat summary, such as \"Every 3 days at 9:00 AM\".")
+                RepeatSummarySentence(summary: form.repeatSummary)
             }
         }
     }
@@ -226,30 +224,28 @@ private struct StrengthSection: View {
 
     var body: some View {
         let isLocked = form.lockedFields.contains(.strength)
+        let label = Text("Strength", comment: "The reminder form's strength choice: Gentle, Firm or Relentless.")
         Section {
             Picker(selection: $form.strength) {
                 ForEach(Strength.formOrder, id: \.self) { strength in
                     Text(strength.title).tag(strength)
                 }
             } label: {
-                LockableLabel(isLocked: isLocked) {
-                    Text("Strength", comment: "The reminder form's strength choice: Gentle, Firm or Relentless.")
-                }
+                LockableLabel(isLocked: isLocked) { label }
             }
             .strengthPickerStyle(isMenu: dynamicTypeSize.isAccessibilitySize)
             .lockedWhileNudging(isLocked)
         } header: {
             if !dynamicTypeSize.isAccessibilitySize {
-                LockableLabel(isLocked: isLocked) {
-                    Text("Strength", comment: "The reminder form's strength choice: Gentle, Firm or Relentless.")
-                }
-                .accessibilityHidden(true)
+                LockableLabel(isLocked: isLocked) { label }
+                    .accessibilityHidden(true)
             }
         } footer: {
-            Text(form.strength.blurb)
-            + Text(verbatim: " ")
-            + Text("Gives up after \(GiveUpLimit.shipped.nudgeCount) nudges or \(GiveUpLimit.shipped.spanText), whichever comes first.",
-                   comment: "Under the reminder form's strength. 1: the give-up limit's nudge count. 2: its span, such as \"24 hours\".")
+            VStack(alignment: .leading, spacing: Design.Spacing.s1) {
+                Text(form.strength.blurb)
+                Text("Gives up after \(GiveUpLimit.shipped.nudgeCount) nudges or \(GiveUpLimit.shipped.spanText), whichever comes first.",
+                     comment: "Under the reminder form's strength. 1: the give-up limit's nudge count. 2: its span, such as \"24 hours\".")
+            }
         }
     }
 }
@@ -325,12 +321,12 @@ extension View {
     }
 }
 
-/// Why a Nudging reminder's schedule is locked (ticket 13). The details screen (ticket 27) shows
-/// the same reason under its Schedule.
+/// Why a Nudging reminder's schedule is locked (ticket 13), as the form's top note says it. A
+/// separate catalog string from the note because a hint can't carry its bold.
 enum LockNote {
     static let hint = LocalizedStringResource(
-        "Nudging now. Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them.",
-        comment: "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging."
+        "Nudging now. Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge.",
+        comment: "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging: the note at the top of the form, without its bold."
     )
 }
 
@@ -364,20 +360,30 @@ extension GiveUpLimit {
     }
 }
 
+/// A repeat summary as a sentence: the Starts footer, and the Custom row's footer when the repeat
+/// is custom.
+struct RepeatSummarySentence: View {
+    let summary: String
+
+    var body: some View {
+        Text("\(summary).", comment: "A repeat summary as a sentence, under the reminder form's Starts and under the Repeat page's Custom row. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".")
+    }
+}
+
 #Preview("New") {
-    ReminderFormSheet(form: .preview(), isEditing: false)
+    ReminderFormSheet(form: .preview())
 }
 
 #Preview("New, dark") {
-    ReminderFormSheet(form: .preview(), isEditing: false)
+    ReminderFormSheet(form: .preview())
         .preferredColorScheme(.dark)
 }
 
 #Preview("Locked, largest text") {
-    ReminderFormSheet(form: .previewNudging(), isEditing: true)
+    ReminderFormSheet(form: .previewNudging())
         .environment(\.dynamicTypeSize, .accessibility5)
 }
 
 #Preview("Locked") {
-    ReminderFormSheet(form: .previewNudging(), isEditing: true)
+    ReminderFormSheet(form: .previewNudging())
 }

@@ -1,7 +1,7 @@
 import NudgeEngine
 import SwiftUI
 
-/// The form's Repeat page, as the mockup's: the seven presets, then Custom in its own section,
+/// The form's Repeat page, as the mockup's: Never and the six presets, then Custom in its own section,
 /// as in Calendar. Custom opens ticket 25's page; until then its row is disabled, but a reminder
 /// that already has a custom rule shows it checked with the engine's summary.
 struct RepeatPage: View {
@@ -23,7 +23,7 @@ struct RepeatPage: View {
                     .disabled(true)
             } footer: {
                 if form.repeatPreset == nil {
-                    Text("\(form.repeatSummary).", comment: "Under the Repeat page's Custom row when the repeat is custom. The placeholder is the repeat summary.")
+                    RepeatSummarySentence(summary: form.repeatSummary)
                 } else {
                     Text("Every few days, chosen weekdays, the last day of the month, or a repeat that ends.",
                          comment: "Under the Repeat page's Custom row: what a custom repeat can do.")
@@ -33,29 +33,6 @@ struct RepeatPage: View {
         .centeredInReadableColumn()
         .navigationTitle(Text("Repeat", comment: "Title of the reminder form's Repeat page."))
         .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-/// One choice of several, with a checkmark on the chosen one. VoiceOver reads it as selected.
-private struct CheckmarkRow: View {
-    let title: Text
-    let isChecked: Bool
-    let choose: () -> Void
-
-    var body: some View {
-        Button(action: choose) {
-            HStack {
-                title
-                    .foregroundStyle(Color(uiColor: .label))
-                Spacer()
-                if isChecked {
-                    Image(systemName: "checkmark")
-                        .foregroundStyle(Color.accentColor)
-                        .accessibilityHidden(true)
-                }
-            }
-        }
-        .accessibilityAddTraits(isChecked ? .isSelected : [])
     }
 }
 

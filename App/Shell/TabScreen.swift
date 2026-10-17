@@ -84,7 +84,7 @@ struct NewReminderButton: View {
 
     var body: some View {
         Button {
-            if let model { form = ReminderForm(engine: model.engine, now: { .now }) }
+            if let model { form = ReminderForm(engine: { model.engine }, now: { .now }) }
         } label: {
             Label {
                 Text("New Reminder", comment: "Toolbar button (a plus) that opens the New Reminder form.")
@@ -94,7 +94,7 @@ struct NewReminderButton: View {
         }
         .disabled(model == nil || ScreenState(model: model) != .ready)
         .sheet(item: $form) { form in
-            ReminderFormSheet(form: form, isEditing: false)
+            ReminderFormSheet(form: form)
         }
     }
 }

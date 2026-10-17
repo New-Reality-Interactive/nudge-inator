@@ -1,8 +1,9 @@
 import Foundation
 import NudgeEngine
 
-/// The Repeat page's seven presets, in the mockup's order. Each is one of the engine's rules
-/// (ticket 08); any other rule is Custom (ticket 25).
+/// The Repeat page's first section: Never and the six presets (GLOSSARY.md › Repeat), in the
+/// mockup's order. Each is one of the engine's rules (ticket 08); any other rule is Custom
+/// (ticket 25).
 enum RepeatPreset: CaseIterable, Hashable {
     case never
     case everyDay

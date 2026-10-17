@@ -7,7 +7,7 @@ extension ReminderForm {
     static func preview(tags: [String] = []) -> ReminderForm {
         var engine = Engine(clock: PreviewClock(), scheduler: PreviewScheduler())
         engine.update(tags: tags.map { Tag(name: $0) })
-        return ReminderForm(engine: engine, now: { .now })
+        return ReminderForm(engine: { engine }, now: { .now })
     }
 
     /// The Edit form of a Firm reminder that fell due ten minutes ago, so it is Nudging.
@@ -24,7 +24,7 @@ extension ReminderForm {
     private static func edit(_ reminder: Reminder) -> ReminderForm {
         var engine = Engine(clock: PreviewClock(), scheduler: PreviewScheduler())
         engine.update(reminders: [reminder])
-        return ReminderForm(engine: engine, editing: reminder.id, now: { .now }) ?? preview()
+        return ReminderForm(engine: { engine }, editing: reminder.id, now: { .now }) ?? preview()
     }
 }
 

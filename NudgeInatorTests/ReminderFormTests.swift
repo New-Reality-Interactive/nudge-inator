@@ -27,11 +27,11 @@ struct ReminderFormTests {
     }
 
     func newForm(on model: AppModel) -> ReminderForm {
-        ReminderForm(engine: model.engine, now: { [clock] in clock.now })
+        ReminderForm(engine: { model.engine }, now: { [clock] in clock.now })
     }
 
     func editForm(of reminderID: Reminder.ID, on model: AppModel) throws -> ReminderForm {
-        let form = ReminderForm(engine: model.engine, editing: reminderID, now: { [clock] in clock.now })
+        let form = ReminderForm(engine: { model.engine }, editing: reminderID, now: { [clock] in clock.now })
         return try #require(form)
     }
 
@@ -239,10 +239,24 @@ struct ReminderFormTests {
         #expect(form.saveBlock == .pastTime)
         #expect(form.save(to: model) == false)
         #expect(model.engine.reminders.isEmpty)
+    }
 
-        // A repeat may start in the past: its next due time is still to come.
-        form.repeatPreset = .everyDay
-        #expect(form.saveBlock == nil)
+    /// Ticket 13: a repeat whose start has passed would open an occurrence at once and nudge.
+    @Test func aRepeatCantStartAtATimeThatHasPassedUnlessItKeepsItsSavedStart() async throws {
+        let model = try await launchedModel()
+        let new = newForm(on: model)
+        new.title = "Stretch"
+        new.repeatPreset = .everyDay
+        new.dueTime = NewYork.local(2026, 10, 15, 7)
+        #expect(new.saveBlock == .pastTime)
+
+        let stretch = Reminder(title: "Stretch", dueTime: NewYork.local(2026, 10, 1, 9), repeatRule: .everyWeek, strength: .gentle)
+        model.add(stretch)
+        let edit = try editForm(of: stretch.id, on: model)
+        edit.title = "Stretch for ten minutes"
+        #expect(edit.saveBlock == nil)
+        edit.dueTime = NewYork.local(2026, 10, 15, 7, 30)
+        #expect(edit.saveBlock == .pastTime)
     }
 
     @Test func aOneOffThatKeepsItsPassedTimeCanBeRenamedButNotMovedToAnotherPassedTime() async throws {
@@ -256,6 +270,10 @@ struct ReminderFormTests {
 
         form.dueTime = NewYork.local(2026, 10, 15, 7, 45)
         #expect(form.saveBlock == .pastTime)
+
+        // The picker shows minutes, so the same minute is the same start.
+        form.dueTime = NewYork.local(2026, 10, 15, 7, 30, 40)
+        #expect(form.saveBlock == nil)
     }
 
     @Test(arguments: [
@@ -315,5 +333,48 @@ struct ReminderFormTests {
         form.toggleTag(home.id)
 
         #expect(form.chosenTagsText == "#errands #home")
+    }
+
+    @Test func aSaveTurnedDownByTheLockCreatesNoTag() async throws {
+        let model = try await launchedModel()
+        let later = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 9), strength: .firm)
+        model.add(later)
+        let form = try editForm(of: later.id, on: model)
+        form.addTag(named: "money")
+        form.strength = .relentless
+        clock.now = NewYork.local(2026, 10, 15, 9, 5)
+
+        #expect(form.save(to: model) == false)
+        #expect(model.engine.tags.isEmpty)
+    }
+
+    @Test func theLockLiftsWhenTheReminderIsMarkedDoneWhileTheFormIsOpen() async throws {
+        let model = try await launchedModel()
+        model.add(bins)
+        let form = try editForm(of: bins.id, on: model)
+        #expect(!form.lockedFields.isEmpty)
+
+        model.markDone(bins.id)
+
+        #expect(form.lockedFields.isEmpty)
+    }
+
+    @Test func aTitleWithLineBreaksIsSavedOnOneLine() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.title = "Buy\nmilk\r\nand eggs"
+
+        #expect(form.save(to: model))
+        #expect(model.engine.reminders.only?.title == "Buy milk and eggs")
+    }
+
+    @Test func savingTwiceAddsTheReminderOnce() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.title = "Feed the cat"
+
+        #expect(form.save(to: model))
+        #expect(form.save(to: model) == false)
+        #expect(model.engine.reminders.count == 1)
     }
 }
