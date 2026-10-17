@@ -130,7 +130,7 @@ The decisions:
   5. **VoiceOver:** each tab reads its name. The + reads "New Reminder, dimmed" on Now and My Day, and "New Tag, dimmed" on Tags.
 
 **Device checks:**
-- Ticket 21's checks: the reboot check is done, the cold launch moved to ticket 26, and a Done before the first unlock is a decision (ticket 21).
+- Ticket 21's checks: the reboot check is done, the cold launch moved to ticket 26, and a Done before the first unlock is ticket 32.
 - ~~The alarm's tint now comes from the color set~~: done (2026-10-17, iPhone 15, iOS 27.0.1). `AlarmRingDeviceCheck` rang two alarms on time, both teal and showing only the title.
 
 **Left alone:**
