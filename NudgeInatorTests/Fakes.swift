@@ -1,7 +1,15 @@
+import AlarmKit
+import AppIntents
 import Foundation
 import NudgeEngine
+import NudgeShared
 import UserNotifications
 @testable import NudgeInator
+
+/// The real time, for device checks.
+struct SystemClock: EngineClock {
+    var now: Date { .now }
+}
 
 /// A clock the test sets by hand, so no test depends on real time.
 final class FakeClock: EngineClock {
@@ -109,5 +117,159 @@ final class TemporaryStoreFile: Sendable {
         for suffix in ["", "-wal", "-shm"] {
             try? FileManager.default.removeItem(at: URL(filePath: url.path() + suffix))
         }
+    }
+}
+
+/// Stands in for `AlarmManager`: keeps the schedule and attributes of every alarm the adapter
+/// schedules, so tests assert on what the alert shows and when it rings.
+@MainActor
+final class FakeAlarmManager: AlarmManaging {
+    struct Scheduled {
+        var id: Alarm.ID
+        var schedule: Alarm.Schedule
+        var attributes: AlarmAttributes<NudgeAlarmMetadata>
+        var secondaryIntent: (any LiveActivityIntent)?
+        var state: Alarm.State = .scheduled
+
+        var fireDate: Date? {
+            if case .fixed(let date) = schedule { date } else { nil }
+        }
+    }
+
+    /// The alarms the system holds, in the order scheduled.
+    private(set) var scheduled: [Scheduled] = []
+    /// Every alarm passed to `schedule`, in order, including refused ones.
+    private(set) var scheduleCalls: [Scheduled] = []
+    private(set) var cancelledIDs: [Alarm.ID] = []
+
+    /// When set, `schedule` throws `maximumLimitReached` once the system holds this many.
+    var alarmLimit: Int?
+    /// When set, every `schedule` throws it and nothing is scheduled.
+    var scheduleError: (any Error)?
+
+    func schedule(
+        id: Alarm.ID,
+        schedule: Alarm.Schedule,
+        attributes: AlarmAttributes<NudgeAlarmMetadata>,
+        secondaryIntent: (any LiveActivityIntent)?
+    ) async throws {
+        let alarm = Scheduled(id: id, schedule: schedule, attributes: attributes, secondaryIntent: secondaryIntent)
+        scheduleCalls.append(alarm)
+        defer { whileScheduling?() }
+        if let scheduleError { throw scheduleError }
+        if let alarmLimit, scheduled.count >= alarmLimit {
+            throw AlarmManager.AlarmError.maximumLimitReached
+        }
+        scheduled.removeAll { $0.id == id }
+        scheduled.append(alarm)
+    }
+
+    /// What the system does at an alarm's fire time.
+    func ring(_ id: Alarm.ID) {
+        for index in scheduled.indices where scheduled[index].id == id {
+            scheduled[index].state = .alerting
+        }
+    }
+
+    /// When set, every `cancel(id:)` throws it and nothing is cancelled.
+    var cancelError: (any Error)?
+    /// Runs after each `schedule` call, as if something happened while AlarmKit was busy.
+    var whileScheduling: (() -> Void)?
+
+    func cancel(id: Alarm.ID) throws {
+        if let cancelError { throw cancelError }
+        cancelledIDs.append(id)
+        scheduled.removeAll { $0.id == id }
+    }
+
+    /// When set, `alarms()` throws it.
+    var alarmsError: (any Error)?
+
+    func alarms() throws -> [AlarmSnapshot] {
+        if let alarmsError { throw alarmsError }
+        return scheduled.map { AlarmSnapshot(id: $0.id, state: $0.state) }
+    }
+
+    var authorizationState = AlarmManager.AuthorizationState.notDetermined
+
+    /// What the person answers when `requestAuthorization()` shows the prompt.
+    var promptAnswer = AlarmManager.AuthorizationState.authorized
+    private(set) var authorizationRequests = 0
+
+    func requestAuthorization() async throws -> AlarmManager.AuthorizationState {
+        authorizationRequests += 1
+        if authorizationState == .notDetermined {
+            authorizationState = promptAnswer
+        }
+        return authorizationState
+    }
+
+    private var authorizationContinuations: [AsyncStream<AlarmManager.AuthorizationState>.Continuation] = []
+
+    func authorizationUpdates() -> AsyncStream<AlarmManager.AuthorizationState> {
+        let (stream, continuation) = AsyncStream.makeStream(of: AlarmManager.AuthorizationState.self)
+        authorizationContinuations.append(continuation)
+        return stream
+    }
+
+    /// What the system does when the person changes the app's alarm permission in Settings.
+    func changeAuthorization(to state: AlarmManager.AuthorizationState) {
+        authorizationState = state
+        for continuation in authorizationContinuations {
+            continuation.yield(state)
+        }
+    }
+}
+
+extension Collection {
+    /// The one element, or `nil` if there are none or several.
+    var only: Element? { count == 1 ? first : nil }
+}
+
+/// Stands in for ticket 21's app model: owns the engine and sends the alarm adapter's reports on
+/// to it, as the real model will.
+@MainActor
+final class FakeAlarmEvents: AlarmAdapterEvents {
+    var engine: Engine?
+    /// A nudge whose alarm AlarmKit turned down with `maximumLimitReached`.
+    struct LimitReport: Equatable {
+        var reminderID: Reminder.ID
+        var fireTime: Date
+    }
+
+    private(set) var limitReports: [LimitReport] = []
+    private(set) var schedulingErrors: [any Error] = []
+
+    func markAlarmLimitReached(_ reminderID: Reminder.ID, firingAt fireTime: Date) {
+        limitReports.append(LimitReport(reminderID: reminderID, fireTime: fireTime))
+        engine?.markAlarmLimitReached(reminderID, firingAt: fireTime)
+    }
+
+    func schedulingFailed(_ error: any Error) {
+        schedulingErrors.append(error)
+    }
+
+    private(set) var authorizationChanges = 0
+
+    func alarmAuthorizationChanged() {
+        authorizationChanges += 1
+    }
+}
+
+/// Sits between the engine and an adapter: records each plan, then passes it on.
+@MainActor
+final class RecordingScheduler: @MainActor SchedulerAdapter {
+    private let adapter: any SchedulerAdapter
+    private(set) var appliedPlans: [SchedulePlan] = []
+
+    var lastPlan: SchedulePlan? { appliedPlans.last }
+
+    init(passingTo adapter: any SchedulerAdapter) {
+        self.adapter = adapter
+    }
+
+    func apply(_ plan: SchedulePlan) {
+        appliedPlans.append(plan)
+        adapter.apply(plan)
     }
 }
