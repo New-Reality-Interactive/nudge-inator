@@ -6,11 +6,6 @@ import NudgeShared
 import UserNotifications
 @testable import NudgeInator
 
-/// The real time, for device checks.
-struct SystemClock: EngineClock {
-    var now: Date { .now }
-}
-
 /// A clock the test sets by hand, so no test depends on real time.
 final class FakeClock: EngineClock {
     var now: Date
