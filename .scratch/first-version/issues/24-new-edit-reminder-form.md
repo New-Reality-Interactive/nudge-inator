@@ -150,6 +150,8 @@ The summary is compared with the engine's own output, whose wording `RepeatSumma
 - **The lock on a nudging reminder on the phone (ticket 27, which adds Edit):** the note at the top, and VoiceOver reading the lock note as the hint of each disabled control, including the segmented Strength picker, whose segments may not carry it. The docs don't say a disabled control's hint is read.
 - **Custom opening ticket 25's page:** this criterion stays open for ticket 25. The rest of it is done: with a custom rule, the Repeat row reads Custom and the footer gives the engine's summary (unit test and preview).
 
+**Tooling (added at the user's request):** `scripts/test.sh` no longer passes `-quiet`, which hid Swift Testing's lines. `xcodebuild_logged` keeps each run's full output in `.build/test-logs/` (`engine-macos.log`, `app-ios-<os>.log`) and prints only each run's count, the failed tests, errors and the verdict, so one run shows "204 tests" for the engine and "139 tests" for each iOS version. On a failure it also prints the log's path.
+
 **Left alone:**
 - the Custom page (25);
 - Now, My Day and Tags content (26, 28, 29), including showing the new reminder under Coming Up;
