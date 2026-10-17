@@ -24,8 +24,9 @@ public enum LockedField: Hashable, CaseIterable, Sendable {
     case strength
     case breakThroughFocus
 
-    /// Whether `edited` gives this field a different value from `current`.
-    func isChanged(from current: Reminder, to edited: Reminder) -> Bool {
+    /// Whether `edited` gives this field a different value from `current`. Public so the form
+    /// (ticket 24) can turn down a locked change before it creates the draft's new tags.
+    public func isChanged(from current: Reminder, to edited: Reminder) -> Bool {
         switch self {
         case .dueTime: current.dueTime != edited.dueTime
         case .repeatRule: current.repeatRule != edited.repeatRule

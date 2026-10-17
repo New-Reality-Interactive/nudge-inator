@@ -1,0 +1,389 @@
+import NudgeEngine
+import SwiftUI
+
+/// The New and Edit Reminder form, as the mockup's sheet: Title, Notes and Tags; Starts and
+/// Repeat; Strength; Break Through Focus. While the reminder is Nudging the schedule fields are
+/// disabled, each with a `lock`, under a note that says why (ticket 13). Save goes through the app
+/// model; without one (previews) it is disabled.
+struct ReminderFormSheet: View {
+    @Bindable var form: ReminderForm
+    @Environment(AppModel.self) private var model: AppModel?
+    @Environment(\.dismiss) private var dismiss
+    @State private var isConfirmingDiscard = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                if form.isEditing { EditNoteSection(isLocked: !form.lockedFields.isEmpty) }
+                WhatSection(form: form)
+                ScheduleSection(form: form)
+                StrengthSection(form: form)
+                BreakThroughFocusSection(form: form)
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .centeredInReadableColumn()
+            .navigationTitle(form.isEditing
+                ? Text("Edit Reminder", comment: "Title of the form that edits a reminder.")
+                : Text("New Reminder", comment: "Title of the form that makes a reminder."))
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: ReminderFormPage.self) { page in
+                switch page {
+                case .tags: TagsPage(form: form)
+                case .repeat: RepeatPage(form: form)
+                }
+            }
+            .toolbar { toolbar }
+        }
+        // A swipe down mustn't lose changes; Cancel asks first instead.
+        .interactiveDismissDisabled(form.hasChanges)
+    }
+
+    @ToolbarContentBuilder
+    private var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button(role: .cancel) {
+                if form.hasChanges { isConfirmingDiscard = true } else { dismiss() }
+            } label: {
+                Label {
+                    Text("Cancel", comment: "The form's cancel button (an xmark).")
+                } icon: {
+                    Image(systemName: "xmark")
+                }
+            }
+            .confirmationDialog(Text("Discard your changes?", comment: "Asked when cancelling a reminder form with changes."),
+                                isPresented: $isConfirmingDiscard, titleVisibility: .hidden) {
+                Button(role: .destructive) {
+                    dismiss()
+                } label: {
+                    Text("Discard Changes", comment: "Throws away the reminder form's changes and closes it.")
+                }
+                Button(role: .cancel) {
+                } label: {
+                    Text("Keep Editing", comment: "Goes back to the reminder form without discarding.")
+                }
+            }
+        }
+        ToolbarItem(placement: .confirmationAction) {
+            Button(role: .confirm) {
+                if let model, form.save(to: model) { dismiss() }
+            } label: {
+                Label {
+                    form.isEditing
+                        ? Text("Save", comment: "The Edit Reminder form's confirm button (a checkmark).")
+                        : Text("Add", comment: "The New Reminder form's confirm button (a checkmark).")
+                } icon: {
+                    Image(systemName: "checkmark")
+                }
+            }
+            .disabled(model == nil || form.saveBlock != nil)
+        }
+    }
+}
+
+/// The pages the form pushes.
+enum ReminderFormPage: Hashable {
+    case tags
+    case `repeat`
+}
+
+/// The note at the top of the Edit form: why the schedule is locked, or when changes apply.
+private struct EditNoteSection: View {
+    let isLocked: Bool
+
+    var body: some View {
+        Section {
+        } header: {
+            Group {
+                if isLocked {
+                    Label {
+                        Text("**Nudging now.** Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge.",
+                             comment: "Top of the Edit Reminder form while the reminder is nudging: why four fields are locked.")
+                    } icon: {
+                        LockGlyph()
+                    }
+                } else {
+                    Text("A new schedule applies from the next time it's due. A new strength or Break Through Focus setting applies from the next nudge.",
+                         comment: "Top of the Edit Reminder form when the reminder isn't nudging: when changes apply.")
+                }
+            }
+            .font(.footnote)
+            .foregroundStyle(Color(uiColor: .secondaryLabel))
+            .textCase(nil)
+        }
+    }
+}
+
+/// Title, Notes and Tags, which stay editable while nudging.
+private struct WhatSection: View {
+    @Bindable var form: ReminderForm
+    @FocusState private var isTitleFocused: Bool
+
+    var body: some View {
+        Section {
+            TextField(text: $form.title, axis: .vertical) {
+                Text("Title", comment: "The reminder form's title field, which must be filled in.")
+            }
+            .focused($isTitleFocused)
+            .submitLabel(.done)
+            // A vertical field takes Return as a new line. Return at the end ends editing instead,
+            // as the mockup's "done" key; the form saves any pasted line breaks as spaces.
+            .onChange(of: form.title) { _, title in
+                guard title.last?.isNewline == true else { return }
+                form.title.removeLast()
+                isTitleFocused = false
+            }
+            TextField(text: $form.notes, axis: .vertical) {
+                Text("Notes", comment: "The reminder form's notes field.")
+            }
+            .lineLimit(3...)
+            NavigationLink(value: ReminderFormPage.tags) {
+                LabeledContent {
+                    if let tags = form.chosenTagsText {
+                        // The person's own tag names, never translated.
+                        Text(verbatim: tags)
+                    } else {
+                        Text("None", comment: "The reminder form's Tags row when no tag is chosen.")
+                    }
+                } label: {
+                    Text("Tags", comment: "The reminder form's row that opens the Tags page.")
+                }
+            }
+        } footer: {
+            VStack(alignment: .leading, spacing: Design.Spacing.s1) {
+                if form.saveBlock == .noTitle {
+                    Text("Add a title to save.", comment: "Under the reminder form's title when it is empty, so Save is disabled.")
+                        .foregroundStyle(Color.negative)
+                }
+                Text("Notes and tags stay in the app. Notifications and alarms show the title, not these.",
+                     comment: "Under the reminder form's Title, Notes and Tags.")
+            }
+        }
+        .onAppear {
+            // A new reminder starts at its title, as the mockup's sheet does.
+            if form.title.isEmpty { isTitleFocused = true }
+        }
+    }
+}
+
+/// Starts and Repeat, locked while nudging.
+private struct ScheduleSection: View {
+    @Bindable var form: ReminderForm
+
+    var body: some View {
+        let locked = form.lockedFields
+        Section {
+            DatePicker(selection: $form.dueTime) {
+                LockableLabel(isLocked: locked.contains(.dueTime)) {
+                    Text("Starts", comment: "The reminder form's start date and time.")
+                }
+            }
+            .lockedWhileNudging(locked.contains(.dueTime))
+            RepeatRow(form: form, isLocked: locked.contains(.repeatRule))
+        } footer: {
+            VStack(alignment: .leading, spacing: Design.Spacing.s1) {
+                if form.saveBlock == .pastTime {
+                    Text("This time has passed. Choose a later time.",
+                         comment: "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled.")
+                        .foregroundStyle(Color.negative)
+                }
+                RepeatSummarySentence(summary: form.repeatSummary)
+            }
+        }
+    }
+}
+
+/// The Repeat row: the preset's name or Custom. It opens the Repeat page unless it's locked.
+private struct RepeatRow: View {
+    let form: ReminderForm
+    let isLocked: Bool
+
+    var body: some View {
+        let value = form.repeatPreset.map { Text($0.title) }
+            ?? Text("Custom", comment: "The reminder form's Repeat row when the repeat is a custom rule.")
+        let label = Text("Repeat", comment: "The reminder form's row that opens the Repeat page.")
+        if isLocked {
+            LabeledContent {
+                value
+            } label: {
+                LockableLabel(isLocked: true) { label }
+            }
+            .accessibilityElement(children: .combine)
+            .lockedWhileNudging(true)
+        } else {
+            NavigationLink(value: ReminderFormPage.repeat) {
+                LabeledContent { value } label: { label }
+            }
+        }
+    }
+}
+
+/// Gentle, Firm or Relentless, locked while nudging.
+private struct StrengthSection: View {
+    @Bindable var form: ReminderForm
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        let isLocked = form.lockedFields.contains(.strength)
+        let label = Text("Strength", comment: "The reminder form's strength choice: Gentle, Firm or Relentless.")
+        Section {
+            Picker(selection: $form.strength) {
+                ForEach(Strength.formOrder, id: \.self) { strength in
+                    Text(strength.title).tag(strength)
+                }
+            } label: {
+                LockableLabel(isLocked: isLocked) { label }
+            }
+            .strengthPickerStyle(isMenu: dynamicTypeSize.isAccessibilitySize)
+            .lockedWhileNudging(isLocked)
+        } header: {
+            if !dynamicTypeSize.isAccessibilitySize {
+                LockableLabel(isLocked: isLocked) { label }
+                    .accessibilityHidden(true)
+            }
+        } footer: {
+            VStack(alignment: .leading, spacing: Design.Spacing.s1) {
+                Text(form.strength.blurb)
+                Text("Gives up after \(GiveUpLimit.shipped.nudgeCount) nudges or \(GiveUpLimit.shipped.spanText), whichever comes first.",
+                     comment: "Under the reminder form's strength. 1: the give-up limit's nudge count. 2: its span, such as \"24 hours\".")
+            }
+        }
+    }
+}
+
+/// The Break Through Focus switch, locked while nudging.
+private struct BreakThroughFocusSection: View {
+    @Bindable var form: ReminderForm
+
+    var body: some View {
+        let isLocked = form.lockedFields.contains(.breakThroughFocus)
+        Section {
+            Toggle(isOn: $form.breakThroughFocus) {
+                LockableLabel(isLocked: isLocked) {
+                    Text("Break Through Focus", comment: "The reminder form's switch: whether its nudges get through a Focus.")
+                }
+            }
+            .lockedWhileNudging(isLocked)
+        } footer: {
+            switch (form.breakThroughFocus, form.strength) {
+            case (true, .gentle):
+                Text("High nudges are Time Sensitive, so a Focus can't hold them. Gentle never reaches Urgent, so it never rings.",
+                     comment: "Under Break Through Focus when it's on and the strength is Gentle.")
+            case (true, _):
+                Text("High nudges are Time Sensitive and Urgent nudges ring as alarms, so a Focus can't hold them.",
+                     comment: "Under Break Through Focus when it's on and the strength is Firm or Relentless.")
+            case (false, _):
+                Text("Every nudge is an ordinary notification, which a Focus can hold. Nothing rings.",
+                     comment: "Under Break Through Focus when it's off.")
+            }
+        }
+    }
+}
+
+/// A control's label, with the `lock` glyph after it while the field is locked.
+private struct LockableLabel<Content: View>: View {
+    let isLocked: Bool
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        HStack(spacing: Design.Spacing.s1) {
+            content()
+            if isLocked { LockGlyph() }
+        }
+    }
+}
+
+/// DESIGN.md's `lock`, always beside its reason as text, so VoiceOver skips it.
+private struct LockGlyph: View {
+    var body: some View {
+        Image(systemName: "lock")
+            .foregroundStyle(Color(uiColor: .secondaryLabel))
+            .accessibilityHidden(true)
+    }
+}
+
+extension View {
+    /// The mockup's segmented control, which becomes a menu at accessibility sizes so the names
+    /// aren't cut short.
+    @ViewBuilder
+    fileprivate func strengthPickerStyle(isMenu: Bool) -> some View {
+        if isMenu {
+            pickerStyle(.menu)
+        } else {
+            pickerStyle(.segmented)
+        }
+    }
+
+    /// Disables a field that is locked while nudging, and gives it the reason as its VoiceOver
+    /// hint, so the reason isn't only the dimmed look and the glyph.
+    func lockedWhileNudging(_ isLocked: Bool) -> some View {
+        disabled(isLocked)
+            .accessibilityHint(Text(LockNote.hint), isEnabled: isLocked)
+    }
+}
+
+/// Why a Nudging reminder's schedule is locked (ticket 13), as the form's top note says it. A
+/// separate catalog string from the note because a hint can't carry its bold.
+enum LockNote {
+    static let hint = LocalizedStringResource(
+        "Nudging now. Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge.",
+        comment: "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging: the note at the top of the form, without its bold."
+    )
+}
+
+extension Strength {
+    /// In the form's order, gentlest first.
+    static let formOrder: [Strength] = [.gentle, .firm, .relentless]
+
+    var title: LocalizedStringResource {
+        switch self {
+        case .gentle: LocalizedStringResource("Gentle", comment: "Strength name: the reminder nudges gently.")
+        case .firm: LocalizedStringResource("Firm", comment: "Strength name.")
+        case .relentless: LocalizedStringResource("Relentless", comment: "Strength name: the reminder nudges hardest.")
+        }
+    }
+
+    /// The mockup's line under the strength choice. Ticket 31 reads the ladder from the engine
+    /// for How It Nudges; until then these numbers are copy.
+    var blurb: LocalizedStringResource {
+        switch self {
+        case .gentle: LocalizedStringResource("Hourly at first, easing to every 20 min. Never rings as an alarm.", comment: "Under the reminder form's strength when Gentle is chosen.")
+        case .firm: LocalizedStringResource("Every 30 min, down to every 5. Rings as an alarm from nudge 4.", comment: "Under the reminder form's strength when Firm is chosen.")
+        case .relentless: LocalizedStringResource("Every 10 min, down to every 2. Rings as an alarm from nudge 4.", comment: "Under the reminder form's strength when Relentless is chosen.")
+        }
+    }
+}
+
+extension GiveUpLimit {
+    /// The span in words, such as "24 hours", in the app's language.
+    var spanText: String {
+        Duration.seconds(span).formatted(.units(allowed: [.hours], width: .wide))
+    }
+}
+
+/// A repeat summary as a sentence: the Starts footer, and the Custom row's footer when the repeat
+/// is custom.
+struct RepeatSummarySentence: View {
+    let summary: String
+
+    var body: some View {
+        Text("\(summary).", comment: "A repeat summary as a sentence, under the reminder form's Starts and under the Repeat page's Custom row. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".")
+    }
+}
+
+#Preview("New") {
+    ReminderFormSheet(form: .preview())
+}
+
+#Preview("New, dark") {
+    ReminderFormSheet(form: .preview())
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Locked, largest text") {
+    ReminderFormSheet(form: .previewNudging())
+        .environment(\.dynamicTypeSize, .accessibility5)
+}
+
+#Preview("Locked") {
+    ReminderFormSheet(form: .previewNudging())
+}
