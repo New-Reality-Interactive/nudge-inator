@@ -13,6 +13,9 @@ public struct SchedulePlan: Equatable, Sendable {
     public struct Item: Equatable, Sendable {
         public var reminderID: Reminder.ID
         public var nudgeNumber: Int
+        /// The nudges its occurrence sends in all, the "of 20" in its body: the give-up limit's
+        /// count, fewer if the span or a take-over comes first.
+        public var nudgesInAll: Int
         public var fireTime: Date
         public var urgency: Urgency
         public var title: String
@@ -29,6 +32,7 @@ public struct SchedulePlan: Equatable, Sendable {
         public init(
             reminderID: Reminder.ID,
             nudgeNumber: Int,
+            nudgesInAll: Int,
             fireTime: Date,
             urgency: Urgency,
             title: String,
@@ -37,6 +41,7 @@ public struct SchedulePlan: Equatable, Sendable {
         ) {
             self.reminderID = reminderID
             self.nudgeNumber = nudgeNumber
+            self.nudgesInAll = nudgesInAll
             self.fireTime = fireTime
             self.urgency = urgency
             self.title = title
@@ -46,10 +51,9 @@ public struct SchedulePlan: Equatable, Sendable {
 
         /// The notification body, for example "Nudge 3 of 20 · High", in the app's language.
         public var body: String {
-            let limit = GiveUpLimit.shipped.nudgeCount
             let urgency = urgency.name
-            return String(localized: "Nudge \(nudgeNumber) of \(limit) · \(urgency)", bundle: .module,
-                          comment: "Notification body: never the notes or tags. 1: which nudge this is. 2: the most nudges an occurrence gets. 3: the urgency, such as High.")
+            return String(localized: "Nudge \(nudgeNumber) of \(nudgesInAll) · \(urgency)", bundle: .module,
+                          comment: "Notification body: never the notes or tags. 1: which nudge this is. 2: how many nudges its occurrence sends in all. 3: the urgency, such as High.")
         }
     }
 }
