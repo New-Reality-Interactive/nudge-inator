@@ -79,6 +79,19 @@ struct MyDayFilterTests {
         #expect(filter.hasTags)
     }
 
+    /// What the Filter button's badge counts: the checked tags, or 1 for No Tags.
+    @Test func theFilterButtonCountsCheckedTagsAndNoTagsAsOne() {
+        var filter = MyDayFilter()
+        #expect(filter.checkedCount == 0)
+
+        filter.toggle(home.id)
+        filter.toggle(money.id)
+        #expect(filter.checkedCount == 2)
+
+        filter.toggleNoTags()
+        #expect(filter.checkedCount == 1)
+    }
+
     @Test func matchAnyFiltersByAnyOfTheCheckedTags() {
         var filter = MyDayFilter()
         filter.toggle(home.id)

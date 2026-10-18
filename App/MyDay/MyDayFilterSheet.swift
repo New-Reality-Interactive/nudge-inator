@@ -15,7 +15,7 @@ struct MyDayFilterSheet {
         var isChecked: Bool
 
         var id: Tag.ID { tag.id }
-        var text: String { "#\(tag.name)" }
+        var text: String { tag.label }
     }
 
     init(engine: Engine, filter: MyDayFilter) {
@@ -30,8 +30,7 @@ struct MyDayFilterSheet {
         } else if filter.tagIDs.isEmpty {
             result = LocalizedStringResource("Showing everything due today (\(due)).", comment: "My Day's filter sheet: under the lists when nothing is checked. The placeholder is how many are due today.")
         } else {
-            let names = filter.tagIDs.compactMap { id in engine.tags.first { $0.id == id }.map { "#\($0.name)" } }
-            let list = names.formatted(.list(type: filter.match == .all ? .and : .or))
+            let list = filter.match.list(of: engine.tagLabels(for: filter.tagIDs))
             result = LocalizedStringResource("\(due) due today with \(list).", comment: "My Day's filter sheet: under the lists when tags are checked. 1: how many are due today. 2: the checked tags, such as \"#home and #money\" (Match All) or \"#home or #money\" (Match Any).")
         }
     }

@@ -39,12 +39,12 @@ struct MyDayTab: View {
                 }
             }
             .navigationTitle(Text(AppTab.myDay.title))
-            .navigationSubtitle(compact ? Text(Date.now, format: .dateTime.weekday(.wide).day().month(.wide)) : Text(verbatim: ""))
+            .navigationSubtitle(compact ? todayText(.now) : Text(verbatim: ""))
             .reminderDetailsDestination()
             .toolbar {
                 if compact {
                     ToolbarItem(placement: .topBarTrailing) {
-                        MyDayFilterButton(chosen: screen(at: .now).filterTokens.count, style: .bar) { isFiltering = true }
+                        MyDayFilterButton(chosen: checkedCount, style: .bar) { isFiltering = true }
                     }
                 }
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
@@ -61,6 +61,12 @@ struct MyDayTab: View {
         model?.engine ?? previewEngine
     }
 
+    /// How many tags, or No Tags, the filter has, without those that were deleted.
+    private var checkedCount: Int {
+        guard let engine else { return 0 }
+        return filter.keeping(tagsIn: Set(engine.tags.map(\.id))).checkedCount
+    }
+
     private func screen(at now: Date) -> MyDayScreen {
         engine.map { MyDayScreen(engine: $0, filter: filter, now: now) } ?? MyDayScreen(filter: filter, now: now)
     }
@@ -71,6 +77,11 @@ struct MyDayTab: View {
         case .noTags: filter.toggleNoTags()
         }
     }
+}
+
+/// The date as the mockup writes it under the title: "Sunday, October 18".
+private func todayText(_ date: Date) -> Text {
+    Text(date, format: .dateTime.weekday(.wide).day().month(.wide))
 }
 
 /// The permission banners go at the top of the list (the mockup's `permBanner`). Ticket 31 owns
@@ -119,7 +130,7 @@ private struct MyDayList: View {
                 }
             } header: {
                 if showsDateAndFilter {
-                    Text(Date.now, format: .dateTime.weekday(.wide).day().month(.wide))
+                    todayText(now)
                         .subheadStyle()
                         .textCase(nil)
                 }
@@ -154,7 +165,7 @@ private struct MyDayList: View {
     private func showingOnlyBar(_ count: MyDayCount) -> some View {
         let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading)) : AnyLayout(HStackLayout())
         return layout {
-            Text("Showing only \(String(localized: count.title))", comment: "My Day: under the counts while one is chosen. The placeholder is its name, such as \"Missed\".")
+            Text(count.showingOnly)
                 .subheadStyle()
             if !dynamicTypeSize.isAccessibilitySize { Spacer() }
             Button {

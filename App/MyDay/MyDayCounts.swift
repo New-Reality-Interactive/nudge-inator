@@ -12,6 +12,17 @@ extension MyDayCount {
         }
     }
 
+    /// The line under the counts while this one is chosen. A sentence for each, not a word
+    /// placed in one, so a translation can agree it with the rest.
+    var showingOnly: LocalizedStringResource {
+        switch self {
+        case .done: LocalizedStringResource("Showing only Done", comment: "My Day: under the counts while Done is chosen.")
+        case .nudging: LocalizedStringResource("Showing only Nudging", comment: "My Day: under the counts while Nudging is chosen.")
+        case .missed: LocalizedStringResource("Showing only Missed", comment: "My Day: under the counts while Missed is chosen.")
+        case .left: LocalizedStringResource("Showing only Left", comment: "My Day: under the counts while Left is chosen.")
+        }
+    }
+
     /// DESIGN.md's Counts: Done positive, Nudging and Missed negative, Left the label color.
     fileprivate var color: Color {
         switch self {
@@ -117,11 +128,11 @@ private struct CountCell: View {
         let caption = Text(count.kind.title)
             .foregroundStyle(Color(uiColor: count.isChosen ? .label : .secondaryLabel))
         // A capsule beside its number can't hold a large caption on one line: it stacks, as a cell.
-        switch stackedStyle {
+        switch effectiveStyle {
         case .cell:
             VStack(spacing: 0) {
                 number.font(.title2.bold())
-                caption.font(.caption)
+                caption.font(.caption.weight(.semibold))
             }
             .padding(.vertical, Design.Spacing.s1)
         case .pill:
@@ -134,13 +145,13 @@ private struct CountCell: View {
         }
     }
 
-    private var stackedStyle: Style {
+    private var effectiveStyle: Style {
         dynamicTypeSize.isAccessibilitySize ? .cell : style
     }
 
     private var shape: AnyShape {
-        switch stackedStyle {
-        case .cell: AnyShape(RoundedRectangle(cornerRadius: Design.Radius.control - Design.Spacing.s1 / 2))
+        switch effectiveStyle {
+        case .cell: AnyShape(RoundedRectangle(cornerRadius: Design.Radius.countCell))
         case .pill: AnyShape(Capsule())
         }
     }

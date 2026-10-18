@@ -75,14 +75,15 @@ struct MyDayRowView: View {
 
     /// The tags, the ones the filter chose in bold, then the note.
     private var detail: AttributedString {
-        var line = AttributedString()
-        for tag in item.tags {
-            var text = AttributedString(tag.text + " ")
+        let note = AttributedString(localized: item.note(at: now))
+        guard !item.tags.isEmpty else { return note }
+        var tags = AttributedString()
+        for (index, tag) in item.tags.enumerated() {
+            var text = AttributedString(index == 0 ? tag.text : " " + tag.text)
             if tag.isChosen { text.inlinePresentationIntent = .stronglyEmphasized }
-            line += text
+            tags += text
         }
-        if !item.tags.isEmpty { line += AttributedString("· ") }
-        return line + AttributedString(localized: item.note(at: now))
+        return AttributedString(localized: "\(tags) · \(note)", comment: "My Day: under the title of a tagged reminder. 1: its tags, such as \"#home #errands\", the ones the filter chose in bold. 2: the note, such as \"Nudging · 2 nudges · next 1:15 PM\".")
     }
 
     @ViewBuilder private var trailing: some View {
@@ -96,13 +97,11 @@ struct MyDayRowView: View {
             .buttonBorderShape(.capsule)
             // Regular is 34 pt tall; every button is at least 44 (DESIGN.md › Buttons).
             .controlSize(.large)
-            .accessibilityLabel(Text("Done, stop nudging: \(item.title)", comment: "VoiceOver label of a nudge card's Done button. The placeholder is the reminder's title."))
+            .accessibilityLabel(Text("Done, stop nudging: \(item.title)", comment: "VoiceOver label of the Done button on a nudge card or a My Day row. The placeholder is the reminder's title."))
         case .due(let state):
             StatusLabel(state: state)
         case .paused:
-            Text("Paused", comment: "Status label: the reminder is paused.")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color(uiColor: .secondaryLabel))
+            PausedLabel()
         case .left:
             EmptyView()
         }
@@ -119,9 +118,24 @@ struct NowMarkerView: View {
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(Color(uiColor: .label))
             Rectangle()
-                .fill(Color(uiColor: .label).opacity(0.6))
-                .frame(height: 1)
+                .fill(Color(uiColor: .label).opacity(Design.Size.nowMarkerLineOpacity))
+                .frame(height: Design.Size.nowMarkerLine)
                 .accessibilityHidden(true)
         }
     }
 }
+
+#if DEBUG
+#Preview("Rows") {
+    let now = Calendar.current.dateInterval(of: .minute, for: .now)?.start ?? .now
+    let screen = MyDayScreen(engine: .myDayPreview(), filter: MyDayFilter(), now: now)
+    return NavigationStack {
+        List(screen.rows) { row in
+            switch row {
+            case .item(let item): MyDayRowView(item: item, now: now) {}
+            case .now(let time): NowMarkerView(time: time)
+            }
+        }
+    }
+}
+#endif

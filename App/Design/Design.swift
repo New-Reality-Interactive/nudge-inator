@@ -38,6 +38,8 @@ enum Design {
         static let token: CGFloat = 7
         /// Sheet tops, set by the system.
         static let sheet: CGFloat = 38
+        /// A count cell, set inside the Counts container's own radius (the mockup's `.count`).
+        static let countCell: CGFloat = 8
         /// Capsules: bar buttons, filter tokens, the strength badge, the nudge meter.
         static let full: CGFloat = 9999
     }
@@ -50,6 +52,9 @@ enum Design {
         static let meterHeight: CGFloat = 6
         /// The chosen count's inset accent ring on My Day.
         static let ringWidth: CGFloat = 2
+        /// The line in My Day's "Now" marker, and how opaque it is (the mockup's `.marker::after`).
+        static let nowMarkerLine: CGFloat = 1
+        static let nowMarkerLineOpacity: Double = 0.6
         /// The permission banner's border.
         static let bannerBorder: CGFloat = 2
         /// A wide nudge card's side column, at the default text size (the mockup's 13rem).

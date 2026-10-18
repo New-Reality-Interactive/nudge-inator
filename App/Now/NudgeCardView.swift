@@ -121,7 +121,7 @@ struct NudgeCardView: View {
         // Large is the system's tallest regular button, over the 44 pt every button needs.
         .controlSize(.large)
         .buttonBorderShape(.roundedRectangle(radius: Design.Radius.control))
-        .accessibilityLabel(Text("Done, stop nudging: \(card.title)", comment: "VoiceOver label of a nudge card's Done button. The placeholder is the reminder's title."))
+        .accessibilityLabel(Text("Done, stop nudging: \(card.title)", comment: "VoiceOver label of the Done button on a nudge card or a My Day row. The placeholder is the reminder's title."))
     }
 
     private var footer: some View {

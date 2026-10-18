@@ -145,6 +145,15 @@ struct StatusLabel: View {
     }
 }
 
+/// DESIGN.md's Status label for a reminder that is paused, in the secondary label color.
+struct PausedLabel: View {
+    var body: some View {
+        Text("Paused", comment: "Status label: the reminder is paused.")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Color(uiColor: .secondaryLabel))
+    }
+}
+
 /// DESIGN.md's Nudge meter: a 6 pt capsule track that fills from the leading edge in the
 /// urgency's color, nudges sent out of the give-up limit. The card's VoiceOver value says the
 /// count, so the meter itself is hidden.

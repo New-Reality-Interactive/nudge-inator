@@ -12,11 +12,9 @@ struct MyDayScreen {
     let filterSummary: LocalizedStringResource?
     /// What the list says when it has no rows, by the chosen count.
     let emptyMessage: LocalizedStringResource
-    /// The time of day, for the "Now" marker among the rows.
     private let nowTime: String
     private let now: Date
 
-    /// One of the four cells above the list.
     struct Count: Identifiable {
         var kind: MyDayCount
         var number: Int
@@ -83,8 +81,8 @@ struct MyDayScreen {
         }
 
         var kind: Kind
-        /// "#home", or "No Tags".
-        var text: String
+        /// "#home". `nil` for No Tags, whose words are the view's, so they are localized there.
+        var tagText: String?
 
         var id: Kind { kind }
     }
@@ -146,15 +144,14 @@ struct MyDayScreen {
     init(engine: Engine, filter: MyDayFilter, now: Date) {
         let filter = filter.keeping(tagsIn: Set(engine.tags.map(\.id)))
         self.now = now
-        let chosenTags = filter.tagIDs.compactMap { tagID in engine.tags.first { $0.id == tagID } }
+        let chosenTags = filter.tagIDs.compactMap { engine.tag(withID: $0) }
         if filter.noTags {
-            filterTokens = [FilterToken(kind: .noTags, text: String(localized: "No Tags", comment: "My Day: the filter token that shows only reminders without tags."))]
+            filterTokens = [FilterToken(kind: .noTags, tagText: nil)]
         } else {
-            filterTokens = chosenTags.map { FilterToken(kind: .tag($0.id), text: "#\($0.name)") }
+            filterTokens = chosenTags.map { FilterToken(kind: .tag($0.id), tagText: $0.label) }
         }
         if chosenTags.count > 1 {
-            let names = chosenTags.map { "#\($0.name)" }
-            let list = names.formatted(.list(type: filter.match == .all ? .and : .or))
+            let list = filter.match.list(of: chosenTags.map(\.label))
             filterSummary = LocalizedStringResource("Due today with \(list)", comment: "My Day: under the filter tokens when two or more tags are chosen. The placeholder lists them, such as \"#home and #money\" (Match All) or \"#home or #money\" (Match Any).")
         } else {
             filterSummary = nil
@@ -183,7 +180,7 @@ extension MyDayScreen.Item {
         nudgesSent = closed?.nudgesSent ?? nudging?.nudgesSent ?? 0
         nextNudgeTime = nudging?.nextNudge.map { engine.timeOfDay(of: $0.fireTime) }
         tags = reminder.tagIDs.compactMap { tagID in
-            engine.tags.first { $0.id == tagID }.map { MyDayScreen.TagLabel(text: "#\($0.name)", isChosen: chosen.contains(tagID)) }
+            engine.tag(withID: tagID).map { MyDayScreen.TagLabel(text: $0.label, isChosen: chosen.contains(tagID)) }
         }
     }
 }

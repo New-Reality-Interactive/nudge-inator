@@ -26,6 +26,17 @@
         }
       }
     },
+    "%@ · %@" : {
+      "comment" : "My Day: under the title of a tagged reminder. 1: its tags, such as \"#home #errands\", the ones the filter chose in bold. 2: the note, such as \"Nudging · 2 nudges · next 1:15 PM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "%@ · **%lld reminders nudging you**" : {
       "comment" : "Now: under the title; the bold part shows in red. 1: today's short date, such as \"Sat, Oct 17\". 2: how many reminders are nudging.",
       "localizations" : {
@@ -103,15 +114,47 @@
       "comment" : "My Day's filter sheet: under the lists when tags are checked. 1: how many are due today. 2: the checked tags, such as \"#home and #money\" (Match All) or \"#home or #money\" (Match Any).",
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld due today with %2$@."
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld due today with %2$@."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld due today with %2$@."
+                }
+              }
+            }
           }
         }
       }
     },
     "%lld due today without tags." : {
-      "comment" : "My Day's filter sheet: under the lists when No Tags is checked. The placeholder is how many are due today."
+      "comment" : "My Day's filter sheet: under the lists when No Tags is checked. The placeholder is how many are due today.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld due today without tags."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld due today without tags."
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "**All clear.** Nothing needs you right now." : {
       "comment" : "Now: the Nudging section when nothing is nudging."
@@ -270,7 +313,7 @@
       }
     },
     "Done, stop nudging: %@" : {
-      "comment" : "VoiceOver label of a nudge card's Done button. The placeholder is the reminder's title."
+      "comment" : "VoiceOver label of the Done button on a nudge card or a My Day row. The placeholder is the reminder's title."
     },
     "Due %@" : {
       "comment" : "Nudge card: under the title of a reminder with no tags. The placeholder is its due time, such as \"9:00 AM\"."
@@ -416,7 +459,27 @@
       "comment" : "Under Break Through Focus when it's off."
     },
     "Filter (%lld)" : {
-      "comment" : "My Day: the button that opens the tag filter, while tags are chosen. The placeholder is how many."
+      "comment" : "My Day: the button that opens the tag filter, while tags are chosen. The placeholder is how many.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Filter (%lld)"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Filter (%lld)"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "Filter My Day" : {
       "comment" : "Title of My Day's tag filter sheet."
@@ -425,7 +488,27 @@
       "comment" : "My Day: the button that opens the tag filter, while none is chosen."
     },
     "Filter by Tags, %lld chosen" : {
-      "comment" : "VoiceOver label of My Day's filter button while tags are chosen. The placeholder is how many."
+      "comment" : "VoiceOver label of My Day's filter button while tags are chosen. The placeholder is how many.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Filter by Tags, %lld chosen"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Filter by Tags, %lld chosen"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "Filtering by" : {
       "comment" : "VoiceOver label of the group of tokens for the tags My Day is filtered by."
@@ -738,10 +821,39 @@
       "comment" : "My Day: the button that clears the chosen count and shows every row."
     },
     "Showing everything due today (%lld)." : {
-      "comment" : "My Day's filter sheet: under the lists when nothing is checked. The placeholder is how many are due today."
+      "comment" : "My Day's filter sheet: under the lists when nothing is checked. The placeholder is how many are due today.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Showing everything due today (%lld)."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Showing everything due today (%lld)."
+                }
+              }
+            }
+          }
+        }
+      }
     },
-    "Showing only %@" : {
-      "comment" : "My Day: under the counts while one is chosen. The placeholder is its name, such as \"Missed\"."
+    "Showing only Done" : {
+      "comment" : "My Day: under the counts while Done is chosen."
+    },
+    "Showing only Left" : {
+      "comment" : "My Day: under the counts while Left is chosen."
+    },
+    "Showing only Missed" : {
+      "comment" : "My Day: under the counts while Missed is chosen."
+    },
+    "Showing only Nudging" : {
+      "comment" : "My Day: under the counts while Nudging is chosen."
     },
     "Skipped" : {
       "comment" : "Status label: an occurrence closed because its reminder was paused."

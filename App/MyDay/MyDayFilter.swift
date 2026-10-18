@@ -14,6 +14,11 @@ struct MyDayFilter: Equatable {
     enum Match: Equatable {
         case all
         case any
+
+        /// The tags as a list in the engine's locale: "#home and #money", or "#home or #money".
+        func list(of labels: [String]) -> String {
+            labels.formatted(.list(type: self == .all ? .and : .or))
+        }
     }
 
     /// The engine's filter for the checked tags. With none checked, nothing is filtered.
@@ -47,8 +52,10 @@ struct MyDayFilter: Equatable {
         self.count = self.count == count ? nil : count
     }
 
-    /// Whether tags, or No Tags, are chosen.
     var hasTags: Bool { noTags || !tagIDs.isEmpty }
+
+    /// What the Filter button's badge counts: the checked tags, or 1 for No Tags.
+    var checkedCount: Int { noTags ? 1 : tagIDs.count }
 
     /// Clears the tags and No Tags and goes back to Match All. The chosen count stays: it is
     /// chosen on the screen, not in the sheet.

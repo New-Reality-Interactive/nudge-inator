@@ -237,6 +237,18 @@ struct MyDayScreenTests {
         #expect(cells() == ["0 enabled chosen", "1 enabled ", "0 disabled ", "0 disabled "])
     }
 
+    /// The line under the counts while one is chosen, a whole sentence for each, so a translation
+    /// can agree the name with the rest.
+    @Test(arguments: [
+        (MyDayCount.done, "Showing only Done"),
+        (.nudging, "Showing only Nudging"),
+        (.missed, "Showing only Missed"),
+        (.left, "Showing only Left"),
+    ])
+    func theChosenCountIsNamedInItsOwnSentence(count: MyDayCount, expected: String) {
+        #expect(plain(count.showingOnly) == expected)
+    }
+
     /// The mockup's `DAY_STATUS.empty`, for when the list has no rows. The tag filter isn't in the
     /// sentence: its tokens and summary are on screen, and gluing a clause on would build a
     /// sentence from fragments.
@@ -267,17 +279,18 @@ struct MyDayScreenTests {
         #expect(screen().filterSummary == nil)
 
         filter.toggle(day.health.id)
-        #expect(screen().filterTokens.map(\.text) == ["#health"])
+        #expect(screen().filterTokens.map(\.tagText) == ["#health"])
         #expect(screen().filterSummary == nil)
 
         filter.toggle(day.work.id)
-        #expect(screen().filterTokens.map(\.text) == ["#health", "#work"])
+        #expect(screen().filterTokens.map(\.tagText) == ["#health", "#work"])
         #expect(screen().filterSummary.map(plain) == "Due today with #health and #work")
         filter.match = .any
         #expect(screen().filterSummary.map(plain) == "Due today with #health or #work")
 
         filter.toggleNoTags()
-        #expect(screen().filterTokens.map(\.text) == ["No Tags"])
+        #expect(screen().filterTokens.map(\.kind) == [.noTags])
+        #expect(screen().filterTokens.map(\.tagText) == [nil])
         #expect(screen().filterSummary == nil)
     }
 

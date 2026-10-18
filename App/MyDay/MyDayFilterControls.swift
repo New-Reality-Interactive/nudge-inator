@@ -15,6 +15,7 @@ struct MyDayFilterButton: View {
     let open: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    private static let symbol = "line.3.horizontal.decrease"
 
     var body: some View {
         Button(action: open) {
@@ -23,7 +24,7 @@ struct MyDayFilterButton: View {
                 // Not a `Label`: its own layout leaves the title a narrow width and cuts it off
                 // at accessibility sizes. Here the text takes what the row has and wraps.
                 HStack(spacing: Design.Spacing.s2) {
-                    Image(systemName: "line.3.horizontal.decrease")
+                    Image(systemName: Self.symbol)
                         .accessibilityHidden(true)
                     if chosen > 0 {
                         Text("Filter (\(chosen))", comment: "My Day: the button that opens the tag filter, while tags are chosen. The placeholder is how many.")
@@ -36,7 +37,7 @@ struct MyDayFilterButton: View {
                 .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : nil)
             case .bar:
                 HStack(spacing: Design.Spacing.s1) {
-                    Image(systemName: "line.3.horizontal.decrease")
+                    Image(systemName: Self.symbol)
                     if chosen > 0 {
                         Text(chosen, format: .number)
                             .font(.subheadline.weight(.semibold))
@@ -67,6 +68,8 @@ private struct FilterButtonStyle: ViewModifier {
             content
                 .buttonStyle(.bordered)
                 .buttonBorderShape(.capsule)
+                // Regular is 34 pt tall; every button is at least 44 (DESIGN.md › Buttons).
+                .controlSize(.large)
         case .bar:
             content
         }
@@ -114,7 +117,12 @@ private struct FilterTokenView: View {
     var body: some View {
         Button(action: remove) {
             HStack(spacing: Design.Spacing.s2) {
-                Text(verbatim: token.text)
+                switch token.kind {
+                case .tag:
+                    Text(verbatim: token.tagText ?? "")
+                case .noTags:
+                    Text("No Tags", comment: "My Day: the filter token that shows only reminders without tags.")
+                }
                 Image(systemName: "xmark")
                     .font(.caption.weight(.bold))
                     .accessibilityHidden(true)
@@ -132,9 +140,27 @@ private struct FilterTokenView: View {
     private var label: Text {
         switch token.kind {
         case .tag:
-            Text("Remove \(token.text) from the filter", comment: "VoiceOver label of a tag's filter token on My Day. The placeholder is the tag, such as \"#home\".")
+            Text("Remove \(token.tagText ?? "") from the filter", comment: "VoiceOver label of a tag's filter token on My Day. The placeholder is the tag, such as \"#home\".")
         case .noTags:
             Text("Remove No Tags from the filter", comment: "VoiceOver label of My Day's No Tags filter token.")
         }
     }
+}
+
+#Preview("Filter button and tokens") {
+    VStack(alignment: .leading, spacing: Design.Spacing.s3) {
+        MyDayFilterButton(chosen: 0, style: .content) {}
+        MyDayFilterButton(chosen: 2, style: .content) {}
+        MyDayFilterTokens(
+            tokens: [
+                .init(kind: .tag(UUID()), tagText: "#health"),
+                .init(kind: .tag(UUID()), tagText: "#work"),
+            ],
+            summary: LocalizedStringResource("Due today with \("#health and #work")", comment: "My Day: under the filter tokens when two or more tags are chosen. The placeholder lists them, such as \"#home and #money\" (Match All) or \"#home or #money\" (Match Any)."),
+            remove: { _ in },
+            clear: {}
+        )
+        MyDayFilterTokens(tokens: [.init(kind: .noTags, tagText: nil)], summary: nil, remove: { _ in }, clear: {})
+    }
+    .padding()
 }

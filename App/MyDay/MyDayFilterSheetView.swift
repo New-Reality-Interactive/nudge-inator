@@ -103,3 +103,12 @@ struct MyDayFilterSheetView: View {
         .accessibilityAddTraits(isChecked ? .isSelected : [])
     }
 }
+
+#if DEBUG
+#Preview("Filter sheet") {
+    var filter = MyDayFilter()
+    let engine = Engine.myDayPreview()
+    if let first = engine.tags.first { filter.toggle(first.id) }
+    return MyDayFilterSheetView(engine: engine, filter: .constant(filter))
+}
+#endif
