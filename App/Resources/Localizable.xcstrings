@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@" : {
+      "comment" : "My Day: under the title of an occurrence due later today. The placeholder is how soon, such as \"in 4 hr.\"."
+    },
     "%@ %@" : {
       "comment" : "Via label: a glyph, then how a nudge arrives. Keep the glyph first.",
       "localizations" : {
@@ -19,6 +22,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@" : {
+      "comment" : "My Day: under the title of a tagged reminder. 1: its tags, such as \"#home #errands\", the ones the filter chose in bold. 2: the note, such as \"Nudging · 2 nudges · next 1:15 PM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@"
           }
         }
       }
@@ -96,6 +110,52 @@
     "%@." : {
       "comment" : "A repeat summary as a sentence, under the reminder form's Starts and under the Repeat page's Custom row. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".\nTop of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\"."
     },
+    "%lld due today with %@." : {
+      "comment" : "My Day's filter sheet: under the lists when tags are checked. 1: how many are due today. 2: the checked tags, such as \"#home and #money\" (Match All) or \"#home or #money\" (Match Any).",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld due today with %2$@."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld due today with %2$@."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld due today without tags." : {
+      "comment" : "My Day's filter sheet: under the lists when No Tags is checked. The placeholder is how many are due today.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld due today without tags."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld due today without tags."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "**All clear.** Nothing needs you right now." : {
       "comment" : "Now: the Nudging section when nothing is nudging."
     },
@@ -140,6 +200,15 @@
     "Alarm" : {
       "comment" : "Nudge card: the next nudge rings as an alarm."
     },
+    "All Tags" : {
+      "comment" : "My Day's filter sheet: the Match choice that needs every checked tag."
+    },
+    "All Tags shows reminders with every checked tag. Any Tag shows those with at least one." : {
+      "comment" : "My Day's filter sheet: under the tags when two or more are checked."
+    },
+    "Any Tag" : {
+      "comment" : "My Day's filter sheet: the Match choice that needs at least one checked tag."
+    },
     "Break Through Focus" : {
       "comment" : "Reminder details, Schedule: the per-reminder switch that sends nudges as alarms.\nThe reminder form's switch: whether its nudges get through a Focus."
     },
@@ -148,6 +217,9 @@
     },
     "Cancel" : {
       "comment" : "Closes the alert without choosing a new time.\nKeeps the reminder instead of deleting it.\nThe form's cancel button (an xmark)."
+    },
+    "Check one or more tags." : {
+      "comment" : "My Day's filter sheet: under the tags."
     },
     "Choose Time" : {
       "comment" : "Opens the Edit Reminder form to choose a new time, so the reminder can resume."
@@ -160,6 +232,9 @@
     },
     "Choose one or more days." : {
       "comment" : "Under the Custom repeat page's weekdays."
+    },
+    "Clear" : {
+      "comment" : "My Day's filter sheet: removes every tag from the filter.\nMy Day: removes every tag from the filter."
     },
     "Coming Up" : {
       "comment" : "Now: section header for reminders due soon."
@@ -186,7 +261,7 @@
       "comment" : "Asked when cancelling a reminder form with changes."
     },
     "Done" : {
-      "comment" : "Notification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nStatus label: an occurrence closed as Done."
+      "comment" : "My Day's filter sheet: closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nStatus label: an occurrence closed as Done."
     },
     "Done after %lld nudges" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence closed as Done. The placeholder is how many nudges it sent.",
@@ -211,11 +286,40 @@
         }
       }
     },
+    "Done at %@" : {
+      "comment" : "My Day: under the title of an occurrence closed as Done with no nudge sent. The placeholder is when it closed, such as \"7:04 AM\"."
+    },
+    "Done at %@ after %lld nudges" : {
+      "comment" : "My Day: under the title of an occurrence closed as Done. 1: when it closed, such as \"7:04 AM\". 2: how many nudges it sent.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Done at %1$@ after %2$lld nudge"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Done at %1$@ after %2$lld nudges"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Done, stop nudging: %@" : {
-      "comment" : "VoiceOver label of a nudge card's Done button. The placeholder is the reminder's title."
+      "comment" : "VoiceOver label of the Done button on a nudge card or a My Day row. The placeholder is the reminder's title."
     },
     "Due %@" : {
       "comment" : "Nudge card: under the title of a reminder with no tags. The placeholder is its due time, such as \"9:00 AM\"."
+    },
+    "Due today with %@" : {
+      "comment" : "My Day: under the filter tokens when two or more tags are chosen. The placeholder lists them, such as \"#home and #money\" (Match All) or \"#home or #money\" (Match Any)."
     },
     "Edit" : {
       "comment" : "Reminder details: the toolbar button that opens the Edit Reminder form."
@@ -354,6 +458,61 @@
     "Every nudge is an ordinary notification, which a Focus can hold. Nothing rings." : {
       "comment" : "Under Break Through Focus when it's off."
     },
+    "Filter (%lld)" : {
+      "comment" : "My Day: the button that opens the tag filter, while tags are chosen. The placeholder is how many.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Filter (%lld)"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Filter (%lld)"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Filter My Day" : {
+      "comment" : "Title of My Day's tag filter sheet."
+    },
+    "Filter by Tags" : {
+      "comment" : "My Day: the button that opens the tag filter, while none is chosen."
+    },
+    "Filter by Tags, %lld chosen" : {
+      "comment" : "VoiceOver label of My Day's filter button while tags are chosen. The placeholder is how many.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Filter by Tags, %lld chosen"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Filter by Tags, %lld chosen"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Filtering by" : {
+      "comment" : "VoiceOver label of the group of tokens for the tags My Day is filtered by."
+    },
     "Firm" : {
       "comment" : "Strength name."
     },
@@ -407,8 +566,14 @@
     "Last occurrence" : {
       "comment" : "Reminder details, Schedule: how the latest occurrence closed."
     },
+    "Left" : {
+      "comment" : "My Day: the caption of the count of occurrences still to come today."
+    },
+    "Match" : {
+      "comment" : "My Day's filter sheet: label of the choice between All Tags and Any Tag."
+    },
     "Missed" : {
-      "comment" : "Status label: an occurrence closed without Done, by its give-up limit or a take-over."
+      "comment" : "My Day: the caption of the count of occurrences missed today.\nStatus label: an occurrence closed without Done, by its give-up limit or a take-over."
     },
     "Missed: gave up after the limit" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that reached its give-up limit (20 nudges or 24 hours)."
@@ -452,10 +617,13 @@
       }
     },
     "No Tags" : {
-      "comment" : "Tags: title when there are no tags yet."
+      "comment" : "My Day's filter sheet: the row that shows only reminders without tags.\nMy Day: the filter token that shows only reminders without tags.\nTags: title when there are no tags yet."
     },
     "No tags yet. Add one above." : {
       "comment" : "The Tags page's list when there are no tags."
+    },
+    "No tags yet. Add them when you edit a reminder." : {
+      "comment" : "My Day's filter sheet: the Tags list when no tag exists."
     },
     "None" : {
       "comment" : "Reminder details, Schedule: nothing is left to come.\nThe reminder form's Tags row when no tag is chosen."
@@ -469,11 +637,23 @@
     "Nothing closed yet today." : {
       "comment" : "Now: the Last 24 Hours section when no occurrence closed in that time."
     },
+    "Nothing is done yet today." : {
+      "comment" : "My Day: the list when Done is chosen and nothing is done yet today."
+    },
     "Nothing is due today." : {
       "comment" : "My Day: the list when nothing is due today."
     },
+    "Nothing is left to do today." : {
+      "comment" : "My Day: the list when Left is chosen and nothing is left to do today."
+    },
+    "Nothing is nudging you." : {
+      "comment" : "My Day: the list when Nudging is chosen and nothing is nudging."
+    },
     "Nothing scheduled this week." : {
       "comment" : "Now: the Coming Up section when nothing is due in the next 7 days."
+    },
+    "Nothing was missed today." : {
+      "comment" : "My Day: the list when Missed is chosen and nothing was missed today."
     },
     "Notification" : {
       "comment" : "Nudge card: the next nudge comes as a notification."
@@ -499,6 +679,9 @@
     "Now" : {
       "comment" : "Tab bar: the tab with what's nudging you now, coming up and closed lately"
     },
+    "Now, %@" : {
+      "comment" : "My Day: the marker among the rows that shows where the time is now. The placeholder is the time, such as \"1:00 PM\"."
+    },
     "Nudge %lld of %lld" : {
       "comment" : "Nudge card: how many nudges it has sent of the most it sends, such as \"Nudge 3 of 20\".",
       "localizations" : {
@@ -511,13 +694,59 @@
       }
     },
     "Nudging" : {
-      "comment" : "Now: section header for the reminders nudging you now.\nStatus label: an occurrence that has come due and isn't Done yet."
+      "comment" : "My Day: the caption of the count of occurrences nudging now.\nNow: section header for the reminders nudging you now.\nStatus label: an occurrence that has come due and isn't Done yet."
     },
     "Nudging Now" : {
       "comment" : "Reminder details: section header above the card of a reminder that is nudging."
     },
     "Nudging now. Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge." : {
       "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging: the note at the top of the form, without its bold."
+    },
+    "Nudging · %lld nudges" : {
+      "comment" : "My Day: under the title of a Nudging occurrence with no nudge left. The placeholder is how many it sent.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Nudging · %lld nudge"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Nudging · %lld nudges"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Nudging · %lld nudges · next %@" : {
+      "comment" : "My Day: under the title of a Nudging occurrence. 1: how many nudges it has sent. 2: when the next one fires, such as \"1:15 PM\".",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Nudging · %1$lld nudge · next %2$@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Nudging · %1$lld nudges · next %2$@"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "Off" : {
       "comment" : "Reminder details: Break Through Focus is off."
@@ -537,6 +766,9 @@
     "Only Done stops the nudging." : {
       "comment" : "Nudge card: under the Done button."
     },
+    "Only reminders without tags" : {
+      "comment" : "My Day's filter sheet: under No Tags."
+    },
     "Open" : {
       "comment" : "Alarm button: opens the app on the reminder, where Done is. Shown on the Lock Screen; keep it short."
     },
@@ -549,6 +781,9 @@
     "Paused" : {
       "comment" : "Reminder details, Schedule: the reminder is paused, so nothing is next.\nStatus label: the reminder is paused."
     },
+    "Paused: this one will be skipped" : {
+      "comment" : "My Day: under the title of an occurrence due later today whose reminder is paused."
+    },
     "Pausing stops the nudging. Anything due while it's paused is skipped, not missed." : {
       "comment" : "Reminder details: under Pause Reminder."
     },
@@ -557,6 +792,12 @@
     },
     "Reminder Not Found" : {
       "comment" : "Reminder details: title when the reminder isn't there."
+    },
+    "Remove %@ from the filter" : {
+      "comment" : "VoiceOver label of a tag's filter token on My Day. The placeholder is the tag, such as \"#home\"."
+    },
+    "Remove No Tags from the filter" : {
+      "comment" : "VoiceOver label of My Day's No Tags filter token."
     },
     "Repeat" : {
       "comment" : "The reminder form's row that opens the Repeat page.\nTitle of the reminder form's Repeat page."
@@ -576,6 +817,44 @@
     "Settings" : {
       "comment" : "Tab bar: the app's settings tab"
     },
+    "Show All" : {
+      "comment" : "My Day: the button that clears the chosen count and shows every row."
+    },
+    "Showing everything due today (%lld)." : {
+      "comment" : "My Day's filter sheet: under the lists when nothing is checked. The placeholder is how many are due today.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Showing everything due today (%lld)."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Showing everything due today (%lld)."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Showing only Done" : {
+      "comment" : "My Day: under the counts while Done is chosen."
+    },
+    "Showing only Left" : {
+      "comment" : "My Day: under the counts while Left is chosen."
+    },
+    "Showing only Missed" : {
+      "comment" : "My Day: under the counts while Missed is chosen."
+    },
+    "Showing only Nudging" : {
+      "comment" : "My Day: under the counts while Nudging is chosen."
+    },
     "Skipped" : {
       "comment" : "Status label: an occurrence closed because its reminder was paused."
     },
@@ -592,7 +871,7 @@
       "comment" : "The reminder form's strength choice: Gentle, Firm or Relentless."
     },
     "Tags" : {
-      "comment" : "Tab bar: the tab listing your tags\nThe reminder form's row that opens the Tags page.\nTitle of the reminder form's Tags page."
+      "comment" : "My Day's filter sheet: header of the list of tags.\nTab bar: the tab listing your tags\nThe reminder form's row that opens the Tags page.\nTitle of the reminder form's Tags page."
     },
     "Tags: %@" : {
       "comment" : "VoiceOver label of a reminder's tags on its details. The placeholder lists them, such as \"#home and #errands\"."
@@ -629,6 +908,9 @@
     },
     "Today" : {
       "comment" : "The Custom repeat page's Next Times: a due time today."
+    },
+    "Today's counts. Choose one to show only those." : {
+      "comment" : "VoiceOver label of the group of four counts on My Day."
     },
     "Tomorrow" : {
       "comment" : "The Custom repeat page's Next Times: a due time tomorrow."

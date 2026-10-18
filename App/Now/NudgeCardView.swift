@@ -98,7 +98,7 @@ struct NudgeCardView: View {
 
     @ViewBuilder private var nextLine: some View {
         if let next = card.status.nextNudge, let time = card.nextNudgeTime {
-            let relative = Self.relative.localizedString(for: next.fireTime, relativeTo: now)
+            let relative = next.fireTime.shortRelative(to: now)
             Text("Next nudge \(time) (\(relative)): \(ViaLabel(delivery: next.delivery).text) · \(next.urgency.name)",
                  comment: "Nudge card: the next nudge. 1: its time, such as \"9:45 AM\". 2: how soon, such as \"in 5 min\". 3: how it arrives, such as \"Alarm\". 4: its urgency, such as \"High\".")
         } else {
@@ -121,7 +121,7 @@ struct NudgeCardView: View {
         // Large is the system's tallest regular button, over the 44 pt every button needs.
         .controlSize(.large)
         .buttonBorderShape(.roundedRectangle(radius: Design.Radius.control))
-        .accessibilityLabel(Text("Done, stop nudging: \(card.title)", comment: "VoiceOver label of a nudge card's Done button. The placeholder is the reminder's title."))
+        .accessibilityLabel(Text("Done, stop nudging: \(card.title)", comment: "VoiceOver label of the Done button on a nudge card or a My Day row. The placeholder is the reminder's title."))
     }
 
     private var footer: some View {
@@ -129,13 +129,6 @@ struct NudgeCardView: View {
             .font(.footnote)
             .foregroundStyle(Color(uiColor: .secondaryLabel))
     }
-
-    /// "in 5 min", from the time the card is drawn, as the mockup's `rel`.
-    private static let relative: RelativeDateTimeFormatter = {
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .short
-        return formatter
-    }()
 }
 
 /// The strength badge, the urgency word and "Nudge 3 of 20", stacked at accessibility sizes.
