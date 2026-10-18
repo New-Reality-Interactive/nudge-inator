@@ -12,6 +12,7 @@ struct MyDayRowView: View {
     let markDone: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
     /// Wide enough for "12:30 PM", so the titles line up.
     @ScaledMetric(relativeTo: .body) private var timeWidth: CGFloat = Design.Size.timeColumn
 
@@ -34,10 +35,11 @@ struct MyDayRowView: View {
                 }
             }
         }
-        // Only a Nudging row has the swipe. VoiceOver has the row's own Done button instead (the
-        // mockup's `swipeable`).
+        // Only a Nudging row has the swipe, and not while VoiceOver is running: it lists a row's
+        // swipe actions among its actions whatever `accessibilityHidden` says (the phone showed
+        // it), so Done would be offered twice. VoiceOver has the row's own Done button.
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            if item.offersDone {
+            if item.offersDone && !voiceOverEnabled {
                 Button(action: markDone) {
                     Label {
                         Text("Done", comment: "My Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.")
@@ -46,7 +48,6 @@ struct MyDayRowView: View {
                     }
                 }
                 .tint(Color.tileGreen)
-                .accessibilityHidden(true)
             }
         }
     }
