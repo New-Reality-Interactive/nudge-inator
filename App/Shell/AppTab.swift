@@ -7,8 +7,7 @@ enum AppTab: CaseIterable, Hashable {
     case tags
     case settings
 
-    /// The tab a route opens on. Reminder details are pushed on Now, as the mockup's Open does
-    /// (ticket 27 pushes them).
+    /// The tab a route opens on. Reminder details are pushed on Now, as the mockup's Open does.
     init(route: AppModel.Route) {
         switch route {
         case .now, .reminderDetails: self = .now

@@ -6,21 +6,27 @@ import SwiftUI
 /// an occurrence falls due or gives up), so the list is read again at the start of every minute.
 struct NowTab: View {
     let state: ScreenState
+    /// The reminders whose details are pushed, which the shell sets for the alarm's Open and a
+    /// tap appends to.
+    @Binding var path: [OpenedReminder]
     /// What previews show, since they have no app model.
     var preview: NowScreen?
 
     @Environment(AppModel.self) private var model: AppModel?
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             TabScreen(state: state) {
                 TimelineView(.everyMinute) { context in
                     NowList(screen: screen, now: context.date) { reminderID in
                         model?.markDone(reminderID)
+                    } openDetails: { reminderID in
+                        path.append(OpenedReminder(id: reminderID))
                     }
                 }
             }
             .navigationTitle(Text(AppTab.now.title))
+            .reminderDetailsDestination()
             .toolbar {
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
             }
@@ -37,6 +43,7 @@ private struct NowList: View {
     let screen: NowScreen
     let now: Date
     let markDone: (Reminder.ID) -> Void
+    let openDetails: (Reminder.ID) -> Void
 
     var body: some View {
         List {
@@ -45,7 +52,7 @@ private struct NowList: View {
                     EmptyRow(text: Text("**All clear.** Nothing needs you right now.", comment: "Now: the Nudging section when nothing is nudging."))
                 } else {
                     ForEach(screen.nudging) { card in
-                        NudgeCardRow(card: card, now: now) { markDone(card.id) }
+                        NudgeCardRow(card: card, now: now, markDone: { markDone(card.id) }, openDetails: { openDetails(card.id) })
                     }
                 }
             } header: {
@@ -55,7 +62,7 @@ private struct NowList: View {
                 if screen.comingUp.isEmpty {
                     EmptyRow(text: Text("Nothing scheduled this week.", comment: "Now: the Coming Up section when nothing is due in the next 7 days."))
                 } else {
-                    ForEach(screen.comingUp) { ComingUpRowView(row: $0) }
+                    ForEach(screen.comingUp) { row in ComingUpRowView(row: row) { openDetails(row.reminder.id) } }
                 }
             } header: {
                 ComingUpHeader()
@@ -64,7 +71,7 @@ private struct NowList: View {
                 if screen.lastDay.isEmpty {
                     EmptyRow(text: Text("Nothing closed yet today.", comment: "Now: the Last 24 Hours section when no occurrence closed in that time."))
                 } else {
-                    ForEach(screen.lastDay) { ClosedRowView(row: $0) }
+                    ForEach(screen.lastDay) { row in ClosedRowView(row: row) { openDetails(row.reminder.id) } }
                 }
             } header: {
                 Text("Last 24 Hours", comment: "Now: section header for occurrences closed in the last 24 hours.")
@@ -79,9 +86,10 @@ private struct NudgeCardRow: View {
     let card: NudgeCard
     let now: Date
     let markDone: () -> Void
+    let openDetails: () -> Void
 
     var body: some View {
-        NudgeCardView(card: card, now: now, markDone: markDone)
+        NudgeCardView(card: card, now: now, markDone: markDone, openDetails: openDetails)
             .listRowInsets(EdgeInsets(top: Design.Spacing.s3 / 2, leading: 0, bottom: Design.Spacing.s3 / 2, trailing: 0))
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
@@ -144,23 +152,23 @@ private struct ComingUpHeader: View {
 }
 
 #Preview("Light") {
-    NowTab(state: .ready, preview: .preview())
+    NowTab(state: .ready, path: .constant([]), preview: .preview())
 }
 
 #Preview("Dark") {
-    NowTab(state: .ready, preview: .preview())
+    NowTab(state: .ready, path: .constant([]), preview: .preview())
         .preferredColorScheme(.dark)
 }
 
 #Preview("Largest text") {
-    NowTab(state: .ready, preview: .preview())
+    NowTab(state: .ready, path: .constant([]), preview: .preview())
         .environment(\.dynamicTypeSize, .accessibility5)
 }
 
 #Preview("Landscape", traits: .landscapeLeft) {
-    NowTab(state: .ready, preview: .preview())
+    NowTab(state: .ready, path: .constant([]), preview: .preview())
 }
 
 #Preview("Empty") {
-    NowTab(state: .ready)
+    NowTab(state: .ready, path: .constant([]))
 }

@@ -21,18 +21,8 @@ struct NowScreen {
     init(engine: Engine) {
         shortDate = { engine.shortDate(of: $0) }
         let reminders = Dictionary(engine.reminders.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        let tagNames = Dictionary(engine.tags.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
         nudging = engine.nudgingOccurrences().compactMap { item in
-            guard let reminder = reminders[item.reminderID], let status = engine.nudgingStatus(of: item.reminderID) else { return nil }
-            return NudgeCard(
-                reminder: reminder,
-                status: status,
-                // Only tags the engine holds, as the tag filters do.
-                tags: reminder.tagIDs.compactMap { tagNames[$0].map { "#\($0)" } },
-                dueTime: engine.timeOfDay(of: status.dueTime),
-                nextNudgeTime: status.nextNudge.map { engine.timeOfDay(of: $0.fireTime) },
-                missedAtTime: engine.timeOfDay(of: status.missedAt)
-            )
+            reminders[item.reminderID].flatMap { NudgeCard(engine: engine, reminder: $0) }
         }
         comingUp = engine.comingUp().compactMap { item in
             reminders[item.reminderID].map {
@@ -82,6 +72,17 @@ struct NudgeCard: Identifiable {
 
     var id: Reminder.ID { reminder.id }
     var title: String { reminder.title }
+
+    /// The reminder's card, or `nil` if it isn't nudging.
+    init?(engine: Engine, reminder: Reminder) {
+        guard let status = engine.nudgingStatus(of: reminder.id) else { return nil }
+        self.reminder = reminder
+        self.status = status
+        tags = engine.tagLabels(for: reminder.tagIDs)
+        dueTime = engine.timeOfDay(of: status.dueTime)
+        nextNudgeTime = status.nextNudge.map { engine.timeOfDay(of: $0.fireTime) }
+        missedAtTime = engine.timeOfDay(of: status.missedAt)
+    }
 
     /// Under the title: the tags and the due time. The urgency is in the top row, with its glyph.
     var detail: LocalizedStringResource {

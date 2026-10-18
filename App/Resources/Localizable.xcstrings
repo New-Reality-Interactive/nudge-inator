@@ -12,6 +12,17 @@
         }
       }
     },
+    "%@ at %@" : {
+      "comment" : "Reminder details, Schedule: the next due time. 1: \"Today\", \"Tomorrow\" or a short date. 2: the time, such as \"8:00 AM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ at %2$@"
+          }
+        }
+      }
+    },
     "%@ · **%lld reminders nudging you**" : {
       "comment" : "Now: under the title; the bold part shows in red. 1: today's short date, such as \"Sat, Oct 17\". 2: how many reminders are nudging.",
       "localizations" : {
@@ -45,6 +56,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ · due %2$@"
+          }
+        }
+      }
+    },
+    "%@, %@" : {
+      "comment" : "Reminder details, Schedule: when the latest occurrence closed. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"9:40 AM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@"
           }
         }
       }
@@ -119,13 +141,19 @@
       "comment" : "Nudge card: the next nudge rings as an alarm."
     },
     "Break Through Focus" : {
-      "comment" : "The reminder form's switch: whether its nudges get through a Focus."
+      "comment" : "Reminder details, Schedule: the per-reminder switch that sends nudges as alarms.\nThe reminder form's switch: whether its nudges get through a Focus."
     },
     "Can't Open Your Reminders" : {
       "comment" : "Title shown when the app can't read its stored reminders, for example before the first unlock after a restart."
     },
     "Cancel" : {
-      "comment" : "The form's cancel button (an xmark)."
+      "comment" : "Closes the alert without choosing a new time.\nKeeps the reminder instead of deleting it.\nThe form's cancel button (an xmark)."
+    },
+    "Choose Time" : {
+      "comment" : "Opens the Edit Reminder form to choose a new time, so the reminder can resume."
+    },
+    "Choose a New Time" : {
+      "comment" : "Alert title: Resume was turned down because the reminder has no time left."
     },
     "Choose an end date after the start." : {
       "comment" : "Under the Custom repeat page's end date when it is before the start, so Save is disabled."
@@ -136,11 +164,20 @@
     "Coming Up" : {
       "comment" : "Now: section header for reminders due soon."
     },
+    "Coming up" : {
+      "comment" : "Status label: the reminder isn't due yet."
+    },
     "Custom" : {
       "comment" : "The Repeat page's row that opens the custom repeat page.\nThe reminder form's Repeat row when the repeat is a custom rule.\nTitle of the Custom repeat page."
     },
     "Daily" : {
       "comment" : "The Custom repeat page's frequency."
+    },
+    "Delete Reminder" : {
+      "comment" : "Confirms deleting the reminder.\nReminder details: opens the question that asks before deleting the reminder."
+    },
+    "Delete “%@”?" : {
+      "comment" : "Asked before deleting a reminder from its details. The placeholder is its title."
     },
     "Discard Changes" : {
       "comment" : "Throws away the reminder form's changes and closes it."
@@ -179,6 +216,12 @@
     },
     "Due %@" : {
       "comment" : "Nudge card: under the title of a reminder with no tags. The placeholder is its due time, such as \"9:00 AM\"."
+    },
+    "Edit" : {
+      "comment" : "Reminder details: the toolbar button that opens the Edit Reminder form."
+    },
+    "Edit %@" : {
+      "comment" : "VoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title."
     },
     "Edit Reminder" : {
       "comment" : "Title of the form that edits a reminder."
@@ -352,11 +395,17 @@
     "Hourly at first, easing to every 20 min. Never rings as an alarm." : {
       "comment" : "Under the reminder form's strength when Gentle is chosen."
     },
+    "It may have been deleted." : {
+      "comment" : "Reminder details: under \"Reminder Not Found\"."
+    },
     "Keep Editing" : {
       "comment" : "Goes back to the reminder form without discarding."
     },
     "Last 24 Hours" : {
       "comment" : "Now: section header for occurrences closed in the last 24 hours."
+    },
+    "Last occurrence" : {
+      "comment" : "Reminder details, Schedule: how the latest occurrence closed."
     },
     "Missed" : {
       "comment" : "Status label: an occurrence closed without Done, by its give-up limit or a take-over."
@@ -382,6 +431,9 @@
     "New Tag" : {
       "comment" : "The Tags page's field for typing a new tag's name.\nToolbar button (a plus) on Tags that adds a tag."
     },
+    "Next" : {
+      "comment" : "Reminder details, Schedule: when the reminder is next due."
+    },
     "Next 7 days" : {
       "comment" : "Now: how far ahead the Coming Up section looks."
     },
@@ -406,7 +458,7 @@
       "comment" : "The Tags page's list when there are no tags."
     },
     "None" : {
-      "comment" : "The reminder form's Tags row when no tag is chosen."
+      "comment" : "Reminder details, Schedule: nothing is left to come.\nThe reminder form's Tags row when no tag is chosen."
     },
     "Notes" : {
       "comment" : "The reminder form's notes field."
@@ -461,11 +513,17 @@
     "Nudging" : {
       "comment" : "Now: section header for the reminders nudging you now.\nStatus label: an occurrence that has come due and isn't Done yet."
     },
+    "Nudging Now" : {
+      "comment" : "Reminder details: section header above the card of a reminder that is nudging."
+    },
     "Nudging now. Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge." : {
       "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging: the note at the top of the form, without its bold."
     },
+    "Off" : {
+      "comment" : "Reminder details: Break Through Focus is off."
+    },
     "On" : {
-      "comment" : "Header of the Custom repeat page's days: the weekdays, or the day of the month."
+      "comment" : "Header of the Custom repeat page's days: the weekdays, or the day of the month.\nReminder details: Break Through Focus is on."
     },
     "On %@, from the start date. Change it to pick another day." : {
       "comment" : "Under the Custom repeat page's frequency when it's yearly. The placeholder is the start's day and month, such as \"28 October\"."
@@ -482,14 +540,38 @@
     "Open" : {
       "comment" : "Alarm button: opens the app on the reminder, where Done is. Shown on the Lock Screen; keep it short."
     },
+    "Opens the reminder's details." : {
+      "comment" : "VoiceOver hint on a nudge card's title and on a Now row: tapping it opens the reminder's details."
+    },
+    "Pause Reminder" : {
+      "comment" : "Reminder details: stops the reminder's nudging until it is resumed."
+    },
+    "Paused" : {
+      "comment" : "Reminder details, Schedule: the reminder is paused, so nothing is next.\nStatus label: the reminder is paused."
+    },
+    "Pausing stops the nudging. Anything due while it's paused is skipped, not missed." : {
+      "comment" : "Reminder details: under Pause Reminder."
+    },
     "Relentless" : {
       "comment" : "Strength name: the reminder nudges hardest."
+    },
+    "Reminder Not Found" : {
+      "comment" : "Reminder details: title when the reminder isn't there."
     },
     "Repeat" : {
       "comment" : "The reminder form's row that opens the Repeat page.\nTitle of the reminder form's Repeat page."
     },
+    "Repeats" : {
+      "comment" : "Reminder details, Schedule: how often the reminder comes due."
+    },
+    "Resume Reminder" : {
+      "comment" : "Reminder details: brings a paused reminder back at its next time."
+    },
     "Save" : {
       "comment" : "The Edit Reminder form's confirm button (a checkmark)."
+    },
+    "Schedule" : {
+      "comment" : "Reminder details: section header for when and how the reminder nudges."
     },
     "Settings" : {
       "comment" : "Tab bar: the app's settings tab"
@@ -500,6 +582,9 @@
     "Skipped: the reminder was paused" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that closed because its reminder was paused."
     },
+    "Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them." : {
+      "comment" : "Reminder details: under Schedule while the reminder is nudging, why four fields can't be edited."
+    },
     "Starts" : {
       "comment" : "The reminder form's start date and time."
     },
@@ -508,6 +593,9 @@
     },
     "Tags" : {
       "comment" : "Tab bar: the tab listing your tags\nThe reminder form's row that opens the Tags page.\nTitle of the reminder form's Tags page."
+    },
+    "Tags: %@" : {
+      "comment" : "VoiceOver label of a reminder's tags on its details. The placeholder lists them, such as \"#home and #errands\"."
     },
     "Tap + to add a tag, or add tags to a reminder when you create or edit it." : {
       "comment" : "Tags: how to add a tag when there are none."
@@ -526,6 +614,9 @@
     },
     "These follow the start date. Change it to pick another day." : {
       "comment" : "Under the Custom repeat page's monthly days."
+    },
+    "This deletes its history too, and cancels any nudges and alarms." : {
+      "comment" : "Under the question asked before deleting a reminder."
     },
     "This repeat has no times left. Change when it ends." : {
       "comment" : "Under the Custom repeat page's Next Times when the repeat has ended."
@@ -556,6 +647,9 @@
     },
     "Your reminders stay on this iPhone. There's no account and no server, and nothing syncs to other devices." : {
       "comment" : "Settings: the privacy note under Your Data."
+    },
+    "“%@” was due while it was paused. Choose a new time to resume it." : {
+      "comment" : "Alert message: why Resume needs a new time. The placeholder is the reminder's title."
     }
   },
   "version" : "1.0"

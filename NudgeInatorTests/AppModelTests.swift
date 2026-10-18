@@ -481,13 +481,14 @@ struct AppModelTests {
         #expect(try store.load().histories[call.id]?.closedOccurrences[call.dueTime]?.state == .done)
     }
 
-    /// An alarm left from a reminder since deleted, for example.
-    @Test func openForAReminderTheAppDoesntHoldShowsNow() async throws {
+    /// An alarm left from a reminder since deleted, for example. The details screen says it isn't
+    /// found (ticket 27), rather than the person landing on Now with no word of why.
+    @Test func openForAReminderTheAppDoesntHoldShowsItsDetailsToSayNotFound() async throws {
         let model = await launchedModel(store: try ReminderStore(location: .inMemory))
 
         model.showReminder(call.id)
 
-        #expect(model.route == .now)
+        #expect(model.route == .reminderDetails(call.id))
     }
 
     /// The tab shell takes the route once it has followed it, so the same Open isn't followed again.

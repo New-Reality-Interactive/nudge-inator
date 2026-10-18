@@ -5,7 +5,7 @@ import SwiftUI
 /// (the app hosting tests, and previews) every tab shows its empty state.
 struct RootView: View {
     @Environment(AppModel.self) private var model: AppModel?
-    @State private var selection = AppTab.now
+    @State private var navigation = ShellNavigation()
     /// The start of the current minute, ticked by `tickEveryMinute()`. The badge counts what's
     /// nudging, which changes as time passes with no change to the engine, so reading this in
     /// `body` redraws the badge each minute, as Now's list is redrawn.
@@ -15,9 +15,9 @@ struct RootView: View {
         let state = ScreenState(model: model)
         // Not a TimelineView around the TabView: in the test host that held up main-actor work
         // until each minute's start.
-        TabView(selection: $selection) {
+        TabView(selection: $navigation.selection) {
             Tab(AppTab.now.title, systemImage: AppTab.now.systemImage, value: .now) {
-                NowTab(state: state)
+                NowTab(state: state, path: $navigation.nowPath)
             }
             .badge(nowBadge(in: state, at: minute))
             Tab(AppTab.myDay.title, systemImage: AppTab.myDay.systemImage, value: .myDay) {
@@ -37,7 +37,7 @@ struct RootView: View {
         // `initial`, so a route set before the shell appeared (Open launching the app) is followed.
         .onChange(of: model?.route, initial: true) {
             guard let route = model?.takeRoute() else { return }
-            selection = AppTab(route: route)
+            navigation.follow(route)
         }
     }
 
@@ -50,10 +50,7 @@ struct RootView: View {
 
     /// Sets `minute` at the start of each minute until the view goes away.
     private func tickEveryMinute() async {
-        let calendar = Calendar.current
-        while !Task.isCancelled {
-            guard let next = calendar.nextDate(after: .now, matching: DateComponents(second: 0), matchingPolicy: .nextTime) else { return }
-            try? await Task.sleep(for: .seconds(next.timeIntervalSinceNow))
+        while (try? await EveryMinute.sleepUntilNext()) != nil {
             minute = .now
         }
     }

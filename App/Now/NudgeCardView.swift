@@ -10,6 +10,9 @@ struct NudgeCardView: View {
     /// When the card is drawn, for "in 5 min".
     let now: Date
     let markDone: () -> Void
+    /// Opens the reminder's details: the title is the link, with no chevron (DESIGN.md). `nil` on
+    /// the details screen itself, where the card would open the screen it is on.
+    var openDetails: (() -> Void)?
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var width: CGFloat = 0
@@ -75,6 +78,9 @@ struct NudgeCardView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: card.title))
         .accessibilityValue(Text(card.voiceOverValue))
+        // The summary is one element, so say outright that it opens something.
+        .accessibilityAddTraits(openDetails == nil ? [] : .isButton)
+        .opensDetails(openDetails)
     }
 
     private var details: some View {

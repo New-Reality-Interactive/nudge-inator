@@ -25,7 +25,7 @@ extension ReminderForm {
     static func previewCustom(from preset: RepeatPreset) -> ReminderForm {
         let form = preview()
         form.repeatPreset = preset
-        form.chooseCustom()
+        form.customRepeat = form.customChoices
         return form
     }
 
@@ -34,9 +34,5 @@ extension ReminderForm {
         engine.update(reminders: [reminder])
         return ReminderForm(engine: { engine }, editing: reminder.id, now: { .now }) ?? preview()
     }
-}
-
-private struct PreviewClock: EngineClock {
-    var now: Date { .now }
 }
 #endif

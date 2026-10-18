@@ -118,11 +118,29 @@ final class ReminderForm: Identifiable {
         }
     }
 
-    /// The Repeat page's Custom: starts from the preset that was chosen, or keeps the custom
-    /// repeat it already has.
-    func chooseCustom() {
-        guard customRepeat == nil else { return }
-        customRepeat = currentEngine().customRepeat(from: presetRule, startingAt: dueTime)
+    /// What the Custom page shows and edits: the custom choices, or, while the repeat is a preset
+    /// or Never, the choices that preset starts from. Those aren't stored: looking at the page
+    /// changes nothing, which matters most on a reminder that is locked while nudging (device
+    /// check, ticket 27). The first choice made on the page stores them, and the repeat is Custom.
+    var customChoices: CustomRepeat {
+        get { customRepeat ?? currentEngine().customRepeat(from: presetRule, startingAt: dueTime) }
+        set { customRepeat = newValue }
+    }
+
+    /// The Custom page's summary sentence: of the choices it shows, which are not yet the repeat
+    /// while it is a preset or Never.
+    var customPageSummary: String {
+        currentEngine().repeatSummary(of: draft(tagIDs: tagIDs, repeatRule: customPageRule))
+    }
+
+    /// The Custom page's Next Times: when the choices it shows fall due.
+    var customPageUpcomingDueTimes: [Date] {
+        currentEngine().upcomingDueTimes(of: draft(tagIDs: tagIDs, repeatRule: customPageRule), count: Self.nextTimesCount)
+    }
+
+    /// The rule of the choices the Custom page shows.
+    private var customPageRule: RepeatRule? {
+        customRepeat == nil ? currentEngine().repeatRule(for: customChoices, startingAt: dueTime) : repeatRule
     }
 
     /// The Custom page's monthly choices for the start, each with its title ("On the fourth
@@ -134,7 +152,7 @@ final class ReminderForm: Identifiable {
 
     /// Under a monthly choice of the 29th to the 31st: such months are skipped. From the engine.
     var skippedMonthsNote: String? {
-        customRepeat.flatMap { currentEngine().skippedMonthsNote(of: $0, startingAt: dueTime) }
+        currentEngine().skippedMonthsNote(of: customChoices, startingAt: dueTime)
     }
 
     /// A weekday's name for the Custom page, in the engine's locale.
@@ -143,8 +161,8 @@ final class ReminderForm: Identifiable {
     }
 
     /// The monthly choice the rule uses for the start, which the Custom page checks.
-    var chosenMonthlyDay: CustomRepeat.MonthlyDay? {
-        customRepeat.map { currentEngine().monthlyDay(of: $0, startingAt: dueTime) }
+    var chosenMonthlyDay: CustomRepeat.MonthlyDay {
+        currentEngine().monthlyDay(of: customChoices, startingAt: dueTime)
     }
 
     /// The Repeat row's preset, or `nil` when the rule is Custom. Setting a preset replaces a
@@ -178,10 +196,37 @@ final class ReminderForm: Identifiable {
         !Calendar.autoupdatingCurrent.isDate(dueTime, equalTo: now(), toGranularity: .year)
     }
 
+    /// When the lock was last checked. Reading it in `lockedFields` is what makes a view that
+    /// reads the lock redraw when `checkLock()` moves it: the engine's answer changes as the clock
+    /// passes the due time, with no change anywhere the views can see.
+    private var lockCheckedAt: Date?
+
     /// The fields the engine won't let an Edit change now (ticket 13). Read from the engine, so
     /// the form has no rule of its own; a new reminder has none.
     var lockedFields: Set<LockedField> {
-        original.map { currentEngine().lockedFields(of: $0.id) } ?? []
+        _ = lockCheckedAt
+        return original.map { currentEngine().lockedFields(of: $0.id) } ?? []
+    }
+
+    /// Makes the views read the lock again, and puts the locked fields back as saved if it has
+    /// arrived. The reminder falling due locks it with no event for the views to see, so the sheet
+    /// calls this at the start of every minute while it is open.
+    func checkLock() {
+        lockCheckedAt = now()
+        // A lock that has arrived discards what was changed on the fields it locks, at once: their
+        // controls are disabled now, and a value that can't be saved shouldn't stay on screen
+        // (the user's ruling, ticket 27). A title, notes or tags change is kept.
+        guard let original, lockedFields.contains(where: { $0.isChanged(from: original, to: draft(tagIDs: tagIDs)) }) else { return }
+        restoreLockedFields(from: original)
+    }
+
+    /// Checks the lock at the start of every minute until the task is cancelled. Only an Edit form
+    /// has a lock.
+    func keepTheLockCurrent() async {
+        guard isEditing else { return }
+        while (try? await EveryMinute.sleepUntilNext()) != nil {
+            checkLock()
+        }
     }
 
     var saveBlock: SaveBlock? {
@@ -211,8 +256,8 @@ final class ReminderForm: Identifiable {
     /// The Tags row: the chosen tags as `#name`, in the order chosen, or `nil` if there are none.
     /// Tokens separated by spaces as the mockup shows them, not a sentence, so not a list format.
     var chosenTagsText: String? {
-        let names = tagIDs.compactMap { tagID in tags.first { $0.id == tagID }?.name }
-        return names.isEmpty ? nil : names.map { "#\($0)" }.joined(separator: " ")
+        let labels = tagRules.tagLabels(for: tagIDs)
+        return labels.isEmpty ? nil : labels.joined(separator: " ")
     }
 
     /// The Tags page's Add: the typed name, made one word, attaches the tag with that name
@@ -262,6 +307,10 @@ final class ReminderForm: Identifiable {
 
     /// The draft as a reminder. A new one gets its ID here, which nothing keeps until it's saved.
     private func draft(tagIDs: [Tag.ID]) -> Reminder {
+        draft(tagIDs: tagIDs, repeatRule: repeatRule)
+    }
+
+    private func draft(tagIDs: [Tag.ID], repeatRule: RepeatRule?) -> Reminder {
         Reminder(
             id: original?.id ?? newID,
             // One line: a pasted title's line breaks become spaces.

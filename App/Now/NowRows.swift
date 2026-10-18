@@ -2,12 +2,13 @@ import NudgeEngine
 import SwiftUI
 
 /// A Coming Up row: the time and its day, the title and the repeat summary, and the strength
-/// badge. No chevron until ticket 27 makes the row open the reminder.
+/// badge. It opens the reminder's details.
 struct ComingUpRowView: View {
     let row: ComingUpRow
+    let openDetails: () -> Void
 
     var body: some View {
-        NowRowLayout {
+        NowRowLayout(openDetails: openDetails) {
             TimeColumn(time: row.time, day: row.day)
         } main: {
             Text(verbatim: row.title)
@@ -21,12 +22,14 @@ struct ComingUpRowView: View {
     }
 }
 
-/// A Last 24 Hours row: when it closed, the title and how it closed, and the status label.
+/// A Last 24 Hours row: when it closed, the title and how it closed, and the status label. It
+/// opens the reminder's details.
 struct ClosedRowView: View {
     let row: ClosedRow
+    let openDetails: () -> Void
 
     var body: some View {
-        NowRowLayout {
+        NowRowLayout(openDetails: openDetails) {
             TimeColumn(time: row.time, day: row.day)
         } main: {
             Text(verbatim: row.title)
@@ -40,9 +43,11 @@ struct ClosedRowView: View {
     }
 }
 
-/// The mockup's `.cell`: a time column, the main text, and a trailing item. At accessibility
-/// sizes they stack and wrap. VoiceOver reads the row as one element.
+/// The mockup's `.cell`: a time column, the main text, and a trailing item, then DESIGN.md's
+/// chevron. The row is a button that opens the reminder. At accessibility sizes they stack and
+/// wrap. VoiceOver reads the row as one element.
 private struct NowRowLayout<Leading: View, Main: View, Trailing: View>: View {
+    let openDetails: () -> Void
     @ViewBuilder let leading: () -> Leading
     @ViewBuilder let main: () -> Main
     @ViewBuilder let trailing: () -> Trailing
@@ -57,7 +62,11 @@ private struct NowRowLayout<Leading: View, Main: View, Trailing: View>: View {
                 VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                     leading()
                     mainStack
-                    trailing()
+                    HStack {
+                        trailing()
+                        Spacer(minLength: 0)
+                        chevron
+                    }
                 }
             } else {
                 HStack(alignment: .firstTextBaseline, spacing: Design.Spacing.s3) {
@@ -66,9 +75,11 @@ private struct NowRowLayout<Leading: View, Main: View, Trailing: View>: View {
                     mainStack
                         .frame(maxWidth: .infinity, alignment: .leading)
                     trailing()
+                    chevron
                 }
             }
         }
+        .opensDetails(openDetails)
         .accessibilityElement(children: .combine)
     }
 
@@ -76,6 +87,14 @@ private struct NowRowLayout<Leading: View, Main: View, Trailing: View>: View {
         VStack(alignment: .leading, spacing: Design.Spacing.line) {
             main()
         }
+    }
+
+    /// DESIGN.md's Reminder row chevron, in the tertiary label color. Decorative.
+    private var chevron: some View {
+        Image(systemName: "chevron.right")
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(Color(uiColor: .tertiaryLabel))
+            .accessibilityHidden(true)
     }
 }
 
