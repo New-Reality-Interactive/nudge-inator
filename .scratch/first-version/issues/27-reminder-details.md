@@ -38,7 +38,7 @@ Blocked by: 09, 24, 26
 
 **Tests.** `scripts/test.sh` passes: engine tests on macOS, and 193 app tests on iOS 26.1 and 26.5 (iPhone 17). The 193 app tests also passed on the iPhone 15 (iOS 27.0.1). Seams: `ShellNavigationTests`, `ReminderDetailsTests` (the `ReminderDetails` value through the real `AppModel`), `ReminderFormTests` additions. Layout, the dialog, the Edit sheet and VoiceOver are screenshot and device checks.
 
-**Screenshots.** Simulator, iPhone 17, iOS 26.5, compared with the mockup's `viewRem`, at default and largest text, portrait and landscape: the same structure. The differences are the Last occurrence row and the Delete popover (iOS 26 draws the confirmation as a popover).
+**Screenshots.** Simulator, iPhone 17, iOS 26.5, at the largest text size and in landscape, looked right against the mockup's `viewRem`. The one addition is the Last occurrence row, which the mockup doesn't have.
 
 **Device checks** (iPhone 15, iOS 27.0.1; the app wasn't installed at the start, and it was uninstalled afterwards):
 1. Details from a card's title and from Last 24 Hours and Coming Up rows; Done on the details: pass.
