@@ -122,7 +122,21 @@ final class ReminderForm: Identifiable {
     /// repeat it already has.
     func chooseCustom() {
         guard customRepeat == nil else { return }
-        customRepeat = currentEngine().customRepeat(from: presetRule, startingAt: dueTime)
+        let seeded = currentEngine().customRepeat(from: presetRule, startingAt: dueTime)
+        customRepeat = seeded
+        seededCustom = seeded
+    }
+
+    /// The choices `chooseCustom()` started the page with, until the page is left.
+    private var seededCustom: CustomRepeat?
+
+    /// Leaving the Custom page. Choices still as they were seeded were never a choice, so the
+    /// repeat goes back to the preset it was (or Never): looking at the page changes nothing, which
+    /// matters most on a reminder that is locked while nudging.
+    func leaveCustom() {
+        defer { seededCustom = nil }
+        guard let seededCustom, customRepeat == seededCustom else { return }
+        customRepeat = nil
     }
 
     /// The Custom page's monthly choices for the start, each with its title ("On the fourth

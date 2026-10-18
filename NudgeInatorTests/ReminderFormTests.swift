@@ -418,6 +418,66 @@ struct ReminderFormTests {
         #expect(form.repeatRule?.rrule == "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO")
     }
 
+    /// Device check, ticket 27: looking at the Custom page changed the Repeat page and the form to
+    /// Custom, though the rule hadn't changed, even on a locked reminder. Leaving it with the
+    /// choices as they were seeded puts the draft back as it was.
+    @Test func leavingTheCustomPageUnchangedLeavesTheRepeatAsItWas() async throws {
+        let model = try await launchedModel()
+        let daily = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 15, 9), repeatRule: .everyDay, strength: .gentle)
+        model.add(daily)
+        let form = try editForm(of: daily.id, on: model)
+
+        form.chooseCustom()
+        form.leaveCustom()
+
+        #expect(form.repeatPreset == .everyDay)
+        #expect(form.repeatRule == .everyDay)
+        #expect(form.customRepeat == nil)
+        #expect(!form.hasChanges)
+    }
+
+    /// A new reminder that was Never is still Never: the page's starting choices aren't a choice.
+    @Test func leavingTheCustomPageUnchangedKeepsNever() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+
+        form.chooseCustom()
+        form.leaveCustom()
+
+        #expect(form.repeatPreset == .never)
+        #expect(form.repeatRule == nil)
+    }
+
+    /// A choice made on the page is kept when the person leaves it: that is a change.
+    @Test func leavingTheCustomPageAfterAChoiceKeepsTheCustomRepeat() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.dueTime = Self.monday
+        form.repeatPreset = .everyDay
+        form.chooseCustom()
+        form.customRepeat?.interval = 3
+
+        form.leaveCustom()
+
+        #expect(form.repeatPreset == nil)
+        #expect(form.repeatRule?.rrule == "FREQ=DAILY;INTERVAL=3")
+    }
+
+    /// A reminder with a custom repeat already, reopened, keeps it: nothing was seeded to undo.
+    @Test func leavingTheCustomPageOnAnExistingCustomRepeatKeepsIt() async throws {
+        let model = try await launchedModel()
+        let custom = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 16, 9),
+                              repeatRule: try #require(RepeatRule(frequency: .daily, interval: 3)), strength: .gentle)
+        model.add(custom)
+        let form = try editForm(of: custom.id, on: model)
+
+        form.chooseCustom()
+        form.leaveCustom()
+
+        #expect(form.repeatPreset == nil)
+        #expect(form.repeatRule == custom.repeatRule)
+    }
+
     /// Every 2 weeks from Monday 19 October skips the week of the 26th.
     @Test func theCustomPagesChoicesUpdateTheSummaryAndTheNextTimes() async throws {
         let model = try await launchedModel()

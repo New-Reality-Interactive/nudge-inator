@@ -39,6 +39,8 @@ struct CustomRepeatPage: View {
         .navigationBarTitleDisplayMode(.inline)
         // Choosing Custom on the Repeat page starts from the preset that was chosen.
         .onAppear { form.chooseCustom() }
+        // Left with the choices as they were seeded, it changes nothing.
+        .onDisappear { form.leaveCustom() }
     }
 }
 
