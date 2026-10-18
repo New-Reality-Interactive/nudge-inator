@@ -35,9 +35,14 @@ struct MyDayRowView: View {
                 }
             }
         }
-        // The button gives way to the status when it is Done: no cross-fade, which the phone left
-        // half drawn.
+        // The button gives way to the status when it is Done. With VoiceOver on, the phone left the
+        // button's capsule drawn over the status, so the content is made anew, not updated, and
+        // not cross-faded.
+        .id(item.offersDone)
         .animation(nil, value: item.status)
+        // Without this the separator starts where the row's first text does, and under a Done
+        // row that was the status label's edge, so only the right of it was drawn.
+        .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }
         // Only a Nudging row has the swipe, and not while VoiceOver is running: it lists a row's
         // swipe actions among its actions whatever `accessibilityHidden` says (the phone showed
         // it), so Done would be offered twice. VoiceOver has the row's own Done button.
