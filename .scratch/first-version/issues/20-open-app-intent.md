@@ -20,7 +20,7 @@ The App Intent the alarm's **Open** button runs. It conforms to **`LiveActivityI
 
 ## Acceptance criteria
 
-- [x] Unit test: the Open stops its alarm and posts a "show reminder" route to that reminder's details; an unknown reminder ID shows "Reminder Not Found" without crashing. (Reworded 2026-10-18; see Comments.)
+- [x] Unit test: the intent carries the alarm's and the reminder's IDs, and its `perform()`, through the app's opener, stops that alarm and posts a "show reminder" route to that reminder's details; an unknown reminder ID shows "Reminder Not Found", and IDs that aren't UUIDs don't crash. (Reworded 2026-10-18; see Comments.)
 - [x] The app opens on the reminder's details with the occurrence's Done action available.
 - [x] The intent conforms to `LiveActivityIntent`, declares `supportedModes` (not `openAppWhenRun`), and builds without warnings about either.
 - [x] The intent type lives in the shared module and both the app and the extension build with it.
@@ -42,7 +42,7 @@ Blocked by: 02, 19, 27
 
 **Design.**
 - `OpenReminderIntent` (NudgeShared): `LiveActivityIntent`, `supportedModes = .foreground`, `isDiscoverable = false` (kept from Siri, Spotlight and Shortcuts, where an alarm's IDs mean nothing), with `alarmID` and `reminderID` as `String` parameters, as in the spike. Its doc comment cites ticket 02 B, C and F.
-- It reaches the app through `@Dependency var opener: AlarmOpener`, a `Sendable` struct around an async closure. `AppDelegate.application(_:didFinishLaunchingWithOptions:)` registers it with `AppDependencyManager` right after building the model. Apple: a dependency means the system "can't run the app intent until the specified object is available".
+- It reaches the app through `@Dependency var opener: AlarmOpener`, a `Sendable` struct around an async closure. The model builds its own (`AppModel.alarmOpener`, which calls `open`), and `AppDelegate.application(_:didFinishLaunchingWithOptions:)` registers it with `AppDependencyManager` right after building the model. Apple: a dependency means the system "can't run the app intent until the specified object is available".
 - `AppModel.open(alarmID:reminderID:)` calls `AlarmAdapter.stop(_:)` (new, through `AlarmManaging.stop(id:)`). It then reads the store, trying again if a Done before first unlock left it unread, and calls `showReminder`. A `stop` that throws is logged, and the route still follows.
 - `AlarmAdapter`'s `openIntent` closure now takes the alarm ID as well as the plan item. `AppDelegate.makeModel` passes `OpenReminderIntent`, so every alarm now has the Open button (ticket 19's adapter adds it only when there is an intent).
 - The intent's title and parameter titles are not in a String Catalog: the intent isn't discoverable, and the alert's button text is the app's own `AlarmButton` string, which is in the catalog.
@@ -51,7 +51,18 @@ Blocked by: 02, 19, 27
 - `@Dependency` resolves only inside the system's own run of an intent. Calling `perform()` directly traps ("Dependency values can only be accessed inside of the intent perform flow … unless the value of the dependency is manually set"). App Intents Testing would run it properly but needs iOS 27 (see AGENTS.md › Toolchain). So `opener` is internal, and `OpenReminderIntentTests` sets it by hand through `@testable import NudgeShared`. The system's resolution of the registered opener is covered by the device checks.
 - The extracted metadata records `supportedModes = 2` and `isDiscoverable = false` for both bundles. It also shows `openAppWhenRun = true`, which the code doesn't set; the build writes it, apparently from `.foreground`. The build has no warning about either; the only warning is `MyDayTab`'s existing preview one.
 
-**Tests.** `scripts/test.sh` passes: 231 engine tests on macOS, and 198 app tests on iOS 26.1 and 26.5 (iPhone 17). Seams: `AppModelTests` (Open stops the alarm that rang and routes, Done then closes the occurrence; unknown reminder; a `stop` that throws; a cold launch stops before the store is read and routes after; an unread store is tried again), `AlarmAdapterTests` (the intent gets that alarm's ID), and `OpenReminderIntentTests` (`perform()` hands both IDs to the opener; `LiveActivityIntent`, `.foreground`, not discoverable). The 196 app tests before the review's two additions passed on the iPhone 15 (iOS 27.0.1). The two additions use only fakes.
+**Tests.** `scripts/test.sh` passes: 231 engine tests on macOS, and 200 app tests on iOS 26.1 and 26.5 (iPhone 17). Seams:
+- `AppModelTests`:
+  - The intent's `perform()`, through `model.alarmOpener`, stops the alarm that rang and routes to its details.
+  - `open` stops that alarm and routes, and Done then closes the occurrence.
+  - An unknown reminder routes to the details, which say "Reminder Not Found".
+  - A `stop` that throws still routes.
+  - A cold launch stops the alarm before the store is read, and routes after.
+  - An unread store is tried again.
+- `AlarmAdapterTests`: the intent gets that alarm's ID.
+- `OpenReminderIntentTests`: `perform()` hands both IDs to the opener; IDs that aren't UUIDs call nothing and don't crash; the intent is a `LiveActivityIntent`, `.foreground`, and not discoverable.
+
+196 app tests passed on the iPhone 15 (iOS 27.0.1), before the reviews added four more. The four use only fakes.
 
 **Device checks** (iPhone 15, iOS 27.0.1, Debug build). The app wasn't installed at the start and was uninstalled afterwards. One Relentless reminder, due 11:02, rang its first alarm at 11:19:30 and then every 2 minutes; Done closed it after the checks.
 1. (a) Unlocked, app in the background: Open on the banner brought the app forward on the reminder's details with the Nudging Now card and Done; the ring stopped by itself; the banner went away. Pass.
@@ -64,6 +75,13 @@ Blocked by: 02, 19, 27
 - A test pins that a `stop` that throws still routes.
 - `perform()` logs IDs that won't parse instead of returning silently.
 - The opener is registered in `didFinishLaunching`, not in `makeModel`, so the factory the device checks call registers nothing global. It still happens right after the model is built, where it was during the device checks.
+
+**Second review (2026-10-18).** Two findings from an independent review of the committed branch:
+- **Missing `AppIntentsPackage` signposts (High): not changed.** Device checks (a)–(c) above ran Open without any signposts, unlocked, locked and from a cold launch. The ring stops and the route follows only inside `perform()`, so the system found and ran the intent each time. WWDC25-244: "use App Intents Package when referencing code not compiled into a static library", and NudgeShared is static.
+- **Criterion 1 not met as written (Medium): partly agreed.** The wording had already been changed for the unknown ID (ticket 27's ruling, kept). It is now sharpened to say what the tests guarantee. Two gaps were real and are fixed:
+  - Nothing tested `perform()` through the app's own opener. The closure moved from `didFinishLaunching` to `AppModel.alarmOpener`, and a test now runs intent → opener → stop and route.
+  - IDs that aren't UUIDs had no test. They still only log: there is no alarm to stop and no reminder to show, and the app stays on what it was showing.
+- The device checks ran before `alarmOpener` moved. The registered opener makes the same call (`model.open`) at the same moment, right after the model is built in `didFinishLaunching`.
 
 **Judgement calls kept.**
 - `(alarmID, reminderID)` travel together through `AlarmOpener` and `AppModel.open` (a possible data clump). Two sites didn't seem to earn a type.

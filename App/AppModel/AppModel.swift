@@ -1,5 +1,6 @@
 import Foundation
 import NudgeEngine
+import NudgeShared
 import Observation
 import os
 
@@ -150,6 +151,14 @@ final class AppModel {
         }
         await launchTryingAnUnreadStoreAgain()
         showReminder(reminderID)
+    }
+
+    /// What `OpenReminderIntent` calls, registered with `AppDependencyManager` at launch. The model
+    /// lives as long as the app, so holding it here keeps nothing alive that wouldn't be.
+    var alarmOpener: AlarmOpener {
+        AlarmOpener { [self] alarmID, reminderID in
+            await open(alarmID: alarmID, reminderID: reminderID)
+        }
     }
 
     /// The route, which is then cleared: the tab shell follows each one once.

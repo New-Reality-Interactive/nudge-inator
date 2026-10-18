@@ -22,9 +22,10 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             // The alarm's Open runs `OpenReminderIntent` in this process (ticket 02 F), and reaches
             // the model through this opener. Here, as early as the model: Apple says the system
             // "can run app intents soon after your app or app extension launches".
-            AppDependencyManager.shared.add(dependency: AlarmOpener { alarmID, reminderID in
-                await model.open(alarmID: alarmID, reminderID: reminderID)
-            })
+            // Built here, on the main actor: the dependency is an autoclosure, and the docs don't
+            // say which thread evaluates it.
+            let opener = model.alarmOpener
+            AppDependencyManager.shared.add(dependency: opener)
             Task { await model.launch() }
         }
         return true

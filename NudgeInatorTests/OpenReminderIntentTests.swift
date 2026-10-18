@@ -22,6 +22,23 @@ struct OpenReminderIntentTests {
         #expect(await opened.ids == [OpenedIDs.Pair(alarmID: alarmID, reminderID: reminderID)])
     }
 
+    /// The app builds both from UUIDs, so this shouldn't happen. If it does, there is no alarm to
+    /// stop and no reminder to show, and the intent mustn't crash.
+    @Test(arguments: [("not an alarm", UUID().uuidString), (UUID().uuidString, "not a reminder")])
+    func performWithAnIDThatIsntAUUIDCallsNothingAndDoesntCrash(alarmID: String, reminderID: String) async throws {
+        let opened = OpenedIDs()
+        var intent = OpenReminderIntent()
+        intent.alarmID = alarmID
+        intent.reminderID = reminderID
+        intent.opener = AlarmOpener { alarmID, reminderID in
+            await opened.record(alarmID, reminderID)
+        }
+
+        _ = try await intent.perform()
+
+        #expect(await opened.ids.isEmpty)
+    }
+
     /// AlarmKit's `secondaryIntent` takes only a `LiveActivityIntent`. `.foreground` brings the app
     /// forward, in place of the deprecated `openAppWhenRun`, and hidden from Siri, Spotlight and
     /// Shortcuts, where an alarm's IDs mean nothing.

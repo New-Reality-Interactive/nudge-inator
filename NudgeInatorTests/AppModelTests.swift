@@ -1,6 +1,7 @@
 import AlarmKit
 import Foundation
 import NudgeEngine
+@testable import NudgeShared
 import SwiftData
 import Testing
 import UserNotifications
@@ -483,6 +484,25 @@ struct AppModelTests {
         #expect(center.pending.isEmpty)
         #expect(manager.scheduled.isEmpty)
         #expect(try store.load().histories[call.id]?.closedOccurrences[call.dueTime]?.state == .done)
+    }
+
+    /// The whole Open, from the intent the alarm runs, through the opener the app registers at
+    /// launch. The system resolves that opener only in its own run of the intent, so it is set by
+    /// hand here.
+    @Test func theOpenIntentStopsItsAlarmAndShowsItsReminderThroughTheAppsOpener() async throws {
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+        model.add(call)
+        await model.waitUntilApplied()
+        let ringing = try #require(manager.scheduled.first { $0.fireDate == NewYork.local(2026, 10, 15, 9, 17, 30) })
+        clock.now = NewYork.local(2026, 10, 15, 9, 18)
+        manager.ring(ringing.id)
+        var intent = OpenReminderIntent(alarmID: ringing.id, reminderID: call.id)
+        intent.opener = model.alarmOpener
+
+        _ = try await intent.perform()
+
+        #expect(manager.stoppedIDs == [ringing.id])
+        #expect(model.route == .reminderDetails(call.id))
     }
 
     /// An alarm left from a reminder since deleted, for example. The details screen says it isn't
