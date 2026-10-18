@@ -1,0 +1,140 @@
+import SwiftUI
+
+/// The Filter button. In portrait it is a bordered button in the content, "Filter by Tags" or
+/// "Filter (2)"; in landscape the mockup moves it into the bar as an icon, with the number of
+/// tags chosen beside it, in the accent color, while the filter is on.
+struct MyDayFilterButton: View {
+    enum Style {
+        case content
+        case bar
+    }
+
+    /// How many tags (or No Tags) are chosen.
+    let chosen: Int
+    let style: Style
+    let open: () -> Void
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        Button(action: open) {
+            switch style {
+            case .content:
+                // Not a `Label`: its own layout leaves the title a narrow width and cuts it off
+                // at accessibility sizes. Here the text takes what the row has and wraps.
+                HStack(spacing: Design.Spacing.s2) {
+                    Image(systemName: "line.3.horizontal.decrease")
+                        .accessibilityHidden(true)
+                    if chosen > 0 {
+                        Text("Filter (\(chosen))", comment: "My Day: the button that opens the tag filter, while tags are chosen. The placeholder is how many.")
+                    } else {
+                        Text("Filter by Tags", comment: "My Day: the button that opens the tag filter, while none is chosen.")
+                    }
+                }
+                .font(.subheadline.weight(.semibold))
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : nil)
+            case .bar:
+                HStack(spacing: Design.Spacing.s1) {
+                    Image(systemName: "line.3.horizontal.decrease")
+                    if chosen > 0 {
+                        Text(chosen, format: .number)
+                            .font(.subheadline.weight(.semibold))
+                            .accessibilityHidden(true)
+                    }
+                }
+            }
+        }
+        .modifier(FilterButtonStyle(style: style))
+        .accessibilityLabel(label)
+    }
+
+    private var label: Text {
+        if chosen > 0 {
+            Text("Filter by Tags, \(chosen) chosen", comment: "VoiceOver label of My Day's filter button while tags are chosen. The placeholder is how many.")
+        } else {
+            Text("Filter by Tags", comment: "My Day: the button that opens the tag filter, while none is chosen.")
+        }
+    }
+}
+
+private struct FilterButtonStyle: ViewModifier {
+    let style: MyDayFilterButton.Style
+
+    func body(content: Content) -> some View {
+        switch style {
+        case .content:
+            content
+                .buttonStyle(.bordered)
+                .buttonBorderShape(.capsule)
+        case .bar:
+            content
+        }
+    }
+}
+
+/// The chosen tags as DESIGN.md's filter tokens, each removing itself when tapped, with Clear
+/// beside them from two on, then the summary line.
+struct MyDayFilterTokens: View {
+    let tokens: [MyDayScreen.FilterToken]
+    let summary: LocalizedStringResource?
+    let remove: (MyDayScreen.FilterToken) -> Void
+    let clear: () -> Void
+
+    var body: some View {
+        if !tokens.isEmpty {
+            VStack(alignment: .leading, spacing: Design.Spacing.s2) {
+                FlowLayout {
+                    ForEach(tokens) { token in
+                        FilterTokenView(token: token) { remove(token) }
+                    }
+                    if tokens.count > 1 {
+                        Button(action: clear) {
+                            Text("Clear", comment: "My Day: removes every tag from the filter.")
+                                .frame(minHeight: Design.Spacing.rowMin)
+                        }
+                    }
+                }
+                if let summary {
+                    Text(summary)
+                        .subheadStyle()
+                }
+            }
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(Text("Filtering by", comment: "VoiceOver label of the group of tokens for the tags My Day is filtered by."))
+        }
+    }
+}
+
+/// DESIGN.md's `filter-token`: a 44 pt capsule on the tertiary fill with the tag and an `xmark`.
+private struct FilterTokenView: View {
+    let token: MyDayScreen.FilterToken
+    let remove: () -> Void
+
+    var body: some View {
+        Button(action: remove) {
+            HStack(spacing: Design.Spacing.s2) {
+                Text(verbatim: token.text)
+                Image(systemName: "xmark")
+                    .font(.caption.weight(.bold))
+                    .accessibilityHidden(true)
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Color.accentColor)
+            .padding(.horizontal, Design.Spacing.s3)
+            .frame(minHeight: Design.Spacing.rowMin)
+            .background(Capsule().fill(Color(uiColor: .tertiarySystemFill)))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+    }
+
+    private var label: Text {
+        switch token.kind {
+        case .tag:
+            Text("Remove \(token.text) from the filter", comment: "VoiceOver label of a tag's filter token on My Day. The placeholder is the tag, such as \"#home\".")
+        case .noTags:
+            Text("Remove No Tags from the filter", comment: "VoiceOver label of My Day's No Tags filter token.")
+        }
+    }
+}

@@ -48,4 +48,19 @@ struct ShellNavigationTests {
 
         #expect(navigation.nowPath == [OpenedReminder(id: id)])
     }
+
+    /// My Day has a stack of its own (the mockup's `stacks.day`). The alarm's Open goes to Now and
+    /// leaves what was open on My Day where it is.
+    @Test func routesLeaveMyDaysStackAlone() {
+        let open = OpenedReminder(id: UUID())
+        var navigation = ShellNavigation(selection: .myDay)
+        navigation.dayPath = [open]
+
+        navigation.follow(.reminderDetails(UUID()))
+        #expect(navigation.selection == .now)
+        #expect(navigation.dayPath == [open])
+
+        navigation.follow(.now)
+        #expect(navigation.dayPath == [open])
+    }
 }

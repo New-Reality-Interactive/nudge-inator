@@ -21,7 +21,7 @@ struct RootView: View {
             }
             .badge(nowBadge(in: state, at: minute))
             Tab(AppTab.myDay.title, systemImage: AppTab.myDay.systemImage, value: .myDay) {
-                MyDayTab(state: state)
+                MyDayTab(state: state, path: $navigation.dayPath)
             }
             Tab(AppTab.tags.title, systemImage: AppTab.tags.systemImage, value: .tags) {
                 TagsTab(state: state)
