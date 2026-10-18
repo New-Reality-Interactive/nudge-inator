@@ -13,6 +13,9 @@ struct MyDayRowView: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
+    /// Where VoiceOver's cursor goes when Done takes the button away. Left alone it stays drawn
+    /// where the button was, over the status, until something else is focused.
+    @AccessibilityFocusState private var isOpenerFocused: Bool
     /// Wide enough for "12:30 PM", so the titles line up.
     @ScaledMetric(relativeTo: .body) private var timeWidth: CGFloat = Design.Size.timeColumn
 
@@ -35,11 +38,6 @@ struct MyDayRowView: View {
                 }
             }
         }
-        // The button gives way to the status when it is Done. With VoiceOver on, the phone left the
-        // button's capsule drawn over the status, so the content is made anew, not updated, and
-        // not cross-faded.
-        .id(item.offersDone)
-        .animation(nil, value: item.status)
         // Without this the separator starts where the row's first text does, and under a Done
         // row that was the status label's edge, so only the right of it was drawn.
         .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }
@@ -70,6 +68,7 @@ struct MyDayRowView: View {
         }
         .opensDetails(openDetails)
         .accessibilityElement(children: .combine)
+        .accessibilityFocused($isOpenerFocused)
     }
 
     /// DESIGN.md's Reminder row chevron, in the tertiary label color. Decorative.
@@ -136,7 +135,11 @@ struct MyDayRowView: View {
 
     @ViewBuilder private var doneButton: some View {
         if item.offersDone {
-            Button(action: markDone) {
+            Button {
+                // The row then reads as Done, which VoiceOver speaks.
+                isOpenerFocused = true
+                markDone()
+            } label: {
                 Text("Done", comment: "My Day: the button on a Nudging row that marks the reminder Done and stops its nudges.")
             }
             .buttonStyle(SmallBorderedButtonStyle())
