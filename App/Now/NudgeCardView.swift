@@ -1,0 +1,186 @@
+import NudgeEngine
+import SwiftUI
+
+/// DESIGN.md's Nudge card: a leading stripe in the urgency's color; the strength badge, urgency
+/// word and nudge count; the title; the tags and due time; the next nudge; the meter; and Done.
+/// A card at least `wideCard` wide puts Done in a side column (the mockup's `.nc` container
+/// query). At accessibility sizes it always stacks, with Done right under the title.
+struct NudgeCardView: View {
+    let card: NudgeCard
+    /// When the card is drawn, for "in 5 min".
+    let now: Date
+    let markDone: () -> Void
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var width: CGFloat = 0
+    /// The mockup's 13rem side column.
+    @ScaledMetric private var sideWidth: CGFloat = 208
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Rectangle()
+                .fill(card.status.urgency.color)
+                .frame(width: Design.Size.stripeWidth)
+                .accessibilityHidden(true)
+            content
+                .padding(.vertical, 14)
+                .padding(.horizontal, Design.Spacing.s4)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: Design.Radius.card))
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+    }
+
+    @ViewBuilder private var content: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: Design.Spacing.s2) {
+                summary
+                doneButton
+                details
+                footer
+            }
+        } else if width >= Design.Spacing.wideCard {
+            HStack(spacing: 20) {
+                VStack(alignment: .leading, spacing: Design.Spacing.s1) {
+                    summary
+                    details
+                }
+                VStack(alignment: .leading, spacing: Design.Spacing.s2) {
+                    doneButton
+                    footer
+                }
+                .frame(width: sideWidth)
+            }
+        } else {
+            VStack(alignment: .leading, spacing: Design.Spacing.s1) {
+                summary
+                details
+                doneButton
+                    .padding(.top, Design.Spacing.s3)
+                footer
+            }
+        }
+    }
+
+    /// The top row and the title, which VoiceOver reads as one element whose value is everything
+    /// the details show, so the details themselves are hidden from it.
+    private var summary: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            TopRow(card: card)
+            Text(verbatim: card.title)
+                .font(.headline)
+                .foregroundStyle(Color(uiColor: .label))
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: card.title))
+        .accessibilityValue(accessibilityValue)
+    }
+
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(card.detail)
+                .foregroundStyle(Color(uiColor: .secondaryLabel))
+            nextLine
+                .foregroundStyle(Color(uiColor: .label))
+            NudgeMeter(nudgesSent: card.status.nudgesSent, nudgeLimit: card.status.nudgeLimit, urgency: card.status.urgency)
+                .padding(.top, 10)
+        }
+        .font(.subheadline)
+        .accessibilityHidden(true)
+    }
+
+    @ViewBuilder private var nextLine: some View {
+        if let next = card.status.nextNudge, let time = card.nextNudgeTime {
+            let relative = Self.relative.localizedString(for: next.fireTime, relativeTo: now)
+            Text("Next nudge \(time) (\(relative)): \(ViaLabel(delivery: next.delivery).text) · \(next.urgency.name)",
+                 comment: "Nudge card: the next nudge. 1: its time, such as \"9:45 AM\". 2: how soon, such as \"in 5 min\". 3: how it arrives, such as \"Alarm\". 4: its urgency, such as \"High\".")
+        } else {
+            Text("That was the last nudge. It closes as Missed at \(card.missedAtTime).",
+                 comment: "Nudge card: after the occurrence's last nudge. The placeholder is when it gives up or the next occurrence takes over, such as \"11:17 AM\".")
+        }
+    }
+
+    private var doneButton: some View {
+        Button(action: markDone) {
+            Label {
+                Text("Done", comment: "Nudge card: the button that marks the reminder Done and stops its nudges.")
+            } icon: {
+                Image(systemName: "checkmark")
+            }
+            .fontWeight(.semibold)
+            .foregroundStyle(Color.onAccent)
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        // Large is the system's tallest regular button, over the 44 pt every button needs.
+        .controlSize(.large)
+        .buttonBorderShape(.roundedRectangle(radius: Design.Radius.control))
+        .accessibilityLabel(Text("Done, stop nudging: \(card.title)", comment: "VoiceOver label of a nudge card's Done button. The placeholder is the reminder's title."))
+    }
+
+    private var footer: some View {
+        Text("Only Done stops the nudging.", comment: "Nudge card: under the Done button.")
+            .font(.footnote)
+            .foregroundStyle(Color(uiColor: .secondaryLabel))
+    }
+
+    private var accessibilityValue: Text {
+        let status = card.status
+        let via = String(localized: NudgeCard.via(status.nextNudge?.delivery ?? .cannotArrive))
+        let detail = String(localized: card.detail)
+        if let next = status.nextNudge, let time = card.nextNudgeTime {
+            return Text("Nudge \(status.nudgesSent) of \(status.nudgeLimit), urgency \(status.urgency.name). \(detail). Next nudge \(time): \(via), \(next.urgency.name).",
+                        comment: "VoiceOver value of a nudge card. 1: the nudges sent. 2: the most it sends. 3: the urgency now, such as \"High\". 4: the tags and due time, such as \"#home · due 9:00 AM\". 5: the next nudge's time. 6: how it arrives, such as \"Alarm\". 7: its urgency.")
+        }
+        return Text("Nudge \(status.nudgesSent) of \(status.nudgeLimit), urgency \(status.urgency.name). \(detail). That was the last nudge. It closes as Missed at \(card.missedAtTime).",
+                    comment: "VoiceOver value of a nudge card after its last nudge. 1: the nudges sent. 2: the most it sends. 3: the urgency now, such as \"High\". 4: the tags and due time, such as \"#home · due 9:00 AM\". 5: when it closes as Missed.")
+    }
+
+    /// "in 5 min", from the time the card is drawn, as the mockup's `rel`.
+    private static let relative: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .short
+        return formatter
+    }()
+}
+
+/// The strength badge, the urgency word and "Nudge 3 of 20", stacked at accessibility sizes.
+private struct TopRow: View {
+    let card: NudgeCard
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Design.Spacing.s1))
+            : AnyLayout(HStackLayout(spacing: Design.Spacing.s2))
+        layout {
+            StrengthBadge(strength: card.reminder.strength)
+            UrgencyWord(urgency: card.status.urgency)
+            if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
+            Text("Nudge \(card.status.nudgesSent) of \(card.status.nudgeLimit)",
+                 comment: "Nudge card: how many nudges it has sent of the most it sends, such as \"Nudge 3 of 20\".")
+                .font(.footnote)
+                .foregroundStyle(Color(uiColor: .secondaryLabel))
+        }
+    }
+}
+
+/// DESIGN.md's Via label: `alarm` or `bell` and how the nudge arrives, or "Notifications off" in
+/// red with `bell.slash`. A `Text`, so it sits inside the next-nudge sentence.
+struct ViaLabel {
+    let delivery: NudgeDelivery
+
+    var text: Text {
+        let words = Text(NudgeCard.via(delivery))
+        switch delivery {
+        case .alarm:
+            return Text("\(Image(systemName: "alarm")) \(words)", comment: "Via label: a glyph, then how a nudge arrives. Keep the glyph first.")
+        case .notification:
+            return Text("\(Image(systemName: "bell")) \(words)", comment: "Via label: a glyph, then how a nudge arrives. Keep the glyph first.")
+        case .cannotArrive:
+            return Text("\(Image(systemName: "bell.slash")) \(words)", comment: "Via label: a glyph, then how a nudge arrives. Keep the glyph first.")
+                .foregroundStyle(Color.negative)
+        }
+    }
+}

@@ -40,7 +40,7 @@ private struct PreviewClock: EngineClock {
     var now: Date { .now }
 }
 
-private struct PreviewScheduler: SchedulerAdapter {
+struct PreviewScheduler: SchedulerAdapter {
     func apply(_ plan: SchedulePlan) {}
 }
 #endif

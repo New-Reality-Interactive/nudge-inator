@@ -51,7 +51,7 @@ public struct Engine {
     let calendar: Calendar
     /// Formats the times and dates in a repeat's summary.
     let locale: Locale
-    private var permissions: PermissionStates
+    private(set) var permissions: PermissionStates
     /// Earlier permission states, oldest first, with when the app reported a change. A nudge that
     /// fired before the change was delivered under the old states, so its plan item keeps that
     /// delivery. App-wide, so not in a reminder's `History`.
@@ -357,12 +357,7 @@ public struct Engine {
         let nudgeTimes = reminder.strength.nudgeTimes(from: dueTime, within: giveUpLimit)
         return nudgeTimes.prefix { $0 < takeOverTime ?? .distantFuture }.enumerated().compactMap { index, fireTime in
             let urgency = reminder.strength.urgency(ofNudge: index + 1)
-            guard let delivery = delivery(
-                of: urgency,
-                breakThroughFocus: reminder.breakThroughFocus,
-                permissions: permissions(firingAt: fireTime),
-                alarmLimitReached: historyByReminder[reminder.id]?.isPastAlarmLimit(firingAt: fireTime) ?? false
-            ) else { return nil }
+            guard let delivery = delivery(of: reminder, firingAt: fireTime, urgency: urgency) else { return nil }
             return SchedulePlan.Item(
                 reminderID: reminder.id,
                 nudgeNumber: index + 1,
@@ -373,6 +368,17 @@ public struct Engine {
                 isPastAlarmLimit: delivery.isPastAlarmLimit
             )
         }
+    }
+
+    /// How the reminder's nudge firing at `fireTime` is delivered, as its plan item says, or `nil`
+    /// when nothing can deliver it. The nudge card reads it too, so the two never disagree.
+    func delivery(of reminder: Reminder, firingAt fireTime: Date, urgency: Urgency) -> (kind: DeliveryKind, isPastAlarmLimit: Bool)? {
+        delivery(
+            of: urgency,
+            breakThroughFocus: reminder.breakThroughFocus,
+            permissions: permissions(firingAt: fireTime),
+            alarmLimitReached: historyByReminder[reminder.id]?.isPastAlarmLimit(firingAt: fireTime) ?? false
+        )
     }
 
     /// The title a nudge firing at `fireTime` carries: the one it was delivered with if it fired

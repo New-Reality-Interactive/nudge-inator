@@ -1,8 +1,53 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ %@" : {
+      "comment" : "Via label: a glyph, then how a nudge arrives. Keep the glyph first.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ · **%lld reminders nudging you**" : {
+      "comment" : "Now: under the title; the bold part shows in red. 1: today's short date, such as \"Sat, Oct 17\". 2: how many reminders are nudging.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$@ · **%2$lld reminder nudging you**"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$@ · **%2$lld reminders nudging you**"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%@ · Nothing is nudging you" : {
-      "comment" : "Now: under the title. The placeholder is today's short date, such as \"Sat 17 Oct\"."
+      "comment" : "Now: under the title when nothing is nudging. The placeholder is today's short date, such as \"Sat, Oct 17\"."
+    },
+    "%@ · due %@" : {
+      "comment" : "Nudge card: under the title. 1: the reminder's tags, such as \"#home #errands\". 2: its due time, such as \"9:00 AM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · due %2$@"
+          }
+        }
+      }
     },
     "%@." : {
       "comment" : "A repeat summary as a sentence, under the reminder form's Starts and under the Repeat page's Custom row. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".\nTop of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\"."
@@ -48,6 +93,9 @@
         }
       }
     },
+    "Alarm" : {
+      "comment" : "Nudge card: the next nudge rings as an alarm."
+    },
     "Break Through Focus" : {
       "comment" : "The reminder form's switch: whether its nudges get through a Focus."
     },
@@ -79,7 +127,36 @@
       "comment" : "Asked when cancelling a reminder form with changes."
     },
     "Done" : {
-      "comment" : "Notification action: marks the reminder Done and stops its nudges."
+      "comment" : "Notification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nStatus label: an occurrence closed as Done."
+    },
+    "Done after %lld nudges" : {
+      "comment" : "Now, Last 24 Hours: under the title of an occurrence closed as Done. The placeholder is how many nudges it sent.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Done after %lld nudge"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Done after %lld nudges"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Done, stop nudging: %@" : {
+      "comment" : "VoiceOver label of a nudge card's Done button. The placeholder is the reminder's title."
+    },
+    "Due %@" : {
+      "comment" : "Nudge card: under the title of a reminder with no tags. The placeholder is its due time, such as \"9:00 AM\"."
     },
     "Edit Reminder" : {
       "comment" : "Title of the form that edits a reminder."
@@ -259,6 +336,15 @@
     "Last 24 Hours" : {
       "comment" : "Now: section header for occurrences closed in the last 24 hours."
     },
+    "Missed" : {
+      "comment" : "Status label: an occurrence closed without Done, by its give-up limit or a take-over."
+    },
+    "Missed: gave up after the limit" : {
+      "comment" : "Now, Last 24 Hours: under the title of an occurrence that reached its give-up limit (20 nudges or 24 hours)."
+    },
+    "Missed: the next one took over" : {
+      "comment" : "Now, Last 24 Hours: under the title of an occurrence that closed because the repeat's next occurrence fell due."
+    },
     "Monthly" : {
       "comment" : "The Custom repeat page's frequency."
     },
@@ -279,6 +365,17 @@
     },
     "Next Times" : {
       "comment" : "Header of the Custom repeat page's next three due times."
+    },
+    "Next nudge %@ (%@): %@ · %@" : {
+      "comment" : "Nudge card: the next nudge. 1: its time, such as \"9:45 AM\". 2: how soon, such as \"in 5 min\". 3: how it arrives, such as \"Alarm\". 4: its urgency, such as \"High\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Next nudge %1$@ (%2$@): %3$@ · %4$@"
+          }
+        }
+      }
     },
     "No Tags" : {
       "comment" : "Tags: title when there are no tags yet."
@@ -304,8 +401,62 @@
     "Nothing scheduled this week." : {
       "comment" : "Now: the Coming Up section when nothing is due in the next 7 days."
     },
+    "Notification" : {
+      "comment" : "Nudge card: the next nudge comes as a notification."
+    },
+    "Notification: Break through Focus is off" : {
+      "comment" : "Nudge card: a High or Urgent nudge comes as an ordinary notification because the reminder's Break through Focus switch is off."
+    },
+    "Notification: Time Sensitive is off" : {
+      "comment" : "Nudge card: a High nudge comes as an ordinary notification because Time Sensitive notifications are off."
+    },
+    "Notification: alarms and Time Sensitive are off" : {
+      "comment" : "Nudge card: an Urgent nudge comes as an ordinary notification because alarms aren't allowed and Time Sensitive notifications are off."
+    },
+    "Notification: alarms are off" : {
+      "comment" : "Nudge card: an Urgent nudge comes as a notification because alarms aren't allowed."
+    },
+    "Notification: too many alarms scheduled" : {
+      "comment" : "Nudge card: an Urgent nudge comes as a notification because the system's alarm limit is reached."
+    },
+    "Notifications off" : {
+      "comment" : "Nudge card, in red: the next nudge can't arrive because notifications are off."
+    },
     "Now" : {
       "comment" : "Tab bar: the tab with what's nudging you now, coming up and closed lately"
+    },
+    "Nudge %lld of %lld" : {
+      "comment" : "Nudge card: how many nudges it has sent of the most it sends, such as \"Nudge 3 of 20\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Nudge %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "Nudge %lld of %lld, urgency %@. %@. Next nudge %@: %@, %@." : {
+      "comment" : "VoiceOver value of a nudge card. 1: the nudges sent. 2: the most it sends. 3: the urgency now, such as \"High\". 4: the tags and due time, such as \"#home · due 9:00 AM\". 5: the next nudge's time. 6: how it arrives, such as \"Alarm\". 7: its urgency.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Nudge %1$lld of %2$lld, urgency %3$@. %4$@. Next nudge %5$@: %6$@, %7$@."
+          }
+        }
+      }
+    },
+    "Nudge %lld of %lld, urgency %@. %@. That was the last nudge. It closes as Missed at %@." : {
+      "comment" : "VoiceOver value of a nudge card after its last nudge. 1: the nudges sent. 2: the most it sends. 3: the urgency now, such as \"High\". 4: the tags and due time, such as \"#home · due 9:00 AM\". 5: when it closes as Missed.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Nudge %1$lld of %2$lld, urgency %3$@. %4$@. That was the last nudge. It closes as Missed at %5$@."
+          }
+        }
+      }
     },
     "Nudging" : {
       "comment" : "Now: section header for the reminders nudging you now."
@@ -325,6 +476,9 @@
     "One word. Spaces become hyphens. A reminder can have as many tags as you like." : {
       "comment" : "Under the Tags page's New Tag field."
     },
+    "Only Done stops the nudging." : {
+      "comment" : "Nudge card: under the Done button."
+    },
     "Open" : {
       "comment" : "Alarm button: opens the app on the reminder, where Done is. Shown on the Lock Screen; keep it short."
     },
@@ -340,6 +494,12 @@
     "Settings" : {
       "comment" : "Tab bar: the app's settings tab"
     },
+    "Skipped" : {
+      "comment" : "Status label: an occurrence closed because its reminder was paused."
+    },
+    "Skipped: the reminder was paused" : {
+      "comment" : "Now, Last 24 Hours: under the title of an occurrence that closed because its reminder was paused."
+    },
     "Starts" : {
       "comment" : "The reminder form's start date and time."
     },
@@ -351,6 +511,9 @@
     },
     "Tap + to add a tag, or add tags to a reminder when you create or edit it." : {
       "comment" : "Tags: how to add a tag when there are none."
+    },
+    "That was the last nudge. It closes as Missed at %@." : {
+      "comment" : "Nudge card: after the occurrence's last nudge. The placeholder is when it gives up or the next occurrence takes over, such as \"11:17 AM\"."
     },
     "The repeat ends before it starts. Change its end date." : {
       "comment" : "Under the reminder form's start when a custom repeat's end date is before the start, so Save is disabled."

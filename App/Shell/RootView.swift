@@ -6,13 +6,20 @@ import SwiftUI
 struct RootView: View {
     @Environment(AppModel.self) private var model: AppModel?
     @State private var selection = AppTab.now
+    /// The start of the current minute, ticked by `tickEveryMinute()`. The badge counts what's
+    /// nudging, which changes as time passes with no change to the engine, so reading this in
+    /// `body` redraws the badge each minute, as Now's list is redrawn.
+    @State private var minute = Date.now
 
     var body: some View {
         let state = ScreenState(model: model)
+        // Not a TimelineView around the TabView: in the test host that held up main-actor work
+        // until each minute's start.
         TabView(selection: $selection) {
             Tab(AppTab.now.title, systemImage: AppTab.now.systemImage, value: .now) {
                 NowTab(state: state)
             }
+            .badge(nowBadge(in: state, at: minute))
             Tab(AppTab.myDay.title, systemImage: AppTab.myDay.systemImage, value: .myDay) {
                 MyDayTab(state: state)
             }
@@ -26,10 +33,28 @@ struct RootView: View {
         // The mockup shrinks the tab bar while scrolling down (iOS 26). Ticket 23 records what it
         // does in portrait and landscape.
         .tabBarMinimizeBehavior(.onScrollDown)
+        .task { await tickEveryMinute() }
         // `initial`, so a route set before the shell appeared (Open launching the app) is followed.
         .onChange(of: model?.route, initial: true) {
             guard let route = model?.takeRoute() else { return }
             selection = AppTab(route: route)
+        }
+    }
+
+    /// How many reminders are nudging, once the store has been read. Zero hides the badge. The
+    /// engine reads its own clock; `minute` is taken so the badge is redrawn when it ticks.
+    private func nowBadge(in state: ScreenState, at minute: Date) -> Int {
+        guard state == .ready, let model else { return 0 }
+        return NowScreen(engine: model.engine).badgeCount
+    }
+
+    /// Sets `minute` at the start of each minute until the view goes away.
+    private func tickEveryMinute() async {
+        let calendar = Calendar.current
+        while !Task.isCancelled {
+            guard let next = calendar.nextDate(after: .now, matching: DateComponents(second: 0), matchingPolicy: .nextTime) else { return }
+            try? await Task.sleep(for: .seconds(next.timeIntervalSinceNow))
+            minute = .now
         }
     }
 }
