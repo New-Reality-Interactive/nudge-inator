@@ -145,6 +145,22 @@ struct StatusLabel: View {
     }
 }
 
+/// DESIGN.md's `button-bordered` as a small capsule: accent text on the tertiary fill, at least
+/// 44 pt tall. Drawn here rather than by `.bordered`: the system's style carries a glass layer
+/// that the phone left drawn behind a My Day row's status after Done.
+struct SmallBorderedButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Color.accentColor)
+            .padding(.horizontal, Design.Spacing.s4)
+            .frame(minHeight: Design.Spacing.rowMin)
+            .background(Capsule().fill(Color(uiColor: .tertiarySystemFill)))
+            .contentShape(Capsule())
+            .opacity(configuration.isPressed ? 0.6 : 1)
+    }
+}
+
 /// DESIGN.md's Status label for a reminder that is paused, in the secondary label color.
 struct PausedLabel: View {
     var body: some View {

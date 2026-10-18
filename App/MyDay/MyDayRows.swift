@@ -35,6 +35,9 @@ struct MyDayRowView: View {
                 }
             }
         }
+        // The button gives way to the status when it is Done: no cross-fade, which the phone left
+        // half drawn.
+        .animation(nil, value: item.status)
         // Only a Nudging row has the swipe, and not while VoiceOver is running: it lists a row's
         // swipe actions among its actions whatever `accessibilityHidden` says (the phone showed
         // it), so Done would be offered twice. VoiceOver has the row's own Done button.
@@ -130,12 +133,8 @@ struct MyDayRowView: View {
         if item.offersDone {
             Button(action: markDone) {
                 Text("Done", comment: "My Day: the button on a Nudging row that marks the reminder Done and stops its nudges.")
-                    .fontWeight(.semibold)
             }
-            .buttonStyle(.bordered)
-            .buttonBorderShape(.capsule)
-            // Regular is 34 pt tall; every button is at least 44 (DESIGN.md › Buttons).
-            .controlSize(.large)
+            .buttonStyle(SmallBorderedButtonStyle())
             .accessibilityLabel(Text("Done, stop nudging: \(item.title)", comment: "VoiceOver label of the Done button on a nudge card or a My Day row. The placeholder is the reminder's title."))
         }
     }
