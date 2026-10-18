@@ -208,10 +208,16 @@ final class ReminderForm: Identifiable {
         return original.map { currentEngine().lockedFields(of: $0.id) } ?? []
     }
 
-    /// Makes the views read the lock again. The reminder falling due locks it with no event for the
-    /// views to see, so the sheet calls this at the start of every minute while it is open.
+    /// Makes the views read the lock again, and puts the locked fields back as saved if it has
+    /// arrived. The reminder falling due locks it with no event for the views to see, so the sheet
+    /// calls this at the start of every minute while it is open.
     func checkLock() {
         lockCheckedAt = now()
+        // A lock that has arrived discards what was changed on the fields it locks, at once: their
+        // controls are disabled now, and a value that can't be saved shouldn't stay on screen
+        // (the user's ruling, ticket 27). A title, notes or tags change is kept.
+        guard let original, lockedFields.contains(where: { $0.isChanged(from: original, to: draft(tagIDs: tagIDs)) }) else { return }
+        restoreLockedFields(from: original)
     }
 
     /// Checks the lock at the start of every minute until the task is cancelled. Only an Edit form

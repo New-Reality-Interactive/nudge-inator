@@ -191,6 +191,64 @@ struct ReminderFormTests {
         #expect(form.lockedFields == Set(LockedField.allCases))
     }
 
+    /// Device check, ticket 27 (the user's ruling): when the lock arrives while the form is open,
+    /// the locked fields go back to their saved values at once, so the screen shows only what a
+    /// Save can keep, and the first Save works. A title being typed is kept: it isn't locked.
+    @Test func aLockArrivingRestoresTheLockedFieldsToTheirSavedValues() async throws {
+        let model = try await launchedModel()
+        let saved = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 9), repeatRule: .everyDay, strength: .firm)
+        model.add(saved)
+        let form = try editForm(of: saved.id, on: model)
+        form.title = "Call the bank about the card"
+        form.strength = .relentless
+        form.breakThroughFocus = false
+        form.dueTime = NewYork.local(2026, 10, 15, 11)
+        form.customChoices.interval = 3
+
+        clock.now = NewYork.local(2026, 10, 15, 9, 5)
+        form.checkLock()
+
+        #expect(form.strength == .firm)
+        #expect(form.breakThroughFocus)
+        #expect(form.dueTime == saved.dueTime)
+        #expect(form.repeatPreset == .everyDay)
+        #expect(form.repeatRule == .everyDay)
+        #expect(form.title == "Call the bank about the card")
+        // Nothing is left for the lock to turn down, so the first Save works.
+        #expect(form.save(to: model))
+        #expect(model.engine.reminders.only?.title == "Call the bank about the card")
+        #expect(model.engine.reminders.only?.strength == .firm)
+    }
+
+    /// A custom repeat the reminder had when the form opened is what comes back, not a default.
+    @Test func aLockArrivingRestoresASavedCustomRepeat() async throws {
+        let model = try await launchedModel()
+        let everyThreeDays = try #require(RepeatRule(frequency: .daily, interval: 3))
+        let saved = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 15, 9), repeatRule: everyThreeDays, strength: .gentle)
+        model.add(saved)
+        let form = try editForm(of: saved.id, on: model)
+        form.customChoices.interval = 5
+
+        clock.now = NewYork.local(2026, 10, 15, 9, 5)
+        form.checkLock()
+
+        #expect(form.repeatRule == everyThreeDays)
+        #expect(form.customChoices.interval == 3)
+    }
+
+    /// Nothing is locked yet, so checking the clock leaves the person's changes alone.
+    @Test func checkingTheClockBeforeTheLockLeavesChangesAlone() async throws {
+        let model = try await launchedModel()
+        let saved = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 9), strength: .firm)
+        model.add(saved)
+        let form = try editForm(of: saved.id, on: model)
+        form.strength = .relentless
+
+        form.checkLock()
+
+        #expect(form.strength == .relentless)
+    }
+
     @Test func aSaveAfterTheReminderStartedNudgingIsTurnedDownAndTheFormLocks() async throws {
         let model = try await launchedModel()
         let later = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 9), strength: .firm)
