@@ -10,6 +10,9 @@ struct NudgeCardView: View {
     /// When the card is drawn, for "in 5 min".
     let now: Date
     let markDone: () -> Void
+    /// Opens the reminder's details: the title is the link, with no chevron (DESIGN.md). `nil` on
+    /// the details screen itself, where the card would open the screen it is on.
+    var open: (() -> Void)?
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var width: CGFloat = 0
@@ -75,6 +78,9 @@ struct NudgeCardView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: card.title))
         .accessibilityValue(Text(card.voiceOverValue))
+        // The summary is one element, so say outright that it opens something.
+        .accessibilityAddTraits(open == nil ? [] : .isButton)
+        .opensDetails(open)
     }
 
     private var details: some View {
@@ -169,6 +175,21 @@ struct ViaLabel {
         case .alarm: "alarm"
         case .notification: "bell"
         case .cannotArrive: "bell.slash"
+        }
+    }
+}
+
+extension View {
+    /// Makes the view a plain button that opens a reminder's details, or leaves it as it is when
+    /// `open` is `nil`. Plain, so the card keeps its look.
+    @ViewBuilder
+    func opensDetails(_ open: (() -> Void)?) -> some View {
+        if let open {
+            // The whole summary takes the tap, not only what is drawn: the top row has a gap.
+            Button(action: open) { contentShape(Rectangle()) }
+                .buttonStyle(.plain)
+        } else {
+            self
         }
     }
 }
