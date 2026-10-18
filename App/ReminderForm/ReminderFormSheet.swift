@@ -35,6 +35,9 @@ struct ReminderFormSheet: View {
             }
             .toolbar { toolbar }
         }
+        // On the stack, not its root: the root is covered by the Repeat and Custom pages, which
+        // lock too when the reminder falls due while they're open.
+        .task { await form.keepTheLockCurrent() }
         // A swipe down mustn't lose changes; Cancel asks first instead.
         .interactiveDismissDisabled(form.hasChanges)
     }

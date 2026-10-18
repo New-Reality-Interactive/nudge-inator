@@ -178,10 +178,31 @@ final class ReminderForm: Identifiable {
         !Calendar.autoupdatingCurrent.isDate(dueTime, equalTo: now(), toGranularity: .year)
     }
 
+    /// When the lock was last checked. Reading it in `lockedFields` is what makes a view that
+    /// reads the lock redraw when `checkLock()` moves it: the engine's answer changes as the clock
+    /// passes the due time, with no change anywhere the views can see.
+    private var lockCheckedAt: Date?
+
     /// The fields the engine won't let an Edit change now (ticket 13). Read from the engine, so
     /// the form has no rule of its own; a new reminder has none.
     var lockedFields: Set<LockedField> {
-        original.map { currentEngine().lockedFields(of: $0.id) } ?? []
+        _ = lockCheckedAt
+        return original.map { currentEngine().lockedFields(of: $0.id) } ?? []
+    }
+
+    /// Makes the views read the lock again. The reminder falling due locks it with no event for the
+    /// views to see, so the sheet calls this at the start of every minute while it is open.
+    func checkLock() {
+        lockCheckedAt = now()
+    }
+
+    /// Checks the lock at the start of every minute until the task is cancelled. Only an Edit form
+    /// has a lock.
+    func keepTheLockCurrent() async {
+        guard isEditing else { return }
+        while (try? await EveryMinute.sleepUntilNext()) != nil {
+            checkLock()
+        }
     }
 
     var saveBlock: SaveBlock? {

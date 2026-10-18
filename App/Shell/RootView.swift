@@ -50,10 +50,7 @@ struct RootView: View {
 
     /// Sets `minute` at the start of each minute until the view goes away.
     private func tickEveryMinute() async {
-        let calendar = Calendar.current
-        while !Task.isCancelled {
-            guard let next = calendar.nextDate(after: .now, matching: DateComponents(second: 0), matchingPolicy: .nextTime) else { return }
-            try? await Task.sleep(for: .seconds(next.timeIntervalSinceNow))
+        while (try? await EveryMinute.sleepUntilNext()) != nil {
             minute = .now
         }
     }

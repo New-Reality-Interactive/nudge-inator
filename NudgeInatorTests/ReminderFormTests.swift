@@ -1,5 +1,7 @@
 import Foundation
 import NudgeEngine
+import Observation
+import Synchronization
 import Testing
 @testable import NudgeInator
 
@@ -165,6 +167,28 @@ struct ReminderFormTests {
         form.strength = .relentless
         #expect(form.save(to: model))
         #expect(model.engine.reminders.only?.strength == .relentless)
+    }
+
+    /// Device check, ticket 27: a form open on a reminder that falls due kept showing its fields
+    /// editable, because nothing told its views to read the lock again as the clock passed the
+    /// due time. Checking the clock does: what a view read from `lockedFields` is invalidated.
+    @Test func checkingTheClockMakesViewsReadTheLockAgain() async throws {
+        let model = try await launchedModel()
+        let later = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 9), strength: .firm)
+        model.add(later)
+        let form = try editForm(of: later.id, on: model)
+        let viewsMustReadAgain = Mutex(false)
+        withObservationTracking {
+            _ = form.lockedFields
+        } onChange: {
+            viewsMustReadAgain.withLock { $0 = true }
+        }
+
+        clock.now = NewYork.local(2026, 10, 15, 9)
+        form.checkLock()
+
+        #expect(viewsMustReadAgain.withLock { $0 })
+        #expect(form.lockedFields == Set(LockedField.allCases))
     }
 
     @Test func aSaveAfterTheReminderStartedNudgingIsTurnedDownAndTheFormLocks() async throws {
