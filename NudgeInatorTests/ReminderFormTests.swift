@@ -524,6 +524,36 @@ struct ReminderFormTests {
         #expect(form.customChoices.interval == 3)
     }
 
+    /// Storing the choices a preset starts the page from, as the first control tap does, must not
+    /// change when the reminder falls due. The rule may be written differently (a weekly rule
+    /// names its weekday), but the times are the same. Never is left out: it starts a weekly page.
+    @Test(arguments: RepeatPreset.allCases.filter { $0 != .never })
+    func storingAPresetsStartingChoicesKeepsItsDueTimes(preset: RepeatPreset) async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.dueTime = Self.monday
+        form.repeatPreset = preset
+        let before = form.upcomingDueTimes
+
+        form.customChoices = form.customChoices
+
+        #expect(form.upcomingDueTimes == before)
+    }
+
+    /// Accepted (ticket 25): Every Month from the 31st uses the last day of a short month, but the
+    /// Custom page's "On the 31st" skips it, and says so in its footer. A control tap stores that.
+    @Test func storingEveryMonthsChoicesFromThe31stSkipsTheShortMonths() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.dueTime = NewYork.local(2026, 10, 31)
+        form.repeatPreset = .everyMonth
+        #expect(form.upcomingDueTimes.prefix(2).last == NewYork.local(2026, 11, 30))
+
+        form.customChoices = form.customChoices
+
+        #expect(form.upcomingDueTimes.prefix(2).last == NewYork.local(2026, 12, 31))
+    }
+
     /// A reminder with a custom repeat already shows it, and nothing is seeded over it.
     @Test func theCustomPageShowsAnExistingCustomRepeat() async throws {
         let model = try await launchedModel()
@@ -544,13 +574,12 @@ struct ReminderFormTests {
         form.title = "Water the plants"
         form.dueTime = Self.monday
         form.repeatPreset = .everyTwoWeeks
-        form.customRepeat = form.customChoices
 
-        form.customRepeat?.toggle(.wednesday)
+        form.customChoices.toggle(.wednesday)
         #expect(form.upcomingDueTimes == [Self.monday, NewYork.local(2026, 10, 21), NewYork.local(2026, 11, 2)])
 
-        form.customRepeat?.ending = .afterCount
-        form.customRepeat?.count = 2
+        form.customChoices.ending = .afterCount
+        form.customChoices.count = 2
         #expect(form.upcomingDueTimes == [Self.monday, NewYork.local(2026, 10, 21)])
         let expected = Reminder(title: "Water the plants", dueTime: Self.monday,
                                 repeatRule: try RepeatRule(rrule: "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE;COUNT=2"), strength: .firm)
@@ -564,8 +593,7 @@ struct ReminderFormTests {
         let form = newForm(on: model)
         form.dueTime = NewYork.local(2026, 10, 28)
         form.repeatPreset = .everyMonth
-        form.customRepeat = form.customChoices
-        form.customRepeat?.monthlyDay = .lastWeekdayOfMonth
+        form.customChoices.monthlyDay = .lastWeekdayOfMonth
         #expect(form.repeatRule?.rrule == "FREQ=MONTHLY;BYDAY=-1WE")
 
         form.dueTime = NewYork.local(2026, 11, 18)
@@ -578,15 +606,14 @@ struct ReminderFormTests {
         let form = newForm(on: model)
         form.title = "Water the plants"
         form.dueTime = Self.monday
-        form.customRepeat = form.customChoices
-        form.customRepeat?.ending = .onDate
-        form.customRepeat?.endDate = NewYork.local(2026, 10, 18)
+        form.customChoices.ending = .onDate
+        form.customChoices.endDate = NewYork.local(2026, 10, 18)
 
         #expect(form.repeatBlock == .endsBeforeStart)
         #expect(form.saveBlock == .endsBeforeStart)
         #expect(form.save(to: model) == false)
 
-        form.customRepeat?.endDate = Self.monday
+        form.customChoices.endDate = Self.monday
         #expect(form.saveBlock == nil)
         #expect(form.save(to: model))
     }
@@ -602,11 +629,11 @@ struct ReminderFormTests {
         #expect(form.upcomingDueTimes.isEmpty)
         #expect(form.saveBlock == nil)
 
-        form.customRepeat?.count = 5
+        form.customChoices.count = 5
         #expect(form.repeatBlock == .noTimesLeft)
         #expect(form.saveBlock == .noTimesLeft)
 
-        form.customRepeat?.count = 30
+        form.customChoices.count = 30
         #expect(form.saveBlock == nil)
         form.title = "Water the ferns"
         #expect(form.save(to: model))
@@ -617,11 +644,10 @@ struct ReminderFormTests {
         let form = newForm(on: model)
         form.title = "Pay the cleaner"
         form.dueTime = NewYork.local(2026, 10, 28)
-        form.customRepeat = form.customChoices
-        form.customRepeat?.frequency = .monthly
-        form.customRepeat?.monthlyDay = .lastWeekdayOfMonth
-        form.customRepeat?.ending = .afterCount
-        form.customRepeat?.count = 5
+        form.customChoices.frequency = .monthly
+        form.customChoices.monthlyDay = .lastWeekdayOfMonth
+        form.customChoices.ending = .afterCount
+        form.customChoices.count = 5
         #expect(form.save(to: model))
         let saved = try #require(model.engine.reminders.only)
         #expect(saved.repeatRule?.rrule == "FREQ=MONTHLY;BYDAY=-1WE;COUNT=5")
@@ -656,7 +682,7 @@ struct ReminderFormTests {
         #expect(model.engine.reminders.only?.repeatRule == summer.repeatRule)
 
         let again = try editForm(of: summer.id, on: model)
-        again.customRepeat?.toggle(.friday)
+        again.customChoices.toggle(.friday)
         #expect(again.repeatRule?.rrule == "FREQ=WEEKLY;BYDAY=MO,FR;COUNT=30")
     }
 
@@ -674,27 +700,26 @@ struct ReminderFormTests {
         let form = newForm(on: model)
         form.dueTime = NewYork.local(2026, 10, 28)
         form.repeatPreset = .everyWeek
-        form.customRepeat = form.customChoices
 
         switch control {
         case "daily every 3":
-            form.customRepeat?.frequency = .daily
-            form.customRepeat?.interval = 3
+            form.customChoices.frequency = .daily
+            form.customChoices.interval = 3
         case "monthly last Wednesday":
-            form.customRepeat?.frequency = .monthly
-            form.customRepeat?.monthlyDay = .lastWeekdayOfMonth
+            form.customChoices.frequency = .monthly
+            form.customChoices.monthlyDay = .lastWeekdayOfMonth
         case "monthly fourth Wednesday":
-            form.customRepeat?.frequency = .monthly
-            form.customRepeat?.monthlyDay = .weekdayOfMonth
+            form.customChoices.frequency = .monthly
+            form.customChoices.monthlyDay = .weekdayOfMonth
         case "monthly last day":
-            form.customRepeat?.frequency = .monthly
-            form.customRepeat?.monthlyDay = .lastDay
+            form.customChoices.frequency = .monthly
+            form.customChoices.monthlyDay = .lastDay
         case "yearly every 2":
-            form.customRepeat?.frequency = .yearly
-            form.customRepeat?.interval = 2
+            form.customChoices.frequency = .yearly
+            form.customChoices.interval = 2
         default:
-            form.customRepeat?.ending = .onDate
-            form.customRepeat?.endDate = NewYork.local(2026, 12, 1, 0)
+            form.customChoices.ending = .onDate
+            form.customChoices.endDate = NewYork.local(2026, 12, 1, 0)
         }
 
         #expect(form.repeatRule?.rrule == rrule)
