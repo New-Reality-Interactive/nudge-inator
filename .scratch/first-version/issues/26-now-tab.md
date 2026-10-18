@@ -140,6 +140,8 @@ Also checked in the screenshots:
      - Done is a separate button, "Done, stop nudging: Card check";
      - VoiceOver offers no swipe action.
 
+**Second device run (2026-10-17, same iPhone and iOS), after the notification-body and give-up-limit changes.** Before: Nudge-inator was not installed. A fresh-install run (`TEST_RUNNER_NUDGE_FRESH_INSTALL=1`) passed all 161 app tests in 5.6 s, including the device check that reads a real notification's body ("Nudge 5 of 20 · High", Gentle's real total). After: the app was uninstalled, and `xcrun devicectl device info apps` lists no Nudge-inator.
+
 **Left alone:**
 - reminder details and opening them from Now (27);
 - My Day (28), Tags (29), Settings (30);
