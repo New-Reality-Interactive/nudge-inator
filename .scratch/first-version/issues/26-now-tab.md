@@ -35,7 +35,7 @@ The docs don't say how VoiceOver presents a List swipe action, whether `.accessi
 
 The decisions:
 1. **The card reads an engine read-out.** `Engine.nudgingStatus(of:) -> NudgingStatus?` (`NudgingStatus.swift`) gives:
-   - `dueTime`, `nudgesSent`, `nudgeLimit` and `urgency` (of the latest nudge sent);
+   - `dueTime`, `nudgesSent`, `nudgesInAll` and `urgency` (of the latest nudge sent);
    - `nextNudge` (`NextNudge`: `nudgeNumber`, `fireTime`, `urgency`, `delivery`);
    - `missedAt`, when it gives up or the next occurrence takes over.
 
@@ -47,7 +47,7 @@ The decisions:
 
    The engine also exposes the repeat summary's own `dayLabel(of:)`, `timeOfDay(of:)` and `shortDate(of:)`, so Now's times and dates are in the engine's locale and time zone.
 2. **Test seams:**
-   - `NudgingStatusTests` (engine, macOS): 6 tests, 14 delivery cases.
+   - `NudgingStatusTests` (engine, macOS): 7 tests, 14 delivery cases.
    - `NowScreenTests` (app, through the real `AppModel`, in-memory store, real adapters over the fakes): 11 tests on `NowScreen(engine:)`, the plain value `NowTab` draws. Previews build it from an engine with no model.
    - Layout, the wide card, AX5, the swipe, VoiceOver and the cold launch are screenshot and device checks.
 3. **Refresh:**
@@ -68,7 +68,7 @@ The decisions:
 
 **How criterion 3 is met.** With the shipped give-up limit (20 nudges, Gentle's ending at +8 h) and daily as the fastest repeat, every occurrence gives up before the next falls due. So no fixture can reach a take-over through the model. "Missed: the next one took over" is tested on the row's text for each closing state (`aClosedRowSaysHowItClosed`). The give-up and Skipped wording are also tested through the model, and the engine's take-over closing is ticket 16's.
 
-**Tests.** `scripts/test.sh` passes: 229 engine tests, and 160 app tests on each of the iOS 26.1 and 26.5 simulators.
+**Tests.** `scripts/test.sh` passes: 230 engine tests, and 160 app tests on each of the iOS 26.1 and 26.5 simulators.
 - **Red first:**
   - the card's status, each delivery, the last nudge and the take-over cut-off;
   - the day and time labels;
@@ -118,8 +118,8 @@ Also checked in the screenshots:
 - **Spec:** the subhead's date used the device's time zone, not the engine's.
 - **Kept, as judgement calls:**
   - the items carry strings the engine formatted, so every time is in its zone and testable;
-  - `nowBadge(in:at:)` takes the minute it's redrawn by;
-  - the meter counts out of 20 even when 24 hours would come first, as the mockup's `cap.maxAttempts` does.
+  - `nowBadge(in:at:)` takes the minute it's redrawn by.
+- **Changed after the review, at the user's direction (2026-10-17):** the review noted that the card counted out of 20 even when the 24-hour span or a take-over would close the occurrence sooner. I had kept that because the mockup's `cap.maxAttempts` does it. The user's ruling: the mockup shows how the app looks, and its data isn't fact; the real app shows the actual data. `nudgeLimit` is now `nudgesInAll`, the nudges this occurrence really sends before it closes as Missed. "Nudge 3 of N" and the meter count out of it. With today's ladders every strength reaches 20 well inside 24 hours, so cards still read "of 20". Tested by `aSpanThatEndsFirstCutsTheNudgesInAll` (a 1-hour span: "2 of 5") and the take-over test (281 of 281), both red first.
 
 **Device run (2026-10-17), Brian's iPhone: iPhone 15, iOS 27.0.1, wired, Xcode 26.6.**
 - **Before:** Nudge-inator was not installed. **After:** it was uninstalled, and `xcrun devicectl device info apps` lists no Nudge-inator. Every reminder made by hand was Gentle, so no alarm was scheduled.

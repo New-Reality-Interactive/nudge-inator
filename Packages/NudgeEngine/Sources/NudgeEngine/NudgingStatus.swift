@@ -5,8 +5,9 @@ public struct NudgingStatus: Equatable, Sendable {
     public var dueTime: Date
     /// "Nudge 3 of 20", and how full the nudge meter is.
     public var nudgesSent: Int
-    /// The give-up limit's nudge count.
-    public var nudgeLimit: Int
+    /// The nudges this occurrence sends before it closes as Missed: the give-up limit's count,
+    /// fewer if its span or a take-over comes first. "Nudge 3 of 20" and the meter count out of it.
+    public var nudgesInAll: Int
     /// The urgency of the latest nudge sent.
     public var urgency: Urgency
     /// The nudge still to come, or `nil` after the last one, or when the next occurrence of its
@@ -71,7 +72,8 @@ extension Engine {
         return NudgingStatus(
             dueTime: occurrence.dueTime,
             nudgesSent: nudgesSent,
-            nudgeLimit: giveUpLimit.nudgeCount,
+            // `nudgeTimes` already stops at the span; a take-over stops it sooner.
+            nudgesInAll: nudgeTimes.count { $0 < missedAt },
             urgency: strength.urgency(ofNudge: nudgesSent),
             nextNudge: nextNudge,
             missedAt: missedAt

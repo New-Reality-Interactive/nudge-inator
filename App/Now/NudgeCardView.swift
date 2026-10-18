@@ -83,7 +83,7 @@ struct NudgeCardView: View {
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
             nextLine
                 .foregroundStyle(Color(uiColor: .label))
-            NudgeMeter(nudgesSent: card.status.nudgesSent, nudgeLimit: card.status.nudgeLimit, urgency: card.status.urgency)
+            NudgeMeter(nudgesSent: card.status.nudgesSent, nudgesInAll: card.status.nudgesInAll, urgency: card.status.urgency)
                 .padding(.top, Design.Spacing.s3)
         }
         .font(.subheadline)
@@ -145,7 +145,7 @@ private struct TopRow: View {
             StrengthBadge(strength: card.reminder.strength)
             UrgencyWord(urgency: card.status.urgency)
             if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
-            Text("Nudge \(card.status.nudgesSent) of \(card.status.nudgeLimit)",
+            Text("Nudge \(card.status.nudgesSent) of \(card.status.nudgesInAll)",
                  comment: "Nudge card: how many nudges it has sent of the most it sends, such as \"Nudge 3 of 20\".")
                 .font(.footnote)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))

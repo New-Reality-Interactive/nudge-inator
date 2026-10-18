@@ -150,11 +150,11 @@ struct StatusLabel: View {
 /// count, so the meter itself is hidden.
 struct NudgeMeter: View {
     let nudgesSent: Int
-    let nudgeLimit: Int
+    let nudgesInAll: Int
     let urgency: Urgency
 
     var body: some View {
-        let fraction = nudgeLimit > 0 ? min(1, CGFloat(nudgesSent) / CGFloat(nudgeLimit)) : 0
+        let fraction = nudgesInAll > 0 ? min(1, CGFloat(nudgesSent) / CGFloat(nudgesInAll)) : 0
         Capsule()
             .fill(Color(uiColor: .tertiarySystemFill))
             .overlay(alignment: .leading) {
@@ -185,7 +185,7 @@ struct NudgeMeter: View {
             StatusLabel(state: .missed(reason: .giveUpLimit))
             StatusLabel(state: .skipped(reason: .paused))
         }
-        NudgeMeter(nudgesSent: 7, nudgeLimit: 20, urgency: .urgent)
+        NudgeMeter(nudgesSent: 7, nudgesInAll: 20, urgency: .urgent)
     }
     .padding()
 }

@@ -25,7 +25,7 @@ struct NudgingStatusTests {
 
         #expect(status.dueTime == NewYork.local(2026, 10, 16, 9))
         #expect(status.nudgesSent == 2)
-        #expect(status.nudgeLimit == 20)
+        #expect(status.nudgesInAll == 20)
         #expect(status.urgency == .normal)
         #expect(status.nextNudge == NextNudge(
             nudgeNumber: 3,
@@ -128,5 +128,23 @@ struct NudgingStatusTests {
 
         #expect(status.nextNudge == nil)
         #expect(status.missedAt == NewYork.local(2026, 10, 17))
+        // Nudges at +0, +30, +45 and +52.5 min, then every 5 minutes up to 8:57:30: 4 + 277.
+        #expect(status.nudgesSent == 281)
+        #expect(status.nudgesInAll == 281)
+    }
+
+    /// The card counts the nudges this occurrence really sends. With a 1-hour span, Firm sends
+    /// nudges at 9:00, 9:30, 9:45, 9:52:30 and 9:57:30; the next would be at 10:02:30, after it
+    /// gives up at 10:00. So it's "Nudge 2 of 5", not "of 20".
+    @Test func aSpanThatEndsFirstCutsTheNudgesInAll() throws {
+        let hour = GiveUpLimit(nudgeCount: 20, span: 60 * 60)
+        var engine = Engine(clock: clock, scheduler: scheduler, giveUpLimit: hour, timeZone: NewYork.timeZone)
+        engine.update(reminders: [bins])
+        clock.now = NewYork.local(2026, 10, 16, 9, 40)
+
+        let status = try #require(engine.nudgingStatus(of: bins.id))
+
+        #expect(status.nudgesSent == 2)
+        #expect(status.nudgesInAll == 5)
     }
 }
