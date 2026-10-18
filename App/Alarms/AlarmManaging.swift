@@ -22,6 +22,7 @@ protocol AlarmManaging: AnyObject {
         secondaryIntent: (any LiveActivityIntent)?
     ) async throws
     func cancel(id: Alarm.ID) throws
+    func stop(id: Alarm.ID) throws
     func alarms() throws -> [AlarmSnapshot]
     /// AlarmKit's authorization state, read off the main thread. See `SystemAlarmManager`.
     func readAuthorizationState() async -> AlarmManager.AuthorizationState
@@ -51,6 +52,10 @@ final class SystemAlarmManager: AlarmManaging {
 
     func cancel(id: Alarm.ID) throws {
         try AlarmManager.shared.cancel(id: id)
+    }
+
+    func stop(id: Alarm.ID) throws {
+        try AlarmManager.shared.stop(id: id)
     }
 
     func alarms() throws -> [AlarmSnapshot] {

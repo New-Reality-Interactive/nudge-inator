@@ -1,5 +1,7 @@
+import AppIntents
 import Foundation
 import NudgeEngine
+import NudgeShared
 import UIKit
 
 /// Builds the app model at launch. A delegate rather than the scene phase because Apple says
@@ -17,6 +19,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         if let model {
+            // The alarm's Open runs `OpenReminderIntent` in this process (ticket 02 F), and reaches
+            // the model through this opener. Here, as early as the model: Apple says the system
+            // "can run app intents soon after your app or app extension launches".
+            // Built here, on the main actor: the dependency is an autoclosure, and the docs don't
+            // say which thread evaluates it.
+            let opener = model.alarmOpener
+            AppDependencyManager.shared.add(dependency: opener)
             Task { await model.launch() }
         }
         return true
@@ -37,7 +46,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             clock: clock,
             openStore: openStore,
             notifications: NotificationAdapter(center: SystemNotificationCenter(), clock: clock),
-            alarms: AlarmAdapter(manager: SystemAlarmManager(), clock: clock)
+            alarms: AlarmAdapter(manager: SystemAlarmManager(), clock: clock, openIntent: { item, alarmID in
+                OpenReminderIntent(alarmID: alarmID, reminderID: item.reminderID)
+            })
         )
     }
 }

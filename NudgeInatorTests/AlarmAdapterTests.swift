@@ -562,10 +562,11 @@ struct AlarmAdapterTests {
         #expect(error.code == .featureUnsupported)
     }
 
-    /// Ticket 20 passes its Open intent in. The button runs it (`.custom`) for the nudge that rang.
-    @Test func anOpenIntentAddsAnOpenButtonThatRunsItForThatNudge() async throws {
-        let adapter = AlarmAdapter(manager: manager, clock: clock, openIntent: { item in
-            TestOpenIntent(reminderID: item.reminderID, fireTime: item.fireTime)
+    /// Ticket 20 passes its Open intent in. The button runs it (`.custom`) for the nudge that rang,
+    /// with that alarm's ID, which the intent stops.
+    @Test func anOpenIntentAddsAnOpenButtonThatRunsItForThatNudgesAlarm() async throws {
+        let adapter = AlarmAdapter(manager: manager, clock: clock, openIntent: { item, alarmID in
+            TestOpenIntent(alarmID: alarmID, reminderID: item.reminderID)
         })
 
         adapter.apply(SchedulePlan(items: [nudge(4, at: NewYork.local(2026, 10, 16, 9, 10))]))
@@ -578,16 +579,16 @@ struct AlarmAdapterTests {
         #expect(button.textColor == .black)
         #expect(call.attributes.presentation.alert.secondaryButtonBehavior == .custom)
         let intent = try #require(call.secondaryIntent as? TestOpenIntent)
+        #expect(intent.alarmID == call.id)
         #expect(intent.reminderID == Self.pills)
-        #expect(intent.fireTime == NewYork.local(2026, 10, 16, 9, 10))
     }
 }
 
 /// Stands in for ticket 20's Open intent.
 struct TestOpenIntent: LiveActivityIntent {
     static let title: LocalizedStringResource = "Open"
+    var alarmID = UUID()
     var reminderID = UUID()
-    var fireTime = Date.distantPast
 
     func perform() async throws -> some IntentResult {
         .result()

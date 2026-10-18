@@ -1,4 +1,4 @@
-/// Values both targets share. The Open intent arrives with ticket 20.
+/// Values both targets share.
 public enum NudgeShared {
     public static let appGroup = "group.com.newrealityinteractive.nudgeinator"
 }
