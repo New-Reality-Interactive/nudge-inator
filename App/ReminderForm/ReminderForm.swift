@@ -118,25 +118,29 @@ final class ReminderForm: Identifiable {
         }
     }
 
-    /// The Repeat page's Custom: starts from the preset that was chosen, or keeps the custom
-    /// repeat it already has.
-    func chooseCustom() {
-        guard customRepeat == nil else { return }
-        let seeded = currentEngine().customRepeat(from: presetRule, startingAt: dueTime)
-        customRepeat = seeded
-        seededCustom = seeded
+    /// What the Custom page shows and edits: the custom choices, or, while the repeat is a preset
+    /// or Never, the choices that preset starts from. Those aren't stored: looking at the page
+    /// changes nothing, which matters most on a reminder that is locked while nudging (device
+    /// check, ticket 27). The first choice made on the page stores them, and the repeat is Custom.
+    var customChoices: CustomRepeat {
+        get { customRepeat ?? currentEngine().customRepeat(from: presetRule, startingAt: dueTime) }
+        set { customRepeat = newValue }
     }
 
-    /// The choices `chooseCustom()` started the page with, until the page is left.
-    private var seededCustom: CustomRepeat?
+    /// The Custom page's summary sentence: of the choices it shows, which are not yet the repeat
+    /// while it is a preset or Never.
+    var customPageSummary: String {
+        currentEngine().repeatSummary(of: draft(tagIDs: tagIDs, repeatRule: customPageRule))
+    }
 
-    /// Leaving the Custom page. Choices still as they were seeded were never a choice, so the
-    /// repeat goes back to the preset it was (or Never): looking at the page changes nothing, which
-    /// matters most on a reminder that is locked while nudging.
-    func leaveCustom() {
-        defer { seededCustom = nil }
-        guard let seededCustom, customRepeat == seededCustom else { return }
-        customRepeat = nil
+    /// The Custom page's Next Times: when the choices it shows fall due.
+    var customPageUpcomingDueTimes: [Date] {
+        currentEngine().upcomingDueTimes(of: draft(tagIDs: tagIDs, repeatRule: customPageRule), count: Self.nextTimesCount)
+    }
+
+    /// The rule of the choices the Custom page shows.
+    private var customPageRule: RepeatRule? {
+        customRepeat == nil ? currentEngine().repeatRule(for: customChoices, startingAt: dueTime) : repeatRule
     }
 
     /// The Custom page's monthly choices for the start, each with its title ("On the fourth
@@ -148,7 +152,7 @@ final class ReminderForm: Identifiable {
 
     /// Under a monthly choice of the 29th to the 31st: such months are skipped. From the engine.
     var skippedMonthsNote: String? {
-        customRepeat.flatMap { currentEngine().skippedMonthsNote(of: $0, startingAt: dueTime) }
+        currentEngine().skippedMonthsNote(of: customChoices, startingAt: dueTime)
     }
 
     /// A weekday's name for the Custom page, in the engine's locale.
@@ -157,8 +161,8 @@ final class ReminderForm: Identifiable {
     }
 
     /// The monthly choice the rule uses for the start, which the Custom page checks.
-    var chosenMonthlyDay: CustomRepeat.MonthlyDay? {
-        customRepeat.map { currentEngine().monthlyDay(of: $0, startingAt: dueTime) }
+    var chosenMonthlyDay: CustomRepeat.MonthlyDay {
+        currentEngine().monthlyDay(of: customChoices, startingAt: dueTime)
     }
 
     /// The Repeat row's preset, or `nil` when the rule is Custom. Setting a preset replaces a
@@ -297,6 +301,10 @@ final class ReminderForm: Identifiable {
 
     /// The draft as a reminder. A new one gets its ID here, which nothing keeps until it's saved.
     private func draft(tagIDs: [Tag.ID]) -> Reminder {
+        draft(tagIDs: tagIDs, repeatRule: repeatRule)
+    }
+
+    private func draft(tagIDs: [Tag.ID], repeatRule: RepeatRule?) -> Reminder {
         Reminder(
             id: original?.id ?? newID,
             // One line: a pasted title's line breaks become spaces.
