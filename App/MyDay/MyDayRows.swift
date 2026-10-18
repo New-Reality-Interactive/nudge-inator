@@ -2,11 +2,13 @@ import NudgeEngine
 import SwiftUI
 
 /// A My Day row, the mockup's `.cell`: the time, the title with its tags and note, and Done while
-/// Nudging or the outcome otherwise, then the system's chevron. The row opens the reminder's
-/// details. Done keeps its own action, so it is a borderless button inside the link.
+/// Nudging or the outcome otherwise, then a chevron. The row is a button that opens the
+/// reminder's details, as Now's rows are. Done is its own button beside it, not inside it: nested
+/// in a link, VoiceOver merged it into the row and listed Done twice.
 struct MyDayRowView: View {
     let item: MyDayScreen.Item
     let now: Date
+    let openDetails: () -> Void
     let markDone: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -14,23 +16,26 @@ struct MyDayRowView: View {
     @ScaledMetric(relativeTo: .body) private var timeWidth: CGFloat = Design.Size.timeColumn
 
     var body: some View {
-        NavigationLink(value: OpenedReminder(id: item.reminder.id)) {
+        Group {
             if dynamicTypeSize.isAccessibilitySize {
                 VStack(alignment: .leading, spacing: Design.Spacing.s1) {
-                    text
-                    trailing
+                    opener
+                    HStack {
+                        doneButton
+                        Spacer(minLength: 0)
+                        chevron
+                    }
                 }
             } else {
                 HStack(alignment: .firstTextBaseline, spacing: Design.Spacing.s3) {
-                    text
-                    Spacer(minLength: 0)
-                    trailing
+                    opener
+                    doneButton
+                    chevron
                 }
             }
         }
-        // Only a Nudging row has the swipe. VoiceOver lists it among the row's actions (the phone
-        // showed that `accessibilityHidden` doesn't hide it on a link row), so it carries the
-        // reminder's name and the row's own Done button is hidden from VoiceOver: one action.
+        // Only a Nudging row has the swipe. VoiceOver has the row's own Done button instead (the
+        // mockup's `swipeable`).
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             if item.offersDone {
                 Button(action: markDone) {
@@ -41,13 +46,29 @@ struct MyDayRowView: View {
                     }
                 }
                 .tint(Color.tileGreen)
-                .accessibilityLabel(doneLabel)
+                .accessibilityHidden(true)
             }
         }
     }
 
-    private var doneLabel: Text {
-        Text("Done, stop nudging: \(item.title)", comment: "VoiceOver label of the Done button on a nudge card or a My Day row. The placeholder is the reminder's title.")
+    /// The time, title and note, and the outcome for a row with no Done button. All of it opens
+    /// the details, and VoiceOver reads it as one element.
+    private var opener: some View {
+        HStack(alignment: .firstTextBaseline, spacing: Design.Spacing.s3) {
+            text
+            Spacer(minLength: 0)
+            if !item.offersDone { outcome }
+        }
+        .opensDetails(openDetails)
+        .accessibilityElement(children: .combine)
+    }
+
+    /// DESIGN.md's Reminder row chevron, in the tertiary label color. Decorative.
+    private var chevron: some View {
+        Image(systemName: "chevron.right")
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(Color(uiColor: .tertiaryLabel))
+            .accessibilityHidden(true)
     }
 
     private var text: some View {
@@ -60,7 +81,6 @@ struct MyDayRowView: View {
                 .frame(minWidth: stacked ? nil : timeWidth, alignment: .leading)
             titleAndDetail
         }
-        .accessibilityElement(children: .combine)
     }
 
     private var time: some View {
@@ -92,9 +112,21 @@ struct MyDayRowView: View {
         return AttributedString(localized: "\(tags) · \(note)", comment: "My Day: under the title of a tagged reminder. 1: its tags, such as \"#home #errands\", the ones the filter chose in bold. 2: the note, such as \"Nudging · 2 nudges · next 1:15 PM\".")
     }
 
-    @ViewBuilder private var trailing: some View {
+    /// What the row shows in place of Done: how it closed, or that it is paused. Nothing while
+    /// it is still to come.
+    @ViewBuilder private var outcome: some View {
         switch item.status {
-        case .due(.nudging):
+        case .due(.nudging), .left:
+            EmptyView()
+        case .due(let state):
+            StatusLabel(state: state)
+        case .paused:
+            PausedLabel()
+        }
+    }
+
+    @ViewBuilder private var doneButton: some View {
+        if item.offersDone {
             Button(action: markDone) {
                 Text("Done", comment: "My Day: the button on a Nudging row that marks the reminder Done and stops its nudges.")
                     .fontWeight(.semibold)
@@ -103,14 +135,7 @@ struct MyDayRowView: View {
             .buttonBorderShape(.capsule)
             // Regular is 34 pt tall; every button is at least 44 (DESIGN.md › Buttons).
             .controlSize(.large)
-            // The swipe action is the one Done VoiceOver offers.
-            .accessibilityHidden(true)
-        case .due(let state):
-            StatusLabel(state: state)
-        case .paused:
-            PausedLabel()
-        case .left:
-            EmptyView()
+            .accessibilityLabel(Text("Done, stop nudging: \(item.title)", comment: "VoiceOver label of the Done button on a nudge card or a My Day row. The placeholder is the reminder's title."))
         }
     }
 }
@@ -139,7 +164,7 @@ struct NowMarkerView: View {
     return NavigationStack {
         List(screen.rows) { row in
             switch row {
-            case .item(let item): MyDayRowView(item: item, now: now) {}
+            case .item(let item): MyDayRowView(item: item, now: now, openDetails: {}, markDone: {})
             case .now(let time): NowMarkerView(time: time)
             }
         }

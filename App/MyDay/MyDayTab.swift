@@ -34,6 +34,7 @@ struct MyDayTab: View {
                         removeToken: remove,
                         clearTokens: { filter.clearTags() },
                         openFilter: { isFiltering = true },
+                        openDetails: { path.append(OpenedReminder(id: $0)) },
                         markDone: { model?.markDone($0) }
                     )
                 }
@@ -101,6 +102,7 @@ private struct MyDayList: View {
     let removeToken: (MyDayScreen.FilterToken) -> Void
     let clearTokens: () -> Void
     let openFilter: () -> Void
+    let openDetails: (Reminder.ID) -> Void
     let markDone: (Reminder.ID) -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -142,7 +144,7 @@ private struct MyDayList: View {
                     ForEach(screen.rows) { row in
                         switch row {
                         case .item(let item):
-                            MyDayRowView(item: item, now: now) { markDone(item.reminder.id) }
+                            MyDayRowView(item: item, now: now, openDetails: { openDetails(item.reminder.id) }, markDone: { markDone(item.reminder.id) })
                         case .now(let time):
                             NowMarkerView(time: time)
                                 .listRowInsets(EdgeInsets(top: Design.Spacing.s1, leading: Design.Spacing.margin, bottom: Design.Spacing.s1, trailing: Design.Spacing.margin))
