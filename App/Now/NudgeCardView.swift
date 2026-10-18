@@ -74,7 +74,7 @@ struct NudgeCardView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: card.title))
-        .accessibilityValue(accessibilityValue)
+        .accessibilityValue(Text(card.voiceOverValue))
     }
 
     private var details: some View {
@@ -122,19 +122,6 @@ struct NudgeCardView: View {
         Text("Only Done stops the nudging.", comment: "Nudge card: under the Done button.")
             .font(.footnote)
             .foregroundStyle(Color(uiColor: .secondaryLabel))
-    }
-
-    private var accessibilityValue: Text {
-        let status = card.status
-        let via = String(localized: NudgeCard.via(status.nextNudge?.delivery ?? .cannotArrive))
-        let detail = String(localized: card.detail)
-        if let next = status.nextNudge, let time = card.nextNudgeTime {
-            return Text("Nudge \(status.nudgesSent) of \(status.nudgeLimit), urgency \(status.urgency.name). \(detail). Next nudge \(time): \(via), \(next.urgency.name).",
-                        comment: "VoiceOver value of a nudge card. 1: the nudges sent. 2: the most it sends. 3: the urgency now, such as \"High\". 4: the tags and due time, such as \"#home · due 9:00 AM\". 5: the next nudge's time. 6: how it arrives, such as \"Alarm\". 7: its urgency.")
-        }
-        let lastNudge = String(localized: card.lastNudgeLine)
-        return Text("Nudge \(status.nudgesSent) of \(status.nudgeLimit), urgency \(status.urgency.name). \(detail). \(lastNudge)",
-                    comment: "VoiceOver value of a nudge card after its last nudge. 1: the nudges sent. 2: the most it sends. 3: the urgency now, such as \"High\". 4: the tags and due time, such as \"#home · due 9:00 AM\". 5: the card's line saying that was the last nudge and when it closes as Missed.")
     }
 
     /// "in 5 min", from the time the card is drawn, as the mockup's `rel`.

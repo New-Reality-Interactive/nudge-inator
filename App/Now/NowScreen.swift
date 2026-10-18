@@ -93,6 +93,21 @@ struct NudgeCard: Identifiable {
         return LocalizedStringResource("\(tags) · due \(dueTime)", comment: "Nudge card: under the title. 1: the reminder's tags, such as \"#home #errands\". 2: its due time, such as \"9:00 AM\".")
     }
 
+    /// What VoiceOver reads after the title. The card's top row and title are one element, so
+    /// this says everything they and the details show, the strength first.
+    var voiceOverValue: LocalizedStringResource {
+        let strength = String(localized: reminder.strength.title)
+        let detail = String(localized: detail)
+        guard let next = status.nextNudge, let nextNudgeTime else {
+            let lastNudge = String(localized: lastNudgeLine)
+            return LocalizedStringResource("\(strength), nudge \(status.nudgesSent) of \(status.nudgeLimit), urgency \(status.urgency.name). \(detail). \(lastNudge)",
+                                           comment: "VoiceOver value of a nudge card after its last nudge. 1: the strength, such as \"Gentle\". 2: the nudges sent. 3: the most it sends. 4: the urgency now, such as \"High\". 5: the tags and due time, such as \"#home · due 9:00 AM\". 6: the card's line saying that was the last nudge and when it closes as Missed.")
+        }
+        let via = String(localized: Self.via(next.delivery))
+        return LocalizedStringResource("\(strength), nudge \(status.nudgesSent) of \(status.nudgeLimit), urgency \(status.urgency.name). \(detail). Next nudge \(nextNudgeTime): \(via), \(next.urgency.name).",
+                                       comment: "VoiceOver value of a nudge card. 1: the strength, such as \"Gentle\". 2: the nudges sent. 3: the most it sends. 4: the urgency now, such as \"High\". 5: the tags and due time, such as \"#home · due 9:00 AM\". 6: the next nudge's time. 7: how it arrives, such as \"Alarm\". 8: its urgency.")
+    }
+
     /// After the last nudge, in place of the next one; its VoiceOver value says the same.
     var lastNudgeLine: LocalizedStringResource {
         LocalizedStringResource("That was the last nudge. It closes as Missed at \(missedAtTime).",

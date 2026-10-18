@@ -150,6 +150,18 @@ struct NowScreenTests {
         #expect(plain(NowScreen(engine: model.engine).subhead(on: clock.now)) == "Sat, Oct 17 · Nothing is nudging you")
     }
 
+    /// What VoiceOver reads after the card's title: its strength first, since the badge inside
+    /// the card's one element isn't read on its own (device check, iOS 27.0.1), then the count,
+    /// the urgency, the details and the next nudge. At 9:40 the bins sent nudges 1 and 2.
+    @Test func aCardsVoiceOverValueSaysItsStrengthCountUrgencyAndNextNudge() async throws {
+        let model = try await modelAtNineForty()
+
+        let card = try #require(NowScreen(engine: model.engine).nudging.first { $0.title == "Take the bins out" })
+
+        #expect(String(localized: card.voiceOverValue)
+            == "Firm, nudge 2 of 20, urgency Normal. Due 9:00\u{202F}AM. Next nudge 9:45\u{202F}AM: Notification, High.")
+    }
+
     /// The card's line after its last nudge, which its VoiceOver value repeats. Firm's nudge 20 is
     /// at 11:12:30; it gives up at 11:17:30.
     @Test func afterItsLastNudgeACardSaysWhenItClosesAsMissed() async throws {

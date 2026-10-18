@@ -49,6 +49,28 @@
         }
       }
     },
+    "%@, nudge %lld of %lld, urgency %@. %@. %@" : {
+      "comment" : "VoiceOver value of a nudge card after its last nudge. 1: the strength, such as \"Gentle\". 2: the nudges sent. 3: the most it sends. 4: the urgency now, such as \"High\". 5: the tags and due time, such as \"#home · due 9:00 AM\". 6: the card's line saying that was the last nudge and when it closes as Missed.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, nudge %2$lld of %3$lld, urgency %4$@. %5$@. %6$@"
+          }
+        }
+      }
+    },
+    "%@, nudge %lld of %lld, urgency %@. %@. Next nudge %@: %@, %@." : {
+      "comment" : "VoiceOver value of a nudge card. 1: the strength, such as \"Gentle\". 2: the nudges sent. 3: the most it sends. 4: the urgency now, such as \"High\". 5: the tags and due time, such as \"#home · due 9:00 AM\". 6: the next nudge's time. 7: how it arrives, such as \"Alarm\". 8: its urgency.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, nudge %2$lld of %3$lld, urgency %4$@. %5$@. Next nudge %6$@: %7$@, %8$@."
+          }
+        }
+      }
+    },
     "%@." : {
       "comment" : "A repeat summary as a sentence, under the reminder form's Starts and under the Repeat page's Custom row. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".\nTop of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\"."
     },
@@ -432,28 +454,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Nudge %1$lld of %2$lld"
-          }
-        }
-      }
-    },
-    "Nudge %lld of %lld, urgency %@. %@. %@" : {
-      "comment" : "VoiceOver value of a nudge card after its last nudge. 1: the nudges sent. 2: the most it sends. 3: the urgency now, such as \"High\". 4: the tags and due time, such as \"#home · due 9:00 AM\". 5: the card's line saying that was the last nudge and when it closes as Missed.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Nudge %1$lld of %2$lld, urgency %3$@. %4$@. %5$@"
-          }
-        }
-      }
-    },
-    "Nudge %lld of %lld, urgency %@. %@. Next nudge %@: %@, %@." : {
-      "comment" : "VoiceOver value of a nudge card. 1: the nudges sent. 2: the most it sends. 3: the urgency now, such as \"High\". 4: the tags and due time, such as \"#home · due 9:00 AM\". 5: the next nudge's time. 6: how it arrives, such as \"Alarm\". 7: its urgency.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Nudge %1$lld of %2$lld, urgency %3$@. %4$@. Next nudge %5$@: %6$@, %7$@."
           }
         }
       }
