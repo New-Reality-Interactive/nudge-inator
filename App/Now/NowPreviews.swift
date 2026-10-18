@@ -31,13 +31,4 @@ extension NowScreen {
         return NowScreen(engine: engine)
     }
 }
-
-/// A clock the preview moves by hand, so its Done and pause happen in the past.
-private final class PreviewClock: EngineClock {
-    var now: Date
-
-    init(now: Date) {
-        self.now = now
-    }
-}
 #endif

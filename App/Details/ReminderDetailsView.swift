@@ -3,7 +3,7 @@ import SwiftUI
 
 extension View {
     /// What a stack shows for a pushed `OpenedReminder`. Add it to the stack's root, outside any
-    /// `List`, so Now, My Day and a tag's list push the same screen.
+    /// `List`, so every stack that pushes a reminder pushes the same screen.
     func reminderDetailsDestination() -> some View {
         navigationDestination(for: OpenedReminder.self) { ReminderDetailsView(id: $0.id) }
     }
@@ -21,8 +21,9 @@ struct ReminderDetailsView: View {
     @Environment(AppModel.self) private var model: AppModel?
     @Environment(\.dismiss) private var dismiss
     @State private var form: ReminderForm?
-    /// Set when Resume was turned down for want of a time, so Edit's save tries Resume again.
-    @State private var resumesAfterEdit = false
+    /// The reminder as it was when "Choose Time" opened Edit, so Save can resume it. `nil` for
+    /// any other Edit.
+    @State private var resumeBaseline: Reminder?
     @State private var isAskingForNewTime = false
     /// What was on screen when Delete was confirmed. The reminder is gone from the engine at
     /// once, but the screen is still sliding away, and shouldn't flash "not found" while it does.
@@ -30,55 +31,45 @@ struct ReminderDetailsView: View {
 
     var body: some View {
         TimelineView(.everyMinute) { context in
-            Group {
-                if let details = deleted ?? current {
-                    DetailsList(
-                        details: details,
-                        now: context.date,
-                        isEnabled: deleted == nil,
-                        markDone: { model?.markDone(id) },
-                        togglePause: { togglePause(details) },
-                        delete: {
-                            deleted = details
-                            model?.delete(id)
-                            dismiss()
-                        }
-                    )
-                    .navigationTitle(Text(verbatim: ""))
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .primaryAction) {
-                            Button(action: openEdit) {
-                                Text("Edit", comment: "Reminder details: the toolbar button that opens the Edit Reminder form.")
-                            }
-                            .accessibilityLabel(Text("Edit \(details.title)", comment: "VoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title."))
-                            .disabled(model == nil || deleted != nil)
-                        }
-                    }
-                    .alert(
-                        Text("Choose a New Time", comment: "Alert title: Resume was turned down because the reminder has no time left."),
-                        isPresented: $isAskingForNewTime
-                    ) {
-                        Button(role: .cancel) {
-                        } label: {
-                            Text("Cancel", comment: "Closes the alert without choosing a new time.")
-                        }
-                        Button {
-                            resumesAfterEdit = true
-                            openEdit()
-                        } label: {
-                            Text("Choose Time", comment: "Opens the Edit Reminder form to choose a new time, so the reminder can resume.")
-                        }
-                    } message: {
-                        Text("“\(details.title)” was due while it was paused. Choose a new time to resume it.", comment: "Alert message: why Resume needs a new time. The placeholder is the reminder's title.")
-                    }
-                } else {
-                    NotFoundView()
-                }
+            if let details = deleted ?? current {
+                loaded(details, now: context.date)
+            } else {
+                NotFoundView()
             }
         }
         .sheet(item: $form, onDismiss: resumeAfterEdit) { form in
             ReminderFormSheet(form: form)
+        }
+    }
+
+    private func loaded(_ details: ReminderDetails, now: Date) -> some View {
+        DetailsList(
+            details: details,
+            now: now,
+            isEnabled: deleted == nil,
+            markDone: { model?.markDone(id) },
+            togglePause: { togglePause(details) },
+            delete: {
+                deleted = details
+                model?.delete(id)
+                dismiss()
+            }
+        )
+        // The bar holds only its buttons: the hero carries the title.
+        .navigationTitle(Text(verbatim: ""))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: openEdit) {
+                    Text("Edit", comment: "Reminder details: the toolbar button that opens the Edit Reminder form.")
+                }
+                .accessibilityLabel(Text("Edit \(details.title)", comment: "VoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title."))
+                .disabled(model == nil || deleted != nil)
+            }
+        }
+        .newTimeAlert(isPresented: $isAskingForNewTime, title: details.title) {
+            resumeBaseline = details.reminder
+            openEdit()
         }
     }
 
@@ -106,12 +97,35 @@ struct ReminderDetailsView: View {
         }
     }
 
-    /// After the person chose a new time and saved, Resume picks up where it was turned down. If
-    /// they cancelled, it is turned down again and nothing happens.
+    /// After "Choose Time", Save resumes the reminder, or asks again if the Edit left no time.
+    /// Cancel changed nothing, so nothing happens.
     private func resumeAfterEdit() {
-        guard resumesAfterEdit else { return }
-        resumesAfterEdit = false
-        try? model?.resume(id)
+        guard let before = resumeBaseline else { return }
+        resumeBaseline = nil
+        if model?.resumeAfterEdit(of: before) == .needsNewDueTime {
+            isAskingForNewTime = true
+        }
+    }
+}
+
+extension View {
+    /// The alert shown when Resume is turned down for want of a time: Cancel, or "Choose Time",
+    /// which opens Edit.
+    fileprivate func newTimeAlert(isPresented: Binding<Bool>, title: String, chooseTime: @escaping () -> Void) -> some View {
+        alert(
+            Text("Choose a New Time", comment: "Alert title: Resume was turned down because the reminder has no time left."),
+            isPresented: isPresented
+        ) {
+            Button(role: .cancel) {
+            } label: {
+                Text("Cancel", comment: "Closes the alert without choosing a new time.")
+            }
+            Button(action: chooseTime) {
+                Text("Choose Time", comment: "Opens the Edit Reminder form to choose a new time, so the reminder can resume.")
+            }
+        } message: {
+            Text("“\(title)” was due while it was paused. Choose a new time to resume it.", comment: "Alert message: why Resume needs a new time. The placeholder is the reminder's title.")
+        }
     }
 }
 
@@ -241,12 +255,12 @@ private struct DetailsHero: View {
                 StrengthBadge(strength: details.strength)
                 StatusWord(status: details.status)
             }
-            if !details.tags.isEmpty {
+            if let tagsLabel = details.tagsVoiceOverLabel {
                 // Tokens, joined by spaces: they are not a sentence. Ticket 29 makes them buttons.
                 Text(verbatim: details.tags.joined(separator: " "))
                     .font(.subheadline)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
-                    .accessibilityLabel(Text("Tags: \(details.tags.joined(separator: ", "))", comment: "VoiceOver label of a reminder's tags on its details. The placeholder lists them, such as \"#home, #errands\"."))
+                    .accessibilityLabel(Text(tagsLabel))
             }
         }
         .padding(.vertical, Design.Spacing.s1)
@@ -261,6 +275,7 @@ private struct StatusWord: View {
     var body: some View {
         switch status {
         case .nudging:
+            // The label's word and color don't depend on the nudge number.
             StatusLabel(state: .nudging(nudgeNumber: 0))
         case .closed(let state):
             StatusLabel(state: state)

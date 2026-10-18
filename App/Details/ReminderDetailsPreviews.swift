@@ -12,7 +12,7 @@ extension ReminderDetails {
         pausedAt: Double? = nil
     ) -> ReminderDetails {
         let now = Calendar.current.dateInterval(of: .minute, for: .now)?.start ?? .now
-        let clock = DetailsPreviewClock(now: now)
+        let clock = PreviewClock(now: now)
         var reminder = reminder
         let engineTags = tags.map { Tag(name: $0) }
         reminder.tagIDs = engineTags.map(\.id)
@@ -41,14 +41,6 @@ extension ReminderDetails {
 
     static func previewComingUp() -> ReminderDetails {
         preview(Reminder(title: "Pay rent", dueTime: .now.addingTimeInterval(2 * 24 * 3600), strength: .relentless), tags: [])
-    }
-}
-
-private final class DetailsPreviewClock: EngineClock {
-    var now: Date
-
-    init(now: Date) {
-        self.now = now
     }
 }
 

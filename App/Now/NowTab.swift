@@ -20,7 +20,7 @@ struct NowTab: View {
                 TimelineView(.everyMinute) { context in
                     NowList(screen: screen, now: context.date) { reminderID in
                         model?.markDone(reminderID)
-                    } open: { reminderID in
+                    } openDetails: { reminderID in
                         path.append(OpenedReminder(id: reminderID))
                     }
                 }
@@ -43,7 +43,7 @@ private struct NowList: View {
     let screen: NowScreen
     let now: Date
     let markDone: (Reminder.ID) -> Void
-    let open: (Reminder.ID) -> Void
+    let openDetails: (Reminder.ID) -> Void
 
     var body: some View {
         List {
@@ -52,7 +52,7 @@ private struct NowList: View {
                     EmptyRow(text: Text("**All clear.** Nothing needs you right now.", comment: "Now: the Nudging section when nothing is nudging."))
                 } else {
                     ForEach(screen.nudging) { card in
-                        NudgeCardRow(card: card, now: now, markDone: { markDone(card.id) }, open: { open(card.id) })
+                        NudgeCardRow(card: card, now: now, markDone: { markDone(card.id) }, openDetails: { openDetails(card.id) })
                     }
                 }
             } header: {
@@ -62,7 +62,7 @@ private struct NowList: View {
                 if screen.comingUp.isEmpty {
                     EmptyRow(text: Text("Nothing scheduled this week.", comment: "Now: the Coming Up section when nothing is due in the next 7 days."))
                 } else {
-                    ForEach(screen.comingUp) { row in ComingUpRowView(row: row) { open(row.id) } }
+                    ForEach(screen.comingUp) { row in ComingUpRowView(row: row) { openDetails(row.reminder.id) } }
                 }
             } header: {
                 ComingUpHeader()
@@ -71,7 +71,7 @@ private struct NowList: View {
                 if screen.lastDay.isEmpty {
                     EmptyRow(text: Text("Nothing closed yet today.", comment: "Now: the Last 24 Hours section when no occurrence closed in that time."))
                 } else {
-                    ForEach(screen.lastDay) { row in ClosedRowView(row: row) { open(row.reminder.id) } }
+                    ForEach(screen.lastDay) { row in ClosedRowView(row: row) { openDetails(row.reminder.id) } }
                 }
             } header: {
                 Text("Last 24 Hours", comment: "Now: section header for occurrences closed in the last 24 hours.")
@@ -86,10 +86,10 @@ private struct NudgeCardRow: View {
     let card: NudgeCard
     let now: Date
     let markDone: () -> Void
-    let open: () -> Void
+    let openDetails: () -> Void
 
     var body: some View {
-        NudgeCardView(card: card, now: now, markDone: markDone, open: open)
+        NudgeCardView(card: card, now: now, markDone: markDone, openDetails: openDetails)
             .listRowInsets(EdgeInsets(top: Design.Spacing.s3 / 2, leading: 0, bottom: Design.Spacing.s3 / 2, trailing: 0))
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)

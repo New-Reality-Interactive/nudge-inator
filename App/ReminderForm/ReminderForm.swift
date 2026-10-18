@@ -211,8 +211,8 @@ final class ReminderForm: Identifiable {
     /// The Tags row: the chosen tags as `#name`, in the order chosen, or `nil` if there are none.
     /// Tokens separated by spaces as the mockup shows them, not a sentence, so not a list format.
     var chosenTagsText: String? {
-        let names = tagIDs.compactMap { tagID in tags.first { $0.id == tagID }?.name }
-        return names.isEmpty ? nil : names.map { "#\($0)" }.joined(separator: " ")
+        let labels = tagRules.tagLabels(for: tagIDs)
+        return labels.isEmpty ? nil : labels.joined(separator: " ")
     }
 
     /// The Tags page's Add: the typed name, made one word, attaches the tag with that name

@@ -25,4 +25,27 @@ struct ShellNavigationTests {
         #expect(navigation.selection == .now)
         #expect(navigation.nowPath.isEmpty)
     }
+
+    /// The alarm's Open for a reminder whose details are already on screen leaves one copy, not a
+    /// second push on top.
+    @Test func aRouteToTheReminderAlreadyOpenLeavesOneCopy() {
+        let id = UUID()
+        var navigation = ShellNavigation()
+        navigation.nowPath = [OpenedReminder(id: id)]
+
+        navigation.follow(.reminderDetails(id))
+
+        #expect(navigation.nowPath == [OpenedReminder(id: id)])
+    }
+
+    /// An ID the engine doesn't hold still pushes, and the pushed screen says "not found": the
+    /// route carries whatever ID it is given. (`AppModel.showReminder` keeps unknown IDs off it.)
+    @Test func aRouteToAnyIDPushesItsDetailsScreen() {
+        let id = UUID()
+        var navigation = ShellNavigation()
+
+        navigation.follow(.reminderDetails(id))
+
+        #expect(navigation.nowPath == [OpenedReminder(id: id)])
+    }
 }

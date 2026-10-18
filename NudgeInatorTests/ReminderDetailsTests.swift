@@ -63,7 +63,6 @@ struct ReminderDetailsTests {
         let before = try #require(ReminderDetails(engine: model.engine, id: bins.id))
         #expect(before.status == .comingUp)
         #expect(!before.offersDone)
-        #expect(before.card == nil)
 
         clock.now = NewYork.local(2026, 10, 16, 9, 30)
         await model.appOpened()
@@ -190,7 +189,8 @@ struct ReminderDetailsTests {
 
     /// Criterion 7: notes and tags are in the app and nowhere in a notification or an alarm. Every
     /// field of every pending request, and everything an alarm carries, is searched for them.
-    @Test func notesAndTagsAreNotInAnyNotificationOrAlarm() async throws {
+    @Test(arguments: ["Green one too", "Garden"])
+    func notesAndTagsAreNotInAnyNotificationOrAlarm(secret: String) async throws {
         let model = try await launchedModel()
         let garden = try #require(try model.createTag(named: "Garden"))
         var reminder = bins
@@ -205,12 +205,141 @@ struct ReminderDetailsTests {
 
         let notifications = center.pending.map { String(describing: [$0.content.title, $0.content.subtitle, $0.content.body] as [Any] + [$0.content.userInfo]) }
         let alarms = manager.scheduled.map { String(describing: $0.attributes) }
-        for content in notifications + alarms {
-            #expect(!content.localizedCaseInsensitiveContains("Green one too"))
-            #expect(!content.localizedCaseInsensitiveContains("Garden"))
-        }
+
+        #expect(!(notifications + alarms).contains { $0.localizedCaseInsensitiveContains(secret) })
         // The searches can find what is there: the title is.
         #expect(notifications.allSatisfy { $0.contains("Take the bins out") })
         #expect(alarms.allSatisfy { $0.contains("Take the bins out") })
+    }
+
+    /// The tags as VoiceOver reads them: a list in the engine's words, not commas glued on.
+    @Test func theTagsReadToVoiceOverAsAList() async throws {
+        let model = try await launchedModel()
+        let home = try #require(try model.createTag(named: "home"))
+        let weekly = try #require(try model.createTag(named: "weekly"))
+        var tagged = bins
+        tagged.tagIDs = [home.id, weekly.id]
+        model.add(tagged)
+
+        let details = try #require(ReminderDetails(engine: model.engine, id: bins.id))
+
+        #expect(String(localized: try #require(details.tagsVoiceOverLabel)) == "Tags: #home and #weekly")
+        model.add(meds)
+        #expect(try #require(ReminderDetails(engine: model.engine, id: meds.id)).tagsVoiceOverLabel == nil)
+    }
+
+    /// A one-off paused before it was due comes back at that time: Resume has a future time to
+    /// return it at, so it isn't turned down.
+    @Test func resumingAOneOffPausedBeforeItWasDueReturnsItAtItsTime() async throws {
+        let model = try await launchedModel()
+        model.add(bins)
+        model.pause(bins.id)
+        try model.resume(bins.id)
+
+        let details = try #require(ReminderDetails(engine: model.engine, id: bins.id))
+
+        #expect(details.status == .comingUp)
+        #expect(details.next == .at(day: "Today", time: "9:00\u{202F}AM"))
+        #expect(details.pauseAction == .pause)
+    }
+
+    /// While a repeating reminder is nudging, Next is its following due time, not the one that is
+    /// open now.
+    @Test func whileNudgingNextIsTheFollowingDueTime() async throws {
+        let model = try await launchedModel()
+        model.add(meds)
+        clock.now = NewYork.local(2026, 10, 16, 9, 30)
+        await model.appOpened()
+
+        let details = try #require(ReminderDetails(engine: model.engine, id: meds.id))
+
+        #expect(details.status == .nudging)
+        #expect(details.next == .at(day: "Tomorrow", time: "8:00\u{202F}AM"))
+        #expect(details.pauseAction == .pause)
+    }
+
+    /// A one-off that has closed has nothing left to pause, and its status is how it closed.
+    @Test func aFinishedReminderOffersNoPauseAndSaysHowItClosed() async throws {
+        let model = try await launchedModel()
+        model.add(bins)
+        clock.now = NewYork.local(2026, 10, 16, 9, 30)
+        await model.appOpened()
+        // Gentle's give-up span, from the due time at 9:00, is long past by the next morning.
+        clock.now = NewYork.local(2026, 10, 17, 12)
+        await model.appOpened()
+
+        let details = try #require(ReminderDetails(engine: model.engine, id: bins.id))
+
+        #expect(details.status == .closed(.missed(reason: .giveUpLimit)))
+        #expect(details.pauseAction == nil)
+        #expect(details.next == .none)
+        #expect(details.lastOccurrence?.state == .missed(reason: .giveUpLimit))
+    }
+
+    /// A reminder paused through its due time closes as Skipped, and with no later time the hero
+    /// says how it closed only once it is no longer paused; while paused it says Paused.
+    @Test func aPausedOneOffWhoseTimePassedStillSaysPaused() async throws {
+        let model = try await launchedModel()
+        model.add(bins)
+        model.pause(bins.id)
+        clock.now = NewYork.local(2026, 10, 16, 9, 30)
+        await model.appOpened()
+
+        let details = try #require(ReminderDetails(engine: model.engine, id: bins.id))
+
+        #expect(details.status == .paused)
+        #expect(details.lastOccurrence?.state == .skipped(reason: .paused))
+    }
+
+    /// Edit's Save after Resume was turned down for want of a time: a new time resumes the
+    /// reminder at once.
+    @Test func anEditThatChoseANewTimeResumesTheReminder() async throws {
+        let model = try await launchedModel()
+        model.add(bins)
+        model.pause(bins.id)
+        clock.now = NewYork.local(2026, 10, 16, 9, 30)
+        await model.appOpened()
+        let before = try #require(model.engine.reminders.first)
+        var edited = before
+        edited.dueTime = NewYork.local(2026, 10, 16, 12)
+        try model.edit(edited)
+
+        #expect(model.resumeAfterEdit(of: before) == .resumed)
+
+        let details = try #require(ReminderDetails(engine: model.engine, id: bins.id))
+        #expect(details.status == .comingUp)
+        #expect(details.next == .at(day: "Today", time: "12:00\u{202F}PM"))
+    }
+
+    /// A Save that left the time alone, a new title say, still has no time to resume at: the
+    /// screen is told, so it asks again rather than staying paused in silence.
+    @Test func anEditThatLeftNoTimeStillNeedsOne() async throws {
+        let model = try await launchedModel()
+        model.add(bins)
+        model.pause(bins.id)
+        clock.now = NewYork.local(2026, 10, 16, 9, 30)
+        await model.appOpened()
+        let before = try #require(model.engine.reminders.first)
+        var renamed = before
+        renamed.title = "Bins"
+        try model.edit(renamed)
+
+        #expect(model.resumeAfterEdit(of: before) == .needsNewDueTime)
+
+        #expect(try #require(ReminderDetails(engine: model.engine, id: bins.id)).status == .paused)
+    }
+
+    /// Cancel left the reminder as it was, so there is nothing to resume or to say.
+    @Test func aCancelledEditChangesNothing() async throws {
+        let model = try await launchedModel()
+        model.add(bins)
+        model.pause(bins.id)
+        clock.now = NewYork.local(2026, 10, 16, 9, 30)
+        await model.appOpened()
+        let before = try #require(model.engine.reminders.first)
+
+        #expect(model.resumeAfterEdit(of: before) == .unchanged)
+
+        #expect(try #require(ReminderDetails(engine: model.engine, id: bins.id)).status == .paused)
     }
 }

@@ -35,8 +35,4 @@ extension ReminderForm {
         return ReminderForm(engine: { engine }, editing: reminder.id, now: { .now }) ?? preview()
     }
 }
-
-private struct PreviewClock: EngineClock {
-    var now: Date { .now }
-}
 #endif

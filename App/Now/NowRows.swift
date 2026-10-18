@@ -5,10 +5,10 @@ import SwiftUI
 /// badge. It opens the reminder's details.
 struct ComingUpRowView: View {
     let row: ComingUpRow
-    let open: () -> Void
+    let openDetails: () -> Void
 
     var body: some View {
-        NowRowLayout(open: open) {
+        NowRowLayout(openDetails: openDetails) {
             TimeColumn(time: row.time, day: row.day)
         } main: {
             Text(verbatim: row.title)
@@ -26,10 +26,10 @@ struct ComingUpRowView: View {
 /// opens the reminder's details.
 struct ClosedRowView: View {
     let row: ClosedRow
-    let open: () -> Void
+    let openDetails: () -> Void
 
     var body: some View {
-        NowRowLayout(open: open) {
+        NowRowLayout(openDetails: openDetails) {
             TimeColumn(time: row.time, day: row.day)
         } main: {
             Text(verbatim: row.title)
@@ -47,7 +47,7 @@ struct ClosedRowView: View {
 /// chevron. The row is a button that opens the reminder. At accessibility sizes they stack and
 /// wrap. VoiceOver reads the row as one element.
 private struct NowRowLayout<Leading: View, Main: View, Trailing: View>: View {
-    let open: () -> Void
+    let openDetails: () -> Void
     @ViewBuilder let leading: () -> Leading
     @ViewBuilder let main: () -> Main
     @ViewBuilder let trailing: () -> Trailing
@@ -57,34 +57,36 @@ private struct NowRowLayout<Leading: View, Main: View, Trailing: View>: View {
     @ScaledMetric(relativeTo: .body) private var timeWidth: CGFloat = Design.Size.timeColumn
 
     var body: some View {
-        Button(action: open) {
-            Group {
-                if dynamicTypeSize.isAccessibilitySize {
-                    VStack(alignment: .leading, spacing: Design.Spacing.s1) {
-                        leading()
-                        mainStack
-                        HStack {
-                            trailing()
-                            Spacer(minLength: 0)
-                            chevron
-                        }
-                    }
-                } else {
-                    HStack(alignment: .firstTextBaseline, spacing: Design.Spacing.s3) {
-                        leading()
-                            .frame(minWidth: timeWidth, alignment: .leading)
-                        mainStack
-                            .frame(maxWidth: .infinity, alignment: .leading)
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: Design.Spacing.s1) {
+                    leading()
+                    mainStack
+                    HStack {
                         trailing()
+                        Spacer(minLength: 0)
                         chevron
                     }
                 }
+            } else {
+                HStack(alignment: .firstTextBaseline, spacing: Design.Spacing.s3) {
+                    leading()
+                        .frame(minWidth: timeWidth, alignment: .leading)
+                    mainStack
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    trailing()
+                    chevron
+                }
             }
-            // The whole row takes the tap, not only its text.
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .opensDetails(openDetails)
         .accessibilityElement(children: .combine)
+    }
+
+    private var mainStack: some View {
+        VStack(alignment: .leading, spacing: Design.Spacing.line) {
+            main()
+        }
     }
 
     /// DESIGN.md's Reminder row chevron, in the tertiary label color. Decorative.
@@ -93,12 +95,6 @@ private struct NowRowLayout<Leading: View, Main: View, Trailing: View>: View {
             .font(.footnote.weight(.semibold))
             .foregroundStyle(Color(uiColor: .tertiaryLabel))
             .accessibilityHidden(true)
-    }
-
-    private var mainStack: some View {
-        VStack(alignment: .leading, spacing: Design.Spacing.line) {
-            main()
-        }
     }
 }
 

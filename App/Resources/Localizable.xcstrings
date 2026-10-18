@@ -540,6 +540,9 @@
     "Open" : {
       "comment" : "Alarm button: opens the app on the reminder, where Done is. Shown on the Lock Screen; keep it short."
     },
+    "Opens the reminder's details." : {
+      "comment" : "VoiceOver hint on a nudge card's title and on a Now row: tapping it opens the reminder's details."
+    },
     "Pause Reminder" : {
       "comment" : "Reminder details: stops the reminder's nudging until it is resumed."
     },
@@ -592,7 +595,7 @@
       "comment" : "Tab bar: the tab listing your tags\nThe reminder form's row that opens the Tags page.\nTitle of the reminder form's Tags page."
     },
     "Tags: %@" : {
-      "comment" : "VoiceOver label of a reminder's tags on its details. The placeholder lists them, such as \"#home, #errands\"."
+      "comment" : "VoiceOver label of a reminder's tags on its details. The placeholder lists them, such as \"#home and #errands\"."
     },
     "Tap + to add a tag, or add tags to a reminder when you create or edit it." : {
       "comment" : "Tags: how to add a tag when there are none."

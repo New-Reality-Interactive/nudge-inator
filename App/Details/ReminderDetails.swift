@@ -29,6 +29,13 @@ struct ReminderDetails {
     /// Done is shown only while the reminder is Nudging.
     var offersDone: Bool { card != nil }
 
+    /// The tags as VoiceOver reads them, a list in the engine's words, or `nil` with none.
+    var tagsVoiceOverLabel: LocalizedStringResource? {
+        guard !tags.isEmpty else { return nil }
+        let list = tags.formatted(.list(type: .and))
+        return LocalizedStringResource("Tags: \(list)", comment: "VoiceOver label of a reminder's tags on its details. The placeholder lists them, such as \"#home and #errands\".")
+    }
+
     /// The hero's status word, from DESIGN.md's Status label.
     enum Status: Equatable {
         case nudging
@@ -65,13 +72,17 @@ struct ReminderDetails {
     init?(engine: Engine, id: Reminder.ID) {
         guard let reminder = engine.reminders.first(where: { $0.id == id }) else { return nil }
         self.reminder = reminder
-        let tagNames = Dictionary(engine.tags.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
-        tags = reminder.tagIDs.compactMap { tagNames[$0].map { "#\($0)" } }
-        lastOccurrence = engine.latestOccurrence(for: id)
+        tags = engine.tagLabels(for: reminder.tagIDs)
+        card = NudgeCard(engine: engine, reminder: reminder)
+        let latest = engine.latestOccurrence(for: id)
+        lastOccurrence = latest
             .flatMap { engine.closedOccurrence(of: id, dueAt: $0.dueTime) }
             .map { LastOccurrence(state: $0.occurrence.state, day: engine.dayLabel(of: $0.closedAt), time: engine.timeOfDay(of: $0.closedAt)) }
-        card = NudgeCard(engine: engine, reminder: reminder, tags: tags)
-        // The open occurrence's own due time isn't "next", whatever the clock says.
+        repeats = engine.repeatSummary(of: reminder)
+        showsLockNote = !engine.lockedFields(of: id).isEmpty
+
+        // The open occurrence's own due time isn't "next", whatever the clock says. The engine
+        // reads "at or after now", so a second time is asked for in case the first is that one.
         let openDueTime = engine.openOccurrence(for: id)?.dueTime ?? .distantPast
         let nextDueTime = engine.upcomingDueTimes(of: reminder, count: 2).first { $0 > openDueTime }
         let isPaused = engine.isPaused(id)
@@ -82,15 +93,13 @@ struct ReminderDetails {
         } else if nextDueTime != nil {
             status = .comingUp
         } else {
-            status = engine.latestOccurrence(for: id).map { .closed($0.state) } ?? .comingUp
+            status = latest.map { .closed($0.state) } ?? .comingUp
         }
         if isPaused {
             next = .paused
         } else {
             next = nextDueTime.map { .at(day: engine.dayLabel(of: $0), time: engine.timeOfDay(of: $0)) } ?? .none
         }
-        repeats = engine.repeatSummary(of: reminder)
-        showsLockNote = !engine.lockedFields(of: id).isEmpty
         pauseAction = isPaused ? .resume : (card != nil || nextDueTime != nil ? .pause : nil)
     }
 }
