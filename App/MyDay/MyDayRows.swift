@@ -28,7 +28,9 @@ struct MyDayRowView: View {
                 }
             }
         }
-        // Only a Nudging row has the swipe; VoiceOver has the row's own Done button instead.
+        // Only a Nudging row has the swipe. VoiceOver lists it among the row's actions (the phone
+        // showed that `accessibilityHidden` doesn't hide it on a link row), so it carries the
+        // reminder's name and the row's own Done button is hidden from VoiceOver: one action.
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             if item.offersDone {
                 Button(action: markDone) {
@@ -39,9 +41,13 @@ struct MyDayRowView: View {
                     }
                 }
                 .tint(Color.tileGreen)
-                .accessibilityHidden(true)
+                .accessibilityLabel(doneLabel)
             }
         }
+    }
+
+    private var doneLabel: Text {
+        Text("Done, stop nudging: \(item.title)", comment: "VoiceOver label of the Done button on a nudge card or a My Day row. The placeholder is the reminder's title.")
     }
 
     private var text: some View {
@@ -97,7 +103,8 @@ struct MyDayRowView: View {
             .buttonBorderShape(.capsule)
             // Regular is 34 pt tall; every button is at least 44 (DESIGN.md › Buttons).
             .controlSize(.large)
-            .accessibilityLabel(Text("Done, stop nudging: \(item.title)", comment: "VoiceOver label of the Done button on a nudge card or a My Day row. The placeholder is the reminder's title."))
+            // The swipe action is the one Done VoiceOver offers.
+            .accessibilityHidden(true)
         case .due(let state):
             StatusLabel(state: state)
         case .paused:
