@@ -125,9 +125,10 @@ final class AppModel {
     }
 
     /// The alarm's Open button (ticket 20's intent, which also stops the ring): the reminder's
-    /// details, or Now if the app no longer holds the reminder.
+    /// details. If the app no longer holds the reminder, the details say it isn't found, so the
+    /// person isn't left on Now wondering where it went (ticket 27).
     func showReminder(_ reminderID: Reminder.ID) {
-        route = engine.reminders.contains { $0.id == reminderID } ? .reminderDetails(reminderID) : .now
+        route = .reminderDetails(reminderID)
     }
 
     /// The route, which is then cleared: the tab shell follows each one once.

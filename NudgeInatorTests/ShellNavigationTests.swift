@@ -39,7 +39,7 @@ struct ShellNavigationTests {
     }
 
     /// An ID the engine doesn't hold still pushes, and the pushed screen says "not found": the
-    /// route carries whatever ID it is given. (`AppModel.showReminder` keeps unknown IDs off it.)
+    /// route carries whatever ID it is given, `AppModel.showReminder`'s unknown IDs included.
     @Test func aRouteToAnyIDPushesItsDetailsScreen() {
         let id = UUID()
         var navigation = ShellNavigation()
