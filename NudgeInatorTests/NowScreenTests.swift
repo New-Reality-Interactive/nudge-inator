@@ -102,7 +102,7 @@ struct NowScreenTests {
     ])
     func aClosedRowSaysHowItClosed(state: OccurrenceState, nudgesSent: Int, detail: String, status: String) {
         #expect(String(localized: ClosedRow.detail(closingAs: state, nudgesSent: nudgesSent)) == detail)
-        #expect(String(localized: ClosedRow.status(closingAs: state)) == status)
+        #expect(String(localized: state.statusName) == status)
     }
 
     /// The time columns, the card's tag line and its times, in the engine's time zone (New York),
@@ -137,20 +137,42 @@ struct NowScreenTests {
         let screen = NowScreen(engine: model.engine)
 
         #expect(screen.nudging.isEmpty && screen.comingUp.isEmpty && screen.lastDay.isEmpty)
-        #expect(screen.badgeCount == 0)
+        #expect(NowScreen.badgeCount(of: model.engine) == 0)
         #expect(plain(screen.subhead(on: clock.now)) == "Fri, Oct 16 · Nothing is nudging you")
+    }
+
+    /// The subhead's date is the engine's (New York) day. At 0:30 on Saturday in New York the
+    /// simulator, on the Mac's Central time, is still on Friday.
+    @Test func theSubheadDateIsTheEnginesDay() async throws {
+        clock.now = NewYork.local(2026, 10, 17, 0, 30)
+        let model = try await launchedModel()
+
+        #expect(plain(NowScreen(engine: model.engine).subhead(on: clock.now)) == "Sat, Oct 17 · Nothing is nudging you")
+    }
+
+    /// The card's line after its last nudge, which its VoiceOver value repeats. Firm's nudge 20 is
+    /// at 11:12:30; it gives up at 11:17:30.
+    @Test func afterItsLastNudgeACardSaysWhenItClosesAsMissed() async throws {
+        let model = try await modelAtNineForty()
+        clock.now = NewYork.local(2026, 10, 16, 11, 15)
+        await model.appOpened()
+
+        let card = try #require(NowScreen(engine: model.engine).nudging.first { $0.title == "Take the bins out" })
+
+        #expect(String(localized: card.lastNudgeLine) == "That was the last nudge. It closes as Missed at 11:17\u{202F}AM.")
     }
 
     /// The mockup's subhead counts the nudging reminders, as the tab's badge does.
     @Test func theSubheadAndTheBadgeCountWhatIsNudging() async throws {
         let model = try await modelAtNineForty()
         let two = NowScreen(engine: model.engine)
+        let twoBadge = NowScreen.badgeCount(of: model.engine)
         model.pause(bins.id)
         let one = NowScreen(engine: model.engine)
 
-        #expect(two.badgeCount == 2)
+        #expect(twoBadge == 2)
         #expect(plain(two.subhead(on: clock.now)) == "Fri, Oct 16 · 2 reminders nudging you")
-        #expect(one.badgeCount == 1)
+        #expect(NowScreen.badgeCount(of: model.engine) == 1)
         #expect(plain(one.subhead(on: clock.now)) == "Fri, Oct 16 · 1 reminder nudging you")
     }
 
@@ -158,12 +180,12 @@ struct NowScreenTests {
     /// urgency. Time Sensitive and ordinary notifications both read "Notification".
     @Test(arguments: [
         (NudgeDelivery.alarm, "Alarm"),
-        (.notification(fallback: nil), "Notification"),
-        (.notification(fallback: .alarmsOff), "Notification: alarms are off"),
-        (.notification(fallback: .alarmsAndTimeSensitiveOff), "Notification: alarms and Time Sensitive are off"),
-        (.notification(fallback: .timeSensitiveOff), "Notification: Time Sensitive is off"),
-        (.notification(fallback: .breakThroughFocusOff), "Notification: Break through Focus is off"),
-        (.notification(fallback: .pastAlarmLimit), "Notification: too many alarms scheduled"),
+        (.notification(weakerBecause: nil), "Notification"),
+        (.notification(weakerBecause: .alarmsOff), "Notification: alarms are off"),
+        (.notification(weakerBecause: .alarmsAndTimeSensitiveOff), "Notification: alarms and Time Sensitive are off"),
+        (.notification(weakerBecause: .timeSensitiveOff), "Notification: Time Sensitive is off"),
+        (.notification(weakerBecause: .breakThroughFocusOff), "Notification: Break through Focus is off"),
+        (.notification(weakerBecause: .pastAlarmLimit), "Notification: too many alarms scheduled"),
         (.cannotArrive, "Notifications off"),
     ])
     func theViaLabelSaysHowTheNextNudgeArrives(delivery: NudgeDelivery, text: String) {

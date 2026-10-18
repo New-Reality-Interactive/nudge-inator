@@ -7,18 +7,27 @@ extension Engine {
     /// in the app's language; its names, lists, times and dates follow the engine's locale and
     /// time zone. The reminder needn't be one the engine holds, so a draft can be summarised.
     public func repeatSummary(of reminder: Reminder) -> String {
-        RepeatSummaryWriter(locale: locale, calendar: calendar, now: clock.now).summary(of: reminder)
+        summaryWriter.summary(of: reminder)
     }
 
     /// "Today", "Tomorrow", "Yesterday" or a short date such as "Tue, Oct 20", in the engine's
     /// locale and time zone, as a one-off's summary says it: the Now rows' day.
     public func dayLabel(of date: Date) -> String {
-        RepeatSummaryWriter(locale: locale, calendar: calendar, now: clock.now).dayLabel(of: date)
+        summaryWriter.dayLabel(of: date)
+    }
+
+    /// A short date such as "Sat, Oct 17", in the engine's locale and time zone: Now's subhead.
+    public func shortDate(of date: Date) -> String {
+        summaryWriter.shortDate(of: date)
     }
 
     /// The time of day, such as "9:00 AM", in the engine's locale and time zone.
     public func timeOfDay(of date: Date) -> String {
-        RepeatSummaryWriter(locale: locale, calendar: calendar, now: clock.now).time(of: date)
+        summaryWriter.time(of: date)
+    }
+
+    private var summaryWriter: RepeatSummaryWriter {
+        RepeatSummaryWriter(locale: locale, calendar: calendar, now: clock.now)
     }
 }
 
@@ -107,7 +116,7 @@ struct RepeatSummaryWriter {
     }
 
     /// "Sat 10 Oct" in en_GB, "Sat, Oct 10" in en_US.
-    private func shortDate(of date: Date) -> String {
+    func shortDate(of date: Date) -> String {
         date.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone).weekday(.abbreviated).day().month(.abbreviated))
     }
 

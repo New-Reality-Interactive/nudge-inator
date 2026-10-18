@@ -7,15 +7,19 @@ struct NowScreen {
     var nudging: [NudgeCard]
     var comingUp: [ComingUpRow]
     var lastDay: [ClosedRow]
+    /// The engine's short date, so the subhead's day is in its time zone, as every other time is.
+    private let shortDate: (Date) -> String
 
     /// Nothing to show: the app hosting tests, and previews without an engine.
     init() {
         nudging = []
         comingUp = []
         lastDay = []
+        shortDate = { $0.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)) }
     }
 
     init(engine: Engine) {
+        shortDate = { engine.shortDate(of: $0) }
         let reminders = Dictionary(engine.reminders.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let tagNames = Dictionary(engine.tags.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
         nudging = engine.nudgingOccurrences().compactMap { item in
@@ -48,13 +52,16 @@ struct NowScreen {
         }
     }
 
-    /// The Now tab's badge: how many reminders are nudging. Zero hides it.
-    var badgeCount: Int { nudging.count }
+    /// The Now tab's badge: how many reminders are nudging. Zero hides it. Static, so the tab bar
+    /// counts without building the whole screen.
+    static func badgeCount(of engine: Engine) -> Int {
+        engine.nudgingOccurrences().count
+    }
 
     /// Under the title: today's date and what's nudging. The count is bold, which the view turns
     /// red, as the mockup's `<strong>`.
     func subhead(on date: Date) -> LocalizedStringResource {
-        let day = date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        let day = shortDate(date)
         guard !nudging.isEmpty else {
             return LocalizedStringResource("\(day) · Nothing is nudging you", comment: "Now: under the title when nothing is nudging. The placeholder is today's short date, such as \"Sat, Oct 17\".")
         }
@@ -86,23 +93,29 @@ struct NudgeCard: Identifiable {
         return LocalizedStringResource("\(tags) · due \(dueTime)", comment: "Nudge card: under the title. 1: the reminder's tags, such as \"#home #errands\". 2: its due time, such as \"9:00 AM\".")
     }
 
+    /// After the last nudge, in place of the next one; its VoiceOver value says the same.
+    var lastNudgeLine: LocalizedStringResource {
+        LocalizedStringResource("That was the last nudge. It closes as Missed at \(missedAtTime).",
+                                comment: "Nudge card: after the occurrence's last nudge. The placeholder is when it gives up or the next occurrence takes over, such as \"11:17 AM\".")
+    }
+
     /// How a nudge arrives, the mockup's `viaLabel`: a weaker one says why. Time Sensitive and
     /// ordinary notifications both read "Notification", as in the mockup.
     static func via(_ delivery: NudgeDelivery) -> LocalizedStringResource {
         switch delivery {
         case .alarm:
             LocalizedStringResource("Alarm", comment: "Nudge card: the next nudge rings as an alarm.")
-        case .notification(fallback: nil):
+        case .notification(weakerBecause: nil):
             LocalizedStringResource("Notification", comment: "Nudge card: the next nudge comes as a notification.")
-        case .notification(fallback: .alarmsOff):
+        case .notification(weakerBecause: .alarmsOff):
             LocalizedStringResource("Notification: alarms are off", comment: "Nudge card: an Urgent nudge comes as a notification because alarms aren't allowed.")
-        case .notification(fallback: .alarmsAndTimeSensitiveOff):
+        case .notification(weakerBecause: .alarmsAndTimeSensitiveOff):
             LocalizedStringResource("Notification: alarms and Time Sensitive are off", comment: "Nudge card: an Urgent nudge comes as an ordinary notification because alarms aren't allowed and Time Sensitive notifications are off.")
-        case .notification(fallback: .timeSensitiveOff):
+        case .notification(weakerBecause: .timeSensitiveOff):
             LocalizedStringResource("Notification: Time Sensitive is off", comment: "Nudge card: a High nudge comes as an ordinary notification because Time Sensitive notifications are off.")
-        case .notification(fallback: .breakThroughFocusOff):
+        case .notification(weakerBecause: .breakThroughFocusOff):
             LocalizedStringResource("Notification: Break through Focus is off", comment: "Nudge card: a High or Urgent nudge comes as an ordinary notification because the reminder's Break through Focus switch is off.")
-        case .notification(fallback: .pastAlarmLimit):
+        case .notification(weakerBecause: .pastAlarmLimit):
             LocalizedStringResource("Notification: too many alarms scheduled", comment: "Nudge card: an Urgent nudge comes as a notification because the system's alarm limit is reached.")
         case .cannotArrive:
             LocalizedStringResource("Notifications off", comment: "Nudge card, in red: the next nudge can't arrive because notifications are off.")
@@ -154,19 +167,6 @@ struct ClosedRow: Identifiable {
             LocalizedStringResource("Missed: the next one took over", comment: "Now, Last 24 Hours: under the title of an occurrence that closed because the repeat's next occurrence fell due.")
         case .skipped(reason: .paused):
             LocalizedStringResource("Skipped: the reminder was paused", comment: "Now, Last 24 Hours: under the title of an occurrence that closed because its reminder was paused.")
-        }
-    }
-
-    /// The status label at the row's trailing edge.
-    static func status(closingAs state: OccurrenceState) -> LocalizedStringResource {
-        switch state {
-        // As in `detail(closingAs:nudgesSent:)`.
-        case .done, .nudging:
-            LocalizedStringResource("Done", comment: "Status label: an occurrence closed as Done.")
-        case .missed:
-            LocalizedStringResource("Missed", comment: "Status label: an occurrence closed without Done, by its give-up limit or a take-over.")
-        case .skipped:
-            LocalizedStringResource("Skipped", comment: "Status label: an occurrence closed because its reminder was paused.")
         }
     }
 }

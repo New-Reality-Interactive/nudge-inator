@@ -49,7 +49,7 @@ private struct NowRowLayout<Leading: View, Main: View, Trailing: View>: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// Wide enough for "12:30 PM", so the titles line up.
-    @ScaledMetric(relativeTo: .body) private var timeWidth: CGFloat = 72
+    @ScaledMetric(relativeTo: .body) private var timeWidth: CGFloat = Design.Size.timeColumn
 
     var body: some View {
         Group {
@@ -73,7 +73,7 @@ private struct NowRowLayout<Leading: View, Main: View, Trailing: View>: View {
     }
 
     private var mainStack: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: Design.Spacing.line) {
             main()
         }
     }

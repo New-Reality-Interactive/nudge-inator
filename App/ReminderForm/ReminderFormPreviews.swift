@@ -39,8 +39,4 @@ extension ReminderForm {
 private struct PreviewClock: EngineClock {
     var now: Date { .now }
 }
-
-struct PreviewScheduler: SchedulerAdapter {
-    func apply(_ plan: SchedulePlan) {}
-}
 #endif

@@ -13,8 +13,8 @@ struct StrengthBadge: View {
         }
         .font(.caption.weight(.semibold))
         .foregroundStyle(Color(uiColor: .label))
-        .padding(.vertical, 1)
-        .padding(.leading, 6)
+        .padding(.vertical, Design.Size.badgeVerticalPadding)
+        .padding(.leading, Design.Size.badgeLeadingPadding)
         .padding(.trailing, Design.Spacing.s2)
         .overlay(Capsule().strokeBorder(Color.neutral))
         // The name says it; the bars only show it.
@@ -98,13 +98,29 @@ struct UrgencyWord: View {
     }
 }
 
+extension OccurrenceState {
+    /// The status label's word.
+    var statusName: LocalizedStringResource {
+        switch self {
+        case .done:
+            LocalizedStringResource("Done", comment: "Status label: an occurrence closed as Done.")
+        case .nudging:
+            LocalizedStringResource("Nudging", comment: "Status label: an occurrence that has come due and isn't Done yet.")
+        case .missed:
+            LocalizedStringResource("Missed", comment: "Status label: an occurrence closed without Done, by its give-up limit or a take-over.")
+        case .skipped:
+            LocalizedStringResource("Skipped", comment: "Status label: an occurrence closed because its reminder was paused.")
+        }
+    }
+}
+
 /// DESIGN.md's Status label: Done green with `checkmark.circle.fill`, Missed red, Skipped in the
 /// secondary label color. The word always comes with the color.
 struct StatusLabel: View {
     let state: OccurrenceState
 
     var body: some View {
-        let text = Text(ClosedRow.status(closingAs: state))
+        let text = Text(state.statusName)
         Group {
             if case .done = state {
                 Label {

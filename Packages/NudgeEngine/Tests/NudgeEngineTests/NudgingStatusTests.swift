@@ -31,7 +31,7 @@ struct NudgingStatusTests {
             nudgeNumber: 3,
             fireTime: NewYork.local(2026, 10, 16, 9, 45),
             urgency: .high,
-            delivery: .notification(fallback: nil)
+            delivery: .notification(weakerBecause: nil)
         ))
     }
 
@@ -51,16 +51,16 @@ struct NudgingStatusTests {
         DeliveryCase(minute: 50, expected: .alarm),
         DeliveryCase(minute: 50, permissions: PermissionStates(timeSensitive: .off), expected: .alarm),
         DeliveryCase(minute: 50, permissions: PermissionStates(notifications: .denied), expected: .alarm),
-        DeliveryCase(minute: 50, permissions: PermissionStates(alarms: .denied), expected: .notification(fallback: .alarmsOff)),
-        DeliveryCase(minute: 50, permissions: PermissionStates(alarms: .denied, timeSensitive: .off), expected: .notification(fallback: .alarmsAndTimeSensitiveOff)),
+        DeliveryCase(minute: 50, permissions: PermissionStates(alarms: .denied), expected: .notification(weakerBecause: .alarmsOff)),
+        DeliveryCase(minute: 50, permissions: PermissionStates(alarms: .denied, timeSensitive: .off), expected: .notification(weakerBecause: .alarmsAndTimeSensitiveOff)),
         DeliveryCase(minute: 50, permissions: PermissionStates(notifications: .denied, alarms: .denied), expected: .cannotArrive),
-        DeliveryCase(minute: 50, breakThroughFocus: false, expected: .notification(fallback: .breakThroughFocusOff)),
-        DeliveryCase(minute: 40, expected: .notification(fallback: nil)),
-        DeliveryCase(minute: 40, permissions: PermissionStates(timeSensitive: .off), expected: .notification(fallback: .timeSensitiveOff)),
-        DeliveryCase(minute: 40, breakThroughFocus: false, permissions: PermissionStates(timeSensitive: .off), expected: .notification(fallback: .breakThroughFocusOff)),
+        DeliveryCase(minute: 50, breakThroughFocus: false, expected: .notification(weakerBecause: .breakThroughFocusOff)),
+        DeliveryCase(minute: 40, expected: .notification(weakerBecause: nil)),
+        DeliveryCase(minute: 40, permissions: PermissionStates(timeSensitive: .off), expected: .notification(weakerBecause: .timeSensitiveOff)),
+        DeliveryCase(minute: 40, breakThroughFocus: false, permissions: PermissionStates(timeSensitive: .off), expected: .notification(weakerBecause: .breakThroughFocusOff)),
         DeliveryCase(minute: 40, permissions: PermissionStates(notifications: .denied), expected: .cannotArrive),
-        DeliveryCase(minute: 10, breakThroughFocus: false, expected: .notification(fallback: nil)),
-        DeliveryCase(minute: 10, permissions: PermissionStates(timeSensitive: .off), expected: .notification(fallback: nil)),
+        DeliveryCase(minute: 10, breakThroughFocus: false, expected: .notification(weakerBecause: nil)),
+        DeliveryCase(minute: 10, permissions: PermissionStates(timeSensitive: .off), expected: .notification(weakerBecause: nil)),
         DeliveryCase(minute: 10, permissions: PermissionStates(notifications: .denied), expected: .cannotArrive),
     ])
     func theNextNudgeSaysHowItArrives(_ check: DeliveryCase) throws {
@@ -83,7 +83,7 @@ struct NudgingStatusTests {
         let nextNudge = try #require(engine.nudgingStatus(of: bins.id)?.nextNudge)
 
         #expect(nextNudge.nudgeNumber == 5)
-        #expect(nextNudge.delivery == .notification(fallback: .pastAlarmLimit))
+        #expect(nextNudge.delivery == .notification(weakerBecause: .pastAlarmLimit))
     }
 
     /// Firm's nudge 20 fires at 11:12:30, five minutes after nudge 19, and it gives up a wait

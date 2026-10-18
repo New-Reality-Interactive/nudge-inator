@@ -51,7 +51,7 @@ public struct Engine {
     let calendar: Calendar
     /// Formats the times and dates in a repeat's summary.
     let locale: Locale
-    private(set) var permissions: PermissionStates
+    private var permissions: PermissionStates
     /// Earlier permission states, oldest first, with when the app reported a change. A nudge that
     /// fired before the change was delivered under the old states, so its plan item keeps that
     /// delivery. App-wide, so not in a reminder's `History`.
@@ -390,7 +390,7 @@ public struct Engine {
     /// The permission states a nudge firing at `fireTime` is delivered under: the ones in force
     /// when it fired, if a change came after, otherwise the current ones. A nudge firing exactly
     /// at a change counts as delivered, as with titles.
-    private func permissions(firingAt fireTime: Date) -> PermissionStates {
+    func permissions(firingAt fireTime: Date) -> PermissionStates {
         replacedPermissions.value(firingAt: fireTime) ?? permissions
     }
 

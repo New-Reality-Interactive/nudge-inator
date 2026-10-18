@@ -14,7 +14,7 @@ struct NudgeCardView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var width: CGFloat = 0
     /// The mockup's 13rem side column.
-    @ScaledMetric private var sideWidth: CGFloat = 208
+    @ScaledMetric private var sideWidth: CGFloat = Design.Size.sideColumn
 
     var body: some View {
         HStack(spacing: 0) {
@@ -23,7 +23,7 @@ struct NudgeCardView: View {
                 .frame(width: Design.Size.stripeWidth)
                 .accessibilityHidden(true)
             content
-                .padding(.vertical, 14)
+                .padding(.vertical, Design.Spacing.cardVertical)
                 .padding(.horizontal, Design.Spacing.s4)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -41,7 +41,7 @@ struct NudgeCardView: View {
                 footer
             }
         } else if width >= Design.Spacing.wideCard {
-            HStack(spacing: 20) {
+            HStack(spacing: Design.Spacing.sideColumnGap) {
                 VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                     summary
                     details
@@ -66,7 +66,7 @@ struct NudgeCardView: View {
     /// The top row and the title, which VoiceOver reads as one element whose value is everything
     /// the details show, so the details themselves are hidden from it.
     private var summary: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: Design.Spacing.s2) {
             TopRow(card: card)
             Text(verbatim: card.title)
                 .font(.headline)
@@ -78,13 +78,13 @@ struct NudgeCardView: View {
     }
 
     private var details: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: Design.Spacing.line) {
             Text(card.detail)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
             nextLine
                 .foregroundStyle(Color(uiColor: .label))
             NudgeMeter(nudgesSent: card.status.nudgesSent, nudgeLimit: card.status.nudgeLimit, urgency: card.status.urgency)
-                .padding(.top, 10)
+                .padding(.top, Design.Spacing.s3)
         }
         .font(.subheadline)
         .accessibilityHidden(true)
@@ -96,8 +96,7 @@ struct NudgeCardView: View {
             Text("Next nudge \(time) (\(relative)): \(ViaLabel(delivery: next.delivery).text) · \(next.urgency.name)",
                  comment: "Nudge card: the next nudge. 1: its time, such as \"9:45 AM\". 2: how soon, such as \"in 5 min\". 3: how it arrives, such as \"Alarm\". 4: its urgency, such as \"High\".")
         } else {
-            Text("That was the last nudge. It closes as Missed at \(card.missedAtTime).",
-                 comment: "Nudge card: after the occurrence's last nudge. The placeholder is when it gives up or the next occurrence takes over, such as \"11:17 AM\".")
+            Text(card.lastNudgeLine)
         }
     }
 
@@ -133,8 +132,9 @@ struct NudgeCardView: View {
             return Text("Nudge \(status.nudgesSent) of \(status.nudgeLimit), urgency \(status.urgency.name). \(detail). Next nudge \(time): \(via), \(next.urgency.name).",
                         comment: "VoiceOver value of a nudge card. 1: the nudges sent. 2: the most it sends. 3: the urgency now, such as \"High\". 4: the tags and due time, such as \"#home · due 9:00 AM\". 5: the next nudge's time. 6: how it arrives, such as \"Alarm\". 7: its urgency.")
         }
-        return Text("Nudge \(status.nudgesSent) of \(status.nudgeLimit), urgency \(status.urgency.name). \(detail). That was the last nudge. It closes as Missed at \(card.missedAtTime).",
-                    comment: "VoiceOver value of a nudge card after its last nudge. 1: the nudges sent. 2: the most it sends. 3: the urgency now, such as \"High\". 4: the tags and due time, such as \"#home · due 9:00 AM\". 5: when it closes as Missed.")
+        let lastNudge = String(localized: card.lastNudgeLine)
+        return Text("Nudge \(status.nudgesSent) of \(status.nudgeLimit), urgency \(status.urgency.name). \(detail). \(lastNudge)",
+                    comment: "VoiceOver value of a nudge card after its last nudge. 1: the nudges sent. 2: the most it sends. 3: the urgency now, such as \"High\". 4: the tags and due time, such as \"#home · due 9:00 AM\". 5: the card's line saying that was the last nudge and when it closes as Missed.")
     }
 
     /// "in 5 min", from the time the card is drawn, as the mockup's `rel`.
@@ -172,15 +172,16 @@ struct ViaLabel {
     let delivery: NudgeDelivery
 
     var text: Text {
-        let words = Text(NudgeCard.via(delivery))
+        let text = Text("\(Image(systemName: systemImage)) \(Text(NudgeCard.via(delivery)))",
+                        comment: "Via label: a glyph, then how a nudge arrives. Keep the glyph first.")
+        return delivery == .cannotArrive ? text.foregroundStyle(Color.negative) : text
+    }
+
+    private var systemImage: String {
         switch delivery {
-        case .alarm:
-            return Text("\(Image(systemName: "alarm")) \(words)", comment: "Via label: a glyph, then how a nudge arrives. Keep the glyph first.")
-        case .notification:
-            return Text("\(Image(systemName: "bell")) \(words)", comment: "Via label: a glyph, then how a nudge arrives. Keep the glyph first.")
-        case .cannotArrive:
-            return Text("\(Image(systemName: "bell.slash")) \(words)", comment: "Via label: a glyph, then how a nudge arrives. Keep the glyph first.")
-                .foregroundStyle(Color.negative)
+        case .alarm: "alarm"
+        case .notification: "bell"
+        case .cannotArrive: "bell.slash"
         }
     }
 }

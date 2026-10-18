@@ -20,6 +20,13 @@ enum Design {
         static let readableWidth: CGFloat = 672
         /// A nudge card at least this wide puts its actions in a side column.
         static let wideCard: CGFloat = 540
+        /// Between lines of one block of text, such as a row's title and its detail (the mockup's
+        /// 2 px margins).
+        static let line: CGFloat = 2
+        /// A nudge card's padding above and below its content (the mockup's `.nudgecard`).
+        static let cardVertical: CGFloat = 14
+        /// Between a wide nudge card's text and its side column (the mockup's `.nc` gap).
+        static let sideColumnGap: CGFloat = 20
     }
 
     enum Radius {
@@ -45,5 +52,12 @@ enum Design {
         static let ringWidth: CGFloat = 2
         /// The permission banner's border.
         static let bannerBorder: CGFloat = 2
+        /// A wide nudge card's side column, at the default text size (the mockup's 13rem).
+        static let sideColumn: CGFloat = 208
+        /// A Now row's time column, at the default text size: wide enough for "12:30 PM".
+        static let timeColumn: CGFloat = 72
+        /// The strength badge's padding inside its outline (the mockup's `.cap`).
+        static let badgeVerticalPadding: CGFloat = 1
+        static let badgeLeadingPadding: CGFloat = 6
     }
 }

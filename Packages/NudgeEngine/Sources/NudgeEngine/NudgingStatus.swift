@@ -29,24 +29,25 @@ public enum NudgeDelivery: Equatable, Sendable {
     case alarm
     /// A notification, ordinary or Time Sensitive, with why it isn't the stronger kind its urgency
     /// asks for, if it isn't.
-    case notification(fallback: Fallback?)
+    case notification(weakerBecause: Reason?)
     /// Nothing can deliver it: notifications are off and it doesn't ring.
     case cannotArrive
-}
 
-/// Why a nudge arrives as a weaker notification than its urgency asks for, as the mockup's
-/// `viaLabel` says it: "Notification: alarms are off".
-public enum Fallback: Equatable, Sendable {
-    /// An Urgent nudge, with alarms not allowed.
-    case alarmsOff
-    /// An Urgent nudge, with alarms not allowed and Time Sensitive off, so it's ordinary.
-    case alarmsAndTimeSensitiveOff
-    /// A High nudge, ordinary because Time Sensitive is off.
-    case timeSensitiveOff
-    /// A High or Urgent nudge of a reminder whose Break through Focus is off.
-    case breakThroughFocusOff
-    /// An Urgent nudge past the alarm limit: "too many alarms scheduled".
-    case pastAlarmLimit
+    /// Why a nudge arrives as a weaker notification than its urgency asks for, as the mockup's
+    /// `viaLabel` says it: "Notification: alarms are off". A fallback (GLOSSARY.md), or the
+    /// reminder's own Break through Focus switch, which is the person's choice, not a fallback.
+    public enum Reason: Equatable, Sendable {
+        /// An Urgent nudge, with alarms not allowed.
+        case alarmsOff
+        /// An Urgent nudge, with alarms not allowed and Time Sensitive off, so it's ordinary.
+        case alarmsAndTimeSensitiveOff
+        /// A High nudge, ordinary because Time Sensitive is off.
+        case timeSensitiveOff
+        /// A High or Urgent nudge of a reminder whose Break through Focus is off.
+        case breakThroughFocusOff
+        /// An Urgent nudge past the alarm limit: "too many alarms scheduled".
+        case pastAlarmLimit
+    }
 }
 
 extension Engine {
@@ -80,18 +81,18 @@ extension Engine {
     private func nudgeDelivery(of reminder: Reminder, firingAt fireTime: Date, urgency: Urgency) -> NudgeDelivery {
         guard let delivery = delivery(of: reminder, firingAt: fireTime, urgency: urgency) else { return .cannotArrive }
         if delivery.kind == .alarm { return .alarm }
-        if delivery.isPastAlarmLimit { return .notification(fallback: .pastAlarmLimit) }
-        let timeSensitiveOff = permissions.timeSensitive == .off
+        if delivery.isPastAlarmLimit { return .notification(weakerBecause: .pastAlarmLimit) }
+        let timeSensitiveOff = permissions(firingAt: fireTime).timeSensitive == .off
         switch urgency {
         case .normal:
-            return .notification(fallback: nil)
+            return .notification(weakerBecause: nil)
         case _ where !reminder.breakThroughFocus:
-            return .notification(fallback: .breakThroughFocusOff)
+            return .notification(weakerBecause: .breakThroughFocusOff)
         case .high:
-            return .notification(fallback: timeSensitiveOff ? .timeSensitiveOff : nil)
+            return .notification(weakerBecause: timeSensitiveOff ? .timeSensitiveOff : nil)
         // Urgent that doesn't ring, with the switch on and within the alarm limit: alarms are off.
         case .urgent:
-            return .notification(fallback: timeSensitiveOff ? .alarmsAndTimeSensitiveOff : .alarmsOff)
+            return .notification(weakerBecause: timeSensitiveOff ? .alarmsAndTimeSensitiveOff : .alarmsOff)
         }
     }
 }

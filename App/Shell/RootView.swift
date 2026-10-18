@@ -45,7 +45,7 @@ struct RootView: View {
     /// engine reads its own clock; `minute` is taken so the badge is redrawn when it ticks.
     private func nowBadge(in state: ScreenState, at minute: Date) -> Int {
         guard state == .ready, let model else { return 0 }
-        return NowScreen(engine: model.engine).badgeCount
+        return NowScreen.badgeCount(of: model.engine)
     }
 
     /// Sets `minute` at the start of each minute until the view goes away.

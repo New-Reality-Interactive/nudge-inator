@@ -436,6 +436,17 @@
         }
       }
     },
+    "Nudge %lld of %lld, urgency %@. %@. %@" : {
+      "comment" : "VoiceOver value of a nudge card after its last nudge. 1: the nudges sent. 2: the most it sends. 3: the urgency now, such as \"High\". 4: the tags and due time, such as \"#home · due 9:00 AM\". 5: the card's line saying that was the last nudge and when it closes as Missed.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Nudge %1$lld of %2$lld, urgency %3$@. %4$@. %5$@"
+          }
+        }
+      }
+    },
     "Nudge %lld of %lld, urgency %@. %@. Next nudge %@: %@, %@." : {
       "comment" : "VoiceOver value of a nudge card. 1: the nudges sent. 2: the most it sends. 3: the urgency now, such as \"High\". 4: the tags and due time, such as \"#home · due 9:00 AM\". 5: the next nudge's time. 6: how it arrives, such as \"Alarm\". 7: its urgency.",
       "localizations" : {
@@ -447,19 +458,8 @@
         }
       }
     },
-    "Nudge %lld of %lld, urgency %@. %@. That was the last nudge. It closes as Missed at %@." : {
-      "comment" : "VoiceOver value of a nudge card after its last nudge. 1: the nudges sent. 2: the most it sends. 3: the urgency now, such as \"High\". 4: the tags and due time, such as \"#home · due 9:00 AM\". 5: when it closes as Missed.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Nudge %1$lld of %2$lld, urgency %3$@. %4$@. That was the last nudge. It closes as Missed at %5$@."
-          }
-        }
-      }
-    },
     "Nudging" : {
-      "comment" : "Now: section header for the reminders nudging you now."
+      "comment" : "Now: section header for the reminders nudging you now.\nStatus label: an occurrence that has come due and isn't Done yet."
     },
     "Nudging now. Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge." : {
       "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging: the note at the top of the form, without its bold."
