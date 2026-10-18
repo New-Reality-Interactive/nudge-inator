@@ -35,6 +35,8 @@ struct NotificationAdapterTests {
         SchedulePlan.Item(
             reminderID: reminderID,
             nudgeNumber: nudgeNumber,
+            // Every shipped ladder sends 20 before it gives up.
+            nudgesInAll: 20,
             fireTime: fireTime,
             urgency: urgency,
             title: title,

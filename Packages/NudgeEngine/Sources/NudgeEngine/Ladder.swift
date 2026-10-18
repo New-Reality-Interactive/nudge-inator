@@ -6,6 +6,13 @@ public struct GiveUpLimit: Equatable, Sendable {
     public var nudgeCount: Int
     public var span: TimeInterval
 
+    /// Public only so the app's tests can widen it: with `shipped`, a daily repeat gives up long
+    /// before its next occurrence falls due, so only a wider limit reaches a take-over.
+    public init(nudgeCount: Int, span: TimeInterval) {
+        self.nudgeCount = nudgeCount
+        self.span = span
+    }
+
     /// With today's ladders every strength reaches nudge 20 well inside 24 hours (Gentle, the
     /// slowest, gives up at +8 h 4 min 4 s). The span is enforced anyway, so a retuned ladder
     /// can't nudge past a day.

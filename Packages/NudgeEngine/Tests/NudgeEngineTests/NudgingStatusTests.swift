@@ -99,6 +99,21 @@ struct NudgingStatusTests {
         #expect(status.missedAt == Date(timeInterval: 30, since: NewYork.local(2026, 10, 16, 11, 17)))
     }
 
+    /// A notification counts out of the nudges its occurrence really sends, as the card does: with
+    /// a 1-hour span Firm sends 5, so its bodies read "of 5", not "of 20".
+    @Test func aNotificationCountsOutOfTheNudgesItsOccurrenceReallySends() throws {
+        let hour = GiveUpLimit(nudgeCount: 20, span: 60 * 60)
+        var engine = Engine(clock: clock, scheduler: scheduler, giveUpLimit: hour, timeZone: NewYork.timeZone)
+        engine.update(reminders: [bins])
+
+        let bodies = try #require(scheduler.lastPlan).items.map(\.body)
+
+        #expect(bodies == [
+            "Nudge 1 of 5 · Normal", "Nudge 2 of 5 · Normal", "Nudge 3 of 5 · High",
+            "Nudge 4 of 5 · Urgent", "Nudge 5 of 5 · Urgent",
+        ])
+    }
+
     /// In en_US and New York at 8:00 on Friday 16 October: the Now rows' time column, in the
     /// engine's locale and time zone, as the repeat summary writes them.
     @Test(arguments: [

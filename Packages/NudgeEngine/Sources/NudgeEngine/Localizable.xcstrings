@@ -282,7 +282,7 @@
       "comment" : "Urgency: a nudge on the first rung of its ladder, as in \"Nudge 1 of 20 · Normal\"."
     },
     "Nudge %lld of %lld · %@" : {
-      "comment" : "Notification body: never the notes or tags. 1: which nudge this is. 2: the most nudges an occurrence gets. 3: the urgency, such as High.",
+      "comment" : "Notification body: never the notes or tags. 1: which nudge this is. 2: how many nudges its occurrence sends in all. 3: the urgency, such as High.",
       "localizations" : {
         "en" : {
           "stringUnit" : {

@@ -47,8 +47,8 @@ The decisions:
 
    The engine also exposes the repeat summary's own `dayLabel(of:)`, `timeOfDay(of:)` and `shortDate(of:)`, so Now's times and dates are in the engine's locale and time zone.
 2. **Test seams:**
-   - `NudgingStatusTests` (engine, macOS): 7 tests, 14 delivery cases.
-   - `NowScreenTests` (app, through the real `AppModel`, in-memory store, real adapters over the fakes): 11 tests on `NowScreen(engine:)`, the plain value `NowTab` draws. Previews build it from an engine with no model.
+   - `NudgingStatusTests` (engine, macOS): 8 tests, 14 delivery cases.
+   - `NowScreenTests` (app, through the real `AppModel`, in-memory store, real adapters over the fakes): 12 tests on `NowScreen(engine:)`, the plain value `NowTab` draws. Previews build it from an engine with no model.
    - Layout, the wide card, AX5, the swipe, VoiceOver and the cold launch are screenshot and device checks.
 3. **Refresh:**
    - Now's list sits in a `TimelineView(.everyMinute)`, and the read-outs use the engine's clock, so a nudge, a due time or a give-up shows within a minute.
@@ -66,9 +66,14 @@ The decisions:
 7. **DESIGN.md over the mockup for the card's top row:** the strength badge, then the urgency word with its glyph (none for Normal), then "Nudge 3 of 20". The details line keeps the tags and due time and drops the mockup's "Urgency High".
 8. **VoiceOver:** the top row and title are one element. Its label is the title, and its value is the strength, count, urgency, details and next nudge. Done is a separate button, "Done, stop nudging: ‹title›".
 
-**How criterion 3 is met.** With the shipped give-up limit (20 nudges, Gentle's ending at +8 h) and daily as the fastest repeat, every occurrence gives up before the next falls due. So no fixture can reach a take-over through the model. "Missed: the next one took over" is tested on the row's text for each closing state (`aClosedRowSaysHowItClosed`). The give-up and Skipped wording are also tested through the model, and the engine's take-over closing is ticket 16's.
+**How criterion 3 is met** (the user's ruling, 2026-10-17: it must be tested through the real app model). With the shipped give-up limit (20 nudges, Gentle's ending at +8 h) and daily as the fastest repeat, every occurrence gives up before the next falls due, so the shipped app never reaches a take-over. So the give-up limit became a seam that only tests set:
+- `GiveUpLimit` has a public `init`;
+- `Engine`'s public init takes `giveUpLimit` (default `.shipped`), and the alarm limit stays internal;
+- `AppModel` takes `giveUpLimit` (default `.shipped`) and builds its engines with it. The app's own wiring passes nothing.
 
-**Tests.** `scripts/test.sh` passes: 230 engine tests, and 160 app tests on each of the iOS 26.1 and 26.5 simulators.
+`aTakenOverOccurrenceAppearsUnderTheLast24HoursAsTheNextOneTookOver` runs a daily midnight Firm reminder through the real model with the limit widened. Thursday's occurrence lists under Last 24 Hours as "Missed: the next one took over", closed at 12:00 AM Today, and Friday's card counts out of 281. Mutation-checked: an `AppModel` that ignores the limit fails it ("gave up after the limit" at 2:17 AM). `aClosedRowSaysHowItClosed` still checks each closing's wording.
+
+**Tests.** `scripts/test.sh` passes: 231 engine tests, and 161 app tests on each of the iOS 26.1 and 26.5 simulators.
 - **Red first:**
   - the card's status, each delivery, the last nudge and the take-over cut-off;
   - the day and time labels;
@@ -119,7 +124,7 @@ Also checked in the screenshots:
 - **Kept, as judgement calls:**
   - the items carry strings the engine formatted, so every time is in its zone and testable;
   - `nowBadge(in:at:)` takes the minute it's redrawn by.
-- **Changed after the review, at the user's direction (2026-10-17):** the review noted that the card counted out of 20 even when the 24-hour span or a take-over would close the occurrence sooner. I had kept that because the mockup's `cap.maxAttempts` does it. The user's ruling: the mockup shows how the app looks, and its data isn't fact; the real app shows the actual data. `nudgeLimit` is now `nudgesInAll`, the nudges this occurrence really sends before it closes as Missed. "Nudge 3 of N" and the meter count out of it. With today's ladders every strength reaches 20 well inside 24 hours, so cards still read "of 20". Tested by `aSpanThatEndsFirstCutsTheNudgesInAll` (a 1-hour span: "2 of 5") and the take-over test (281 of 281), both red first.
+- **Changed after the review, at the user's direction (2026-10-17):** the review noted that the card counted out of 20 even when the 24-hour span or a take-over would close the occurrence sooner. I had kept that because the mockup's `cap.maxAttempts` does it. The user's ruling: the mockup shows how the app looks, and its data isn't fact; the real app shows the actual data. `nudgeLimit` is now `nudgesInAll`, the nudges this occurrence really sends before it closes as Missed. "Nudge 3 of N" and the meter count out of it. With today's ladders every strength reaches 20 well inside 24 hours, so cards still read "of 20". Tested by `aSpanThatEndsFirstCutsTheNudgesInAll` (a 1-hour span: "2 of 5") and the take-over test (281 of 281), both red first. The notification body follows the same rule: `SchedulePlan.Item` carries `nudgesInAll`, and the body reads "Nudge 3 of N · High" from it, not from `GiveUpLimit.shipped` (`aNotificationCountsOutOfTheNudgesItsOccurrenceReallySends`, red first). The plan's ladder and the card count from one `nudgeTimes(of:dueAt:takenOverAt:)`, so they agree.
 
 **Device run (2026-10-17), Brian's iPhone: iPhone 15, iOS 27.0.1, wired, Xcode 26.6.**
 - **Before:** Nudge-inator was not installed. **After:** it was uninstalled, and `xcrun devicectl device info apps` lists no Nudge-inator. Every reminder made by hand was Gentle, so no alarm was scheduled.

@@ -39,22 +39,26 @@ final class AppModel {
     private let alarms: AlarmAdapter
     private let scheduler: CombinedSchedulerAdapter
     private let timeZone: TimeZone
+    private let giveUpLimit: GiveUpLimit
 
+    /// `giveUpLimit` is the shipped one; only tests pass another, to reach a take-over.
     init(
         clock: any EngineClock,
         openStore: @escaping () throws -> ReminderStore,
         notifications: NotificationAdapter,
         alarms: AlarmAdapter,
-        timeZone: TimeZone = .autoupdatingCurrent
+        timeZone: TimeZone = .autoupdatingCurrent,
+        giveUpLimit: GiveUpLimit = .shipped
     ) {
         self.clock = clock
         self.openStore = openStore
         self.notifications = notifications
         self.alarms = alarms
         self.timeZone = timeZone
+        self.giveUpLimit = giveUpLimit
         scheduler = CombinedSchedulerAdapter(adapters: [notifications, alarms])
         // Never handed an event before `launch()` replaces it, so it never applies a plan.
-        engine = Engine(clock: clock, scheduler: scheduler, timeZone: timeZone)
+        engine = Engine(clock: clock, scheduler: scheduler, giveUpLimit: giveUpLimit, timeZone: timeZone)
         // Here rather than after launch, so no report is missed: each one waits for launch.
         notifications.events = self
         alarms.events = self
@@ -87,7 +91,7 @@ final class AppModel {
         }
         let permissions = await currentPermissions()
         self.permissions = permissions
-        var engine = Engine(clock: clock, scheduler: scheduler, timeZone: timeZone, permissions: permissions)
+        var engine = Engine(clock: clock, scheduler: scheduler, giveUpLimit: giveUpLimit, timeZone: timeZone, permissions: permissions)
         engine.update(tags: stored.tags)
         engine.update(histories: stored.histories)
         engine.update(reminders: stored.reminders)

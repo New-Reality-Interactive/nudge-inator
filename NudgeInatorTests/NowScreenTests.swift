@@ -23,14 +23,15 @@ struct NowScreenTests {
     /// Today at 7:00, once, Gentle: Done at 7:30, after its first nudge.
     let walk = Reminder(title: "Walk the dog", dueTime: NewYork.local(2026, 10, 16, 7), strength: .gentle)
 
-    func launchedModel() async throws -> AppModel {
+    func launchedModel(giveUpLimit: GiveUpLimit = .shipped) async throws -> AppModel {
         let store = try ReminderStore(location: .inMemory)
         let model = AppModel(
             clock: clock,
             openStore: { store },
             notifications: NotificationAdapter(center: center, clock: clock),
             alarms: AlarmAdapter(manager: manager, clock: clock),
-            timeZone: NewYork.timeZone
+            timeZone: NewYork.timeZone,
+            giveUpLimit: giveUpLimit
         )
         await model.launch()
         return model
@@ -202,6 +203,26 @@ struct NowScreenTests {
     ])
     func theViaLabelSaysHowTheNextNudgeArrives(delivery: NudgeDelivery, text: String) {
         #expect(String(localized: NudgeCard.via(delivery)) == text)
+    }
+
+    /// A take-over through the model. With the shipped limit a daily repeat gives up long before
+    /// the next falls due, so the limit is widened, as only tests can. The pills fall due every day
+    /// at midnight: Thursday's was still nudging when Friday's fell due, so it closed then as
+    /// Missed, the next one took over. Friday's nudges until Saturday's midnight takes it over:
+    /// Firm's +0, +30, +45 and +52.5 min, then every 5 minutes to 23:57:30, 281 in all.
+    @Test func aTakenOverOccurrenceAppearsUnderTheLast24HoursAsTheNextOneTookOver() async throws {
+        let model = try await launchedModel(giveUpLimit: GiveUpLimit(nudgeCount: 10_000, span: 72 * 60 * 60))
+        let pills = Reminder(title: "Take the pills", dueTime: NewYork.local(2026, 10, 15, 0), repeatRule: .everyDay, strength: .firm)
+        model.add(pills)
+        await model.waitUntilApplied()
+
+        let screen = NowScreen(engine: model.engine)
+
+        #expect(screen.lastDay.map { "\($0.title): \(String(localized: $0.detail))" } == ["Take the pills: Missed: the next one took over"])
+        let closed = try #require(screen.lastDay.first)
+        #expect([closed.day, closed.time] == ["Today", "12:00\u{202F}AM"])
+        #expect(String(localized: closed.closed.occurrence.state.statusName) == "Missed")
+        #expect(screen.nudging.map(\.status.nudgesInAll) == [281])
     }
 
     /// Yesterday's meds gave up at 16:04:04; the bins, paused at 9:40, closed as Skipped then.

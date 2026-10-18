@@ -59,12 +59,14 @@ extension Engine {
               case let .nudging(nudgesSent) = occurrence.state
         else { return nil }
         let strength = reminder.strength
-        let nudgeTimes = strength.nudgeTimes(from: occurrence.dueTime, within: giveUpLimit)
-        let giveUpTime = strength.giveUpTime(from: occurrence.dueTime, after: nudgeTimes, within: giveUpLimit)
-        // Open, so the next due time is after now and hasn't taken it over yet.
-        let missedAt = min(giveUpTime, reminder.nextDueTime(after: clock.now, calendar: calendar) ?? giveUpTime)
-        // A nudge at the take-over time is the next occurrence's, as in the plan.
-        let nextNudge = nudgeTimes.indices.dropFirst(nudgesSent).first.flatMap { nudgeTimes[$0] < missedAt ? $0 : nil }.map { index in
+        let ladder = strength.nudgeTimes(from: occurrence.dueTime, within: giveUpLimit)
+        let giveUpTime = strength.giveUpTime(from: occurrence.dueTime, after: ladder, within: giveUpLimit)
+        // Open, so its next due time is after now and hasn't taken it over yet.
+        let takeOverTime = reminder.nextDueTime(after: clock.now, calendar: calendar)
+        let missedAt = min(giveUpTime, takeOverTime ?? giveUpTime)
+        // Cut at the take-over, as the plan's ladder is.
+        let nudgeTimes = nudgeTimes(of: reminder, dueAt: occurrence.dueTime, takenOverAt: takeOverTime)
+        let nextNudge = nudgeTimes.indices.dropFirst(nudgesSent).first.map { index in
             let urgency = strength.urgency(ofNudge: index + 1)
             let delivery = nudgeDelivery(of: reminder, firingAt: nudgeTimes[index], urgency: urgency)
             return NextNudge(nudgeNumber: index + 1, fireTime: nudgeTimes[index], urgency: urgency, delivery: delivery)
@@ -72,8 +74,7 @@ extension Engine {
         return NudgingStatus(
             dueTime: occurrence.dueTime,
             nudgesSent: nudgesSent,
-            // `nudgeTimes` already stops at the span; a take-over stops it sooner.
-            nudgesInAll: nudgeTimes.count { $0 < missedAt },
+            nudgesInAll: nudgeTimes.count,
             urgency: strength.urgency(ofNudge: nudgesSent),
             nextNudge: nextNudge,
             missedAt: missedAt

@@ -81,10 +81,12 @@ public struct Engine {
     }
 
     /// `timeZone` is where repeats keep their local time of day. `locale` formats the times and
-    /// dates in a repeat's summary, including the 12- or 24-hour clock.
+    /// dates in a repeat's summary, including the 12- or 24-hour clock. `giveUpLimit` is fixed at
+    /// `shipped`; only tests pass another.
     public init(
         clock: any EngineClock,
         scheduler: any SchedulerAdapter,
+        giveUpLimit: GiveUpLimit = .shipped,
         timeZone: TimeZone = .autoupdatingCurrent,
         locale: Locale = .autoupdatingCurrent,
         permissions: PermissionStates = PermissionStates()
@@ -92,22 +94,21 @@ public struct Engine {
         self.init(
             clock: clock,
             scheduler: scheduler,
-            giveUpLimit: .shipped,
+            giveUpLimit: giveUpLimit,
+            alarmLimit: .shipped,
             timeZone: timeZone,
             locale: locale,
             permissions: permissions
         )
     }
 
-    /// Lets tests change the give-up limit and the alarm limit. A shorter span is the only way to
-    /// see it win over the nudge count with today's ladders, and a wider limit the only way to keep
-    /// an every-day reminder Nudging until the next one takes over. A small alarm limit is the only
-    /// way to reach it without thousands of reminders. Internal because both limits are fixed.
+    /// Lets tests change the alarm limit too. A small one is the only way to reach it without
+    /// thousands of reminders. Internal because it is fixed and only the engine's tests need it.
     init(
         clock: any EngineClock,
         scheduler: any SchedulerAdapter,
         giveUpLimit: GiveUpLimit,
-        alarmLimit: AlarmLimit = .shipped,
+        alarmLimit: AlarmLimit,
         timeZone: TimeZone = .autoupdatingCurrent,
         locale: Locale = .autoupdatingCurrent,
         permissions: PermissionStates = PermissionStates()
@@ -354,13 +355,14 @@ public struct Engine {
     /// `simulate` with `until`), so the plan never nudges about two occurrences at once.
     /// `takeOverTime` is the next due time, `nil` if the repeat has none.
     private func ladder(of reminder: Reminder, dueAt dueTime: Date, takenOverAt takeOverTime: Date?) -> [SchedulePlan.Item] {
-        let nudgeTimes = reminder.strength.nudgeTimes(from: dueTime, within: giveUpLimit)
-        return nudgeTimes.prefix { $0 < takeOverTime ?? .distantFuture }.enumerated().compactMap { index, fireTime in
+        let nudgeTimes = nudgeTimes(of: reminder, dueAt: dueTime, takenOverAt: takeOverTime)
+        return nudgeTimes.enumerated().compactMap { index, fireTime in
             let urgency = reminder.strength.urgency(ofNudge: index + 1)
             guard let delivery = delivery(of: reminder, firingAt: fireTime, urgency: urgency) else { return nil }
             return SchedulePlan.Item(
                 reminderID: reminder.id,
                 nudgeNumber: index + 1,
+                nudgesInAll: nudgeTimes.count,
                 fireTime: fireTime,
                 urgency: urgency,
                 title: title(of: reminder, firingAt: fireTime),
@@ -379,6 +381,13 @@ public struct Engine {
             permissions: permissions(firingAt: fireTime),
             alarmLimitReached: historyByReminder[reminder.id]?.isPastAlarmLimit(firingAt: fireTime) ?? false
         )
+    }
+
+    /// When each nudge of the reminder's occurrence due at `dueTime` fires: its ladder within the
+    /// give-up limit, stopped where the next occurrence takes over at `takeOverTime`. The plan and
+    /// the nudge card both count from it, so they agree on the nudges it sends in all.
+    func nudgeTimes(of reminder: Reminder, dueAt dueTime: Date, takenOverAt takeOverTime: Date?) -> [Date] {
+        reminder.strength.nudgeTimes(from: dueTime, within: giveUpLimit).prefix { $0 < takeOverTime ?? .distantFuture }.map(\.self)
     }
 
     /// The title a nudge firing at `fireTime` carries: the one it was delivered with if it fired
