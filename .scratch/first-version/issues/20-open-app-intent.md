@@ -62,7 +62,7 @@ Blocked by: 02, 19, 27
 - `AlarmAdapterTests`: the intent gets that alarm's ID.
 - `OpenReminderIntentTests`: `perform()` hands both IDs to the opener; IDs that aren't UUIDs call nothing and don't crash; the intent is a `LiveActivityIntent`, `.foreground`, and not discoverable.
 
-196 app tests passed on the iPhone 15 (iOS 27.0.1), before the reviews added four more. The four use only fakes.
+All 200 app tests passed on the iPhone 15 (iOS 27.0.1), re-run on 2026-10-18 after both reviews. This includes the four the reviews added and the device checks that need no person (`AlarmDeviceCheck`, `PendingLimitDeviceCheck`, `StoreProtectionDeviceCheck`). The app wasn't installed, so the run set `TEST_RUNNER_NUDGE_FRESH_INSTALL=1`; Brian allowed the alarm and notification prompts, and the app was uninstalled afterwards. An earlier run, before the reviews, passed all 196.
 
 **Device checks** (iPhone 15, iOS 27.0.1, Debug build). The app wasn't installed at the start and was uninstalled afterwards. One Relentless reminder, due 11:02, rang its first alarm at 11:19:30 and then every 2 minutes; Done closed it after the checks.
 1. (a) Unlocked, app in the background: Open on the banner brought the app forward on the reminder's details with the Nudging Now card and Done; the ring stopped by itself; the banner went away. Pass.
