@@ -33,10 +33,10 @@ enum AlarmAdapterError: Error, Equatable {
 final class AlarmAdapter: @MainActor SchedulerAdapter {
     private let manager: any AlarmManaging
     private let clock: any EngineClock
-    /// The intent the alert's Open button runs for a nudge: ticket 20's. Without one there is no
-    /// Open button, only the system Stop: a button with no intent would do nothing, and ticket 02
-    /// showed that Open without `stop(id:)` can leave a locked phone ringing.
-    private let openIntent: (SchedulePlan.Item) -> (any LiveActivityIntent)?
+    /// The intent the alert's Open button runs for a nudge and its alarm's ID: ticket 20's. Without
+    /// one there is no Open button, only the system Stop: a button with no intent would do nothing,
+    /// and ticket 02 showed that Open without `stop(id:)` can leave a locked phone ringing.
+    private let openIntent: (SchedulePlan.Item, Alarm.ID) -> (any LiveActivityIntent)?
     /// The latest apply. The manager's `schedule` is async but `apply(_:)` isn't, so each apply
     /// runs in a task that waits for the one before, and plans reach the manager in the order given.
     private var applying: Task<Void, Never>?
@@ -60,7 +60,7 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
     init(
         manager: any AlarmManaging,
         clock: any EngineClock,
-        openIntent: @escaping (SchedulePlan.Item) -> (any LiveActivityIntent)? = { _ in nil },
+        openIntent: @escaping (SchedulePlan.Item, Alarm.ID) -> (any LiveActivityIntent)? = { _, _ in nil },
         authorizationReadLimit: Duration = .seconds(2)
     ) {
         self.manager = manager
@@ -139,7 +139,7 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
         var firstError: (any Error)?
         for (item, id) in alarms {
             guard planNumber == latestPlanNumber else { break }
-            let intent = openIntent(item)
+            let intent = openIntent(item, id)
             do {
                 try await manager.schedule(
                     id: id,
@@ -155,6 +155,12 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
             }
         }
         return firstError
+    }
+
+    /// Silences a ringing alarm. The Open button doesn't (ticket 02 B), so the Open intent calls
+    /// this. A nudge is a one-shot, which AlarmKit then deletes.
+    func stop(_ alarmID: Alarm.ID) throws {
+        try manager.stop(id: alarmID)
     }
 
     /// `states` with the alarms field read from AlarmKit. Notifications and Time Sensitive are the

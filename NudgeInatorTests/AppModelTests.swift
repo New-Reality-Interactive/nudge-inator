@@ -461,16 +461,20 @@ struct AppModelTests {
         withExtendedLifetime(model) {}
     }
 
-    /// Ticket 20's Open intent calls `showReminder`; Done on the details screen is then the same
-    /// `markDone` as everywhere else in the app.
-    @Test func openShowsTheRemindersDetailsWhereDoneClosesItsOccurrence() async throws {
+    /// The alarm's Open: the ring stops (ticket 02 B), and the app shows the reminder's details,
+    /// where Done is then the same `markDone` as everywhere else in the app.
+    @Test func openStopsTheAlarmThatRangAndShowsTheRemindersDetailsWhereDoneClosesItsOccurrence() async throws {
         let store = try ReminderStore(location: .inMemory)
         let model = await launchedModel(store: store)
         model.add(call)
-        clock.now = NewYork.local(2026, 10, 15, 9, 20)
-        await model.appOpened()
+        await model.waitUntilApplied()
+        let ringing = try #require(manager.scheduled.first { $0.fireDate == NewYork.local(2026, 10, 15, 9, 17, 30) })
+        clock.now = NewYork.local(2026, 10, 15, 9, 18)
+        manager.ring(ringing.id)
 
-        model.showReminder(call.id)
+        await model.open(alarmID: ringing.id, reminderID: call.id)
+
+        #expect(manager.stoppedIDs == [ringing.id])
         #expect(model.route == .reminderDetails(call.id))
 
         model.markDone(call.id)
@@ -485,10 +489,62 @@ struct AppModelTests {
     /// found (ticket 27), rather than the person landing on Now with no word of why.
     @Test func openForAReminderTheAppDoesntHoldShowsItsDetailsToSayNotFound() async throws {
         let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+        let alarmID = UUID()
 
-        model.showReminder(call.id)
+        await model.open(alarmID: alarmID, reminderID: call.id)
+
+        #expect(manager.stoppedIDs == [alarmID])
+        #expect(model.route == .reminderDetails(call.id))
+    }
+
+    /// An alarm already stopped, by its own Stop or a Done, for example. The person still lands on
+    /// the reminder.
+    @Test func anOpenWhoseAlarmWontStopStillShowsTheRemindersDetails() async throws {
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+        model.add(call)
+        manager.stopError = CocoaError(.featureUnsupported)
+
+        await model.open(alarmID: UUID(), reminderID: call.id)
 
         #expect(model.route == .reminderDetails(call.id))
+    }
+
+    /// A Done before the first unlock can leave the store unread (see the test above). Open runs
+    /// only once the person has authenticated, so it tries the store again before it routes.
+    @Test func anOpenTriesAStoreThatCouldntBeOpenedAgainBeforeItRoutes() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        try store.save(StoredData(reminders: [call], tags: [], histories: [:]))
+        var attempts = 0
+        let model = model(openingStoreWith: {
+            attempts += 1
+            if attempts == 1 { throw StoreWontOpen() }
+            return store
+        }).model
+        await model.launch()
+
+        await model.open(alarmID: UUID(), reminderID: call.id)
+
+        #expect(model.engine.reminders == [call])
+        #expect(model.route == .reminderDetails(call.id))
+    }
+
+    /// Open launches the app if it isn't running. The ring stops before the store is read, and the
+    /// route waits for it: set sooner, the details would show "Reminder Not Found" until it loads.
+    @Test func anOpenThatLaunchesTheAppStopsTheRingFirstAndRoutesOnceTheStoreIsRead() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        try store.save(StoredData(reminders: [call], tags: [], histories: [:]))
+        let alarmID = UUID()
+        var stoppedBeforeTheStoreOpened: [UUID]?
+        let model = model(openingStoreWith: { [manager] in
+            stoppedBeforeTheStoreOpened = manager.stoppedIDs
+            return store
+        }).model
+
+        await model.open(alarmID: alarmID, reminderID: call.id)
+
+        #expect(stoppedBeforeTheStoreOpened == [alarmID])
+        #expect(model.route == .reminderDetails(call.id))
+        #expect(model.engine.reminders == [call])
     }
 
     /// The tab shell takes the route once it has followed it, so the same Open isn't followed again.

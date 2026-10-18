@@ -64,6 +64,18 @@ final class AppModel {
         alarms.events = self
     }
 
+    /// Launch, after setting aside a launch that couldn't read the store. Before the first unlock
+    /// after a restart, data protection keeps the store shut, and a Done action can launch the
+    /// app then. Only call it once the phone is unlocked: App opened, or an Open the person
+    /// authenticated for.
+    private func launchTryingAnUnreadStoreAgain() async {
+        if case .storeUnreadable = launchState {
+            launching = nil
+            launchState = .launching
+        }
+        await launch()
+    }
+
     /// The one launch, which the app delegate starts and App opened waits for.
     private var launching: Task<Void, Never>?
 
@@ -102,13 +114,7 @@ final class AppModel {
     /// App opened (ticket 07): permissions read again, then a fresh plan, which also refills the
     /// notifications past the 64 the system keeps pending (ticket 18).
     func appOpened() async {
-        // Before the first unlock after a restart, data protection keeps the store shut, and a
-        // Done action can launch the app then. Opened, the phone is unlocked: try again.
-        if case .storeUnreadable = launchState {
-            launching = nil
-            launchState = .launching
-        }
-        await launch()
+        await launchTryingAnUnreadStoreAgain()
         refreshPermissions()
         await permissionsRefresh?.value
         perform { $0.update(reminders: $0.reminders) }
@@ -129,6 +135,21 @@ final class AppModel {
     /// person isn't left on Now wondering where it went (ticket 27).
     func showReminder(_ reminderID: Reminder.ID) {
         route = .reminderDetails(reminderID)
+    }
+
+    /// The alarm's Open button, through ticket 20's intent. Ticket 02 B: Open doesn't silence the
+    /// ring, and C: on a locked phone it opens the app once the person authenticates, so without
+    /// a stop here the ring would go on with no alert left to stop it from. The stop comes first,
+    /// before anything that waits. The route waits for the store to be read, when Open is what
+    /// launched the app: set sooner, the details would say "Reminder Not Found" until it was.
+    func open(alarmID: UUID, reminderID: Reminder.ID) async {
+        do {
+            try alarms.stop(alarmID)
+        } catch {
+            Self.logger.error("The alarm wouldn't stop: \(error, privacy: .public)")
+        }
+        await launchTryingAnUnreadStoreAgain()
+        showReminder(reminderID)
     }
 
     /// The route, which is then cleared: the tab shell follows each one once.

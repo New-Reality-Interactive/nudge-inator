@@ -200,6 +200,17 @@ final class FakeAlarmManager: AlarmManaging {
         scheduled.removeAll { $0.id == id }
     }
 
+    private(set) var stoppedIDs: [Alarm.ID] = []
+    /// When set, every `stop(id:)` throws it and nothing is stopped.
+    var stopError: (any Error)?
+
+    /// Apple: "If the alarm is a one-shot … then the system deletes the alarm." Every nudge is.
+    func stop(id: Alarm.ID) throws {
+        if let stopError { throw stopError }
+        stoppedIDs.append(id)
+        scheduled.removeAll { $0.id == id }
+    }
+
     /// When set, `alarms()` throws it.
     var alarmsError: (any Error)?
 
