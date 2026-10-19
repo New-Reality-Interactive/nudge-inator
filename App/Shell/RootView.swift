@@ -27,7 +27,7 @@ struct RootView: View {
                 TagsTab(state: state, path: $navigation.tagPath)
             }
             Tab(AppTab.settings.title, systemImage: AppTab.settings.systemImage, value: .settings) {
-                SettingsTab()
+                SettingsTab(state: state)
             }
         }
         // The mockup shrinks the tab bar while scrolling down (iOS 26). Ticket 23 records what it

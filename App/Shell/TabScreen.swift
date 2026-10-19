@@ -32,16 +32,9 @@ struct StoreUnreadableView: View {
                 Image(systemName: "exclamationmark.triangle")
             }
         } description: {
-            Text("Your reminders are still on this iPhone, and nudges already scheduled will still come. Unlock your iPhone, then open \(Self.appName) again.",
+            Text("Your reminders are still on this iPhone, and nudges already scheduled will still come. Unlock your iPhone, then open \(Bundle.appDisplayName) again.",
                  comment: "Explains the unreadable store: nothing is lost, and reopening the app tries again. The placeholder is the app's name.")
         }
-    }
-
-    /// The name under the app's icon, in the app's language (InfoPlist.xcstrings).
-    private static var appName: String {
-        Bundle.main.localizedInfoDictionary?["CFBundleDisplayName"] as? String
-            ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
-            ?? ""
     }
 }
 

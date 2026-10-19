@@ -65,7 +65,8 @@ final class SystemAlarmManager: AlarmManaging {
     /// AlarmKit's `authorizationState` is a synchronous call to the system's alarm service.
     /// Read on the main thread right after the prompt was answered, it froze the iPhone's main
     /// thread for 69 s, and once for good (ticket 22's device runs). Apple's docs don't say it
-    /// can block. So it is read on a background thread, and only by the adapter, once.
+    /// can block. So it is read on a background thread, and only by the adapter, at launch and when the
+    /// app comes forward, never while an earlier read is outstanding.
     func readAuthorizationState() async -> AlarmManager.AuthorizationState {
         await Task.detached { AlarmManager.shared.authorizationState }.value
     }

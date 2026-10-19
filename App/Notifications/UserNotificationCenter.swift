@@ -14,6 +14,9 @@ protocol UserNotificationCenter: AnyObject {
     func add(_ request: UNNotificationRequest) async throws
     func pendingNotificationRequests() async -> [UNNotificationRequest]
     func removePendingNotificationRequests(withIdentifiers identifiers: [String])
+    /// Delete All Data (ticket 30): everything of the app's, pending or already shown.
+    func removeAllPendingNotificationRequests()
+    func removeAllDeliveredNotifications()
     func setNotificationCategories(_ categories: Set<UNNotificationCategory>)
     /// The center holds its delegate weakly, so the caller must keep it.
     func setDelegate(_ delegate: any UNUserNotificationCenterDelegate)
@@ -36,6 +39,14 @@ final class SystemNotificationCenter: UserNotificationCenter {
 
     func removePendingNotificationRequests(withIdentifiers identifiers: [String]) {
         center.removePendingNotificationRequests(withIdentifiers: identifiers)
+    }
+
+    func removeAllPendingNotificationRequests() {
+        center.removeAllPendingNotificationRequests()
+    }
+
+    func removeAllDeliveredNotifications() {
+        center.removeAllDeliveredNotifications()
     }
 
     func setNotificationCategories(_ categories: Set<UNNotificationCategory>) {

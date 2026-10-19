@@ -451,6 +451,63 @@ struct AlarmAdapterTests {
         #expect(alarms == .allowed)
     }
 
+    /// Ticket 30's device check (iPhone 15, iOS 27.0.1): with the app suspended, alarms were turned
+    /// off in Settings and `authorizationUpdates` said nothing, while a read off the main thread
+    /// answered `denied` at once. So the adapter reads again each time the app comes forward.
+    @Test func aChangeMadeInSettingsWithNoUpdateIsReadWhenTheAppComesForward() async throws {
+        let adapter = adapter()
+        manager.authorizationState = .authorized
+        #expect(await adapter.permissions(updating: PermissionStates()).alarms == .allowed)
+
+        manager.authorizationState = .denied
+        #expect(await adapter.permissions(updating: PermissionStates()).alarms == .allowed)
+        await adapter.refreshAuthorization()
+
+        #expect(await adapter.permissions(updating: PermissionStates()).alarms == .denied)
+    }
+
+    /// A read that doesn't answer may still be stuck in AlarmKit, so a later refresh starts no
+    /// second one, and the state stays as it was.
+    @Test func aRefreshThatNeverAnswersKeepsTheStateAndStartsNoSecondRead() async throws {
+        let adapter = AlarmAdapter(manager: manager, clock: clock, authorizationReadLimit: .milliseconds(50))
+        manager.authorizationState = .authorized
+        #expect(await adapter.permissions(updating: PermissionStates()).alarms == .allowed)
+        manager.authorizationReadHangs = true
+        manager.authorizationState = .denied
+
+        await adapter.refreshAuthorization()
+        await adapter.refreshAuthorization()
+
+        #expect(await adapter.permissions(updating: PermissionStates()).alarms == .allowed)
+        #expect(manager.authorizationReads == 2)
+    }
+
+    /// An update, or the prompt's answer, that comes while a read waits is newer than that read.
+    @Test func anUpdateThatComesWhileARefreshWaitsIsNotOverwrittenByTheOlderRead() async throws {
+        let adapter = adapter()
+        manager.authorizationState = .authorized
+        #expect(await adapter.permissions(updating: PermissionStates()).alarms == .allowed)
+        manager.holdsAuthorizationReads = true
+        let refresh = Task { await adapter.refreshAuthorization() }
+        for _ in 0..<100 where manager.heldAuthorizationReadCount == 0 {
+            await Task.yield()
+        }
+        #expect(manager.heldAuthorizationReadCount == 1)
+
+        manager.changeAuthorization(to: .denied)
+        // The update has landed before the older read is let go, or the test proves nothing.
+        var alarms = AlarmPermission.allowed
+        for _ in 0..<100 where alarms != .denied {
+            await Task.yield()
+            alarms = await adapter.permissions(updating: PermissionStates()).alarms
+        }
+        #expect(alarms == .denied)
+        manager.releaseLatestAuthorizationRead(returning: .authorized)
+        await refresh.value
+
+        #expect(await adapter.permissions(updating: PermissionStates()).alarms == .denied)
+    }
+
     /// Privacy: alarms carry only the title. Every field of each alarm's attributes is checked,
     /// through a real engine so the plan is a real one.
     @Test func noAlarmCarriesTheRemindersNotesTagsOrNudgeCount() async throws {

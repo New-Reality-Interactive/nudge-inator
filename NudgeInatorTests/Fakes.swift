@@ -71,6 +71,17 @@ final class FakeNotificationCenter: UserNotificationCenter {
         pending.removeAll { identifiers.contains($0.identifier) }
     }
 
+    func removeAllPendingNotificationRequests() {
+        pending.removeAll()
+    }
+
+    /// Delivered notifications can't be made in a test, so only the call is kept.
+    private(set) var removedAllDeliveredCount = 0
+
+    func removeAllDeliveredNotifications() {
+        removedAllDeliveredCount += 1
+    }
+
     func setNotificationCategories(_ categories: Set<UNNotificationCategory>) {
         self.categories = categories
     }
@@ -226,8 +237,21 @@ final class FakeAlarmManager: AlarmManaging {
     /// When set, `readAuthorizationState()` never answers, as on the iPhone.
     var authorizationReadHangs = false
 
+    /// When set, each `readAuthorizationState()` waits for `releaseLatestAuthorizationRead(returning:)`,
+    /// so a test can finish a read after something newer has happened.
+    var holdsAuthorizationReads = false
+    private var heldAuthorizationReads: [CheckedContinuation<AlarmManager.AuthorizationState, Never>] = []
+    var heldAuthorizationReadCount: Int { heldAuthorizationReads.count }
+
+    func releaseLatestAuthorizationRead(returning state: AlarmManager.AuthorizationState) {
+        heldAuthorizationReads.popLast()?.resume(returning: state)
+    }
+
     func readAuthorizationState() async -> AlarmManager.AuthorizationState {
         authorizationReads += 1
+        if holdsAuthorizationReads {
+            return await withCheckedContinuation { heldAuthorizationReads.append($0) }
+        }
         if authorizationReadHangs {
             try? await Task.sleep(for: .seconds(3600))
         }

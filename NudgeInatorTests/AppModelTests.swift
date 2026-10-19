@@ -172,6 +172,49 @@ struct AppModelTests {
         #expect(model.permissions == PermissionStates(notifications: .allowed, alarms: .denied, timeSensitive: .off))
     }
 
+    /// Ticket 30: Settings' rows, from what the fake adapters report through the model.
+    @Test(arguments: [
+        (UNAuthorizationStatus.authorized, AlarmManager.AuthorizationState.authorized, NotificationsStatus.on, AlarmsStatus.on, SettingsStatus.OpenSettings?.none),
+        (.denied, .denied, .off, .off, .appSettings),
+        (.authorized, .notDetermined, .on, .notSet, nil),
+    ])
+    func settingsRowsReflectWhatTheAdaptersReadThroughTheModel(
+        notifications: UNAuthorizationStatus,
+        alarms: AlarmManager.AuthorizationState,
+        expectedNotifications: NotificationsStatus,
+        expectedAlarms: AlarmsStatus,
+        expectedOpenSettings: SettingsStatus.OpenSettings?
+    ) async throws {
+        center.settings = NotificationSettingsSnapshot(authorizationStatus: notifications, timeSensitiveSetting: .enabled)
+        manager.authorizationState = alarms
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+
+        let status = SettingsStatus(model.permissions)
+
+        #expect(status.notifications == expectedNotifications)
+        #expect(status.alarms == expectedAlarms)
+        #expect(status.openSettings == expectedOpenSettings)
+    }
+
+    /// Ticket 30's device check: alarms turned off in Settings while the app was suspended, with no
+    /// update from AlarmKit. Coming forward reads the state again and re-plans.
+    @Test func alarmsTurnedOffInSettingsWithNoUpdateAreFoundWhenTheAppIsOpened() async throws {
+        manager.authorizationState = .authorized
+        center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled)
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+        model.add(call)
+        await model.waitUntilApplied()
+        #expect(manager.scheduled.count == 17)
+
+        manager.authorizationState = .denied
+        await model.appOpened()
+        await model.waitUntilApplied()
+
+        #expect(model.permissions.alarms == .denied)
+        #expect(manager.scheduled.isEmpty)
+        #expect(center.pending.count == 20)
+    }
+
     /// The app hears notifications were turned off only when the center turns a request down.
     @Test func notificationsTurnedOffAreReadAgainWhenTheCenterRefusesARequest() async throws {
         let model = await launchedModel(store: try ReminderStore(location: .inMemory))
@@ -243,6 +286,91 @@ struct AppModelTests {
         #expect(center.pending.isEmpty)
         #expect(manager.scheduled.isEmpty)
         #expect(try store.load() == StoredData(reminders: [], tags: [], histories: [:]))
+    }
+
+    /// Ticket 30. A Relentless reminder (3 requests, 17 alarms), a Done one with history, a tag and a
+    /// test nudge: afterwards the store, the engine, the center and the alarm manager are all empty.
+    @Test func deleteAllDataEmptiesTheStoreTheEngineAndBothAdapters() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        let model = await launchedModel(store: store)
+        let water = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 15, 9, 5), strength: .firm)
+        model.add(call)
+        model.add(water)
+        try model.createTag(named: "home")
+        clock.now = NewYork.local(2026, 10, 15, 9, 12)
+        model.markDone(water.id)
+        await model.sendTestNudge()
+        await model.waitUntilApplied()
+        #expect(center.pending.count > 1)
+        #expect(manager.scheduled.isEmpty == false)
+
+        try await model.deleteAllData()
+
+        #expect(model.engine.reminders.isEmpty)
+        #expect(model.engine.tags.isEmpty)
+        #expect(model.engine.histories.isEmpty)
+        #expect(center.pending.isEmpty)
+        #expect(center.removedAllDeliveredCount == 1)
+        #expect(manager.scheduled.isEmpty)
+        #expect(try store.load() == StoredData(reminders: [], tags: [], histories: [:]))
+    }
+
+    @Test func afterDeleteAllDataTheModelTakesNewRemindersAsFromANewInstall() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        let model = await launchedModel(store: store)
+        model.add(call)
+        try await model.deleteAllData()
+
+        model.add(call)
+        await model.waitUntilApplied()
+
+        #expect(model.engine.reminders == [call])
+        #expect(try store.load().reminders == [call])
+        #expect(center.pending.count == 3)
+    }
+
+    /// The store goes first, so a store that turns the delete down leaves the reminders, their
+    /// nudges and the alarms exactly as they were.
+    @Test func aStoreThatCannotDeleteLeavesEverythingAsItWasAndSaysSo() async throws {
+        let storeFile = TemporaryStoreFile()
+        let seed = try ReminderStore(location: .file(storeFile.url))
+        try seed.save(StoredData(reminders: [call], tags: [], histories: [:]))
+        // Read-only, as a file the system won't let the app change.
+        for file in storeFile.files where FileManager.default.fileExists(atPath: file.path()) {
+            try FileManager.default.setAttributes([.posixPermissions: 0o444], ofItemAtPath: file.path())
+        }
+        let model = await launchedModel(store: try ReminderStore(location: .file(storeFile.url)))
+        await model.waitUntilApplied()
+        let pending = Set(center.pending.map(\.identifier))
+        let alarms = Set(manager.scheduled.map(\.id))
+
+        await #expect(throws: (any Error).self) { try await model.deleteAllData() }
+
+        #expect(model.engine.reminders == [call])
+        #expect(Set(center.pending.map(\.identifier)) == pending)
+        #expect(Set(manager.scheduled.map(\.id)) == alarms)
+        #expect(center.removedAllDeliveredCount == 0)
+    }
+
+    @Test func deleteAllDataBeforeTheStoreIsReadDoesNothing() async throws {
+        let model = model(openingStoreWith: { throw StoreWontOpen() }).model
+        await model.launch()
+
+        try await model.deleteAllData()
+
+        #expect(center.removedAllDeliveredCount == 0)
+    }
+
+    @Test func sendingATestNudgeSchedulesOneNotificationThatNoPlanRemoves() async throws {
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+
+        await model.sendTestNudge()
+        model.add(call)
+        await model.waitUntilApplied()
+
+        #expect(center.pending.map(\.identifier).contains(NotificationAdapter.testNudgeIdentifier))
+        #expect(center.pending.count == 4)
+        #expect(manager.scheduled.count == 17)
     }
 
     @Test func pauseAndResumeAreSavedAndReachBothAdapters() async throws {

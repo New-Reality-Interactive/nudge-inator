@@ -68,5 +68,7 @@ enum Design {
         /// one at the top of the New Tag and Rename Tag sheet.
         static let tagTile: CGFloat = 29
         static let tagTileLarge: CGFloat = 84
+        /// The rounded icon tile in a Settings row (the mockup's `.ico`), at the default text size.
+        static let settingsTile: CGFloat = 29
     }
 }
