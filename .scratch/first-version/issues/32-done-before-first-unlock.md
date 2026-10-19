@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: resolved
 
 # Keep a Done chosen before the first unlock
 
@@ -26,10 +26,10 @@ The user decided (2026-10-17) to keep it. While the store can't be opened, the a
 - [x] When protected data becomes available, or the next App opened, the queued Dones are merged into the store as Done, and the file is deleted (unit test).
 - [x] A queued Done for an occurrence that is no longer the latest is dropped without error (unit test).
 - [x] No title, note or tag is written to the file (assert on its contents).
-- [ ] Device (human): restart the phone, choose Done on a nudge from the Lock Screen before unlocking, and check that the nudging stops. Then unlock, and check that the reminder reads Done after the next launch. Record the iOS version.
-- [ ] Device (human): on a fresh install, go through onboarding (Continue, then both prompts) and check that nothing freezes when the alarm prompt closes. This checks ticket 31's 2 s window, in which App opened leaves AlarmKit's state alone after the prompts' answer; it replaced the flag the device checks ran with. *(Moved here from ticket 31.)*
-- [ ] Device (human): a permission changed in iOS Settings while the app is suspended: record whether it arrives through AlarmKit's `authorizationUpdates` or App opened's re-read (`AlarmAdapter.refreshAuthorization()`), which needs a log line on each path. Ticket 30 found no update arrives. Knowledge only: the banner already clears on return either way. *(Moved here from ticket 31.)*
-- [ ] Device (human), or agree to drop it: the alarms-only onboarding step (`AppModel.Onboarding.alarmsOnly`), for data restored from a backup with alarms never asked, shows the alarm explanation and then the alarm prompt. It needs a backup restore, or a debug-only way to fake one; Apple's docs don't say whether iOS restores the alarm permission with a backup, and if it does the step never shows. *(Moved here from ticket 31.)*
+- [x] Device (human): restart the phone and, before unlocking, check whether a nudge offers Done from the Lock Screen. If it does, choose it and check that the nudging stops, then unlock and check that the reminder reads Done after the next launch. If it doesn't, record that the case doesn't arise on that iOS version. Record the iOS version. *(Reworded, see Comments.)*
+- [x] Device (human): on a fresh install, go through onboarding (Continue, then both prompts) and check that nothing freezes when the alarm prompt closes. This checks ticket 31's 2 s window, in which App opened leaves AlarmKit's state alone after the prompts' answer; it replaced the flag the device checks ran with. *(Moved here from ticket 31.)*
+- [x] Device (human): a permission changed in iOS Settings while the app is suspended: record whether it arrives through AlarmKit's `authorizationUpdates` or App opened's re-read (`AlarmAdapter.refreshAuthorization()`), which needs a log line on each path. Ticket 30 found no update arrives. Knowledge only: the banner already clears on return either way. *(Moved here from ticket 31.)*
+- [x] Device (human), or agree to drop it: the alarms-only onboarding step (`AppModel.Onboarding.alarmsOnly`), for data restored from a backup with alarms never asked, shows the alarm explanation and then the alarm prompt. It needs a backup restore, or a debug-only way to fake one; Apple's docs don't say whether iOS restores the alarm permission with a backup, and if it does the step never shows. *(Moved here from ticket 31.)*
 
 Blocked by: 21
 
@@ -96,3 +96,12 @@ Blocked by: 21
   - **Banners delivered by an earlier build carry no `dueTime`:** nothing has shipped.
   - **Merging plans the occurrence's nudges again for a moment before the merged Done removes them:** in order, within one launch.
   - **A failed save at merge keeps the file until the next cold launch:** the Done is already in memory, and the next save stores it.
+
+**Device checks (Brian's iPhone 15, iOS 27.0.1, build 37176b1, 2026-10-19).**
+- **Criterion 9, met.** Fresh install, launched with `-onboardingFinished YES`: the alarm explanation came first, with no welcome and no notification prompt, then the AlarmKit prompt (allowed).
+- **Criterion 7, met.** Uninstalled, reinstalled, normal launch: welcome, Continue, notification prompt (Allow), alarm prompt (Allow). Tabs switched straight away after the alarm prompt closed, with no freeze.
+- **Criterion 8, met.** Logs read through `devicectl device process launch --console` with `OS_ACTIVITY_DT_MODE=YES`. Both changes made in Settings while the app was suspended (same process throughout) arrived only through App opened's re-read: "re-read: denied, was authorized" for alarms off, "re-read: authorized, was denied" for back on. `authorizationUpdates` sent nothing for either. Its only line was the current value it yields when the app subscribes at launch.
+- **Criterion 6, first attempt.** After the restart, holding "Test 32"'s nudge 1 on the Lock Screen gave a haptic and no Done action. Show Previews was "When Unlocked" (global and the app's default), which we first took to be the cause. Brian then unlocked, so that attempt tested nothing.
+- **Criterion 6, rerun (Show Previews: Always for Nudge-inator).** Restarted and left locked. "Test 32" nudge 1 arrived at 6:28 PM showing its title and "Nudge 1 of 20", High. Holding it again gave only a haptic and no Done action. Tapping it asked for the passcode. "Control 32" (Gentle, Break Through Focus off) arrived at 6:33 PM, still locked. So on iOS 27.0.1 notifications arrive and show their content before the first unlock, but offer no actions. A Lock Screen Done can't reach the app then, and the queue isn't exercised on a device. Apple's docs don't say this; it is what the iPhone did.
+
+**Criterion 6 reworded (Brian, 2026-10-19):** a Time Sensitive notification that can't be marked Done from the Lock Screen after a restart is acceptable. It matches an alarm, which can't mark a reminder Done either and needs the app. Criterion 6 now records whether the case arises, and on iOS 27.0.1 it doesn't. The queue stays as a guard in case some iOS version or setting does deliver a Done before the first unlock. The unit tests (criteria 1-5) cover it.
