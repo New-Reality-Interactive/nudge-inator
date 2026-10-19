@@ -229,18 +229,28 @@
       "comment" : "Tags: under a tag's name when none is nudging. 1: how many reminders have the tag. 2: how many of them are due today.",
       "localizations" : {
         "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$lld reminder · %2$lld today"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$lld reminders · %2$lld today"
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@reminders@ · %2$lld today"
+          },
+          "substitutions" : {
+            "reminders" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
                 }
               }
             }
@@ -252,18 +262,28 @@
       "comment" : "Tags: under a tag's name. 1: how many reminders have the tag. 2: how many of them are due today. 3: how many are nudging, in bold, shown in red.",
       "localizations" : {
         "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$lld reminder · %2$lld today · **%3$lld nudging**"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$lld reminders · %2$lld today · **%3$lld nudging**"
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@reminders@ · %2$lld today · **%3$lld nudging**"
+          },
+          "substitutions" : {
+            "reminders" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
                 }
               }
             }

@@ -52,4 +52,31 @@ extension TagsScreenTests {
         #expect(home.reminderCount == 3)
         #expect(message.contains("3 reminders use this tag"))
     }
+
+    /// The catalog varies these by the first number only (a substitution), so the other two
+    /// counts must not change the reminder/reminders choice.
+    @Test func theCountsLineSaysReminderOrRemindersByTheReminderCountAlone() async throws {
+        let day = try await fixture.dayAtOnePM()
+        try day.model.createTag(named: "solo")
+        var alex = day.alex
+        alex.tagIDs = [day.home.id, try #require(day.model.engine.tags.first { $0.name == "solo" }).id]
+        try day.model.edit(alex)
+
+        let rows = TagsScreen(engine: day.model.engine).rows
+        let solo = try #require(rows.first { $0.tag.name == "solo" })
+        let home = try #require(rows.first { $0.tag.id == day.home.id })
+
+        func text(_ summary: TagSummary) -> String {
+            var resource = summary.counts
+            resource.locale = Locale(identifier: "en")
+            return String(localized: resource)
+        }
+
+        #expect(solo.reminderCount == 1 && solo.nudgingCount == 1)
+        #expect(text(solo).hasPrefix("1 reminder · "))
+        #expect(text(solo).contains("1 nudging"))
+        #expect(home.reminderCount == 4 && home.nudgingCount == 1)
+        #expect(text(home).hasPrefix("4 reminders · "))
+        #expect(text(rows.first { $0.tag.name == "work" }!).hasPrefix("3 reminders · 3 today"))
+    }
 }
