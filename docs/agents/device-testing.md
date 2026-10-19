@@ -14,6 +14,23 @@ Uninstalling does **not** remove the app's AlarmKit alarms on a device (iPhone 1
 
 The iOS 26.5 simulator's own `mediaanalysisd` (the Photos analysis daemon inside the simulator, not macOS's) ran at 700-870% of a CPU from about 20-60 s after every boot, for as long as the simulator was up. It happened with no app, test or screenshot running (2026-10-18, ticket 29: a boot-only run and an idle Mac were the controls), and it forced a restart of the development Mac. The iOS 26.1 simulator didn't do it. Apple's docs say nothing about it. Nothing in the app uses Photos, Vision or Live Text, so `scripts/test.sh` switches the daemon off in each simulator before testing it (`launchctl disable` and `bootout` through `xcrun simctl spawn`). That persists across boots, and a new or erased simulator needs it again, which the script does. Set `KEEP_MEDIA_ANALYSIS=1` to leave it on, or run `xcrun simctl spawn <udid> launchctl enable system/com.apple.mediaanalysisd` to turn it back on. If the Mac runs hot during simulator work, check `ps -Ao %cpu,comm | grep mediaanalysisd` first, and whether the path is under a `.simruntime`.
 
+## Manual device checks: build, install, clean up
+
+For checks the person drives by hand (VoiceOver, landscape, tapping through screens), not `-only-testing` runs. Used for ticket 29 on an iPhone 15, iOS 27.0.1; the device id comes from `xcrun devicectl list devices`.
+
+1. Before installing, note whether the app is there: `xcrun devicectl device info apps --device <id> --bundle-id com.newrealityinteractive.nudgeinator` (an empty "Apps installed:" means it isn't).
+2. Build: `xcodebuild -project NudgeInator.xcodeproj -scheme NudgeInator -destination 'id=<id>' -derivedDataPath .build/derived-device -allowProvisioningUpdates -quiet build` (`.build` is git-ignored; the first build takes a few minutes).
+3. Install and launch: `xcrun devicectl device install app --device <id> .build/derived-device/Build/Products/Debug-iphoneos/NudgeInator.app`, then `xcrun devicectl device process launch --terminate-existing --device <id> com.newrealityinteractive.nudgeinator`. After a code fix, repeat 2 and 3; the install keeps the app's data, so the person doesn't re-enter their test data.
+4. The person seeds their own test data by hand; there is no seeding route.
+5. Tell the person their starting settings before you ask them to change any (for example text size: Settings > Accessibility > Display & Text Size > Larger Text, noting the notch and whether Larger Accessibility Sizes is on), and have them restore it at the end.
+6. Clean up: reminders with Break Through Focus on schedule AlarmKit alarms, and uninstalling doesn't remove those. Ask the person to delete every reminder they made (Done may not cancel the alarm) before you uninstall. If the app wasn't installed at the start, uninstall it with `xcrun devicectl device uninstall app --device <id> com.newrealityinteractive.nudgeinator`, then check with step 1.
+
+Lessons from ticket 29:
+
+- Simulator screenshots missed a failure that only showed on the phone: at the largest text size in landscape the keyboard covered the rename sheet's error. Check landscape plus largest text on the device whenever a sheet has a text field with a message under it.
+- A Form section footer sits below its field and goes behind the keyboard; in compact height put such a message in the section header.
+- VoiceOver speaks "#" as "number sign".
+
 ## Device-check walkthrough
 
 When closing an acceptance criterion needs device checks that need the person, walk them through one check at a time, so none is missed. For each check:

@@ -748,4 +748,18 @@ struct ReminderFormTests {
 
         #expect(newForm(on: model).showsYear(of: dueTime) == showsYear)
     }
+
+    @Test func aFormOpenedFromATagStartsWithItChosenAndNoChanges() async throws {
+        let model = try await launchedModel()
+        let home = try #require(try model.createTag(named: "home"))
+        let now = clock.now
+        let form = ReminderForm(engine: { model.engine }, now: { now }, tagIDs: [home.id])
+        let hasChanges = form.hasChanges
+        form.title = "Water the plants"
+
+        #expect(form.tagIDs == [home.id])
+        #expect(!hasChanges)
+        #expect(form.save(to: model))
+        #expect(model.engine.reminders.first?.tagIDs == [home.id])
+    }
 }

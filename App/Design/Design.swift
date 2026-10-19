@@ -64,5 +64,9 @@ enum Design {
         /// The strength badge's padding inside its outline (the mockup's `.cap`).
         static let badgeVerticalPadding: CGFloat = 1
         static let badgeLeadingPadding: CGFloat = 6
+        /// The round gray tag tile in a Tags row (the mockup's `.ico`, 1.8125 rem), and the large
+        /// one at the top of the New Tag and Rename Tag sheet.
+        static let tagTile: CGFloat = 29
+        static let tagTileLarge: CGFloat = 84
     }
 }
