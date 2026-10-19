@@ -180,6 +180,16 @@ final class ReminderForm: Identifiable {
         currentEngine().repeatSummary(of: draft(tagIDs: tagIDs))
     }
 
+    /// The draft's ladder with its strength and switch, for the form's How It Nudges (ticket 31).
+    var howItNudges: HowItNudges {
+        currentEngine().howItNudges(strength, breakThroughFocus: breakThroughFocus)
+    }
+
+    /// The line under the strength choice, from the same ladder.
+    var strengthBlurb: StrengthBlurb {
+        StrengthBlurb(howItNudges)
+    }
+
     /// How many due times the Custom page's Next Times shows.
     static let nextTimesCount = 3
 

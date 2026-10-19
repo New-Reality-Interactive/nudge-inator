@@ -107,9 +107,19 @@ final class FakeNotificationCenter: UserNotificationCenter {
         return settings
     }
 
+    /// What the person answers when `requestAuthorization(options:)` shows the prompt. As on the
+    /// iPhone, it shows only while the status is not determined.
+    var promptAnswer = UNAuthorizationStatus.authorized
+    /// Runs during each `requestAuthorization(options:)`, while the prompt would be up.
+    var whileRequestingAuthorization: (() -> Void)?
+
     func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool {
         requestedAuthorizationOptions.append(options)
-        return true
+        whileRequestingAuthorization?()
+        if settings.authorizationStatus == .notDetermined {
+            settings = NotificationSettingsSnapshot(authorizationStatus: promptAnswer, timeSensitiveSetting: settings.timeSensitiveSetting)
+        }
+        return settings.authorizationStatus == .authorized
     }
 }
 
@@ -231,7 +241,7 @@ final class FakeAlarmManager: AlarmManaging {
     }
 
     /// The system's authorization state, which `readAuthorizationState()` returns.
-    var authorizationState = AlarmManager.AuthorizationState.notDetermined
+    var authorizationState = AlarmManager.AuthorizationState.authorized
     /// How many times the adapter read the state, the call that froze the iPhone.
     private(set) var authorizationReads = 0
     /// When set, `readAuthorizationState()` never answers, as on the iPhone.
@@ -262,8 +272,12 @@ final class FakeAlarmManager: AlarmManaging {
     var promptAnswer = AlarmManager.AuthorizationState.authorized
     private(set) var authorizationRequests = 0
 
+    /// Runs during each `requestAuthorization()`, while the prompt would be up.
+    var whileRequestingAuthorization: (() -> Void)?
+
     func requestAuthorization() async throws -> AlarmManager.AuthorizationState {
         authorizationRequests += 1
+        whileRequestingAuthorization?()
         if authorizationState == .notDetermined {
             authorizationState = promptAnswer
         }

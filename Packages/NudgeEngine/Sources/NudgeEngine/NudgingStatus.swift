@@ -82,14 +82,30 @@ extension Engine {
     }
 
     private func nudgeDelivery(of reminder: Reminder, firingAt fireTime: Date, urgency: Urgency) -> NudgeDelivery {
-        guard let delivery = delivery(of: reminder, firingAt: fireTime, urgency: urgency) else { return .cannotArrive }
+        Self.nudgeDelivery(
+            delivery(of: reminder, firingAt: fireTime, urgency: urgency),
+            urgency: urgency,
+            breakThroughFocus: reminder.breakThroughFocus,
+            timeSensitive: permissions(firingAt: fireTime).timeSensitive
+        )
+    }
+
+    /// The via label's delivery for a plan item's `delivery`, which says how it arrives but not why
+    /// it is weaker than its urgency asks for. How It Nudges reads it too.
+    static func nudgeDelivery(
+        _ delivery: (kind: DeliveryKind, isPastAlarmLimit: Bool)?,
+        urgency: Urgency,
+        breakThroughFocus: Bool,
+        timeSensitive: TimeSensitiveSetting
+    ) -> NudgeDelivery {
+        guard let delivery else { return .cannotArrive }
         if delivery.kind == .alarm { return .alarm }
         if delivery.isPastAlarmLimit { return .notification(weakerBecause: .pastAlarmLimit) }
-        let timeSensitiveOff = permissions(firingAt: fireTime).timeSensitive == .off
+        let timeSensitiveOff = timeSensitive == .off
         switch urgency {
         case .normal:
             return .notification(weakerBecause: nil)
-        case _ where !reminder.breakThroughFocus:
+        case _ where !breakThroughFocus:
             return .notification(weakerBecause: .breakThroughFocusOff)
         case .high:
             return .notification(weakerBecause: timeSensitiveOff ? .timeSensitiveOff : nil)

@@ -1,9 +1,8 @@
 import NudgeEngine
 import SwiftUI
 
-/// Settings: what the app may send (notifications and alarms), a way to open iOS Settings when
-/// something is off, Send a Test Nudge, and Delete All Data. The How It Nudges link comes with
-/// that screen (ticket 31).
+/// Settings: the permission banners, what the app may send (notifications and alarms), a way to
+/// open iOS Settings when something is off, Send a Test Nudge, How It Nudges, and Delete All Data.
 struct SettingsTab: View {
     let state: ScreenState
     /// What previews show, since they have no app model: the permissions and how they leave
@@ -88,7 +87,7 @@ struct SettingsTab: View {
             )
             if let openSettings = status.openSettings {
                 Button {
-                    open(openSettings)
+                    openSettings.open()
                 } label: {
                     SettingsRow(
                         tile: .tileGray,
@@ -109,8 +108,21 @@ struct SettingsTab: View {
                 )
             }
             .disabled(!status.canSendTestNudge || !canAct)
+            NavigationLink {
+                HowItNudgesPage(previewPermissions: previewPermissions)
+            } label: {
+                SettingsRow(
+                    tile: .tileGray,
+                    symbol: "info.circle",
+                    title: Text("How It Nudges", comment: "Settings: row that opens the page explaining how each strength nudges, and what onboarding said.")
+                )
+            }
         } header: {
-            Text("Nudges", comment: "Settings: header of the section with the permission rows and Send a Test Nudge.")
+            // The banners under the title, as the mockup's `viewSettings` puts them.
+            VStack(alignment: .leading, spacing: Design.Spacing.s5) {
+                PermissionBanners(reach: reach)
+                Text("Nudges", comment: "Settings: header of the section with the permission rows and Send a Test Nudge.")
+            }
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s2) {
                 ForEach(SettingsStatus.footer(for: reach), id: \.self) { $0.text }
@@ -148,11 +160,6 @@ struct SettingsTab: View {
     /// How each urgency reaches the person, from the engine. Without a model, the previews' states.
     private var reach: Reach {
         model?.engine.reach ?? previewReach
-    }
-
-    private func open(_ destination: SettingsStatus.OpenSettings) {
-        guard let url = URL(string: destination.urlString) else { return }
-        Task { await UIApplication.shared.open(url) }
     }
 
     private func sendTestNudge() {

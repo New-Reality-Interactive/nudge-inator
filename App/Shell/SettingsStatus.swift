@@ -44,6 +44,12 @@ struct SettingsStatus: Equatable {
             case .appSettings: UIApplication.openSettingsURLString
             }
         }
+
+        /// Opens that page in the Settings app: Settings' row and the permission banners.
+        @MainActor func open() {
+            guard let url = URL(string: urlString) else { return }
+            Task { await UIApplication.shared.open(url) }
+        }
     }
 }
 

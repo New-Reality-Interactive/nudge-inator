@@ -51,7 +51,7 @@ public struct Engine {
     let calendar: Calendar
     /// Formats the times and dates in a repeat's summary.
     let locale: Locale
-    private var permissions: PermissionStates
+    private(set) var permissions: PermissionStates
     /// Earlier permission states, oldest first, with when the app reported a change. A nudge that
     /// fired before the change was delivered under the old states, so its plan item keeps that
     /// delivery. App-wide, so not in a reminder's `History`.
@@ -412,7 +412,7 @@ public struct Engine {
     /// alarms-denied fallback, so it also follows notifications denied and Time Sensitive off. It
     /// is marked only when it would otherwise ring: with alarms denied or the switch off, that is
     /// the reason it's a notification, and the screens say so instead.
-    private func delivery(
+    func delivery(
         of urgency: Urgency,
         breakThroughFocus: Bool,
         permissions: PermissionStates,

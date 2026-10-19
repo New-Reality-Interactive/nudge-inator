@@ -18,7 +18,7 @@ struct NowTab: View {
         NavigationStack(path: $path) {
             TabScreen(state: state) {
                 TimelineView(.everyMinute) { context in
-                    NowList(screen: screen, now: context.date) { reminderID in
+                    NowList(screen: screen, reach: model?.engine.reach, now: context.date) { reminderID in
                         model?.markDone(reminderID)
                     } openDetails: { reminderID in
                         path.append(OpenedReminder(id: reminderID))
@@ -41,6 +41,8 @@ struct NowTab: View {
 /// The three sections, in the mockup's `viewNow` order.
 private struct NowList: View {
     let screen: NowScreen
+    /// What can still reach the person, for the permission banners under the subhead.
+    let reach: Reach?
     let now: Date
     let markDone: (Reminder.ID) -> Void
     let openDetails: (Reminder.ID) -> Void
@@ -56,7 +58,7 @@ private struct NowList: View {
                     }
                 }
             } header: {
-                NowHeader(subhead: screen.subhead(on: now))
+                NowHeader(subhead: screen.subhead(on: now), reach: reach)
             }
             Section {
                 if screen.comingUp.isEmpty {
@@ -113,11 +115,16 @@ private struct NudgeCardRow: View {
 /// section header.
 private struct NowHeader: View {
     let subhead: LocalizedStringResource
+    let reach: Reach?
 
     var body: some View {
         VStack(alignment: .leading, spacing: Design.Spacing.s3) {
             Text(Self.styled(subhead))
                 .subheadStyle()
+            // Between the subhead and Nudging, as the mockup's `viewNow` puts it.
+            if let reach {
+                PermissionBanners(reach: reach)
+            }
             Text("Nudging", comment: "Now: section header for the reminders nudging you now.")
                 .font(.title3.bold())
                 // The label color, as the mockup's big section header: a list header's own

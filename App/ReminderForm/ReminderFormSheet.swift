@@ -19,6 +19,7 @@ struct ReminderFormSheet: View {
                 ScheduleSection(form: form)
                 StrengthSection(form: form)
                 BreakThroughFocusSection(form: form)
+                HowItNudgesSection(howItNudges: form.howItNudges)
             }
             .scrollDismissesKeyboard(.interactively)
             .centeredInReadableColumn()
@@ -260,7 +261,7 @@ private struct StrengthSection: View {
             }
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
-                Text(form.strength.blurb)
+                form.strengthBlurb.text
                 Text("Gives up after \(GiveUpLimit.shipped.nudgeCount) nudges or \(GiveUpLimit.shipped.spanText), whichever comes first.",
                      comment: "Under the reminder form's strength. 1: the give-up limit's nudge count. 2: its span, such as \"24 hours\".")
             }
@@ -357,16 +358,6 @@ extension Strength {
         case .gentle: LocalizedStringResource("Gentle", comment: "Strength name: the reminder nudges gently.")
         case .firm: LocalizedStringResource("Firm", comment: "Strength name.")
         case .relentless: LocalizedStringResource("Relentless", comment: "Strength name: the reminder nudges hardest.")
-        }
-    }
-
-    /// The mockup's line under the strength choice. Ticket 31 reads the ladder from the engine
-    /// for How It Nudges; until then these numbers are copy.
-    var blurb: LocalizedStringResource {
-        switch self {
-        case .gentle: LocalizedStringResource("Hourly at first, easing to every 20 min. Never rings as an alarm.", comment: "Under the reminder form's strength when Gentle is chosen.")
-        case .firm: LocalizedStringResource("Every 30 min, down to every 5. Rings as an alarm from nudge 4.", comment: "Under the reminder form's strength when Firm is chosen.")
-        case .relentless: LocalizedStringResource("Every 10 min, down to every 2. Rings as an alarm from nudge 4.", comment: "Under the reminder form's strength when Relentless is chosen.")
         }
     }
 }

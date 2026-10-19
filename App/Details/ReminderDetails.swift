@@ -22,6 +22,8 @@ struct ReminderDetails {
     var pauseAction: PauseAction?
     /// Whether the Schedule section ends with the lock note: some field is Locked (ticket 13).
     var showsLockNote: Bool
+    /// The reminder's ladder with its own Break Through Focus switch (ticket 31).
+    var howItNudges: HowItNudges
 
     var title: String { reminder.title }
     var notes: String { reminder.notes }
@@ -80,6 +82,7 @@ struct ReminderDetails {
             .map { LastOccurrence(state: $0.occurrence.state, day: engine.dayLabel(of: $0.closedAt), time: engine.timeOfDay(of: $0.closedAt)) }
         repeats = engine.repeatSummary(of: reminder)
         showsLockNote = !engine.lockedFields(of: id).isEmpty
+        howItNudges = engine.howItNudges(reminder.strength, breakThroughFocus: reminder.breakThroughFocus)
 
         // The open occurrence's own due time isn't "next", whatever the clock says. The engine
         // reads "at or after now", so a second time is asked for in case the first is that one.

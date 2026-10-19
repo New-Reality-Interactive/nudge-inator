@@ -163,6 +163,7 @@ struct AppModelTests {
     /// banners (ticket 31) must follow a change without a relaunch.
     @Test func thePermissionStatesFollowWhatTheAdaptersRead() async throws {
         center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .disabled)
+        manager.authorizationState = .notDetermined
         let model = await launchedModel(store: try ReminderStore(location: .inMemory))
         #expect(model.permissions == PermissionStates(notifications: .allowed, alarms: .notDetermined, timeSensitive: .off))
 

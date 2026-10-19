@@ -127,12 +127,19 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
                 .sorted { ($0.fireTime, $0.reminderID.uuidString) < ($1.fireTime, $1.reminderID.uuidString) }
                 .map { (item: $0, id: Self.alarmID(for: $0)) }
                 .filter { seen.insert($0.id).inserted && !existing.contains($0.id) }
-            if await currentAuthorization() == .denied {
+            switch await currentAuthorization() {
+            case .denied:
                 if !missing.isEmpty {
                     firstError = firstError ?? AlarmAdapterError.alarmsNotAllowed
                 }
-            } else if let error = await schedule(missing, planNumber: planNumber) {
-                firstError = firstError ?? error
+            // AlarmKit would prompt by itself on the first `schedule`, in the middle of a plan.
+            // Onboarding asks instead (ticket 31), and its answer re-plans these alarms.
+            case .notDetermined:
+                break
+            default:
+                if let error = await schedule(missing, planNumber: planNumber) {
+                    firstError = firstError ?? error
+                }
             }
             if let firstError {
                 events?.schedulingFailed(firstError)
@@ -190,6 +197,12 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
             states.alarms = .notDetermined
         }
         return states
+    }
+
+    /// Whether AlarmKit is known not to have asked yet. A read that didn't answer in time counts as
+    /// not asked for the plan, but isn't known to be, so it doesn't bring onboarding back.
+    func isKnownNotAskedYet() async -> Bool {
+        await currentAuthorization() == .notDetermined
     }
 
     /// The state as last learned, or the one read's answer if nothing has been learned yet.

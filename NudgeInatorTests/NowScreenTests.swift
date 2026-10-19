@@ -197,7 +197,7 @@ struct NowScreenTests {
         (.notification(weakerBecause: .alarmsOff), "Notification: alarms are off"),
         (.notification(weakerBecause: .alarmsAndTimeSensitiveOff), "Notification: alarms and Time Sensitive are off"),
         (.notification(weakerBecause: .timeSensitiveOff), "Notification: Time Sensitive is off"),
-        (.notification(weakerBecause: .breakThroughFocusOff), "Notification: Break through Focus is off"),
+        (.notification(weakerBecause: .breakThroughFocusOff), "Notification: Break Through Focus is off"),
         (.notification(weakerBecause: .pastAlarmLimit), "Notification: too many alarms scheduled"),
         (.cannotArrive, "Notifications off"),
     ])

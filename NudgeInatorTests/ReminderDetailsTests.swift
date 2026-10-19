@@ -31,6 +31,23 @@ struct ReminderDetailsTests {
         return model
     }
 
+    /// How It Nudges (ticket 31) follows the reminder's own strength and Break Through Focus
+    /// switch: Firm's nudges 4–20 ring, unless the switch is off.
+    @Test(arguments: [
+        (true, NudgeDelivery.alarm),
+        (false, .notification(weakerBecause: .breakThroughFocusOff)),
+    ])
+    func howItNudgesFollowsTheRemindersSwitch(breakThroughFocus: Bool, urgent: NudgeDelivery) async throws {
+        let model = try await launchedModel()
+        var reminder = bins
+        reminder.breakThroughFocus = breakThroughFocus
+        model.add(reminder)
+
+        let rows = try #require(ReminderDetails(engine: model.engine, id: reminder.id)).howItNudges.rows
+        #expect(rows.map(\.nudges) == [1...1, 2...2, 3...3, 4...20])
+        #expect(rows.last?.delivery == urgent)
+    }
+
     @Test func aReminderTheEngineDoesntHoldHasNoDetails() async throws {
         let model = try await launchedModel()
 

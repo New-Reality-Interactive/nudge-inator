@@ -9,10 +9,10 @@ extension View {
     }
 }
 
-/// A reminder's details, as the mockup's `viewRem` less its How It Nudges (ticket 31) and History
-/// (out of scope): the hero, the Nudging Now card with Done, Schedule, Pause or Resume, and
-/// Delete. It reads the engine again at every change and every minute, so it follows a Done from
-/// a notification while it is open.
+/// A reminder's details, as the mockup's `viewRem` less its History (out of scope): the hero, the
+/// Nudging Now card with Done, Schedule, How It Nudges, Pause or Resume, and Delete. It reads the
+/// engine again at every change and every minute, so it follows a Done from a notification while
+/// it is open.
 struct ReminderDetailsView: View {
     let id: Reminder.ID
     /// What previews show, since they have no app model.
@@ -129,7 +129,7 @@ extension View {
     }
 }
 
-/// The list: hero, Nudging Now, Schedule, and the Pause and Delete actions.
+/// The list: hero, Nudging Now, Schedule, How It Nudges, and the Pause and Delete actions.
 private struct DetailsList: View {
     let details: ReminderDetails
     let now: Date
@@ -166,6 +166,7 @@ private struct DetailsList: View {
                     }
                 }
             }
+            HowItNudgesSection(howItNudges: details.howItNudges)
             Section {
                 if let action = details.pauseAction {
                     Button(action: togglePause) {
