@@ -77,6 +77,10 @@ final class AppModel {
         await launch()
     }
 
+    private func makeEngine(permissions: PermissionStates) -> Engine {
+        Engine(clock: clock, scheduler: scheduler, giveUpLimit: giveUpLimit, timeZone: timeZone, permissions: permissions)
+    }
+
     /// The one launch, which the app delegate starts and App opened waits for.
     private var launching: Task<Void, Never>?
 
@@ -104,7 +108,7 @@ final class AppModel {
         }
         let permissions = await currentPermissions()
         self.permissions = permissions
-        var engine = Engine(clock: clock, scheduler: scheduler, giveUpLimit: giveUpLimit, timeZone: timeZone, permissions: permissions)
+        var engine = makeEngine(permissions: permissions)
         engine.update(tags: stored.tags)
         engine.update(histories: stored.histories)
         engine.update(reminders: stored.reminders)
@@ -116,6 +120,9 @@ final class AppModel {
     /// notifications past the 64 the system keeps pending (ticket 18).
     func appOpened() async {
         await launchTryingAnUnreadStoreAgain()
+        // AlarmKit sent no update for a change made in Settings while the app was suspended
+        // (ticket 30's device check), so its state is read again, off the main thread.
+        await alarms.refreshAuthorization()
         refreshPermissions()
         await permissionsRefresh?.value
         perform { $0.update(reminders: $0.reminders) }
@@ -207,6 +214,31 @@ final class AppModel {
     /// The reminder and its whole history go, from the engine and the store (ticket 12).
     func delete(_ reminderID: Reminder.ID) {
         perform({ $0.delete(reminderID) }, storeChange: { try $0.delete(reminderID) })
+    }
+
+    /// Settings' Send a Test Nudge (ticket 30): one ordinary notification a few seconds away. It is
+    /// no reminder's, so the engine and the store know nothing of it.
+    func sendTestNudge() async {
+        await notifications.sendTestNudge()
+    }
+
+    /// Settings' Delete All Data (ticket 30): the store, then the engine, then everything the
+    /// adapters hold, including the test nudge and the nudges already in Notification Center.
+    /// Not through `perform`: the store goes first and a store that turns the delete down stops
+    /// it, so the reminders and their nudges stay as they were. A disk failure is likelier than a
+    /// failed cancel, and a nudge left pending for deleted data is cancelled by the next App opened,
+    /// which plans from nothing. An alarm that is ringing is left to ring, as a re-plan leaves it. Before the store has been read there is nothing to delete.
+    func deleteAllData() async throws {
+        guard case .ready = launchState, let store else { return }
+        try store.deleteAllData()
+        saveError = nil
+        // A new engine, not emptied lists: the old one keeps a key for every history it held, and
+        // its alarm-limit records. Its empty plan still reaches the adapters.
+        var empty = makeEngine(permissions: permissions)
+        empty.update(reminders: [])
+        engine = empty
+        await waitUntilApplied()
+        await notifications.cancelAll()
     }
 
     /// Returns once both adapters have applied every plan handed to them so far, including the

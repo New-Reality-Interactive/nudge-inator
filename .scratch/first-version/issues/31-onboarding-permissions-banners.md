@@ -32,3 +32,9 @@ First launch: a short onboarding explaining how nudges reach you (the mockup's F
 - [ ] Matches the mockup's First launch screens.
 
 Blocked by: 21, 22, 23
+
+
+## Comments
+
+**From ticket 30 (2026-10-19).** On the iPhone (iOS 27.0.1), alarms turned off in iOS Settings while the app was suspended sent **no** `authorizationUpdates` event, while a read off the main thread answered at once. `AlarmAdapter.refreshAuthorization()` now reads again on each App opened (guards in ticket 30's Comments), so the alarms banner can follow a change in Settings without a relaunch: read the adapter's `permissions(updating:)` on the foreground, don't rely on the updates alone. Notifications and Time Sensitive were already re-read each time. The device criterion above still has the prompt under Sleep Focus to check. Also: the Settings tab (30) can be reached before any permission is asked for, and shows "Not Set" for alarms then; this ticket's onboarding asks. The mockup draws the permission banner under Settings' title; that is here too. The How It Nudges link goes in Settings' Nudges section or beside it (30 leaves it out); the mockup doesn't place it.
+

@@ -335,6 +335,12 @@
     "Alarm" : {
       "comment" : "Nudge card: the next nudge rings as an alarm."
     },
+    "Alarms" : {
+      "comment" : "Settings: row that shows whether alarms are allowed."
+    },
+    "Alarms are off, so Urgent nudges come as Time Sensitive notifications instead, which silent mode can mute." : {
+      "comment" : "Settings: footer under the Nudges rows, when alarms are off but Time Sensitive is on."
+    },
     "All Tags" : {
       "comment" : "My Day's filter sheet: the Match choice that needs every checked tag."
     },
@@ -351,7 +357,10 @@
       "comment" : "Title shown when the app can't read its stored reminders, for example before the first unlock after a restart."
     },
     "Cancel" : {
-      "comment" : "Closes the alert without choosing a new time.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nThe form's cancel button (an xmark).\nThe tag sheet's cancel button (an xmark)."
+      "comment" : "Closes the alert without choosing a new time.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nSettings: keeps your data instead of deleting it.\nThe form's cancel button (an xmark).\nThe tag sheet's cancel button (an xmark)."
+    },
+    "Change these in iOS Settings." : {
+      "comment" : "Settings: last line of the footer under the Nudges rows."
     },
     "Check one or more tags." : {
       "comment" : "My Day's filter sheet: under the tags."
@@ -406,6 +415,9 @@
     "Completed" : {
       "comment" : "A tag's screen: header of the reminders with nothing more to come."
     },
+    "Couldn't Delete Your Data" : {
+      "comment" : "Settings: title of the message shown when deleting everything failed."
+    },
     "Custom" : {
       "comment" : "The Repeat page's row that opens the custom repeat page.\nThe reminder form's Repeat row when the repeat is a custom rule.\nTitle of the Custom repeat page."
     },
@@ -413,13 +425,19 @@
       "comment" : "The Custom repeat page's frequency."
     },
     "Delete" : {
-      "comment" : "Tags: confirms deleting the tag. The reminders that have it are kept."
+      "comment" : "Settings: confirms deleting every reminder, tag and all history.\nTags: confirms deleting the tag. The reminders that have it are kept."
     },
     "Delete %@" : {
       "comment" : "VoiceOver label of a tag's Delete button in Edit mode. The placeholder is the tag, such as \"#home\"."
     },
     "Delete %@?" : {
       "comment" : "Tags: title of the question that asks before deleting a tag. The placeholder is the tag, such as \"#home\"."
+    },
+    "Delete All Data" : {
+      "comment" : "Settings: row that opens the question that asks before deleting every reminder, tag and all history."
+    },
+    "Delete All Data?" : {
+      "comment" : "Settings: title of the question that asks before deleting everything."
     },
     "Delete Reminder" : {
       "comment" : "Confirms deleting the reminder.\nReminder details: opens the question that asks before deleting the reminder."
@@ -695,6 +713,12 @@
     "Firm" : {
       "comment" : "Strength name."
     },
+    "For a reminder with Break Through Focus on, High nudges are Time Sensitive, so they get through a Focus." : {
+      "comment" : "Settings: footer under the Nudges rows, when Time Sensitive is on."
+    },
+    "For a reminder with Break Through Focus on, High nudges come as ordinary notifications, because Time Sensitive is off." : {
+      "comment" : "Settings: footer under the Nudges rows, when Time Sensitive is off."
+    },
     "Frequency" : {
       "comment" : "The Custom repeat page's choice of Daily, Weekly, Monthly or Yearly."
     },
@@ -819,6 +843,12 @@
     "None" : {
       "comment" : "Reminder details, Schedule: nothing is left to come.\nThe reminder form's Tags row when no tag is chosen."
     },
+    "Normal nudges arrive as ordinary notifications, which a Focus can hold." : {
+      "comment" : "Settings: footer under the Nudges rows."
+    },
+    "Not Set" : {
+      "comment" : "Settings: status of the Alarms row before the person has been asked about alarms."
+    },
     "Notes" : {
       "comment" : "The reminder form's notes field."
     },
@@ -843,6 +873,9 @@
     "Nothing scheduled this week." : {
       "comment" : "Now: the Coming Up section when nothing is due in the next 7 days."
     },
+    "Nothing was deleted. Your reminders and their nudges are as they were. Try again." : {
+      "comment" : "Settings: under the message shown when deleting everything failed."
+    },
     "Nothing was missed today." : {
       "comment" : "My Day: the list when Missed is chosen and nothing was missed today."
     },
@@ -864,6 +897,9 @@
     "Notification: too many alarms scheduled" : {
       "comment" : "Nudge card: an Urgent nudge comes as a notification because the system's alarm limit is reached."
     },
+    "Notifications" : {
+      "comment" : "Settings: row that shows whether notifications are allowed."
+    },
     "Notifications off" : {
       "comment" : "Nudge card, in red: the next nudge can't arrive because notifications are off."
     },
@@ -883,6 +919,12 @@
           }
         }
       }
+    },
+    "Nudges" : {
+      "comment" : "Settings: header of the section with the permission rows and Send a Test Nudge."
+    },
+    "Nudges will look like this." : {
+      "comment" : "Body of the notification that Settings' Send a Test Nudge sends."
     },
     "Nudging" : {
       "comment" : "My Day: the caption of the count of occurrences nudging now.\nNow: section header for the reminders nudging you now.\nStatus label: an occurrence that has come due and isn't Done yet."
@@ -939,17 +981,23 @@
         }
       }
     },
+    "OK" : {
+      "comment" : "Settings: dismisses the message that deleting failed."
+    },
     "Off" : {
-      "comment" : "Reminder details: Break Through Focus is off."
+      "comment" : "Reminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Notifications row when notifications are turned off."
     },
     "On" : {
-      "comment" : "Header of the Custom repeat page's days: the weekdays, or the day of the month.\nReminder details: Break Through Focus is on."
+      "comment" : "Header of the Custom repeat page's days: the weekdays, or the day of the month.\nReminder details: Break Through Focus is on.\nSettings: status of the Alarms row when alarms are allowed.\nSettings: status of the Notifications row when notifications and Time Sensitive are allowed."
     },
     "On %@, from the start date. Change it to pick another day." : {
       "comment" : "Under the Custom repeat page's frequency when it's yearly. The placeholder is the start's day and month, such as \"28 October\"."
     },
     "On Date" : {
       "comment" : "The Custom repeat page's Ends choice: it ends on a date."
+    },
+    "On · Time Sensitive off" : {
+      "comment" : "Settings: status of the Notifications row when notifications are allowed but Time Sensitive is turned off."
     },
     "One word. Spaces become hyphens. A reminder can have as many tags as you like." : {
       "comment" : "Under the Tags page's New Tag field."
@@ -968,6 +1016,9 @@
     },
     "Open" : {
       "comment" : "Alarm button: opens the app on the reminder, where Done is. Shown on the Lock Screen; keep it short."
+    },
+    "Open iOS Settings" : {
+      "comment" : "Settings: row that opens the app's page in the iOS Settings app, where notifications and alarms can be turned on."
     },
     "Opens the reminder's details." : {
       "comment" : "VoiceOver hint on a nudge card's title and on a Now row: tapping it opens the reminder's details."
@@ -1019,6 +1070,12 @@
     },
     "Schedule" : {
       "comment" : "Reminder details: section header for when and how the reminder nudges."
+    },
+    "Send a Test Nudge" : {
+      "comment" : "Settings: row that sends a notification in a few seconds, to see how a nudge looks."
+    },
+    "Sent" : {
+      "comment" : "Settings: shown beside Send a Test Nudge for a few seconds after it was tapped, while the test nudge is on its way."
     },
     "Settings" : {
       "comment" : "Tab bar: the app's settings tab"
@@ -1091,6 +1148,9 @@
     "Tap + to add a tag, or add tags to a reminder when you create or edit it." : {
       "comment" : "Tags: how to add a tag when there are none."
     },
+    "Test nudge" : {
+      "comment" : "Title of the notification that Settings' Send a Test Nudge sends."
+    },
     "That was the last nudge. It closes as Missed at %@." : {
       "comment" : "Nudge card: after the occurrence's last nudge. The placeholder is when it gives up or the next occurrence takes over, such as \"11:17 AM\"."
     },
@@ -1105,6 +1165,9 @@
     },
     "These follow the start date. Change it to pick another day." : {
       "comment" : "Under the Custom repeat page's monthly days."
+    },
+    "This deletes every reminder, tag and all history from this iPhone, and cancels every nudge and alarm. It can't be undone." : {
+      "comment" : "Settings: under the question asked before deleting everything."
     },
     "This deletes its history too, and cancels any nudges and alarms." : {
       "comment" : "Under the question asked before deleting a reminder."
@@ -1121,6 +1184,9 @@
     "Title" : {
       "comment" : "The reminder form's title field, which must be filled in."
     },
+    "To get every nudge during a Focus, allow %@ in that Focus. Nudges vibrate when your iPhone's settings allow it." : {
+      "comment" : "Settings: footer under the Nudges rows. The placeholder is the app's name."
+    },
     "Today" : {
       "comment" : "A tag's screen: header of the reminders that are nudging or due later today.\nThe Custom repeat page's Next Times: a due time today."
     },
@@ -1130,6 +1196,12 @@
     "Tomorrow" : {
       "comment" : "The Custom repeat page's Next Times: a due time tomorrow."
     },
+    "Urgent nudges come as ordinary notifications, which silent mode can mute and a Focus can hold." : {
+      "comment" : "Settings: footer under the Nudges rows, when neither alarms nor Time Sensitive can deliver Urgent nudges."
+    },
+    "Urgent nudges ring as alarms, even in silent mode and in every Focus." : {
+      "comment" : "Settings: footer under the Nudges rows, when alarms are allowed."
+    },
     "Weekly" : {
       "comment" : "The Custom repeat page's frequency."
     },
@@ -1138,6 +1210,9 @@
     },
     "You already have the tag %@." : {
       "comment" : "Tag sheet: shown when another tag has the name, ignoring case. The placeholder is that tag, such as \"#home\"."
+    },
+    "Your Data" : {
+      "comment" : "Settings: header of the section with Delete All Data."
     },
     "Your Tags" : {
       "comment" : "Tags: header of the list of tags.\nThe Tags page's section header above every tag."

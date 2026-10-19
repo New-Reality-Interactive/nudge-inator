@@ -38,6 +38,9 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     /// Marks the adapter's own requests, so a plan never removes one it didn't make, such as
     /// Settings' Send a Test Nudge (ticket 30).
     private static let identifierPrefix = "nudge."
+    static let testNudgeIdentifier = "test-nudge"
+    /// Long enough to lock the phone or leave the app and see how a nudge looks there.
+    static let testNudgeDelay: TimeInterval = 5
     /// Where a request keeps its nudge, so Done needn't parse the identifier.
     nonisolated private static let reminderIDKey = "reminderID"
     /// Seconds since 2001, `Date`'s own value, so the fire time comes back exactly. Seconds since
@@ -147,6 +150,41 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
             states.timeSensitive = .off
         }
         return states
+    }
+
+    /// Settings' Send a Test Nudge (ticket 30): one ordinary notification, no reminder's, so the
+    /// person sees how a nudge arrives. It has no `nudge.` prefix, so no plan removes it, and it
+    /// offers Done like a nudge; its Done names no reminder, so the system just clears it. A
+    /// refusal is reported like any other.
+    func sendTestNudge() async {
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "Test nudge", comment: "Title of the notification that Settings' Send a Test Nudge sends.")
+        content.body = String(localized: "Nudges will look like this.", comment: "Body of the notification that Settings' Send a Test Nudge sends.")
+        content.interruptionLevel = .active
+        content.categoryIdentifier = Self.categoryIdentifier
+        let request = UNNotificationRequest(
+            identifier: Self.testNudgeIdentifier,
+            content: content,
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: Self.testNudgeDelay, repeats: false)
+        )
+        do {
+            try await center.add(request)
+        } catch {
+            events?.schedulingFailed(error)
+        }
+    }
+
+    /// Delete All Data (ticket 30): every pending request, the test nudge too, and every nudge
+    /// already in Notification Center. After the plans handed over so far, so none lands later.
+    func cancelAll() async {
+        let previous = applying
+        let cancelling = Task {
+            await previous?.value
+            center.removeAllPendingNotificationRequests()
+            center.removeAllDeliveredNotifications()
+        }
+        applying = cancelling
+        await cancelling.value
     }
 
     /// Shows the notification prompt, when onboarding asks (ticket 31). Returns whether the

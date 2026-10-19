@@ -46,13 +46,20 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
 
     weak var events: (any AlarmAdapterEvents)?
 
-    /// AlarmKit's authorization, as the adapter last learned it: read once, before any prompt,
-    /// then taken from the prompt's answer and from AlarmKit's updates. Reading it around a
-    /// prompt froze the iPhone (see `SystemAlarmManager.readAuthorizationState()`). `nil` until
-    /// then, or if that one read didn't answer in time.
+    /// AlarmKit's authorization, as the adapter last learned it: read before any prompt, taken
+    /// from the prompt's answer and from AlarmKit's updates, and read again each time the app
+    /// comes forward (`refreshAuthorization()`), since the updates didn't report a change made in
+    /// Settings while the app was suspended (ticket 30's device check, iOS 27.0.1). Reading it
+    /// around a prompt froze the iPhone (see `SystemAlarmManager.readAuthorizationState()`).
+    /// `nil` until then, or if that read didn't answer in time.
     private var authorization: AlarmManager.AuthorizationState?
-    /// The one read, which every caller waits for. It is never repeated: a read that didn't
-    /// answer may still be stuck in AlarmKit.
+    /// How many times an update or the prompt's answer has set `authorization`, so a read that
+    /// began before one can tell it is older and leave it alone.
+    private var authorizationChanges = 0
+    /// A read is under way, and may still be after its time limit: AlarmKit's call can't be
+    /// cancelled and once didn't answer. No second read starts while one is.
+    private var isReadingAuthorization = false
+    /// The first read, which every caller waits for.
     private var authorizationRead: Task<AlarmManager.AuthorizationState?, Never>?
     /// How long launch waits for that read before going on without it.
     private let authorizationReadLimit: Duration
@@ -73,6 +80,7 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
         Task { [weak self] in
             for await state in updates {
                 self?.authorization = state
+                self?.authorizationChanges += 1
                 self?.events?.alarmAuthorizationChanged()
             }
         }
@@ -195,19 +203,36 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
         return authorization
     }
 
-    /// The read, or `nil` if it doesn't answer within the limit. The read's own task is left
-    /// running: AlarmKit's call can't be cancelled.
+    /// The read, or `nil` if it doesn't answer within the limit, or if an earlier read is still
+    /// outstanding, in which case none starts. The read's own task is left running: AlarmKit's call
+    /// can't be cancelled.
     private func readAuthorizationWithinLimit() async -> AlarmManager.AuthorizationState? {
+        guard !isReadingAuthorization else { return nil }
+        isReadingAuthorization = true
         let manager = manager
         let limit = authorizationReadLimit
         return await withCheckedContinuation { continuation in
             let first = FirstAnswer(continuation)
-            Task { first.resume(with: await manager.readAuthorizationState()) }
+            Task {
+                let state = await manager.readAuthorizationState()
+                isReadingAuthorization = false
+                first.resume(with: state)
+            }
             Task {
                 try? await Task.sleep(for: limit)
                 first.resume(with: nil)
             }
         }
+    }
+
+    /// Reads AlarmKit's state again, for App opened (ticket 30): a change made in Settings while the
+    /// app was suspended came through no update on the iPhone (iOS 27.0.1), though a read off the
+    /// main thread answered at once. The answer is kept unless an update or the prompt's answer
+    /// came while it waited, which is newer, or it didn't answer in time.
+    func refreshAuthorization() async {
+        let changesBefore = authorizationChanges
+        guard let answer = await readAuthorizationWithinLimit(), changesBefore == authorizationChanges else { return }
+        authorization = answer
     }
 
     /// Shows the AlarmKit prompt, when onboarding asks (ticket 31). Returns whether the person
@@ -216,6 +241,7 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
     func requestAuthorization() async throws -> Bool {
         let answer = try await manager.requestAuthorization()
         authorization = answer
+        authorizationChanges += 1
         return answer == .authorized
     }
 
