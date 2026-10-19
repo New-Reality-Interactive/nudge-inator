@@ -79,6 +79,25 @@ cp App/Resources/InfoPlist.xcstrings "$scratch/InfoPlist.xcstrings"
 step "xcodegen generate"
 xcodegen generate --quiet || failed+=("xcodegen")
 
+# The iOS 26.5 simulator's own mediaanalysisd (its Photos analysis daemon) ran away after every boot,
+# 700-870% of a CPU for as long as the simulator was up, with no app or test involved; 26.1's did not.
+# Nothing here uses Photos, Vision or Live Text, so it is switched off in each simulator, which
+# persists across boots and is idempotent. Undo: `xcrun simctl spawn <udid> launchctl enable
+# system/com.apple.mediaanalysisd`. Set KEEP_MEDIA_ANALYSIS=1 to leave it alone.
+quiet_media_analysis() {
+  [ "${KEEP_MEDIA_ANALYSIS:-0}" = 1 ] && return 0
+  local os="$1" udid
+  udid=$(xcrun simctl list devices available | awk -v os="iOS $os" -v name="$SIMULATOR_NAME" '
+    /^-- / { in_os = ($0 == "-- " os " --") }
+    in_os && $0 ~ ("^ +" name " \\(") { match($0, /[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}/); print substr($0, RSTART, RLENGTH); exit }')
+  if [ -z "$udid" ]; then echo "note: no $SIMULATOR_NAME simulator for iOS $os to quiet" >&2; return 0; fi
+  xcrun simctl boot "$udid" 2>/dev/null || true # already booted is fine
+  xcrun simctl bootstatus "$udid" -b > /dev/null 2>&1 || true
+  xcrun simctl spawn "$udid" launchctl disable system/com.apple.mediaanalysisd > /dev/null 2>&1 || true
+  xcrun simctl spawn "$udid" launchctl bootout system/com.apple.mediaanalysisd > /dev/null 2>&1 || true
+  echo "mediaanalysisd switched off in the $SIMULATOR_NAME (iOS $os) simulator, $udid"
+}
+
 for os in $SIMULATOR_OSES; do
   step "iOS $os simulator runtime is installed"
   if ! xcrun simctl list runtimes | grep -q "iOS $os "; then
@@ -86,6 +105,7 @@ for os in $SIMULATOR_OSES; do
     failed+=("runtime-$os")
     continue
   fi
+  quiet_media_analysis "$os"
   step "xcodebuild test (app + widget extension) on $SIMULATOR_NAME, iOS $os"
   xcodebuild_logged "$logs/app-ios-$os.log" test -project NudgeInator.xcodeproj -scheme NudgeInator \
     -destination "platform=iOS Simulator,name=$SIMULATOR_NAME,OS=$os" \
