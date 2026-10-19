@@ -10,11 +10,13 @@ import UserNotifications
 struct NotificationAdapterTests {
     static let pills = UUID(uuidString: "6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C")!
     /// The request identifiers of the pills' nudges at 9:10, 9:20, 9:30 and 9:45 in New York
-    /// (EDT), which are 13:10, 13:20, 13:30 and 13:45 UTC.
-    static let pillsAt0910 = "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792156200000"
-    static let pillsAt0920 = "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792156800000"
-    static let pillsAt0930 = "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792157400000"
-    static let pillsAt0945 = "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792158300000"
+    /// (EDT), which are 13:10, 13:20, 13:30 and 13:45 UTC, for the occurrence due at 9:00 (13:00).
+    static let pillsAt0910 = "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792155600000.1792156200000"
+    static let pillsAt0920 = "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792155600000.1792156800000"
+    static let pillsAt0930 = "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792155600000.1792157400000"
+    static let pillsAt0945 = "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792155600000.1792158300000"
+    /// The pills' occurrence due at 9:00 on 16 October, which the nudges above are for.
+    static let pillsDueTime = NewYork.local(2026, 10, 16)
 
     let clock = FakeClock(now: NewYork.local(2026, 10, 16, 9))
     let center = FakeNotificationCenter()
@@ -29,11 +31,13 @@ struct NotificationAdapterTests {
         _ urgency: Urgency,
         _ deliveryKind: DeliveryKind,
         of reminderID: UUID = pills,
+        dueAt dueTime: Date = pillsDueTime,
         title: String = "Take the pills",
         isPastAlarmLimit: Bool = false
     ) -> SchedulePlan.Item {
         SchedulePlan.Item(
             reminderID: reminderID,
+            dueTime: dueTime,
             nudgeNumber: nudgeNumber,
             // Every shipped ladder sends 20 before it gives up.
             nudgesInAll: 20,
@@ -108,7 +112,8 @@ struct NotificationAdapterTests {
     }
 
     /// Mirrors the delegate: it reads the nudge from the delivered request's `userInfo`. The fire
-    /// time goes along so the engine can tell an earlier occurrence's banner from today's.
+    /// time goes along so the engine can tell an earlier occurrence's banner from today's, and the
+    /// due time so a Done before the first unlock can name its occurrence (ticket 32).
     @Test func theDoneActionReportsDoneForTheNotificationsNudge() async throws {
         let adapter = adapter()
         let events = FakeNotificationEvents()
@@ -122,7 +127,7 @@ struct NotificationAdapterTests {
             nudge: NotificationAdapter.deliveredNudge(in: delivered.content.userInfo)
         )
 
-        #expect(events.dones == [DeliveredNudge(reminderID: Self.pills, fireTime: NewYork.local(2026, 10, 16, 9, 10))])
+        #expect(events.dones == [DeliveredNudge(reminderID: Self.pills, dueTime: Self.pillsDueTime, fireTime: NewYork.local(2026, 10, 16, 9, 10))])
     }
 
     /// The engine closes the occurrence only if the nudge fired at or after its due time, so the
@@ -139,12 +144,37 @@ struct NotificationAdapterTests {
         #expect(NotificationAdapter.deliveredNudge(in: delivered.content.userInfo)?.fireTime == fireTime)
     }
 
+    /// A Done before the first unlock stops its occurrence's nudges with no store to plan from
+    /// (ticket 32). Only that occurrence's: the next one's ladder, another reminder's nudges and
+    /// the test nudge stay.
+    @Test func cancellingAnOccurrencesNudgesRemovesOnlyItsPendingRequests() async throws {
+        let adapter = adapter()
+        let bins = UUID(uuidString: "0A1B2C3D-4E5F-4061-8273-8495A6B7C8D9")!
+        let tomorrow = NewYork.local(2026, 10, 17)
+        adapter.apply(SchedulePlan(items: [
+            nudge(1, at: NewYork.local(2026, 10, 16, 9, 10), .normal, .notification),
+            nudge(2, at: NewYork.local(2026, 10, 16, 9, 20), .normal, .notification),
+            nudge(1, at: NewYork.local(2026, 10, 17, 9, 10), .normal, .notification, dueAt: tomorrow),
+            nudge(1, at: NewYork.local(2026, 10, 16, 9, 30), .normal, .notification, of: bins),
+        ]))
+        await adapter.sendTestNudge()
+        await adapter.waitUntilApplied()
+
+        await adapter.cancelNudges(of: Self.pills, dueAt: Self.pillsDueTime)
+
+        #expect(Set(center.pending.map(\.identifier)) == [
+            "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792242000000.1792242600000",
+            "nudge.0A1B2C3D-4E5F-4061-8273-8495A6B7C8D9.1792155600000.1792157400000",
+            NotificationAdapter.testNudgeIdentifier,
+        ])
+    }
+
     /// The Done action can launch the app in the background, and the response may come before the
     /// app model is listening (ticket 21). It waits rather than being lost.
     @Test func aDoneBeforeAnyoneListensIsReportedOnceSomeoneDoes() async {
         let adapter = adapter()
         let events = FakeNotificationEvents()
-        let nudge = DeliveredNudge(reminderID: Self.pills, fireTime: NewYork.local(2026, 10, 16, 9, 10))
+        let nudge = DeliveredNudge(reminderID: Self.pills, dueTime: Self.pillsDueTime, fireTime: NewYork.local(2026, 10, 16, 9, 10))
 
         await adapter.handleResponse(actionIdentifier: NotificationAdapter.doneActionIdentifier, nudge: nudge)
         adapter.events = events
@@ -167,7 +197,7 @@ struct NotificationAdapterTests {
 
         await adapter.handleResponse(
             actionIdentifier: actionIdentifier,
-            nudge: DeliveredNudge(reminderID: Self.pills, fireTime: NewYork.local(2026, 10, 16, 9, 10))
+            nudge: DeliveredNudge(reminderID: Self.pills, dueTime: Self.pillsDueTime, fireTime: NewYork.local(2026, 10, 16, 9, 10))
         )
 
         #expect(events.dones.isEmpty)
@@ -254,7 +284,7 @@ struct NotificationAdapterTests {
             let content = request.content
             let text = [content.title, content.subtitle, content.body] + content.userInfo.values.map { "\($0)" }
             #expect(!text.contains { $0.localizedStandardContains("With food") || $0.localizedStandardContains("health") })
-            #expect(Set(content.userInfo.keys.compactMap { $0 as? String }) == ["reminderID", "fireTime"])
+            #expect(Set(content.userInfo.keys.compactMap { $0 as? String }) == ["reminderID", "dueTime", "fireTime"])
         }
     }
 

@@ -129,8 +129,8 @@ final class FakeNotificationEvents: NotificationAdapterEvents {
     private(set) var dones: [DeliveredNudge] = []
     private(set) var schedulingErrors: [any Error] = []
 
-    func markDone(_ reminderID: Reminder.ID, nudgeFiredAt fireTime: Date) async {
-        dones.append(DeliveredNudge(reminderID: reminderID, fireTime: fireTime))
+    func markDone(_ nudge: DeliveredNudge) async {
+        dones.append(nudge)
     }
 
     func schedulingFailed(_ error: any Error) {
@@ -299,6 +299,12 @@ final class FakeAlarmManager: AlarmManaging {
             continuation.yield(state)
         }
     }
+}
+
+extension DoneQueue {
+    /// A queue in the temporary directory, for models whose tests queue no Done, so none reads or
+    /// deletes the app's own queue (ticket 32). `DoneBeforeFirstUnlockTests` uses folders of its own.
+    static let temporary = DoneQueue(folder: FileManager.default.temporaryDirectory.appending(path: "NudgeInatorTests.DoneQueue"))
 }
 
 extension Collection {

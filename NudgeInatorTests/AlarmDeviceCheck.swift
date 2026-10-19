@@ -45,6 +45,7 @@ class AlarmDeviceCheckSuite {
     func nudge(_ nudgeNumber: Int, at fireTime: Date, title: String) -> SchedulePlan.Item {
         let item = SchedulePlan.Item(
             reminderID: reminderID,
+            dueTime: fireTime,
             nudgeNumber: nudgeNumber,
             // Every shipped ladder sends 20 before it gives up.
             nudgesInAll: 20,

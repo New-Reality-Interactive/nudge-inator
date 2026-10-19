@@ -33,6 +33,7 @@ final class OnboardingTests {
             notifications: NotificationAdapter(center: center, clock: clock),
             alarms: AlarmAdapter(manager: manager, clock: clock),
             onboardingRecord: OnboardingRecord(defaults: defaults),
+            doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )
         await model.launch()
@@ -144,6 +145,7 @@ final class OnboardingTests {
             notifications: NotificationAdapter(center: center, clock: clock),
             alarms: AlarmAdapter(manager: manager, clock: clock, authorizationReadLimit: .milliseconds(50)),
             onboardingRecord: OnboardingRecord(defaults: defaults),
+            doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )
         await model.launch()
