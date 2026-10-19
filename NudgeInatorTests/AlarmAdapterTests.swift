@@ -378,6 +378,7 @@ struct AlarmAdapterTests {
         isAllowed: Bool
     ) async throws {
         let adapter = adapter()
+        manager.authorizationState = .notDetermined
         manager.promptAnswer = answer
 
         #expect(try await adapter.requestAuthorization() == isAllowed)
@@ -408,6 +409,7 @@ struct AlarmAdapterTests {
         let adapter = adapter()
         let events = FakeAlarmEvents()
         adapter.events = events
+        manager.authorizationState = .notDetermined
         #expect(await adapter.permissions(updating: PermissionStates()).alarms == .notDetermined)
 
         manager.changeAuthorization(to: .authorized)
@@ -423,9 +425,28 @@ struct AlarmAdapterTests {
         #expect(manager.authorizationReads == 1)
     }
 
+    /// AlarmKit prompts by itself on the first `schedule` if the app hasn't asked, so until
+    /// onboarding asks, a plan's alarms wait (ticket 31). The prompt's answer re-plans them.
+    @Test func noAlarmIsScheduledUntilThePersonHasBeenAsked() async throws {
+        let adapter = adapter()
+        manager.authorizationState = .notDetermined
+        manager.promptAnswer = .authorized
+        let plan = SchedulePlan(items: [nudge(4, at: NewYork.local(2026, 10, 16, 9, 10))])
+
+        adapter.apply(plan)
+        await adapter.waitUntilApplied()
+        #expect(manager.scheduleCalls.isEmpty)
+
+        _ = try await adapter.requestAuthorization()
+        adapter.apply(plan)
+        await adapter.waitUntilApplied()
+        #expect(manager.scheduled.count == 1)
+    }
+
     /// The prompt's answer is the state: reading it straight after is what froze the iPhone.
     @Test func theAnswerToThePromptIsUsedWithoutReadingTheState() async throws {
         let adapter = adapter()
+        manager.authorizationState = .notDetermined
         manager.promptAnswer = .denied
 
         _ = try await adapter.requestAuthorization()

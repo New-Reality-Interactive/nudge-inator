@@ -19,6 +19,21 @@ final class AppModel {
     /// What the adapters last read, for Settings' status rows (ticket 30), which show not
     /// determined. The banners (ticket 31) read `engine.reach`.
     private(set) var permissions = PermissionStates()
+    /// What onboarding still has to show (ticket 31), or `nil` once it's finished.
+    private(set) var onboarding: Onboarding?
+    /// A second Continue while the prompts are up does nothing.
+    private(set) var isAskingForPermissions = false
+    /// When onboarding's prompts were answered. The App opened their closing makes comes within a
+    /// moment, and leaves AlarmKit's state alone; a later return reads it again.
+    private var promptsAnsweredAt: Date?
+
+    enum Onboarding: Equatable {
+        /// First launch: the welcome, then both prompts.
+        case welcome
+        /// Onboarding was finished but alarms were never asked for, as with data restored from a
+        /// backup: only the alarm prompt, so no plan's alarm is held back for good.
+        case alarmsOnly
+    }
 
     enum LaunchState {
         case launching
@@ -41,6 +56,7 @@ final class AppModel {
     private let scheduler: CombinedSchedulerAdapter
     private let timeZone: TimeZone
     private let giveUpLimit: GiveUpLimit
+    private let onboardingRecord: OnboardingRecord
 
     /// `giveUpLimit` is the shipped one; only tests pass another, to reach a take-over.
     init(
@@ -48,6 +64,7 @@ final class AppModel {
         openStore: @escaping () throws -> ReminderStore,
         notifications: NotificationAdapter,
         alarms: AlarmAdapter,
+        onboardingRecord: OnboardingRecord = .standard,
         timeZone: TimeZone = .autoupdatingCurrent,
         giveUpLimit: GiveUpLimit = .shipped
     ) {
@@ -57,6 +74,8 @@ final class AppModel {
         self.alarms = alarms
         self.timeZone = timeZone
         self.giveUpLimit = giveUpLimit
+        self.onboardingRecord = onboardingRecord
+        onboarding = onboardingRecord.isFinished ? nil : .welcome
         scheduler = CombinedSchedulerAdapter(adapters: [notifications, alarms])
         // Never handed an event before `launch()` replaces it, so it never applies a plan.
         engine = Engine(clock: clock, scheduler: scheduler, giveUpLimit: giveUpLimit, timeZone: timeZone)
@@ -108,6 +127,9 @@ final class AppModel {
         }
         let permissions = await currentPermissions()
         self.permissions = permissions
+        if onboarding == nil, await alarms.isKnownNotAskedYet() {
+            onboarding = .alarmsOnly
+        }
         var engine = makeEngine(permissions: permissions)
         engine.update(tags: stored.tags)
         engine.update(histories: stored.histories)
@@ -121,11 +143,48 @@ final class AppModel {
     func appOpened() async {
         await launchTryingAnUnreadStoreAgain()
         // AlarmKit sent no update for a change made in Settings while the app was suspended
-        // (ticket 30's device check), so its state is read again, off the main thread.
-        await alarms.refreshAuthorization()
+        // (ticket 30's device check), so its state is read again, off the main thread. Not
+        // around onboarding's prompts, which each make an App opened: there the answer is the
+        // state, and a read right after the prompt froze the iPhone (ticket 22).
+        if !isAskingForPermissions, !promptsJustAnswered {
+            await alarms.refreshAuthorization()
+        }
         refreshPermissions()
         await permissionsRefresh?.value
         perform { $0.update(reminders: $0.reminders) }
+    }
+
+    /// Onboarding's Continue: the notification prompt, then the alarm prompt whatever the person
+    /// chose, then the new permissions reach the engine, whose re-plan schedules the alarms held
+    /// back until now. A prompt already answered returns at once without showing. Onboarding is
+    /// finished only once both have answered, so if the app is killed in between it shows again.
+    func askForPermissions() async {
+        guard let step = onboarding, !isAskingForPermissions else { return }
+        isAskingForPermissions = true
+        defer { isAskingForPermissions = false }
+        if step == .welcome {
+            do {
+                _ = try await notifications.requestAuthorization()
+            } catch {
+                Self.logger.error("The notification prompt failed: \(error, privacy: .public)")
+            }
+        }
+        do {
+            _ = try await alarms.requestAuthorization()
+        } catch {
+            Self.logger.error("The alarm prompt failed: \(error, privacy: .public)")
+        }
+        onboardingRecord.isFinished = true
+        onboarding = nil
+        promptsAnsweredAt = clock.now
+        refreshPermissions()
+        await permissionsRefresh?.value
+    }
+
+    /// Within a moment of the prompts' answer, when the App opened a prompt's closing makes
+    /// comes. Two seconds, by the model's clock.
+    private var promptsJustAnswered: Bool {
+        promptsAnsweredAt.map { clock.now.timeIntervalSince($0) < 2 } ?? false
     }
 
     /// Where the app was asked to go from outside its screens. The tab shell (ticket 22) follows

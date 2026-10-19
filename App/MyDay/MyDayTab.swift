@@ -28,6 +28,7 @@ struct MyDayTab: View {
                     let screen = screen(at: context.date)
                     MyDayList(
                         screen: screen,
+                        reach: engine?.reach,
                         now: context.date,
                         showsDateAndFilter: !compact,
                         tapCount: { filter.tap($0) },
@@ -85,16 +86,11 @@ private func todayText(_ date: Date) -> Text {
     Text(date, format: .dateTime.weekday(.wide).day().month(.wide))
 }
 
-/// The permission banners go at the top of the list (the mockup's `permBanner`). Ticket 31 owns
-/// the banner view; until then this holds the place and draws nothing.
-private struct PermissionBannerSlot: View {
-    var body: some View {
-        EmptyView()
-    }
-}
-
 private struct MyDayList: View {
     let screen: MyDayScreen
+    /// What can still reach the person, for the permission banners at the top of the list (the
+    /// mockup's `permBanner`).
+    let reach: Reach?
     let now: Date
     /// Portrait shows the date and the Filter button in the content; landscape has them in the bar.
     let showsDateAndFilter: Bool
@@ -110,7 +106,6 @@ private struct MyDayList: View {
     var body: some View {
         List {
             Section {
-                PermissionBannerSlot()
                 if showsDateAndFilter {
                     plainRow {
                         // The full width, so the label wraps at accessibility sizes instead of
@@ -131,10 +126,15 @@ private struct MyDayList: View {
                     plainRow { showingOnlyBar(chosen.kind) }
                 }
             } header: {
-                if showsDateAndFilter {
-                    todayText(now)
-                        .subheadStyle()
-                        .textCase(nil)
+                VStack(alignment: .leading, spacing: Design.Spacing.s3) {
+                    if showsDateAndFilter {
+                        todayText(now)
+                            .subheadStyle()
+                            .textCase(nil)
+                    }
+                    if let reach {
+                        PermissionBanners(reach: reach)
+                    }
                 }
             }
             Section {

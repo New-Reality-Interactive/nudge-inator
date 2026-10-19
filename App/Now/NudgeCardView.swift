@@ -163,6 +163,12 @@ struct ViaLabel {
         return delivery == .cannotArrive ? text.foregroundStyle(Color.negative) : text
     }
 
+    /// The words alone, for VoiceOver, which would otherwise read the glyph's own name first
+    /// ("Notifications: Notification", device check, ticket 31).
+    var spokenText: Text {
+        Text(NudgeCard.via(delivery))
+    }
+
     private var systemImage: String {
         switch delivery {
         case .alarm: "alarm"

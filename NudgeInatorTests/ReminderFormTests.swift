@@ -40,6 +40,27 @@ struct ReminderFormTests {
     /// Due at 7:30 and Firm, so at 8:00 it is Nudging.
     let bins = Reminder(title: "Take the bins out", dueTime: NewYork.local(2026, 10, 15, 7, 30), strength: .firm)
 
+    /// The form's How It Nudges and the line under the strength (ticket 31) follow the draft's
+    /// strength and switch, from the engine. Firm waits 30 min, then 15 and 7.5, then its 5 min
+    /// floor; Gentle waits an hour, easing to 20 min.
+    @Test(arguments: [
+        (Strength.firm, true, StrengthBlurb(firstWait: 30 * 60, floor: 5 * 60, firstAlarm: 4)),
+        (.firm, false, StrengthBlurb(firstWait: 30 * 60, floor: 5 * 60, firstAlarm: nil)),
+        (.gentle, true, StrengthBlurb(firstWait: 60 * 60, floor: 20 * 60, firstAlarm: nil)),
+        (.relentless, true, StrengthBlurb(firstWait: 10 * 60, floor: 2 * 60, firstAlarm: 4)),
+    ])
+    func theStrengthsLineAndHowItNudgesFollowTheDraft(strength: Strength, breakThroughFocus: Bool, blurb: StrengthBlurb) async throws {
+        manager.authorizationState = .authorized
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.strength = strength
+        form.breakThroughFocus = breakThroughFocus
+
+        #expect(form.strengthBlurb == blurb)
+        #expect(form.howItNudges.nudgeCount == 20)
+        #expect(form.howItNudges.rows.contains { $0.delivery == .alarm } == (blurb.firstAlarm != nil))
+    }
+
     @Test(arguments: ["", "   ", "\n"])
     func aReminderWithNoTitleCantBeSaved(title: String) async throws {
         let model = try await launchedModel()

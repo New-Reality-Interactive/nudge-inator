@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// The tab shell: Now, My Day, Tags and Settings, in the system tab bar. It follows the model's
-/// route (the alarm's Open) and shows each tab's content for the launch state. Without a model
-/// (the app hosting tests, and previews) every tab shows its empty state.
+/// The tab shell: Now, My Day, Tags and Settings, in the system tab bar, under onboarding on first
+/// launch. It follows the model's route (the alarm's Open) and shows each tab's content for the
+/// launch state. Without a model (the app hosting tests, and previews) every tab shows its empty
+/// state.
 struct RootView: View {
     @Environment(AppModel.self) private var model: AppModel?
     @State private var navigation = ShellNavigation()
@@ -38,6 +39,15 @@ struct RootView: View {
         .onChange(of: model?.route, initial: true) {
             guard let route = model?.takeRoute() else { return }
             navigation.follow(route)
+        }
+        // Over the tabs from the first frame, so nothing behind it can be reached before the
+        // prompts. Only the model closes it, once both have been answered.
+        .fullScreenCover(isPresented: .constant(model?.onboarding != nil)) {
+            if let model {
+                OnboardingView(step: model.onboarding ?? .welcome, isAsking: model.isAskingForPermissions) {
+                    Task { await model.askForPermissions() }
+                }
+            }
         }
     }
 

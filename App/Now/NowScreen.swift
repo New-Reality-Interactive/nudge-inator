@@ -130,7 +130,7 @@ struct NudgeCard: Identifiable {
         case .notification(weakerBecause: .timeSensitiveOff):
             LocalizedStringResource("Notification: Time Sensitive is off", comment: "Nudge card: a High nudge comes as an ordinary notification because Time Sensitive notifications are off.")
         case .notification(weakerBecause: .breakThroughFocusOff):
-            LocalizedStringResource("Notification: Break through Focus is off", comment: "Nudge card: a High or Urgent nudge comes as an ordinary notification because the reminder's Break through Focus switch is off.")
+            LocalizedStringResource("Notification: Break Through Focus is off", comment: "Via label on a nudge card and in How It Nudges: a High or Urgent nudge comes as an ordinary notification because the reminder's Break Through Focus switch is off.")
         case .notification(weakerBecause: .pastAlarmLimit):
             LocalizedStringResource("Notification: too many alarms scheduled", comment: "Nudge card: an Urgent nudge comes as a notification because the system's alarm limit is reached.")
         case .cannotArrive:

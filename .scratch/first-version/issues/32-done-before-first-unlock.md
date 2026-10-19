@@ -27,5 +27,8 @@ The user decided (2026-10-17) to keep it. While the store can't be opened, the a
 - [ ] A queued Done for an occurrence that is no longer the latest is dropped without error (unit test).
 - [ ] No title, note or tag is written to the file (assert on its contents).
 - [ ] Device (human): restart the phone, choose Done on a nudge from the Lock Screen before unlocking, and check that the nudging stops. Then unlock, and check that the reminder reads Done after the next launch. Record the iOS version.
+- [ ] Device (human): on a fresh install, go through onboarding (Continue, then both prompts) and check that nothing freezes when the alarm prompt closes. This checks ticket 31's 2 s window, in which App opened leaves AlarmKit's state alone after the prompts' answer; it replaced the flag the device checks ran with. *(Moved here from ticket 31.)*
+- [ ] Device (human): a permission changed in iOS Settings while the app is suspended: record whether it arrives through AlarmKit's `authorizationUpdates` or App opened's re-read (`AlarmAdapter.refreshAuthorization()`), which needs a log line on each path. Ticket 30 found no update arrives. Knowledge only: the banner already clears on return either way. *(Moved here from ticket 31.)*
+- [ ] Device (human), or agree to drop it: the alarms-only onboarding step (`AppModel.Onboarding.alarmsOnly`), for data restored from a backup with alarms never asked, shows the alarm explanation and then the alarm prompt. It needs a backup restore, or a debug-only way to fake one; Apple's docs don't say whether iOS restores the alarm permission with a backup, and if it does the step never shows. *(Moved here from ticket 31.)*
 
 Blocked by: 21
