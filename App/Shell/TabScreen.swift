@@ -1,3 +1,4 @@
+import NudgeEngine
 import SwiftUI
 
 /// One tab's content for its screen state: a spinner while the store is read, a message when it
@@ -57,34 +58,19 @@ struct EmptyRow: View {
     }
 }
 
-/// A toolbar + whose sheet a later ticket builds, so it is shown but disabled: New Tag on Tags.
-struct DisabledAddButton: View {
-    /// What the + adds, for VoiceOver.
-    let label: Text
-
-    var body: some View {
-        Button {
-        } label: {
-            Label {
-                label
-            } icon: {
-                Image(systemName: "plus")
-            }
-        }
-        .disabled(true)
-    }
-}
-
 /// The + that opens the New Reminder form, on Now and My Day. Saving it lands back here, so the
 /// new reminder shows on the screen the person came from. It is disabled until the store has been
 /// read, since the model drops events before then, and without a model (previews, the test host).
 struct NewReminderButton: View {
+    /// Tags the form opens with chosen: a tag's screen passes its own.
+    var tagIDs: [Tag.ID] = []
+
     @Environment(AppModel.self) private var model: AppModel?
     @State private var form: ReminderForm?
 
     var body: some View {
         Button {
-            if let model { form = ReminderForm(engine: { model.engine }, now: { .now }) }
+            if let model { form = ReminderForm(engine: { model.engine }, now: { .now }, tagIDs: tagIDs) }
         } label: {
             Label {
                 Text("New Reminder", comment: "Toolbar button (a plus) that opens the New Reminder form.")

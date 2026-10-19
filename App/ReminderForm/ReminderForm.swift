@@ -55,8 +55,10 @@ final class ReminderForm: Identifiable {
     /// The draft as the form opened, set once `init` has filled it in.
     private var opened: Reminder?
 
-    /// A New Reminder form.
-    init(engine currentEngine: @escaping () -> Engine, now: @escaping () -> Date) {
+    /// A New Reminder form. `tagIDs` are chosen when it opens, as from a tag's screen, and aren't
+    /// a change the person made.
+    init(engine currentEngine: @escaping () -> Engine, now: @escaping () -> Date, tagIDs: [Tag.ID] = []) {
+        self.tagIDs = tagIDs
         self.currentEngine = currentEngine
         tagRules = currentEngine()
         self.now = now

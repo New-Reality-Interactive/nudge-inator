@@ -24,7 +24,7 @@ struct RootView: View {
                 MyDayTab(state: state, path: $navigation.dayPath)
             }
             Tab(AppTab.tags.title, systemImage: AppTab.tags.systemImage, value: .tags) {
-                TagsTab(state: state)
+                TagsTab(state: state, path: $navigation.tagPath)
             }
             Tab(AppTab.settings.title, systemImage: AppTab.settings.systemImage, value: .settings) {
                 SettingsTab()
