@@ -31,6 +31,14 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         return true
     }
 
+    /// The first unlock since a restart: the store, shut until now, can be read, and a Done chosen
+    /// on the Lock Screen meanwhile is merged (ticket 32). Apple's docs don't say whether a
+    /// suspended app gets this; App opened retries too.
+    func applicationProtectedDataDidBecomeAvailable(_ application: UIApplication) {
+        guard let model else { return }
+        Task { await model.protectedDataBecameAvailable() }
+    }
+
     /// Whether the app was launched to host the tests. Its own model would then plan from the
     /// real store and, on every foreground, hand the real adapters a plan that cancels the
     /// alarms the device checks schedule, and its notification delegate would replace theirs.
@@ -39,8 +47,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 
-    /// The real wiring. The device checks pass a store of their own.
-    static func makeModel(openStore: @escaping () throws -> ReminderStore = { try ReminderStore(location: .appGroup) }) -> AppModel {
+    /// The real wiring. The device checks pass a store and a queue of their own.
+    static func makeModel(
+        openStore: @escaping () throws -> ReminderStore = { try ReminderStore(location: .appGroup) },
+        doneQueue: DoneQueue = .standard
+    ) -> AppModel {
         let clock = SystemClock()
         return AppModel(
             clock: clock,
@@ -48,7 +59,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             notifications: NotificationAdapter(center: SystemNotificationCenter(), clock: clock),
             alarms: AlarmAdapter(manager: SystemAlarmManager(), clock: clock, openIntent: { item, alarmID in
                 OpenReminderIntent(alarmID: alarmID, reminderID: item.reminderID)
-            })
+            }),
+            doneQueue: doneQueue
         )
     }
 }

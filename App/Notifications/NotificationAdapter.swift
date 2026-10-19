@@ -10,7 +10,7 @@ protocol NotificationAdapterEvents: AnyObject {
     /// Return only once it is saved and applied: the response handler waits for it, and Apple
     /// says its return tells the system "you are done processing the user's response", after
     /// which an app the action launched in the background can be suspended.
-    func markDone(_ reminderID: Reminder.ID, nudgeFiredAt fireTime: Date) async
+    func markDone(_ nudge: DeliveredNudge) async
     /// The center turned a request down. `notificationsNotAllowed` means the person turned
     /// notifications off, so read `permissions(updating:)` again and hand them to the engine.
     func schedulingFailed(_ error: any Error)
@@ -19,6 +19,9 @@ protocol NotificationAdapterEvents: AnyObject {
 /// The nudge a delivered notification was for, as its request's `userInfo` carries it.
 struct DeliveredNudge: Equatable, Sendable {
     var reminderID: Reminder.ID
+    /// The due time of the occurrence it nudged about, which names that occurrence when the store
+    /// can't be read (ticket 32).
+    var dueTime: Date
     var fireTime: Date
 }
 
@@ -47,6 +50,8 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     /// 1970 lose a fraction of a second on the way, and the engine then read the Done as one for
     /// an earlier occurrence and ignored it (ticket 21's device check).
     nonisolated private static let fireTimeKey = "fireTime"
+    /// Seconds since 2001, like the fire time.
+    nonisolated private static let dueTimeKey = "dueTime"
 
     private let center: any UserNotificationCenter
     private let clock: any EngineClock
@@ -83,9 +88,14 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     nonisolated static func deliveredNudge(in userInfo: [AnyHashable: Any]) -> DeliveredNudge? {
         guard let text = userInfo[reminderIDKey] as? String,
               let reminderID = UUID(uuidString: text),
-              let seconds = userInfo[fireTimeKey] as? TimeInterval
+              let dueSeconds = userInfo[dueTimeKey] as? TimeInterval,
+              let fireSeconds = userInfo[fireTimeKey] as? TimeInterval
         else { return nil }
-        return DeliveredNudge(reminderID: reminderID, fireTime: Date(timeIntervalSinceReferenceDate: seconds))
+        return DeliveredNudge(
+            reminderID: reminderID,
+            dueTime: Date(timeIntervalSinceReferenceDate: dueSeconds),
+            fireTime: Date(timeIntervalSinceReferenceDate: fireSeconds)
+        )
     }
 
     func apply(_ plan: SchedulePlan) {
@@ -187,6 +197,21 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         await cancelling.value
     }
 
+    /// Removes the pending nudges of the reminder's occurrence due at `dueTime`, for a Done chosen
+    /// while the store can't be read (ticket 32): the identifiers name the occurrence, so no plan
+    /// is needed. The next occurrence's nudges stay. After the plans handed over so far.
+    func cancelNudges(of reminderID: Reminder.ID, dueAt dueTime: Date) async {
+        let previous = applying
+        let cancelling = Task {
+            await previous?.value
+            let prefix = Self.occurrencePrefix(of: reminderID, dueAt: dueTime)
+            let identifiers = await center.pendingNotificationRequests().map(\.identifier).filter { $0.hasPrefix(prefix) }
+            center.removePendingNotificationRequests(withIdentifiers: identifiers)
+        }
+        applying = cancelling
+        await cancelling.value
+    }
+
     /// Shows the notification prompt, when onboarding asks (ticket 31). Returns whether the
     /// person allowed notifications.
     func requestAuthorization() async throws -> Bool {
@@ -215,7 +240,7 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         let dones = unreportedDones
         unreportedDones.removeAll()
         for done in dones {
-            await events.markDone(done.reminderID, nudgeFiredAt: done.fireTime)
+            await events.markDone(done)
         }
     }
 
@@ -227,6 +252,7 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         content.categoryIdentifier = Self.categoryIdentifier
         content.userInfo = [
             Self.reminderIDKey: item.reminderID.uuidString,
+            Self.dueTimeKey: item.dueTime.timeIntervalSinceReferenceDate,
             Self.fireTimeKey: item.fireTime.timeIntervalSinceReferenceDate,
         ]
         let trigger = UNTimeIntervalNotificationTrigger(
@@ -237,10 +263,19 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     }
 
     /// The fire time, not the nudge number, names the nudge: a plan can hold two ladders for one
-    /// reminder (ticket 15). Milliseconds, so two nudges can't share an identifier.
+    /// reminder (ticket 15). Milliseconds, so two nudges can't share an identifier. The occurrence's
+    /// due time comes first, so its nudges share a prefix (ticket 32).
     static func identifier(for item: SchedulePlan.Item) -> String {
-        let milliseconds = Int64((item.fireTime.timeIntervalSince1970 * 1000).rounded())
-        return "\(identifierPrefix)\(item.reminderID.uuidString).\(milliseconds)"
+        "\(occurrencePrefix(of: item.reminderID, dueAt: item.dueTime))\(milliseconds(of: item.fireTime))"
+    }
+
+    /// What every identifier of the occurrence's nudges starts with.
+    private static func occurrencePrefix(of reminderID: Reminder.ID, dueAt dueTime: Date) -> String {
+        "\(identifierPrefix)\(reminderID.uuidString).\(milliseconds(of: dueTime))."
+    }
+
+    private static func milliseconds(of date: Date) -> Int64 {
+        Int64((date.timeIntervalSince1970 * 1000).rounded())
     }
 
     private static func hasSameContent(_ request: UNNotificationRequest, _ pending: UNNotificationRequest?) -> Bool {

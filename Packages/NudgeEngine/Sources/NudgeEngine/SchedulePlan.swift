@@ -12,6 +12,9 @@ public struct SchedulePlan: Equatable, Sendable {
     /// One planned nudge. It carries only the reminder's title, never its notes or tags.
     public struct Item: Equatable, Sendable {
         public var reminderID: Reminder.ID
+        /// The due time of the occurrence it nudges about. With the reminder ID it names the
+        /// occurrence, so its nudges can be found without the store (ticket 32).
+        public var dueTime: Date
         public var nudgeNumber: Int
         /// The nudges its occurrence sends in all, the "of 20" in its body: the give-up limit's
         /// count, fewer if the span or a take-over comes first.
@@ -31,6 +34,7 @@ public struct SchedulePlan: Equatable, Sendable {
 
         public init(
             reminderID: Reminder.ID,
+            dueTime: Date,
             nudgeNumber: Int,
             nudgesInAll: Int,
             fireTime: Date,
@@ -40,6 +44,7 @@ public struct SchedulePlan: Equatable, Sendable {
             isPastAlarmLimit: Bool = false
         ) {
             self.reminderID = reminderID
+            self.dueTime = dueTime
             self.nudgeNumber = nudgeNumber
             self.nudgesInAll = nudgesInAll
             self.fireTime = fireTime

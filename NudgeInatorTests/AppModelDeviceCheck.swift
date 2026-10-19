@@ -90,7 +90,7 @@ final class NudgeActionDeviceCheck {
         try #require(await center.notificationSettings().authorizationStatus == .authorized, "Allow notifications for Nudge-inator, or set TEST_RUNNER_NUDGE_FRESH_INSTALL=1 on a fresh install")
         try #require(try AlarmManager.shared.alarms.isEmpty, "Nudge-inator already holds alarms; the check would cancel them")
         ownsEveryAlarm = true
-        let model = AppDelegate.makeModel { [storeFile] in try ReminderStore(location: .file(storeFile.url)) }
+        let model = AppDelegate.makeModel(openStore: { [storeFile] in try ReminderStore(location: .file(storeFile.url)) }, doneQueue: .temporary)
         await model.launch()
         return model
     }

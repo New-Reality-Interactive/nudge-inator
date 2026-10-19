@@ -39,6 +39,21 @@ struct RepeatTakeOverTests {
         #expect(engine(for: pills).occurrence(of: pills.id, dueAt: NewYork.local(2026, 10, 15))?.state == .missed(reason: .nextTookOver))
     }
 
+    /// Each nudge names the occurrence it is for, so a Done before the first unlock can stop that
+    /// occurrence's nudges without touching the next one's (ticket 32).
+    @Test func eachNudgeCarriesItsOccurrencesDueTime() throws {
+        let open = NewYork.local(2026, 10, 15)
+        let next = NewYork.local(2026, 10, 16)
+
+        clock.now = NewYork.local(2026, 10, 16, 8)
+        _ = engine(for: pills)
+        let items = try #require(scheduler.lastPlan).items
+
+        #expect(items.filter { $0.fireTime < next }.allSatisfy { $0.dueTime == open })
+        #expect(items.filter { $0.fireTime >= next }.allSatisfy { $0.dueTime == next })
+        #expect(Set(items.map(\.dueTime)) == [open, next])
+    }
+
     /// An hour before the next one falls due, the old occurrence is still Nudging. Its ladder stops
     /// at the next due time, so from then on the plan holds only the new occurrence, from nudge 1
     /// at the strength's lowest urgency.

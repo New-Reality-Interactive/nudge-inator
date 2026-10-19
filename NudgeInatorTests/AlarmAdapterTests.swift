@@ -25,11 +25,13 @@ struct AlarmAdapterTests {
         at fireTime: Date,
         _ deliveryKind: DeliveryKind = .alarm,
         of reminderID: UUID = pills,
+        dueAt dueTime: Date = NewYork.local(2026, 10, 16),
         title: String = "Take the pills",
         isPastAlarmLimit: Bool = false
     ) -> SchedulePlan.Item {
         SchedulePlan.Item(
             reminderID: reminderID,
+            dueTime: dueTime,
             nudgeNumber: nudgeNumber,
             // Every shipped ladder sends 20 before it gives up.
             nudgesInAll: 20,
@@ -152,11 +154,33 @@ struct AlarmAdapterTests {
     }
 
     /// Ticket 20's Open intent finds its alarm by this ID, so it is pinned to a value worked out
-    /// independently (Python's `uuid.uuid5` with the same namespace and name).
-    @Test func theAlarmIDIsAVersionFiveUUIDOfTheReminderFireTimeAndTitle() {
+    /// independently (Python's `hashlib.sha1` with the same namespace and names): the first half
+    /// names the occurrence (reminder and due time, ticket 32), the second the nudge (fire time and
+    /// title), with RFC 9562's version 8 and variant bits.
+    @Test func theAlarmIDIsAVersionEightUUIDOfTheOccurrenceAndTheNudge() {
         let id = AlarmAdapter.alarmID(for: nudge(4, at: NewYork.local(2026, 10, 16, 9, 10)))
 
-        #expect(id.uuidString == "9DBDB8C7-1174-5F1D-BA74-03F168DA5F11")
+        #expect(id.uuidString == "B922D948-47D5-8D7E-90E9-107121305AE8")
+    }
+
+    /// A Done before the first unlock stops its occurrence's alarms with no store, so no title, to
+    /// plan from (ticket 32). Only that occurrence's alarms yet to ring: the next one's ladder,
+    /// another reminder's alarms, and one already ringing, stay.
+    @Test func cancellingAnOccurrencesNudgesCancelsOnlyItsAlarmsYetToRing() async throws {
+        let adapter = adapter()
+        let bins = UUID(uuidString: "0A1B2C3D-4E5F-4061-8273-8495A6B7C8D9")!
+        let ringing = nudge(4, at: NewYork.local(2026, 10, 16, 9, 10))
+        let open = nudge(5, at: NewYork.local(2026, 10, 16, 9, 15))
+        let next = nudge(4, at: NewYork.local(2026, 10, 17, 9, 10), dueAt: NewYork.local(2026, 10, 17))
+        let other = nudge(4, at: NewYork.local(2026, 10, 16, 9, 12), of: bins)
+        adapter.apply(SchedulePlan(items: [ringing, open, next, other]))
+        await adapter.waitUntilApplied()
+        manager.ring(AlarmAdapter.alarmID(for: ringing))
+
+        await adapter.cancelNudges(of: Self.pills, dueAt: NewYork.local(2026, 10, 16))
+
+        #expect(manager.cancelledIDs == [AlarmAdapter.alarmID(for: open)])
+        #expect(Set(manager.scheduled.map(\.id)) == Set([ringing, next, other].map(AlarmAdapter.alarmID(for:))))
     }
 
     /// Ticket 13: the plan still holds an open ladder's passed nudges, which were delivered.

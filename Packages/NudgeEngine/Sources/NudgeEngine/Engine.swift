@@ -221,6 +221,26 @@ public struct Engine {
         markDone(reminderID)
     }
 
+    /// A Done chosen before the first unlock after a restart, when the store couldn't be read, and
+    /// queued until it could (ticket 32). It closes the occurrence due at `dueTime` as Done at
+    /// `doneAt`, if that occurrence was Nudging then and is still the reminder's latest: one that
+    /// gave up since is Done all the same, since the person chose Done in time. One the next has
+    /// taken over is dropped, as is one already closed.
+    public mutating func markDone(_ reminderID: Reminder.ID, occurrenceDueAt dueTime: Date, doneAt: Date) {
+        guard let reminder = reminder(reminderID),
+              latestOccurrence(for: reminderID)?.dueTime == dueTime,
+              dueTime <= doneAt, doneAt <= clock.now,
+              case let (occurrence, nil) = occurrence(of: reminder, dueAt: dueTime, takenOverAt: nil, asOf: doneAt),
+              case let .nudging(nudgeNumber) = occurrence.state
+        else { return }
+        historyByReminder[reminderID, default: History()].saved.closedOccurrences[dueTime] = Closing(
+            state: .done,
+            closedAt: doneAt,
+            nudgesSent: nudgeNumber
+        )
+        applyPlan()
+    }
+
     /// Stops the reminder nudging without losing it. Its open occurrence, if any, closes as Skipped,
     /// and so does anything that falls due until Resume (the mockup's PAUSE_NOTE). With nothing
     /// open, Pause only marks the reminder paused. Pausing a paused reminder is ignored.
@@ -361,6 +381,7 @@ public struct Engine {
             guard let delivery = delivery(of: reminder, firingAt: fireTime, urgency: urgency) else { return nil }
             return SchedulePlan.Item(
                 reminderID: reminder.id,
+                dueTime: dueTime,
                 nudgeNumber: index + 1,
                 nudgesInAll: nudgeTimes.count,
                 fireTime: fireTime,
@@ -522,12 +543,15 @@ public struct Engine {
     }
 
     /// The occurrence's state from the clock, and how it closed. `takeOverTime` is when the next
-    /// occurrence fell due, or `nil` if it hasn't yet (or the repeat has no next).
+    /// occurrence fell due, or `nil` if it hasn't yet (or the repeat has no next). `now` is the
+    /// clock's, or the moment a queued Done was chosen (ticket 32).
     private func occurrence(
         of reminder: Reminder,
         dueAt dueTime: Date,
-        takenOverAt takeOverTime: Date?
+        takenOverAt takeOverTime: Date?,
+        asOf now: Date? = nil
     ) -> (occurrence: Occurrence, closing: Closing?) {
+        let now = now ?? clock.now
         func closed(_ closing: Closing) -> (occurrence: Occurrence, closing: Closing?) {
             (Occurrence(dueTime: dueTime, state: closing.state), closing)
         }
@@ -552,10 +576,10 @@ public struct Engine {
             let sent = nudgeTimes.count { $0 < takeOverTime }
             return closed(Closing(state: .missed(reason: .nextTookOver), closedAt: takeOverTime, nudgesSent: sent))
         }
-        if clock.now >= giveUpTime {
+        if now >= giveUpTime {
             return closed(Closing(state: .missed(reason: .giveUpLimit), closedAt: giveUpTime, nudgesSent: nudgeTimes.count))
         }
-        let sent = nudgeTimes.filter { $0 <= clock.now }.count
+        let sent = nudgeTimes.filter { $0 <= now }.count
         return (Occurrence(dueTime: dueTime, state: .nudging(nudgeNumber: sent)), nil)
     }
 }

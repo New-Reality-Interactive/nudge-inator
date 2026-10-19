@@ -79,7 +79,7 @@ struct TestNudgeTests {
         let adapter = adapter()
         adapter.apply(SchedulePlan(items: [
             SchedulePlan.Item(
-                reminderID: UUID(), nudgeNumber: 1, nudgesInAll: 20,
+                reminderID: UUID(), dueTime: NewYork.local(2026, 10, 19, 9), nudgeNumber: 1, nudgesInAll: 20,
                 fireTime: NewYork.local(2026, 10, 19, 9, 30), urgency: .normal,
                 title: "Take the pills", deliveryKind: .notification
             ),

@@ -4,6 +4,7 @@ import CryptoKit
 import Foundation
 import NudgeEngine
 import NudgeShared
+import os
 import SwiftUI
 
 /// What the alarm adapter reports to the app model, which owns the engine (ticket 21).
@@ -79,6 +80,9 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
         // its whole life (ticket 21), so the task isn't cancelled.
         Task { [weak self] in
             for await state in updates {
+                // Which path carries a change made in Settings: this or App opened's re-read
+                // (ticket 32's device check).
+                Self.logger.notice("AlarmKit's authorization update: \(String(describing: state), privacy: .public)")
                 self?.authorization = state
                 self?.authorizationChanges += 1
                 self?.events?.alarmAuthorizationChanged()
@@ -172,6 +176,27 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
         return firstError
     }
 
+    /// Cancels the alarms yet to ring of the reminder's occurrence due at `dueTime`, for a Done
+    /// chosen while the store can't be read (ticket 32): an alarm's ID names its occurrence, so no
+    /// plan is needed. As in a re-plan, an alarm that is ringing is left to the person's Stop or
+    /// Open. After the plans handed over so far.
+    func cancelNudges(of reminderID: Reminder.ID, dueAt dueTime: Date) async {
+        let previous = applying
+        let cancelling = Task {
+            await previous?.value
+            let occurrence = Self.occurrenceBytes(of: reminderID, dueAt: dueTime)
+            do {
+                for alarm in try manager.alarms() where alarm.state == .scheduled && Self.occurrenceBytes(in: alarm.id) == occurrence {
+                    try manager.cancel(id: alarm.id)
+                }
+            } catch {
+                Self.logger.error("An occurrence's alarms couldn't be cancelled: \(error, privacy: .public)")
+            }
+        }
+        applying = cancelling
+        await cancelling.value
+    }
+
     /// Silences a ringing alarm. The Open button doesn't (ticket 02 B), so the Open intent calls
     /// this. A nudge is a one-shot, which AlarmKit then deletes.
     func stop(_ alarmID: Alarm.ID) throws {
@@ -245,6 +270,7 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
     func refreshAuthorization() async {
         let changesBefore = authorizationChanges
         guard let answer = await readAuthorizationWithinLimit(), changesBefore == authorizationChanges else { return }
+        Self.logger.notice("App opened's authorization re-read: \(String(describing: answer), privacy: .public), was \(String(describing: self.authorization), privacy: .public)")
         authorization = answer
     }
 
@@ -267,16 +293,17 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
         }
     }
 
-    /// A name-based UUID (RFC 9562 version 5) of the reminder, the fire time and the title, so the
-    /// same nudge always gets the same ID, even after a relaunch, and the diff needs no saved
-    /// record. The fire time, not the nudge number, names the nudge: a plan can hold two ladders for
-    /// one reminder (ticket 15). The title is in the name because AlarmKit can't say what an alarm
-    /// shows: a title Edit gives a new ID, so the old alarm is cancelled and the new one scheduled.
+    /// A UUID (RFC 9562 version 8, custom) built from two name hashes, so the same nudge always
+    /// gets the same ID, even after a relaunch, and the diff needs no saved record. The first half
+    /// names the occurrence, the reminder and its due time, so a Done chosen before the store can
+    /// be read finds the occurrence's alarms by ID alone (ticket 32): AlarmKit lists only IDs,
+    /// schedules and states. The second half names the nudge. The fire time, not the nudge number,
+    /// does: a plan can hold two ladders for one reminder (ticket 15). The title is in it because
+    /// AlarmKit can't say what an alarm shows: a title Edit gives a new ID, so the old alarm is
+    /// cancelled and the new one scheduled.
     static func alarmID(for item: SchedulePlan.Item) -> Alarm.ID {
-        let milliseconds = Int64((item.fireTime.timeIntervalSince1970 * 1000).rounded())
-        let name = "nudge.\(item.reminderID.uuidString).\(milliseconds).\(item.title)"
-        var bytes = Array(Insecure.SHA1.hash(data: Data(alarmIDNamespace + Array(name.utf8))).prefix(16))
-        bytes[6] = (bytes[6] & 0x0F) | 0x50  // version 5
+        let nudge = nameHash("nudge.\(milliseconds(of: item.fireTime)).\(item.title)")
+        var bytes = occurrenceBytes(of: item.reminderID, dueAt: item.dueTime) + nudge
         bytes[8] = (bytes[8] & 0x3F) | 0x80  // RFC 9562 variant
         return UUID(uuid: (
             bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7],
@@ -284,8 +311,29 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
         ))
     }
 
+    /// The first 8 bytes of the alarm IDs of the reminder's occurrence due at `dueTime`, version
+    /// bits included. 60 bits of hash, so two occurrences sharing them is out of reach.
+    private static func occurrenceBytes(of reminderID: Reminder.ID, dueAt dueTime: Date) -> [UInt8] {
+        var bytes = nameHash("occurrence.\(reminderID.uuidString).\(milliseconds(of: dueTime))")
+        bytes[6] = (bytes[6] & 0x0F) | 0x80  // version 8
+        return bytes
+    }
+
+    private static func occurrenceBytes(in alarmID: Alarm.ID) -> [UInt8] {
+        withUnsafeBytes(of: alarmID.uuid) { Array($0.prefix(8)) }
+    }
+
+    /// The first 8 bytes of the SHA-1 of the namespace and the name.
+    private static func nameHash(_ name: String) -> [UInt8] {
+        Array(Insecure.SHA1.hash(data: Data(alarmIDNamespace + Array(name.utf8))).prefix(8))
+    }
+
+    private static func milliseconds(of date: Date) -> Int64 {
+        Int64((date.timeIntervalSince1970 * 1000).rounded())
+    }
+
     /// The namespace for nudge alarm IDs, 3B0F6C2E-8D1A-4E57-9A64-2C7B5E9D1F80: a fixed random UUID,
-    /// so no other name-based UUID clashes with them.
+    /// so no other hashed name clashes with them.
     private static let alarmIDNamespace: [UInt8] = [
         0x3B, 0x0F, 0x6C, 0x2E, 0x8D, 0x1A, 0x4E, 0x57, 0x9A, 0x64, 0x2C, 0x7B, 0x5E, 0x9D, 0x1F, 0x80,
     ]
@@ -320,6 +368,10 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
             : AlarmPresentation.Alert(title: title)
         return AlarmAttributes(presentation: AlarmPresentation(alert: alert), metadata: NudgeAlarmMetadata(), tintColor: alarmTint)
     }
+}
+
+extension AlarmAdapter {
+    static let logger = Logger(subsystem: "com.newrealityinteractive.nudgeinator", category: "AlarmAdapter")
 }
 
 /// Resumes a continuation with whichever answer comes first, once.

@@ -22,6 +22,7 @@ struct ReminderFormTests {
             openStore: { store },
             notifications: NotificationAdapter(center: center, clock: clock),
             alarms: AlarmAdapter(manager: manager, clock: clock),
+            doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )
         await model.launch()

@@ -117,6 +117,38 @@ struct StopAndDoneTests {
         #expect(engine.latestOccurrence(for: reminder.id)?.state == .done)
     }
 
+    /// A Done chosen before the first unlock waits in a queue until the store opens (ticket 32). It
+    /// closes its occurrence as Done when it was chosen, at nudge 4 (+18 min 45 s), even if the
+    /// occurrence has given up by the time it's merged (+51 min 30 s for Relentless).
+    @Test(arguments: [20 * 60, 2 * 60 * 60])
+    func aQueuedDoneClosesItsOccurrenceWhenItWasChosen(mergedSecondsAfterDue: Int) throws {
+        let reminder = Reminder(title: "Leave for the train", dueTime: dueTime, strength: .relentless)
+        var engine = Engine(clock: clock, scheduler: scheduler)
+        engine.update(reminders: [reminder])
+
+        clock.now = dueTime + TimeInterval(mergedSecondsAfterDue)
+        engine.markDone(reminder.id, occurrenceDueAt: dueTime, doneAt: dueTime + 1125)
+
+        let reading = try #require(engine.reading(of: reminder.id, dueAt: dueTime))
+        #expect(reading.closing == Closing(state: .done, closedAt: dueTime + 1125, nudgesSent: 4))
+        #expect(try #require(scheduler.lastPlan).items.isEmpty)
+    }
+
+    /// By the time it's merged, the next occurrence has fallen due. The queued Done is for the one
+    /// before, so it's dropped: the earlier one stays Missed and today's keeps nudging.
+    @Test func aQueuedDoneForAnOccurrenceNoLongerTheLatestIsDropped() throws {
+        let reminder = Reminder(title: "Take the pills", dueTime: dueTime, repeatRule: .everyDay, strength: .relentless)
+        var engine = Engine(clock: clock, scheduler: scheduler)
+        engine.update(reminders: [reminder])
+        let tomorrow = dueTime + 24 * 60 * 60
+
+        clock.now = tomorrow + 5 * 60
+        engine.markDone(reminder.id, occurrenceDueAt: dueTime, doneAt: dueTime + 1125)
+
+        #expect(engine.occurrence(of: reminder.id, dueAt: dueTime)?.state == .missed(reason: .giveUpLimit))
+        #expect(engine.openOccurrence(for: reminder.id)?.dueTime == tomorrow)
+    }
+
     /// The spec offers Done only on a nudging occurrence. Before the due time there is none, so
     /// Done is ignored and the occurrence still nudges when it comes due.
     @Test func doneBeforeTheDueTimeIsIgnored() throws {

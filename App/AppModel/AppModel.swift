@@ -57,6 +57,8 @@ final class AppModel {
     private let timeZone: TimeZone
     private let giveUpLimit: GiveUpLimit
     private let onboardingRecord: OnboardingRecord
+    /// Where a Done waits while the store can't be read (ticket 32).
+    private let doneQueue: DoneQueue
 
     /// `giveUpLimit` is the shipped one; only tests pass another, to reach a take-over.
     init(
@@ -65,6 +67,7 @@ final class AppModel {
         notifications: NotificationAdapter,
         alarms: AlarmAdapter,
         onboardingRecord: OnboardingRecord = .standard,
+        doneQueue: DoneQueue,
         timeZone: TimeZone = .autoupdatingCurrent,
         giveUpLimit: GiveUpLimit = .shipped
     ) {
@@ -75,6 +78,7 @@ final class AppModel {
         self.timeZone = timeZone
         self.giveUpLimit = giveUpLimit
         self.onboardingRecord = onboardingRecord
+        self.doneQueue = doneQueue
         onboarding = onboardingRecord.isFinished ? nil : .welcome
         scheduler = CombinedSchedulerAdapter(adapters: [notifications, alarms])
         // Never handed an event before `launch()` replaces it, so it never applies a plan.
@@ -86,8 +90,8 @@ final class AppModel {
 
     /// Launch, after setting aside a launch that couldn't read the store. Before the first unlock
     /// after a restart, data protection keeps the store shut, and a Done action can launch the
-    /// app then. Only call it once the phone is unlocked: App opened, or an Open the person
-    /// authenticated for.
+    /// app then. Only call it once the phone is unlocked: App opened, protected data becoming
+    /// available, or an Open the person authenticated for.
     private func launchTryingAnUnreadStoreAgain() async {
         if case .storeUnreadable = launchState {
             launching = nil
@@ -125,6 +129,11 @@ final class AppModel {
             launchState = .storeUnreadable(error)
             return
         }
+        // `UserDefaults` is shut before the first unlock too, so a launch then read onboarding as
+        // not finished. It reads the record again now that the store has opened.
+        if onboarding == .welcome, onboardingRecord.isFinished {
+            onboarding = nil
+        }
         let permissions = await currentPermissions()
         self.permissions = permissions
         if onboarding == nil, await alarms.isKnownNotAskedYet() {
@@ -134,8 +143,53 @@ final class AppModel {
         engine.update(tags: stored.tags)
         engine.update(histories: stored.histories)
         engine.update(reminders: stored.reminders)
+        let queued = loadQueuedDones()
+        for done in queued {
+            engine.markDone(done.reminderID, occurrenceDueAt: done.dueTime, doneAt: done.doneAt)
+        }
         self.engine = engine
         launchState = .ready
+        // The file goes only once its Dones are saved; until then the next launch merges them
+        // again, and the engine ignores a Done for an occurrence already closed.
+        if !queued.isEmpty, save() {
+            removeQueuedDones()
+        }
+    }
+
+    /// The Dones chosen while the store couldn't be read, after making the queue's folder for the
+    /// next restart. A file that won't decode is deleted: it never will, and the occurrences it
+    /// named keep nudging, so the person can choose Done again. One that couldn't be read is kept
+    /// for the next launch.
+    private func loadQueuedDones() -> [QueuedDone] {
+        do {
+            try doneQueue.makeFolder()
+        } catch {
+            Self.logger.error("The queue's folder couldn't be made: \(error, privacy: .public)")
+        }
+        do {
+            return try doneQueue.dones()
+        } catch is DecodingError {
+            Self.logger.error("The queued Dones were unreadable and are deleted")
+            removeQueuedDones()
+            return []
+        } catch {
+            Self.logger.error("The queued Dones couldn't be read: \(error, privacy: .public)")
+            return []
+        }
+    }
+
+    private func removeQueuedDones() {
+        do {
+            try doneQueue.removeAll()
+        } catch {
+            Self.logger.error("The queued Dones couldn't be deleted: \(error, privacy: .public)")
+        }
+    }
+
+    /// The phone was unlocked for the first time since a restart, so the store can be read
+    /// (ticket 32). It is opened, if it couldn't be before, and the Dones queued meanwhile merged.
+    func protectedDataBecameAvailable() async {
+        await launchTryingAnUnreadStoreAgain()
     }
 
     /// App opened (ticket 07): permissions read again, then a fresh plan, which also refills the
@@ -339,15 +393,25 @@ final class AppModel {
         _ event: (inout Engine) throws(Failure) -> Void,
         storeChange: ((ReminderStore) throws -> Void)? = nil
     ) throws(Failure) {
-        guard case .ready = launchState, let store else { return }
+        guard case .ready = launchState, store != nil else { return }
         try event(&engine)
+        save(storeChange: storeChange)
+    }
+
+    /// Saves what the engine holds, after the event's own store change, if any. Returns whether
+    /// the store took it.
+    @discardableResult
+    private func save(storeChange: ((ReminderStore) throws -> Void)? = nil) -> Bool {
+        guard let store else { return false }
         do {
             try storeChange?(store)
             try store.save(StoredData(reminders: engine.reminders, tags: engine.tags, histories: engine.histories))
             saveError = nil
+            return true
         } catch {
             Self.logger.error("The store turned a save down: \(error, privacy: .public)")
             saveError = error
+            return false
         }
     }
 }
@@ -361,10 +425,29 @@ extension AppModel: NotificationAdapterEvents, AlarmAdapterEvents {
     /// only if the nudge was its own (ticket 18), not a banner left from an earlier one.
     /// It launches first if it has to (the action launches the app in the background), and
     /// returns once the Done is saved and applied, for the response handler to wait on.
-    func markDone(_ reminderID: Reminder.ID, nudgeFiredAt fireTime: Date) async {
+    /// Before the first unlock the store can't be read, so the Done is queued instead (ticket 32).
+    func markDone(_ nudge: DeliveredNudge) async {
         await launch()
-        perform { $0.markDone(reminderID, nudgeFiredAt: fireTime) }
+        if case .storeUnreadable = launchState {
+            await queueDone(nudge)
+            return
+        }
+        perform { $0.markDone(nudge.reminderID, nudgeFiredAt: nudge.fireTime) }
         await waitUntilApplied()
+    }
+
+    /// Writes the Done to the queue, to be merged once the store opens, and stops its occurrence's
+    /// nudges by their identifiers, since there are no reminders to plan from. A Done that can't
+    /// be written leaves the nudges to come, so what's pending still matches the store.
+    private func queueDone(_ nudge: DeliveredNudge) async {
+        do {
+            try doneQueue.add(QueuedDone(reminderID: nudge.reminderID, dueTime: nudge.dueTime, doneAt: clock.now))
+        } catch {
+            Self.logger.error("A Done couldn't be queued: \(error, privacy: .public)")
+            return
+        }
+        await notifications.cancelNudges(of: nudge.reminderID, dueAt: nudge.dueTime)
+        await alarms.cancelNudges(of: nudge.reminderID, dueAt: nudge.dueTime)
     }
 
     /// The plan the engine hands back reaches both adapters, with that nudge as a notification.

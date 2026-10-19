@@ -31,6 +31,7 @@ struct AppModelTests {
             openStore: openStore,
             notifications: notifications,
             alarms: AlarmAdapter(manager: manager, clock: clock),
+            doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )
         return (model, notifications)
@@ -46,7 +47,7 @@ struct AppModelTests {
     func chooseDone(on notifications: NotificationAdapter, nudgeFiredAt fireTime: Date) async {
         await notifications.handleResponse(
             actionIdentifier: NotificationAdapter.doneActionIdentifier,
-            nudge: DeliveredNudge(reminderID: call.id, fireTime: fireTime)
+            nudge: DeliveredNudge(reminderID: call.id, dueTime: call.dueTime, fireTime: fireTime)
         )
     }
 
