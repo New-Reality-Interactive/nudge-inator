@@ -47,14 +47,18 @@ private struct NowList: View {
     let markDone: (Reminder.ID) -> Void
     let openDetails: (Reminder.ID) -> Void
 
+    /// A card Done was chosen on with VoiceOver, kept until VoiceOver moves on.
+    @State private var held: HeldCard?
+
     var body: some View {
+        let cards = screen.nudging(holding: held)
         List {
             Section {
-                if screen.nudging.isEmpty {
+                if cards.isEmpty {
                     EmptyRow(text: Text("**All clear.** Nothing needs you right now.", comment: "Now: the Nudging section when nothing is nudging."))
                 } else {
-                    ForEach(screen.nudging) { card in
-                        NudgeCardRow(card: card, now: now, markDone: { markDone(card.id) }, openDetails: { openDetails(card.id) })
+                    ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
+                        NudgeCardRow(card: card, now: now, markDone: { markDone(card.id) }, openDetails: { openDetails(card.id) }, isDoneHeld: heldBinding(for: card, at: index))
                     }
                 }
             } header: {
@@ -80,6 +84,18 @@ private struct NowList: View {
             }
         }
     }
+
+    private func heldBinding(for card: NudgeCard, at index: Int) -> Binding<Bool> {
+        Binding {
+            held?.card.id == card.id
+        } set: { isHeld in
+            if isHeld {
+                held = HeldCard(card: card, index: index)
+            } else if held?.card.id == card.id {
+                held = nil
+            }
+        }
+    }
 }
 
 /// A nudge card as a list row: drawn on its own background, with the mockup's 12 pt between
@@ -89,9 +105,10 @@ private struct NudgeCardRow: View {
     let now: Date
     let markDone: () -> Void
     let openDetails: () -> Void
+    let isDoneHeld: Binding<Bool>
 
     var body: some View {
-        NudgeCardView(card: card, now: now, markDone: markDone, openDetails: openDetails)
+        NudgeCardView(card: card, now: now, markDone: markDone, openDetails: openDetails, isDoneHeld: isDoneHeld)
             .listRowInsets(EdgeInsets(top: Design.Spacing.s3 / 2, leading: 0, bottom: Design.Spacing.s3 / 2, trailing: 0))
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)

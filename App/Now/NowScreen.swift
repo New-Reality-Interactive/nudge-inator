@@ -42,6 +42,15 @@ struct NowScreen {
         }
     }
 
+    /// The cards to draw: `nudging`, with the held card back at its place.
+    func nudging(holding held: HeldCard?) -> [NudgeCard] {
+        guard let held, !nudging.contains(where: { $0.id == held.card.id }) else { return nudging }
+        var cards = nudging
+        // Others may have closed since, from a notification or an alarm.
+        cards.insert(held.card, at: min(held.index, cards.count))
+        return cards
+    }
+
     /// The Now tab's badge: how many reminders are nudging. Zero hides it. Static, so the tab bar
     /// counts without building the whole screen.
     static func badgeCount(of engine: Engine) -> Int {
@@ -57,6 +66,14 @@ struct NowScreen {
         }
         return LocalizedStringResource("\(day) · **\(nudging.count) reminders nudging you**", comment: "Now: under the title; the bold part shows in red. 1: today's short date, such as \"Sat, Oct 17\". 2: how many reminders are nudging.")
     }
+}
+
+/// A card marked Done while VoiceOver was on its Done, kept on screen until VoiceOver moves on,
+/// so its cursor stays on the card's "Done" rather than over the empty place where it was.
+struct HeldCard {
+    let card: NudgeCard
+    /// Its place among the cards when Done was chosen.
+    let index: Int
 }
 
 /// One nudge card: a reminder's open occurrence.

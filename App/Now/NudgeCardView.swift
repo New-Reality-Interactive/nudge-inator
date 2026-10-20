@@ -13,6 +13,10 @@ struct NudgeCardView: View {
     /// Opens the reminder's details: the title is the link, with no chevron (DESIGN.md). `nil` on
     /// the details screen itself, where the card would open the screen it is on.
     var openDetails: (() -> Void)?
+    /// Whether Done is held after it was chosen with VoiceOver on it (`DoneSlot`). The caller keeps
+    /// the card on screen while it is. The slot is then the card's only VoiceOver element, so
+    /// moving on leaves the card: the hold ends, and the card goes, only once VoiceOver is off it.
+    let isDoneHeld: Binding<Bool>
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var width: CGFloat = 0
@@ -81,6 +85,7 @@ struct NudgeCardView: View {
         // The summary is one element, so say outright that it opens something.
         .accessibilityAddTraits(openDetails == nil ? [] : .isButton)
         .opensDetails(openDetails)
+        .accessibilityHidden(isDoneHeld.wrappedValue)
     }
 
     private var details: some View {
@@ -107,7 +112,13 @@ struct NudgeCardView: View {
     }
 
     private var doneButton: some View {
-        Button(action: markDone) {
+        DoneSlot(title: card.title, isHeld: isDoneHeld, markDone: markDone) { action in
+            prominentDoneButton(action: action)
+        }
+    }
+
+    private func prominentDoneButton(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
             Label {
                 Text("Done", comment: "Nudge card: the button that marks the reminder Done and stops its nudges.")
             } icon: {
@@ -121,13 +132,13 @@ struct NudgeCardView: View {
         // Large is the system's tallest regular button, over the 44 pt every button needs.
         .controlSize(.large)
         .buttonBorderShape(.roundedRectangle(radius: Design.Radius.control))
-        .accessibilityLabel(Text("Done, stop nudging: \(card.title)", comment: "VoiceOver label of the Done button on a nudge card or a My Day row. The placeholder is the reminder's title."))
     }
 
     private var footer: some View {
         Text("Only Done stops the nudging.", comment: "Nudge card: under the Done button.")
             .font(.footnote)
             .foregroundStyle(Color(uiColor: .secondaryLabel))
+            .accessibilityHidden(isDoneHeld.wrappedValue)
     }
 }
 

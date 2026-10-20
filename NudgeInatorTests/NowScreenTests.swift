@@ -92,6 +92,42 @@ struct NowScreenTests {
         #expect(manager.scheduled.allSatisfy { $0.fireDate.map { $0 >= rent.dueTime } ?? false })
     }
 
+    /// Done on the meds' card with VoiceOver on it: the card stays where it was, ahead of the
+    /// bins, until VoiceOver moves on.
+    @Test func aHeldCardStaysAtItsPlaceAfterDone() async throws {
+        let model = try await modelAtNineForty()
+        let medsCard = try #require(NowScreen(engine: model.engine).nudging.first)
+        model.markDone(medsCard.id)
+        await model.waitUntilApplied()
+
+        let screen = NowScreen(engine: model.engine)
+
+        #expect(screen.nudging(holding: HeldCard(card: medsCard, index: 0)).map(\.title) == ["Morning meds", "Take the bins out"])
+    }
+
+    /// The bins' card is held at its place, second, and the meds are then Done from their
+    /// notification: the bins' card is the only card left.
+    @Test func aHeldCardPastTheEndGoesLast() async throws {
+        let model = try await modelAtNineForty()
+        let binsCard = try #require(NowScreen(engine: model.engine).nudging.last)
+        model.markDone(binsCard.id)
+        model.markDone(meds.id)
+        await model.waitUntilApplied()
+
+        let screen = NowScreen(engine: model.engine)
+
+        #expect(screen.nudging(holding: HeldCard(card: binsCard, index: 1)).map(\.title) == ["Take the bins out"])
+    }
+
+    /// Held before the engine has its Done, the meds' card is still nudging: it shows once.
+    @Test func aHeldCardStillNudgingShowsOnce() async throws {
+        let model = try await modelAtNineForty()
+        let screen = NowScreen(engine: model.engine)
+        let medsCard = try #require(screen.nudging.first)
+
+        #expect(screen.nudging(holding: HeldCard(card: medsCard, index: 0)).map(\.title) == ["Morning meds", "Take the bins out"])
+    }
+
     /// The mockup's `closedLabel` and `closedWhy`, with the take-over distinct from the give-up
     /// limit. With the shipped limit a daily repeat gives up long before the next falls due, so no
     /// fixture can reach a take-over through the model; the row's text is checked for each state.

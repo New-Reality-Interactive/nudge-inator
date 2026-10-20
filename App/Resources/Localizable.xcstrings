@@ -26,6 +26,9 @@
         }
       }
     },
+    "%@ is Done. Its nudges have stopped." : {
+      "comment" : "VoiceOver, after Done on a nudge card or a My Day row: what the Done button's place now says. The placeholder is the reminder's title."
+    },
     "%@ · %@" : {
       "comment" : "A tag's screen: under a reminder's title. 1: its tags, such as \"#home #errands\", this screen's tag in bold. 2: its schedule, such as \"Every day at 8:00 AM\".\nMy Day: under the title of a tagged reminder. 1: its tags, such as \"#home #errands\", the ones the filter chose in bold. 2: the note, such as \"Nudging · 2 nudges · next 1:15 PM\".",
       "localizations" : {

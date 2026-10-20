@@ -138,14 +138,17 @@ private struct DetailsList: View {
     let togglePause: () -> Void
     let delete: () -> Void
 
+    /// The card Done was chosen on with VoiceOver, kept until VoiceOver moves on.
+    @State private var heldCard: NudgeCard?
+
     var body: some View {
         List {
             Section {
                 DetailsHero(details: details)
             }
-            if let card = details.card {
+            if let card = details.card ?? heldCard {
                 Section {
-                    NudgeCardView(card: card, now: now, markDone: markDone)
+                    NudgeCardView(card: card, now: now, markDone: markDone, isDoneHeld: heldBinding(for: card))
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                 } header: {
@@ -196,6 +199,14 @@ private struct DetailsList: View {
         }
         .disabled(!isEnabled)
         .centeredInReadableColumn()
+    }
+
+    private func heldBinding(for card: NudgeCard) -> Binding<Bool> {
+        Binding {
+            heldCard != nil
+        } set: { isHeld in
+            heldCard = isHeld ? card : nil
+        }
     }
 }
 
