@@ -13,9 +13,9 @@ struct MyDayRowView: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
-    /// Where VoiceOver's cursor goes when Done takes the button away. Left alone it stays drawn
-    /// where the button was, over the status, until something else is focused.
-    @AccessibilityFocusState private var isOpenerFocused: Bool
+    /// Done was chosen with VoiceOver on it, which is still there: the Done slot shows the status
+    /// in the button's place, and the opener leaves it out.
+    @State private var isDoneHeld = false
     /// Wide enough for "12:30 PM", so the titles line up.
     @ScaledMetric(relativeTo: .body) private var timeWidth: CGFloat = Design.Size.timeColumn
 
@@ -64,11 +64,10 @@ struct MyDayRowView: View {
         HStack(alignment: .firstTextBaseline, spacing: Design.Spacing.s3) {
             text
             Spacer(minLength: 0)
-            if !item.offersDone { outcome }
+            if !item.offersDone && !isDoneHeld { outcome }
         }
         .opensDetails(openDetails)
         .accessibilityElement(children: .combine)
-        .accessibilityFocused($isOpenerFocused)
     }
 
     /// DESIGN.md's Reminder row chevron, in the tertiary label color. Decorative.
@@ -134,16 +133,13 @@ struct MyDayRowView: View {
     }
 
     @ViewBuilder private var doneButton: some View {
-        if item.offersDone {
-            Button {
-                // The row then reads as Done, which VoiceOver speaks.
-                isOpenerFocused = true
-                markDone()
-            } label: {
-                Text("Done", comment: "My Day: the button on a Nudging row that marks the reminder Done and stops its nudges.")
+        if item.offersDone || isDoneHeld {
+            DoneSlot(title: item.title, isHeld: $isDoneHeld, markDone: markDone) { action in
+                Button(action: action) {
+                    Text("Done", comment: "My Day: the button on a Nudging row that marks the reminder Done and stops its nudges.")
+                }
+                .buttonStyle(SmallBorderedButtonStyle())
             }
-            .buttonStyle(SmallBorderedButtonStyle())
-            .accessibilityLabel(Text("Done, stop nudging: \(item.title)", comment: "VoiceOver label of the Done button on a nudge card or a My Day row. The placeholder is the reminder's title."))
         }
     }
 }
