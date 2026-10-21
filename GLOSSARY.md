@@ -28,7 +28,7 @@ _Avoid_: Ping, alert
 The state of an occurrence that has come due and is not yet done.
 
 **Locked**:
-The state of a Nudging reminder's due time, repeat, strength and Break through Focus. They can't be edited until the occurrence closes. Title, notes and tags stay editable.
+The state of a Nudging reminder's due time, repeat, strength, pace and Break through Focus. They can't be edited until the occurrence closes. Title, notes and tags stay editable.
 _Avoid_: Frozen, read-only
 
 **Done**:
@@ -42,11 +42,21 @@ The system alarm's button, which silences the current ring and moves the ladder 
 The alarm's secondary button. It opens the app on the reminder, where the person can mark it Done.
 
 **Break through Focus**:
-A per-reminder setting. On: nudges are sent as alarms, which sound through silent mode and Focus. Off: nudges are ordinary notifications that a Focus can hold.
+A per-reminder setting. On: nudges are sent as alarms, which sound through silent mode and Focus. Off: nudges are ordinary notifications that a Focus can hold. A Relentless reminder always breaks through Focus; its switch stays on.
 
 **Strength**:
-How hard a reminder nudges: Gentle, Firm or Relentless. It sets the nudge intervals, the urgency ladder and the give-up limit.
+How hard a reminder nudges: Gentle, Firm or Relentless. It sets the urgency ladder and the give-up limit, and with an Escalating pace the waits between nudges too. Relentless nudges only with alarms.
 _Avoid_: Priority, level
+
+**Pace**:
+How the waits between a reminder's nudges are spaced: Escalating or Consistent. Each reminder has its own; a new reminder starts with the default pace from Settings.
+_Avoid_: Ladder, spacing, schedule
+
+**Escalating**:
+The pace whose waits come from the strength and shrink as the nudging goes on.
+
+**Consistent**:
+The pace with one wait, chosen by the person from 2 min to 16 h, the same between every nudge.
 
 **Urgency**:
 A nudge's place on its strength's ladder: Normal, High or Urgent. Urgency decides how the nudge is delivered.
