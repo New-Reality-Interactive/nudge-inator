@@ -70,7 +70,7 @@ mockup was changed to match the app.
 6. Done, wherever a status label shows it, has a green `checkmark.circle.fill` before the word.
 7. Section headers (Coming Up, Last 24 Hours, Schedule, Your Tags and the rest) are the system's
    iOS 26 headers: 17 pt semibold in the secondary label color, not 13 pt footnote. DESIGN.md
-   still says footnote; see below.
+   now says so too.
 
 **Reminder details**
 
@@ -158,7 +158,8 @@ At the accessibility text sizes a My Day row stacks its time and title, but keep
 (✓ Done, Missed, Skipped, Paused) beside them, so the column is squeezed: "12:33 / PM", "Morn- /
 ing meds" and "Do / ne" break mid-word (both simulators, AX5). The row's `opener` in
 `App/MyDay/MyDayRows.swift` keeps the label in its `HStack` at every size. This mockup draws the
-row as intended, with the label under the text, and the fix is a bug ticket of its own.
+row as intended, with the label under the text. The fix is
+[first-version ticket 34](../../../.scratch/first-version/issues/34-my-day-row-status-at-accessibility-sizes.md).
 
 ## Not checked against the app
 
@@ -167,12 +168,6 @@ row as intended, with the label under the text, and the fix is a bug ticket of i
   show alarms, and the screenshots don't reach the system's UI.
 - Dark mode, Bold Text, Increase Contrast and Reduce Transparency were not compared.
 - Screen sizes other than the two simulators' (393 × 852 pt).
-
-## DESIGN.md disagrees
-
-DESIGN.md says section headers and footers are footnote (13 pt). The app uses the system's section
-headers, which iOS 26 draws as a 17 pt semibold headline, and this mockup follows the app. Whether
-DESIGN.md or the app changes is open.
 
 ## How it was checked
 

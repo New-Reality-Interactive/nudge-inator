@@ -4,14 +4,14 @@
 
 **Blocked by:** 01 (the screenshots come from its simulators).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] The as-built mockup is a single HTML file with a README, in a dated folder under the mockups, opening in a browser with no dependencies, as the first-version one does.
 - [x] Every screen in the app (Now, My Day, Tags and a tag's list, Settings, the reminder form and its pages, reminder details, How It Nudges, onboarding, the permission banners) appears in it and matches simulator screenshots from both the 26.5 and 27.x simulators in portrait, landscape and a large text size.
 - [x] The README lists each difference from the first-version mockup that was found and corrected.
 - [x] The screenshots used for the check are kept with it, or the README says where they are and how to make them again.
 - [x] The first-version mockup is in the archive, its README marked superseded with a link to this one, and links to it elsewhere (README, DESIGN.md, the first-version spec) point to its new place.
-- [ ] Brian has looked it over and agrees it matches the app.
+- [x] Brian has looked it over and agrees it matches the app.
 
 ## Comments
 
@@ -31,3 +31,6 @@
 
 
 **Review (2026-10-21, `code-review` from main).** Standards: two hard findings, both fixed: `scripts/screenshots.sh` booted simulators it never shut down (it now shuts down any it booted), and dismissing the simulator's keyboard tip can't be undone (now said in device-testing.md). Judgement calls fixed: a `Scenario` enum for `SHOT_SCENARIO`, the seed called directly (with a once-only guard), `scrollToTop()` extracted, a doc comment that said "up" for down, the force unwraps noted as harness-only, DESIGN.md's reflowed paragraph and "the archived mockup" made unambiguous. Spec: four corrections missing from the README (Reminder Not Found, the notifications-off Settings footer and How It Nudges sentence, the unlocked Edit note), now folded into items 8, 11, 14 and 19; leftovers of the removed lock control and take-over row deleted from the mockup. Spec also flagged that the My Day AX5 row is drawn as intended rather than as the app draws it: for the developer to agree with criterion 6. After the fixes the harness passed portrait on 27.0 and landscape on 26.5 (48 screenshots each), and the mockup's screens load with no script errors.
+
+**Brian's check (2026-10-21).** Brian approved the mockup as matching the app (criterion 6). He agreed the one exception, the My Day row at AX5 drawn as intended rather than as the app draws it, and asked for a bug ticket: first-version ticket 34. On the section headers he chose DESIGN.md to match the app: headline (17 pt semibold) in the secondary label color, no longer footnote; the mockup and its README now say so.
+

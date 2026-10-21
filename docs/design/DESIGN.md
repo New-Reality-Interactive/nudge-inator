@@ -77,13 +77,13 @@ typography:
   title-3:
     note: '(20 pt). Section headers on Now, such as Nudging.'
   headline:
-    note: 'Semibold (17 pt). Nudge card titles, nav titles, alert titles.'
+    note: 'Semibold (17 pt). Nudge card titles, nav titles, alert titles, and section headers in the secondary label color (iOS 26 inset grouped lists).'
   body:
     note: '(17 pt). Row titles, buttons.'
   subhead:
     note: '(15 pt). Row details, status labels, tokens, small buttons.'
   footnote:
-    note: '(13 pt). Section headers and footers, timestamps, How It Nudges rows.'
+    note: '(13 pt). Section footers, timestamps, How It Nudges rows.'
   caption-1:
     note: 'Semibold (12 pt). Strength badge, urgency word, count labels.'
 rounded:
