@@ -6,11 +6,11 @@ How a ticket is reviewed, and how to keep a session's context small. Review runs
 
 - One full review per ticket, after `scripts/test.sh` passes. After fixing findings, re-review only the files the fixes changed. Ask before any second full round.
 - Give the skill its inputs up front so it skips the issue-ref search: the fixed point (`main` unless told otherwise) and the ticket path, for example `.scratch/first-version/issues/NN-name.md`.
-- Tell it the repo's `AGENTS.md` rules win over the skill's smell baseline. Where a rule endorses something a smell would flag, drop the smell.
-- The Standards agent reads these `AGENTS.md` sections: Swift, SwiftUI, Accessibility, Localization, Testing.
+- Tell it the repo's rules (`CODING_STANDARDS.md`, `AGENTS.md`) win over the skill's smell baseline. Where a rule endorses something a smell would flag, drop the smell.
+- The Standards agent reads `CODING_STANDARDS.md`, and `AGENTS.md`'s AlarmKit and Testing sections.
 - Nothing gates localization, accessibility labels or Swift 6 isolation except the catalog check in `scripts/test.sh`, so the Standards agent is the only check on them.
 - Skip the Spec agent when every acceptance criterion in the ticket is already ticked and the change is mechanical. Say so in the report.
-- Finish order: tests pass → review → fix findings → re-test → ticket update and commit → `/pr` → report.
+- Finish order: tests pass → review → fix findings → re-test → ticket update and commit. Then `docs/agents/ticket-workflow.md`, from step 8: the developer's check comes before the PR.
 
 ## Session size
 

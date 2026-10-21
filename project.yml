@@ -16,6 +16,8 @@ settings:
     SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
     # Every string a person sees is in a String Catalog; the compiler extracts them (scripts/sync-strings.sh).
     SWIFT_EMIT_LOC_STRINGS: YES
+    # Warnings are errors: a new toolchain's warnings otherwise pass unnoticed (pace ticket 01).
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
 packages:
   NudgeEngine:

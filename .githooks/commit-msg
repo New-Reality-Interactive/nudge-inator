@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Rejects a commit message whose subject is missing or over 72 characters, or whose body isn't
+# separated from it by a blank line (without one, git folds the body into the subject).
+# Enabled per checkout: git config core.hooksPath .githooks (README).
+set -euo pipefail
+
+# Comment lines are git's own template, not the message. (macOS's bash 3.2 has no mapfile.)
+message="$(grep -v '^#' "$1" || true)"
+subject="$(printf '%s\n' "$message" | sed -n 1p)"
+second="$(printf '%s\n' "$message" | sed -n 2p)"
+lines="$(printf '%s\n' "$message" | wc -l | tr -d ' ')"
+
+case "$subject" in Merge\ *) exit 0 ;; esac
+
+if [ -z "$subject" ]; then
+  echo "commit-msg: the first line (the subject) is empty" >&2
+  exit 1
+fi
+if [ ${#subject} -gt 72 ]; then
+  echo "commit-msg: the subject is ${#subject} characters; keep it to 72" >&2
+  exit 1
+fi
+if [ "$lines" -gt 1 ] && [ -n "$second" ]; then
+  echo "commit-msg: leave a blank line between the subject and the body" >&2
+  exit 1
+fi
