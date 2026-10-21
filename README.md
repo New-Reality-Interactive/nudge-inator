@@ -17,6 +17,18 @@ Tests the `NudgeEngine` package on macOS, then runs `xcodebuild test` for the ap
 
 The simulators are chosen by their exact names: `SIMULATORS`, separated by `;` (for example `SIMULATORS="iPhone 15 - iOS 26.1" scripts/test.sh`). The script fails with a hint if one is missing. Create one with `xcrun simctl create "iPhone 15 Pro - iOS 26.5" "iPhone 15 Pro" com.apple.CoreSimulator.SimRuntime.iOS-26-5`, after installing its runtime with `xcodebuild -downloadPlatform iOS -buildVersion 26.5` or in Xcode > Settings > Components.
 
+## VS Code
+
+`.vscode/` recommends the extensions (Swift, LLDB DAP, YAML) and keeps build output out of search and the file watcher. The Swift extension understands the two packages on its own. For the app, widget and test targets, which live in the generated Xcode project, it needs **xcode-build-server**, which hands it the flags from the last build:
+
+```sh
+brew install xcode-build-server
+xcode-build-server config -project NudgeInator.xcodeproj -scheme NudgeInator --build_root "$PWD/.build/derived"
+scripts/test.sh
+```
+
+`buildServer.json` is machine-specific and git-ignored. The server reads the newest build log under `.build/derived`, so after adding a file or changing `project.yml`, run `scripts/test.sh` (or any build into that folder) for the editor to see it. If completion still falls back to plain Swift, seed it from the full build once: `xcode-build-server parse -a -l <the newest .xcactivitylog under .build/derived/Logs/Build> -o <the compile_file under ~/Library/Caches/xcode-build-server>`.
+
 ## Project layout
 
 - `project.yml`: the project definition. The project uses **XcodeGen**, so `NudgeInator.xcodeproj` is generated and git-ignored. Run `xcodegen generate` (`scripts/test.sh` does it for you) after editing `project.yml` or adding files.

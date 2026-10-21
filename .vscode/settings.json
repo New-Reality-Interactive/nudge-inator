@@ -1,0 +1,15 @@
+{
+  // Build output and the generated Xcode project hold almost every file in the repo; watching,
+  // searching and indexing them slows VS Code and turns up hits in derived data.
+  "files.watcherExclude": {
+    "**/.build/**": true,
+    "NudgeInator.xcodeproj/**": true
+  },
+  "search.exclude": {
+    "**/.build": true,
+    "NudgeInator.xcodeproj": true
+  },
+  "files.exclude": {
+    "**/.swiftpm": true
+  }
+}

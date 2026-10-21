@@ -23,7 +23,7 @@ xcodebuild_logged() {
   local log="$1"; shift
   xcodebuild "$@" > "$log" 2>&1
   local status=$?
-  grep -E '✘ Test|Test run with|error:|\*\* TEST (SUCCEEDED|FAILED)' "$log" || true
+  grep -E '✘ Test|Test run with|error:|\*\* TEST (BUILD |EXECUTE )?(SUCCEEDED|FAILED)' "$log" || true
   [ $status -eq 0 ] || echo "Full output: $log" >&2
   return $status
 }
@@ -102,6 +102,7 @@ quiet_media_analysis() {
   echo "mediaanalysisd switched off in the $name simulator, $udid"
 }
 
+udids=()
 for name in "${simulators[@]}"; do
   step "Simulator \"$name\" exists"
   udid="$(simulator_udid "$name")"
@@ -112,11 +113,28 @@ for name in "${simulators[@]}"; do
     continue
   fi
   quiet_media_analysis "$name" "$udid"
-  step "xcodebuild test (app + widget extension) on $name"
-  xcodebuild_logged "$logs/app-$name.log" test -project NudgeInator.xcodeproj -scheme NudgeInator \
-    -destination "platform=iOS Simulator,id=$udid" \
-    -derivedDataPath .build/derived || failed+=("app-tests-$name")
+  udids+=("$udid")
 done
+
+# One build for every simulator: they share the SDK and architecture, so a second build compiled
+# nothing anyway. It also keeps the newest build log the one that compiled, which is the log
+# xcode-build-server reads for VS Code's code completion (README).
+if [ ${#udids[@]} -gt 0 ]; then
+  step "xcodebuild build-for-testing (app + widget extension)"
+  if xcodebuild_logged "$logs/app-build.log" build-for-testing -project NudgeInator.xcodeproj \
+    -scheme NudgeInator -destination "platform=iOS Simulator,id=${udids[0]}" -derivedDataPath .build/derived; then
+    for name in "${simulators[@]}"; do
+      udid="$(simulator_udid "$name")"
+      [ -n "$udid" ] || continue
+      step "xcodebuild test-without-building on $name"
+      xcodebuild_logged "$logs/app-$name.log" test-without-building -project NudgeInator.xcodeproj \
+        -scheme NudgeInator -destination "platform=iOS Simulator,id=$udid" \
+        -derivedDataPath .build/derived || failed+=("app-tests-$name")
+    done
+  else
+    failed+=("app-build")
+  fi
+fi
 
 # The app build also builds NudgeEngine, so its .stringsdata covers both catalogs.
 step "The String Catalogs hold every string the code shows"
