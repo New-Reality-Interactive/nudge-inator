@@ -22,15 +22,18 @@ struct BreakThroughFocusTests {
 
     /// Nudges 1–20 in order, from the How It Nudges table's urgency rows. Relentless starts at
     /// High, so it has no ordinary notifications; Gentle never reaches Urgent, so it never rings.
-    @Test(arguments: [
-        (Strength.gentle, [DeliveryKind](repeating: .notification, count: 4)
+    /// Typed and out of the macro: Swift 6.4 can't type-check this literal inline in `@Test`.
+    static let deliveryKindsByStrength: [(Strength, [DeliveryKind])] = [
+        (.gentle, [DeliveryKind](repeating: .notification, count: 4)
             + [DeliveryKind](repeating: .timeSensitiveNotification, count: 16)),
         (.firm, [DeliveryKind](repeating: .notification, count: 2)
-            + [.timeSensitiveNotification]
+            + [DeliveryKind.timeSensitiveNotification]
             + [DeliveryKind](repeating: .alarm, count: 17)),
         (.relentless, [DeliveryKind](repeating: .timeSensitiveNotification, count: 3)
             + [DeliveryKind](repeating: .alarm, count: 17)),
-    ])
+    ]
+
+    @Test(arguments: deliveryKindsByStrength)
     func switchOnDeliversEachNudgeByItsUrgency(strength: Strength, kinds: [DeliveryKind]) throws {
         let items = try planItems(for: strength, breakThroughFocus: true)
         #expect(items.map(\.deliveryKind) == kinds)

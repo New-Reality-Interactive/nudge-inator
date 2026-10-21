@@ -36,7 +36,9 @@ struct ColorSetTests {
         (.light, .normal), (.dark, .normal), (.light, .high), (.dark, .high),
     ]
 
-    @Test(arguments: expected)
+    /// Main actor: `UIMutableTraits`' setters are isolated to it, and the mutations closure runs
+    /// in this function's isolation.
+    @Test(arguments: expected) @MainActor
     func theColorSetHasDesignsValueInEveryAppearance(_ color: Expected) throws {
         let set = try #require(UIColor(named: color.name, in: Bundle(for: AppDelegate.self), compatibleWith: nil))
 

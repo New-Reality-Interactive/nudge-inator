@@ -64,3 +64,5 @@ fastlane/test_output
 docs/Apple
 docs/screenshots
 NudgeInator.xcodeproj/
+# xcode-build-server for VS Code; machine-specific (README)
+buildServer.json

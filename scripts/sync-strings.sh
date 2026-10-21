@@ -35,7 +35,9 @@ for entry in "${targets[@]}"; do
     if [ -n "$(find "$sources" -name "$(basename "$file" .stringsdata).swift" -print -quit)" ]; then
       args+=(--stringsdata "$file")
     fi
-  done < <(find "$derived" -path "*/$target.build/Objects-normal/*" -name "*.stringsdata" | sort)
+  # Xcode 27 names a package target's folder "<target>-t.build"; Xcode 26 named it "<target>.build".
+  done < <(find "$derived" \( -path "*/$target.build/Objects-normal/*" -o -path "*/$target-t.build/Objects-normal/*" \) \
+    -name "*.stringsdata" | sort)
   if [ ${#args[@]} -eq 0 ]; then
     echo "No .stringsdata for $target under $derived: build it first" >&2
     exit 1

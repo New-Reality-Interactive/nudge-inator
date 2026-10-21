@@ -12,7 +12,7 @@ struct OpenReminderIntentTests {
         let opened = OpenedIDs()
         let alarmID = UUID()
         let reminderID = UUID()
-        var intent = OpenReminderIntent(alarmID: alarmID, reminderID: reminderID)
+        let intent = OpenReminderIntent(alarmID: alarmID, reminderID: reminderID)
         intent.opener = AlarmOpener { alarmID, reminderID in
             await opened.record(alarmID, reminderID)
         }
@@ -27,7 +27,7 @@ struct OpenReminderIntentTests {
     @Test(arguments: [("not an alarm", UUID().uuidString), (UUID().uuidString, "not a reminder")])
     func performWithAnIDThatIsntAUUIDCallsNothingAndDoesntCrash(alarmID: String, reminderID: String) async throws {
         let opened = OpenedIDs()
-        var intent = OpenReminderIntent()
+        let intent = OpenReminderIntent()
         intent.alarmID = alarmID
         intent.reminderID = reminderID
         intent.opener = AlarmOpener { alarmID, reminderID in

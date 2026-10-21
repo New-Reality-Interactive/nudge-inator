@@ -20,6 +20,12 @@ struct SettingsRow: View {
         dynamicTypeSize.isAccessibilitySize ? min(tileSize, Design.Spacing.rowMin) : tileSize
     }
 
+    /// Read in `body` and captured: the iOS 27 SDK's `alignmentGuide` closure is `Sendable`, so it
+    /// can't read the view's main-actor properties itself.
+    private var separatorInset: CGFloat {
+        dynamicTypeSize.isAccessibilitySize ? 0 : scaledTile + Design.Spacing.s3
+    }
+
     var body: some View {
         SizeAdaptiveStack(rowSpacing: Design.Spacing.s3, stackedSpacing: Design.Spacing.s2) {
             Image(systemName: symbol)
@@ -47,8 +53,8 @@ struct SettingsRow: View {
             }
         }
         // Separators start at the text, past the tile: 60 pt at the default size (DESIGN.md).
-        .alignmentGuide(.listRowSeparatorLeading) { dimensions in
-            dynamicTypeSize.isAccessibilitySize ? dimensions[.leading] : dimensions[.leading] + scaledTile + Design.Spacing.s3
+        .alignmentGuide(.listRowSeparatorLeading) { [separatorInset] dimensions in
+            dimensions[.leading] + separatorInset
         }
         .accessibilityElement(children: .combine)
     }

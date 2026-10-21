@@ -1,6 +1,6 @@
 # Due time, repeat, strength and Break through Focus are locked while a reminder is nudging
 
-While an occurrence is Nudging, the reminder's due time, repeat, strength and Break through Focus switch can't be edited. Title, notes and tags can. The lock lifts when the occurrence closes. To change a locked field, mark the reminder Done, or Pause, edit and Resume.
+While an occurrence is Nudging, the reminder's due time, repeat, strength and Break through Focus switch can't be edited. Title, notes and tags can. The lock lifts when the occurrence closes. Pace, and a Consistent pace's wait, were added to the lock when pace was introduced, for the same reason as strength: changing them would reshape a schedule already running. To change a locked field, mark the reminder Done, or Pause, edit and Resume.
 
 The product promise is that nudging continues until Done. An edit that moved the due time into the future would close the occurrence as Skipped without Done, the same loophole ADR 0001 closed for Stop. Locking also removes three engine rules the earlier plan needed: a preview of what an edit would do, skip-by-edit, and the nudge count rule when strength changes mid-ladder.
 

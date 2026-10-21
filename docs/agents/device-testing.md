@@ -4,7 +4,17 @@ Reference moved out of `AGENTS.md`. The rules that change behaviour stay in `AGE
 
 ## Toolchain rationale
 
-The project builds with **Xcode 26.6 and the iOS 26.5 SDK**, the newest the development Mac (Intel) can run: Apple's Xcode 27 release notes say "Xcode 27 will only install and run on Apple silicon Macs." So there is no iOS 27 SDK or simulator here. Physical-device checks can still run on a newer iOS (Xcode 26.6 installs on an iOS 27 iPhone). Revisit this when the project moves to an Apple silicon Mac.
+Since the pace enhancement's ticket 01 (2026-10-21) the development Mac is an Apple M5 (macOS 26.6) with **Xcode 27.1** (27A9275), the iOS 27.1 SDK and Swift 6.4.
+
+The matrix's simulators were created by hand on that Mac, which is why `scripts/test.sh` picks them by name. The Mac also has `iPhone 15 - iOS 26.1` and `iPhone Duo - iOS 27.1` simulators, left out of the matrix for now (run them with `SIMULATORS`). With 26.1 dropped, nothing runs automatically at the minimum, so a change that leans on an API newer than 26.1 is worth a run there.
+
+### Test iPhones
+
+An iPhone 15 on iOS 27.0.1 ("Brian's iPhone" in `xcrun devicectl list devices`). It is the only one, which is why AGENTS.md's Testing rule checks the iOS 26 path behind `if #available` on the iOS 26.5 simulator. If a phone on iOS 26.x arrives, record it here and change that rule.
+
+### History: the Intel Mac
+
+Until then the project built with **Xcode 26.6 and the iOS 26.5 SDK**, the newest the development Mac (Intel) could run: Apple's Xcode 27 release notes say "Xcode 27 will only install and run on Apple silicon Macs." So there was no iOS 27 SDK or simulator, and the matrix was the iOS 26.1 and 26.5 simulators. Physical-device checks still ran on an iOS 27 iPhone (Xcode 26.6 installs on one).
 
 ## AlarmKit alarms survive uninstall
 

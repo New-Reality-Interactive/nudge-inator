@@ -3,9 +3,9 @@ iOS application that nudges you about Reminders and Alarms.
 
 ## Requirements
 
-iPhone only, **iOS 26.1 or later**. Automated tests run on the 26.1 and 26.5 simulators. Device checks run on a physical iPhone (record its iOS version).
+iPhone only, **iOS 26.1 or later**. Built with **Xcode 27.x** (iOS 27 SDK) on an Apple silicon Mac.
 
-Built with **Xcode 26.6** (iOS 26.5 SDK), the newest Xcode the development Mac can run: Xcode 27 is Apple silicon only, and this is an Intel Mac. So there's no iOS 27 SDK or simulator yet, though the app installs and runs on an iOS 27 iPhone. This changes with an Apple silicon Mac.
+The command line must use Xcode, not the Command Line Tools: `xcode-select -p` should print `/Applications/Xcode.app/Contents/Developer`. If it prints `/Library/Developer/CommandLineTools`, `xcodebuild`, `simctl` and `devicectl` aren't found; run `sudo xcode-select -s /Applications/Xcode.app` (or set `DEVELOPER_DIR` to that path).
 
 ## Run the tests
 
@@ -13,9 +13,21 @@ Built with **Xcode 26.6** (iOS 26.5 SDK), the newest Xcode the development Mac c
 scripts/test.sh
 ```
 
-Runs `swift test` for the `NudgeEngine` package, then `xcodebuild test` for the app on **both** the iOS 26.1 and iOS 26.5 simulators (the minimum, and the newest this Mac's Xcode supports; run every automated test against both). The widget extension is built along with the app. Exits non-zero on any failure, and also fails if `NudgeEngine` imports anything but Foundation.
+Tests the `NudgeEngine` package on macOS, then builds the app once with `build-for-testing` and runs its tests with `test-without-building` on each simulator in the test matrix (the `SIMULATORS` default at the top of the script; the rule is AGENTS.md's Testing section). The widget extension is built along with the app. Exits non-zero on any failure, and also fails if `NudgeEngine` imports anything but Foundation.
 
-The simulator is chosen by name: `SIMULATOR_NAME` (default `iPhone 17`). The iOS versions are `SIMULATOR_OSES`, a space-separated list (default `26.1 26.5`); the script fails with an install hint if a runtime is missing. Install one with `xcodebuild -downloadPlatform iOS -buildVersion 26.1`, or in Xcode > Settings > Components > Add Platforms. Don't pick an iOS 18 simulator.
+The simulators are chosen by their exact names: `SIMULATORS`, separated by `;` (for example `SIMULATORS="iPhone 15 - iOS 26.1" scripts/test.sh`). The script fails with a hint if one is missing. Create one with `xcrun simctl create "iPhone 15 Pro - iOS 26.5" "iPhone 15 Pro" com.apple.CoreSimulator.SimRuntime.iOS-26-5`, after installing its runtime with `xcodebuild -downloadPlatform iOS -buildVersion 26.5` or in Xcode > Settings > Components.
+
+## VS Code
+
+`.vscode/` recommends the extensions (Swift, LLDB DAP, YAML) and keeps build output out of search and the file watcher. The Swift extension understands the two packages on its own. For the app, widget and test targets, which live in the generated Xcode project, it needs **xcode-build-server**, which hands it the flags from the last build:
+
+```sh
+brew install xcode-build-server
+xcode-build-server config -project NudgeInator.xcodeproj -scheme NudgeInator --build_root "$PWD/.build/derived"
+scripts/test.sh
+```
+
+`buildServer.json` is machine-specific and git-ignored. The server reads the newest build log under `.build/derived`, so after adding a file or changing `project.yml`, run `scripts/test.sh` (or any build into that folder) for the editor to see it. If completion still falls back to plain Swift, seed it from the full build once: `xcode-build-server parse -a -l <the newest .xcactivitylog under .build/derived/Logs/Build> -o <the compile_file under ~/Library/Caches/xcode-build-server>`.
 
 ## Project layout
 

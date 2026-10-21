@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Runs every test: the NudgeEngine package, then the app tests on an iOS 26 simulator for EACH
-# iOS version in the test matrix (the oldest and the newest we support).
-# Also builds the widget extension (it is a dependency of the app scheme).
-# Env: SIMULATOR_NAME (default "iPhone 17"), SIMULATOR_OSES (space-separated, default "26.1 26.5").
+# Runs every test: the NudgeEngine package, then the app tests on EACH simulator in the test
+# matrix (one per iOS version, named for it). Also builds the widget extension (it is a dependency
+# of the app scheme).
+# Env: SIMULATORS (simulator names separated by ";", default the iOS 26.5 and 27.0 ones below).
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-SIMULATOR_NAME="${SIMULATOR_NAME:-iPhone 17}"
-SIMULATOR_OSES="${SIMULATOR_OSES:-26.1 26.5}"
+SIMULATORS="${SIMULATORS:-iPhone 15 Pro - iOS 26.5;iPhone 15 - iOS 27.0}"
+IFS=';' read -r -a simulators <<< "$SIMULATORS"
 failed=()
 
 step() { echo; echo "==> $1"; }
@@ -23,7 +23,7 @@ xcodebuild_logged() {
   local log="$1"; shift
   xcodebuild "$@" > "$log" 2>&1
   local status=$?
-  grep -E '✘ Test|Test run with|error:|\*\* TEST (SUCCEEDED|FAILED)' "$log" || true
+  grep -E '✘ Test|Test run with|error:|\*\* TEST (BUILD |EXECUTE )?(SUCCEEDED|FAILED)' "$log" || true
   [ $status -eq 0 ] || echo "Full output: $log" >&2
   return $status
 }
@@ -79,6 +79,14 @@ cp App/Resources/InfoPlist.xcstrings "$scratch/InfoPlist.xcstrings"
 step "xcodegen generate"
 xcodegen generate --quiet || failed+=("xcodegen")
 
+# Prints the UDID of the available simulator named exactly $1, or nothing.
+simulator_udid() {
+  xcrun simctl list devices available | awk -v name="$1" '
+    { line = $0; sub(/^ +/, "", line) }
+    index(line, name " (") == 1 {
+      match(line, /[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}/); print substr(line, RSTART, RLENGTH); exit }'
+}
+
 # The iOS 26.5 simulator's own mediaanalysisd (its Photos analysis daemon) ran away after every boot,
 # 700-870% of a CPU for as long as the simulator was up, with no app or test involved; 26.1's did not.
 # Nothing here uses Photos, Vision or Live Text, so it is switched off in each simulator, which
@@ -86,31 +94,52 @@ xcodegen generate --quiet || failed+=("xcodegen")
 # system/com.apple.mediaanalysisd`. Set KEEP_MEDIA_ANALYSIS=1 to leave it alone.
 quiet_media_analysis() {
   [ "${KEEP_MEDIA_ANALYSIS:-0}" = 1 ] && return 0
-  local os="$1" udid
-  udid=$(xcrun simctl list devices available | awk -v os="iOS $os" -v name="$SIMULATOR_NAME" '
-    /^-- / { in_os = ($0 == "-- " os " --") }
-    in_os && $0 ~ ("^ +" name " \\(") { match($0, /[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}/); print substr($0, RSTART, RLENGTH); exit }')
-  if [ -z "$udid" ]; then echo "note: no $SIMULATOR_NAME simulator for iOS $os to quiet" >&2; return 0; fi
+  local name="$1" udid="$2"
   xcrun simctl boot "$udid" 2>/dev/null || true # already booted is fine
   xcrun simctl bootstatus "$udid" -b > /dev/null 2>&1 || true
   xcrun simctl spawn "$udid" launchctl disable system/com.apple.mediaanalysisd > /dev/null 2>&1 || true
   xcrun simctl spawn "$udid" launchctl bootout system/com.apple.mediaanalysisd > /dev/null 2>&1 || true
-  echo "mediaanalysisd switched off in the $SIMULATOR_NAME (iOS $os) simulator, $udid"
+  echo "mediaanalysisd switched off in the $name simulator, $udid"
 }
 
-for os in $SIMULATOR_OSES; do
-  step "iOS $os simulator runtime is installed"
-  if ! xcrun simctl list runtimes | grep -q "iOS $os "; then
-    echo "FAIL: no iOS $os simulator runtime. Install it: xcodebuild -downloadPlatform iOS -buildVersion $os" >&2
-    failed+=("runtime-$os")
+found=() udids=()
+for name in "${simulators[@]}"; do
+  step "Simulator \"$name\" exists"
+  udid="$(simulator_udid "$name")"
+  if [ -z "$udid" ]; then
+    if [[ "$name" == *" - iOS "* ]]; then
+      # Names follow "<device type> - iOS <version>", so the hint can name both.
+      os="${name##* - iOS }"
+      echo "FAIL: no simulator named \"$name\". Create it:" \
+        "xcrun simctl create \"$name\" \"${name% - iOS *}\" com.apple.CoreSimulator.SimRuntime.iOS-${os//./-}" >&2
+    else
+      echo "FAIL: no simulator named \"$name\". Create it with xcrun simctl create (README)." >&2
+    fi
+    failed+=("simulator-$name")
     continue
   fi
-  quiet_media_analysis "$os"
-  step "xcodebuild test (app + widget extension) on $SIMULATOR_NAME, iOS $os"
-  xcodebuild_logged "$logs/app-ios-$os.log" test -project NudgeInator.xcodeproj -scheme NudgeInator \
-    -destination "platform=iOS Simulator,name=$SIMULATOR_NAME,OS=$os" \
-    -derivedDataPath .build/derived || failed+=("app-tests-$os")
+  quiet_media_analysis "$name" "$udid"
+  found+=("$name") udids+=("$udid")
 done
+
+# One build for every simulator: they share the SDK and architecture, so a second build compiled
+# nothing anyway. It also keeps the newest build log the one that compiled, which is the log
+# xcode-build-server reads for VS Code's code completion (README).
+if [ ${#udids[@]} -gt 0 ]; then
+  step "xcodebuild build-for-testing (app + widget extension)"
+  if xcodebuild_logged "$logs/app-build.log" build-for-testing -project NudgeInator.xcodeproj \
+    -scheme NudgeInator -destination "platform=iOS Simulator,id=${udids[0]}" -derivedDataPath .build/derived; then
+    for i in "${!udids[@]}"; do
+      name="${found[$i]}" udid="${udids[$i]}"
+      step "xcodebuild test-without-building on $name"
+      xcodebuild_logged "$logs/app-$name.log" test-without-building -project NudgeInator.xcodeproj \
+        -scheme NudgeInator -destination "platform=iOS Simulator,id=$udid" \
+        -derivedDataPath .build/derived || failed+=("app-tests-$name")
+    done
+  else
+    failed+=("app-build")
+  fi
+fi
 
 # The app build also builds NudgeEngine, so its .stringsdata covers both catalogs.
 step "The String Catalogs hold every string the code shows"

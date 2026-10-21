@@ -579,8 +579,11 @@ struct ReminderFormTests {
     /// A reminder with a custom repeat already shows it, and nothing is seeded over it.
     @Test func theCustomPageShowsAnExistingCustomRepeat() async throws {
         let model = try await launchedModel()
+        // Its own line: passed straight to the optional `repeatRule:`, `#require` would infer an
+        // optional result and unwrap nothing.
+        let rule = try #require(RepeatRule(frequency: .daily, interval: 3))
         let custom = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 16, 9),
-                              repeatRule: try #require(RepeatRule(frequency: .daily, interval: 3)), strength: .gentle)
+                              repeatRule: rule, strength: .gentle)
         model.add(custom)
         let form = try editForm(of: custom.id, on: model)
 
