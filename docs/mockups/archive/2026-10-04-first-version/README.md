@@ -1,5 +1,8 @@
 # Nudge-inator iOS mockup: first version
 
+> **Superseded** by the [as-built mockup](../../2026-10-21-as-built/README.md) (2026-10-21), which
+> matches the app as it was built. This one is kept as the record of the first version's design.
+
 Nudge-inator as an **iPhone app for iOS 26 and later**. Reminders and nudging live on the device:
 there's no account, no server and no website. A reminder can have any number of tags, and you find
 reminders by filtering on one or more of them.
@@ -8,12 +11,12 @@ Open [`index.html`](index.html) in a browser. It's a single file with no depende
 it shows a phone with **Mockup controls** beside it, in portrait or landscape. On a phone the app
 fills the screen and the controls are below it.
 
-This mockup matches the decisions in [GLOSSARY.md](../../../GLOSSARY.md),
-[ADR 0001](../../adr/0001-stop-silences-done-is-deliberate.md),
-[ADR 0002](../../adr/0002-lock-due-time-repeat-strength-while-nudging.md),
-[ADR 0003](../../adr/0003-custom-repeat-is-an-rrule-subset.md) and the
-[first-version spec](../../../.scratch/first-version/spec.md). It was made from the
-[2026-10-02 mockup](../archive/2026-10-02-ux-review-changes/README.md), which is archived and
+This mockup matches the decisions in [GLOSSARY.md](../../../../GLOSSARY.md),
+[ADR 0001](../../../adr/0001-stop-silences-done-is-deliberate.md),
+[ADR 0002](../../../adr/0002-lock-due-time-repeat-strength-while-nudging.md),
+[ADR 0003](../../../adr/0003-custom-repeat-is-an-rrule-subset.md) and the
+[first-version spec](../../../../.scratch/first-version/spec.md). It was made from the
+[2026-10-02 mockup](../2026-10-02-ux-review-changes/README.md), which is archived and
 describes the fuller product. Where the two differ, this one is the first version.
 
 ## What it shows

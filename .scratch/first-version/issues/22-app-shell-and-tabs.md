@@ -2,7 +2,7 @@ Status: resolved
 
 # App shell: tab bar, theme, empty states
 
-Visual spec: `docs/mockups/2026-10-04-first-version/` (open `index.html`; the README describes the screens).
+Visual spec: `docs/mockups/archive/2026-10-04-first-version/` (open `index.html`; the README describes the screens).
 
 Design spec: `docs/design/DESIGN.md` (Colors, Typography, Layout & Spacing, Mapping to code). Where it and the mockup disagree, see its Precedence note.
 
