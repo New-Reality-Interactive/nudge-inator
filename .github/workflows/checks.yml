@@ -1,0 +1,24 @@
+# The checks that need no simulator: the engine's tests and its Foundation-only rule, and the
+# color sets. GitHub's runners don't have the named simulators the full suite runs on
+# (scripts/test.sh), so that stays a local step before each commit (AGENTS.md, Testing).
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  checks:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      # The newest Xcode on the runner; the project builds with 27.x, which the image may not have yet.
+      - name: Select the newest Xcode
+        run: |
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)"
+          xcodebuild -version
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Run the checks
+        run: SIMULATORS= scripts/test.sh

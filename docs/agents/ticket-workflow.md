@@ -3,9 +3,9 @@
 The steps every ticket follows, from its first prompt to the prompt for the next one. They follow
 the mattpocock-skills main flow. Where a step has its own doc, this file points to it.
 
-Run each skill named here with the Skill tool (`mattpocock-skills:<name>`), at the step that names
-it. Don't write its output from memory of what the skill does: its steps are the procedure, and a
-step done by hand gets skipped. The ones in `/slash` form only the developer can run; ask for them.
+Each skill named here runs through the Skill tool (`mattpocock-skills:<name>`) at the step that
+names it, and its steps are the procedure for that step. The ones in `/slash` form only the
+developer can run; ask for them.
 
 ## Start
 
@@ -30,9 +30,7 @@ last PR was merged (below), with the model and effort it recommends. The prompt 
 
 ## Review and commit
 
-7. Follow `review.md`'s finish order up to the commit: `scripts/test.sh` passes, `/compact`
-   (ask the developer), `mattpocock-skills:code-review`, fix, re-test, tick the criteria, write
-   Comments, commit.
+7. Review with `mattpocock-skills:code-review` and finish to the commit, as `review.md` says.
 
 ## The developer's check
 

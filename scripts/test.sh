@@ -3,10 +3,11 @@
 # matrix (one per iOS version, named for it). Also builds the widget extension (it is a dependency
 # of the app scheme).
 # Env: SIMULATORS (simulator names separated by ";", default the iOS 26.5 and 27.0 ones below).
+# SIMULATORS= (set but empty) runs only the steps that need no simulator, as CI does.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-SIMULATORS="${SIMULATORS:-iPhone 15 Pro - iOS 26.5;iPhone 15 - iOS 27.0}"
+SIMULATORS="${SIMULATORS-iPhone 15 Pro - iOS 26.5;iPhone 15 - iOS 27.0}"
 IFS=';' read -r -a simulators <<< "$SIMULATORS"
 failed=()
 
@@ -18,12 +19,14 @@ mkdir -p "$logs"
 
 # Runs xcodebuild with its whole output in the log $1, and prints only the results: each test
 # run's count, failed tests, errors and the verdict. Not -quiet, which hides Swift Testing's lines
-# and so the counts. Returns xcodebuild's status.
+# and so the counts. Errors are the compiler's (`file:line:col: error:`) and xcodebuild's own, not
+# any line with "error:": the app's tests log hundreds of "CoreData: error" lines on purpose.
+# Returns xcodebuild's status.
 xcodebuild_logged() {
   local log="$1"; shift
   xcodebuild "$@" > "$log" 2>&1
   local status=$?
-  grep -E '✘ Test|Test run with|error:|\*\* TEST (BUILD |EXECUTE )?(SUCCEEDED|FAILED)' "$log" || true
+  grep -E '✘ Test|Test run with|:[0-9]+:[0-9]+: error:|^(xcodebuild: )?error:|^Testing failed:|\*\* TEST (BUILD |EXECUTE )?(SUCCEEDED|FAILED)' "$log" || true
   [ $status -eq 0 ] || echo "Full output: $log" >&2
   return $status
 }
@@ -103,7 +106,8 @@ quiet_media_analysis() {
 }
 
 found=() udids=()
-for name in "${simulators[@]}"; do
+# The +"..." form expands an empty list to nothing: bash 3.2 (macOS) calls it unbound under set -u.
+for name in ${simulators[@]+"${simulators[@]}"}; do
   step "Simulator \"$name\" exists"
   udid="$(simulator_udid "$name")"
   if [ -z "$udid" ]; then
@@ -141,12 +145,15 @@ if [ ${#udids[@]} -gt 0 ]; then
   fi
 fi
 
-# The app build also builds NudgeEngine, so its .stringsdata covers both catalogs.
-step "The String Catalogs hold every string the code shows"
-scripts/sync-strings.sh --check .build/derived || failed+=("string-catalogs")
-if ! diff "$scratch/InfoPlist.xcstrings" App/Resources/InfoPlist.xcstrings; then
-  echo "FAIL: the build added Info.plist keys to App/Resources/InfoPlist.xcstrings: give each a comment and commit it" >&2
-  failed+=("infoplist-strings")
+# The app build also builds NudgeEngine, so its .stringsdata covers both catalogs. With no
+# simulator there was no app build to check.
+if [ ${#udids[@]} -gt 0 ]; then
+  step "The String Catalogs hold every string the code shows"
+  scripts/sync-strings.sh --check .build/derived || failed+=("string-catalogs")
+  if ! diff "$scratch/InfoPlist.xcstrings" App/Resources/InfoPlist.xcstrings; then
+    echo "FAIL: the build added Info.plist keys to App/Resources/InfoPlist.xcstrings: give each a comment and commit it" >&2
+    failed+=("infoplist-strings")
+  fi
 fi
 
 echo
