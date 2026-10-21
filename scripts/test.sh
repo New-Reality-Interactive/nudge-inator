@@ -79,11 +79,6 @@ cp App/Resources/InfoPlist.xcstrings "$scratch/InfoPlist.xcstrings"
 step "xcodegen generate"
 xcodegen generate --quiet || failed+=("xcodegen")
 
-# The iOS 26.5 simulator's own mediaanalysisd (its Photos analysis daemon) ran away after every boot,
-# 700-870% of a CPU for as long as the simulator was up, with no app or test involved; 26.1's did not.
-# Nothing here uses Photos, Vision or Live Text, so it is switched off in each simulator, which
-# persists across boots and is idempotent. Undo: `xcrun simctl spawn <udid> launchctl enable
-# system/com.apple.mediaanalysisd`. Set KEEP_MEDIA_ANALYSIS=1 to leave it alone.
 # Prints the UDID of the available simulator named exactly $1, or nothing.
 simulator_udid() {
   xcrun simctl list devices available | awk -v name="$1" '
@@ -92,6 +87,11 @@ simulator_udid() {
       match(line, /[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}/); print substr(line, RSTART, RLENGTH); exit }'
 }
 
+# The iOS 26.5 simulator's own mediaanalysisd (its Photos analysis daemon) ran away after every boot,
+# 700-870% of a CPU for as long as the simulator was up, with no app or test involved; 26.1's did not.
+# Nothing here uses Photos, Vision or Live Text, so it is switched off in each simulator, which
+# persists across boots and is idempotent. Undo: `xcrun simctl spawn <udid> launchctl enable
+# system/com.apple.mediaanalysisd`. Set KEEP_MEDIA_ANALYSIS=1 to leave it alone.
 quiet_media_analysis() {
   [ "${KEEP_MEDIA_ANALYSIS:-0}" = 1 ] && return 0
   local name="$1" udid="$2"
@@ -102,18 +102,24 @@ quiet_media_analysis() {
   echo "mediaanalysisd switched off in the $name simulator, $udid"
 }
 
-udids=()
+found=() udids=()
 for name in "${simulators[@]}"; do
   step "Simulator \"$name\" exists"
   udid="$(simulator_udid "$name")"
   if [ -z "$udid" ]; then
-    echo "FAIL: no simulator named \"$name\". Create it, for example:" \
-      "xcrun simctl create \"$name\" \"iPhone 15 Pro\" com.apple.CoreSimulator.SimRuntime.iOS-26-5" >&2
+    if [[ "$name" == *" - iOS "* ]]; then
+      # Names follow "<device type> - iOS <version>", so the hint can name both.
+      os="${name##* - iOS }"
+      echo "FAIL: no simulator named \"$name\". Create it:" \
+        "xcrun simctl create \"$name\" \"${name% - iOS *}\" com.apple.CoreSimulator.SimRuntime.iOS-${os//./-}" >&2
+    else
+      echo "FAIL: no simulator named \"$name\". Create it with xcrun simctl create (README)." >&2
+    fi
     failed+=("simulator-$name")
     continue
   fi
   quiet_media_analysis "$name" "$udid"
-  udids+=("$udid")
+  found+=("$name") udids+=("$udid")
 done
 
 # One build for every simulator: they share the SDK and architecture, so a second build compiled
@@ -123,9 +129,8 @@ if [ ${#udids[@]} -gt 0 ]; then
   step "xcodebuild build-for-testing (app + widget extension)"
   if xcodebuild_logged "$logs/app-build.log" build-for-testing -project NudgeInator.xcodeproj \
     -scheme NudgeInator -destination "platform=iOS Simulator,id=${udids[0]}" -derivedDataPath .build/derived; then
-    for name in "${simulators[@]}"; do
-      udid="$(simulator_udid "$name")"
-      [ -n "$udid" ] || continue
+    for i in "${!udids[@]}"; do
+      name="${found[$i]}" udid="${udids[$i]}"
       step "xcodebuild test-without-building on $name"
       xcodebuild_logged "$logs/app-$name.log" test-without-building -project NudgeInator.xcodeproj \
         -scheme NudgeInator -destination "platform=iOS Simulator,id=$udid" \

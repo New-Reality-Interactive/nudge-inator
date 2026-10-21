@@ -3,6 +3,10 @@
 The steps every ticket follows, from its first prompt to the prompt for the next one. They follow
 the mattpocock-skills main flow. Where a step has its own doc, this file points to it.
 
+Run each skill named here with the Skill tool (`mattpocock-skills:<name>`), at the step that names
+it. Don't write its output from memory of what the skill does: its steps are the procedure, and a
+step done by hand gets skipped. The ones in `/slash` form only the developer can run; ask for them.
+
 ## Start
 
 The developer starts a ticket in a fresh session (`/clear`) by pasting the prompt drafted when the
@@ -16,17 +20,19 @@ last PR was merged (below), with the model and effort it recommends. The prompt 
 
 ## Build
 
-4. Build every change in behaviour with `tdd`. Propose the seams and wait for the developer to
-   agree them before the first test. A ticket with no behaviour (docs, a mockup) skips `tdd`; say so.
-5. Use `domain-modeling` when a name isn't in `GLOSSARY.md`. Use `diagnosing-bugs` when something
-   fails and a first look doesn't explain it.
+4. Build every change in behaviour with `mattpocock-skills:tdd`. Propose the seams and wait for
+   the developer to agree them before the first test. A ticket with no behaviour (docs, a mockup)
+   skips `tdd`; say so.
+5. Use `mattpocock-skills:domain-modeling` when a name isn't in `GLOSSARY.md`, and
+   `mattpocock-skills:diagnosing-bugs` when something fails and a first look doesn't explain it.
 6. For a change on screen, check its visual criteria on both simulators (AGENTS.md, Testing)
    before review.
 
 ## Review and commit
 
 7. Follow `review.md`'s finish order up to the commit: `scripts/test.sh` passes, `/compact`
-   (ask the developer), `code-review`, fix, re-test, tick the criteria, write Comments, commit.
+   (ask the developer), `mattpocock-skills:code-review`, fix, re-test, tick the criteria, write
+   Comments, commit.
 
 ## The developer's check
 
@@ -43,7 +49,8 @@ last PR was merged (below), with the model and effort it recommends. The prompt 
 
 9. When the developer says it passed: rerun `scripts/test.sh` if anything changed since the
    last run, push the branch, and open a PR to `main` with `gh pr create`. Title it
-   `Ticket NN: <ticket title>` and write the body with `pr`. Give the developer the link and stop.
+   `Ticket NN: <ticket title>` and write the body with `mattpocock-skills:pr`. Give the developer
+   the link and stop.
 
 ## When the PR is merged
 

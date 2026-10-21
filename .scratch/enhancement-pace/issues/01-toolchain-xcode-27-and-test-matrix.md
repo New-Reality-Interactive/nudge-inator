@@ -32,3 +32,5 @@
 - Three `var intent` in `AppModelTests` and `OpenReminderIntentTests` became `let`: the new SDK's `@Parameter` and `@Dependency` setters don't mutate.
 
 **Run (clean build, `scripts/test.sh`).** 238 engine tests on macOS; 299 app tests in 33 suites on `iPhone 15 Pro - iOS 26.5` and on `iPhone 15 - iOS 27.0`; color sets, imports and String Catalogs pass. No compiler warnings left. The only one is appintentsmetadataprocessor's note for the engine package, which has no App Intents. Before the matrix was settled, an earlier run also passed 299 on the 26.1, 26.5 (iPhone 15), 27.0 and 27.1 simulators.
+
+**Review (2026-10-21, `code-review` from 0084efd).** Standards: no breaches; five judgement calls, all fixed: test.sh's mediaanalysisd comment had drifted above `simulator_udid`, each UDID was looked up twice, the missing-simulator hint always named the iPhone 15 Pro on 26.5, the README still described one `xcodebuild test` per simulator, and the spec's visual-check line still said "the newest iOS 27.x". Spec skipped: every criterion ticked and the change mechanical (review.md). After the fixes: 238 engine tests, 299 app tests on each simulator.
