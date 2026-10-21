@@ -49,8 +49,9 @@ last PR was merged (below), with the model and effort it recommends. The prompt 
 
 9. When the developer says it passed: rerun `scripts/test.sh` if anything changed since the
    last run, push the branch, and open a PR to `main` with `gh pr create`. Title it
-   `Ticket NN: <ticket title>` and write the body with `mattpocock-skills:pr`. Give the developer
-   the link and stop.
+   `Ticket <NN> (<folder>): <short summary>`, where `<folder>` is the ticket's folder under
+   `.scratch/`, for example `Ticket 02 (enhancement-pace): As-built mockup`. Write the body with
+   `mattpocock-skills:pr`. Give the developer the link and stop.
 
 ## When the PR is merged
 
