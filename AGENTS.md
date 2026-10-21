@@ -35,7 +35,7 @@ Nudge-inator is a Swift 6, SwiftUI, iPhone-only app (iOS 26.1 minimum) with a wi
 
 ### Toolchain
 
-The project builds with **Xcode 26.6 and the iOS 26.5 SDK**, the newest the development Mac (Intel) can run. There is no iOS 27 SDK or simulator here. Don't use iOS 27-only APIs, don't add an iOS 27 simulator to the test matrix, and don't raise the SDK or tooling past 26.x. Physical-device checks can still run on a newer iOS. Rationale: `docs/agents/device-testing.md`.
+The project builds with **Xcode 27.x and the iOS 27 SDK** on an Apple silicon Mac. The minimum stays iOS 26.1, so an iOS 27-only API is allowed only behind `if #available(iOS 27, *)` with an iOS 26 path beside it. Setting up a Mac (selecting Xcode, creating the simulators): `README.md`. The Mac's versions, rationale and history: `docs/agents/device-testing.md`.
 
 ### Structure
 
@@ -95,7 +95,9 @@ Never read `AlarmManager.authorizationState` directly. It is a synchronous call 
 - Group related tests in a `struct` suite. Use parameterized `@Test(arguments:)` instead of `for` loops over cases.
 - Test names describe behavior, without a `test` prefix.
 - Engine logic is tested in `NudgeEngineTests` with no simulator. App-target tests cover only code that needs Apple frameworks.
-- Automated tests always run against **both** the iOS 26.1 and iOS 26.5 simulators (the minimum, and the newest this Mac's Xcode supports; see Toolchain); `scripts/test.sh` does this. Don't narrow it to one version to get a pass. Simulators don't cover AlarmKit behavior, so device checks stay on a physical iPhone and record its iOS version.
+- Automated tests always run against **both** the `iPhone 15 Pro - iOS 26.5` and `iPhone 15 - iOS 27.0` simulators; `scripts/test.sh` does this. The iOS 26.1 simulator is dropped from the matrix for now, though 26.1 stays the minimum. Don't narrow it to one simulator to get a pass.
+- A story that changes something on screen has its visual criteria checked on both simulators first, in portrait, landscape and a large text size. Once they pass there, offer the person a run on the physical iPhone; they decide whether to take it.
+- Simulators don't cover AlarmKit behavior, so device checks stay on a physical iPhone and record which phone and iOS version they ran on. There is one test iPhone for now, on iOS 27.x, so the iOS 26 path of anything behind `if #available` is checked on the iOS 26.5 simulator. Detail: `docs/agents/device-testing.md`.
 - Run everything with `scripts/test.sh` before committing. UI, VoiceOver and AlarmKit behavior can't be checked in unit tests, so mark those as device checks.
 - Any test run on the physical iPhone is safe and leaves the phone exactly as it found it. Each test undoes everything it changed: pending and delivered notifications, scheduled alarms, stored data, and the app's own state. The cleanup runs even when the test fails, so put it in a `defer` or in a class or actor suite's `deinit`, which Swift Testing runs after each test. A test acts only on what it created, found by its own identifiers, and leaves the person's reminders, notifications from other apps, and system settings (permissions, Focus, Time Sensitive) as they were. If a test can't undo something, make it a manual device check instead. Before a device run, note whether the app is installed (`xcrun devicectl device info apps`). If it wasn't, uninstall it afterwards, which also resets its permissions. If it was, keep it and its data.
 - Uninstalling does **not** remove the app's AlarmKit alarms on a device, so a device test cancels every alarm it schedules and doesn't assume a fresh install holds none. A device test shows a permission prompt only when the run says the app wasn't installed (`TEST_RUNNER_NUDGE_FRESH_INSTALL=1`). History and detail: `docs/agents/device-testing.md`.

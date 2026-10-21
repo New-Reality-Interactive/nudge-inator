@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Runs every test: the NudgeEngine package, then the app tests on an iOS 26 simulator for EACH
-# iOS version in the test matrix (the oldest and the newest we support).
-# Also builds the widget extension (it is a dependency of the app scheme).
-# Env: SIMULATOR_NAME (default "iPhone 17"), SIMULATOR_OSES (space-separated, default "26.1 26.5").
+# Runs every test: the NudgeEngine package, then the app tests on EACH simulator in the test
+# matrix (one per iOS version, named for it). Also builds the widget extension (it is a dependency
+# of the app scheme).
+# Env: SIMULATORS (simulator names separated by ";", default the iOS 26.5 and 27.0 ones below).
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-SIMULATOR_NAME="${SIMULATOR_NAME:-iPhone 17}"
-SIMULATOR_OSES="${SIMULATOR_OSES:-26.1 26.5}"
+SIMULATORS="${SIMULATORS:-iPhone 15 Pro - iOS 26.5;iPhone 15 - iOS 27.0}"
+IFS=';' read -r -a simulators <<< "$SIMULATORS"
 failed=()
 
 step() { echo; echo "==> $1"; }
@@ -84,32 +84,38 @@ xcodegen generate --quiet || failed+=("xcodegen")
 # Nothing here uses Photos, Vision or Live Text, so it is switched off in each simulator, which
 # persists across boots and is idempotent. Undo: `xcrun simctl spawn <udid> launchctl enable
 # system/com.apple.mediaanalysisd`. Set KEEP_MEDIA_ANALYSIS=1 to leave it alone.
+# Prints the UDID of the available simulator named exactly $1, or nothing.
+simulator_udid() {
+  xcrun simctl list devices available | awk -v name="$1" '
+    { line = $0; sub(/^ +/, "", line) }
+    index(line, name " (") == 1 {
+      match(line, /[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}/); print substr(line, RSTART, RLENGTH); exit }'
+}
+
 quiet_media_analysis() {
   [ "${KEEP_MEDIA_ANALYSIS:-0}" = 1 ] && return 0
-  local os="$1" udid
-  udid=$(xcrun simctl list devices available | awk -v os="iOS $os" -v name="$SIMULATOR_NAME" '
-    /^-- / { in_os = ($0 == "-- " os " --") }
-    in_os && $0 ~ ("^ +" name " \\(") { match($0, /[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}/); print substr($0, RSTART, RLENGTH); exit }')
-  if [ -z "$udid" ]; then echo "note: no $SIMULATOR_NAME simulator for iOS $os to quiet" >&2; return 0; fi
+  local name="$1" udid="$2"
   xcrun simctl boot "$udid" 2>/dev/null || true # already booted is fine
   xcrun simctl bootstatus "$udid" -b > /dev/null 2>&1 || true
   xcrun simctl spawn "$udid" launchctl disable system/com.apple.mediaanalysisd > /dev/null 2>&1 || true
   xcrun simctl spawn "$udid" launchctl bootout system/com.apple.mediaanalysisd > /dev/null 2>&1 || true
-  echo "mediaanalysisd switched off in the $SIMULATOR_NAME (iOS $os) simulator, $udid"
+  echo "mediaanalysisd switched off in the $name simulator, $udid"
 }
 
-for os in $SIMULATOR_OSES; do
-  step "iOS $os simulator runtime is installed"
-  if ! xcrun simctl list runtimes | grep -q "iOS $os "; then
-    echo "FAIL: no iOS $os simulator runtime. Install it: xcodebuild -downloadPlatform iOS -buildVersion $os" >&2
-    failed+=("runtime-$os")
+for name in "${simulators[@]}"; do
+  step "Simulator \"$name\" exists"
+  udid="$(simulator_udid "$name")"
+  if [ -z "$udid" ]; then
+    echo "FAIL: no simulator named \"$name\". Create it, for example:" \
+      "xcrun simctl create \"$name\" \"iPhone 15 Pro\" com.apple.CoreSimulator.SimRuntime.iOS-26-5" >&2
+    failed+=("simulator-$name")
     continue
   fi
-  quiet_media_analysis "$os"
-  step "xcodebuild test (app + widget extension) on $SIMULATOR_NAME, iOS $os"
-  xcodebuild_logged "$logs/app-ios-$os.log" test -project NudgeInator.xcodeproj -scheme NudgeInator \
-    -destination "platform=iOS Simulator,name=$SIMULATOR_NAME,OS=$os" \
-    -derivedDataPath .build/derived || failed+=("app-tests-$os")
+  quiet_media_analysis "$name" "$udid"
+  step "xcodebuild test (app + widget extension) on $name"
+  xcodebuild_logged "$logs/app-$name.log" test -project NudgeInator.xcodeproj -scheme NudgeInator \
+    -destination "platform=iOS Simulator,id=$udid" \
+    -derivedDataPath .build/derived || failed+=("app-tests-$name")
 done
 
 # The app build also builds NudgeEngine, so its .stringsdata covers both catalogs.

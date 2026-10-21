@@ -626,7 +626,7 @@ struct AppModelTests {
         let ringing = try #require(manager.scheduled.first { $0.fireDate == NewYork.local(2026, 10, 15, 9, 17, 30) })
         clock.now = NewYork.local(2026, 10, 15, 9, 18)
         manager.ring(ringing.id)
-        var intent = OpenReminderIntent(alarmID: ringing.id, reminderID: call.id)
+        let intent = OpenReminderIntent(alarmID: ringing.id, reminderID: call.id)
         intent.opener = model.alarmOpener
 
         _ = try await intent.perform()
