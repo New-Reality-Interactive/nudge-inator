@@ -22,6 +22,10 @@ Colors, type, spacing, shapes and components are in `docs/design/DESIGN.md`. UI 
 
 How a ticket is reviewed and how to keep a session small: `docs/agents/review.md`.
 
+### Ticket workflow
+
+Every ticket follows the same steps, from its first prompt to the next ticket's: `docs/agents/ticket-workflow.md`.
+
 ## Apple platform questions
 
 For any iOS design, implementation or testing question, or any Xcode question, look it up with the `apple-rag-mcp` tools before answering or deciding: `search` first, then `fetch` for a full page. Don't answer from memory.
