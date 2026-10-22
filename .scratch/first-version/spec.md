@@ -1,4 +1,5 @@
-Status: resolved
+Status: released
+Version: 1.0.0
 
 # Nudge-inator, first version
 

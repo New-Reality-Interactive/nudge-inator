@@ -52,6 +52,16 @@ if non_foundation_imports Packages/NudgeEngine/Sources | grep .; then
   failed+=("engine-imports")
 fi
 
+# AlarmKit's authorization read is a synchronous call that froze the iPhone for 69 s on the main
+# thread (ticket 22). Only the system wrapper makes it, for AlarmAdapter to call off the main thread
+# with a time limit (AGENTS.md, AlarmKit).
+step "AlarmKit's authorization state is read only in AlarmManaging.swift"
+if grep -rn --include='*.swift' 'AlarmManager\.shared\.authorizationState' App NudgeWidgets Packages/NudgeShared \
+  | grep -v '^App/Alarms/AlarmManaging\.swift:'; then
+  echo "FAIL: read it through AlarmAdapter (permissions(updating:)), not AlarmManager directly" >&2
+  failed+=("alarm-authorization-read")
+fi
+
 # xcodebuild, not `swift test`: SwiftPM's command line copies the engine's String Catalog without
 # compiling it, so every string would fall back to its key and plural variants would never apply.
 step "xcodebuild test (NudgeEngine, macOS)"
