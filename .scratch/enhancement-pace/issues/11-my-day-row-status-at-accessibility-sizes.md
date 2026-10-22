@@ -1,9 +1,12 @@
-Status: ready-for-agent
-Type: bug
+# 11: My Day rows break words at accessibility text sizes
 
-# My Day rows break words at accessibility text sizes
+**What to build:** A bug fix. At the accessibility text sizes a My Day row puts its status label under its text, as the as-built mockup draws it, so no word breaks mid-word.
 
-Found while making the as-built mockup (enhancement-pace ticket 02), in simulator screenshots on `iPhone 15 Pro - iOS 26.5` and `iPhone 15 - iOS 27.0` at the largest text size (AX5), 2026-10-21. Brian agreed the mockup draws the row as intended, and asked for this ticket.
+**Blocked by:** none.
+
+**Status:** ready-for-agent
+
+Found while making the as-built mockup (ticket 02), in simulator screenshots on `iPhone 15 Pro - iOS 26.5` and `iPhone 15 - iOS 27.0` at the largest text size (AX5), 2026-10-21. Brian agreed the mockup draws the row as intended, and asked for this ticket.
 
 ## The bug
 

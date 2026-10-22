@@ -159,7 +159,7 @@ At the accessibility text sizes a My Day row stacks its time and title, but keep
 ing meds" and "Do / ne" break mid-word (both simulators, AX5). The row's `opener` in
 `App/MyDay/MyDayRows.swift` keeps the label in its `HStack` at every size. This mockup draws the
 row as intended, with the label under the text. The fix is
-[first-version ticket 34](../../../.scratch/first-version/issues/34-my-day-row-status-at-accessibility-sizes.md).
+[ticket 11](../../../.scratch/enhancement-pace/issues/11-my-day-row-status-at-accessibility-sizes.md).
 
 ## Not checked against the app
 
