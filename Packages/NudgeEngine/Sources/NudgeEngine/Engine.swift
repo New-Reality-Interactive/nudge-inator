@@ -408,7 +408,7 @@ public struct Engine {
     /// give-up limit, stopped where the next occurrence takes over at `takeOverTime`. The plan and
     /// the nudge card both count from it, so they agree on the nudges it sends in all.
     func nudgeTimes(of reminder: Reminder, dueAt dueTime: Date, takenOverAt takeOverTime: Date?) -> [Date] {
-        reminder.strength.nudgeTimes(from: dueTime, within: giveUpLimit).prefix { $0 < takeOverTime ?? .distantFuture }.map(\.self)
+        reminder.nudgeTimes(from: dueTime, within: giveUpLimit).prefix { $0 < takeOverTime ?? .distantFuture }.map(\.self)
     }
 
     /// The title a nudge firing at `fireTime` carries: the one it was delivered with if it fired
@@ -558,8 +558,8 @@ public struct Engine {
         if let closing = historyByReminder[reminder.id]?.saved.closedOccurrences[dueTime] {
             return closed(closing)
         }
-        let nudgeTimes = reminder.strength.nudgeTimes(from: dueTime, within: giveUpLimit)
-        let giveUpTime = reminder.strength.giveUpTime(from: dueTime, after: nudgeTimes, within: giveUpLimit)
+        let nudgeTimes = reminder.nudgeTimes(from: dueTime, within: giveUpLimit)
+        let giveUpTime = reminder.giveUpTime(from: dueTime, after: nudgeTimes, within: giveUpLimit)
         // The first pause that ends at or after the due time is the first the occurrence could be
         // open in. If it hadn't closed by then, it's Skipped: the Nudging one that Pause closes, any
         // due while paused, and one an edit while paused moved to before the pause.

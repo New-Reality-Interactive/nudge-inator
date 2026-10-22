@@ -221,6 +221,35 @@ struct ReminderStoreTests {
         #expect(try store().load().reminders.first?.strength == strength)
     }
 
+    /// A reminder's pace is saved with it (enhancement-pace ticket 04).
+    @Test(arguments: [Pace.escalating])
+    func aReminderPaceSurvivesASaveAndReload(_ pace: Pace) throws {
+        let reminder = Reminder(title: "Stretch", dueTime: NewYork.local(2026, 10, 15), strength: .firm, pace: pace)
+
+        try store().save(StoredData(reminders: [reminder], tags: [], histories: [:]))
+
+        #expect(try store().load().reminders.first?.pace == pace)
+    }
+
+    /// A pace kind the store can't map back is an error, not a reminder that quietly nudges
+    /// another way.
+    @Test func aPaceKindTheStoreCantMapBackIsUnreadable() throws {
+        let reminder = Reminder(title: "Stretch", dueTime: NewYork.local(2026, 10, 15), strength: .firm)
+        try store().save(StoredData(reminders: [reminder], tags: [], histories: [:]))
+        let container = try ModelContainer(
+            for: ReminderRecord.self, ClosedOccurrenceRecord.self, PauseSpanRecord.self, ReplacedTitleRecord.self, TagRecord.self,
+            configurations: ReminderStore.configuration(for: .file(fileURL))
+        )
+        for record in try container.mainContext.fetch(FetchDescriptor<ReminderRecord>()) {
+            record.paceKind = "gallop"
+        }
+        try container.mainContext.save()
+
+        #expect(throws: StoreError.unreadable(field: .paceKind, value: "gallop")) {
+            try store().load()
+        }
+    }
+
     /// Every state a closing can hold, including Nudging, which a closing never has but the
     /// engine's type allows.
     @Test(arguments: [

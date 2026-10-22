@@ -221,7 +221,7 @@ struct AlarmLimitFallbackTests {
     /// Alarms that have rung hold no slot the engine counts, so the app opening mid-ladder fits
     /// the ten still to ring.
     @Test func engineCapCountsOnlyAlarmsYetToRing() throws {
-        clock.now = try #require(bins.strength.nudgeTimes(from: dueTime, within: .shipped).dropFirst(9).first)
+        clock.now = try #require(bins.nudgeTimes(from: dueTime, within: .shipped).dropFirst(9).first)
         _ = engine(alarmLimit: AlarmLimit(pendingAlarms: 10), holding: [bins])
         let items = try lastItems()
         #expect(items.allSatisfy { !$0.isPastAlarmLimit })

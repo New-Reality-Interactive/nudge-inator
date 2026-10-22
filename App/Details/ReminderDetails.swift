@@ -82,7 +82,7 @@ struct ReminderDetails {
             .map { LastOccurrence(state: $0.occurrence.state, day: engine.dayLabel(of: $0.closedAt), time: engine.timeOfDay(of: $0.closedAt)) }
         repeats = engine.repeatSummary(of: reminder)
         showsLockNote = !engine.lockedFields(of: id).isEmpty
-        howItNudges = engine.howItNudges(reminder.strength, breakThroughFocus: reminder.breakThroughFocus)
+        howItNudges = engine.howItNudges(reminder.strength, pace: reminder.pace, breakThroughFocus: reminder.breakThroughFocus)
 
         // The open occurrence's own due time isn't "next", whatever the clock says. The engine
         // reads "at or after now", so a second time is asked for in case the first is that one.

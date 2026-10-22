@@ -27,6 +27,12 @@ final class ReminderRecord: IdentifiedRecord {
     /// The exact instant of an UNTIL that ends at a time. RRULE text keeps only whole seconds.
     var repeatUntilTime: Date?
     var strength: String
+    /// The pace's kind, as `Pace`'s stored spelling. Both pace properties carry default values so
+    /// SwiftData opens a store saved before paces existed (no migration: the beta reinstalls).
+    var paceKind: String = "escalating"
+    /// The wait a Consistent pace carries, in seconds: `nil` for Escalating, whose waits come from
+    /// the strength.
+    var paceWait: Double?
     var breakThroughFocus: Bool
     /// Its history goes with it: Delete clears a reminder's whole history (ticket 12).
     @Relationship(deleteRule: .cascade, inverse: \ClosedOccurrenceRecord.reminder)

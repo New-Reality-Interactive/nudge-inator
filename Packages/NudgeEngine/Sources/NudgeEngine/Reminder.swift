@@ -14,6 +14,8 @@ public struct Reminder: Identifiable, Equatable, Sendable {
     /// `nil` repeats Never.
     public var repeatRule: RepeatRule?
     public var strength: Strength
+    /// How the waits between its nudges are spaced.
+    public var pace: Pace
     /// On unless the person turns it off, as in the mockup's New Reminder form.
     public var breakThroughFocus: Bool
 
@@ -25,6 +27,7 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         dueTime: Date,
         repeatRule: RepeatRule? = nil,
         strength: Strength,
+        pace: Pace = .escalating,
         breakThroughFocus: Bool = true
     ) {
         self.id = id
@@ -34,6 +37,7 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         self.dueTime = dueTime
         self.repeatRule = repeatRule
         self.strength = strength
+        self.pace = pace
         self.breakThroughFocus = breakThroughFocus
     }
 }
