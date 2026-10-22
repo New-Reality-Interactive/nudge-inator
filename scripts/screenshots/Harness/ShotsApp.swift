@@ -85,8 +85,9 @@ enum ShotsSeed {
         await model.appOpened()
     }
 
-    /// The mockup's reminders (its `seed()`), with the mockup's 8:20 AM as now. Times are now plus
-    /// or minus the mockup's gaps, so the screens show the same states whenever this runs.
+    /// The mockup's reminders (its `seed()`) and their paces (the rest Escalating), with the
+    /// mockup's 8:20 AM as now. Times are now plus or minus the mockup's gaps, so the screens show
+    /// the same states whenever this runs.
     static func seedMockupData(into model: AppModel) {
         let now = Calendar.current.dateInterval(of: .minute, for: .now)!.start
         func at(_ minutes: Double, days: Double = 0) -> Date {
@@ -99,24 +100,25 @@ enum ShotsSeed {
         func tagged(_ names: String...) -> [Tag.ID] { names.map { tags[$0]! } }
         let everyThreeDays = RepeatRule(frequency: .daily, interval: 3)!
 
-        // 7:30 AM every week, nudging since 7:30; last week's was Done at 7:52.
-        let bins = Reminder(title: "Take the bins out", tagIDs: tagged("home"), dueTime: at(-50, days: -7), repeatRule: .everyWeek, strength: .firm)
+        // 7:30 AM every week, every 30 min, so on nudge 2 since 8:00 and High at 8:30; last week's
+        // was Done at 7:52.
+        let bins = Reminder(title: "Take the bins out", tagIDs: tagged("home"), dueTime: at(-50, days: -7), repeatRule: .everyWeek, strength: .firm, pace: .consistent(wait: 30 * 60))
         // 8:10 AM today, nudging.
         let alex = Reminder(title: "Reply to Alex about the lease", notes: "They need an answer before 10.", tagIDs: tagged("money", "home"), dueTime: at(-10), strength: .relentless)
-        // 6:30 AM every day, Done at 7:04.
-        let meds = Reminder(title: "Morning meds", notes: "Blue pill + vitamin D", tagIDs: tagged("health", "morning"), dueTime: at(-110, days: -1), repeatRule: .everyDay, strength: .gentle)
+        // 6:30 AM every day, every 15 min, Done at 7:04.
+        let meds = Reminder(title: "Morning meds", notes: "Blue pill + vitamin D", tagIDs: tagged("health", "morning"), dueTime: at(-110, days: -1), repeatRule: .everyDay, strength: .gentle, pace: .consistent(wait: 15 * 60))
         // 10:00 AM every day; yesterday's gave up.
         let stretch = Reminder(title: "Stretch break", tagIDs: tagged("health", "work"), dueTime: at(100, days: -1), repeatRule: .everyDay, strength: .firm)
         // 6:00 PM every 3 days, Break Through Focus off.
         let plants = Reminder(title: "Water the plants", tagIDs: tagged("home"), dueTime: at(580), repeatRule: everyThreeDays, strength: .gentle, breakThroughFocus: false)
         // 9:00 AM on the 1st of each month, in 3 days.
         let rent = Reminder(title: "Pay rent", notes: "Transfer to the landlord's account.", tagIDs: tagged("money", "home"), dueTime: at(40, days: 3), repeatRule: .everyMonth, strength: .relentless)
-        // 1:15 PM in 4 days.
-        let dentist = Reminder(title: "Dentist appointment", notes: "Bring the insurance card.", tagIDs: tagged("health", "appointments"), dueTime: at(295, days: 4), strength: .firm)
+        // 1:15 PM in 4 days, every 10 min.
+        let dentist = Reminder(title: "Dentist appointment", notes: "Bring the insurance card.", tagIDs: tagged("health", "appointments"), dueTime: at(295, days: 4), strength: .firm, pace: .consistent(wait: 10 * 60))
         // 18 days ago, Done after 41 minutes.
         let passport = Reminder(title: "Renew passport", tagIDs: tagged("money", "travel"), dueTime: at(40, days: -18), strength: .firm)
-        // 9:30 AM every weekday.
-        let standUp = Reminder(title: "Team stand-up", notes: "Join from the meeting link in the calendar invite.", tagIDs: tagged("work", "morning"), dueTime: at(70), repeatRule: .everyWeekday, strength: .firm)
+        // 9:30 AM every weekday, every 5 min.
+        let standUp = Reminder(title: "Team stand-up", notes: "Join from the meeting link in the calendar invite.", tagIDs: tagged("work", "morning"), dueTime: at(70), repeatRule: .everyWeekday, strength: .firm, pace: .consistent(wait: 5 * 60))
         // 4:30 PM every week.
         let status = Reminder(title: "Send the weekly status update", tagIDs: tagged("work"), dueTime: at(490), repeatRule: .everyWeek, strength: .gentle)
         // 7:00 AM every day, Break Through Focus off, Done at 7:18.

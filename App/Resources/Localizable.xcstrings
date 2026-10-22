@@ -357,13 +357,24 @@
         }
       }
     },
+    "**Nudges %lld–%lld** when due" : {
+      "comment" : "How It Nudges row: a run of nudges from the first, which comes at the due time, each one wait after the last. 1: the first nudge's number, 1. 2: the last's.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**Nudges %1$lld–%2$lld** when due"
+          }
+        }
+      }
+    },
     "**Nudging now.** Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge." : {
       "comment" : "Top of the Edit Reminder form while the reminder is nudging: why four fields are locked."
     },
     "**Time Sensitive is off.** High nudges come as ordinary notifications, so a Focus can hold them." : {
       "comment" : "Permission banner, when the app's Time Sensitive notifications are turned off. Keep the first sentence bold."
     },
-    "A new schedule applies from the next time it's due. A new strength or Break Through Focus setting applies from the next nudge." : {
+    "A new schedule applies from the next time it's due. A new strength, pace or Break Through Focus setting applies from the next nudge." : {
       "comment" : "Top of the Edit Reminder form when the reminder isn't nudging: when changes apply."
     },
     "Add" : {
@@ -474,6 +485,12 @@
     "Below is how each strength nudges a reminder with Break Through Focus on." : {
       "comment" : "How It Nudges page: under the points at the top, before the three strengths' schedules."
     },
+    "Both nudges are notifications." : {
+      "comment" : "How It Nudges footer, when a reminder sends two nudges, as a long Consistent wait can, and neither rings as an alarm."
+    },
+    "Both nudges ring as alarms." : {
+      "comment" : "How It Nudges footer, when a reminder sends two nudges, as a long Consistent wait can, and both ring as alarms."
+    },
     "Break Through Focus" : {
       "comment" : "Reminder details, Schedule: the per-reminder switch that sends nudges as alarms.\nThe reminder form's switch: whether its nudges get through a Focus."
     },
@@ -541,6 +558,12 @@
     },
     "Completed" : {
       "comment" : "A tag's screen: header of the reminders with nothing more to come."
+    },
+    "Consistent" : {
+      "comment" : "Pace name: one wait, chosen by the person, between every nudge."
+    },
+    "Consistent · %@" : {
+      "comment" : "A Consistent pace with its wait, as reminder details show it. The placeholder is the wait between nudges, such as \"30 min\"."
     },
     "Continue" : {
       "comment" : "Onboarding: the only button, which goes on to the system's permission prompts."
@@ -648,6 +671,9 @@
     "During a Focus, Normal nudges wait until High, unless you allow %@ in that Focus." : {
       "comment" : "How It Nudges footer. The placeholder is the app's name."
     },
+    "During a Focus, every nudge waits, unless you allow %@ in that Focus." : {
+      "comment" : "How It Nudges footer, when no nudge reaches High, as with a long Consistent wait. The placeholder is the app's name."
+    },
     "Each Gentle or Firm reminder has a Break Through Focus switch. Turn it off and a Focus can hold its nudges, and nothing rings. Relentless always breaks through." : {
       "comment" : "Onboarding and How It Nudges: under \"You choose what breaks through\"."
     },
@@ -669,38 +695,25 @@
     "Enter a name for the tag." : {
       "comment" : "Tag sheet: shown when what was typed leaves no name, such as only a #."
     },
-    "Every %@ at first, down to every %@. Every nudge rings as an alarm." : {
-      "comment" : "Under the reminder form's strength, when every nudge rings, as Relentless's do. 1: the wait after the first nudge, such as \"10 min\". 2: the shortest wait.",
+    "Escalating" : {
+      "comment" : "Pace name: the waits between nudges come from the strength and shrink as the nudging goes on."
+    },
+    "Every" : {
+      "comment" : "The reminder form's row for a Consistent pace's wait between nudges, such as \"10 min\"."
+    },
+    "Every %@ at first, down to every %@." : {
+      "comment" : "Under the reminder form's pace when it is Escalating. 1: the wait after the first nudge, such as \"30 min\". 2: the shortest wait.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Every %1$@ at first, down to every %2$@. Every nudge rings as an alarm."
+            "value" : "Every %1$@ at first, down to every %2$@."
           }
         }
       }
     },
-    "Every %@ at first, down to every %@. Never rings as an alarm." : {
-      "comment" : "Under the reminder form's strength, when none of its nudges rings. 1: the wait after the first nudge, such as \"1 hr\". 2: the shortest wait.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Every %1$@ at first, down to every %2$@. Never rings as an alarm."
-          }
-        }
-      }
-    },
-    "Every %@ at first, down to every %@. Rings as an alarm from nudge %lld." : {
-      "comment" : "Under the reminder form's strength. 1: the wait after the first nudge, such as \"30 min\". 2: the shortest wait. 3: the first nudge that rings as an alarm.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Every %1$@ at first, down to every %2$@. Rings as an alarm from nudge %3$lld."
-          }
-        }
-      }
+    "Every %@, from when it's due." : {
+      "comment" : "Under the reminder form's pace when it is Consistent. The placeholder is the wait between nudges, such as \"10 min\"."
     },
     "Every %lld days" : {
       "comment" : "The Custom repeat page's stepper for a daily repeat. Singular: \"Every day\".",
@@ -820,6 +833,9 @@
     },
     "Every nudge is an ordinary notification, which a Focus can hold. Nothing rings." : {
       "comment" : "Under Break Through Focus when it's off."
+    },
+    "Every nudge rings as an alarm." : {
+      "comment" : "Under the reminder form's strength, when every nudge rings, as Relentless's do."
     },
     "Filter (%lld)" : {
       "comment" : "My Day: the button that opens the tag filter, while tags are chosen. The placeholder is how many.",
@@ -961,6 +977,9 @@
     },
     "Never" : {
       "comment" : "Repeat preset, on the Repeat page and the form's Repeat row: the reminder doesn't repeat.\nThe Custom repeat page's Ends choice: it repeats for ever."
+    },
+    "Never rings as an alarm." : {
+      "comment" : "Under the reminder form's strength, when none of its nudges rings."
     },
     "New Reminder" : {
       "comment" : "Title of the form that makes a reminder.\nToolbar button (a plus) that opens the New Reminder form."
@@ -1232,6 +1251,9 @@
     "Opens the reminder's details." : {
       "comment" : "VoiceOver hint on a nudge card's title and on a Now row: tapping it opens the reminder's details."
     },
+    "Pace" : {
+      "comment" : "Reminder details, Schedule: how the waits between the reminder's nudges are spaced.\nThe reminder form's pace choice: Escalating or Consistent."
+    },
     "Pause Reminder" : {
       "comment" : "Reminder details: stops the reminder's nudging until it is resumed."
     },
@@ -1253,7 +1275,7 @@
     "Reminder Not Found" : {
       "comment" : "Reminder details: title when the reminder isn't there."
     },
-    "Reminders keep coming back, more often and more insistently, until you tap Done." : {
+    "Reminders keep coming back until you tap Done: at a steady pace, or more often and more insistently." : {
       "comment" : "Onboarding and How It Nudges: under \"Nudges until you're done\"."
     },
     "Remove %@ from the filter" : {
@@ -1279,6 +1301,9 @@
     },
     "Resume Reminder" : {
       "comment" : "Reminder details: brings a paused reminder back at its next time."
+    },
+    "Rings as an alarm from nudge %lld." : {
+      "comment" : "Under the reminder form's strength. The placeholder is the first nudge that rings as an alarm."
     },
     "Save" : {
       "comment" : "The Edit Reminder form's confirm button (a checkmark)."

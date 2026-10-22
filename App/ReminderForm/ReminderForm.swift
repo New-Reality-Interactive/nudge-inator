@@ -24,6 +24,20 @@ final class ReminderForm: Identifiable {
     /// The person's switch, as saved. Relentless ignores it but keeps it, so leaving Relentless
     /// gives it back; the form shows `breaksThroughFocus`.
     var breakThroughFocus = true
+    /// The Pace control: Escalating or Consistent. A new reminder starts Escalating until the
+    /// Default Pace (ticket 09).
+    var paceChoice = PaceChoice.escalating
+    /// The Every row's wait, one of `Pace.consistentWaits`. Kept while Escalating is chosen, so
+    /// choosing Consistent again finds it (spec story 25).
+    var consistentWait = PaceChoice.startingWait
+
+    /// The draft's pace, from the Pace control and the Every row.
+    var pace: Pace {
+        switch paceChoice {
+        case .escalating: .escalating
+        case .consistent: .consistent(wait: consistentWait)
+        }
+    }
 
     /// The switch as the form shows it: always on for Relentless (ADR 0004). Setting it sets the
     /// person's switch.
@@ -103,6 +117,8 @@ final class ReminderForm: Identifiable {
         repeatRule = reminder.repeatRule
         strength = reminder.strength
         breakThroughFocus = reminder.breakThroughFocus
+        paceChoice = PaceChoice(reminder.pace)
+        if case .consistent(let wait) = reminder.pace { consistentWait = wait }
         opened = draft(tagIDs: tagIDs)
     }
 
@@ -195,14 +211,20 @@ final class ReminderForm: Identifiable {
         currentEngine().repeatSummary(of: draft(tagIDs: tagIDs))
     }
 
-    /// The draft's ladder with its strength and switch, for the form's How It Nudges (ticket 31).
+    /// The draft's ladder with its strength, pace and switch, for the form's How It Nudges
+    /// (ticket 31).
     var howItNudges: HowItNudges {
-        currentEngine().howItNudges(strength, breakThroughFocus: breakThroughFocus)
+        currentEngine().howItNudges(strength, pace: pace, breakThroughFocus: breakThroughFocus)
     }
 
     /// The line under the strength choice, from the same ladder.
     var strengthBlurb: StrengthBlurb {
         StrengthBlurb(howItNudges)
+    }
+
+    /// The line under the pace choice, from the same ladder.
+    var paceBlurb: PaceBlurb {
+        PaceBlurb(pace, howItNudges)
     }
 
     /// How many due times the Custom page's Next Times shows.
@@ -347,6 +369,7 @@ final class ReminderForm: Identifiable {
             dueTime: dueTime,
             repeatRule: repeatRule,
             strength: strength,
+            pace: pace,
             breakThroughFocus: breakThroughFocus
         )
     }
