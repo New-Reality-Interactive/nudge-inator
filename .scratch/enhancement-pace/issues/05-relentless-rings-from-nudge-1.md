@@ -9,7 +9,10 @@
 - [ ] Engine: every nudge of a Relentless reminder is Urgent, and its fire times are unchanged.
 - [ ] Engine: with alarms denied, Relentless nudges arrive as Time Sensitive notifications, or ordinary ones when Time Sensitive is off; past the alarm limit they fall back the same way, marked "too many alarms scheduled".
 - [ ] How It Nudges and the strength line show Relentless as alarms from nudge 1, matching the proposed mockup, and the reach the banners describe stays true.
+- [ ] The strength line for Relentless reads "Every nudge rings as an alarm.", and Settings' footer under Nudges gains "Every Relentless nudge is Urgent." (proposed mockup README items 3 and 14).
 - [ ] Simulators (26.5 and 27.x): How It Nudges and the form show the change in portrait, landscape and large text.
 - [ ] Offered to Brian, after the simulator pass: on an iPhone, a Relentless reminder's first nudge rings as an alarm at its due time (phone and iOS version recorded).
 
 ## Comments
+
+**2026-10-21, criteria from the proposed mockup.** Added with Brian's agreement after ticket 03, for text and behaviour the approved mockup settled that this ticket didn't name: the Relentless strength line and Settings' footer. Detail: `docs/mockups/2026-10-21-proposed-pace/README.md`, items 3 and 14.

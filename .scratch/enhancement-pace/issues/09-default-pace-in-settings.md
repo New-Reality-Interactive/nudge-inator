@@ -11,8 +11,11 @@
 - [ ] Changing the Default pace leaves every existing reminder's pace as it was.
 - [ ] Delete All Data sets the Default pace back to Consistent · 10 min.
 - [ ] Settings' Nudges section has the Default pace row with the form's controls, as in the proposed mockup.
+- [ ] The Default Pace row reads "Consistent · 10 min" and opens a Default Pace page with the form's Pace and Every controls and the note "New reminders start with this pace. Changing it doesn't change the reminders you already have."; the screenshot harness walks to that page.
 - [ ] Simulators (26.5 and 27.x): the row in portrait, landscape and large text; VoiceOver reads it as the form's controls read.
 - [ ] A beta note, where the testers will see it, says to run Delete All Data and then reinstall to get this version.
 - [ ] Offered to Brian, after the simulator pass: on an iPhone, a new reminder starts with the Default pace he set (phone and iOS version recorded).
 
 ## Comments
+
+**2026-10-21, criteria from the proposed mockup.** Added with Brian's agreement after ticket 03, for text and behaviour the approved mockup settled that this ticket didn't name: the Default Pace row opening its own page, and the harness reaching it. Detail: `docs/mockups/2026-10-21-proposed-pace/README.md`, items 12.
