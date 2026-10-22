@@ -2,7 +2,7 @@
 
 ### Issue tracker
 
-Issues and specs are local markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
+Issues and specs are local markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`. The open feature is `enhancement-pace`; every finished one (`first-version`, shipped as v1.0.0) is closed.
 
 A ticket is `resolved` only when every acceptance criterion is ticked. While one is open, its `Status:` stays as it was. Say which criterion is open and why, and resolve it with the user: meet it, or agree a change to it (reworded, or moved to a named ticket) and record that agreement in Comments.
 
@@ -52,9 +52,9 @@ The project builds with **Xcode 27.x and the iOS 27 SDK** on an Apple silicon Ma
 
 ### AlarmKit
 
-Apple's AlarmKit docs confirm that scheduling fails silently without a non-empty `NSAlarmKitUsageDescription`, and that the app must handle the `denied` authorization state in its UI. The docs don't say how alert-only alarms behave with the empty widget extension present. Ticket 02 checks that on a device. Don't assume it works.
+Apple's AlarmKit docs confirm that scheduling fails silently without a non-empty `NSAlarmKitUsageDescription`, and that the app must handle the `denied` authorization state in its UI. On the iPhone, alert-only alarms ring through silent mode and Do Not Disturb, with or without the widget extension (first-version ticket 02).
 
-Never read `AlarmManager.authorizationState` directly. It is a synchronous call to the system's alarm service, and on the iPhone, read on the main thread right after the prompt was answered, it froze the app for 69 s, and once for good (ticket 22). Apple's docs don't say it can block. `AlarmAdapter` reads it off the main thread with a time limit, at launch and each time the app comes forward (`refreshAuthorization()`, never while an earlier read is still outstanding, and not around onboarding's prompts, each of which makes an App opened), and between those takes the state from `requestAuthorization()`'s answer and from `authorizationUpdates`. The updates alone aren't enough: on the iPhone (iOS 27.0.1) a change made in Settings while the app was suspended sent none (ticket 30). Ask the adapter (`permissions(updating:)`) for the state instead. While the state is not determined the adapter schedules no alarm, since AlarmKit would prompt by itself on the first `schedule`; onboarding asks (ticket 31).
+AlarmKit's authorization state comes from `AlarmAdapter` (`permissions(updating:)`), never from `AlarmManager` directly: on the iPhone that synchronous read froze the app for 69 s, and once for good (ticket 22). `scripts/test.sh` fails on a direct read outside `App/Alarms/AlarmManaging.swift`. When the adapter reads it, and why the update stream alone isn't enough: its doc comments.
 
 ### Testing
 
