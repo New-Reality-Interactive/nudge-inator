@@ -225,6 +225,21 @@ final class ShotsUITests: XCTestCase {
         shot("form-new-relentless", pages: 8)
     }
 
+    /// The mockup's `form-new` is Consistent · 10 min, its Default Pace; the app's New form starts
+    /// Escalating until ticket 09, so this chooses Consistent.
+    func testFormConsistent() {
+        launch(.app)
+        openSheet("New Reminder", title: "New Reminder")
+        hideKeyboard()
+        // At accessibility sizes the pace is a menu rather than segments.
+        let segment = app.buttons["Consistent"]
+        if !segment.waitForExistence(timeout: 2) || !segment.isHittable {
+            tapText("Pace", inSheet: true)
+        }
+        tapText("Consistent", inSheet: true)
+        shot("form-new-consistent", pages: 8)
+    }
+
     /// Its own test: going back from the Tags page closed the sheet on the iOS 27.0 simulator.
     func testFormTags() {
         launch(.app)

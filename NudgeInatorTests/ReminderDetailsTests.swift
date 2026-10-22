@@ -49,6 +49,21 @@ struct ReminderDetailsTests {
         #expect(rows.last?.delivery == urgent)
     }
 
+    /// Mockup items 8 and 10: the Schedule's Pace row shows the reminder's pace, and How It Nudges
+    /// folds a Consistent reminder's equal waits into one row per urgency.
+    @Test func detailsShowTheRemindersPaceAndFoldItsEqualWaits() async throws {
+        let model = try await launchedModel()
+        var consistent = bins
+        consistent.pace = .consistent(wait: 30 * 60)
+        model.add(consistent)
+        model.add(meds)
+
+        let details = try #require(ReminderDetails(engine: model.engine, id: consistent.id))
+        #expect(details.pace == .consistent(wait: 30 * 60))
+        #expect(details.howItNudges.rows.map(\.nudges) == [1...2, 3...3, 4...20])
+        #expect(try #require(ReminderDetails(engine: model.engine, id: meds.id)).pace == .escalating)
+    }
+
     /// Relentless always breaks through Focus (ticket 06, mockup item 9): with its stored switch
     /// off, the Break Through Focus row says On and every How It Nudges row rings.
     @Test func aRelentlessReminderBreaksThroughFocusWhateverItsSwitch() async throws {

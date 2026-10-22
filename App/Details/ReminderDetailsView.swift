@@ -305,7 +305,7 @@ private struct StatusWord: View {
     }
 }
 
-/// Repeats, Next, Break Through Focus, and how the latest occurrence closed.
+/// Repeats, Next, Pace, Break Through Focus, and how the latest occurrence closed.
 private struct ScheduleRows: View {
     let details: ReminderDetails
 
@@ -319,6 +319,11 @@ private struct ScheduleRows: View {
             next
         } label: {
             Text("Next", comment: "Reminder details, Schedule: when the reminder is next due.")
+        }
+        LabeledContent {
+            Text(details.pace.title)
+        } label: {
+            Text("Pace", comment: "Reminder details, Schedule: how the waits between the reminder's nudges are spaced.")
         }
         LabeledContent {
             // On for Relentless, which always breaks through Focus (ADR 0004).

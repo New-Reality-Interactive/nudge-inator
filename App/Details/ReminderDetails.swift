@@ -28,6 +28,8 @@ struct ReminderDetails {
     var title: String { reminder.title }
     var notes: String { reminder.notes }
     var strength: Strength { reminder.strength }
+    /// The Schedule's Pace row.
+    var pace: Pace { reminder.pace }
     /// Done is shown only while the reminder is Nudging.
     var offersDone: Bool { card != nil }
 

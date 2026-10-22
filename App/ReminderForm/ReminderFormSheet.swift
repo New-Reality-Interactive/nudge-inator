@@ -2,9 +2,9 @@ import NudgeEngine
 import SwiftUI
 
 /// The New and Edit Reminder form, as the mockup's sheet: Title, Notes and Tags; Starts and
-/// Repeat; Strength; Break Through Focus. While the reminder is Nudging the schedule fields are
-/// disabled, each with a `lock`, under a note that says why (ticket 13). Save goes through the app
-/// model; without one (previews) it is disabled.
+/// Repeat; Strength; Pace; Break Through Focus. While the reminder is Nudging the schedule fields
+/// are disabled, each with a `lock`, under a note that says why (ticket 13). Save goes through the
+/// app model; without one (previews) it is disabled.
 struct ReminderFormSheet: View {
     @Bindable var form: ReminderForm
     @Environment(AppModel.self) private var model: AppModel?
@@ -18,6 +18,7 @@ struct ReminderFormSheet: View {
                 WhatSection(form: form)
                 ScheduleSection(form: form)
                 StrengthSection(form: form)
+                PaceSection(form: form)
                 BreakThroughFocusSection(form: form)
                 HowItNudgesSection(howItNudges: form.howItNudges)
             }
@@ -108,7 +109,7 @@ private struct EditNoteSection: View {
                         LockGlyph()
                     }
                 } else {
-                    Text("A new schedule applies from the next time it's due. A new strength or Break Through Focus setting applies from the next nudge.",
+                    Text("A new schedule applies from the next time it's due. A new strength, pace or Break Through Focus setting applies from the next nudge.",
                          comment: "Top of the Edit Reminder form when the reminder isn't nudging: when changes apply.")
                 }
             }
@@ -265,6 +266,45 @@ private struct StrengthSection: View {
                 Text("Gives up after \(GiveUpLimit.shipped.nudgeCount) nudges or \(GiveUpLimit.shipped.spanText), whichever comes first.",
                      comment: "Under the reminder form's strength. 1: the give-up limit's nudge count. 2: its span, such as \"24 hours\".")
             }
+        }
+    }
+}
+
+/// Escalating or Consistent, and for Consistent the Every row's wait from the engine's list. The
+/// lock while nudging is ticket 08's.
+private struct PaceSection: View {
+    @Bindable var form: ReminderForm
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        let label = Text("Pace", comment: "The reminder form's pace choice: Escalating or Consistent.")
+        Section {
+            Picker(selection: $form.paceChoice) {
+                ForEach(PaceChoice.allCases, id: \.self) { choice in
+                    Text(choice.title).tag(choice)
+                }
+            } label: {
+                label
+            }
+            .segmentedPickerStyle(isMenu: dynamicTypeSize.isAccessibilitySize)
+            if form.paceChoice == .consistent {
+                Picker(selection: $form.consistentWait) {
+                    ForEach(Pace.consistentWaits, id: \.self) { wait in
+                        Text(verbatim: HowItNudgesDuration.text(wait)).tag(wait)
+                    }
+                } label: {
+                    Text("Every", comment: "The reminder form's row for a Consistent pace's wait between nudges, such as \"10 min\".")
+                }
+                .pickerStyle(.menu)
+            }
+        } header: {
+            if !dynamicTypeSize.isAccessibilitySize {
+                // As Strength's: VoiceOver reads the segments without the picker's label, so the
+                // heading names them. At accessibility sizes the menu carries it.
+                label
+            }
+        } footer: {
+            form.paceBlurb.text
         }
     }
 }

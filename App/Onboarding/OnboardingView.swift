@@ -106,7 +106,7 @@ enum WelcomeFeature: CaseIterable {
     private var text: Text {
         switch self {
         case .nudgesUntilDone:
-            Text("Reminders keep coming back, more often and more insistently, until you tap Done.", comment: "Onboarding and How It Nudges: under \"Nudges until you're done\".")
+            Text("Reminders keep coming back until you tap Done: at a steady pace, or more often and more insistently.", comment: "Onboarding and How It Nudges: under \"Nudges until you're done\".")
         case .ringsAsAlarms:
             Text("When it really matters, your iPhone rings and vibrates like an alarm, even on silent and in a Focus. Stopping the alarm only quiets it: the next nudge still comes, and only Done ends the reminder.", comment: "Onboarding and How It Nudges: under \"Urgent nudges ring as alarms\".")
         case .chooseWhatBreaksThrough:

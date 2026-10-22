@@ -41,27 +41,90 @@ struct ReminderFormTests {
     /// Due at 7:30 and Firm, so at 8:00 it is Nudging.
     let bins = Reminder(title: "Take the bins out", dueTime: NewYork.local(2026, 10, 15, 7, 30), strength: .firm)
 
-    /// The form's How It Nudges and the line under the strength (ticket 31) follow the draft's
-    /// strength and switch, from the engine. Firm waits 30 min, then 15 and 7.5, then its 5 min
-    /// floor; Gentle waits an hour, easing to 20 min. Relentless rings from nudge 1 (ticket 05).
-    @Test(arguments: [
-        (Strength.firm, true, StrengthBlurb(firstWait: 30 * 60, floor: 5 * 60, firstAlarm: 4)),
-        (.firm, false, StrengthBlurb(firstWait: 30 * 60, floor: 5 * 60, firstAlarm: nil)),
-        (.gentle, true, StrengthBlurb(firstWait: 60 * 60, floor: 20 * 60, firstAlarm: nil)),
-        (.relentless, true, StrengthBlurb(firstWait: 10 * 60, floor: 2 * 60, firstAlarm: 1)),
+    /// The form's How It Nudges, the line under the strength and the line under the pace (ticket
+    /// 31) follow the draft's strength, pace and switch, from the engine. Firm waits 30 min, then 15
+    /// and 7.5, then its 5 min floor; Gentle waits an hour, easing to 20 min. Relentless rings from
+    /// nudge 1 (ticket 05).
+    nonisolated static let strengthAndPaceLines: [(Strength, Pace, Bool, StrengthBlurb, PaceBlurb, Int)] = [
+        (.firm, .escalating, true, StrengthBlurb(firstAlarm: 4), PaceBlurb.escalating(firstWait: 30 * 60, floor: 5 * 60), 20),
+        (.firm, .escalating, false, StrengthBlurb(firstAlarm: nil), .escalating(firstWait: 30 * 60, floor: 5 * 60), 20),
+        (.gentle, .escalating, true, StrengthBlurb(firstAlarm: nil), .escalating(firstWait: 60 * 60, floor: 20 * 60), 20),
+        (.relentless, .escalating, true, StrengthBlurb(firstAlarm: 1), .escalating(firstWait: 10 * 60, floor: 2 * 60), 20),
         // Relentless always breaks through Focus (ticket 06).
-        (.relentless, false, StrengthBlurb(firstWait: 10 * 60, floor: 2 * 60, firstAlarm: 1)),
-    ])
-    func theStrengthsLineAndHowItNudgesFollowTheDraft(strength: Strength, breakThroughFocus: Bool, blurb: StrengthBlurb) async throws {
+        (.relentless, .escalating, false, StrengthBlurb(firstAlarm: 1), .escalating(firstWait: 10 * 60, floor: 2 * 60), 20),
+        (.firm, .consistent(wait: 10 * 60), true, StrengthBlurb(firstAlarm: 4), .consistent(wait: 10 * 60), 20),
+        // Every 12 hr, a Firm reminder nudges at the due time and 12 hr on, then gives up at 24 hr,
+        // before nudge 4 could ring.
+        (.firm, .consistent(wait: 12 * 60 * 60), true, StrengthBlurb(firstAlarm: nil), .consistent(wait: 12 * 60 * 60), 2),
+    ]
+
+    @Test(arguments: strengthAndPaceLines)
+    func theStrengthAndPaceLinesAndHowItNudgesFollowTheDraft(strength: Strength, pace: Pace, breakThroughFocus: Bool, strengthBlurb: StrengthBlurb, paceBlurb: PaceBlurb, nudgeCount: Int) async throws {
         manager.authorizationState = .authorized
         let model = try await launchedModel()
         let form = newForm(on: model)
         form.strength = strength
         form.breakThroughFocus = breakThroughFocus
+        if case .consistent(let wait) = pace {
+            form.paceChoice = .consistent
+            form.consistentWait = wait
+        }
 
-        #expect(form.strengthBlurb == blurb)
-        #expect(form.howItNudges.nudgeCount == 20)
-        #expect(form.howItNudges.rows.contains { $0.delivery == .alarm } == (blurb.firstAlarm != nil))
+        #expect(form.strengthBlurb == strengthBlurb)
+        #expect(form.paceBlurb == paceBlurb)
+        #expect(form.howItNudges.nudgeCount == nudgeCount)
+        #expect(form.howItNudges.rows.contains { $0.delivery == .alarm } == (strengthBlurb.firstAlarm != nil))
+    }
+
+    /// Spec stories 23 and 24: a reminder saved from New keeps the pace and wait chosen, and an
+    /// Edit opens with them and saves them again (ticket 04 found the draft dropped the pace).
+    @Test func aConsistentPaceAndItsWaitAreSavedFromNewAndKeptByAnEdit() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.title = "Water the plants"
+        form.dueTime = NewYork.local(2026, 10, 16, 9)
+        form.paceChoice = .consistent
+        form.consistentWait = 30 * 60
+
+        #expect(form.save(to: model))
+        let saved = try #require(model.engine.reminders.only)
+        #expect(saved.pace == .consistent(wait: 30 * 60))
+
+        let edit = try editForm(of: saved.id, on: model)
+        #expect(edit.paceChoice == .consistent)
+        #expect(edit.consistentWait == 30 * 60)
+        edit.title = "Water the ferns"
+        #expect(edit.save(to: model))
+        #expect(model.engine.reminders.only?.pace == .consistent(wait: 30 * 60))
+    }
+
+    /// Spec story 25: Escalating hides the Every row but keeps its wait, so Consistent finds it
+    /// again, and a reminder saved Escalating carries no wait.
+    @Test func escalatingKeepsTheWaitForConsistentAndSavesWithoutIt() async throws {
+        let model = try await launchedModel()
+        model.add(Reminder(title: "Stretch", dueTime: NewYork.local(2026, 10, 16, 9), strength: .firm, pace: .consistent(wait: 2 * 60 * 60)))
+        let edit = try editForm(of: try #require(model.engine.reminders.only).id, on: model)
+
+        edit.paceChoice = .escalating
+        #expect(edit.hasChanges)
+        #expect(edit.consistentWait == 2 * 60 * 60)
+        edit.paceChoice = .consistent
+        #expect(!edit.hasChanges)
+
+        edit.paceChoice = .escalating
+        #expect(edit.save(to: model))
+        #expect(model.engine.reminders.only?.pace == .escalating)
+    }
+
+    /// Until ticket 09's Default Pace, a new reminder starts Escalating, with 10 min ready for
+    /// Consistent, the mockup's starting wait.
+    @Test func aNewReminderStartsEscalatingWithTenMinutesReadyForConsistent() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+
+        #expect(form.paceChoice == .escalating)
+        #expect(form.consistentWait == 10 * 60)
+        #expect(Pace.consistentWaits.contains(form.consistentWait))
     }
 
     /// Spec stories 30 and 31: Relentless shows the switch on and fixed, and leaving it gives back

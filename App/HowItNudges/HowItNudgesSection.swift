@@ -63,9 +63,13 @@ private struct HowItNudgesRowView: View {
 }
 
 extension HowItNudges.Row {
-    /// "Nudge 1 when due", "Nudge 3 at +45 min" or "Nudges 4–20 at +52 min, 30 sec".
+    /// "Nudge 1 when due", "Nudges 1–2 when due", "Nudge 3 at +45 min" or "Nudges 4–20 at
+    /// +52 min, 30 sec". A Consistent pace's equal waits fold the first nudges into a run.
     fileprivate var whichText: Text {
         let start = HowItNudgesDuration.text(startsAfter)
+        if nudges.lowerBound == 1, nudges.count > 1 {
+            return Text("**Nudges \(nudges.lowerBound)–\(nudges.upperBound)** when due", comment: "How It Nudges row: a run of nudges from the first, which comes at the due time, each one wait after the last. 1: the first nudge's number, 1. 2: the last's.")
+        }
         if nudges.lowerBound == 1 {
             return Text("**Nudge \(nudges.lowerBound)** when due", comment: "How It Nudges row: the first nudge, which comes at the due time. The placeholder is its number, 1.")
         }
@@ -102,8 +106,14 @@ extension HowItNudgesSentence {
             return Text("Notifications are off, so none of them can reach you.", comment: "How It Nudges footer, when notifications are off and none of the nudges rings as an alarm.")
         case .cannotArriveUntilAlarms(let alarms):
             return Text("Notifications are off, so only nudges \(alarms.lowerBound)–\(alarms.upperBound) can reach you, as alarms.", comment: "How It Nudges footer, when notifications are off. 1: the first nudge that rings as an alarm. 2: the last nudge.")
+        // English says "Both" for two, which no plural category of the catalog's has, so two
+        // is its own string. A long Consistent wait can send only two.
+        case .allRing(2):
+            return Text("Both nudges ring as alarms.", comment: "How It Nudges footer, when a reminder sends two nudges, as a long Consistent wait can, and both ring as alarms.")
         case .allRing(let nudges):
             return Text("All \(nudges) nudges ring as alarms.", comment: "How It Nudges footer. The placeholder is how many nudges the reminder sends.")
+        case .allNotifications(2):
+            return Text("Both nudges are notifications.", comment: "How It Nudges footer, when a reminder sends two nudges, as a long Consistent wait can, and neither rings as an alarm.")
         case .allNotifications(let nudges):
             return Text("All \(nudges) nudges are notifications.", comment: "How It Nudges footer, when no nudge rings as an alarm. The placeholder is how many nudges the reminder sends.")
         case .notificationsThenAlarms(let alarms):
@@ -114,6 +124,8 @@ extension HowItNudgesSentence {
             return Text("Alarms and Time Sensitive are off, so Urgent nudges come as ordinary notifications.", comment: "How It Nudges footer, when alarms and Time Sensitive are both off.")
         case .focusHoldsNormal:
             return Text("During a Focus, Normal nudges wait until High, unless you allow \(app) in that Focus.", comment: "How It Nudges footer. The placeholder is the app's name.")
+        case .focusHoldsAllNormal:
+            return Text("During a Focus, every nudge waits, unless you allow \(app) in that Focus.", comment: "How It Nudges footer, when no nudge reaches High, as with a long Consistent wait. The placeholder is the app's name.")
         case .focusHoldsEveryNudge:
             return Text("Break Through Focus is off, so during a Focus every nudge waits, unless you allow \(app) in that Focus.", comment: "How It Nudges footer, for a reminder whose Break Through Focus switch is off. The placeholder is the app's name.")
         case .focusHoldsEveryNotification:

@@ -19,6 +19,9 @@ enum HowItNudgesSentence: Hashable {
     case urgentIsOrdinary
     /// During a Focus, Normal nudges wait until High.
     case focusHoldsNormal
+    /// Every nudge is Normal: a long Consistent wait gives up before High, so during a Focus every
+    /// nudge waits.
+    case focusHoldsAllNormal
     /// Break Through Focus is off, so during a Focus every nudge waits.
     case focusHoldsEveryNudge
     /// Time Sensitive is off, so during a Focus every notification waits.
@@ -50,6 +53,8 @@ enum HowItNudgesSentence: Hashable {
             sentences.append(.focusHoldsEveryNudge)
         } else if reasons.contains(.timeSensitiveOff) || reasons.contains(.alarmsAndTimeSensitiveOff) {
             sentences.append(.focusHoldsEveryNotification)
+        } else if rows.allSatisfy({ $0.urgency == .normal }) {
+            sentences.append(.focusHoldsAllNormal)
         } else if rows.contains(where: { $0.urgency == .normal }) {
             sentences.append(.focusHoldsNormal)
         }
