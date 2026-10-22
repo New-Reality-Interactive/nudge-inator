@@ -321,7 +321,8 @@ private struct ScheduleRows: View {
             Text("Next", comment: "Reminder details, Schedule: when the reminder is next due.")
         }
         LabeledContent {
-            details.reminder.breakThroughFocus
+            // On for Relentless, which always breaks through Focus (ADR 0004).
+            details.reminder.breaksThroughFocus
                 ? Text("On", comment: "Reminder details: Break Through Focus is on.")
                 : Text("Off", comment: "Reminder details: Break Through Focus is off.")
         } label: {

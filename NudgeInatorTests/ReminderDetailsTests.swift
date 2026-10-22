@@ -49,6 +49,18 @@ struct ReminderDetailsTests {
         #expect(rows.last?.delivery == urgent)
     }
 
+    /// Relentless always breaks through Focus (ticket 06, mockup item 9): with its stored switch
+    /// off, the Break Through Focus row says On and every How It Nudges row rings.
+    @Test func aRelentlessReminderBreaksThroughFocusWhateverItsSwitch() async throws {
+        let model = try await launchedModel()
+        let call = Reminder(title: "Call the bank", dueTime: bins.dueTime, strength: .relentless, breakThroughFocus: false)
+        model.add(call)
+
+        let details = try #require(ReminderDetails(engine: model.engine, id: call.id))
+        #expect(details.reminder.breaksThroughFocus)
+        #expect(details.howItNudges.rows.allSatisfy { $0.delivery == .alarm })
+    }
+
     @Test func aReminderTheEngineDoesntHoldHasNoDetails() async throws {
         let model = try await launchedModel()
 

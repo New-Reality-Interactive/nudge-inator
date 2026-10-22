@@ -72,16 +72,16 @@ extension PermissionBanner {
     var text: Text {
         switch self {
         case .notificationsOff(urgentStillRings: true):
-            Text("**Notifications are off.** Only Urgent nudges can reach you, as alarms. Gentle reminders can't reach you at all.",
+            Text("**Notifications are off.** Only Urgent nudges can reach you, as alarms: every Relentless nudge, and a Firm reminder's from nudge 4 with Break Through Focus on. Gentle reminders can't reach you at all.",
                  comment: "Permission banner, when notifications are off but alarms are allowed. Keep the first sentence bold.")
         case .notificationsOff(urgentStillRings: false):
             Text("**Notifications are off.** Nudges can't reach you.",
                  comment: "Permission banner, when notifications and alarms are both off. Keep the first sentence bold.")
         case .alarmsOff(urgentIsTimeSensitive: true):
-            Text("**Alarms are off.** Urgent nudges now come as Time Sensitive notifications, which silent mode can mute.",
+            Text("**Alarms are off.** Urgent nudges, and so every Relentless nudge, now come as Time Sensitive notifications, which silent mode can mute.",
                  comment: "Permission banner, when alarms are off and Time Sensitive is on. Keep the first sentence bold.")
         case .alarmsOff(urgentIsTimeSensitive: false):
-            Text("**Alarms are off.** Urgent nudges now come as ordinary notifications, which silent mode can mute and a Focus can hold.",
+            Text("**Alarms are off.** Urgent nudges, and so every Relentless nudge, now come as ordinary notifications, which silent mode can mute and a Focus can hold.",
                  comment: "Permission banner, when alarms and Time Sensitive are both off. Keep the first sentence bold.")
         case .timeSensitiveOff:
             Text("**Time Sensitive is off.** High nudges come as ordinary notifications, so a Focus can hold them.",

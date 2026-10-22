@@ -85,7 +85,7 @@ extension Engine {
         Self.nudgeDelivery(
             delivery(of: reminder, firingAt: fireTime, urgency: urgency),
             urgency: urgency,
-            breakThroughFocus: reminder.breakThroughFocus,
+            breakThroughFocus: reminder.breaksThroughFocus,
             timeSensitive: permissions(firingAt: fireTime).timeSensitive
         )
     }

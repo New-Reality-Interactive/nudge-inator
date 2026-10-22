@@ -38,9 +38,9 @@ SCREENS = {
   "form-repeat": ("openEditor();state.sheet.page='repeat';render()", 2),
   "form-custom": ("openEditor();state.sheet.page='repeat';render();document.querySelector('[data-repeat=custom]').click()", 3),
   "onboarding": ("state.sheet={kind:'onboard'};render()", 1),
-  "banner-notifications-off": ("perm.notifications=false;render()", 1),
+  "banner-notifications-off": ("perm.notifications=false;render()", 4),
   "settings-notifications-off": ("perm.notifications=false;state.tab='settings';nav()", 2),
-  "banner-alarms-off": ("perm.alarms=false;render()", 1),
+  "banner-alarms-off": ("perm.alarms=false;render()", 3),
   "settings-alarms-off": ("perm.alarms=false;state.tab='settings';nav()", 1),
   "banner-time-sensitive-off": ("perm.timeSensitive=false;render()", 1),
   # Only in the proposed pace mockup (docs/mockups/2026-10-21-proposed-pace).

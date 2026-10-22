@@ -398,7 +398,7 @@ public struct Engine {
     func delivery(of reminder: Reminder, firingAt fireTime: Date, urgency: Urgency) -> (kind: DeliveryKind, isPastAlarmLimit: Bool)? {
         delivery(
             of: urgency,
-            breakThroughFocus: reminder.breakThroughFocus,
+            breakThroughFocus: reminder.breaksThroughFocus,
             permissions: permissions(firingAt: fireTime),
             alarmLimitReached: historyByReminder[reminder.id]?.isPastAlarmLimit(firingAt: fireTime) ?? false
         )

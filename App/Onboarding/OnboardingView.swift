@@ -110,7 +110,7 @@ enum WelcomeFeature: CaseIterable {
         case .ringsAsAlarms:
             Text("When it really matters, your iPhone rings and vibrates like an alarm, even on silent and in a Focus. Stopping the alarm only quiets it: the next nudge still comes, and only Done ends the reminder.", comment: "Onboarding and How It Nudges: under \"Urgent nudges ring as alarms\".")
         case .chooseWhatBreaksThrough:
-            Text("Each reminder has a Break Through Focus switch. Turn it off and a Focus can hold its nudges, and nothing rings.", comment: "Onboarding and How It Nudges: under \"You choose what breaks through\".")
+            Text("Each Gentle or Firm reminder has a Break Through Focus switch. Turn it off and a Focus can hold its nudges, and nothing rings. Relentless always breaks through.", comment: "Onboarding and How It Nudges: under \"You choose what breaks through\".")
         case .staysOnYourIPhone:
             Text("No account and no server. Your reminders stay on this iPhone and in your own backups.", comment: "Onboarding and How It Nudges: under \"Stays on your iPhone\".")
         }

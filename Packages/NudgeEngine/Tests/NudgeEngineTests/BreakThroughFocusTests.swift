@@ -3,7 +3,8 @@ import Testing
 import NudgeEngine
 
 /// The spec's Delivery by urgency rule. On: Normal is an ordinary notification, High is Time
-/// Sensitive and Urgent is an alarm. Off: every nudge is an ordinary notification.
+/// Sensitive and Urgent is an alarm. Off: every nudge is an ordinary notification. A Relentless
+/// reminder always breaks through Focus, whatever its stored switch says (ADR 0004).
 struct BreakThroughFocusTests {
     let dueTime = Date(timeIntervalSinceReferenceDate: 800_000_000)
     let scheduler = FakeScheduler()
@@ -43,7 +44,7 @@ struct BreakThroughFocusTests {
         #expect(reminder.breakThroughFocus)
     }
 
-    @Test(arguments: [Strength.gentle, .firm, .relentless])
+    @Test(arguments: [Strength.gentle, .firm])
     func switchOffSendsEveryNudgeAsOrdinaryNotification(strength: Strength) throws {
         let items = try planItems(for: strength, breakThroughFocus: false)
         #expect(items.count == 20)
@@ -51,7 +52,7 @@ struct BreakThroughFocusTests {
     }
 
     /// Off keeps the ladder: same nudges, times, urgency and text ("Nudge 4 of 20 · Urgent").
-    @Test(arguments: [Strength.gentle, .firm, .relentless])
+    @Test(arguments: [Strength.gentle, .firm])
     func flippingSwitchChangesOnlyDeliveryKinds(strength: Strength) throws {
         let on = try planItems(for: strength, breakThroughFocus: true)
         let off = try planItems(for: strength, breakThroughFocus: false)
@@ -61,5 +62,11 @@ struct BreakThroughFocusTests {
         #expect(off.map(\.urgency) == on.map(\.urgency))
         #expect(off.map(\.body) == on.map(\.body))
         #expect(off.map(\.title) == on.map(\.title))
+    }
+
+    /// Otherwise Relentless could be quieter than Firm with the switch on.
+    @Test func relentlessWithItsSwitchOffStillRingsEveryNudge() throws {
+        let items = try planItems(for: .relentless, breakThroughFocus: false)
+        #expect(items.map(\.deliveryKind) == [DeliveryKind](repeating: .alarm, count: 20))
     }
 }

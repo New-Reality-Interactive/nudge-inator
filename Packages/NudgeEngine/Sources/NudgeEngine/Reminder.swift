@@ -16,7 +16,9 @@ public struct Reminder: Identifiable, Equatable, Sendable {
     public var strength: Strength
     /// How the waits between its nudges are spaced.
     public var pace: Pace
-    /// On unless the person turns it off, as in the mockup's New Reminder form.
+    /// On unless the person turns it off, as in the mockup's New Reminder form. Relentless ignores
+    /// it but keeps it, so switching back to Firm or Gentle gives it back: read
+    /// `breaksThroughFocus` for how the reminder acts.
     public var breakThroughFocus: Bool
 
     public init(
@@ -43,6 +45,11 @@ public struct Reminder: Identifiable, Equatable, Sendable {
 }
 
 extension Reminder {
+    /// Whether its nudges break through Focus: its switch, or always for Relentless (ADR 0004).
+    public var breaksThroughFocus: Bool {
+        strength.breaksThroughFocus(switchedOn: breakThroughFocus)
+    }
+
     /// The latest occurrence's due time at or before `date`, or `nil` before the first one.
     func latestDueTime(atOrBefore date: Date, calendar: Calendar) -> Date? {
         guard let repeatRule else { return date >= dueTime ? dueTime : nil }
@@ -61,4 +68,13 @@ public enum Strength: Equatable, Sendable {
     case gentle
     case firm
     case relentless
+}
+
+extension Strength {
+    /// Whether a reminder of this strength with its Break Through Focus switch `switchedOn` breaks
+    /// through Focus. Relentless always does, so a stored `false` can't make it quieter than Firm
+    /// (ADR 0004). The one place the rule lives: the plan, the nudge card and How It Nudges read it.
+    public func breaksThroughFocus(switchedOn: Bool) -> Bool {
+        self == .relentless || switchedOn
+    }
 }

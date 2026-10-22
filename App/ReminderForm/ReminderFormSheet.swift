@@ -269,27 +269,32 @@ private struct StrengthSection: View {
     }
 }
 
-/// The Break Through Focus switch, locked while nudging.
+/// The Break Through Focus switch, locked while nudging. Relentless shows it on and dimmed, with
+/// a footnote saying why (spec stories 30 and 45).
 private struct BreakThroughFocusSection: View {
     @Bindable var form: ReminderForm
 
     var body: some View {
         let isLocked = form.lockedFields.contains(.breakThroughFocus)
         Section {
-            Toggle(isOn: $form.breakThroughFocus) {
+            Toggle(isOn: $form.breaksThroughFocus) {
                 LockableLabel(isLocked: isLocked) {
                     Text("Break Through Focus", comment: "The reminder form's switch: whether its nudges get through a Focus.")
                 }
             }
+            .disabled(form.isBreakThroughFocusFixed)
             .lockedWhileNudging(isLocked)
         } footer: {
-            switch (form.breakThroughFocus, form.strength) {
+            switch (form.breaksThroughFocus, form.strength) {
+            case _ where form.isBreakThroughFocusFixed:
+                Text("Relentless always rings, so it always breaks through a Focus.",
+                     comment: "Under Break Through Focus when the strength is Relentless, which shows the switch on and dimmed.")
             case (true, .gentle):
                 Text("High nudges are Time Sensitive, so a Focus can't hold them. Gentle never reaches Urgent, so it never rings.",
                      comment: "Under Break Through Focus when it's on and the strength is Gentle.")
             case (true, _):
                 Text("High nudges are Time Sensitive and Urgent nudges ring as alarms, so a Focus can't hold them.",
-                     comment: "Under Break Through Focus when it's on and the strength is Firm or Relentless.")
+                     comment: "Under Break Through Focus when it's on and the strength is Firm.")
             case (false, _):
                 Text("Every nudge is an ordinary notification, which a Focus can hold. Nothing rings.",
                      comment: "Under Break Through Focus when it's off.")

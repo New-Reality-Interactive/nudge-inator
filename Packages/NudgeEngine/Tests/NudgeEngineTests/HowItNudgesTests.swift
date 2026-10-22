@@ -66,8 +66,20 @@ struct HowItNudgesTests {
         #expect(rows.map(\.delivery) == [NudgeDelivery](repeating: delivery, count: 4))
     }
 
+    /// Normal nudges are ordinary anyway, so only High and Urgent say the switch weakened them.
     @Test func breakThroughFocusOffSendsEveryNudgeAsAnOrdinaryNotification() {
+        let rows = engine().howItNudges(.firm, breakThroughFocus: false).rows
+        #expect(rows.map(\.delivery) == [
+            .notification(weakerBecause: nil),
+            .notification(weakerBecause: nil),
+            .notification(weakerBecause: .breakThroughFocusOff),
+            .notification(weakerBecause: .breakThroughFocusOff),
+        ])
+    }
+
+    /// Relentless ignores its stored switch (ADR 0004), so off reads as on.
+    @Test func relentlessWithItsSwitchOffStillRingsEveryNudge() {
         let rows = engine().howItNudges(.relentless, breakThroughFocus: false).rows
-        #expect(rows.map(\.delivery) == [NudgeDelivery](repeating: .notification(weakerBecause: .breakThroughFocusOff), count: 4))
+        #expect(rows.map(\.delivery) == [NudgeDelivery](repeating: .alarm, count: 4))
     }
 }

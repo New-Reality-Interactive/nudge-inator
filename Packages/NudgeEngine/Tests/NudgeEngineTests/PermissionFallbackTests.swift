@@ -167,6 +167,19 @@ struct PermissionFallbackTests {
         (PermissionStates(notifications: .denied, alarms: .allowed), []),
     ])
     func switchOffSendsOrdinaryNotificationsWhateverThePermissions(permissions: PermissionStates, kinds: [DeliveryKind]) throws {
+        _ = engine(permissions: permissions, holding: [reminder(.firm, breakThroughFocus: false)])
+        #expect(try #require(scheduler.lastPlan).items.map(\.deliveryKind) == kinds)
+    }
+
+    /// Relentless ignores its stored switch (ADR 0004), so it takes the switch-on fallbacks: every
+    /// nudge rings while alarms can, and with notifications denied all 20 still do.
+    @Test(arguments: [
+        (PermissionStates(alarms: .allowed), [DeliveryKind](repeating: .alarm, count: 20)),
+        (PermissionStates(alarms: .denied), [DeliveryKind](repeating: .timeSensitiveNotification, count: 20)),
+        (PermissionStates(alarms: .denied, timeSensitive: .off), [DeliveryKind](repeating: .notification, count: 20)),
+        (PermissionStates(notifications: .denied, alarms: .allowed), [DeliveryKind](repeating: .alarm, count: 20)),
+    ])
+    func relentlessWithItsSwitchOffTakesTheSwitchOnFallbacks(permissions: PermissionStates, kinds: [DeliveryKind]) throws {
         _ = engine(permissions: permissions, holding: [reminder(.relentless, breakThroughFocus: false)])
         #expect(try #require(scheduler.lastPlan).items.map(\.deliveryKind) == kinds)
     }

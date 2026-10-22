@@ -74,6 +74,22 @@ struct NudgingStatusTests {
         #expect(nextNudge.delivery == check.expected)
     }
 
+    /// Relentless ignores its stored switch (ADR 0004): its next nudge rings, or with alarms off
+    /// says alarms are why it doesn't, never the switch. Due 9:00, so at 9:05 nudge 2 is next.
+    @Test(arguments: [
+        (PermissionStates(), NudgeDelivery.alarm),
+        (PermissionStates(alarms: .denied), .notification(weakerBecause: .alarmsOff)),
+    ])
+    func aRelentlessNextNudgeIgnoresItsStoredSwitch(permissions: PermissionStates, expected: NudgeDelivery) throws {
+        let call = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 16, 9), strength: .relentless, breakThroughFocus: false)
+        let engine = engine(permissions: permissions, holding: [call])
+        clock.now = NewYork.local(2026, 10, 16, 9, 5)
+
+        let nextNudge = try #require(engine.nudgingStatus(of: call.id)?.nextNudge)
+
+        #expect(nextNudge.delivery == expected)
+    }
+
     /// With room for one alarm, nudge 4 at 9:52:30 rings and nudge 5 at 9:57:30 falls back.
     @Test func anUrgentNudgePastTheAlarmLimitSaysSo() throws {
         var engine = Engine(clock: clock, scheduler: scheduler, giveUpLimit: .shipped, alarmLimit: AlarmLimit(pendingAlarms: 1), timeZone: NewYork.timeZone)
