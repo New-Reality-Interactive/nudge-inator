@@ -25,17 +25,23 @@ struct PermissionFallbackTests {
         return try #require(scheduler.lastPlan).items
     }
 
-    @Test func alarmsDeniedSendsUrgentNudgesAsTimeSensitiveNotifications() throws {
-        let items = try planItems(for: .relentless, permissions: PermissionStates(alarms: .denied))
+    /// Every Relentless nudge is Urgent, so with alarms denied each takes Urgent's fallback: Time
+    /// Sensitive, or ordinary when Time Sensitive is off too.
+    @Test(arguments: [
+        (PermissionStates(alarms: .denied), DeliveryKind.timeSensitiveNotification),
+        (PermissionStates(alarms: .denied, timeSensitive: .off), .notification),
+    ])
+    func alarmsDeniedSendsUrgentNudgesAsNotifications(permissions: PermissionStates, kind: DeliveryKind) throws {
+        let items = try planItems(for: .relentless, permissions: permissions)
         #expect(items.count == 20)
-        #expect(items.allSatisfy { $0.deliveryKind == .timeSensitiveNotification })
+        #expect(items.allSatisfy { $0.deliveryKind == kind })
     }
 
     /// Nudges 1–20 with the switch on. Urgent still rings: only High weakens.
     @Test(arguments: [
         (Strength.gentle, [DeliveryKind](repeating: .notification, count: 20)),
         (.firm, [DeliveryKind](repeating: .notification, count: 3) + [DeliveryKind](repeating: .alarm, count: 17)),
-        (.relentless, [DeliveryKind](repeating: .notification, count: 3) + [DeliveryKind](repeating: .alarm, count: 17)),
+        (.relentless, [DeliveryKind](repeating: .alarm, count: 20)),
     ])
     func timeSensitiveOffSendsHighNudgesAsOrdinaryNotifications(strength: Strength, kinds: [DeliveryKind]) throws {
         let items = try planItems(for: strength, permissions: PermissionStates(timeSensitive: .off))
@@ -46,7 +52,7 @@ struct PermissionFallbackTests {
     @Test(arguments: [
         (Strength.gentle, [Int]()),
         (.firm, Array(4...20)),
-        (.relentless, Array(4...20)),
+        (.relentless, Array(1...20)),
     ])
     func notificationsDeniedLeavesOnlyAlarms(strength: Strength, nudgeNumbers: [Int]) throws {
         let permissions = PermissionStates(notifications: .denied, alarms: .allowed)
@@ -98,7 +104,7 @@ struct PermissionFallbackTests {
         #expect(engine(permissions: permissions).reach == reach)
     }
 
-    /// Relentless nudges at 9:00, 9:10, 9:15, 9:17:30 and 9:19:30, so by 9:20 nudges 4 and 5 have
+    /// Relentless nudges at 9:00, 9:10, 9:15, 9:17:30 and 9:19:30, so by 9:20 nudges 1–5 have
     /// already rung as alarms. They stay alarms; nudges 6–20 become Time Sensitive. A nudge firing
     /// exactly at the change (9:19:30) counts as delivered, as with an Edit's title.
     @Test(arguments: [NewYork.local(2026, 10, 16, 9, 20), NewYork.local(2026, 10, 16, 9, 19) + 30])
@@ -109,26 +115,25 @@ struct PermissionFallbackTests {
         engine.update(permissions: PermissionStates(alarms: .denied))
 
         let items = try #require(scheduler.lastPlan).items
-        #expect(items.map(\.deliveryKind) == [DeliveryKind](repeating: .timeSensitiveNotification, count: 3)
-            + [.alarm, .alarm]
+        #expect(items.map(\.deliveryKind) == [DeliveryKind](repeating: .alarm, count: 5)
             + [DeliveryKind](repeating: .timeSensitiveNotification, count: 15))
     }
 
-    /// Relentless's nudges 1–3 (9:00, 9:10, 9:15) fired while notifications were denied, so they
-    /// reached no one. Allowing notifications at 9:16 doesn't bring them back.
+    /// Firm's nudges 1–3 (9:00, 9:30, 9:45) fired while notifications were denied, so they
+    /// reached no one. Allowing notifications at 9:50 doesn't bring them back.
     @Test func nudgesThatPassedWhileNotificationsWereDeniedStayOutOfThePlan() throws {
         let denied = PermissionStates(notifications: .denied, alarms: .allowed)
-        var engine = engine(permissions: denied, holding: [reminder(.relentless)])
+        var engine = engine(permissions: denied, holding: [reminder(.firm)])
 
-        clock.now = NewYork.local(2026, 10, 16, 9, 16)
+        clock.now = NewYork.local(2026, 10, 16, 9, 50)
         engine.update(permissions: PermissionStates(alarms: .allowed))
 
         let items = try #require(scheduler.lastPlan).items
         #expect(items.map(\.nudgeNumber) == Array(4...20))
     }
 
-    /// Alarms denied at 9:18 and allowed again at 9:20. Nudge 4 (9:17:30) rang before either
-    /// change, so it keeps the first states; nudge 5 (9:19:30) came as a Time Sensitive
+    /// Alarms denied at 9:18 and allowed again at 9:20. Nudges 1–4 (up to 9:17:30) rang before
+    /// either change, so they keep the first states; nudge 5 (9:19:30) came as a Time Sensitive
     /// notification in between; nudges 6–20 ring again.
     @Test func allowingAlarmsAgainRestoresAlarmsForNudgesNotYetDelivered() throws {
         var engine = engine(permissions: PermissionStates(alarms: .allowed), holding: [reminder(.relentless)])
@@ -139,8 +144,8 @@ struct PermissionFallbackTests {
         engine.update(permissions: PermissionStates(alarms: .allowed))
 
         let items = try #require(scheduler.lastPlan).items
-        #expect(items.map(\.deliveryKind) == [DeliveryKind](repeating: .timeSensitiveNotification, count: 3)
-            + [.alarm, .timeSensitiveNotification]
+        #expect(items.map(\.deliveryKind) == [DeliveryKind](repeating: .alarm, count: 4)
+            + [.timeSensitiveNotification]
             + [DeliveryKind](repeating: .alarm, count: 15))
     }
 

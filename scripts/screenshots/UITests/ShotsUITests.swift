@@ -210,6 +210,21 @@ final class ShotsUITests: XCTestCase {
         shot("form-new", pages: 4)
     }
 
+    /// Its own test: `form-new` ends scrolled down, and scrolling up in a sheet could close it.
+    func testFormRelentless() {
+        launch(.app)
+        openSheet("New Reminder", title: "New Reminder")
+        hideKeyboard()
+        // At accessibility sizes the strength is a menu rather than segments.
+        let segment = app.buttons["Relentless"]
+        if !segment.waitForExistence(timeout: 2) || !segment.isHittable {
+            tapText("Strength", inSheet: true)
+        }
+        tapText("Relentless", inSheet: true)
+        // Eight pages: at the largest text, four end at the first How It Nudges row.
+        shot("form-new-relentless", pages: 8)
+    }
+
     /// Its own test: going back from the Tags page closed the sheet on the iOS 27.0 simulator.
     func testFormTags() {
         launch(.app)

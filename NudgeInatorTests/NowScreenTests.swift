@@ -88,7 +88,7 @@ struct NowScreenTests {
         #expect(String(localized: closed.detail) == "Done after 2 nudges")
         #expect(!center.pending.contains { $0.identifier.contains(bins.id.uuidString) })
         #expect(center.pending.contains { $0.identifier.contains(meds.id.uuidString) })
-        #expect(manager.scheduled.count == 17)
+        #expect(manager.scheduled.count == 20)
         #expect(manager.scheduled.allSatisfy { $0.fireDate.map { $0 >= rent.dueTime } ?? false })
     }
 

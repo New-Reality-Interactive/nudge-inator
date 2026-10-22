@@ -79,6 +79,7 @@ enum FooterSentence: Hashable {
     case urgentRingsAsAlarms
     case urgentIsTimeSensitive
     case urgentIsOrdinary
+    case relentlessIsUrgent
     case allowInFocus
     case changeInSettings
 }
@@ -96,6 +97,6 @@ extension SettingsStatus {
         case .timeSensitiveNotification: sentences.append(.urgentIsTimeSensitive)
         case .notification, nil: sentences.append(.urgentIsOrdinary)
         }
-        return sentences + [.allowInFocus, .changeInSettings]
+        return sentences + [.relentlessIsUrgent, .allowInFocus, .changeInSettings]
     }
 }

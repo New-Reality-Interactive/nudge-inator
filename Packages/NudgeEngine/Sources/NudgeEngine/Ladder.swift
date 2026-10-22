@@ -34,7 +34,7 @@ struct Ladder {
 
     static let gentle = Ladder(highFrom: 5, urgentFrom: nil)
     static let firm = Ladder(highFrom: 3, urgentFrom: 4)
-    static let relentless = Ladder(highFrom: 1, urgentFrom: 4)
+    static let relentless = Ladder(highFrom: 1, urgentFrom: 1)
 }
 
 extension Strength {

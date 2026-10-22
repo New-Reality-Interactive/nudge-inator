@@ -63,11 +63,11 @@ struct FirmAndRelentlessLadderTests {
         #expect(item.body == body)
     }
 
-    /// The table's Relentless rows: nudges 1–3 High (it starts above Normal), nudges 4–20 Urgent.
+    /// The table's Relentless row: every nudge Urgent, from nudge 1 at the due time (ticket 05).
     @Test(arguments: [
-        (1, Urgency.high, "Nudge 1 of 20 · High"),
-        (2, .high, "Nudge 2 of 20 · High"),
-        (3, .high, "Nudge 3 of 20 · High"),
+        (1, Urgency.urgent, "Nudge 1 of 20 · Urgent"),
+        (2, .urgent, "Nudge 2 of 20 · Urgent"),
+        (3, .urgent, "Nudge 3 of 20 · Urgent"),
         (4, .urgent, "Nudge 4 of 20 · Urgent"),
         (5, .urgent, "Nudge 5 of 20 · Urgent"),
         (20, .urgent, "Nudge 20 of 20 · Urgent"),
@@ -78,19 +78,19 @@ struct FirmAndRelentlessLadderTests {
         #expect(item.body == body)
     }
 
-    /// With Break through Focus on (the only mapping until ticket 05), Firm and Relentless ring
-    /// as alarms from nudge 4.
+    /// With Break Through Focus on, Firm rings as an alarm from nudge 4 and Relentless from
+    /// nudge 1.
     @Test(arguments: [
         (Strength.firm, 1, DeliveryKind.notification),
         (.firm, 3, .timeSensitiveNotification),
         (.firm, 4, .alarm),
         (.firm, 20, .alarm),
-        (.relentless, 1, .timeSensitiveNotification),
-        (.relentless, 3, .timeSensitiveNotification),
+        (.relentless, 1, .alarm),
+        (.relentless, 3, .alarm),
         (.relentless, 4, .alarm),
         (.relentless, 20, .alarm),
     ])
-    func nudgeRingsAsAlarmFromNudgeFour(strength: Strength, nudgeNumber: Int, kind: DeliveryKind) throws {
+    func nudgeRingsAsAlarmFromItsFirstUrgentNudge(strength: Strength, nudgeNumber: Int, kind: DeliveryKind) throws {
         let item = try #require(try planItems(for: strength).first { $0.nudgeNumber == nudgeNumber })
         #expect(item.deliveryKind == kind)
     }

@@ -43,12 +43,12 @@ struct ReminderFormTests {
 
     /// The form's How It Nudges and the line under the strength (ticket 31) follow the draft's
     /// strength and switch, from the engine. Firm waits 30 min, then 15 and 7.5, then its 5 min
-    /// floor; Gentle waits an hour, easing to 20 min.
+    /// floor; Gentle waits an hour, easing to 20 min. Relentless rings from nudge 1 (ticket 05).
     @Test(arguments: [
         (Strength.firm, true, StrengthBlurb(firstWait: 30 * 60, floor: 5 * 60, firstAlarm: 4)),
         (.firm, false, StrengthBlurb(firstWait: 30 * 60, floor: 5 * 60, firstAlarm: nil)),
         (.gentle, true, StrengthBlurb(firstWait: 60 * 60, floor: 20 * 60, firstAlarm: nil)),
-        (.relentless, true, StrengthBlurb(firstWait: 10 * 60, floor: 2 * 60, firstAlarm: 4)),
+        (.relentless, true, StrengthBlurb(firstWait: 10 * 60, floor: 2 * 60, firstAlarm: 1)),
     ])
     func theStrengthsLineAndHowItNudgesFollowTheDraft(strength: Strength, breakThroughFocus: Bool, blurb: StrengthBlurb) async throws {
         manager.authorizationState = .authorized

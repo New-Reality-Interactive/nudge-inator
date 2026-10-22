@@ -72,19 +72,19 @@ struct SettingsStatusTests {
     @Test(arguments: [
         (
             Reach(normal: .notification, high: .timeSensitiveNotification, urgent: .alarm),
-            [FooterSentence.normalIsOrdinary, .highIsTimeSensitive, .urgentRingsAsAlarms, .allowInFocus, .changeInSettings]
+            [FooterSentence.normalIsOrdinary, .highIsTimeSensitive, .urgentRingsAsAlarms, .relentlessIsUrgent, .allowInFocus, .changeInSettings]
         ),
         (
             Reach(normal: .notification, high: .timeSensitiveNotification, urgent: .timeSensitiveNotification),
-            [.normalIsOrdinary, .highIsTimeSensitive, .urgentIsTimeSensitive, .allowInFocus, .changeInSettings]
+            [.normalIsOrdinary, .highIsTimeSensitive, .urgentIsTimeSensitive, .relentlessIsUrgent, .allowInFocus, .changeInSettings]
         ),
         (
             Reach(normal: .notification, high: .notification, urgent: .alarm),
-            [.normalIsOrdinary, .highIsOrdinary, .urgentRingsAsAlarms, .allowInFocus, .changeInSettings]
+            [.normalIsOrdinary, .highIsOrdinary, .urgentRingsAsAlarms, .relentlessIsUrgent, .allowInFocus, .changeInSettings]
         ),
         (
             Reach(normal: .notification, high: .notification, urgent: .notification),
-            [.normalIsOrdinary, .highIsOrdinary, .urgentIsOrdinary, .allowInFocus, .changeInSettings]
+            [.normalIsOrdinary, .highIsOrdinary, .urgentIsOrdinary, .relentlessIsUrgent, .allowInFocus, .changeInSettings]
         ),
         // Notifications off: Urgent nudges can still ring as alarms, but nothing else reaches the person.
         (Reach(normal: nil, high: nil, urgent: .alarm), [.changeInSettings]),
