@@ -4,13 +4,13 @@
 
 **Blocked by:** 03 (no implementation starts before the proposed mockup is approved).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] A reminder has a pace, Escalating, using the GLOSSARY's terms; the engine stays free of Apple frameworks.
 - [x] The stored reminder record holds the pace, and a saved reminder reloads with it. No migration (the spec's beta install note).
 - [x] The engine's nudge times, waits and give-up time come from pace and strength together; urgency still comes from the strength.
 - [x] The How It Nudges read-out takes the pace.
-- [ ] Every existing engine and app test passes unchanged on both simulators, showing Gentle, Firm and Relentless nudge as before.
+- [x] Every existing engine and app test passes on both simulators with its assertions unchanged (one call site updated, see Comments), showing Gentle, Firm and Relentless nudge as before.
 - [x] New tests: a reminder's pace survives a save and reload; an Escalating reminder of each strength plans the same nudges as before.
 
 ## Before you start
@@ -21,6 +21,6 @@
 
 ## Comments
 
-**Open criterion: "Every existing engine and app test passes unchanged on both simulators."** `scripts/test.sh` passes on both (301 app tests each, the engine package's 241), but one existing test line changed: `AlarmLimitFallbackTests.swift` called `bins.strength.nudgeTimes(from:within:)`, and the waits moved off `Strength`, so it now calls `bins.nudgeTimes(from:within:)`. Same call, same assertions. Left unticked and Status unchanged until Brian agrees: accept the one-line change and reword the criterion to "pass, with one call site updated", or keep a `Strength.nudgeTimes` for the old call (which keeps a strength-only path this ticket removes).
+**Criterion reworded, agreed with Brian (2026-10-21).** It read "Every existing engine and app test passes unchanged on both simulators." `scripts/test.sh` passes on both (301 app tests each, the engine package's 241), but one existing test line had to change: `AlarmLimitFallbackTests.swift` called `bins.strength.nudgeTimes(from:within:)`, and the waits moved off `Strength` into `Pace`, so it now calls `bins.nudgeTimes(from:within:)`. Same calculation, same assertions. Brian chose to reword the criterion to "passes on both simulators with its assertions unchanged (one call site updated)" over keeping a `Strength.nudgeTimes` shim, which would be dead code in the app and ignore a reminder's pace once Consistent exists.
 
 Found in review: `ReminderForm.draft(tagIDs:repeatRule:)` builds a `Reminder` without a `pace`, so an edit saved from the form resets it to Escalating. Harmless while only Escalating exists. Ticket 07, which adds Consistent and the form's pace, must carry the reminder's pace through the draft.
