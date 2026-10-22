@@ -4,7 +4,7 @@
 
 **Blocked by:** 06 (it changes the same wait and urgency rules; run one at a time).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] Engine: the 11 waits are one list the form and tests read. A Consistent reminder's first nudge is at its due time and each later one exactly one wait after.
 - [x] Engine: under Consistent each strength keeps its urgency steps (Gentle, Firm, and Relentless as alarms).
