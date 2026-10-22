@@ -24,6 +24,19 @@ Uninstalling does **not** remove the app's AlarmKit alarms on a device (iPhone 1
 
 The iOS 26.5 simulator's own `mediaanalysisd` (the Photos analysis daemon inside the simulator, not macOS's) ran at 700-870% of a CPU from about 20-60 s after every boot, for as long as the simulator was up. It happened with no app, test or screenshot running (2026-10-18, ticket 29: a boot-only run and an idle Mac were the controls), and it forced a restart of the development Mac. The iOS 26.1 simulator didn't do it. Apple's docs say nothing about it. Nothing in the app uses Photos, Vision or Live Text, so `scripts/test.sh` switches the daemon off in each simulator before testing it (`launchctl disable` and `bootout` through `xcrun simctl spawn`). That persists across boots, and a new or erased simulator needs it again, which the script does. Set `KEEP_MEDIA_ANALYSIS=1` to leave it on, or run `xcrun simctl spawn <udid> launchctl enable system/com.apple.mediaanalysisd` to turn it back on. If the Mac runs hot during simulator work, check `ps -Ao %cpu,comm | grep mediaanalysisd` first, and whether the path is under a `.simruntime`.
 
+## Simulator screenshots
+
+The recipe for a story's visual criteria (AGENTS.md, Testing), and for checking a mockup against the app. `scripts/screenshots.sh` takes a screenshot of every screen on each simulator in the matrix, in portrait, landscape and the largest text size (`accessibility-extra-extra-extra-large`), light appearance:
+
+1. Run `scripts/screenshots.sh`. It writes `docs/screenshots/<today>/<simulator>/<portrait|landscape|largest-text>/<screen>.png` (git-ignored). `SHOTS_OUT` changes the folder, `SHOTS_VARIANTS` runs fewer variants (`SHOTS_VARIANTS=portrait`), and `SIMULATORS` works as in `scripts/test.sh`. A full run takes about an hour, a variant about ten minutes per simulator.
+2. It builds a throwaway harness from `scripts/screenshots/` into `.build/screenshots`: the app's sources with a stand-in `@main` (`Harness/ShotsApp.swift`) over the test fakes and an in-memory store, seeded with the mockup's reminders, and a UI test (`UITests/ShotsUITests.swift`) that walks the screens. `SHOT_SCENARIO` picks the permissions, one test per scenario: everything allowed, first launch (onboarding), and notifications, alarms or Time Sensitive off (the banners).
+3. The real app, its install and its data are never touched. The harness has its own bundle ID, and it and its UI-test runner are uninstalled at the end, and each simulator's text size and appearance are put back, even after a failure.
+4. Compare each screenshot with the mockup's screen. A screen the walk doesn't reach, add to `ShotsUITests` (and the seed, if it needs data).
+
+What the harness can't do: the times are now plus or minus the mockup's gaps, so they differ from the mockup's fixed 8:20 AM, and the system's own UI (notifications, the alarm, permission prompts) isn't in it.
+
+Two simulator quirks it works around (iOS 26.5 simulator, Xcode 27.1): in landscape, a tap on a navigation bar button never lands and `swipeUp()` doesn't scroll, though rows and tabs take taps. So bar buttons are tapped after turning the phone to portrait and back, and scrolling is a coordinate drag. The simulator's first keyboard also shows a tip over the sheet, which the walk dismisses. That can't be undone: the tip doesn't come back on that simulator, for any app.
+
 ## Manual device checks: build, install, clean up
 
 For checks the person drives by hand (VoiceOver, landscape, tapping through screens), not `-only-testing` runs. Used for ticket 29 on an iPhone 15, iOS 27.0.1; the device id comes from `xcrun devicectl list devices`.

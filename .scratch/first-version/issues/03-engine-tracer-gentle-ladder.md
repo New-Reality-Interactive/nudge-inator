@@ -19,7 +19,7 @@ Tests assert only on occurrence state and the plan, through the engine's interfa
 
 - [x] A reminder that is not yet due has no open occurrence.
 - [x] At the due time the occurrence is Nudging, starting at nudge 1.
-- [x] Gentle intervals start at 60 minutes, shrink by factor 0.75 each nudge and never go below 20 minutes. Write the rounding rule (for example to the whole minute) in the code's doc comment and a test, and check it against the mockup's How It Nudges table in `docs/mockups/2026-10-04-first-version/index.html`.
+- [x] Gentle intervals start at 60 minutes, shrink by factor 0.75 each nudge and never go below 20 minutes. Write the rounding rule (for example to the whole minute) in the code's doc comment and a test, and check it against the mockup's How It Nudges table in `docs/mockups/archive/2026-10-04-first-version/index.html`.
 - [x] Every plan item carries title and "Nudge N of 20 · Urgency" text and nothing from notes or tags.
 - [x] The test suite uses only the fake clock and fake scheduler; no real time, no Apple frameworks. `scripts/test.sh` passes.
 

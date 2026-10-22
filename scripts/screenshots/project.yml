@@ -1,0 +1,70 @@
+# The screenshots harness (scripts/screenshots.sh): the app's sources with a stand-in @main
+# (Harness/ShotsApp.swift) over the test fakes, and a UI test that walks every screen. Generated
+# into .build/screenshots; nothing here ships.
+name: NudgeShots
+options:
+  bundleIdPrefix: com.newrealityinteractive
+  deploymentTarget:
+    iOS: "26.1"
+  developmentLanguage: en
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "-"
+    SDKROOT: iphoneos
+    SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    # The harness never writes to the app's String Catalogs.
+    SWIFT_EMIT_LOC_STRINGS: NO
+    TARGETED_DEVICE_FAMILY: "1"
+packages:
+  NudgeEngine:
+    path: ../../Packages/NudgeEngine
+  NudgeShared:
+    path: ../../Packages/NudgeShared
+targets:
+  NudgeShots:
+    type: application
+    platform: iOS
+    sources:
+      - path: ../../App
+        # The app's own entry point, plist and entitlements; InfoPlist.xcstrings so the build can't add keys to it.
+        excludes: [NudgeInatorApp.swift, AppModel/AppDelegate.swift, Info.plist, NudgeInator.entitlements, Resources/InfoPlist.xcstrings]
+      - path: Harness
+      # Fakes.swift without its `@testable import`, written by scripts/screenshots.sh.
+      - path: ../../.build/screenshots/Generated
+    dependencies:
+      - package: NudgeEngine
+      - package: NudgeShared
+    info:
+      path: ../../.build/screenshots/Generated/Info.plist
+      properties:
+        CFBundleDisplayName: Nudge-inator
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.newrealityinteractive.nudgeinator.shots
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: NO
+  NudgeShotsUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: NudgeShots
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.newrealityinteractive.nudgeinator.shots.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: NudgeShots
+schemes:
+  NudgeShots:
+    build:
+      targets:
+        NudgeShots: all
+        NudgeShotsUITests: [test]
+    test:
+      targets: [NudgeShotsUITests]

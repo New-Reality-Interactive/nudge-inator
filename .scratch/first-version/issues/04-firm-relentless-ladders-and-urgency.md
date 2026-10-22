@@ -4,7 +4,7 @@ Status: resolved
 
 ## What to build
 
-Add Firm (start 30 min, factor 0.5, floor 5) and Relentless (start 10 min, factor 0.5, floor 2). Each nudge gets an urgency (Normal, High, Urgent) that rises along the ladder. Firm and Relentless reach Urgent from nudge 4; Gentle never reaches Urgent. Numbers are in the spec and the mockup (`docs/mockups/2026-10-04-first-version/index.html`) and should be single constants so they can be tuned.
+Add Firm (start 30 min, factor 0.5, floor 5) and Relentless (start 10 min, factor 0.5, floor 2). Each nudge gets an urgency (Normal, High, Urgent) that rises along the ladder. Firm and Relentless reach Urgent from nudge 4; Gentle never reaches Urgent. Numbers are in the spec and the mockup (`docs/mockups/archive/2026-10-04-first-version/index.html`) and should be single constants so they can be tuned.
 
 ## Acceptance criteria
 

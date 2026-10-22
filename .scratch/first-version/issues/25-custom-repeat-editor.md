@@ -2,7 +2,7 @@ Status: resolved
 
 # Custom repeat editor
 
-Visual spec: mockup Repeat and Custom pages of the New Reminder form (`docs/mockups/2026-10-04-first-version/`).
+Visual spec: mockup Repeat and Custom pages of the New Reminder form (`docs/mockups/archive/2026-10-04-first-version/`).
 
 Design spec: `docs/design/DESIGN.md`. The page uses only system controls (`Picker` in the segmented style, `Stepper`, checkmark lists and a `DatePicker`), which DESIGN.md says are drawn as the system draws them, so it adds no new component. Where it and the mockup disagree, see its Precedence note.
 

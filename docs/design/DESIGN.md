@@ -77,13 +77,13 @@ typography:
   title-3:
     note: '(20 pt). Section headers on Now, such as Nudging.'
   headline:
-    note: 'Semibold (17 pt). Nudge card titles, nav titles, alert titles.'
+    note: 'Semibold (17 pt). Nudge card titles, nav titles, alert titles, and section headers in the secondary label color (iOS 26 inset grouped lists).'
   body:
     note: '(17 pt). Row titles, buttons.'
   subhead:
     note: '(15 pt). Row details, status labels, tokens, small buttons.'
   footnote:
-    note: '(13 pt). Section headers and footers, timestamps, How It Nudges rows.'
+    note: '(13 pt). Section footers, timestamps, How It Nudges rows.'
   caption-1:
     note: 'Semibold (12 pt). Strength badge, urgency word, count labels.'
 rounded:
@@ -185,10 +185,11 @@ and meets it. It was extracted from the 2026-10-03 design doc and pruned to the
 [GLOSSARY.md](../../GLOSSARY.md): say Done, Nudging, Missed, Strength and Urgency, not synonyms.
 
 **Precedence.** This doc owns tokens and rules: colors, type, spacing, shapes, and "one color, one
-meaning". The [mockup](../mockups/2026-10-04-first-version/index.html) owns how each screen is
-composed. If they disagree on a token value, this doc wins and the mockup gets fixed. If they
-disagree on a screen's layout, the mockup wins. The mockup's HTML still carries code from the
-archived mockup (Snooze, quiet hours, Live Activity); anything the
+meaning". The [as-built mockup](../mockups/2026-10-21-as-built/index.html) owns how each screen
+is composed (the [first-version mockup](../mockups/archive/2026-10-04-first-version/index.html) it
+replaced is archived). If they disagree on a token value, this doc wins and the mockup gets fixed.
+If they disagree on a screen's layout, the mockup wins. The mockup's HTML still carries code from
+the 2026-10-02 mockup (Snooze, quiet hours, Live Activity); anything the
 [spec](../../.scratch/first-version/spec.md) puts out of scope is not a requirement.
 
 ## Brand & Style

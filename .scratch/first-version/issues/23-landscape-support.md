@@ -2,7 +2,7 @@ Status: resolved
 
 # Landscape support in the app shell
 
-Visual spec: `docs/mockups/2026-10-04-first-version/` (open `index.html`, set **Orientation** to Landscape; the README describes it).
+Visual spec: `docs/mockups/archive/2026-10-04-first-version/` (open `index.html`, set **Orientation** to Landscape; the README describes it).
 
 Design spec: `docs/design/DESIGN.md` (Layout & Spacing). Where it and the mockup disagree, see its Precedence note.
 
