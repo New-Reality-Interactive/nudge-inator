@@ -222,7 +222,7 @@ struct ReminderStoreTests {
     }
 
     /// A reminder's pace is saved with it (enhancement-pace ticket 04).
-    @Test(arguments: [Pace.escalating])
+    @Test(arguments: [Pace.escalating] + Pace.consistentWaits.map { Pace.consistent(wait: $0) })
     func aReminderPaceSurvivesASaveAndReload(_ pace: Pace) throws {
         let reminder = Reminder(title: "Stretch", dueTime: NewYork.local(2026, 10, 15), strength: .firm, pace: pace)
 
@@ -246,6 +246,26 @@ struct ReminderStoreTests {
         try container.mainContext.save()
 
         #expect(throws: StoreError.unreadable(field: .paceKind, value: "gallop")) {
+            try store().load()
+        }
+    }
+
+    /// A Consistent pace the store can't read back whole is an error: no wait, or a wait the form
+    /// never offers, would nudge at a rhythm nobody chose.
+    @Test(arguments: [nil, 0, 7 * 60])
+    func aConsistentPaceWithoutAListedWaitIsUnreadable(wait: Double?) throws {
+        let reminder = Reminder(title: "Stretch", dueTime: NewYork.local(2026, 10, 15), strength: .firm, pace: .consistent(wait: 600))
+        try store().save(StoredData(reminders: [reminder], tags: [], histories: [:]))
+        let container = try ModelContainer(
+            for: ReminderRecord.self, ClosedOccurrenceRecord.self, PauseSpanRecord.self, ReplacedTitleRecord.self, TagRecord.self,
+            configurations: ReminderStore.configuration(for: .file(fileURL))
+        )
+        for record in try container.mainContext.fetch(FetchDescriptor<ReminderRecord>()) {
+            record.paceWait = wait
+        }
+        try container.mainContext.save()
+
+        #expect(throws: StoreError.unreadable(field: .paceWait, value: wait.map { String($0) } ?? "none")) {
             try store().load()
         }
     }

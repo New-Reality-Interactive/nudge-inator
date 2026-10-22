@@ -10,6 +10,7 @@ Issues and specs for this repo live as markdown files in `.scratch/`.
 - Triage state is recorded as a `Status:` line near the top of each issue file (see `triage-labels.md` for the role strings)
 - Comments and conversation history append to the bottom of the file under a `## Comments` heading
 - A new ticket, including a bug found while working another, goes in the open feature's folder (AGENTS.md, Issue tracker), numbered after its last ticket, in the format of that folder's other tickets. A released feature's folder gets no new tickets.
+- A ticket split from an open one keeps its number, and the new part takes the number plus a letter (`07` and `07b`), so it stays in dependency order. Its branch, title and PR use that number (`pace-07b-<slug>`, `# 07b:`, `Ticket 07b (…)`). The tickets it blocked list it in `Blocked by`, and both tickets' Comments record the split.
 
 ## Features and versions
 

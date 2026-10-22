@@ -4,6 +4,15 @@ import Foundation
 public enum Pace: Equatable, Sendable {
     /// The waits come from the strength and shrink as the nudging goes on.
     case escalating
+    /// One wait, in seconds, between every nudge. A wait from `consistentWaits`.
+    case consistent(wait: TimeInterval)
+
+    /// The waits a Consistent pace offers, in seconds: 2, 5, 10, 15 and 30 min, then 1, 2, 4, 8,
+    /// 12 and 16 h. The form and the tests read this one list.
+    public static let consistentWaits: [TimeInterval] = [
+        2 * 60, 5 * 60, 10 * 60, 15 * 60, 30 * 60,
+        60 * 60, 2 * 60 * 60, 4 * 60 * 60, 8 * 60 * 60, 12 * 60 * 60, 16 * 60 * 60,
+    ]
 }
 
 /// How an Escalating pace's waits shrink for one strength. Every number a strength's waits can be
@@ -45,6 +54,8 @@ extension Pace {
             let waits = strength.escalatingWaits
             let eased = waits.initialWait * pow(waits.factor, Double(nudgeNumber - 1))
             return max(waits.floor, eased).rounded()
+        case .consistent(let wait):
+            return wait
         }
     }
 

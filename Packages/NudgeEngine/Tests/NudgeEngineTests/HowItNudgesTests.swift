@@ -53,8 +53,8 @@ struct HowItNudgesTests {
     }
 
     /// Every Relentless nudge is Urgent (ticket 05), so each row rings, or with alarms denied each
-    /// is a notification weakened for that reason. Its waits still split it into four rows until
-    /// a Consistent pace (ticket 07) folds it into the mockup's one.
+    /// is a notification weakened for that reason. Its Escalating waits split it into four rows;
+    /// a Consistent pace folds it into the mockup's one (`consistentRelentlessIsOneRow`).
     @Test(arguments: [
         (PermissionStates(alarms: .allowed), NudgeDelivery.alarm),
         (PermissionStates(alarms: .denied), .notification(weakerBecause: .alarmsOff)),
@@ -81,5 +81,40 @@ struct HowItNudgesTests {
     @Test func relentlessWithItsSwitchOffStillRingsEveryNudge() {
         let rows = engine().howItNudges(.relentless, breakThroughFocus: false).rows
         #expect(rows.map(\.delivery) == [NudgeDelivery](repeating: .alarm, count: 4))
+    }
+
+    /// Equal waits fold into one row per urgency (ticket 07; mockup items 10 and 11). Relentless at
+    /// Consistent is one Urgent alarm row, "Nudges 1–20 when due", and with 10 min between nudges
+    /// it gives up one wait after nudge 20: 19 × 600 + 600 = 12,000 s.
+    @Test func consistentRelentlessIsOneRow() {
+        let howItNudges = engine().howItNudges(.relentless, pace: .consistent(wait: 600), breakThroughFocus: true)
+        #expect(howItNudges.rows == [
+            HowItNudges.Row(nudges: 1...20, startsAfter: 0, wait: 600, urgency: .urgent, delivery: .alarm),
+        ])
+        #expect(howItNudges.nudgeCount == 20)
+        #expect(howItNudges.givesUpAfter == 12_000)
+    }
+
+    /// Firm keeps its three urgency steps at 10 min: Normal for nudges 1 and 2, High for 3, Urgent
+    /// from 4, which starts at 3 × 600 = 1800 s. Gentle, at 1 h, turns High at nudge 5, 4 h in.
+    @Test func consistentFoldsEachUrgencyIntoOneRow() {
+        let firm = engine().howItNudges(.firm, pace: .consistent(wait: 600), breakThroughFocus: true).rows
+        #expect(firm == [
+            HowItNudges.Row(nudges: 1...2, startsAfter: 0, wait: 600, urgency: .normal, delivery: .notification(weakerBecause: nil)),
+            HowItNudges.Row(nudges: 3...3, startsAfter: 1200, wait: 600, urgency: .high, delivery: .notification(weakerBecause: nil)),
+            HowItNudges.Row(nudges: 4...20, startsAfter: 1800, wait: 600, urgency: .urgent, delivery: .alarm),
+        ])
+        let gentle = engine().howItNudges(.gentle, pace: .consistent(wait: 3600), breakThroughFocus: true)
+        #expect(gentle.rows.map(\.nudges) == [1...4, 5...20])
+        #expect(gentle.rows.map(\.startsAfter) == [0, 4 * 3600])
+        #expect(gentle.givesUpAfter == 20 * 3600)
+    }
+
+    /// A 16 h wait nudges twice and gives up at 24 h, so its read-out says so.
+    @Test func aLongWaitShowsTwoNudgesAndGivingUpAtADay() {
+        let howItNudges = engine().howItNudges(.relentless, pace: .consistent(wait: 16 * 3600), breakThroughFocus: true)
+        #expect(howItNudges.nudgeCount == 2)
+        #expect(howItNudges.rows.map(\.nudges) == [1...2])
+        #expect(howItNudges.givesUpAfter == 24 * 3600)
     }
 }
