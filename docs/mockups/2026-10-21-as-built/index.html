@@ -1884,7 +1884,6 @@ function settingsSections() {
     <li><div class="cell"><span class="ico" style="background:var(--tile-orange)">${I("alarm", 19)}</span><span class="main">Alarms</span><span class="trail">${ok(perm.alarms, "On", "Off")}</span></div></li>
     ${!perm.notifications || !perm.alarms || !perm.timeSensitive ? `<li><button type="button" class="cell tint" data-ios-settings><span class="ico" style="background:var(--tile-gray)">${I("gearshape", 19)}</span><span class="main">Open iOS Settings</span>${chev}</button></li>` : ""}
     <li><button type="button" class="cell tint" data-test ${perm.notifications ? "" : "disabled"}><span class="ico" style="background:var(--tile-blue)">${I("bell", 19)}</span><span class="main">Send a Test Nudge</span></button></li>
-  </ul>
     <li><button type="button" class="cell" data-hin><span class="ico" style="background:var(--tile-gray)">${I("info.circle", 19)}</span><span class="main">How It Nudges</span>${chev}</button></li>
   </ul>
   <div class="sec-f hin-f">${settingsFooter().map((l) => `<p>${l}</p>`).join("")}</div></div>` },

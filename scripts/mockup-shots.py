@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Screenshots of a mockup's screens in headless Chrome, named as scripts/screenshots.sh names the
 app's, so each pair can be compared (scripts/contact-sheet.sh). The screens are the as-built
-mockup's (docs/mockups/2026-10-21-as-built); a mockup copied from it keeps working. A screen it
+mockup's (docs/mockups/2026-10-21-as-built); a mockup copied from it keeps working, and the last few
+are only in the proposed pace mockup. A screen it
 doesn't know is added to SCREENS: the JavaScript that shows it in the mockup, and how many pages.
 
 Usage: scripts/mockup-shots.py <mockup folder> <out folder> [screen ...]
@@ -42,6 +43,11 @@ SCREENS = {
   "banner-alarms-off": ("perm.alarms=false;render()", 1),
   "settings-alarms-off": ("perm.alarms=false;state.tab='settings';nav()", 1),
   "banner-time-sensitive-off": ("perm.timeSensitive=false;render()", 1),
+  # Only in the proposed pace mockup (docs/mockups/2026-10-21-proposed-pace).
+  "details-relentless": ("push({kind:'rem',id:'r7'})", 4),
+  "form-new-escalating": ("openEditor();state.sheet.draft.pace='escalating';render()", 4),
+  "form-new-relentless": ("openEditor();state.sheet.draft.strength='relentless';render()", 4),
+  "settings-default-pace": ("state.tab='settings';nav();push({kind:'defpace'})", 1),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}
