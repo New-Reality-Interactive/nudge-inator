@@ -32,11 +32,13 @@ public struct HowItNudges: Equatable, Sendable {
 }
 
 extension Engine {
-    /// How a reminder of this strength, pace and Break Through Focus switch nudges, with the current
-    /// permissions and no alarm limit reached. There's no take-over: with the shipped give-up
-    /// limit even a daily repeat gives up long before its next occurrence falls due.
+    /// How a reminder of this strength, pace and Break Through Focus switch nudges (always on for
+    /// Relentless), with the current permissions and no alarm limit reached. There's no take-over:
+    /// with the shipped give-up limit even a daily repeat gives up long before its next occurrence
+    /// falls due.
     public func howItNudges(_ strength: Strength, pace: Pace = .escalating, breakThroughFocus: Bool) -> HowItNudges {
         let dueTime = Date(timeIntervalSinceReferenceDate: 0)
+        let breaksThrough = strength.breaksThroughFocus(switchedOn: breakThroughFocus)
         let times = pace.nudgeTimes(from: dueTime, strength: strength, within: giveUpLimit)
         var rows: [HowItNudges.Row] = []
         for (index, time) in times.enumerated() {
@@ -48,9 +50,9 @@ extension Engine {
                 wait: pace.interval(afterNudge: number, strength: strength),
                 urgency: urgency,
                 delivery: Self.nudgeDelivery(
-                    delivery(of: urgency, breakThroughFocus: breakThroughFocus, permissions: permissions, alarmLimitReached: false),
+                    delivery(of: urgency, breakThroughFocus: breaksThrough, permissions: permissions, alarmLimitReached: false),
                     urgency: urgency,
-                    breakThroughFocus: breakThroughFocus,
+                    breakThroughFocus: breaksThrough,
                     timeSensitive: permissions.timeSensitive
                 )
             )

@@ -249,16 +249,17 @@ final class ShotsUITests: XCTestCase {
         shot("onboarding")
     }
 
+    /// Several pages of each long banner: at the largest text the first shows only its start.
     func testNotificationsOff() {
         launch(.notificationsOff)
-        shot("banner-notifications-off")
+        shot("banner-notifications-off", pages: 4)
         tab("Settings")
         shot("settings-notifications-off", pages: 2)
     }
 
     func testAlarmsOff() {
         launch(.alarmsOff)
-        shot("banner-alarms-off")
+        shot("banner-alarms-off", pages: 3)
         tab("Settings")
         shot("settings-alarms-off")
     }

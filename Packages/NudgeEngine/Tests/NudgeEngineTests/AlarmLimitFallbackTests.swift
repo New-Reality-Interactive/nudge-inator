@@ -53,6 +53,19 @@ struct AlarmLimitFallbackTests {
         #expect(items.filter { $0.nudgeNumber <= 10 }.allSatisfy { $0.deliveryKind == .alarm })
     }
 
+    /// Relentless ignores its stored switch (ADR 0004), so off it still rings and overflows the same.
+    @Test func aRelentlessReminderWithItsSwitchOffOverflowsTheSame() throws {
+        var bins = bins
+        bins.breakThroughFocus = false
+        var engine = engine(holding: [bins])
+        reportAlarmLimit(to: &engine)
+
+        let items = try lastItems()
+        #expect(items.filter { $0.nudgeNumber <= 10 }.allSatisfy { $0.deliveryKind == .alarm })
+        #expect(items.filter { $0.nudgeNumber >= 11 }.allSatisfy { $0.deliveryKind == .timeSensitiveNotification })
+        #expect(items.filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(11...20))
+    }
+
     @Test func onlyTheOverflowNudgesCarryTheMarker() throws {
         _ = engineWithBinsOverflowing()
         #expect(try lastItems().filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(11...20))

@@ -25,7 +25,9 @@ struct HowItNudgesSummaryTests {
         (.relentless, true, PermissionStates(notifications: .denied, alarms: .allowed), [.givesUp(nudges: 20, after: 3090), .allRing(nudges: 20)]),
         (.firm, true, PermissionStates(notifications: .denied, alarms: .allowed), [.givesUp(nudges: 20, after: 8250), .cannotArriveUntilAlarms(alarms: 4...20)]),
         (.gentle, true, PermissionStates(notifications: .denied, alarms: .allowed), [.givesUp(nudges: 20, after: 29044), .noneCanArrive]),
-        (.relentless, false, PermissionStates(alarms: .allowed), [.givesUp(nudges: 20, after: 3090), .allNotifications(nudges: 20), .focusHoldsEveryNudge]),
+        (.firm, false, PermissionStates(alarms: .allowed), [.givesUp(nudges: 20, after: 8250), .allNotifications(nudges: 20), .focusHoldsEveryNudge]),
+        // Relentless ignores its stored switch (ticket 06).
+        (.relentless, false, PermissionStates(alarms: .allowed), [.givesUp(nudges: 20, after: 3090), .allRing(nudges: 20)]),
     ])
     func theSummarySaysHowEveryNudgeArrives(strength: Strength, breakThroughFocus: Bool, permissions: PermissionStates, expected: [HowItNudgesSentence]) {
         #expect(summary(strength, breakThroughFocus: breakThroughFocus, permissions) == expected)

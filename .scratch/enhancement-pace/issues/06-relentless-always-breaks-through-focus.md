@@ -4,19 +4,42 @@
 
 **Blocked by:** 05.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] Engine: a Relentless reminder whose stored switch is off plans and delivers its nudges as alarms, the same as with the switch on.
-- [ ] Form: choosing Relentless shows the switch on and disabled, with the footnote, as in the proposed mockup.
-- [ ] Form: leaving Relentless for Firm or Gentle restores the switch to the person's last value, editable.
-- [ ] Onboarding's third point, also at the top of Settings' How It Nudges page, reads "Each Gentle or Firm reminder has a Break Through Focus switch. Turn it off and a Focus can hold its nudges, and nothing rings. Relentless always breaks through."
-- [ ] The notifications-off and alarms-off banners read as the proposed mockup's items 15 and 16 ("Only Urgent nudges can reach you, as alarms: every Relentless nudge, and a Firm reminder's from nudge 4 with Break Through Focus on. …" and "Urgent nudges, and so every Relentless nudge, now come as …"), and the reach they describe stays true.
-- [ ] Simulators (26.5 and 27.x): the switch, footnote and banners in portrait, landscape and large text.
-- [ ] VoiceOver reads the switch as on and dimmed, and the footnote's reason can be reached.
-- [ ] Offered to Brian, after the simulator pass: on an iPhone under a Focus, a Relentless reminder saved with the switch off before choosing Relentless rings through (phone and iOS version recorded).
+- [x] Engine: a Relentless reminder whose stored switch is off plans and delivers its nudges as alarms, the same as with the switch on.
+- [x] Form: choosing Relentless shows the switch on and disabled, with the footnote, as in the proposed mockup.
+- [x] Form: leaving Relentless for Firm or Gentle restores the switch to the person's last value, editable.
+- [x] Onboarding's third point, also at the top of Settings' How It Nudges page, reads "Each Gentle or Firm reminder has a Break Through Focus switch. Turn it off and a Focus can hold its nudges, and nothing rings. Relentless always breaks through."
+- [x] The notifications-off and alarms-off banners read as the proposed mockup's items 15 and 16 ("Only Urgent nudges can reach you, as alarms: every Relentless nudge, and a Firm reminder's from nudge 4 with Break Through Focus on. …" and "Urgent nudges, and so every Relentless nudge, now come as …"), and the reach they describe stays true.
+- [x] Reminder details' Break Through Focus row says On for a Relentless reminder, whatever its stored switch (mockup item 9).
+- [x] Simulators (26.5 and 27.x): the switch, footnote and banners in portrait, landscape and large text.
+- [x] VoiceOver reads the switch as on and dimmed, and the footnote's reason can be reached.
+- [x] Offered to Brian, after the simulator pass: on an iPhone under a Focus, a Relentless reminder saved with the switch off before choosing Relentless rings through (phone and iOS version recorded).
+
+## Before you start
+
+- Builds on: ticket 05: every Relentless nudge is Urgent (`Ladder.relentless`, `urgentFrom: 1`), so with the switch respected it already rings every nudge. What's left is the switch: `Engine.swift` decides delivery in `delivery(of:breakThroughFocus:permissions:alarmLimitReached:)` (`if breakThroughFocus, urgency == .urgent, …`) and `notificationKind` (`guard breakThroughFocus else { return .notification }`). Read the reminder's switch as on for Relentless in one place, the stored value untouched, so leaving Relentless restores it. Ticket 05's Comments record the banner criterion moved here, and why.
+- Watch for: the banner words are mockup items 15 and 16 (`docs/mockups/2026-10-21-proposed-pace/index.html`, `permBanner`). The alarms-off banner's ordinary-notifications variant also gains "and so every Relentless nudge"; edit both strings in `App/Permissions/PermissionBannerView.swift` and sync the catalog with `scripts/sync-strings.sh .build/derived` after a build (never `cat` the `.xcstrings`). Existing tests that pass Relentless with the switch off assert ordinary notifications and will change: `BreakThroughFocusTests` (`switchOffSendsEveryNudgeAsOrdinaryNotification`, `flippingSwitchChangesOnlyDeliveryKinds`, both with `.relentless` in their arguments), `PermissionFallbackTests.switchOffSendsOrdinaryNotificationsWhateverThePermissions`, `HowItNudgesTests.breakThroughFocusOffSendsEveryNudgeAsAnOrdinaryNotification`, and the app's `HowItNudgesSummaryTests` `(.relentless, false, …)` row. Where a test is about the switch rather than Relentless, move it to Firm instead of deleting it, and note each in Comments. The form keeps the person's value: `ReminderForm.breakThroughFocus` is what's saved, so show the switch on and disabled for Relentless without overwriting it. The screenshot walk already has `form-new-relentless` (eight pages, opens the Strength menu at accessibility sizes), which shows the switch and footnote; the banner screens are `banner-notifications-off` and `banner-alarms-off`.
+- Developer stops: agree the `tdd` seams (engine through the plan for a stored switch off; app through the form's switch state and restore, and the banner and onboarding text); the simulator check on both simulators in portrait, landscape and largest text (`scripts/screenshots.sh`); VoiceOver on the switch and footnote, a device check; then the offer of the iPhone run under a Focus, which Brian may decline.
 
 ## Comments
 
 **2026-10-21, criteria from the proposed mockup.** Added with Brian's agreement after ticket 03, for text and behaviour the approved mockup settled that this ticket didn't name: onboarding's Break Through Focus point. Detail: `docs/mockups/2026-10-21-proposed-pace/README.md`, items 17.
 
 **2026-10-21, banner criterion moved here from ticket 05, agreed with Brian.** The new banner words say every Relentless nudge rings, which is true only once this ticket ignores a Relentless reminder's stored switch. Ticket 05 kept the old words. Its Comments have the detail.
+
+**2026-10-22, details row criterion added, agreed with Brian.** The proposed mockup's item 9 (the details' Break Through Focus row says On for a Relentless reminder) wasn't in any ticket. Once the engine ignores a Relentless reminder's stored switch, the row would say Off above How It Nudges rows that ring, so it's done here.
+
+**2026-10-22, tests moved from Relentless to Firm.** Each was about the switch, not Relentless, and asserted that Relentless with the switch off sends ordinary notifications, which this ticket ends. Each now runs on Firm, with its expected values worked out again, and a Relentless test beside it checks that the stored switch is ignored:
+- `BreakThroughFocusTests`: `switchOffSendsEveryNudgeAsOrdinaryNotification` and `flippingSwitchChangesOnlyDeliveryKinds` drop Relentless from their arguments and keep Gentle and Firm, which already ran; `relentlessWithItsSwitchOffStillRingsEveryNudge` is new (20 alarms).
+- `PermissionFallbackTests.switchOffSendsOrdinaryNotificationsWhateverThePermissions` uses Firm, with the same kinds; `relentlessWithItsSwitchOffTakesTheSwitchOnFallbacks` is new (alarms, Time Sensitive, ordinary, and with notifications denied still 20 alarms: the reach the notifications-off banner describes).
+- `HowItNudgesTests.breakThroughFocusOffSendsEveryNudgeAsAnOrdinaryNotification` uses Firm: nudges 1–2 are Normal, so only rows 3 and 4 say the switch weakened them. `relentlessWithItsSwitchOffStillRingsEveryNudge` is new.
+- App: `HowItNudgesSummaryTests`' `(.relentless, false, …)` row became `(.firm, false, …)` (gives up after 8250 s, all notifications, a Focus holds every nudge), and a new `(.relentless, false, …)` row reads "All 20 nudges ring as alarms."
+- New, with no test moved: `NudgingStatusTests.aRelentlessNextNudgeIgnoresItsStoredSwitch`, `AlarmLimitFallbackTests.aRelentlessReminderWithItsSwitchOffOverflowsTheSame`, `ReminderFormTests`' switch shown and restored and saved-value tests, and `ReminderDetailsTests.aRelentlessReminderBreaksThroughFocusWhateverItsSwitch`.
+
+**2026-10-22, simulator check.** `scripts/screenshots.sh` on `iPhone 15 Pro - iOS 26.5` and `iPhone 15 - iOS 27.0`, in portrait, landscape and the largest text size. On `form-new-relentless`, Break Through Focus shows on and dimmed, with "Relentless always rings, so it always breaks through a Focus." under it, and every How It Nudges row reads Urgent and Alarm. Onboarding's third point, and the top of Settings' How It Nudges page, read the new words. The banners read as mockup items 15 and 16. Nothing clipped or overlapped. At the largest text a banner runs past one screen, so the walk now takes 4 pages of `banner-notifications-off` and 3 of `banner-alarms-off` (`ShotsUITests`, and `mockup-shots.py` to match), and both banners read whole there. The walk has no details screen of a Relentless reminder, so the details row's On rests on `ReminderDetailsTests.aRelentlessReminderBreaksThroughFocusWhateverItsSwitch` and the row reading `breaksThroughFocus`. Seen in passing and not changed here: at the largest text each banner's Open Settings button is cut to "Open…".
+
+**2026-10-22, device checks, iPhone 15, iOS 27.0.1.** The app wasn't installed before, so it was installed for the checks and uninstalled after. VoiceOver: on a new reminder with Relentless chosen, the switch read "Break Through Focus, dimmed, switch button, on", and one swipe right read the footnote. Focus: Brian took the run. "Focus test" was made at 12:22 pm with Break Through Focus turned off on Firm, then switched to Relentless (the switch showed on and dimmed) and saved, due 12:24 pm. Its details row said On. Under Do Not Disturb, with Nudge-inator not allowed, it rang as a full alarm at 12:24 pm. Brian stopped the alarm, deleted the reminder and turned Do Not Disturb off, and the app was uninstalled, so the phone is back as it was.
+
+**2026-10-22, ticket 12 filed.** The banners' Open Settings cut to "Open…" at the largest text, seen in this ticket's simulator check, is ticket 12, at Brian's request.
+

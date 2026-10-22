@@ -21,7 +21,22 @@ final class ReminderForm: Identifiable {
     /// came until a choice or the start changes (decision 5, ticket 25).
     private var setCustomRule: (rule: RepeatRule, choices: CustomRepeat, dueTime: Date)?
     var strength = Strength.firm
+    /// The person's switch, as saved. Relentless ignores it but keeps it, so leaving Relentless
+    /// gives it back; the form shows `breaksThroughFocus`.
     var breakThroughFocus = true
+
+    /// The switch as the form shows it: always on for Relentless (ADR 0004). Setting it sets the
+    /// person's switch.
+    var breaksThroughFocus: Bool {
+        get { strength.breaksThroughFocus(switchedOn: breakThroughFocus) }
+        set { breakThroughFocus = newValue }
+    }
+
+    /// Relentless always breaks through Focus, so its switch can't be turned off: a strength that
+    /// breaks through even with the switch off has nothing for the switch to change.
+    var isBreakThroughFocusFixed: Bool {
+        strength.breaksThroughFocus(switchedOn: false)
+    }
 
     /// Why Save is turned down, shown as text under the field it's about.
     enum SaveBlock: Equatable {

@@ -49,6 +49,8 @@ struct ReminderFormTests {
         (.firm, false, StrengthBlurb(firstWait: 30 * 60, floor: 5 * 60, firstAlarm: nil)),
         (.gentle, true, StrengthBlurb(firstWait: 60 * 60, floor: 20 * 60, firstAlarm: nil)),
         (.relentless, true, StrengthBlurb(firstWait: 10 * 60, floor: 2 * 60, firstAlarm: 1)),
+        // Relentless always breaks through Focus (ticket 06).
+        (.relentless, false, StrengthBlurb(firstWait: 10 * 60, floor: 2 * 60, firstAlarm: 1)),
     ])
     func theStrengthsLineAndHowItNudgesFollowTheDraft(strength: Strength, breakThroughFocus: Bool, blurb: StrengthBlurb) async throws {
         manager.authorizationState = .authorized
@@ -60,6 +62,39 @@ struct ReminderFormTests {
         #expect(form.strengthBlurb == blurb)
         #expect(form.howItNudges.nudgeCount == 20)
         #expect(form.howItNudges.rows.contains { $0.delivery == .alarm } == (blurb.firstAlarm != nil))
+    }
+
+    /// Spec stories 30 and 31: Relentless shows the switch on and fixed, and leaving it gives back
+    /// the value the person set, editable again.
+    @Test(arguments: [Strength.firm, .gentle])
+    func relentlessShowsTheSwitchOnAndLeavingItGivesTheSwitchBack(leavingFor strength: Strength) async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.breaksThroughFocus = false
+
+        form.strength = .relentless
+        #expect(form.breaksThroughFocus)
+        #expect(form.isBreakThroughFocusFixed)
+
+        form.strength = strength
+        #expect(!form.breaksThroughFocus)
+        #expect(!form.isBreakThroughFocusFixed)
+    }
+
+    /// The stored switch keeps the person's value, so a later change to Firm finds it (ADR 0004).
+    @Test func aRelentlessReminderIsSavedWithTheSwitchThePersonSet() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.title = "Call the bank"
+        form.dueTime = NewYork.local(2026, 10, 16, 9)
+        form.breaksThroughFocus = false
+        form.strength = .relentless
+
+        #expect(form.save(to: model))
+
+        let saved = try #require(model.engine.reminders.only)
+        #expect(saved.breakThroughFocus == false)
+        #expect(saved.breaksThroughFocus)
     }
 
     @Test(arguments: ["", "   ", "\n"])
