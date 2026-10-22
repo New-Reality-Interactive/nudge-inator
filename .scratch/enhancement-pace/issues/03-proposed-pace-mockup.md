@@ -4,7 +4,7 @@
 
 **Blocked by:** 02.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] The proposed mockup is a copy of the as-built one in its own dated folder, with a README listing every change from the as-built mockup.
 - [x] The reminder form shows a Pace segmented control (Escalating | Consistent) under Strength, an Every row with the 11 waits revealed only under Consistent, and the control as a menu at accessibility text sizes.
@@ -15,7 +15,7 @@
 - [x] Settings shows a Default pace row, Consistent · 10 min.
 - [x] Now and My Day are unchanged.
 - [x] The mockup's controls can switch pace and strength so each combination can be seen.
-- [ ] Brian approves it. Changes he asks for are made and listed in Comments.
+- [x] Brian approves it. Changes he asks for are made and listed in Comments.
 
 ## Before you start
 
@@ -39,4 +39,4 @@
 
 **Review (2026-10-21, `code-review` from main).** Standards: no hard findings. Fixed: a helper for a reminder's effective switch (`btActs`) instead of five copies, the Default Pace page's header as h2 like other Settings pages, the mockup controls re-syncing when a locked form ignores them, the shots script's docstring, DESIGN.md's wrap, a redundant default. Kept: `pace.pace` naming and the repeated `"consistent"` tests, as in the mockup's idiom. Spec: no criterion missing. Fixed: the line under Strength used the Escalating ladder (Firm at 16 hr said "Rings as an alarm from nudge 4"); long waits that never reach High said "Normal nudges wait until High" and "All 2 nudges"; Pay rent's history now Urgent was missing from the README; DESIGN.md's "the mockup wins" now says which one.
 
-**Open:** criterion 10, Brian's approval.
+**Brian's check (2026-10-21).** Brian approved the mockup, including the four choices above, with no changes asked for. He showed it to the product owner as a Claude artifact (a copy with a short "What's proposed" panel added, not committed), and it matched how they imagined pace would work.
