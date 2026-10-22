@@ -187,8 +187,10 @@ and meets it. It was extracted from the 2026-10-03 design doc and pruned to the
 **Precedence.** This doc owns tokens and rules: colors, type, spacing, shapes, and "one color, one
 meaning". The [as-built mockup](../mockups/2026-10-21-as-built/index.html) owns how each screen
 is composed (the [first-version mockup](../mockups/archive/2026-10-04-first-version/index.html) it
-replaced is archived). If they disagree on a token value, this doc wins and the mockup gets fixed.
-If they disagree on a screen's layout, the mockup wins. The mockup's HTML still carries code from
+replaced is archived). The [proposed pace mockup](../mockups/2026-10-21-proposed-pace/index.html)
+is the as-built one changed for pace; the enhancement-pace tickets build to it. If they disagree
+on a token value, this doc wins and the mockup gets fixed.
+If they disagree on a screen's layout, the mockup wins: the proposed one, for what it changes. The mockup's HTML still carries code from
 the 2026-10-02 mockup (Snooze, quiet hours, Live Activity); anything the
 [spec](../../.scratch/first-version/spec.md) puts out of scope is not a requirement.
 
