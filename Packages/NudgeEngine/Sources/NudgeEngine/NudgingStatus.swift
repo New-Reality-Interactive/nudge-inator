@@ -59,8 +59,8 @@ extension Engine {
               case let .nudging(nudgesSent) = occurrence.state
         else { return nil }
         let strength = reminder.strength
-        let ladder = strength.nudgeTimes(from: occurrence.dueTime, within: giveUpLimit)
-        let giveUpTime = strength.giveUpTime(from: occurrence.dueTime, after: ladder, within: giveUpLimit)
+        let uncutNudgeTimes = reminder.nudgeTimes(from: occurrence.dueTime, within: giveUpLimit)
+        let giveUpTime = reminder.giveUpTime(from: occurrence.dueTime, after: uncutNudgeTimes, within: giveUpLimit)
         // Open, so its next due time is after now and hasn't taken it over yet.
         let takeOverTime = reminder.nextDueTime(after: clock.now, calendar: calendar)
         let missedAt = min(giveUpTime, takeOverTime ?? giveUpTime)

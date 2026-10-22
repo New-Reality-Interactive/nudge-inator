@@ -16,6 +16,7 @@ enum StoreError: Error, Equatable {
         case repeatRule
         case repeatMissingDay
         case strength
+        case paceKind
         case occurrenceState
         case closedOccurrenceDueTime
     }
@@ -196,6 +197,7 @@ private extension ReminderRecord {
         repeatMissingDay = reminder.repeatRule.map { $0.missingDay.storedValue }
         repeatUntilTime = if case .untilTime(let time) = reminder.repeatRule?.end { time } else { nil }
         strength = reminder.strength.storedValue
+        (paceKind, paceWait) = reminder.pace.storedValue
         breakThroughFocus = reminder.breakThroughFocus
     }
 
@@ -208,6 +210,7 @@ private extension ReminderRecord {
             dueTime: dueTime,
             repeatRule: try storedRepeatRule(),
             strength: try Strength(storedValue: strength),
+            pace: try Pace(storedKind: paceKind, wait: paceWait),
             breakThroughFocus: breakThroughFocus
         )
     }
@@ -262,6 +265,22 @@ private extension Strength {
         case "firm": self = .firm
         case "relentless": self = .relentless
         default: throw StoreError.unreadable(field: .strength, value: storedValue)
+        }
+    }
+}
+
+private extension Pace {
+    /// The kind and wait the record holds: no wait for Escalating.
+    var storedValue: (kind: String, wait: Double?) {
+        switch self {
+        case .escalating: ("escalating", nil)
+        }
+    }
+
+    init(storedKind: String, wait: Double?) throws {
+        switch storedKind {
+        case "escalating": self = .escalating
+        default: throw StoreError.unreadable(field: .paceKind, value: storedKind)
         }
     }
 }
