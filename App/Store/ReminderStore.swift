@@ -17,6 +17,7 @@ enum StoreError: Error, Equatable {
         case repeatMissingDay
         case strength
         case paceKind
+        case paceWait
         case occurrenceState
         case closedOccurrenceDueTime
     }
@@ -274,12 +275,18 @@ private extension Pace {
     var storedValue: (kind: String, wait: Double?) {
         switch self {
         case .escalating: ("escalating", nil)
+        case .consistent(let wait): ("consistent", wait)
         }
     }
 
     init(storedKind: String, wait: Double?) throws {
         switch storedKind {
         case "escalating": self = .escalating
+        case "consistent":
+            guard let wait, Pace.consistentWaits.contains(wait) else {
+                throw StoreError.unreadable(field: .paceWait, value: wait.map { String($0) } ?? "none")
+            }
+            self = .consistent(wait: wait)
         default: throw StoreError.unreadable(field: .paceKind, value: storedKind)
         }
     }

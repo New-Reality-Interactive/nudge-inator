@@ -2,7 +2,7 @@
 
 **What to build:** While a reminder is Nudging its pace, and its Consistent wait, are locked like its strength (ADR 0002). The engine rejects an edit that changes either, and the form shows the Pace and Every rows locked, looking and reading like the other locked rows. Spec stories 22 and 32.
 
-**Blocked by:** 07.
+**Blocked by:** 07b (it locks the form's Pace control).
 
 **Status:** ready-for-agent
 
