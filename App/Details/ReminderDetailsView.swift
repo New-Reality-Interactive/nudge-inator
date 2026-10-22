@@ -162,8 +162,8 @@ private struct DetailsList: View {
             } footer: {
                 if details.showsLockNote {
                     Label {
-                        Text("Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them.",
-                             comment: "Reminder details: under Schedule while the reminder is nudging, why four fields can't be edited.")
+                        Text("Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them.",
+                             comment: "Reminder details: under Schedule while the reminder is nudging, why five fields can't be edited.")
                     } icon: {
                         LockGlyph()
                     }

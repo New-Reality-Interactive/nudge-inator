@@ -368,8 +368,8 @@
         }
       }
     },
-    "**Nudging now.** Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge." : {
-      "comment" : "Top of the Edit Reminder form while the reminder is nudging: why four fields are locked."
+    "**Nudging now.** Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge." : {
+      "comment" : "Top of the Edit Reminder form while the reminder is nudging: why five fields are locked."
     },
     "**Time Sensitive is off.** High nudges come as ordinary notifications, so a Focus can hold them." : {
       "comment" : "Permission banner, when the app's Time Sensitive notifications are turned off. Keep the first sentence bold."
@@ -1148,7 +1148,7 @@
     "Nudging Now" : {
       "comment" : "Reminder details: section header above the card of a reminder that is nudging."
     },
-    "Nudging now. Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge." : {
+    "Nudging now. Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge." : {
       "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging: the note at the top of the form, without its bold."
     },
     "Nudging · %lld nudges" : {
@@ -1364,8 +1364,8 @@
     "Skipped: the reminder was paused" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that closed because its reminder was paused."
     },
-    "Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them." : {
-      "comment" : "Reminder details: under Schedule while the reminder is nudging, why four fields can't be edited."
+    "Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them." : {
+      "comment" : "Reminder details: under Schedule while the reminder is nudging, why five fields can't be edited."
     },
     "Starts" : {
       "comment" : "The reminder form's start date and time."

@@ -248,7 +248,7 @@ struct ReminderFormTests {
         model.add(bins)
         let form = try editForm(of: bins.id, on: model)
 
-        #expect(form.lockedFields == [.dueTime, .repeatRule, .strength, .breakThroughFocus])
+        #expect(form.lockedFields == [.dueTime, .repeatRule, .strength, .pace, .breakThroughFocus])
         form.title = "Take both bins out"
         form.notes = "Recycling too"
         form.addTag(named: "home")
@@ -356,6 +356,23 @@ struct ReminderFormTests {
         #expect(form.customChoices.interval == 3)
     }
 
+    /// A saved Consistent · 30 min comes back whole: the switch to Escalating and the wait changed
+    /// before it are both undone, so choosing Consistent can't show a wait that wasn't saved.
+    @Test func aLockArrivingRestoresTheSavedPaceAndItsWait() async throws {
+        let model = try await launchedModel()
+        let saved = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 9), strength: .firm, pace: .consistent(wait: 30 * 60))
+        model.add(saved)
+        let form = try editForm(of: saved.id, on: model)
+        form.consistentWait = 15 * 60
+        form.paceChoice = .escalating
+
+        clock.now = NewYork.local(2026, 10, 15, 9, 5)
+        form.checkLock()
+
+        #expect(form.paceChoice == .consistent)
+        #expect(form.consistentWait == 30 * 60)
+    }
+
     /// Nothing is locked yet, so checking the clock leaves the person's changes alone.
     @Test func checkingTheClockBeforeTheLockLeavesChangesAlone() async throws {
         let model = try await launchedModel()
@@ -388,6 +405,28 @@ struct ReminderFormTests {
         form.title = "Call the bank about the card"
         #expect(form.save(to: model))
         #expect(model.engine.reminders.only?.title == "Call the bank about the card")
+    }
+
+    /// A wait changed after the reminder started nudging is turned down at Save and put back, and
+    /// the title then saves with the pace as it was.
+    @Test func aSaveThatChangesTheWaitAfterTheReminderStartedNudgingIsTurnedDown() async throws {
+        let model = try await launchedModel()
+        let later = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 9), strength: .firm, pace: .consistent(wait: 30 * 60))
+        model.add(later)
+        let form = try editForm(of: later.id, on: model)
+
+        clock.now = NewYork.local(2026, 10, 15, 9, 5)
+        form.consistentWait = 2 * 60
+
+        #expect(form.save(to: model) == false)
+        #expect(form.paceChoice == .consistent)
+        #expect(form.consistentWait == 30 * 60)
+        #expect(model.engine.reminders == [later])
+
+        form.title = "Call the bank about the card"
+        #expect(form.save(to: model))
+        #expect(model.engine.reminders.only?.title == "Call the bank about the card")
+        #expect(model.engine.reminders.only?.pace == .consistent(wait: 30 * 60))
     }
 
     @Test(arguments: [

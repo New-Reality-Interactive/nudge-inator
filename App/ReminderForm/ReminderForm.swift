@@ -117,8 +117,7 @@ final class ReminderForm: Identifiable {
         repeatRule = reminder.repeatRule
         strength = reminder.strength
         breakThroughFocus = reminder.breakThroughFocus
-        paceChoice = PaceChoice(reminder.pace)
-        if case .consistent(let wait) = reminder.pace { consistentWait = wait }
+        setPaceControls(to: reminder.pace)
         opened = draft(tagIDs: tagIDs)
     }
 
@@ -382,9 +381,17 @@ final class ReminderForm: Identifiable {
             case .dueTime: dueTime = reminder.dueTime
             case .repeatRule: repeatRule = reminder.repeatRule
             case .strength: strength = reminder.strength
+            case .pace: setPaceControls(to: reminder.pace)
             case .breakThroughFocus: breakThroughFocus = reminder.breakThroughFocus
             }
         }
+    }
+
+    /// Sets the Pace control and the Every row to show `pace`. An Escalating pace leaves the
+    /// Every row's wait as it is.
+    private func setPaceControls(to pace: Pace) {
+        paceChoice = PaceChoice(pace)
+        if case .consistent(let wait) = pace { consistentWait = wait }
     }
 
     /// The chosen tags' IDs, once the model has created the ones typed here. A name the model

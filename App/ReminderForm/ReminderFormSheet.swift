@@ -103,8 +103,8 @@ private struct EditNoteSection: View {
             Group {
                 if isLocked {
                     Label {
-                        Text("**Nudging now.** Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge.",
-                             comment: "Top of the Edit Reminder form while the reminder is nudging: why four fields are locked.")
+                        Text("**Nudging now.** Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge.",
+                             comment: "Top of the Edit Reminder form while the reminder is nudging: why five fields are locked.")
                     } icon: {
                         LockGlyph()
                     }
@@ -221,13 +221,7 @@ private struct RepeatRow: View {
             ?? Text("Custom", comment: "The reminder form's Repeat row when the repeat is a custom rule.")
         let label = Text("Repeat", comment: "The reminder form's row that opens the Repeat page.")
         if isLocked {
-            LabeledContent {
-                value
-            } label: {
-                LockableLabel(isLocked: true) { label }
-            }
-            .accessibilityElement(children: .combine)
-            .lockedWhileNudging(true)
+            LockedValueRow(label: label, value: value)
         } else {
             NavigationLink(value: ReminderFormPage.repeat) {
                 LabeledContent { value } label: { label }
@@ -239,26 +233,15 @@ private struct RepeatRow: View {
 /// Gentle, Firm or Relentless, locked while nudging.
 private struct StrengthSection: View {
     @Bindable var form: ReminderForm
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        let isLocked = form.lockedFields.contains(.strength)
-        let label = Text("Strength", comment: "The reminder form's strength choice: Gentle, Firm or Relentless.")
-        Section {
-            Picker(selection: $form.strength) {
-                ForEach(Strength.formOrder, id: \.self) { strength in
-                    Text(strength.title).tag(strength)
-                }
-            } label: {
-                LockableLabel(isLocked: isLocked) { label }
-            }
-            .segmentedPickerStyle(isMenu: dynamicTypeSize.isAccessibilitySize)
-            .lockedWhileNudging(isLocked)
-        } header: {
-            if !dynamicTypeSize.isAccessibilitySize {
-                // VoiceOver reads the segments without the picker's label (device check, ticket
-                // 25), so the heading names them. At accessibility sizes the menu carries it.
-                LockableLabel(isLocked: isLocked) { label }
+        SegmentedChoiceSection(
+            label: Text("Strength", comment: "The reminder form's strength choice: Gentle, Firm or Relentless."),
+            selection: $form.strength,
+            isLocked: form.lockedFields.contains(.strength)
+        ) {
+            ForEach(Strength.formOrder, id: \.self) { strength in
+                Text(strength.title).tag(strength)
             }
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
@@ -270,41 +253,83 @@ private struct StrengthSection: View {
     }
 }
 
-/// Escalating or Consistent, and for Consistent the Every row's wait from the engine's list. The
-/// lock while nudging is ticket 08's.
+/// Escalating or Consistent, and for Consistent the Every row's wait from the engine's list.
+/// Both are locked while nudging.
 private struct PaceSection: View {
     @Bindable var form: ReminderForm
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        let label = Text("Pace", comment: "The reminder form's pace choice: Escalating or Consistent.")
-        Section {
-            Picker(selection: $form.paceChoice) {
-                ForEach(PaceChoice.allCases, id: \.self) { choice in
-                    Text(choice.title).tag(choice)
+        let isLocked = form.lockedFields.contains(.pace)
+        SegmentedChoiceSection(
+            label: Text("Pace", comment: "The reminder form's pace choice: Escalating or Consistent."),
+            selection: $form.paceChoice,
+            isLocked: isLocked
+        ) {
+            ForEach(PaceChoice.allCases, id: \.self) { choice in
+                Text(choice.title).tag(choice)
+            }
+        } rows: {
+            if form.paceChoice == .consistent {
+                EveryRow(form: form, isLocked: isLocked)
+            }
+        } footer: {
+            form.paceBlurb.text
+        }
+    }
+}
+
+/// A Consistent pace's wait. Locked, it is plain text without the menu's arrows.
+private struct EveryRow: View {
+    @Bindable var form: ReminderForm
+    let isLocked: Bool
+
+    var body: some View {
+        let label = Text("Every", comment: "The reminder form's row for a Consistent pace's wait between nudges, such as \"10 min\".")
+        if isLocked {
+            LockedValueRow(label: label, value: Text(verbatim: HowItNudgesDuration.text(form.consistentWait)))
+        } else {
+            Picker(selection: $form.consistentWait) {
+                ForEach(Pace.consistentWaits, id: \.self) { wait in
+                    Text(verbatim: HowItNudgesDuration.text(wait)).tag(wait)
                 }
             } label: {
                 label
             }
-            .segmentedPickerStyle(isMenu: dynamicTypeSize.isAccessibilitySize)
-            if form.paceChoice == .consistent {
-                Picker(selection: $form.consistentWait) {
-                    ForEach(Pace.consistentWaits, id: \.self) { wait in
-                        Text(verbatim: HowItNudgesDuration.text(wait)).tag(wait)
-                    }
-                } label: {
-                    Text("Every", comment: "The reminder form's row for a Consistent pace's wait between nudges, such as \"10 min\".")
-                }
-                .pickerStyle(.menu)
+            .pickerStyle(.menu)
+        }
+    }
+}
+
+/// A section that is one segmented choice, as Strength and Pace are: its label as the heading,
+/// the segments, any rows that follow them, and a footer. Locked while nudging, the heading and
+/// the label carry the `lock` and the segments are dimmed.
+private struct SegmentedChoiceSection<Selection: Hashable, Options: View, Rows: View, Footer: View>: View {
+    let label: Text
+    @Binding var selection: Selection
+    let isLocked: Bool
+    @ViewBuilder let options: () -> Options
+    @ViewBuilder let rows: () -> Rows
+    @ViewBuilder let footer: () -> Footer
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        Section {
+            Picker(selection: $selection) {
+                options()
+            } label: {
+                LockableLabel(isLocked: isLocked) { label }
             }
+            .segmentedPickerStyle(isMenu: dynamicTypeSize.isAccessibilitySize)
+            .lockedWhileNudging(isLocked)
+            rows()
         } header: {
             if !dynamicTypeSize.isAccessibilitySize {
-                // As Strength's: VoiceOver reads the segments without the picker's label, so the
-                // heading names them. At accessibility sizes the menu carries it.
-                label
+                // VoiceOver reads the segments without the picker's label (device check, ticket
+                // 25), so the heading names them. At accessibility sizes the menu carries it.
+                LockableLabel(isLocked: isLocked) { label }
             }
         } footer: {
-            form.paceBlurb.text
+            footer()
         }
     }
 }
@@ -343,6 +368,36 @@ private struct BreakThroughFocusSection: View {
     }
 }
 
+extension SegmentedChoiceSection where Rows == EmptyView {
+    /// A choice with no rows after its segments, as Strength is.
+    init(
+        label: Text,
+        selection: Binding<Selection>,
+        isLocked: Bool,
+        @ViewBuilder options: @escaping () -> Options,
+        @ViewBuilder footer: @escaping () -> Footer
+    ) {
+        self.init(label: label, selection: selection, isLocked: isLocked, options: options, rows: { EmptyView() }, footer: footer)
+    }
+}
+
+/// A row whose value is locked while nudging: plain text, without the arrows or chevron of the
+/// control it replaces, read by VoiceOver as one element with the lock's reason as its hint.
+private struct LockedValueRow: View {
+    let label: Text
+    let value: Text
+
+    var body: some View {
+        LabeledContent {
+            value
+        } label: {
+            LockableLabel(isLocked: true) { label }
+        }
+        .accessibilityElement(children: .combine)
+        .lockedWhileNudging(true)
+    }
+}
+
 /// A control's label, with the `lock` glyph after it while the field is locked.
 private struct LockableLabel<Content: View>: View {
     let isLocked: Bool
@@ -367,7 +422,7 @@ struct LockGlyph: View {
 
 extension View {
     /// The mockup's segmented control, which becomes a menu at accessibility sizes so the names
-    /// aren't cut short: Strength, and the Custom page's Frequency and Ends.
+    /// aren't cut short: Strength, Pace, and the Custom page's Frequency and Ends.
     @ViewBuilder
     func segmentedPickerStyle(isMenu: Bool) -> some View {
         if isMenu {
@@ -389,7 +444,7 @@ extension View {
 /// separate catalog string from the note because a hint can't carry its bold.
 enum LockNote {
     static let hint = LocalizedStringResource(
-        "Nudging now. Start, repeat, strength and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge.",
+        "Nudging now. Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge.",
         comment: "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging: the note at the top of the form, without its bold."
     )
 }

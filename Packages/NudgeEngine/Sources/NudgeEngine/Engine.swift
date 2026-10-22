@@ -22,6 +22,8 @@ public enum LockedField: Hashable, CaseIterable, Sendable {
     case dueTime
     case repeatRule
     case strength
+    /// Escalating or Consistent, and a Consistent pace's wait.
+    case pace
     case breakThroughFocus
 
     /// Whether `edited` gives this field a different value from `current`. Public so the form
@@ -31,7 +33,17 @@ public enum LockedField: Hashable, CaseIterable, Sendable {
         case .dueTime: current.dueTime != edited.dueTime
         case .repeatRule: current.repeatRule != edited.repeatRule
         case .strength: current.strength != edited.strength
+        case .pace: current.pace != edited.pace
         case .breakThroughFocus: current.breakThroughFocus != edited.breakThroughFocus
+        }
+    }
+
+    /// Whether changing this field moves the reminder's nudge times, so an accepted Edit of it
+    /// applies from the next occurrence. Break Through Focus changes only how nudges arrive.
+    var movesNudgeTimes: Bool {
+        switch self {
+        case .dueTime, .repeatRule, .strength, .pace: true
+        case .breakThroughFocus: false
         }
     }
 }
@@ -285,7 +297,7 @@ public struct Engine {
         guard let current = reminder(edited.id) else { return }
         let changed = lockedFields(of: edited.id).filter { $0.isChanged(from: current, to: edited) }
         guard changed.isEmpty else { throw .locked(changed) }
-        if [LockedField.dueTime, .repeatRule, .strength].contains(where: { $0.isChanged(from: current, to: edited) }) {
+        if LockedField.allCases.contains(where: { $0.movesNudgeTimes && $0.isChanged(from: current, to: edited) }) {
             let now = clock.now
             let latest = latestOccurrence(for: current.id)?.dueTime
             for dueTime in [latest].compactMap(\.self) + dueTimes(of: current, in: earliestListedDueTime...now) {
@@ -307,8 +319,8 @@ public struct Engine {
         applyPlan()
     }
 
-    /// The fields an Edit can't change now: all four while the reminder has a Nudging occurrence,
-    /// none otherwise. The form and the details screen read the lock from here, not their own rule.
+    /// The fields an Edit can't change now: every `LockedField` while the reminder has a Nudging
+    /// occurrence, none otherwise. The form and the details screen read the lock from here, not their own rule.
     public func lockedFields(of reminderID: Reminder.ID) -> Set<LockedField> {
         openOccurrence(for: reminderID) == nil ? [] : Set(LockedField.allCases)
     }
