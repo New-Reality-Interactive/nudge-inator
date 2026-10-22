@@ -52,6 +52,20 @@ struct HowItNudgesTests {
         #expect(rows.map(\.delivery) == deliveries)
     }
 
+    /// Every Relentless nudge is Urgent (ticket 05), so each row rings, or with alarms denied each
+    /// is a notification weakened for that reason. Its waits still split it into four rows until
+    /// a Consistent pace (ticket 07) folds it into the mockup's one.
+    @Test(arguments: [
+        (PermissionStates(alarms: .allowed), NudgeDelivery.alarm),
+        (PermissionStates(alarms: .denied), .notification(weakerBecause: .alarmsOff)),
+        (PermissionStates(alarms: .denied, timeSensitive: .off), .notification(weakerBecause: .alarmsAndTimeSensitiveOff)),
+    ])
+    func relentlessIsUrgentFromNudgeOne(permissions: PermissionStates, delivery: NudgeDelivery) {
+        let rows = engine(permissions: permissions).howItNudges(.relentless, breakThroughFocus: true).rows
+        #expect(rows.map(\.urgency) == [Urgency](repeating: .urgent, count: 4))
+        #expect(rows.map(\.delivery) == [NudgeDelivery](repeating: delivery, count: 4))
+    }
+
     @Test func breakThroughFocusOffSendsEveryNudgeAsAnOrdinaryNotification() {
         let rows = engine().howItNudges(.relentless, breakThroughFocus: false).rows
         #expect(rows.map(\.delivery) == [NudgeDelivery](repeating: .notification(weakerBecause: .breakThroughFocusOff), count: 4))

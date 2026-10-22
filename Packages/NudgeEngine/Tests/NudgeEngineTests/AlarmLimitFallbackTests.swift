@@ -8,8 +8,9 @@ import Testing
 /// scheduled", and the rest of the ladder stays.
 struct AlarmLimitFallbackTests {
     let dueTime = NewYork.local(2026, 10, 16)
-    let clock = FakeClock(now: NewYork.local(2026, 10, 16))
-    /// Room for 10 alarms. Relentless rings from nudge 4, 17 alarms, so nudges 14–20 overflow.
+    /// A minute before `bins` is due, so all its alarms are yet to ring.
+    let clock = FakeClock(now: NewYork.local(2026, 10, 16) - 60)
+    /// Room for 10 alarms. Relentless rings every nudge, 20 alarms, so nudges 11–20 overflow.
     let scheduler = FakeScheduler(alarmLimit: 10)
     let bins = Reminder(title: "Take the bins out", dueTime: NewYork.local(2026, 10, 16), strength: .relentless)
 
@@ -48,13 +49,13 @@ struct AlarmLimitFallbackTests {
         _ = engineWithBinsOverflowing()
         let items = try lastItems()
         #expect(items.count == 20)
-        #expect(items.filter { $0.nudgeNumber >= 14 }.allSatisfy { $0.deliveryKind == .timeSensitiveNotification })
-        #expect(items.filter { (4...13).contains($0.nudgeNumber) }.allSatisfy { $0.deliveryKind == .alarm })
+        #expect(items.filter { $0.nudgeNumber >= 11 }.allSatisfy { $0.deliveryKind == .timeSensitiveNotification })
+        #expect(items.filter { $0.nudgeNumber <= 10 }.allSatisfy { $0.deliveryKind == .alarm })
     }
 
     @Test func onlyTheOverflowNudgesCarryTheMarker() throws {
         _ = engineWithBinsOverflowing()
-        #expect(try lastItems().filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(14...20))
+        #expect(try lastItems().filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(11...20))
     }
 
     /// With alarms denied the nudge would not have rung anyway, so the reason it's a notification
@@ -70,8 +71,8 @@ struct AlarmLimitFallbackTests {
 
         engine.update(permissions: PermissionStates(alarms: .allowed))
         let allowed = try lastItems()
-        #expect(allowed.filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(14...20))
-        #expect(allowed.filter { (4...13).contains($0.nudgeNumber) }.allSatisfy { $0.deliveryKind == .alarm })
+        #expect(allowed.filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(11...20))
+        #expect(allowed.filter { $0.nudgeNumber <= 10 }.allSatisfy { $0.deliveryKind == .alarm })
     }
 
     /// Each fallback only changes how a nudge arrives, so together they still give one item per
@@ -90,12 +91,12 @@ struct AlarmLimitFallbackTests {
     /// The overflow nudge takes Urgent's fallback, so Time Sensitive off makes it ordinary and
     /// notifications denied leaves nothing to deliver it (ticket 14).
     @Test(arguments: [
-        (PermissionStates(timeSensitive: .off), [DeliveryKind](repeating: .notification, count: 7)),
+        (PermissionStates(timeSensitive: .off), [DeliveryKind](repeating: .notification, count: 10)),
         (PermissionStates(notifications: .denied), []),
     ])
     func overflowNudgesFollowTheOtherFallbacks(permissions: PermissionStates, kinds: [DeliveryKind]) throws {
         _ = engineWithBinsOverflowing(permissions: permissions)
-        let overflow = try lastItems().filter { $0.nudgeNumber >= 14 }
+        let overflow = try lastItems().filter { $0.nudgeNumber >= 11 }
         #expect(overflow.map(\.deliveryKind) == kinds)
         #expect(overflow.allSatisfy { $0.isPastAlarmLimit })
     }
@@ -114,10 +115,10 @@ struct AlarmLimitFallbackTests {
         #expect(scheduler.appliedPlans.count == 1)
     }
 
-    /// Nudge 1 is a notification, so it has no alarm to fail.
+    /// With alarms denied nudge 20 is a notification, so it has no alarm to fail.
     @Test func reportForANudgeThatIsNotAnAlarmIsIgnored() throws {
-        var engine = engine(holding: [bins])
-        engine.markAlarmLimitReached(bins.id, firingAt: try lastItems()[0].fireTime)
+        var engine = engine(permissions: PermissionStates(alarms: .denied), holding: [bins])
+        engine.markAlarmLimitReached(bins.id, firingAt: try lastItems()[19].fireTime)
         #expect(scheduler.appliedPlans.count == 1)
     }
 
@@ -145,7 +146,7 @@ struct AlarmLimitFallbackTests {
         var engine = engineWithBinsOverflowing()
         clock.now = try lastItems()[9].fireTime
         engine.update(reminders: [bins])
-        #expect(try lastItems().filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(14...20))
+        #expect(try lastItems().filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(11...20))
         #expect(scheduler.alarmsPastLimit(at: clock.now).isEmpty)
     }
 
@@ -166,11 +167,11 @@ struct AlarmLimitFallbackTests {
         engine.update(reminders: [bins])
         let items = try lastItems()
         #expect(items.allSatisfy { !$0.isPastAlarmLimit })
-        #expect(items.filter { $0.deliveryKind == .alarm }.map(\.nudgeNumber) == Array(4...20))
+        #expect(items.filter { $0.deliveryKind == .alarm }.map(\.nudgeNumber) == Array(1...20))
     }
 
     /// The record is per nudge. An occurrence whose ladder enters the plan after the reports
-    /// rings from nudge 4 as usual.
+    /// rings every nudge as usual.
     @Test func laterOccurrenceRingsAsAlarms() throws {
         let pills = Reminder(title: "Take the pills", dueTime: dueTime, repeatRule: .everyDay, strength: .relentless)
         var engine = engine(holding: [pills])
@@ -181,16 +182,16 @@ struct AlarmLimitFallbackTests {
         let dayAfter = try lastItems().filter { $0.fireTime >= NewYork.local(2026, 10, 18) }
         #expect(dayAfter.count == 20)
         #expect(dayAfter.allSatisfy { !$0.isPastAlarmLimit })
-        #expect(dayAfter.filter { $0.deliveryKind == .alarm }.map(\.nudgeNumber) == Array(4...20))
+        #expect(dayAfter.filter { $0.deliveryKind == .alarm }.map(\.nudgeNumber) == Array(1...20))
     }
 
     /// Moving a reminder that isn't nudging moves its ladder, so the old fire times say nothing
-    /// about the new nudges. Two minutes later, new nudges 13–19 land on old nudges 14–20.
+    /// about the new nudges. Two minutes later, new nudges 10–19 land on old nudges 11–20.
     @Test func editMovingTheLadderForgetsTheReports() throws {
         let later = Reminder(title: "Take the bins out", dueTime: NewYork.local(2026, 10, 17), strength: .relentless)
         var engine = engine(holding: [later])
         reportAlarmLimit(to: &engine)
-        #expect(try lastItems().filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(14...20))
+        #expect(try lastItems().filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(11...20))
 
         var moved = later
         moved.dueTime += 2 * 60
@@ -204,7 +205,7 @@ struct AlarmLimitFallbackTests {
         var renamed = bins
         renamed.title = "Bins out tonight"
         try engine.edit(renamed)
-        #expect(try lastItems().filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(14...20))
+        #expect(try lastItems().filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(11...20))
     }
 
     // The engine's own cap.
@@ -214,8 +215,8 @@ struct AlarmLimitFallbackTests {
     @Test func alarmsPastTheEnginesCapComeAsMarkedNotificationsWithoutAReport() throws {
         _ = engine(alarmLimit: AlarmLimit(pendingAlarms: 10), holding: [bins])
         let items = try lastItems()
-        #expect(items.filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(14...20))
-        #expect(items.filter { $0.deliveryKind == .alarm }.map(\.nudgeNumber) == Array(4...13))
+        #expect(items.filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(11...20))
+        #expect(items.filter { $0.deliveryKind == .alarm }.map(\.nudgeNumber) == Array(1...10))
     }
 
     /// Alarms that have rung hold no slot the engine counts, so the app opening mid-ladder fits
@@ -225,19 +226,19 @@ struct AlarmLimitFallbackTests {
         _ = engine(alarmLimit: AlarmLimit(pendingAlarms: 10), holding: [bins])
         let items = try lastItems()
         #expect(items.allSatisfy { !$0.isPastAlarmLimit })
-        #expect(items.filter { $0.deliveryKind == .alarm }.map(\.nudgeNumber) == Array(4...20))
+        #expect(items.filter { $0.deliveryKind == .alarm }.map(\.nudgeNumber) == Array(1...20))
     }
 
     /// Unlike the system's limit, the engine knows its own count, so a slot it frees is reused.
     @Test func engineCapGivesAlarmsBackWhenAnotherReminderGoes() throws {
         let cat = Reminder(title: "Feed the cat", dueTime: dueTime - 60, strength: .relentless)
-        var engine = engine(alarmLimit: AlarmLimit(pendingAlarms: 17), holding: [cat, bins])
+        var engine = engine(alarmLimit: AlarmLimit(pendingAlarms: 20), holding: [cat, bins])
         #expect(try lastItems().contains { $0.reminderID == bins.id && $0.isPastAlarmLimit })
 
         engine.delete(cat.id)
         let items = try lastItems()
         #expect(items.allSatisfy { !$0.isPastAlarmLimit })
-        #expect(items.filter { $0.deliveryKind == .alarm }.map(\.nudgeNumber) == Array(4...20))
+        #expect(items.filter { $0.deliveryKind == .alarm }.map(\.nudgeNumber) == Array(1...20))
     }
 
     /// Nudges past the cap that fired before a slot freed were delivered as notifications.
@@ -246,8 +247,8 @@ struct AlarmLimitFallbackTests {
         clock.now = try lastItems()[15].fireTime
         engine.update(reminders: [bins])
         let items = try lastItems()
-        #expect(items.filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(14...16))
-        #expect(items.filter { $0.deliveryKind == .alarm }.map(\.nudgeNumber) == Array(4...13) + Array(17...20))
+        #expect(items.filter(\.isPastAlarmLimit).map(\.nudgeNumber) == Array(11...16))
+        #expect(items.filter { $0.deliveryKind == .alarm }.map(\.nudgeNumber) == Array(1...10) + Array(17...20))
     }
 
     /// Which of two reminders ringing at the same times keeps its alarms doesn't depend on the
@@ -265,9 +266,9 @@ struct AlarmLimitFallbackTests {
 
     /// The shipped cap is the 4,000 pending alarms ticket 02 ("Summary for tickets 15, 19 and
     /// 20", point A) scheduled on an iPhone without `maximumLimitReached`. Each Relentless
-    /// reminder that isn't a repeat rings 17 times: 235 of them plan 3,995 alarms, 236 plan
-    /// 4,012, 12 past the cap.
-    @Test(arguments: [(235, 3_995, 0), (236, 4_000, 12)])
+    /// reminder that isn't a repeat rings 20 times: 200 of them plan 4,000 alarms, 201 plan
+    /// 4,020, 20 past the cap.
+    @Test(arguments: [(200, 4_000, 0), (201, 4_000, 20)])
     func shippedEnginePlansAtMostTheFourThousandAlarmsTicket02Measured(
         reminderCount: Int, alarmCount: Int, overflowCount: Int
     ) throws {

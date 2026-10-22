@@ -572,7 +572,7 @@ struct AlarmAdapterTests {
         ])
         await adapter.waitUntilApplied()
 
-        #expect(manager.scheduled.count == 17)
+        #expect(manager.scheduled.count == 20)
         for alarm in manager.scheduled {
             let presentation = alarm.attributes.presentation
             #expect(String(localized: presentation.alert.title) == "Take the pills")

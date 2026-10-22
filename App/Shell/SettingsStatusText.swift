@@ -37,6 +37,8 @@ extension FooterSentence {
             Text("Alarms are off, so Urgent nudges come as Time Sensitive notifications instead, which silent mode can mute.", comment: "Settings: footer under the Nudges rows, when alarms are off but Time Sensitive is on.")
         case .urgentIsOrdinary:
             Text("Urgent nudges come as ordinary notifications, which silent mode can mute and a Focus can hold.", comment: "Settings: footer under the Nudges rows, when neither alarms nor Time Sensitive can deliver Urgent nudges.")
+        case .relentlessIsUrgent:
+            Text("Every Relentless nudge is Urgent.", comment: "Settings: footer under the Nudges rows, after the sentence on how Urgent nudges arrive.")
         case .allowInFocus:
             Text("To get every nudge during a Focus, allow \(Bundle.appDisplayName) in that Focus. Nudges vibrate when your iPhone's settings allow it.", comment: "Settings: footer under the Nudges rows. The placeholder is the app's name.")
         case .changeInSettings:

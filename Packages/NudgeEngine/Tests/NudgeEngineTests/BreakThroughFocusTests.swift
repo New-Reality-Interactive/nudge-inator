@@ -20,8 +20,8 @@ struct BreakThroughFocusTests {
         return try #require(scheduler.lastPlan).items
     }
 
-    /// Nudges 1–20 in order, from the How It Nudges table's urgency rows. Relentless starts at
-    /// High, so it has no ordinary notifications; Gentle never reaches Urgent, so it never rings.
+    /// Nudges 1–20 in order, from the How It Nudges table's urgency rows. Relentless is Urgent
+    /// from nudge 1, so every nudge rings; Gentle never reaches Urgent, so it never rings.
     /// Typed and out of the macro: Swift 6.4 can't type-check this literal inline in `@Test`.
     static let deliveryKindsByStrength: [(Strength, [DeliveryKind])] = [
         (.gentle, [DeliveryKind](repeating: .notification, count: 4)
@@ -29,8 +29,7 @@ struct BreakThroughFocusTests {
         (.firm, [DeliveryKind](repeating: .notification, count: 2)
             + [DeliveryKind.timeSensitiveNotification]
             + [DeliveryKind](repeating: .alarm, count: 17)),
-        (.relentless, [DeliveryKind](repeating: .timeSensitiveNotification, count: 3)
-            + [DeliveryKind](repeating: .alarm, count: 17)),
+        (.relentless, [DeliveryKind](repeating: .alarm, count: 20)),
     ]
 
     @Test(arguments: deliveryKindsByStrength)

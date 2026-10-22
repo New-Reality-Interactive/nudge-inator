@@ -15,9 +15,9 @@ struct AppModelTests {
     let clock = FakeClock(now: NewYork.local(2026, 10, 15, 8))
     let center = FakeNotificationCenter()
     let manager = FakeAlarmManager()
-    /// Thursday 15 October 2026 at 9:00, once. Relentless sends nudges 1–3 at 9:00, 9:10 and 9:15
-    /// as Time Sensitive notifications, then rings nudges 4–20 as alarms from 9:17:30.
-    let call = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 9), strength: .relentless)
+    /// Thursday 15 October 2026 at 8:40, once. Firm sends nudges 1–3 at 8:40, 9:10 and 9:25 as
+    /// notifications, then rings nudges 4–20 as alarms from 9:32:30, so it reaches both adapters.
+    let call = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 8, 40), strength: .firm)
 
     /// A model before launch, as the app delegate builds it, over new adapters on the shared fakes.
     func model(store: ReminderStore) -> (model: AppModel, notifications: NotificationAdapter) {
@@ -51,7 +51,7 @@ struct AppModelTests {
         )
     }
 
-    @Test func aRelentlessReminderReachesBothAdaptersAndDoneClearsThemAndIsSaved() async throws {
+    @Test func aFirmReminderReachesBothAdaptersAndDoneClearsThemAndIsSaved() async throws {
         let store = try ReminderStore(location: .inMemory)
         let model = await launchedModel(store: store)
 
@@ -113,10 +113,11 @@ struct AppModelTests {
         await model.waitUntilApplied()
     }
 
+    /// Every Relentless nudge is Urgent, so all 20 come back as Time Sensitive notifications.
     @Test func alarmsDeniedInSettingsReplanTheUrgentNudgesAsTimeSensitiveNotifications() async throws {
         manager.authorizationState = .authorized
         let model = await launchedModel(store: try ReminderStore(location: .inMemory))
-        model.add(call)
+        model.add(Reminder(title: "Pay rent", dueTime: NewYork.local(2026, 10, 15, 9), strength: .relentless))
         await model.waitUntilApplied()
 
         manager.changeAuthorization(to: .denied)
@@ -290,7 +291,7 @@ struct AppModelTests {
         #expect(try store.load() == StoredData(reminders: [], tags: [], histories: [:]))
     }
 
-    /// Ticket 30. A Relentless reminder (3 requests, 17 alarms), a Done one with history, a tag and a
+    /// Ticket 30. A Firm reminder (3 requests, 17 alarms), a Done one with history, a tag and a
     /// test nudge: afterwards the store, the engine, the center and the alarm manager are all empty.
     @Test func deleteAllDataEmptiesTheStoreTheEngineAndBothAdapters() async throws {
         let store = try ReminderStore(location: .inMemory)
@@ -599,8 +600,8 @@ struct AppModelTests {
         let model = await launchedModel(store: store)
         model.add(call)
         await model.waitUntilApplied()
-        let ringing = try #require(manager.scheduled.first { $0.fireDate == NewYork.local(2026, 10, 15, 9, 17, 30) })
-        clock.now = NewYork.local(2026, 10, 15, 9, 18)
+        let ringing = try #require(manager.scheduled.first { $0.fireDate == NewYork.local(2026, 10, 15, 9, 32, 30) })
+        clock.now = NewYork.local(2026, 10, 15, 9, 33)
         manager.ring(ringing.id)
 
         await model.open(alarmID: ringing.id, reminderID: call.id)
@@ -623,8 +624,8 @@ struct AppModelTests {
         let model = await launchedModel(store: try ReminderStore(location: .inMemory))
         model.add(call)
         await model.waitUntilApplied()
-        let ringing = try #require(manager.scheduled.first { $0.fireDate == NewYork.local(2026, 10, 15, 9, 17, 30) })
-        clock.now = NewYork.local(2026, 10, 15, 9, 18)
+        let ringing = try #require(manager.scheduled.first { $0.fireDate == NewYork.local(2026, 10, 15, 9, 32, 30) })
+        clock.now = NewYork.local(2026, 10, 15, 9, 33)
         manager.ring(ringing.id)
         let intent = OpenReminderIntent(alarmID: ringing.id, reminderID: call.id)
         intent.opener = model.alarmOpener

@@ -26,11 +26,16 @@ struct StrengthBlurb: Equatable {
     var text: Text {
         let first = HowItNudgesDuration.text(firstWait)
         let shortest = HowItNudgesDuration.text(floor)
-        if let firstAlarm {
+        switch firstAlarm {
+        case 1?:
+            return Text("Every \(first) at first, down to every \(shortest). Every nudge rings as an alarm.",
+                        comment: "Under the reminder form's strength, when every nudge rings, as Relentless's do. 1: the wait after the first nudge, such as \"10 min\". 2: the shortest wait.")
+        case let firstAlarm?:
             return Text("Every \(first) at first, down to every \(shortest). Rings as an alarm from nudge \(firstAlarm).",
                         comment: "Under the reminder form's strength. 1: the wait after the first nudge, such as \"30 min\". 2: the shortest wait. 3: the first nudge that rings as an alarm.")
+        case nil:
+            return Text("Every \(first) at first, down to every \(shortest). Never rings as an alarm.",
+                        comment: "Under the reminder form's strength, when none of its nudges rings. 1: the wait after the first nudge, such as \"1 hr\". 2: the shortest wait.")
         }
-        return Text("Every \(first) at first, down to every \(shortest). Never rings as an alarm.",
-                    comment: "Under the reminder form's strength, when none of its nudges rings. 1: the wait after the first nudge, such as \"1 hr\". 2: the shortest wait.")
     }
 }

@@ -70,8 +70,8 @@ final class OnboardingTests {
     /// plan's alarms wait, so no `schedule` can raise AlarmKit's own prompt; its answer re-plans
     /// them, and the banners' `reach` follows.
     @Test(arguments: [
-        (UNAuthorizationStatus.authorized, AlarmManager.AuthorizationState.authorized, 17, DeliveryKind?.some(.notification), DeliveryKind?.some(.alarm)),
-        (.denied, .authorized, 17, nil, .alarm),
+        (UNAuthorizationStatus.authorized, AlarmManager.AuthorizationState.authorized, 20, DeliveryKind?.some(.notification), DeliveryKind?.some(.alarm)),
+        (.denied, .authorized, 20, nil, .alarm),
         (.authorized, .denied, 0, .notification, .notification),
     ])
     func theAnswersReachThePlan(

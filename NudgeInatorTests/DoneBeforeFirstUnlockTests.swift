@@ -17,8 +17,8 @@ final class DoneBeforeFirstUnlockTests {
     let store: ReminderStore
     /// Data protection keeps the store shut until the first unlock.
     var storeIsShut = false
-    /// Thursday 15 October 2026 at 9:00, once. Relentless sends nudges 1–3 at 9:00, 9:10 and 9:15
-    /// as Time Sensitive notifications, then rings nudges 4–20 as alarms from 9:17:30.
+    /// Thursday 15 October 2026 at 9:00, once. Relentless rings all 20 nudges as alarms: 9:00,
+    /// 9:10, 9:15, 9:17:30, then every 2 min.
     let call = Reminder(title: "Call the bank", notes: "Ask about the fee", dueTime: NewYork.local(2026, 10, 15, 9), strength: .relentless)
 
     struct StoreIsShut: Error {}
@@ -89,7 +89,7 @@ final class DoneBeforeFirstUnlockTests {
     /// The model has no reminders to plan from, so the adapters find the occurrence's nudges by
     /// their identifiers. The other reminder's stay.
     @Test func aDoneWhileTheStoreIsShutStopsItsOccurrencesNudges() async throws {
-        let plants = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 15, 10), strength: .relentless)
+        let plants = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 15, 10), strength: .firm)
         let (model, notifications, first) = try await restartedBeforeTheFirstUnlock(with: [call, plants])
 
         await chooseDone(on: notifications)
@@ -98,7 +98,7 @@ final class DoneBeforeFirstUnlockTests {
         #expect(!center.pending.isEmpty)
         #expect(center.pending.allSatisfy { NotificationAdapter.deliveredNudge(in: $0.content.userInfo)?.reminderID == plants.id })
         #expect(manager.scheduled.count == 17)
-        #expect(manager.cancelledIDs.count == 17)
+        #expect(manager.cancelledIDs.count == 20)
         withExtendedLifetime(first) {}
     }
 

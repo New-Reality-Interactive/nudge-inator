@@ -60,7 +60,7 @@ struct RepeatTakeOverTests {
     @Test(arguments: [
         (Strength.gentle, Urgency.normal),
         (.firm, .normal),
-        (.relentless, .high),
+        (.relentless, .urgent),
     ])
     func theOldLadderStopsWhereTheNewOccurrenceStartsAtNudgeOne(strength: Strength, lowestUrgency: Urgency) throws {
         var reminder = pills

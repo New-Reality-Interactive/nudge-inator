@@ -16,11 +16,13 @@ struct HowItNudgesSummaryTests {
         // Gentle's and Firm's Normal nudges are ordinary notifications, which a Focus holds.
         (Strength.gentle, true, PermissionStates(alarms: .allowed), [HowItNudgesSentence.givesUp(nudges: 20, after: 29044), .allNotifications(nudges: 20), .focusHoldsNormal]),
         (.firm, true, PermissionStates(alarms: .allowed), [.givesUp(nudges: 20, after: 8250), .notificationsThenAlarms(alarms: 4...20), .focusHoldsNormal]),
-        // Relentless starts at High, so nothing waits.
-        (.relentless, true, PermissionStates(alarms: .allowed), [.givesUp(nudges: 20, after: 3090), .notificationsThenAlarms(alarms: 4...20)]),
+        // Every Relentless nudge rings, so nothing waits.
+        (.relentless, true, PermissionStates(alarms: .allowed), [.givesUp(nudges: 20, after: 3090), .allRing(nudges: 20)]),
+        (.relentless, true, PermissionStates(alarms: .denied), [.givesUp(nudges: 20, after: 3090), .allNotifications(nudges: 20), .urgentIsTimeSensitive]),
         (.firm, true, PermissionStates(alarms: .denied), [.givesUp(nudges: 20, after: 8250), .allNotifications(nudges: 20), .urgentIsTimeSensitive, .focusHoldsNormal]),
         (.firm, true, PermissionStates(alarms: .denied, timeSensitive: .off), [.givesUp(nudges: 20, after: 8250), .allNotifications(nudges: 20), .urgentIsOrdinary, .focusHoldsEveryNotification]),
-        (.relentless, true, PermissionStates(alarms: .allowed, timeSensitive: .off), [.givesUp(nudges: 20, after: 3090), .notificationsThenAlarms(alarms: 4...20), .focusHoldsEveryNotification]),
+        (.relentless, true, PermissionStates(alarms: .allowed, timeSensitive: .off), [.givesUp(nudges: 20, after: 3090), .allRing(nudges: 20)]),
+        (.relentless, true, PermissionStates(notifications: .denied, alarms: .allowed), [.givesUp(nudges: 20, after: 3090), .allRing(nudges: 20)]),
         (.firm, true, PermissionStates(notifications: .denied, alarms: .allowed), [.givesUp(nudges: 20, after: 8250), .cannotArriveUntilAlarms(alarms: 4...20)]),
         (.gentle, true, PermissionStates(notifications: .denied, alarms: .allowed), [.givesUp(nudges: 20, after: 29044), .noneCanArrive]),
         (.relentless, false, PermissionStates(alarms: .allowed), [.givesUp(nudges: 20, after: 3090), .allNotifications(nudges: 20), .focusHoldsEveryNudge]),

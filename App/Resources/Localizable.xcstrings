@@ -669,6 +669,17 @@
     "Enter a name for the tag." : {
       "comment" : "Tag sheet: shown when what was typed leaves no name, such as only a #."
     },
+    "Every %@ at first, down to every %@. Every nudge rings as an alarm." : {
+      "comment" : "Under the reminder form's strength, when every nudge rings, as Relentless's do. 1: the wait after the first nudge, such as \"10 min\". 2: the shortest wait.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Every %1$@ at first, down to every %2$@. Every nudge rings as an alarm."
+          }
+        }
+      }
+    },
     "Every %@ at first, down to every %@. Never rings as an alarm." : {
       "comment" : "Under the reminder form's strength, when none of its nudges rings. 1: the wait after the first nudge, such as \"1 hr\". 2: the shortest wait.",
       "localizations" : {
@@ -791,6 +802,9 @@
     },
     "Every Month" : {
       "comment" : "Repeat preset, on the Repeat page and the form's Repeat row."
+    },
+    "Every Relentless nudge is Urgent." : {
+      "comment" : "Settings: footer under the Nudges rows, after the sentence on how Urgent nudges arrive."
     },
     "Every Week" : {
       "comment" : "Repeat preset, on the Repeat page and the form's Repeat row."
