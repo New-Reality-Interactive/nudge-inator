@@ -4,14 +4,14 @@
 
 **Blocked by:** 04.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] Engine: every nudge of a Relentless reminder is Urgent, and its fire times are unchanged.
 - [x] Engine: with alarms denied, Relentless nudges arrive as Time Sensitive notifications, or ordinary ones when Time Sensitive is off; past the alarm limit they fall back the same way, marked "too many alarms scheduled".
 - [x] How It Nudges and the strength line show Relentless as alarms from nudge 1, matching the proposed mockup.
 - [x] The strength line for Relentless reads "Every nudge rings as an alarm.", and Settings' footer under Nudges gains "Every Relentless nudge is Urgent." (proposed mockup README items 3 and 14).
 - [x] Simulators (26.5 and 27.x): How It Nudges and the form show the change in portrait, landscape and large text.
-- [ ] Offered to Brian, after the simulator pass: on an iPhone, a Relentless reminder's first nudge rings as an alarm at its due time (phone and iOS version recorded).
+- [x] Offered to Brian, after the simulator pass: on an iPhone, a Relentless reminder's first nudge rings as an alarm at its due time (phone and iOS version recorded).
 
 ## Before you start
 
@@ -33,3 +33,5 @@
 **2026-10-21, banner half of a criterion moved to ticket 06, agreed with Brian.** The criterion read "How It Nudges and the strength line show Relentless as alarms from nudge 1, matching the proposed mockup, and the reach the banners describe stays true." The mockup's new banner words (items 15 and 16) say every Relentless nudge rings, or falls back as Urgent nudges do. That holds only once a Relentless reminder breaks through Focus whatever its stored switch says (ticket 06): until then one saved with the switch off sends ordinary notifications. So the banners keep their current words here, which stay true, and ticket 06 takes the new words and that half of the criterion.
 
 **2026-10-21, simulator check.** `scripts/screenshots.sh` on `iPhone 15 Pro - iOS 26.5` and `iPhone 15 - iOS 27.0`, in portrait, landscape and the largest text size. A new walk step, `form-new-relentless`, opens the form on Relentless: at accessibility sizes it opens the Strength menu, and it takes eight pages so the largest text reaches the last How It Nudges row. The strength line reads "Every 10 min at first, down to every 2 min. Every nudge rings as an alarm.", every How It Nudges row reads Urgent and Alarm, in the form and on Settings' How It Nudges page, with "All 20 nudges ring as alarms." under them. Settings' footer has "Every Relentless nudge is Urgent." after the Urgent sentence. Nothing clipped or overlapped.
+
+**2026-10-22, device check, iPhone 15, iOS 27.0.1.** Brian took the run. A Relentless reminder due at 6:45 am, with Break Through Focus on and silent mode on, rang as a full alarm at 6:45 am: nudge 1 is an alarm. The alarm's Open showed the reminder's details. The app wasn't installed before, so after Brian deleted the reminder it was uninstalled again, and the phone is back as it was.
