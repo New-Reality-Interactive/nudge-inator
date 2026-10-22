@@ -52,7 +52,8 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
 10. `git switch main && git pull`, check the merge commit is there, and delete the local branch
     with `git branch -d`. If the ticket went sideways, suggest `/retro` before `/clear`.
 11. Find the next ticket: the lowest-numbered open ticket in the feature whose `Blocked by`
-    tickets are all resolved. If none is left, say the feature is done.
+    tickets are all resolved. If none is left, the feature is ready to release: follow
+    `issue-tracker.md`, Features and versions, and tell the developer which steps are theirs.
 12. Write its **Before you start** into the ticket, uncommitted (the ticket's own branch commits
     it), and give the developer one line, then stop:
 

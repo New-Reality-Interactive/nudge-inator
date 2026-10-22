@@ -1,4 +1,5 @@
 Status: ready-for-agent
+Version: 1.1.0
 
 # Nudge-inator enhancement: pace
 

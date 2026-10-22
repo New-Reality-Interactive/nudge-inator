@@ -21,7 +21,10 @@ if match and match.group(1) != "-":
         path = shlex.split(match.group(1))[0]
         body += open(path).read()
     except (OSError, ValueError, IndexError):
-        pass
+        # A path with a shell variable can't be read here.
+        print(f"Can't read the PR body file {match.group(1)}: give its literal path, in a command of "
+              "its own.", file=sys.stderr)
+        sys.exit(2)
 
 missing = [s for s in ("## Summary", "## Evidence", "## Merge Danger") if s not in body]
 if missing:
