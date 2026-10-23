@@ -4,13 +4,13 @@
 
 **Blocked by:** 09.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] The page's section for each strength shows its nudges under the Default pace, read from the engine.
 - [x] Changing the Default pace changes the page the next time it is shown.
 - [x] The page's intro reads "Below is how each strength nudges a new reminder at your Default Pace, <pace>, with Break Through Focus on.", naming the current Default Pace ("Consistent · 10 min").
 - [x] Simulators (26.5 and 27.x): the page under both paces in portrait, landscape and large text, as in the proposed mockup.
-- [ ] Offered to Brian, after the simulator pass: the page on an iPhone (phone and iOS version recorded).
+- [x] Offered to Brian, after the simulator pass: the page on an iPhone (phone and iOS version recorded).
 
 ## Before you start
 
@@ -27,4 +27,6 @@
 **2026-10-23, beyond the criteria.** The walk's `testSettings` puts the Default Pace back to Consistent · 10 min after the 30 min shot, shoots `settings-how-it-nudges` there, then chooses Escalating and shoots `settings-how-it-nudges-escalating`. Before, the page was shot in 4 pages, which at the largest text never got past the welcome's points, and in landscape on iOS 27.0 stopped at Firm. `shot` gained `stopsAtEnd`: `pages` becomes a limit (40 here), and it stops once a page matches one of the two before it, since at the end a scroll expands or collapses the tab bar and the last pages alternate. A rolled-over status-bar minute can leave a few extra end pages; none are lost. `scripts/mockup-shots.py` gained `settings-how-it-nudges-escalating`.
 
 **2026-10-23, simulators passed.** `scripts/screenshots.sh` with `SHOTS_TESTS="testSettings"` on iPhone 15 Pro (iOS 26.5) and iPhone 15 (iOS 27.0), in portrait, landscape and the largest text size. Under Consistent · 10 min the intro reads "…at your Default Pace, Consistent · 10 min, with Break Through Focus on." and the rows fold (Gentle "Nudges 1–4 when due, every 10 min", Relentless one Urgent row); under Escalating it names Escalating and shows each strength's own waits. Every section and summary is shot to the end of Relentless in each variant, and paired with the mockup's page (item 13) it matches. During the 26.5 landscape run the simulator's SpringBoard crashed once (a segfault in Apple's process, not the app); every shot was still taken.
+
+**2026-10-23, device check passed.** On Brian's iPhone (iPhone 15, iOS 27.0.1), from a fresh install. At the shipped Consistent · 10 min, How It Nudges read "Below is how each strength nudges a new reminder at your Default Pace, Consistent · 10 min, with Break Through Focus on.", Gentle showed "Nudges 1–4 when due, every 10 min" then "Nudges 5–20 at +40 min", and Relentless one row, "Nudges 1–20 when due", Urgent, Alarm. After choosing Escalating on the Default Pace page, the page named Escalating, Gentle began "Nudge 1 when due, then waits 1 hr", and Relentless ended "Nudges 4–20 at +17 min, 30 sec, every 2 min", 20 nudges over 51 min, 30 sec. No reminders were made, so no alarms were scheduled. The app wasn't installed before the run, so it was uninstalled afterwards.
 
