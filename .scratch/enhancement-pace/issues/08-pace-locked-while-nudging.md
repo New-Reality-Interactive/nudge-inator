@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] Engine: pace is a locked field while an occurrence is Nudging; an edit switching Escalating and Consistent, or changing the wait, is rejected; it is allowed again once the occurrence closes.
-- [ ] Form: the Pace and Every rows of a Nudging reminder are locked as in the proposed mockup, and the other editable fields (title, notes, tags) still save.
-- [ ] The lock note, in the form and on reminder details, reads "Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them."
-- [ ] Simulators (26.5 and 27.x): the locked rows in portrait, landscape and large text.
+- [x] Engine: pace is a locked field while an occurrence is Nudging; an edit switching Escalating and Consistent, or changing the wait, is rejected; it is allowed again once the occurrence closes.
+- [x] Form: the Pace and Every rows of a Nudging reminder are locked as in the proposed mockup, and the other editable fields (title, notes, tags) still save.
+- [x] The lock note, in the form and on reminder details, reads "Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them."
+- [x] Simulators (26.5 and 27.x): the locked rows in portrait, landscape and large text.
 - [ ] VoiceOver reads the locked rows as the other locked rows read.
 - [ ] Offered to Brian, after the simulator pass: on an iPhone, a Nudging reminder's Pace row can't be changed (phone and iOS version recorded).
 
@@ -22,3 +22,8 @@
 ## Comments
 
 **2026-10-21, criteria from the proposed mockup.** Added with Brian's agreement after ticket 03, for text and behaviour the approved mockup settled that this ticket didn't name: the lock note naming pace. Detail: `docs/mockups/2026-10-21-proposed-pace/README.md`, items 7.
+
+**2026-10-22, built.** `LockedField.pace` compares the whole `Pace`, so a switch between Escalating and Consistent and a change of the Consistent wait are both rejected while Nudging (`LockWhileNudgingTests`). One change beyond the criteria: an accepted pace Edit now applies from the next occurrence, as a strength Edit does (`LockedField.movesNudgeTimes`). Without it, a slower pace saved after Missed reopened today's occurrence and locked the reminder again, a gap left by ticket 07 (`anEditToASlowerPaceAfterMissedLeavesTheOccurrenceMissed` failed without it). The form's `restoreLockedFields` puts back both `paceChoice` and `consistentWait` (`ReminderFormTests`). Strength and Pace now share `SegmentedChoiceSection`, the heading-and-menu code ticket 07b's review left for this ticket. Repeat and Every share `LockedValueRow`. The as-built mockup (`docs/mockups/2026-10-21-as-built/`) keeps the four-field lock note: it records 1.0.0 as shipped. Left as they were after review: the VoiceOver hint stays the whole lock note on each locked field, as since ticket 13. Apple's docs ask for a brief hint, but say nothing about disabled controls, so the hint's wording is left for the VoiceOver check.
+
+**2026-10-22, simulators passed.** `scripts/screenshots.sh` on iPhone 15 Pro (iOS 26.5) and iPhone 15 (iOS 27.0), in portrait, landscape and the largest text size. The Pace heading and the Every row carry the lock. The segments are dimmed, and Every reads "30 min" as plain text. At the largest size Pace is a dimmed menu, with the lock on its label. The form's top note and the details' Schedule footer name pace. At the largest size, the walk's four pages of `form-edit-locked` stopped at Repeat, so it now takes nine.
+
