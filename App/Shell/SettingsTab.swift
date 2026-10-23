@@ -117,8 +117,8 @@ struct SettingsTab: View {
                 SettingsRow(
                     tile: .tileGray,
                     symbol: "clock",
-                    title: Text("Default Pace", comment: "Settings: row that opens the page setting the pace every new reminder starts with. Beside it, that pace, such as \"Consistent · 10 min\"."),
-                    status: Text(defaultPace.wrappedValue.pace.title)
+                    title: Text("Default Pace", comment: "Settings: row that opens the page setting the pace every new reminder starts with. Under it, that pace, such as \"Consistent · 10 min\"."),
+                    value: Text(defaultPace.wrappedValue.pace.title)
                 )
             }
             NavigationLink {

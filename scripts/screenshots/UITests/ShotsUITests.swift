@@ -202,7 +202,13 @@ final class ShotsUITests: XCTestCase {
         shot("settings", pages: 2)
         tapText("Default Pace")
         shot("settings-default-pace")
+        // A new wait, which the row under the label shows on return.
+        // The row's button, "Every, 10 min": a tap on its "Every" text doesn't open the menu.
+        tapButton(containing: "Every, ", inSheet: true)
+        // Without scrolling to the top first, which would close the menu.
+        tapText("30 min", inSheet: true)
         back()
+        shot("settings-default-pace-30-min")
         tapText("How It Nudges")
         shot("settings-how-it-nudges", pages: 4)
     }

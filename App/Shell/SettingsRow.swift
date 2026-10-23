@@ -1,13 +1,17 @@
 import SwiftUI
 
-/// DESIGN.md's Settings row: an icon tile, the label in body, and a trailing status, chevron or both.
-/// The tile is decoration, so VoiceOver reads the label and the status as one element. Stacked at
-/// accessibility sizes, where beside each other the pieces would leave a few letters of width.
+/// DESIGN.md's Settings row: an icon tile, the label in body, and a trailing status or chevron. A
+/// row that opens a page to set a value, as Default Pace does, shows the value under the label
+/// instead, so it never shares the line with it. The tile is decoration, so VoiceOver reads the
+/// label, the value and the status as one element. Stacked at accessibility sizes, where beside
+/// each other the pieces would leave a few letters of width.
 struct SettingsRow: View {
     let tile: Color
     let symbol: String
     let title: Text
     var titleColor: Color = Color(uiColor: .label)
+    /// Under the label, such as "Consistent · 10 min".
+    var value: Text?
     var status: Text?
     var statusIsNegative = false
     var showsChevron = false
@@ -36,12 +40,17 @@ struct SettingsRow: View {
                 .frame(width: scaledTile, height: scaledTile)
                 .background(RoundedRectangle(cornerRadius: Design.Radius.token).fill(tile))
                 .accessibilityHidden(true)
-            title
-                .font(.body)
-                .foregroundStyle(titleColor)
-            // The row's spacing already keeps the title and status apart, so "Default Pace" and
-            // "Consistent · 10 min" fit on one line each at the default size.
-            if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
+            VStack(alignment: .leading, spacing: Design.Spacing.s1) {
+                title
+                    .font(.body)
+                    .foregroundStyle(titleColor)
+                if let value {
+                    value
+                        .font(.body)
+                        .foregroundStyle(Color(uiColor: .secondaryLabel))
+                }
+            }
+            if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: Design.Spacing.s3) }
             if let status {
                 status
                     .font(.body)

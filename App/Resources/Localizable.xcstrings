@@ -578,7 +578,7 @@
       "comment" : "The Custom repeat page's frequency."
     },
     "Default Pace" : {
-      "comment" : "Settings: row that opens the page setting the pace every new reminder starts with. Beside it, that pace, such as \"Consistent · 10 min\".\nTitle of the page in Settings that sets the pace every new reminder starts with."
+      "comment" : "Settings: row that opens the page setting the pace every new reminder starts with. Under it, that pace, such as \"Consistent · 10 min\".\nTitle of the page in Settings that sets the pace every new reminder starts with."
     },
     "Delete" : {
       "comment" : "Settings: confirms deleting every reminder, tag and all history.\nTags: confirms deleting the tag. The reminders that have it are kept."

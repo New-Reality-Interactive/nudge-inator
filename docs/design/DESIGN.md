@@ -386,8 +386,10 @@ except in the tab and navigation bars. Verify names against the mockup.
 
 ### Settings row
 - Icon tile, label in `{typography.body}`, trailing status in `{colors.secondary-label}` (or
-  `{colors.negative}` when off), a chevron, or both for a row that opens a page and shows its
-  value (Default Pace: "Consistent · 10 min"). Tile colors are listed under Colors.
+  `{colors.negative}` when off) or a chevron. A row that opens a page to set a value shows the
+  value under the label in `{typography.body}` `{colors.secondary-label}`, with the chevron
+  (Default Pace: "Consistent · 10 min"), so it never shares the line with the label. Tile colors
+  are listed under Colors.
 
 ### Swipe actions
 - **Token:** `swipe-done`. Trailing swipe shows Done: green tile, white `checkmark` and the word
