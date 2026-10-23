@@ -334,6 +334,19 @@ private struct SegmentedChoiceSection<Selection: Hashable, Options: View, Rows: 
     }
 }
 
+extension SegmentedChoiceSection where Rows == EmptyView {
+    /// A choice with no rows after its segments, as Strength is.
+    init(
+        label: Text,
+        selection: Binding<Selection>,
+        isLocked: Bool,
+        @ViewBuilder options: @escaping () -> Options,
+        @ViewBuilder footer: @escaping () -> Footer
+    ) {
+        self.init(label: label, selection: selection, isLocked: isLocked, options: options, rows: { EmptyView() }, footer: footer)
+    }
+}
+
 /// The Break Through Focus switch, locked while nudging. Relentless shows it on and dimmed, with
 /// a footnote saying why (spec stories 30 and 45).
 private struct BreakThroughFocusSection: View {
@@ -365,19 +378,6 @@ private struct BreakThroughFocusSection: View {
                      comment: "Under Break Through Focus when it's off.")
             }
         }
-    }
-}
-
-extension SegmentedChoiceSection where Rows == EmptyView {
-    /// A choice with no rows after its segments, as Strength is.
-    init(
-        label: Text,
-        selection: Binding<Selection>,
-        isLocked: Bool,
-        @ViewBuilder options: @escaping () -> Options,
-        @ViewBuilder footer: @escaping () -> Footer
-    ) {
-        self.init(label: label, selection: selection, isLocked: isLocked, options: options, rows: { EmptyView() }, footer: footer)
     }
 }
 
