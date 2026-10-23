@@ -4,7 +4,7 @@
 
 **Blocked by:** none.
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 Found during ticket 06's simulator check, in `scripts/screenshots.sh` screenshots on `iPhone 15 Pro - iOS 26.5` and `iPhone 15 - iOS 27.0` at the largest text size (AX5), 2026-10-22. Brian asked for this ticket.
 
@@ -18,8 +18,30 @@ The banner (`App/Permissions/PermissionBannerView.swift`) puts the button in the
 
 DESIGN.md's Permission banner: "**Open Settings** as a small bordered button." Its label should read whole at every text size.
 
-- [ ] At AX5, in portrait and landscape, each banner's Open Settings label reads whole, with no truncation (simulator screenshots on both simulators: `scripts/screenshots.sh`, the `banner-*` screens).
-- [ ] The other uses of `SmallBorderedButtonStyle` are checked at AX5, and fixed too if they truncate.
-- [ ] At the default size the banners are unchanged (screenshots compared with the proposed mockup).
+At accessibility text sizes the banner puts its icon above the text, with `SizeAdaptiveStack`, as Tags' rows do in Edit mode, so the text and Open Settings get the banner's full width, and the button's label wraps if it still doesn't fit. DESIGN.md's Permission banner says so.
+
+- [ ] At AX5, in portrait and landscape, each banner's Open Settings label reads whole, with no truncation. Shot on both simulators with `SHOTS_TESTS="testNotificationsOff testAlarmsOff testTimeSensitiveOff"` and `SHOTS_VARIANTS="largest-text largest-text-landscape"`; Brian looks at the `banner-*` shots.
+- [ ] The other uses of `SmallBorderedButtonStyle` read whole at AX5, in the same shots of `testTags` (`tags-edit`, Rename) and `testMyDay` (`myday`, Done). `DoneSlot` only wraps them; Now's Done button has its own style.
+- [ ] At the default size the banners are unchanged: the `banner-*` shots from this branch look the same as from `main`.
+
+## Before you start
+
+- Builds on: ticket 11: `scripts/screenshots.sh` now has an opt-in `largest-text-landscape` variant (`SHOTS_VARIANTS="portrait landscape largest-text largest-text-landscape"`), which this ticket's first criterion needs; the default variants shoot AX5 in portrait only. Ticket 11's AX5 shots (its Comments, 2026-10-23) showed My Day's Done button, which uses `SmallBorderedButtonStyle`, reading whole on its own line, so that use may already pass the second criterion; check it again rather than assume. `SizeAdaptiveStack` (`App/Design/SizeAdaptiveStack.swift`) is the repo's way to stack a row at accessibility sizes, and drops a `Spacer` there as `SettingsRow` does.
+- Watch for: on the `iPhone 15 - iOS 27.0` simulator in `largest-text-landscape`, `testMyDay` can't find the bar's Filter button, so `myday-filter` isn't shot there and that run reports FAIL; the phone shows the button works (ticket 11's Comments). Shoot only the tests you need with `SHOTS_TESTS` and a `SHOTS_OUT` of its own.
+- Developer stops: agree the `tdd` seams (likely none: a layout fix inside the view, so say so); the simulator pass with `scripts/screenshots.sh`, portrait and landscape, AX5 and the default size against the proposed mockup; then the offer of an iPhone run.
 
 ## Comments
+
+### 2026-10-23: triage
+
+- Still reproduces on `main` at AX5, portrait, on both simulators: `banner-notifications-off-4` and `banner-alarms-off-3` read "Open…". Tags' Rename reads whole there, because its row already stacks at accessibility sizes.
+- Brian chose to stack the banner at accessibility sizes (icon above the text) over letting the label wrap inside the capsule, and agreed the criteria above: the screenshot runs named, the other uses listed, and "unchanged" measured against `main`'s shots, as ticket 11 did. Status `ready-for-agent`.
+- No `tdd` seam: a layout change inside the view, checked with screenshots.
+
+### 2026-10-23: the fix, and the simulator pass
+
+- Stacking alone wasn't enough: with the full width, AX5 portrait still read "Open Setti…". Brian then chose to stack and let the label wrap ("Open / Settings" on two lines). `.fixedSize(horizontal: false, vertical: true)` sits on the button, after its style, so the capsule grows with the label; on the label alone the text spilled out of the capsule and the banner.
+- The wrap is in the banner, not in `SmallBorderedButtonStyle`: Tags' Rename and My Day's Done already read whole at AX5, because their rows stack.
+- Shots, both simulators, `SHOTS_TESTS="testNotificationsOff testAlarmsOff testTimeSensitiveOff"`. AX5 portrait: the icon sits above the text and Open Settings reads "Open / Settings" in a taller capsule inside the border. AX5 landscape: "Open Settings" on one line. Default size, portrait and landscape: each banner pixel-compared with `main`'s shots; the only difference is a sub-pixel shift in the button label's glyphs, which looks the same.
+- Criterion 2: on `main`, `testTags` and `testMyDay` at AX5 (portrait and landscape, both simulators) show Rename and Done whole. The shared style is unchanged.
+- Both mockups gain an AX rule that stacks `.banner`, to match.
