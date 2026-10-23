@@ -4,7 +4,7 @@
 
 **Blocked by:** none.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 Found while making the as-built mockup (ticket 02), in simulator screenshots on `iPhone 15 Pro - iOS 26.5` and `iPhone 15 - iOS 27.0` at the largest text size (AX5), 2026-10-21. Brian agreed the mockup draws the row as intended, and asked for this ticket.
 
@@ -18,9 +18,9 @@ At the accessibility text sizes, a My Day row that shows a status label (✓ Don
 
 The as-built mockup's My Day (`docs/mockups/2026-10-21-as-built/`, Text Size AX1 to AX5): at accessibility sizes the row stacks the time, then the title and its detail, then the status label under them, with the chevron. At the other sizes nothing changes.
 
-- [ ] At accessibility sizes a My Day row's status label sits under its text, and no word in the row breaks mid-word at AX5 (simulator screenshots on both simulators, portrait and landscape: `scripts/screenshots.sh`, the `myday` screens).
-- [ ] At the default size the row is unchanged (screenshots compared with the as-built mockup).
-- [ ] VoiceOver still reads the row as one element, with the status (device check on the iPhone, after the simulator pass).
+- [x] At accessibility sizes a My Day row's status label sits under its text, and no word in the row breaks mid-word at AX5 (simulator screenshots on both simulators, portrait and landscape: `scripts/screenshots.sh`, the `myday` screens).
+- [x] At the default size the row is unchanged (screenshots compared with the as-built mockup).
+- [x] VoiceOver still reads the row as one element, with the status (device check on the iPhone, after the simulator pass).
 
 ## Before you start
 
@@ -38,3 +38,16 @@ The as-built mockup's My Day (`docs/mockups/2026-10-21-as-built/`, Text Size AX1
 - `scripts/screenshots.sh` gains a `largest-text-landscape` variant, only on request: the criterion asks for AX5 in landscape, which no variant shot. `testMyDay` pages `myday` up to 20 pages, stopping at the end, then scrolls back to Filter with `scrollToTop(revealing:)`.
 - Known gap, not this ticket's: on `iPhone 15 - iOS 27.0` in `largest-text-landscape`, the walk can't find the bar's Filter button after the `myday` shots, so `myday-filter` isn't shot there. The other three AX5 runs shoot it.
 - Left as it is: at AX5 the "✓ Done" label starts a little in from the text's leading edge, where the mockup draws it flush. `StatusLabel` is a `Label`, and in a `List` the icon seems to get a column of its own. It is the same `StatusLabel` other screens use, so it wasn't changed here.
+
+### 2026-10-23: criteria 1 and 2
+
+- Criterion 1: Brian looked at the AX5 shots, portrait and landscape on both simulators, and they look fine. Ticked.
+- Criterion 2: the default-size shots were compared with the app before this change, not with the as-built mockup. The default-size layout didn't change. Brian accepted that comparison in place of the mockup's. Ticked.
+- Moved to their own tickets, at Brian's request: whether the Filter button should work the same way in portrait as in landscape, and whether its icon could say more clearly that it filters by tags (ticket 14). The indented status label at AX5 (ticket 15).
+
+### 2026-10-23: device checks, on Brian's iPhone (iPhone 15, iOS 27.0.1)
+
+The app wasn't installed at the start, so it was uninstalled afterwards. Brian made two reminders by hand, marked one Done and paused the other, then deleted both and put VoiceOver and the text size back.
+
+- Criterion 3, at AX5 with VoiceOver: each row reads as one element with its status, then the hint. "3:13 PM, Task 1, Done at 3:13 PM after 1 nudge. Done, button", and "3:14 PM, Task 2, Skipped. The reminder was paused. Skipped, button", each followed by "Opens the reminder's details." Double-tapping each row opened its details. Ticked. (The second row says Skipped, not Paused: pausing a reminder whose occurrence was already due closes it as Skipped, as before this ticket.) A first run at the default text size read the same.
+- The screenshot gap above, at AX5 in landscape with VoiceOver: after scrolling My Day to its end and back, the bar's Filter icon reads "Filter by Tags, button", and double-tapping it opens the Filter sheet. So the button works on the phone, and the walk's failure on the iOS 27 simulator is in the harness.
