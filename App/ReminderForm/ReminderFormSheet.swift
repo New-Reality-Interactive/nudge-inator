@@ -440,12 +440,20 @@ extension View {
     }
 }
 
-/// Why a Nudging reminder's schedule is locked (ticket 13), as the form's top note says it. A
-/// separate catalog string from the note because a hint can't carry its bold.
+/// Why a Nudging reminder's schedule is locked (ticket 13).
 enum LockNote {
-    static let hint = LocalizedStringResource(
+    /// The form's top note, for the Repeat pages. A separate catalog string from the note because
+    /// it can't carry the bold.
+    static let note = LocalizedStringResource(
         "Nudging now. Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge.",
-        comment: "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging: the note at the top of the form, without its bold."
+        comment: "Top of the Repeat and Custom pages when the reminder started nudging while they were open: the note at the top of the Edit Reminder form, without its bold."
+    )
+
+    /// The reason on each locked field, kept brief because VoiceOver reads it after every one
+    /// (ticket 08's VoiceOver check). The form's top note gives the rest.
+    static let hint = LocalizedStringResource(
+        "Locked while it's nudging. Mark it Done or pause it to change it.",
+        comment: "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging."
     )
 }
 

@@ -4,14 +4,14 @@
 
 **Blocked by:** 07b (it locks the form's Pace control).
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] Engine: pace is a locked field while an occurrence is Nudging; an edit switching Escalating and Consistent, or changing the wait, is rejected; it is allowed again once the occurrence closes.
 - [x] Form: the Pace and Every rows of a Nudging reminder are locked as in the proposed mockup, and the other editable fields (title, notes, tags) still save.
 - [x] The lock note, in the form and on reminder details, reads "Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them."
 - [x] Simulators (26.5 and 27.x): the locked rows in portrait, landscape and large text.
-- [ ] VoiceOver reads the locked rows as the other locked rows read.
-- [ ] Offered to Brian, after the simulator pass: on an iPhone, a Nudging reminder's Pace row can't be changed (phone and iOS version recorded).
+- [x] VoiceOver reads the locked rows as the other locked rows read.
+- [x] Offered to Brian, after the simulator pass: on an iPhone, a Nudging reminder's Pace row can't be changed (phone and iOS version recorded).
 
 ## Before you start
 
@@ -27,3 +27,5 @@
 
 **2026-10-22, simulators passed.** `scripts/screenshots.sh` on iPhone 15 Pro (iOS 26.5) and iPhone 15 (iOS 27.0), in portrait, landscape and the largest text size. The Pace heading and the Every row carry the lock. The segments are dimmed, and Every reads "30 min" as plain text. At the largest size Pace is a dimmed menu, with the lock on its label. The form's top note and the details' Schedule footer name pace. At the largest size, the walk's four pages of `form-edit-locked` stopped at Repeat, so it now takes nine.
 
+
+**2026-10-22, device checks passed.** On Brian's iPhone (iPhone 15, iOS 27.0.1), with a Gentle, Consistent · 30 min reminder Nudging and Break Through Focus off. VoiceOver reads Every as Repeat reads ("Every, 30 min, dimmed", then the hint), and the Pace segments as Strength's ("Escalating, dimmed, button, 1 of 2"; "Selected, Consistent, button, 2 of 2"). Tapping Escalating or Every changed nothing, and after Save the details showed Consistent · 30 min with the lock note naming pace. One change from the check, agreed with Brian: the hint read after every locked row was the whole top note, about 25 words, so it's now "Locked while it's nudging. Mark it Done or pause it to change it." (Apple's docs ask for a brief phrase). The Repeat pages keep the whole note as their visible text (`LockNote.note`). The re-listen on the phone confirmed it. Moved to ticket 13, with Brian's agreement: the Strength and Pace segments don't read the hint at all, as Strength hasn't since first-version's ticket 13. The app wasn't installed before the run; the reminder was deleted and the app uninstalled after.

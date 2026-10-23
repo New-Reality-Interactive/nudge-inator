@@ -957,6 +957,9 @@
     "Left" : {
       "comment" : "My Day: the caption of the count of occurrences still to come today."
     },
+    "Locked while it's nudging. Mark it Done or pause it to change it." : {
+      "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging."
+    },
     "Match" : {
       "comment" : "My Day's filter sheet: label of the choice between All Tags and Any Tag."
     },
@@ -1149,7 +1152,7 @@
       "comment" : "Reminder details: section header above the card of a reminder that is nudging."
     },
     "Nudging now. Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge." : {
-      "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging: the note at the top of the form, without its bold."
+      "comment" : "Top of the Repeat and Custom pages when the reminder started nudging while they were open: the note at the top of the Edit Reminder form, without its bold."
     },
     "Nudging · %lld nudges" : {
       "comment" : "My Day: under the title of a Nudging occurrence with no nudge left. The placeholder is how many it sent.",

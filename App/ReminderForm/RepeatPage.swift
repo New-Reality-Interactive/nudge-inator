@@ -51,7 +51,7 @@ struct RepeatLockSection: View {
         Section {
         } header: {
             Label {
-                Text(LockNote.hint)
+                Text(LockNote.note)
             } icon: {
                 LockGlyph()
             }
