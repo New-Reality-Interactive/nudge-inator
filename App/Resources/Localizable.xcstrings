@@ -482,8 +482,8 @@
     "Any Tag" : {
       "comment" : "My Day's filter sheet: the Match choice that needs at least one checked tag."
     },
-    "Below is how each strength nudges a reminder with Break Through Focus on." : {
-      "comment" : "How It Nudges page: under the points at the top, before the three strengths' schedules."
+    "Below is how each strength nudges a new reminder at your Default Pace, %@, with Break Through Focus on." : {
+      "comment" : "How It Nudges page: under the points at the top, before the three strengths' schedules. The placeholder is the Default Pace, such as \"Consistent · 10 min\" or \"Escalating\"."
     },
     "Both nudges are notifications." : {
       "comment" : "How It Nudges footer, when a reminder sends two nudges, as a long Consistent wait can, and neither rings as an alarm."
