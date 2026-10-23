@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// DESIGN.md's Settings row: an icon tile, the label in body, and a trailing status or chevron.
+/// DESIGN.md's Settings row: an icon tile, the label in body, and a trailing status, chevron or both.
 /// The tile is decoration, so VoiceOver reads the label and the status as one element. Stacked at
 /// accessibility sizes, where beside each other the pieces would leave a few letters of width.
 struct SettingsRow: View {
@@ -39,7 +39,9 @@ struct SettingsRow: View {
             title
                 .font(.body)
                 .foregroundStyle(titleColor)
-            if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: Design.Spacing.s3) }
+            // The row's spacing already keeps the title and status apart, so "Default Pace" and
+            // "Consistent · 10 min" fit on one line each at the default size.
+            if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
             if let status {
                 status
                     .font(.body)

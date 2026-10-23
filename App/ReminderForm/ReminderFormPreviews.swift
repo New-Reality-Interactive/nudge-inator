@@ -7,7 +7,7 @@ extension ReminderForm {
     static func preview(tags: [String] = []) -> ReminderForm {
         var engine = Engine(clock: PreviewClock(), scheduler: PreviewScheduler())
         engine.update(tags: tags.map { Tag(name: $0) })
-        return ReminderForm(engine: { engine }, now: { .now })
+        return ReminderForm(engine: { engine }, now: { .now }, defaultPace: .shipped)
     }
 
     /// The Edit form of a Firm reminder that fell due ten minutes ago, so it is Nudging.

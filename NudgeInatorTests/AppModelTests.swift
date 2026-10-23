@@ -31,6 +31,7 @@ struct AppModelTests {
             openStore: openStore,
             notifications: notifications,
             alarms: AlarmAdapter(manager: manager, clock: clock),
+            defaultPaceRecord: .temporary,
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )

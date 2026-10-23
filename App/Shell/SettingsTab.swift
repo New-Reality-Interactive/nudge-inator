@@ -2,7 +2,8 @@ import NudgeEngine
 import SwiftUI
 
 /// Settings: the permission banners, what the app may send (notifications and alarms), a way to
-/// open iOS Settings when something is off, Send a Test Nudge, How It Nudges, and Delete All Data.
+/// open iOS Settings when something is off, Send a Test Nudge, the Default Pace, How It Nudges,
+/// and Delete All Data.
 struct SettingsTab: View {
     let state: ScreenState
     /// What previews show, since they have no app model: the permissions and how they leave
@@ -15,6 +16,8 @@ struct SettingsTab: View {
     @State private var deleteFailed = false
     /// When the latest test nudge was sent, so its row can say it is on its way.
     @State private var testNudgeSentAt: Date?
+    /// The Default Pace previews show and change, since they have no app model.
+    @State private var previewDefaultPace = DefaultPace.shipped
 
     var body: some View {
         NavigationStack {
@@ -109,6 +112,16 @@ struct SettingsTab: View {
             }
             .disabled(!status.canSendTestNudge || !canAct)
             NavigationLink {
+                DefaultPacePage(defaultPace: defaultPace)
+            } label: {
+                SettingsRow(
+                    tile: .tileGray,
+                    symbol: "clock",
+                    title: Text("Default Pace", comment: "Settings: row that opens the page setting the pace every new reminder starts with. Beside it, that pace, such as \"Consistent · 10 min\"."),
+                    status: Text(defaultPace.wrappedValue.pace.title)
+                )
+            }
+            NavigationLink {
                 HowItNudgesPage(previewPermissions: previewPermissions)
             } label: {
                 SettingsRow(
@@ -121,7 +134,7 @@ struct SettingsTab: View {
             // The banners under the title, as the mockup's `viewSettings` puts them.
             VStack(alignment: .leading, spacing: Design.Spacing.s5) {
                 PermissionBanners(reach: reach)
-                Text("Nudges", comment: "Settings: header of the section with the permission rows and Send a Test Nudge.")
+                Text("Nudges", comment: "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and How It Nudges.")
             }
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s2) {
@@ -155,6 +168,12 @@ struct SettingsTab: View {
             Text("Your reminders stay on this iPhone. There's no account and no server, and nothing syncs to other devices.",
                  comment: "Settings: the privacy note under Your Data.")
         }
+    }
+
+    /// The model's Default Pace, read from its record each time. Without a model, the previews'.
+    private var defaultPace: Binding<DefaultPace> {
+        guard let model else { return $previewDefaultPace }
+        return Binding { model.defaultPace } set: { model.defaultPace = $0 }
     }
 
     /// How each urgency reaches the person, from the engine. Without a model, the previews' states.

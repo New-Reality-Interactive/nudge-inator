@@ -577,6 +577,9 @@
     "Daily" : {
       "comment" : "The Custom repeat page's frequency."
     },
+    "Default Pace" : {
+      "comment" : "Settings: row that opens the page setting the pace every new reminder starts with. Beside it, that pace, such as \"Consistent · 10 min\".\nTitle of the page in Settings that sets the pace every new reminder starts with."
+    },
     "Delete" : {
       "comment" : "Settings: confirms deleting every reminder, tag and all history.\nTags: confirms deleting the tag. The reminders that have it are kept."
     },
@@ -699,7 +702,7 @@
       "comment" : "Pace name: the waits between nudges come from the strength and shrink as the nudging goes on."
     },
     "Every" : {
-      "comment" : "The reminder form's row for a Consistent pace's wait between nudges, such as \"10 min\"."
+      "comment" : "The row for a Consistent pace's wait between nudges, such as \"10 min\", in the reminder form and on Settings' Default Pace page."
     },
     "Every %@ at first, down to every %@." : {
       "comment" : "Under the reminder form's pace when it is Escalating. 1: the wait after the first nudge, such as \"30 min\". 2: the shortest wait.",
@@ -990,6 +993,9 @@
     "New Tag" : {
       "comment" : "The Tags page's field for typing a new tag's name.\nTitle of the sheet that adds a tag.\nToolbar button (a plus) on Tags that adds a tag."
     },
+    "New reminders start with this pace. Changing it doesn't change the reminders you already have." : {
+      "comment" : "Default Pace page: under the Pace and Every controls."
+    },
     "Next" : {
       "comment" : "Reminder details, Schedule: when the reminder is next due."
     },
@@ -1126,7 +1132,7 @@
       }
     },
     "Nudges" : {
-      "comment" : "Settings: header of the section with the permission rows and Send a Test Nudge."
+      "comment" : "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and How It Nudges."
     },
     "Nudges 1–%lld are notifications. Nudges %lld–%lld ring as alarms." : {
       "comment" : "How It Nudges footer. 1: the last nudge that is a notification. 2: the first nudge that rings as an alarm. 3: the last nudge.",
@@ -1255,7 +1261,7 @@
       "comment" : "VoiceOver hint on a nudge card's title and on a Now row: tapping it opens the reminder's details."
     },
     "Pace" : {
-      "comment" : "Reminder details, Schedule: how the waits between the reminder's nudges are spaced.\nThe reminder form's pace choice: Escalating or Consistent."
+      "comment" : "Reminder details, Schedule: how the waits between the reminder's nudges are spaced.\nThe pace choice, in the reminder form and on Settings' Default Pace page: Escalating or Consistent."
     },
     "Pause Reminder" : {
       "comment" : "Reminder details: stops the reminder's nudging until it is resumed."

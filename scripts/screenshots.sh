@@ -7,7 +7,9 @@
 # back afterwards, the harness app and its UI-test runner (bundle IDs from
 # scripts/screenshots/project.yml) are uninstalled, and a simulator it booted is shut down.
 # Env: SIMULATORS (as scripts/test.sh), SHOTS_OUT (default docs/screenshots/<today>, git-ignored),
-# SHOTS_VARIANTS (default "portrait landscape largest-text").
+# SHOTS_VARIANTS (default "portrait landscape largest-text"), SHOTS_TESTS (ShotsUITests methods
+# separated by spaces, such as "testSettings testForm"; default every one). Each variant's folder is
+# emptied first, so a run with SHOTS_TESTS wants a SHOTS_OUT of its own.
 # Writes <SHOTS_OUT>/<simulator>/<portrait|landscape|largest-text>/<screen>.png.
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -16,6 +18,8 @@ SIMULATORS="${SIMULATORS-iPhone 15 Pro - iOS 26.5;iPhone 15 - iOS 27.0}"
 IFS=';' read -r -a simulators <<< "$SIMULATORS"
 out="${SHOTS_OUT:-docs/screenshots/$(date +%F)}"
 read -r -a variants <<< "${SHOTS_VARIANTS:-portrait landscape largest-text}"
+only=()
+for test in ${SHOTS_TESTS:-}; do only+=("-only-testing:NudgeShotsUITests/ShotsUITests/$test"); done
 out="$(mkdir -p "$out" && cd "$out" && pwd)"
 build=.build/screenshots
 logs="$PWD/.build/test-logs"
@@ -81,7 +85,7 @@ for name in ${simulators[@]+"${simulators[@]}"}; do
     log="$logs/screenshots-$name-$variant.log"
     TEST_RUNNER_SHOTS_DIR="$dir" TEST_RUNNER_SHOTS_ORIENTATION="$orientation" \
       xcodebuild test-without-building -project "$build/NudgeShots.xcodeproj" -scheme NudgeShots \
-      -destination "platform=iOS Simulator,id=$udid" -derivedDataPath "$build/derived" > "$log" 2>&1 \
+      -destination "platform=iOS Simulator,id=$udid" -derivedDataPath "$build/derived" ${only[@]+"${only[@]}"} > "$log" 2>&1 \
       || { echo "FAIL: see $log" >&2; failed+=("$name/$variant"); }
     echo "$(ls "$dir" | wc -l | tr -d ' ') screenshots in $dir"
   done

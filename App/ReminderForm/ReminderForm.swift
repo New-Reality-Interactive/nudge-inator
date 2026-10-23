@@ -24,19 +24,16 @@ final class ReminderForm: Identifiable {
     /// The person's switch, as saved. Relentless ignores it but keeps it, so leaving Relentless
     /// gives it back; the form shows `breaksThroughFocus`.
     var breakThroughFocus = true
-    /// The Pace control: Escalating or Consistent. A new reminder starts Escalating until the
-    /// Default Pace (ticket 09).
-    var paceChoice = PaceChoice.escalating
+    /// The Pace control: Escalating or Consistent. A New form sets both from the Default Pace; an
+    /// Edit form sets them from the reminder, except an Escalating one's wait, which keeps 10 min.
+    var paceChoice = DefaultPace.shipped.choice
     /// The Every row's wait, one of `Pace.consistentWaits`. Kept while Escalating is chosen, so
     /// choosing Consistent again finds it (spec story 25).
-    var consistentWait = PaceChoice.startingWait
+    var consistentWait = DefaultPace.shipped.consistentWait
 
     /// The draft's pace, from the Pace control and the Every row.
     var pace: Pace {
-        switch paceChoice {
-        case .escalating: .escalating
-        case .consistent: .consistent(wait: consistentWait)
-        }
+        paceChoice.pace(wait: consistentWait)
     }
 
     /// The switch as the form shows it: always on for Relentless (ADR 0004). Setting it sets the
@@ -84,10 +81,12 @@ final class ReminderForm: Identifiable {
     /// The draft as the form opened, set once `init` has filled it in.
     private var opened: Reminder?
 
-    /// A New Reminder form. `tagIDs` are chosen when it opens, as from a tag's screen, and aren't
-    /// a change the person made.
-    init(engine currentEngine: @escaping () -> Engine, now: @escaping () -> Date, tagIDs: [Tag.ID] = []) {
+    /// A New Reminder form, starting with Settings' Default Pace (spec story 39). `tagIDs` are
+    /// chosen when it opens, as from a tag's screen. Neither is a change the person made.
+    init(engine currentEngine: @escaping () -> Engine, now: @escaping () -> Date, defaultPace: DefaultPace, tagIDs: [Tag.ID] = []) {
         self.tagIDs = tagIDs
+        paceChoice = defaultPace.choice
+        consistentWait = defaultPace.consistentWait
         self.currentEngine = currentEngine
         tagRules = currentEngine()
         self.now = now
