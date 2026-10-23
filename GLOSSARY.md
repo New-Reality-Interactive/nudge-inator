@@ -58,6 +58,10 @@ The pace whose waits come from the strength and shrink as the nudging goes on.
 **Consistent**:
 The pace with one wait, chosen by the person from 2 min to 16 h, the same between every nudge.
 
+**Default pace**:
+The pace set in Settings that every new reminder starts with: Consistent · 10 min until the person changes it, and again after Delete All Data. Changing it never changes a reminder already made.
+_Avoid_: Global pace, pace setting
+
 **Urgency**:
 A nudge's place on its strength's ladder: Normal, High or Urgent. Urgency decides how the nudge is delivered.
 

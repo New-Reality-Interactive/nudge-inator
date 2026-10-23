@@ -63,7 +63,7 @@ struct NewReminderButton: View {
 
     var body: some View {
         Button {
-            if let model { form = ReminderForm(engine: { model.engine }, now: { .now }, tagIDs: tagIDs) }
+            if let model { form = ReminderForm(engine: { model.engine }, now: { .now }, defaultPace: model.defaultPace, tagIDs: tagIDs) }
         } label: {
             Label {
                 Text("New Reminder", comment: "Toolbar button (a plus) that opens the New Reminder form.")

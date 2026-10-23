@@ -71,6 +71,7 @@ enum ShotsSeed {
             notifications: NotificationAdapter(center: center, clock: clock),
             alarms: AlarmAdapter(manager: manager, clock: clock),
             onboardingRecord: onboarding,
+            defaultPaceRecord: DefaultPaceRecord(defaults: defaults),
             doneQueue: .temporary
         )
         return model

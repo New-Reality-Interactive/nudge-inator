@@ -307,6 +307,12 @@ extension DoneQueue {
     static let temporary = DoneQueue(folder: FileManager.default.temporaryDirectory.appending(path: "NudgeInatorTests.DoneQueue"))
 }
 
+extension DefaultPaceRecord {
+    /// A record in a suite of the tests' own, for models whose Delete All Data would otherwise
+    /// clear the app's own Default Pace. `DefaultPaceTests` uses suites of its own.
+    static var temporary: DefaultPaceRecord { DefaultPaceRecord(defaults: UserDefaults(suiteName: "NudgeInatorTests.DefaultPace")!) }
+}
+
 extension Collection {
     /// The one element, or `nil` if there are none or several.
     var only: Element? { count == 1 ? first : nil }

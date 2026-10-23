@@ -233,7 +233,7 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
 - **Badge (`{colors.badge}`)** is the Now tab's nudging count, as the system draws it.
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
   action is `{colors.tile-green}`. Settings rows: red (Notifications, Delete All Data), orange
-  (Alarms), gray (Open iOS Settings), blue (Send a Test Nudge). Tiles are icons for rows, not
+  (Alarms), gray (Open iOS Settings, Default Pace, How It Nudges), blue (Send a Test Nudge). Tiles are icons for rows, not
   statuses, so "one color, one meaning" does not apply to them.
 
 Rules:
@@ -386,7 +386,10 @@ except in the tab and navigation bars. Verify names against the mockup.
 
 ### Settings row
 - Icon tile, label in `{typography.body}`, trailing status in `{colors.secondary-label}` (or
-  `{colors.negative}` when off) or a chevron. Tile colors are listed under Colors.
+  `{colors.negative}` when off) or a chevron. A row that opens a page to set a value shows the
+  value under the label in `{typography.body}` `{colors.secondary-label}`, with the chevron
+  (Default Pace: "Consistent · 10 min"), so it never shares the line with the label. Tile colors
+  are listed under Colors.
 
 ### Swipe actions
 - **Token:** `swipe-done`. Trailing swipe shows Done: green tile, white `checkmark` and the word

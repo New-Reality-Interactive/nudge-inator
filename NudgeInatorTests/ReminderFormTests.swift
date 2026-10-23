@@ -29,8 +29,10 @@ struct ReminderFormTests {
         return model
     }
 
-    func newForm(on model: AppModel) -> ReminderForm {
-        ReminderForm(engine: { model.engine }, now: { [clock] in clock.now })
+    /// A New form. Its Default Pace is Escalating unless a test passes another, so the strength's
+    /// own waits show until a test chooses Consistent.
+    func newForm(on model: AppModel, defaultPace: DefaultPace = DefaultPace(choice: .escalating, consistentWait: 10 * 60)) -> ReminderForm {
+        ReminderForm(engine: { model.engine }, now: { [clock] in clock.now }, defaultPace: defaultPace)
     }
 
     func editForm(of reminderID: Reminder.ID, on model: AppModel) throws -> ReminderForm {
@@ -116,15 +118,22 @@ struct ReminderFormTests {
         #expect(model.engine.reminders.only?.pace == .escalating)
     }
 
-    /// Until ticket 09's Default Pace, a new reminder starts Escalating, with 10 min ready for
-    /// Consistent, the mockup's starting wait.
-    @Test func aNewReminderStartsEscalatingWithTenMinutesReadyForConsistent() async throws {
+    /// Spec story 39: a new reminder starts with the Default Pace, and saves it unless changed.
+    /// Escalating keeps the default's wait ready for Consistent.
+    @Test(arguments: [
+        (DefaultPace(choice: .consistent, consistentWait: 60 * 60), Pace.consistent(wait: 60 * 60)),
+        (DefaultPace(choice: .escalating, consistentWait: 30 * 60), Pace.escalating),
+    ])
+    func aNewReminderStartsWithTheDefaultPace(defaultPace: DefaultPace, saved: Pace) async throws {
         let model = try await launchedModel()
-        let form = newForm(on: model)
+        let form = newForm(on: model, defaultPace: defaultPace)
 
-        #expect(form.paceChoice == .escalating)
-        #expect(form.consistentWait == 10 * 60)
-        #expect(Pace.consistentWaits.contains(form.consistentWait))
+        #expect(form.paceChoice == defaultPace.choice)
+        #expect(form.consistentWait == defaultPace.consistentWait)
+        #expect(!form.hasChanges)
+        form.title = "Water the plants"
+        #expect(form.save(to: model))
+        #expect(model.engine.reminders.only?.pace == saved)
     }
 
     /// Spec stories 30 and 31: Relentless shows the switch on and fixed, and leaving it gives back
@@ -915,7 +924,7 @@ struct ReminderFormTests {
         let model = try await launchedModel()
         let home = try #require(try model.createTag(named: "home"))
         let now = clock.now
-        let form = ReminderForm(engine: { model.engine }, now: { now }, tagIDs: [home.id])
+        let form = ReminderForm(engine: { model.engine }, now: { now }, defaultPace: .shipped, tagIDs: [home.id])
         let hasChanges = form.hasChanges
         form.title = "Water the plants"
 
@@ -923,5 +932,6 @@ struct ReminderFormTests {
         #expect(!hasChanges)
         #expect(form.save(to: model))
         #expect(model.engine.reminders.first?.tagIDs == [home.id])
+        #expect(model.engine.reminders.first?.pace == .consistent(wait: 10 * 60))
     }
 }

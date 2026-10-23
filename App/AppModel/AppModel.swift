@@ -57,6 +57,7 @@ final class AppModel {
     private let timeZone: TimeZone
     private let giveUpLimit: GiveUpLimit
     private let onboardingRecord: OnboardingRecord
+    private let defaultPaceRecord: DefaultPaceRecord
     /// Where a Done waits while the store can't be read (ticket 32).
     private let doneQueue: DoneQueue
 
@@ -67,6 +68,7 @@ final class AppModel {
         notifications: NotificationAdapter,
         alarms: AlarmAdapter,
         onboardingRecord: OnboardingRecord = .standard,
+        defaultPaceRecord: DefaultPaceRecord = .standard,
         doneQueue: DoneQueue,
         timeZone: TimeZone = .autoupdatingCurrent,
         giveUpLimit: GiveUpLimit = .shipped
@@ -78,6 +80,7 @@ final class AppModel {
         self.timeZone = timeZone
         self.giveUpLimit = giveUpLimit
         self.onboardingRecord = onboardingRecord
+        self.defaultPaceRecord = defaultPaceRecord
         self.doneQueue = doneQueue
         onboarding = onboardingRecord.isFinished ? nil : .welcome
         scheduler = CombinedSchedulerAdapter(adapters: [notifications, alarms])
@@ -329,22 +332,37 @@ final class AppModel {
         perform({ $0.delete(reminderID) }, storeChange: { try $0.delete(reminderID) })
     }
 
+    /// Settings' Default Pace (ticket 09), what a new reminder starts with. Read from the record
+    /// each time, not kept from launch: before the first unlock `UserDefaults` reads as empty, so
+    /// a launch then would see Consistent · 10 min whatever the person chose.
+    var defaultPace: DefaultPace {
+        get {
+            access(keyPath: \.defaultPace)
+            return defaultPaceRecord.defaultPace
+        }
+        set {
+            withMutation(keyPath: \.defaultPace) { defaultPaceRecord.defaultPace = newValue }
+        }
+    }
+
     /// Settings' Send a Test Nudge (ticket 30): one ordinary notification a few seconds away. It is
     /// no reminder's, so the engine and the store know nothing of it.
     func sendTestNudge() async {
         await notifications.sendTestNudge()
     }
 
-    /// Settings' Delete All Data (ticket 30): the store, then the engine, then everything the
-    /// adapters hold, including the test nudge and the nudges already in Notification Center.
-    /// Not through `perform`: the store goes first and a store that turns the delete down stops
-    /// it, so the reminders and their nudges stay as they were. A disk failure is likelier than a
-    /// failed cancel, and a nudge left pending for deleted data is cancelled by the next App opened,
-    /// which plans from nothing. An alarm that is ringing is left to ring, as a re-plan leaves it. Before the store has been read there is nothing to delete.
+    /// Settings' Delete All Data (ticket 30): the store and the Default Pace, then the engine,
+    /// then everything the adapters hold, including the test nudge and the nudges already in
+    /// Notification Center. Not through `perform`: the store goes first and a store that turns the
+    /// delete down stops it, so the reminders and their nudges stay as they were. A disk failure
+    /// is likelier than a failed cancel, and a nudge left pending for deleted data is cancelled by
+    /// the next App opened, which plans from nothing. An alarm that is ringing is left to ring, as
+    /// a re-plan leaves it. Before the store has been read there is nothing to delete.
     func deleteAllData() async throws {
         guard case .ready = launchState, let store else { return }
         try store.deleteAllData()
         saveError = nil
+        withMutation(keyPath: \.defaultPace) { defaultPaceRecord.clear() }
         // A new engine, not emptied lists: the old one keeps a key for every history it held, and
         // its alarm-limit records. Its empty plan still reaches the adapters.
         var empty = makeEngine(permissions: permissions)

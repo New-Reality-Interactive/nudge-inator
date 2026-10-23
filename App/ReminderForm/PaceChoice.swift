@@ -2,13 +2,19 @@ import Foundation
 import NudgeEngine
 
 /// The form's Pace control. A Consistent pace's wait is the Every row's, so it is kept apart and
-/// survives a switch to Escalating and back.
-enum PaceChoice: Hashable, CaseIterable {
+/// survives a switch to Escalating and back. The raw values are what the Default Pace record
+/// stores, so renaming a case loses a stored choice.
+enum PaceChoice: String, CaseIterable {
     case escalating
     case consistent
 
-    /// The Every row's wait until the Default Pace sets it (ticket 09): the mockup's 10 min.
-    static let startingWait: TimeInterval = 10 * 60
+    /// The pace this choice makes with the Every row's `wait`, which Escalating ignores.
+    func pace(wait: TimeInterval) -> Pace {
+        switch self {
+        case .escalating: .escalating
+        case .consistent: .consistent(wait: wait)
+        }
+    }
 
     /// The choice that shows `pace`.
     init(_ pace: Pace) {

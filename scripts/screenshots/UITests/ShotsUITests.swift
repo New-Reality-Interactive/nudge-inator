@@ -200,6 +200,15 @@ final class ShotsUITests: XCTestCase {
         launch(.app)
         tab("Settings")
         shot("settings", pages: 2)
+        tapText("Default Pace")
+        shot("settings-default-pace")
+        // A new wait, which the row under the label shows on return.
+        // The row's button, "Every, 10 min": a tap on its "Every" text doesn't open the menu.
+        tapButton(containing: "Every, ", inSheet: true)
+        // Without scrolling to the top first, which would close the menu.
+        tapText("30 min", inSheet: true)
+        back()
+        shot("settings-default-pace-30-min")
         tapText("How It Nudges")
         shot("settings-how-it-nudges", pages: 4)
     }
@@ -208,7 +217,8 @@ final class ShotsUITests: XCTestCase {
         launch(.app)
         openSheet("New Reminder", title: "New Reminder")
         hideKeyboard()
-        shot("form-new", pages: 4)
+        // Eight pages: Consistent's Every row pushes How It Nudges further down at the largest text.
+        shot("form-new", pages: 8)
     }
 
     /// Its own test: `form-new` ends scrolled down, and scrolling up in a sheet could close it.
@@ -226,19 +236,18 @@ final class ShotsUITests: XCTestCase {
         shot("form-new-relentless", pages: 8)
     }
 
-    /// The mockup's `form-new` is Consistent · 10 min, its Default Pace; the app's New form starts
-    /// Escalating until ticket 09, so this chooses Consistent.
-    func testFormConsistent() {
+    /// The New form opens at the Default Pace, Consistent · 10 min, so this chooses Escalating.
+    func testFormEscalating() {
         launch(.app)
         openSheet("New Reminder", title: "New Reminder")
         hideKeyboard()
         // At accessibility sizes the pace is a menu rather than segments.
-        let segment = app.buttons["Consistent"]
+        let segment = app.buttons["Escalating"]
         if !segment.waitForExistence(timeout: 2) || !segment.isHittable {
             tapText("Pace", inSheet: true)
         }
-        tapText("Consistent", inSheet: true)
-        shot("form-new-consistent", pages: 8)
+        tapText("Escalating", inSheet: true)
+        shot("form-new-escalating", pages: 8)
     }
 
     /// Its own test: going back from the Tags page closed the sheet on the iOS 27.0 simulator.
