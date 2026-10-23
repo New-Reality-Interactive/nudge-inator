@@ -4,7 +4,7 @@
 
 **Blocked by:** 08.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] The Default pace is Consistent · 10 min when nothing is stored, and a chosen one survives relaunch.
 - [x] A new reminder draft starts with the Default pace from every place one is made: + on Now, + on My Day, and + on a tag's list.
@@ -13,7 +13,7 @@
 - [x] Settings' Nudges section has the Default pace row with the form's controls, as in the proposed mockup.
 - [x] The Default Pace row reads "Consistent · 10 min" and opens a Default Pace page with the form's Pace and Every controls and the note "New reminders start with this pace. Changing it doesn't change the reminders you already have."; the screenshot harness walks to that page.
 - [x] Simulators (26.5 and 27.x): the row in portrait, landscape and large text; VoiceOver reads it as the form's controls read.
-- [ ] A beta note, where the testers will see it, says to run Delete All Data and then reinstall to get this version.
+- [x] A beta note, ready to paste into TestFlight's What to Test, says to run Delete All Data and then reinstall to get this version.
 - [x] Offered to Brian, after the simulator pass: on an iPhone, a new reminder starts with the Default pace he set (phone and iOS version recorded).
 
 ## Before you start
@@ -37,4 +37,6 @@
 **2026-10-23, device checks passed.** On Brian's iPhone (iPhone 15, iOS 27.0.1), from a fresh install. VoiceOver read the row as "Default Pace, Consistent · 10 minutes, button", saying nothing for the "·". On the Default Pace page it read "Default Pace, heading", "Pace, heading", "Escalating, button, 1 of 2", "Selected, Consistent, button, 2 of 2", "Every, 10 minutes, button, pop-up button" with the hint "double-tap to activate the picker", then the note. The form's Every row read the same, so the page reads as the form's controls read. The extra "button" is how iOS 27.0.1 reads this picker now, and it differs from ticket 07b's note. With the Default Pace set to Consistent · 30 min, + on Now opened the New form at Consistent and 30 min, and the saved reminder's details showed Consistent · 30 min. Delete All Data on the phone set the row back to Consistent · 10 min. Afterwards Brian ran Delete All Data and the app was uninstalled, since it wasn't installed before the run.
 
 **2026-10-23, the row's value goes under its title, Brian's choice.** On the phone, "Consistent · 30 min" wrapped mid-phrase beside the label ("Consistent ·" then "30 min"): the app's font gives "3" more width than "1", and last night's spacer fix left only a few points to spare. A layout that moved the value under the label only when it didn't fit was built and passed on the simulators, but Brian chose consistency: the Default Pace row always shows its value under the title. `SettingsRow` gains `value`, shown under the label in body, secondary label. The other rows keep their trailing status, and the spacer is back as it was on main. This differs from the proposed mockup (item 12, value on the right) on purpose. DESIGN.md's Settings row describes it. On the phone the row looked right at both waits, and VoiceOver read "Default Pace, Consistent, 30 minutes, button". The walk now also picks 30 min on the Default Pace page and shoots the row again (`settings-default-pace-30-min`). All four Settings tests were shot again on both simulators, in portrait, landscape and the largest text size.
+
+**2026-10-23, beta note criterion reworded, agreed with Brian.** It read "A beta note, where the testers will see it, says…". The note goes into TestFlight when the 1.1.0 build is uploaded, after this ticket merges, so the criterion now reads "ready to paste into TestFlight's What to Test". Brian approved the text in `docs/release-notes/1.1.0-testflight.md` as written. Pasting it is his, at upload.
 
