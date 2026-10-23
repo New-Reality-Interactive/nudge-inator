@@ -7,10 +7,11 @@
 # back afterwards, the harness app and its UI-test runner (bundle IDs from
 # scripts/screenshots/project.yml) are uninstalled, and a simulator it booted is shut down.
 # Env: SIMULATORS (as scripts/test.sh), SHOTS_OUT (default docs/screenshots/<today>, git-ignored),
-# SHOTS_VARIANTS (default "portrait landscape largest-text"), SHOTS_TESTS (ShotsUITests methods
-# separated by spaces, such as "testSettings testForm"; default every one). Each variant's folder is
-# emptied first, so a run with SHOTS_TESTS wants a SHOTS_OUT of its own.
-# Writes <SHOTS_OUT>/<simulator>/<portrait|landscape|largest-text>/<screen>.png.
+# SHOTS_VARIANTS (default "portrait landscape largest-text"; "largest-text-landscape" on request),
+# SHOTS_TESTS (ShotsUITests methods separated by spaces, such as "testSettings testForm"; default
+# every one). Each variant's folder is emptied first, so a run with SHOTS_TESTS wants a SHOTS_OUT of
+# its own.
+# Writes <SHOTS_OUT>/<simulator>/<variant>/<screen>.png.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -77,8 +78,8 @@ for name in ${simulators[@]+"${simulators[@]}"}; do
   for variant in "${variants[@]}"; do
     echo "==> $name, $variant"
     size=large orientation=portrait
-    [ "$variant" = landscape ] && orientation=landscape
-    [ "$variant" = largest-text ] && size=accessibility-extra-extra-extra-large
+    case "$variant" in *landscape) orientation=landscape ;; esac
+    case "$variant" in largest-text*) size=accessibility-extra-extra-extra-large ;; esac
     xcrun simctl ui "$udid" content_size "$size"
     dir="$out/$name/$variant"
     rm -rf "$dir" && mkdir -p "$dir"

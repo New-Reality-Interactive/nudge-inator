@@ -24,10 +24,12 @@ struct MyDayRowView: View {
             if dynamicTypeSize.isAccessibilitySize {
                 VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                     opener
-                    HStack {
-                        doneButton
-                        Spacer(minLength: 0)
-                        chevron
+                    if showsDoneSlot {
+                        HStack {
+                            doneButton
+                            Spacer(minLength: 0)
+                            chevron
+                        }
                     }
                 }
             } else {
@@ -58,14 +60,30 @@ struct MyDayRowView: View {
         }
     }
 
+    /// Done, or the status that took its place while VoiceOver is on it.
+    private var showsDoneSlot: Bool { item.offersDone || isDoneHeld }
+
     /// The time, title and note, and the outcome for a row with no Done button. All of it opens
-    /// the details, and VoiceOver reads it as one element.
+    /// the details, and VoiceOver reads it as one element. At accessibility sizes the outcome goes
+    /// under the text, with the chevron: beside it, it left the text a few letters of width.
     private var opener: some View {
-        HStack(alignment: .firstTextBaseline, spacing: Design.Spacing.s3) {
+        SizeAdaptiveStack(
+            rowAlignment: .firstTextBaseline, rowSpacing: Design.Spacing.s3, stackedSpacing: Design.Spacing.s1
+        ) {
             text
-            Spacer(minLength: 0)
-            if !item.offersDone && !isDoneHeld { outcome }
+            if !dynamicTypeSize.isAccessibilitySize {
+                Spacer(minLength: 0)
+                if !showsDoneSlot { outcome }
+            } else if !showsDoneSlot {
+                HStack {
+                    outcome
+                    Spacer(minLength: 0)
+                    chevron
+                }
+            }
         }
+        // Stacked, there's no spacer to widen it, and the row would open only where its text is.
+        .frame(maxWidth: .infinity, alignment: .leading)
         .opensDetails(openDetails)
         .accessibilityElement(children: .combine)
     }
@@ -133,7 +151,7 @@ struct MyDayRowView: View {
     }
 
     @ViewBuilder private var doneButton: some View {
-        if item.offersDone || isDoneHeld {
+        if showsDoneSlot {
             DoneSlot(title: item.title, isHeld: $isDoneHeld, markDone: markDone) { action in
                 Button(action: action) {
                     Text("Done", comment: "My Day: the button on a Nudging row that marks the reminder Done and stops its nudges.")

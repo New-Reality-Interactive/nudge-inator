@@ -38,8 +38,13 @@ final class ShotsUITests: XCTestCase {
         from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
     }
 
-    private func scrollToTop() {
-        for _ in 0..<4 { scroll(down: false) }
+    /// Four scrolls up, or with `element`, as many as it takes to reach it, up to a long page's 25.
+    private func scrollToTop(revealing element: XCUIElement? = nil) {
+        guard let element else {
+            for _ in 0..<4 { scroll(down: false) }
+            return
+        }
+        for _ in 0..<25 where !element.isHittable { scroll(down: false) }
     }
 
     private func pause(_ seconds: TimeInterval) {
@@ -184,7 +189,9 @@ final class ShotsUITests: XCTestCase {
     func testMyDay() {
         launch(.app)
         tab("My Day")
-        shot("myday", pages: 3)
+        shot("myday", pages: 20, stopsAtEnd: true)
+        // Filter is at the top of the list, which paging at AX5 left far behind.
+        scrollToTop(revealing: app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "Filter")).firstMatch)
         openSheet("Filter", title: "Filter My Day")
         shot("myday-filter")
     }
