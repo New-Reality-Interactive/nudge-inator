@@ -2,8 +2,8 @@ import Foundation
 import Testing
 @testable import NudgeEngine
 
-/// While a reminder has a Nudging occurrence, its due time, repeat, strength and Break through Focus
-/// are Locked (ADR 0002): an Edit that changes any of them is rejected whole. Title, notes and tags
+/// While a reminder has a Nudging occurrence, its due time, repeat, strength, pace and Break through
+/// Focus are Locked (ADR 0002): an Edit that changes any of them is rejected whole. Title, notes and tags
 /// stay editable. The lock lifts when the occurrence closes.
 struct LockWhileNudgingTests {
     let clock = FakeClock(now: .distantPast)
@@ -60,6 +60,7 @@ struct LockWhileNudgingTests {
         (.dueTime, { $0.dueTime = NewYork.local(2026, 10, 15, 10) }),
         (.repeatRule, { $0.repeatRule = .everyWeekday }),
         (.strength, { $0.strength = .gentle }),
+        (.pace, { $0.pace = .consistent(wait: 10 * 60) }),
         (.breakThroughFocus, { $0.breakThroughFocus = false }),
     ]
 
@@ -80,6 +81,23 @@ struct LockWhileNudgingTests {
         #expect(engine.openOccurrence(for: pills.id) == occurrenceBefore)
         #expect(scheduler.appliedPlans == plansBefore)
         #expect(engine.lockedFields(of: pills.id) == Set(LockedField.allCases))
+    }
+
+    /// A Consistent reminder's wait is part of its pace, so changing only the wait is rejected too.
+    @Test func changingAConsistentWaitWhileNudgingIsRejectedAsAPaceChange() {
+        clock.now = NewYork.local(2026, 10, 15, 9, 40)
+        var consistent = pills
+        consistent.pace = .consistent(wait: 30 * 60)
+        var engine = engine(for: consistent)
+        let plansBefore = scheduler.appliedPlans
+
+        var edited = consistent
+        edited.pace = .consistent(wait: 15 * 60)
+        #expect(throws: EditError.locked([.pace])) { try engine.edit(edited) }
+        edited.pace = .escalating
+        #expect(throws: EditError.locked([.pace])) { try engine.edit(edited) }
+
+        #expect(scheduler.appliedPlans == plansBefore)
     }
 
     /// No partial apply: the new title goes nowhere either, and the error names both locked fields.
@@ -168,6 +186,38 @@ struct LockWhileNudgingTests {
         #expect(engine.lockedFields(of: pills.id).isEmpty)
         let items = try #require(scheduler.lastPlan).items
         #expect(items.allSatisfy { $0.fireTime >= NewYork.local(2026, 10, 16) })
+    }
+
+    /// The pace Edit rejected at 9:40 is accepted after Done at 9:50, and applies from tomorrow:
+    /// Consistent · 2 min brings nudge 2 at 9:02, where Firm's came at 9:30.
+    @Test func afterDoneTheRejectedPaceEditIsAcceptedAndAppliesFromTheNextOccurrence() throws {
+        clock.now = NewYork.local(2026, 10, 15, 9, 40)
+        var engine = engine(for: pills)
+        var edited = pills
+        edited.pace = .consistent(wait: 2 * 60)
+        #expect(throws: EditError.locked([.pace])) { try engine.edit(edited) }
+
+        clock.now = NewYork.local(2026, 10, 15, 9, 50)
+        engine.markDone(pills.id)
+        try engine.edit(edited)
+
+        #expect(engine.latestOccurrence(for: pills.id)?.state == .done)
+        let items = try #require(scheduler.lastPlan).items
+        #expect(items.first { $0.nudgeNumber == 2 }?.fireTime == NewYork.local(2026, 10, 16, 9, 2))
+    }
+
+    /// Consistent · 16 h would still be nudging at 11:30, but today's occurrence already closed as
+    /// Missed under Firm's Escalating pace. Like a strength Edit, a pace Edit applies from the next
+    /// occurrence, so it doesn't reopen today's or lock the reminder again.
+    @Test func anEditToASlowerPaceAfterMissedLeavesTheOccurrenceMissed() throws {
+        clock.now = NewYork.local(2026, 10, 15, 11, 30)
+        var engine = engine(for: pills)
+        var edited = pills
+        edited.pace = .consistent(wait: 16 * 60 * 60)
+        try engine.edit(edited)
+
+        #expect(engine.latestOccurrence(for: pills.id)?.state == .missed(reason: .giveUpLimit))
+        #expect(engine.lockedFields(of: pills.id).isEmpty)
     }
 
     /// Missed at 11:17:30 under Firm, then paused at noon. A slower strength would have still been

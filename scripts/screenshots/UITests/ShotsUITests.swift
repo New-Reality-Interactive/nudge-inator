@@ -165,7 +165,8 @@ final class ShotsUITests: XCTestCase {
         tapText("Take the bins out")
         shot("details-nudging", pages: 4)
         openSheet("Edit", title: "Edit Reminder")
-        shot("form-edit-locked", pages: 4)
+        // Nine pages, so the largest text size reaches the locked Pace and Every rows.
+        shot("form-edit-locked", pages: 9)
         barTap { tapButton(containing: "Cancel", inSheet: true) }
         back()
         tapText("Water the plants")
