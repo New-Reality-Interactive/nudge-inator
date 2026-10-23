@@ -122,7 +122,7 @@ struct SettingsTab: View {
                 )
             }
             NavigationLink {
-                HowItNudgesPage(previewPermissions: previewPermissions)
+                HowItNudgesPage(previewPermissions: previewPermissions, previewDefaultPace: defaultPace.wrappedValue)
             } label: {
                 SettingsRow(
                     tile: .tileGray,

@@ -47,11 +47,19 @@ final class ShotsUITests: XCTestCase {
     }
 
     /// Saves the screen, then `pages - 1` more, scrolling down most of a screen before each.
-    private func shot(_ name: String, pages: Int = 1) {
+    /// With `stopsAtEnd`, `pages` is a limit: it stops once a scroll leaves the screen as one of
+    /// the last two pages, for a page whose length differs a lot between the variants. Two, since
+    /// at the end a scroll expands or collapses the tab bar, so the last pages alternate.
+    private func shot(_ name: String, pages: Int = 1, stopsAtEnd: Bool = false) {
         pause(0.8)
+        var lastTwo: [Data] = []
         for page in 1...pages {
             let suffix = pages > 1 ? "-\(page)" : ""
             let data = XCUIScreen.main.screenshot().pngRepresentation
+            if stopsAtEnd, lastTwo.contains(data) {
+                break
+            }
+            lastTwo = Array((lastTwo + [data]).suffix(2))
             try? data.write(to: directory.appending(path: "\(name)\(suffix).png"))
             if page < pages {
                 scroll(down: true)
@@ -209,8 +217,26 @@ final class ShotsUITests: XCTestCase {
         tapText("30 min", inSheet: true)
         back()
         shot("settings-default-pace-30-min")
+        // The page under each pace, as in the mockup (item 13): Consistent · 10 min, then Escalating.
+        // Four pages in portrait, many more at the largest text.
+        tapText("Default Pace")
+        tapButton(containing: "Every, ", inSheet: true)
+        tapText("10 min", inSheet: true)
+        back()
         tapText("How It Nudges")
-        shot("settings-how-it-nudges", pages: 4)
+        shot("settings-how-it-nudges", pages: 40, stopsAtEnd: true)
+        back()
+        tapText("Default Pace")
+        // At accessibility sizes the pace is a menu rather than segments.
+        let segment = app.buttons["Escalating"]
+        if !segment.waitForExistence(timeout: 2) || !segment.isHittable {
+            tapText("Pace")
+        }
+        // Without scrolling to the top first, which would close the menu.
+        tapText("Escalating", inSheet: true)
+        back()
+        tapText("How It Nudges")
+        shot("settings-how-it-nudges-escalating", pages: 40, stopsAtEnd: true)
     }
 
     func testForm() {

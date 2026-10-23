@@ -49,6 +49,7 @@ SCREENS = {
   "form-new-consistent": ("openEditor();state.sheet.draft.pace='consistent';state.sheet.draft.wait=10;render()", 4),
   "form-new-relentless": ("openEditor();state.sheet.draft.strength='relentless';render()", 4),
   "settings-default-pace": ("state.tab='settings';nav();push({kind:'defpace'})", 1),
+  "settings-how-it-nudges-escalating": ("settings.defaultPace={pace:'escalating',wait:10};state.tab='settings';nav();push({kind:'hin'})", 4),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}
