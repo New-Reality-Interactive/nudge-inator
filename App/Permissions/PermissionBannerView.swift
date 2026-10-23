@@ -3,10 +3,12 @@ import SwiftUI
 
 /// DESIGN.md's Permission banner: the cell color, a 2 pt border (red for notifications off,
 /// orange otherwise), an icon, a bold lead sentence and Open Settings as a small bordered button.
-/// At accessibility sizes the icon goes above the text, so Open Settings gets the banner's full
-/// width, and its label wraps rather than being cut to "Open…".
+/// At accessibility sizes the icon goes above the text and Open Settings fills the banner's width,
+/// as a nudge card's Done does, its label wrapping rather than being cut to "Open…".
 struct PermissionBannerView: View {
     let banner: PermissionBanner
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         SizeAdaptiveStack(rowAlignment: .firstTextBaseline, rowSpacing: Design.Spacing.controlGap,
@@ -27,10 +29,10 @@ struct PermissionBannerView: View {
                     Text("Open Settings", comment: "Permission banner: opens the iOS Settings page where the missing permission is turned on.")
                         .multilineTextAlignment(.center)
                 }
-                .buttonStyle(SmallBorderedButtonStyle())
+                .buttonStyle(SmallBorderedButtonStyle(fillsWidth: dynamicTypeSize.isAccessibilitySize))
                 // At the largest sizes even the full width holds less than its two words, so the
-                // label may wrap, and the whole button, capsule too, grows to fit it. On one line
-                // these change nothing.
+                // label may wrap, and the whole button, background too, grows to fit it. On one
+                // line these change nothing.
                 .fixedSize(horizontal: false, vertical: true)
                 // Two banners can show at once, so VoiceOver hears which permission each opens.
                 .accessibilityLabel(banner.openSettingsLabel)

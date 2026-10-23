@@ -18,11 +18,11 @@ The banner (`App/Permissions/PermissionBannerView.swift`) puts the button in the
 
 DESIGN.md's Permission banner: "**Open Settings** as a small bordered button." Its label should read whole at every text size.
 
-At accessibility text sizes the banner puts its icon above the text, with `SizeAdaptiveStack`, as Tags' rows do in Edit mode, so the text and Open Settings get the banner's full width, and the button's label wraps if it still doesn't fit. DESIGN.md's Permission banner says so.
+At accessibility text sizes the banner puts its icon above the text, with `SizeAdaptiveStack`, as Tags' rows do in Edit mode, and Open Settings fills the banner's width with `{rounded.control}` corners, as a nudge card's Done does, keeping its grey fill; its label wraps if it still doesn't fit. DESIGN.md's Permission banner says so.
 
-- [ ] At AX5, in portrait and landscape, each banner's Open Settings label reads whole, with no truncation. Shot on both simulators with `SHOTS_TESTS="testNotificationsOff testAlarmsOff testTimeSensitiveOff"` and `SHOTS_VARIANTS="largest-text largest-text-landscape"`; Brian looks at the `banner-*` shots.
-- [ ] The other uses of `SmallBorderedButtonStyle` read whole at AX5, in the same shots of `testTags` (`tags-edit`, Rename) and `testMyDay` (`myday`, Done). `DoneSlot` only wraps them; Now's Done button has its own style.
-- [ ] At the default size the banners are unchanged: the `banner-*` shots from this branch look the same as from `main`.
+- [x] At AX5, in portrait and landscape, each banner's Open Settings label reads whole, with no truncation. Shot on both simulators with `SHOTS_TESTS="testNotificationsOff testAlarmsOff testTimeSensitiveOff"` and `SHOTS_VARIANTS="largest-text largest-text-landscape"`; Brian looks at the `banner-*` shots.
+- [x] The other uses of `SmallBorderedButtonStyle` read whole at AX5, in the same shots of `testTags` (`tags-edit`, Rename) and `testMyDay` (`myday`, Done). `DoneSlot` only wraps them; Now's Done button has its own style.
+- [x] At the default size the banners are unchanged: the `banner-*` shots from this branch look the same as from `main`.
 
 ## Before you start
 
@@ -45,3 +45,10 @@ At accessibility text sizes the banner puts its icon above the text, with `SizeA
 - Shots, both simulators, `SHOTS_TESTS="testNotificationsOff testAlarmsOff testTimeSensitiveOff"`. AX5 portrait: the icon sits above the text and Open Settings reads "Open / Settings" in a taller capsule inside the border. AX5 landscape: "Open Settings" on one line. Default size, portrait and landscape: each banner pixel-compared with `main`'s shots; the only difference is a sub-pixel shift in the button label's glyphs, which looks the same.
 - Criterion 2: on `main`, `testTags` and `testMyDay` at AX5 (portrait and landscape, both simulators) show Rename and Done whole. The shared style is unchanged.
 - Both mockups gain an AX rule that stacks `.banner`, to match.
+
+### 2026-10-23: full-width button, and criterion 1
+
+- Brian looked at the first AX5 shots and asked for Open Settings to be like Done there: as wide as the banner. Agreed: full width with `{rounded.control}` (10 pt) corners, the grey fill and teal text kept, only at accessibility sizes. `SmallBorderedButtonStyle` gains `fillsWidth` (default off), which only the banner turns on, so Rename, My Day's Done and the default-size banner are unchanged. DESIGN.md and both mockups' AX rules say so.
+- The iOS 26.5 simulator had stopped turning to landscape: every iOS 26.5 "landscape" shot since ticket 09's run (07:41) was portrait, ticket 10's and 11's included. Restarting the simulator fixed it; this ticket's iOS 26.5 landscape shots were taken after the restart.
+- `testTimeSensitiveOff` now shoots three pages: with one, the banner's button was never in the shot at AX5.
+- Criterion 1: Brian signed off the AX5 shots of all three banners, portrait and landscape, on both simulators. Ticked.- Criterion 2: Brian signed off this branch's AX5 shots of Tags' Rename (`tags-edit`) and My Day's Done (`myday`), portrait and landscape, on both simulators. Ticked. (On iOS 27.0 in `largest-text-landscape`, `myday-filter` again wasn't shot, as in ticket 11.)- Criterion 3: Brian signed off the default-size shots of each banner's first page, `main` beside this branch, portrait and landscape, on both simulators. Ticked.

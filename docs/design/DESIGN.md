@@ -382,8 +382,9 @@ except in the tab and navigation bars. Verify names against the mockup.
 ### Permission banner
 - **Token:** `permission-banner`. `{colors.cell}`, `{rounded.card}`, 2 pt border (negative for
   notifications off, warning otherwise), icon, bold lead sentence, **Open Settings** as a small
-  bordered button. At accessibility text sizes the icon goes above the text, so the button has the
-  full width; its label wraps there rather than truncating.
+  bordered button. At accessibility text sizes the icon goes above the text and the button fills
+  the banner's width with `{rounded.control}` corners, as a nudge card's Done does; its label
+  wraps there rather than truncating.
 
 ### Settings row
 - Icon tile, label in `{typography.body}`, trailing status in `{colors.secondary-label}` (or

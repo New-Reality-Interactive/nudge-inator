@@ -145,18 +145,27 @@ struct StatusLabel: View {
     }
 }
 
-/// DESIGN.md's `button-bordered` as a small capsule: accent text on the tertiary fill, at least
-/// 44 pt tall. Drawn here rather than by `.bordered`: the system's style carries a glass layer
-/// that the phone left drawn behind a My Day row's status after Done.
+/// DESIGN.md's `button-bordered` as a small capsule, or with `fillsWidth` a full-width rounded
+/// rectangle: accent text on the tertiary fill, at least 44 pt tall. Drawn here rather than by
+/// `.bordered`: the system's style carries a glass layer that the phone left drawn behind a My Day
+/// row's status after Done.
 struct SmallBorderedButtonStyle: ButtonStyle {
+    /// Fills its container's width with the control radius, as a nudge card's Done does, in place
+    /// of a capsule, whose round ends would grow with a label that wraps.
+    var fillsWidth = false
+
     func makeBody(configuration: Configuration) -> some View {
+        let shape = fillsWidth
+            ? AnyShape(RoundedRectangle(cornerRadius: Design.Radius.control))
+            : AnyShape(Capsule())
         configuration.label
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(Color.accentColor)
             .padding(.horizontal, Design.Spacing.s4)
-            .frame(minHeight: Design.Spacing.rowMin)
-            .background(Capsule().fill(Color(uiColor: .tertiarySystemFill)))
-            .contentShape(Capsule())
+            .padding(.vertical, fillsWidth ? Design.Spacing.s2 : 0)
+            .frame(maxWidth: fillsWidth ? .infinity : nil, minHeight: Design.Spacing.rowMin)
+            .background(shape.fill(Color(uiColor: .tertiarySystemFill)))
+            .contentShape(shape)
             .opacity(configuration.isPressed ? 0.6 : 1)
     }
 }
