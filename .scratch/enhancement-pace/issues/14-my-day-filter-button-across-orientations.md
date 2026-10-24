@@ -7,7 +7,7 @@
 
 **Blocked by:** none.
 
-**Status:** needs-triage
+**Status:** resolved
 
 Raised by Brian while checking ticket 11's screenshots, 2026-10-23.
 
@@ -29,8 +29,8 @@ The as-built mockup (`docs/mockups/2026-10-21-as-built/`) draws both.
 ## What it should do
 
 - [x] The options, with Apple's guidance (apple-rag-mcp) and the mockup's view of each, are written up here.
-- [ ] My Day's Filter button shows `tag.filter` in place of `line.3.horizontal.decrease`, in the bar beside New Reminder in portrait and landscape (placement B), with the chosen-tag count fitting beside it. Shot on both simulators at the default and largest text sizes; Brian signs off the shots. (Reworded 2026-10-23: B is built here; Comments.)
-- [ ] VoiceOver reads the button as before ("Filter by Tags", with the count when tags are chosen).
+- [x] My Day's Filter button shows `tag.filter` in place of `line.3.horizontal.decrease`, in the bar beside New Reminder in portrait and landscape (placement B), with the chosen-tag count fitting beside it. Shot on both simulators at the default and largest text sizes; Brian signs off the shots. (Reworded 2026-10-23: B is built here; Comments.)
+- [x] VoiceOver reads the button as before ("Filter by Tags", with the count when tags are chosen).
 - [x] DESIGN.md's symbol table uses `tag.filter` for the Filter button, and a new mockup, `docs/mockups/2026-10-23-tag-filter/`, draws it (reworded 2026-10-23: the dated mockups stay as they are; Comments).
 - [x] Brian picks a placement, recorded in Comments, and it's built here rather than in a new ticket (reworded 2026-10-23; Comments).
 
@@ -96,3 +96,12 @@ Recommendation: **B**. The new icon removes the main reason for words in portrai
   - The mockup draws the count in the accent color while the filter is on. The app draws it in the bar's monochrome, as it did in landscape before this ticket. This drift came from the proposed-pace mockup, not from this ticket.
   - Seen in the AX5 shots, not this ticket's: the Now marker breaks "AM" across two lines ("12:03 A / M").
 - Shots: `docs/screenshots/2026-10-23-ticket14-B/` (git-ignored), `testMyDay`, all four variants on both simulators, including the new `myday-filtered`. On iOS 27 every variant shot, including `myday-filter` at AX5 in landscape, the gap from tickets 11 and 12, which is now gone because Filter no longer needs a scroll back to reach it. The iOS 26.5 simulator didn't turn for either landscape variant (ticket 12), and a plain retry didn't help. After a simulator restart (`xcrun simctl shutdown`) it turned, and both landscape variants were reshot into `docs/screenshots/2026-10-23-ticket14-B-265-landscape/`. Use those for iOS 26.5 landscape.
+- Criterion 2: Brian signed off the shots (both simulators, default and AX5, portrait and landscape), 2026-10-24. Ticked. He hadn't asked for the chosen-tag count beside the icon in portrait, but keeps it as a nice touch.
+
+### 2026-10-24: iPhone checks (iPhone 15, iOS 27.0.1)
+
+The app wasn't installed at the start, so it is uninstalled afterwards. Brian made one reminder by hand, due today and tagged.
+
+- Criterion 3, VoiceOver: My Day's Filter button, in the bar, reads "Filter by Tags, button". After choosing #home in the sheet, it reads "Filter by Tags, 1 chosen, button", in portrait and in landscape, with no separate "1". Ticked. (The sheet's tag row reads "Number sign home, button": the known reading of "#", ticket 29.)
+- Large Content Viewer (the proposed check, run as a check rather than a criterion): with VoiceOver off at AX5 (Brian's own setting is +4, put back afterwards), a long press on Filter shows the system's large bubble with the tag icon and, under it, the count. Lifting the finger on the button opens the Filter sheet. It works the same in portrait and landscape. The bar gives the viewer on its own, so no `accessibilityShowsLargeContentViewer` is needed.
+- Clean-up: Brian put his text size back (+4), deleted the reminder, and the app was uninstalled (`devicectl` confirms it's gone).
