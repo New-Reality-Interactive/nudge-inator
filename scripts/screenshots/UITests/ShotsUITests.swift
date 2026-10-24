@@ -7,7 +7,7 @@ import XCTest
 final class ShotsUITests: XCTestCase {
     /// The harness's `SHOT_SCENARIO`s (`ShotsApp.Scenario`, which can't be imported here).
     enum ShotScenario: String {
-        case app, onboarding, notificationsOff, alarmsOff, timeSensitiveOff
+        case app, onboarding, notificationsOff, alarmsOff, timeSensitiveOff, customLocking
     }
 
     private var app: XCUIApplication!
@@ -19,9 +19,10 @@ final class ShotsUITests: XCTestCase {
         XCUIDevice.shared.orientation = landscape ? .landscapeLeft : .portrait
     }
 
-    private func launch(_ scenario: ShotScenario) {
+    private func launch(_ scenario: ShotScenario, dark: Bool = false) {
         app = XCUIApplication()
         app.launchEnvironment["SHOT_SCENARIO"] = scenario.rawValue
+        app.launchEnvironment["SHOT_DARK"] = dark ? "1" : "0"
         app.launch()
         // The seed and the first plan.
         _ = app.tabBars.firstMatch.waitForExistence(timeout: 10)
@@ -347,6 +348,41 @@ final class ShotsUITests: XCTestCase {
         shot("form-repeat", pages: 2)
         tapText("Custom", inSheet: true)
         shot("form-custom", pages: 3)
+    }
+
+    /// The Custom page of a reminder that starts nudging while it's open (ticket 16), light and
+    /// dark, before and after the lock, and what VoiceOver gets for its controls once locked, in the
+    /// test log (`ACCESSIBILITY` lines). Each launch waits up to 210 seconds for the lock. It only
+    /// scrolls down: at the top of the sheet a drag down would close it.
+    func testCustomLocking() {
+        for dark in [false, true] {
+            let name = dark ? "form-custom-locking-dark" : "form-custom-locking"
+            launch(.customLocking, dark: dark)
+            tapText("Plan the week")
+            openSheet("Edit", title: "Edit Reminder")
+            hideKeyboard()
+            tapText("Repeat", inSheet: true)
+            tapText("Custom", inSheet: true)
+            shot("\(name)-unlocked")
+            let note = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Nudging now.")).firstMatch
+            XCTAssert(note.waitForExistence(timeout: 210), "The Custom page didn't lock")
+            for page in 1...5 {
+                shot("\(name)-locked-\(page)")
+                if !dark { reportLockedCustomPage(page: page) }
+                scroll(down: true)
+            }
+            app.terminate()
+        }
+    }
+
+    /// The lines of the accessibility tree on screen that name the locked Custom page's headings,
+    /// choices and steppers: each one's type, label, value and whether it's disabled. XCUITest
+    /// doesn't expose the hint, so that stays a device check.
+    private func reportLockedCustomPage(page: Int) {
+        let names = ["Frequency", "Daily", "Weekly", "Monthly", "Yearly", "Every", "'On", "Ends", "Never", "After", "On Date", "End Date", "ncrement", "ecrement"]
+        for line in app.debugDescription.split(separator: "\n") where names.contains(where: { line.contains($0) }) {
+            print("ACCESSIBILITY page \(page): \(line.trimmingCharacters(in: .whitespaces))")
+        }
     }
 
     func testOnboarding() {

@@ -7,32 +7,37 @@ import SwiftUI
 /// The person never sees the rule (ADR 0003).
 struct CustomRepeatPage: View {
     @Bindable var form: ReminderForm
+    /// The start of the current minute, ticked while the page is open: Next Times' due times pass
+    /// with no change the views can see (ticket 16), as the Now tab's badge counts do.
+    @State private var minute = Date.now
 
     var body: some View {
         let isLocked = form.lockedFields.contains(.repeatRule)
         Form {
             if isLocked { RepeatLockSection() }
             let choices = $form.customChoices
-            Group {
-                Section {
-                } header: {
-                    Text("\(form.customPageSummary).", comment: "Top of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\".")
-                        .font(.subheadline.bold())
-                        .foregroundStyle(Color(uiColor: .label))
-                        .textCase(nil)
-                }
-                Group {
-                    FrequencySection(choices: choices, start: form.dueTime)
-                    switch choices.wrappedValue.frequency {
-                    case .weekly: WeekdaysSection(form: form)
-                    case .monthly: MonthlySection(form: form)
-                    case .daily, .yearly: EmptyView()
-                    }
-                    EndsSection(choices: choices, start: form.dueTime, endsBeforeStart: form.repeatBlock == .endsBeforeStart)
-                }
-                // The reminder may start nudging while the page is open (ticket 13).
-                .lockedWhileNudging(isLocked)
-                NextTimesSection(form: form)
+            Section {
+            } header: {
+                Text("\(form.customPageSummary).", comment: "Top of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\".")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(Color(uiColor: .label))
+                    .textCase(nil)
+            }
+            // The reminder may start nudging while the page is open (ticket 13). Each control
+            // takes the lock itself, so the headings stay headings (ticket 16).
+            FrequencySection(choices: choices, start: form.dueTime, isLocked: isLocked)
+            switch choices.wrappedValue.frequency {
+            case .weekly: WeekdaysSection(form: form, isLocked: isLocked)
+            case .monthly: MonthlySection(form: form, isLocked: isLocked)
+            case .daily, .yearly: EmptyView()
+            }
+            EndsSection(choices: choices, start: form.dueTime, endsBeforeStart: form.repeatBlock == .endsBeforeStart, isLocked: isLocked)
+            NextTimesSection(form: form, minute: minute)
+        }
+        // On the Form, not the section, so exactly one loop ticks however many rows it has.
+        .task {
+            while (try? await EveryMinute.sleepUntilNext()) != nil {
+                minute = .now
             }
         }
         .centeredInReadableColumn()
@@ -45,27 +50,21 @@ struct CustomRepeatPage: View {
 private struct FrequencySection: View {
     @Binding var choices: CustomRepeat
     let start: Date
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    let isLocked: Bool
 
     var body: some View {
-        Section {
-            Picker(selection: $choices.frequency) {
-                ForEach(RepeatRule.Frequency.allCases, id: \.self) { frequency in
-                    Text(frequency.title).tag(frequency)
-                }
-            } label: {
-                Text("Frequency", comment: "The Custom repeat page's choice of Daily, Weekly, Monthly or Yearly.")
+        SegmentedChoiceSection(
+            label: Text("Frequency", comment: "The Custom repeat page's choice of Daily, Weekly, Monthly or Yearly."),
+            selection: $choices.frequency,
+            selectedTitle: Text(choices.frequency.title),
+            isLocked: isLocked
+        ) {
+            ForEach(RepeatRule.Frequency.allCases, id: \.self) { frequency in
+                Text(frequency.title).tag(frequency)
             }
-            .segmentedPickerStyle(isMenu: dynamicTypeSize.isAccessibilitySize)
-            Stepper(value: $choices.interval, in: CustomRepeat.intervals(for: choices.frequency)) {
-                Text(choices.frequency.every(choices.interval))
-            }
-        } header: {
-            if !dynamicTypeSize.isAccessibilitySize {
-                // VoiceOver reads the segments without the picker's label (device check, ticket
-                // 25), so the heading names them. At accessibility sizes the menu carries it.
-                Text("Frequency", comment: "The Custom repeat page's choice of Daily, Weekly, Monthly or Yearly.")
-            }
+        } rows: {
+            LockableStepper(value: $choices.interval, range: CustomRepeat.intervals(for: choices.frequency), isLocked: isLocked,
+                            label: Text(choices.frequency.every(choices.interval)))
         } footer: {
             if choices.frequency == .yearly {
                 let day = start.formatted(.dateTime.day().month(.wide))
@@ -79,6 +78,7 @@ private struct FrequencySection: View {
 /// A weekly repeat's days, Monday first. The last chosen day can't be taken off.
 private struct WeekdaysSection: View {
     @Bindable var form: ReminderForm
+    let isLocked: Bool
 
     /// Monday first, as the mockup's `WEEK_ORDER`, whatever the locale's first weekday.
     private static let order: [RepeatRule.Weekday] = [.monday, .tuesday, .wednesday, .thursday, .friday, .saturday, .sunday]
@@ -94,9 +94,10 @@ private struct WeekdaysSection: View {
                 // SwiftUI on iOS no checkbox trait (the checkbox toggle style is macOS only), so
                 // it's a toggle that is selected while chosen. What VoiceOver says is a device check.
                 .accessibilityAddTraits(.isToggle)
+                .lockedWhileNudging(isLocked)
             }
         } header: {
-            Text("On", comment: "Header of the Custom repeat page's days: the weekdays, or the day of the month.")
+            OnHeader(isLocked: isLocked)
         } footer: {
             Text("Choose one or more days.", comment: "Under the Custom repeat page's weekdays.")
         }
@@ -106,6 +107,7 @@ private struct WeekdaysSection: View {
 /// A monthly repeat's day: the ones the start offers, so there's nothing else to pick.
 private struct MonthlySection: View {
     @Bindable var form: ReminderForm
+    let isLocked: Bool
 
     var body: some View {
         let chosen = form.chosenMonthlyDay
@@ -115,9 +117,10 @@ private struct MonthlySection: View {
                 CheckmarkRow(title: Text(verbatim: monthlyDay.title), isChecked: monthlyDay.day == chosen) {
                     form.customChoices.monthlyDay = monthlyDay.day
                 }
+                .lockedWhileNudging(isLocked)
             }
         } header: {
-            Text("On", comment: "Header of the Custom repeat page's days: the weekdays, or the day of the month.")
+            OnHeader(isLocked: isLocked)
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                 if let note = form.skippedMonthsNote {
@@ -130,43 +133,54 @@ private struct MonthlySection: View {
     }
 }
 
+/// The heading of the weekdays or the monthly days, with the `lock` while they're locked.
+private struct OnHeader: View {
+    let isLocked: Bool
+
+    var body: some View {
+        LockableLabel(isLocked: isLocked) {
+            Text("On", comment: "Header of the Custom repeat page's days: the weekdays, or the day of the month.")
+        }
+    }
+}
+
 /// Never, after a number of times, or on a date no earlier than the start.
 private struct EndsSection: View {
     @Binding var choices: CustomRepeat
     let start: Date
     let endsBeforeStart: Bool
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    let isLocked: Bool
+
+    private static let endings: [CustomRepeat.Ending] = [.never, .afterCount, .onDate]
 
     var body: some View {
-        Section {
-            Picker(selection: $choices.ending) {
-                Text("Never", comment: "The Custom repeat page's Ends choice: it repeats for ever.").tag(CustomRepeat.Ending.never)
-                Text("After", comment: "The Custom repeat page's Ends choice: it ends after a number of times.").tag(CustomRepeat.Ending.afterCount)
-                Text("On Date", comment: "The Custom repeat page's Ends choice: it ends on a date.").tag(CustomRepeat.Ending.onDate)
-            } label: {
-                Text("Ends", comment: "The Custom repeat page's choice of when the repeat ends.")
+        SegmentedChoiceSection(
+            label: Text("Ends", comment: "The Custom repeat page's choice of when the repeat ends."),
+            selection: $choices.ending,
+            selectedTitle: Text(choices.ending.title),
+            isLocked: isLocked
+        ) {
+            ForEach(Self.endings, id: \.self) { ending in
+                Text(ending.title).tag(ending)
             }
-            .segmentedPickerStyle(isMenu: dynamicTypeSize.isAccessibilitySize)
+        } rows: {
             switch choices.ending {
             case .never:
                 EmptyView()
             case .afterCount:
-                Stepper(value: $choices.count, in: CustomRepeat.counts) {
-                    Text("After \(choices.count) times", comment: "The Custom repeat page's stepper: how many times it falls due before it ends.")
-                }
+                LockableStepper(value: $choices.count, range: CustomRepeat.counts, isLocked: isLocked,
+                                label: Text("After \(choices.count) times", comment: "The Custom repeat page's stepper: how many times it falls due before it ends."))
             case .onDate:
                 // No earlier than the start. An end date already before it (the start moved
                 // later) stays in range, or the picker would show the start in its place while
                 // the rule kept the old date (device check, ticket 25); the reason below says why.
                 let startDay = Calendar.autoupdatingCurrent.startOfDay(for: start)
                 DatePicker(selection: $choices.endDate, in: min(startDay, choices.endDate)..., displayedComponents: .date) {
-                    Text("End Date", comment: "The Custom repeat page's last day the repeat can fall due.")
+                    LockableLabel(isLocked: isLocked) {
+                        Text("End Date", comment: "The Custom repeat page's last day the repeat can fall due.")
+                    }
                 }
-            }
-        } header: {
-            if !dynamicTypeSize.isAccessibilitySize {
-                // Read by VoiceOver, as Frequency's heading is.
-                Text("Ends", comment: "The Custom repeat page's choice of when the repeat ends.")
+                .lockedWhileNudging(isLocked)
             }
         } footer: {
             if endsBeforeStart {
@@ -180,6 +194,9 @@ private struct EndsSection: View {
 /// The next three times it falls due, and whether it ends before then.
 private struct NextTimesSection: View {
     let form: ReminderForm
+    /// The page's minute. A new one draws the section again, so its due times are worked out
+    /// from the clock again.
+    let minute: Date
 
     var body: some View {
         let dueTimes = form.customPageUpcomingDueTimes
@@ -214,6 +231,16 @@ private struct NextTimesSection: View {
         let style = Date.FormatStyle().weekday(.abbreviated).day().month(.abbreviated)
         // Formatted for the locale already.
         return Text(verbatim: date.formatted(form.showsYear(of: date) ? style.year() : style))
+    }
+}
+
+extension CustomRepeat.Ending {
+    var title: LocalizedStringResource {
+        switch self {
+        case .never: LocalizedStringResource("Never", comment: "The Custom repeat page's Ends choice: it repeats for ever.")
+        case .afterCount: LocalizedStringResource("After", comment: "The Custom repeat page's Ends choice: it ends after a number of times.")
+        case .onDate: LocalizedStringResource("On Date", comment: "The Custom repeat page's Ends choice: it ends on a date.")
+        }
     }
 }
 

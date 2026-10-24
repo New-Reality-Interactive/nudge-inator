@@ -69,6 +69,28 @@ private extension View {
     }
 }
 
+/// A stepper, as the Custom page's Every and After are. Locked, it is its label as plain text
+/// without the − and +, as the Edit form's locked Every row is: iOS draws a disabled stepper's +
+/// as enabled (ticket 16's simulator check). VoiceOver reads it as one element with the lock's
+/// reason as its hint.
+struct LockableStepper<Value: Strideable>: View {
+    @Binding var value: Value
+    let range: ClosedRange<Value>
+    let isLocked: Bool
+    let label: Text
+
+    var body: some View {
+        if isLocked {
+            LockableLabel(isLocked: true) { label }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
+                .lockedWhileNudging(true)
+        } else {
+            Stepper(value: $value, in: range) { label }
+        }
+    }
+}
+
 /// A row whose value is locked while nudging: plain text, without the arrows or chevron of the
 /// control it replaces, read by VoiceOver as one element with the lock's reason as its hint.
 struct LockedValueRow: View {
