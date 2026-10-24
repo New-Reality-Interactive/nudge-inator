@@ -3,23 +3,33 @@ import SwiftUI
 /// The Filter button, in the bar beside New Reminder in both orientations (the filter-badge
 /// mockup): an icon that turns accent-colored while the filter is on, with the system's badge
 /// showing how many tags are chosen. A count of 0 hides the badge.
+///
+/// At the accessibility text sizes there is no badge. The bar's icons stay bar-sized, but on iOS 27
+/// the system draws the badge at the text size, so it covers the icon (an iPhone on iOS 27.0.1 and
+/// the iOS 27.0 simulator; not the iOS 26.5 simulator). There the chosen-tag tokens and the
+/// VoiceOver label carry the count.
 struct MyDayFilterButton: View {
     /// How many tags (or No Tags) are chosen.
     let chosen: Int
+    /// Whether the badge shows. False at the accessibility text sizes. The caller says, since inside
+    /// a toolbar the Dynamic Type size is the bar's, which stays below them.
+    var showsBadge = true
     let open: () -> Void
 
     /// A custom symbol in the asset catalog: the Tags tab's tag with a filter badge, so it says it
     /// filters by tags.
     private static let symbol = "tag.filter"
 
+    private var badgeCount: Int { showsBadge ? chosen : 0 }
+
     var body: some View {
         Button(action: open) {
             Image(Self.symbol)
         }
-        .badge(chosen)
+        .badge(badgeCount)
         // The toolbar kept showing the old badge when a token took the count down (the iPhone and the
         // simulator, ticket 19), though the tint followed, so each count is its own button.
-        .id(chosen)
+        .id(badgeCount)
         // The bar draws its icons monochrome, so the accent is set here, and only while the filter is
         // on, when the color means something (WWDC25, "Build a SwiftUI app with the new design").
         .tint(chosen > 0 ? Color.accentColor : nil)

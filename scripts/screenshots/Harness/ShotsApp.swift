@@ -43,6 +43,8 @@ struct ShotsApp: App {
 struct BadgeBarShot: View {
     let chosen: Int
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
         NavigationStack {
             Color(.systemGroupedBackground)
@@ -50,7 +52,7 @@ struct BadgeBarShot: View {
                 .navigationTitle("My Day")
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        MyDayFilterButton(chosen: chosen) {}
+                        MyDayFilterButton(chosen: chosen, showsBadge: !dynamicTypeSize.isAccessibilitySize) {}
                     }
                     ToolbarItem(placement: .primaryAction) { NewReminderButton() }
                 }

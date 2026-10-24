@@ -117,3 +117,13 @@ On Brian's iPhone (iPhone 15, iOS 27.0.1), default text size, VoiceOver off: no 
 
 **Fix:** `.id(chosen)` on the button, so each count is its own toolbar item and its badge is built again. The same test now shows "1" after the first removal and no badge after the second (iOS 27.0 simulator). Cause not found beyond that: `.badge` on a toolbar button doesn't refresh when the value changes without the sheet closing, and the docs say nothing about it.
 
+### 2026-10-24: iPhone check 3: the badge at the largest text size
+
+On Brian's iPhone (iOS 27.0.1), with Larger Accessibility Sizes turned on and the slider at the far right (it was off, slider at the default): the badge grows with the text and covers the tag icon, in portrait and landscape, as on the iOS 27.0 simulator. So it is how iOS 27 draws it. Only the iOS 26.5 simulator keeps it small. Apple's docs say nothing about how a bar badge should scale.
+
+**Brian's call (revises the earlier "keep the system badge at every size"):** hide the badge at the accessibility text sizes for now, and open a research ticket on what using UIKit instead of SwiftUI would mean: ticket 21.
+
+**Built:** `MyDayFilterButton` takes `showsBadge`, which `MyDayTab` sets to false at the accessibility sizes. It has to be read there: the Dynamic Type size inside a toolbar is the bar's, which stays below the accessibility sizes (a first try that read it in the button did nothing; this also explains why limiting the button's size did nothing earlier). At those sizes the icon shows in full and stays teal while a filter is on, the chosen-tag tokens list the tags, and the VoiceOver label keeps the count. iOS 27.0 simulator: default size shows the badge (1, 12, 999); largest size shows none.
+
+**Differs from the approved mockup:** `2026-10-24-filter-badge` shows the badge at every size. A frozen mockup isn't edited; this is the record of why the app doesn't match it at the accessibility sizes. DESIGN.md says so.
+

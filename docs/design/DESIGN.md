@@ -232,9 +232,9 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
 - **Neutral (gray)** marks **Normal urgency**, tags, strength badges and counts of 0.
 - **Badge (`{colors.badge}`)** is the Now tab's nudging count and My Day's Filter button's count of
   tags chosen, both as the system draws them (red; SwiftUI can't recolor the Filter button's, and
-  the app doesn't bridge to UIKit for it). A count of 0 shows no badge, so it is never red. The
-  system sizes the badge with the text size, so at the largest sizes it covers the Filter icon and
-  999 reads "9…"; the chosen-tag tokens and the VoiceOver label still carry the count.
+  the app doesn't bridge to UIKit for it). A count of 0 shows no badge, so it is never red. At the
+  accessibility text sizes the Filter button has no badge: on iOS 27 the system draws it at the text
+  size, so it covers the icon. The chosen-tag tokens and the VoiceOver label carry the count there.
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
   action is `{colors.tile-green}`. Settings rows: red (Notifications, Delete All Data), orange
   (Alarms), gray (Open iOS Settings, Default Pace, How It Nudges), blue (Send a Test Nudge). Tiles are icons for rows, not
