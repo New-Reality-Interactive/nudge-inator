@@ -2,7 +2,7 @@
 
 **What to build:** A bug fix, following ticket 13. When a reminder starts nudging while its Custom repeat page is open, every locked control there looks locked and VoiceOver gives the lock's reason on it, as the Edit form's locked fields do. Next Times stays current while the page is open.
 
-**Blocked by:** none.
+**Blocked by:** 18.
 
 **Status:** needs-triage
 

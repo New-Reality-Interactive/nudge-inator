@@ -2,7 +2,7 @@
 
 **What to build:** The Custom repeat page gets a checkmark in the top-right corner that saves its choices as the reminder's repeat and goes back to the Repeat page with Custom checked. Back goes back without changing anything.
 
-**Blocked by:** none.
+**Blocked by:** 16.
 
 **Status:** needs-triage
 
@@ -27,7 +27,7 @@ Brian's choice (option "d"):
 ## Before you start
 
 - Builds on: `CustomRepeatPage` edits the form as the person goes ("so Back keeps it", its doc comment). It needs to edit a copy of the choices, written to the form only by the checkmark.
-- To decide: what the checkmark does when the reminder starts nudging while the page is open (ticket 16). Presumably it's disabled, like the page's other controls.
+- When the reminder starts nudging while the page is open, lock the checkmark as ticket 16 locks the page's other controls.
 - To decide: whether `hasChanges` (Cancel's confirmation) needs anything, since nothing reaches the form until the checkmark is tapped.
 - Check the mockup under `docs/mockups/` for the Custom page's toolbar before building.
 
