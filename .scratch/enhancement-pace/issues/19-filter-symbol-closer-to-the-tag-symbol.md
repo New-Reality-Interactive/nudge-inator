@@ -44,7 +44,7 @@ What Apple's docs say (`apple-rag-mcp`):
 - [x] The badge's background is the teal accent color if the system allows it, and the system's standard badge if not. Try the SwiftUI options first: a tint, and `.badge(Text("\(chosen)").foregroundStyle(…))`, and look at the capsule in the shots. If the capsule stays system red, keep the standard badge; Brian has accepted that. Don't draw a custom badge, which would drop the system's placement and accessibility behavior. If the capsule does turn teal, its number stays legible in light and dark. Record in Comments which it is and what was tried.
 - [x] `docs/design/DESIGN.md` uses red `{colors.badge}` only for the Now tab's nudging count, and says a count of 0 is never red. Record in Comments whether the filter count's badge fits that rule: a red capsule means the rule needs a line saying the Filter button's count is also drawn as the system's badge; a teal one means it needs a line for the accent-colored badge. Update DESIGN.md to match.
 - [x] In the shots, the badge over the tag's dotted end is looked at, and Brian decides whether the symbol stays as it is or is mirrored. Record it in Comments.
-- [ ] VoiceOver reads the button once, as "Filter by Tags", with the count when tags are chosen, and does not read the count twice. Device check.
+- [x] VoiceOver reads the button once, as "Filter by Tags", with the count when tags are chosen, and does not read the count twice. Device check.
 - [x] A new interactive HTML mockup, `docs/mockups/2026-10-24-…/` (`index.html` and a `README.md`, like the other dated mockups), is made first, and Brian approves it before any code changes: no symbol swap, no change to `MyDayFilterButton`, nothing in the app target until he has. It is a copy of `2026-10-23-tag-filter` changed only for this ticket, and its README lists what changed:
   - The Filter button's count is a badge on the button, not text beside the icon. Choosing tags in the mockup shows it; choosing none hides it; it can be tried at counts of 1, 12 and 999. It is drawn as the system's standard badge (red), with a switch to the accent teal so Brian can see both, since the build may not be able to do teal.
   - The `"tag.filter"` entry in the mockup's symbol table is redrawn to match the new symbol: the `tag` outline with the three-line filter badge at the lower right. It is still a stand-in drawn in strokes.
@@ -132,4 +132,18 @@ On Brian's iPhone (iOS 27.0.1), with Larger Accessibility Sizes turned on and th
 Brian's iPhone (iOS 27.0.1), default text size, VoiceOver on: no tag chosen, "Filter by tags, button"; one tag, "Filter by tags, 1 chosen, 1, button"; two tags, "Filter by tags, 2 chosen, 2, button". The system badge adds its own count after the label, which already had it. That is what the iOS review warned the docs couldn't rule out.
 
 **Fix:** the label is always "Filter by Tags", and the count is the accessibility value ("1 chosen"), none when no tag is chosen. The string catalog has the value as a plural-variant entry and no longer has the old label's. A new shot test, `testMyDayFilterAccessibility`, prints what the Filter button exposes (the iOS 27.0 simulator): with none, label "Filter by Tags", value ""; with one, value "1 chosen"; with two, "2 chosen". An explicit value replaces the badge's own, in what the app exposes. Whether VoiceOver now speaks "Filter by tags, 1 chosen, button" needs the iPhone again. At the accessibility sizes the badge is hidden, and the value still carries the count.
+
+### 2026-10-24: Device checks, all five, on Brian's iPhone
+
+Brian's iPhone 15, iOS 27.0.1. Start: default text size, Larger Accessibility Sizes off, VoiceOver off. The app wasn't installed, so it was installed for the checks and uninstalled after (the app list for its bundle ID is empty).
+
+| Check | Result |
+|---|---|
+| 1. Install and seed | Three reminders with 1, 2 and 3 tags. |
+| 2. Badge at the default size, portrait and landscape | Pass after a fix: no badge with none chosen; 1 and 2 right; removing tags left a stale badge (fixed with `.id`, rechecked: two tags, remove one, remove the last, and Clear, both orientations). |
+| 3. Largest text size | The system badge covered the icon (iOS 27). Fixed by hiding it at the accessibility sizes (Brian's call); rechecked: no badge and the icon in full at the largest size, a normal badge again at the largest normal size, both orientations. |
+| 4. VoiceOver | Read the count twice; fixed (count as the accessibility value); rechecked: "Filter by Tags, button", "Filter by Tags, 1 chosen, button", "Filter by Tags, 2 chosen, button". |
+| 5. Clean up | Reminders deleted by Brian, text size and VoiceOver as at the start, app uninstalled. |
+
+The VoiceOver criterion is ticked. The two criteria that need Brian's sign-off of the simulator shots are not.
 
