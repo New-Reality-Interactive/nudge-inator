@@ -24,9 +24,12 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
    ticket with no behaviour (docs, a mockup) skips `tdd`; say so.
 5. Run `mattpocock-skills:domain-modeling` when a name isn't in `GLOSSARY.md`, and
    `mattpocock-skills:diagnosing-bugs` when something fails and a first look doesn't explain it.
-6. A change on screen: check its visual criteria with `scripts/screenshots.sh` on both
-   simulators before review (`device-testing.md`, Simulator screenshots).
-7. Test with `scripts/test.sh` and review as `review.md` says, then commit.
+6. Test with `scripts/test.sh`.
+7. Review as `review.md` says, starting once step 6 passes. A change on screen: start
+   `scripts/screenshots.sh` for its visual criteria, on both simulators, in the background at
+   the same time (`device-testing.md`, Simulator screenshots), except the full walk, which that
+   section puts once before the PR. Make the fixes from the review
+   and from the screenshots after both finish, rerun `scripts/test.sh`, then commit.
 
 ## The developer's check
 
@@ -41,7 +44,8 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
 
 ## PR
 
-9. Rerun `scripts/test.sh` if anything changed since its last run, push, then run
+9. A change that calls for the full screenshot walk (`device-testing.md`, Simulator
+   screenshots) runs it now. Rerun `scripts/test.sh` if anything changed since its last run, push, then run
    `mattpocock-skills:pr` and open the PR to `main` with `gh pr create`, titled
    `Ticket <NN> (<folder>): <short summary>`, `<folder>` being the ticket's folder under
    `.scratch/`. A hook refuses a body without the `pr` skill's sections. Give the developer the
