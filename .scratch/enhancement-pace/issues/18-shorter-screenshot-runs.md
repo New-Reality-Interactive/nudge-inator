@@ -4,7 +4,7 @@
 
 **Blocked by:** none.
 
-**Status:** needs-triage
+**Status:** resolved
 
 Found during ticket 15, 2026-10-24. A one-line change to `StatusLabel` (`App/Design/`) set off the full walk, about an hour, before review could start. Brian asked for this ticket and for it to come before 16 and 17.
 
@@ -24,7 +24,7 @@ Three things make a ticket wait for it:
 - [x] `scripts/screenshots.sh` shoots the simulators in the matrix at the same time once the harness is built. Each simulator's text size and appearance are still put back, the harness is still uninstalled, and a simulator the script booted is still shut down, even after a failure.
 - [x] A failure on one simulator still fails the run, and the output says which simulator and variant failed. Each simulator's lines can be told apart.
 - [x] `review.md` (Finish order) and `ticket-workflow.md` (steps 6 and 7) let the code review start once `scripts/test.sh` passes, while the screenshots run. Fixes from either one are made after both finish.
-- [ ] A run of `SHOTS_TESTS="testMyDay" SHOTS_VARIANTS="largest-text largest-text-landscape"` on both simulators takes about half as long as it did before. Both timings are recorded in Comments.
+- [x] A run of `SHOTS_TESTS="testMyDay" SHOTS_VARIANTS="largest-text largest-text-landscape"` on both simulators takes no more than 60% of the time it did before. Both timings are recorded in Comments.
 
 ## Before you start
 
@@ -50,7 +50,7 @@ Three things make a ticket wait for it:
 
 The third was a variant I dropped: it showed no gain over the second, and the runs differ more than the change would (the same test on the iOS 26.5 simulator wrote 12, 14 and 20 screenshots in `largest-text`).
 
-**Criterion 5 is open: 58% is not "about half".** Parallel by simulator can't get below the slower simulator's own run plus the setup (xcodegen, boot, build, about 50 s). Getting nearer half takes something this ticket puts out of scope (splitting tests across simulator clones), or a looser reading of the criterion. Needs a decision: accept 4 min 2 s as met, or reword it (for example "no more than 60% of the time").
+**Criterion 5 was open: 58% is not "about half".** Parallel by simulator can't get below the slower simulator's own run plus the setup (xcodegen, boot, build, about 50 s). Getting nearer half takes something this ticket puts out of scope (splitting tests across simulator clones), or a looser reading of the criterion. Needs a decision: accept 4 min 2 s as met, or reword it (for example "no more than 60% of the time").
 
 Checked by hand:
 
@@ -60,3 +60,5 @@ Checked by hand:
 - A `SHOTS_TESTS` name that doesn't exist passes with 0 screenshots, as before this ticket. Not changed here.
 
 Review (Standards, Spec, code smells; no Apple files, so no iOS reviewer): no hard violations. Fixed: the temp directory leaked if `xcodegen` failed; a simulator's run that died without writing a failure was not counted (now it fails the run); an interrupt during the harness build waited out the build (the build now runs in the background, and `SIGTERM` 4 s into it exited at once and shut the simulator down); the header and docs claimed every line is prefixed (now "each simulator's lines"); `ticket-workflow.md` didn't say the full walk runs before the PR (step 7 excepts it, step 9 runs it); the timing history left `device-testing.md` for these Comments. Not changed: the simulators share one `-derivedDataPath`, which worked in every parallel run that reached the tests (two timed, one failure test, one plain run) but is unproven beyond that.
+
+Decision (Brian, 2026-10-24): criterion 5 reworded from "about half as long" to "no more than 60% of the time it did before". 4 min 2 s against 6 min 56 s is 58%, 42% faster, and that is good enough; going further needs simulator clones, out of scope. Criterion ticked, ticket resolved. Brian also accepted, as they stand: the iOS 26.5 landscape advice unchanged, the shared `-derivedDataPath`, and a nonexistent `SHOTS_TESTS` name passing with 0 screenshots. Ticket 19's file is left out of this branch.
