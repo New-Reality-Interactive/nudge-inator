@@ -171,6 +171,9 @@ struct NowMarkerView: View {
             Text("Now, \(time)", comment: "My Day: the marker among the rows that shows where the time is now. The placeholder is the time, such as \"1:00 PM\".")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(Color(uiColor: .label))
+                // The line takes what's left. Sharing the width with it broke the time mid-word
+                // at accessibility sizes ("8:40 A / M", enhancement-pace ticket 15).
+                .layoutPriority(1)
             Rectangle()
                 .fill(Color(uiColor: .label).opacity(Design.Size.nowMarkerLineOpacity))
                 .frame(height: Design.Size.nowMarkerLine)

@@ -21,6 +21,9 @@ struct MyDayFilterButton: View {
                 }
             }
         }
+        // The bar draws its icons monochrome, so the accent is set here, and only while the filter is
+        // on, when the color means something (WWDC25, "Build a SwiftUI app with the new design").
+        .tint(chosen > 0 ? Color.accentColor : nil)
         .accessibilityLabel(label)
     }
 

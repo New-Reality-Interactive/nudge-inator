@@ -114,8 +114,10 @@ extension OccurrenceState {
     }
 }
 
-/// DESIGN.md's Status label: Done green with `checkmark.circle.fill`, Missed red, Skipped in the
-/// secondary label color. The word always comes with the color.
+/// DESIGN.md's Status label: Done green with `checkmark.circle.fill`, Nudging and Missed red,
+/// Skipped in the secondary label color. The word always comes with the color. Done is drawn as its
+/// own stack, not a `Label`: in a `List` a label's icon takes a column of its own, which indented it
+/// from the row's text at accessibility sizes (enhancement-pace ticket 15).
 struct StatusLabel: View {
     let state: OccurrenceState
 
@@ -123,10 +125,11 @@ struct StatusLabel: View {
         let text = Text(state.statusName)
         Group {
             if case .done = state {
-                Label {
-                    text
-                } icon: {
+                HStack(spacing: Design.Spacing.s1) {
+                    // The word says it; the glyph only shows it.
                     Image(systemName: "checkmark.circle.fill")
+                        .accessibilityHidden(true)
+                    text
                 }
             } else {
                 text
