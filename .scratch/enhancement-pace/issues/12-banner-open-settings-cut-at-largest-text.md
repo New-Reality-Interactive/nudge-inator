@@ -4,7 +4,7 @@
 
 **Blocked by:** none.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 Found during ticket 06's simulator check, in `scripts/screenshots.sh` screenshots on `iPhone 15 Pro - iOS 26.5` and `iPhone 15 - iOS 27.0` at the largest text size (AX5), 2026-10-22. Brian asked for this ticket.
 
@@ -52,3 +52,4 @@ At accessibility text sizes the banner puts its icon above the text, with `SizeA
 - The iOS 26.5 simulator had stopped turning to landscape: every iOS 26.5 "landscape" shot since ticket 09's run (07:41) was portrait, ticket 10's and 11's included. Restarting the simulator fixed it; this ticket's iOS 26.5 landscape shots were taken after the restart.
 - `testTimeSensitiveOff` now shoots three pages: with one, the banner's button was never in the shot at AX5.
 - Criterion 1: Brian signed off the AX5 shots of all three banners, portrait and landscape, on both simulators. Ticked.- Criterion 2: Brian signed off this branch's AX5 shots of Tags' Rename (`tags-edit`) and My Day's Done (`myday`), portrait and landscape, on both simulators. Ticked. (On iOS 27.0 in `largest-text-landscape`, `myday-filter` again wasn't shot, as in ticket 11.)- Criterion 3: Brian signed off the default-size shots of each banner's first page, `main` beside this branch, portrait and landscape, on both simulators. Ticked.
+- The offered iPhone run (one banner and two, portrait and landscape, a text size change while a banner shows, VoiceOver) moved to ticket 13 at Brian's request, as a criterion there with the steps. Every criterion here is ticked: resolved.
