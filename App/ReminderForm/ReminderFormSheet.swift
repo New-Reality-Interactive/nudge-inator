@@ -238,6 +238,7 @@ private struct StrengthSection: View {
         SegmentedChoiceSection(
             label: Text("Strength", comment: "The reminder form's strength choice: Gentle, Firm or Relentless."),
             selection: $form.strength,
+            selectedTitle: Text(form.strength.title),
             isLocked: form.lockedFields.contains(.strength)
         ) {
             ForEach(Strength.formOrder, id: \.self) { strength in

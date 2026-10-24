@@ -14,6 +14,7 @@ struct PaceControlsSection<Footer: View>: View {
         SegmentedChoiceSection(
             label: Text("Pace", comment: "The pace choice, in the reminder form and on Settings' Default Pace page: Escalating or Consistent."),
             selection: $choice,
+            selectedTitle: Text(choice.title),
             isLocked: isLocked
         ) {
             ForEach(PaceChoice.allCases, id: \.self) { choice in
