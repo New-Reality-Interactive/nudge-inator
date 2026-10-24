@@ -13,6 +13,9 @@ struct ShotsApp: App {
         /// First launch, nothing asked yet.
         case onboarding
         case notificationsOff, alarmsOff, timeSensitiveOff
+        /// Everything allowed, plus a Custom reminder that starts nudging a minute or two after
+        /// launch, so its Custom page can be open as it locks (ticket 16). `SHOT_DARK` shows it dark.
+        case customLocking
     }
 
     @State private var model: AppModel
@@ -20,8 +23,11 @@ struct ShotsApp: App {
     init() {
         let name = ProcessInfo.processInfo.environment["SHOT_SCENARIO"] ?? Scenario.app.rawValue
         guard let scenario = Scenario(rawValue: name) else { fatalError("Unknown SHOT_SCENARIO \(name)") }
+        self.scenario = scenario
         _model = State(initialValue: ShotsSeed.makeModel(scenario: scenario))
     }
+
+    private let scenario: Scenario
 
     var body: some Scene {
         WindowGroup {
@@ -31,7 +37,8 @@ struct ShotsApp: App {
             } else {
                 RootView()
                     .environment(model)
-                    .task { await ShotsSeed.launch(model) }
+                    .preferredColorScheme(ProcessInfo.processInfo.environment["SHOT_DARK"] == "1" ? .dark : nil)
+                    .task { await ShotsSeed.launch(model, scenario: scenario) }
             }
         }
     }
@@ -89,7 +96,7 @@ enum ShotsSeed {
             manager.authorizationState = .denied
         case .timeSensitiveOff:
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .disabled)
-        case .app:
+        case .app, .customLocking:
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled)
         }
         let store = try! ReminderStore(location: .inMemory)
@@ -105,11 +112,12 @@ enum ShotsSeed {
         return model
     }
 
-    static func launch(_ model: AppModel) async {
+    static func launch(_ model: AppModel, scenario: ShotsApp.Scenario) async {
         await model.launch()
         if !isSeeded {
             isSeeded = true
             seedMockupData(into: model)
+            if scenario == .customLocking { seedCustomLocking(into: model) }
         }
         await model.appOpened()
     }
@@ -173,5 +181,16 @@ enum ShotsSeed {
         clock.frozenNow = at(-62)
         model.markDone(dog.id)
         clock.frozenNow = nil
+    }
+
+    /// Weekly on today and tomorrow, at the first whole minute at least 90 seconds away: time for
+    /// the walk to open its Custom page before it falls due.
+    static func seedCustomLocking(into model: AppModel) {
+        let calendar = Calendar.current
+        let dueTime = calendar.dateInterval(of: .minute, for: .now.addingTimeInterval(90))!.end
+        let today = calendar.component(.weekday, from: dueTime)
+        let weekdays = [today, today % 7 + 1].map { RepeatRule.WeekdayNumber(RepeatRule.Weekday(rawValue: $0)!) }
+        let rule = RepeatRule(frequency: .weekly, weekdays: Set(weekdays))!
+        model.add(Reminder(title: "Plan the week", dueTime: dueTime, repeatRule: rule, strength: .gentle, breakThroughFocus: false))
     }
 }

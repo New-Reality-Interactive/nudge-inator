@@ -21,9 +21,17 @@ struct RepeatPage: View {
                 }
                 Section {
                     let isCustom = form.repeatPreset == nil
-                    NavigationLink(value: ReminderFormPage.custom) {
-                        CheckmarkLabel(title: Text("Custom", comment: "The Repeat page's row that opens the custom repeat page."),
-                                       isChecked: isCustom)
+                    let label = CheckmarkLabel(title: Text("Custom", comment: "The Repeat page's row that opens the custom repeat page."),
+                                               isChecked: isCustom)
+                    Group {
+                        if isLocked {
+                            // Not a link while locked: a disabled link fades its title past the
+                            // presets' (device check, ticket 16). Without its chevron, as the
+                            // Edit form's locked rows are.
+                            label.accessibilityElement(children: .combine)
+                        } else {
+                            NavigationLink(value: ReminderFormPage.custom) { label }
+                        }
                     }
                     .accessibilityAddTraits(isCustom ? .isSelected : [])
                 } footer: {

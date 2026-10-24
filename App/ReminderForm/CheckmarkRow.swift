@@ -20,11 +20,14 @@ struct CheckmarkRow: View {
 struct CheckmarkLabel: View {
     let title: Text
     let isChecked: Bool
+    @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
         HStack {
+            // Not the button's tint. A set style isn't dimmed when disabled, so a locked row takes
+            // DESIGN.md's secondary label (ticket 16).
             title
-                .foregroundStyle(Color(uiColor: .label))
+                .foregroundStyle(Color(uiColor: isEnabled ? .label : .secondaryLabel))
             Spacer()
             if isChecked {
                 Image(systemName: "checkmark")
