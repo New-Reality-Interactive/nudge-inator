@@ -188,10 +188,59 @@ final class ShotsUITests: XCTestCase {
         shot("myday", pages: 20, stopsAtEnd: true)
         openSheet("Filter", title: "Filter My Day")
         shot("myday-filter")
-        // The Filter button with a tag chosen: the count beside its icon.
+        // The Filter button with a tag chosen: its badge shows the count.
         tapText("#health", inSheet: true)
         barTap { tapButton(containing: "Done", inSheet: true) }
         shot("myday-filtered")
+    }
+
+    /// The Filter button's badge as tags come off the filter: the badge follows the count when a
+    /// token is removed from My Day, not only when the filter sheet closes (found on the iPhone,
+    /// ticket 19).
+    func testMyDayFilterBadgeFollowsTokens() {
+        launch(.app)
+        tab("My Day")
+        openSheet("Filter", title: "Filter My Day")
+        tapText("#health", inSheet: true)
+        tapText("#work", inSheet: true)
+        barTap { tapButton(containing: "Done", inSheet: true) }
+        shot("myday-badge-2-tags")
+        tapButton(containing: "Remove #work")
+        shot("myday-badge-1-tag-after-remove")
+        tapButton(containing: "Remove #health")
+        shot("myday-badge-0-tags-after-remove")
+    }
+
+    /// What VoiceOver gets for the Filter button with none, one and two tags chosen: its label and
+    /// value, in the test log (`ACCESSIBILITY` lines). VoiceOver speaks the label, then the value.
+    func testMyDayFilterAccessibility() {
+        launch(.app)
+        tab("My Day")
+        func report(_ count: Int) {
+            let button = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Filter by Tags")).firstMatch
+            print("ACCESSIBILITY \(count) tags: label=\"\(button.label)\" value=\"\(button.value as? String ?? "nil")\"")
+        }
+        report(0)
+        openSheet("Filter", title: "Filter My Day")
+        tapText("#health", inSheet: true)
+        barTap { tapButton(containing: "Done", inSheet: true) }
+        report(1)
+        openSheet("Filter", title: "Filter My Day")
+        tapText("#work", inSheet: true)
+        barTap { tapButton(containing: "Done", inSheet: true) }
+        report(2)
+    }
+
+    /// The Filter button's badge at counts the seed can't reach: 12 (two digits) and 999 (the most).
+    func testMyDayFilterBadge() {
+        for count in [12, 999] {
+            app = XCUIApplication()
+            app.launchEnvironment["SHOT_BADGE_COUNT"] = "\(count)"
+            app.launch()
+            _ = app.navigationBars.firstMatch.waitForExistence(timeout: 10)
+            shot("myday-badge-\(count)")
+            app.terminate()
+        }
     }
 
     func testTags() {

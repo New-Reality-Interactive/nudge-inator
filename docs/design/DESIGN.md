@@ -230,7 +230,11 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
 - **Positive (green)** means **done or on**: the Done status and switches that are on. No button
   uses it.
 - **Neutral (gray)** marks **Normal urgency**, tags, strength badges and counts of 0.
-- **Badge (`{colors.badge}`)** is the Now tab's nudging count, as the system draws it.
+- **Badge (`{colors.badge}`)** is the Now tab's nudging count and My Day's Filter button's count of
+  tags chosen, both as the system draws them (red; SwiftUI can't recolor the Filter button's, and
+  the app doesn't bridge to UIKit for it). A count of 0 shows no badge, so it is never red. At the
+  accessibility text sizes the Filter button has no badge: on iOS 27 the system draws it at the text
+  size, so it covers the icon. The chosen-tag tokens and the VoiceOver label carry the count there.
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
   action is `{colors.tile-green}`. Settings rows: red (Notifications, Delete All Data), orange
   (Alarms), gray (Open iOS Settings, Default Pace, How It Nudges), blue (Send a Test Nudge). Tiles are icons for rows, not
@@ -320,7 +324,7 @@ except in the tab and navigation bars. Verify names against the mockup.
 
 | Use | Symbols |
 |---|---|
-| Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `tag.filter` (custom, in the asset catalog: Filter by Tags) |
+| Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `tag.filter` (custom, in the asset catalog: the Tags tab's `tag` with a three-line filter badge at the lower right: Filter by Tags) |
 | Tabs | `bell` (Now), `calendar` (My Day), `tag` (Tags), `gearshape` (Settings) |
 | Urgency | `arrow.up` (High), `alarm` (Urgent) |
 | Status | `checkmark.circle.fill` (Done), `bell.slash`, `clock`, `exclamationmark.triangle`, `lock` (a field locked while nudging, always beside its reason as text) |

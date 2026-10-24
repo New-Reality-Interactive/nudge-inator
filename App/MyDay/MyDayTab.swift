@@ -14,6 +14,7 @@ struct MyDayTab: View {
 
     @Environment(AppModel.self) private var model: AppModel?
     @Environment(\.verticalSizeClass) private var verticalSizeClass
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var filter = MyDayFilter()
     @State private var isFiltering = false
 
@@ -43,7 +44,7 @@ struct MyDayTab: View {
             .reminderDetailsDestination()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    MyDayFilterButton(chosen: checkedCount) { isFiltering = true }
+                    MyDayFilterButton(chosen: checkedCount, showsBadge: !dynamicTypeSize.isAccessibilitySize) { isFiltering = true }
                 }
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
             }
