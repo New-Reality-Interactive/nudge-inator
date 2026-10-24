@@ -4,7 +4,7 @@
 
 **Blocked by:** none.
 
-**Status:** needs-triage
+**Status:** resolved
 
 Found in ticket 11's simulator screenshots (`iPhone 15 Pro - iOS 26.5` and `iPhone 15 - iOS 27.0`, AX5, portrait and landscape), 2026-10-23. Brian asked for this ticket.
 
@@ -20,7 +20,7 @@ Ticket 11 moved the status label under the row's text at accessibility sizes. Th
 
 - [x] At accessibility sizes the Done status label's icon starts at the row text's leading edge, on both simulators, portrait and landscape (`scripts/screenshots.sh`, the `myday` screens).
 - [x] Every other screen that shows `StatusLabel` looks as it does now at the default size (screenshots compared with the as-built mockup).
-- [ ] VoiceOver still reads the status as part of the row.
+- [x] VoiceOver still reads the status as part of the row.
 - [x] The two drifts carried over from ticket 14 (Comments, "Carried over from ticket 14") are reviewed with Brian. For each, he decides: fix it here, file a ticket under the open feature, or no change. His decisions are recorded in Comments.
 
 ## Before you start
@@ -53,4 +53,12 @@ Found during ticket 14's review and shots. Neither was that ticket's to fix. Sho
 
 **Review** (Standards, Spec, iOS, code smells): no defects. Applied: the doc comment names "enhancement-pace ticket 15" (a first-version ticket 15 is cited elsewhere), Nudging added to the colors it lists, and the VoiceOver comment worded as `StrengthBadge`'s.
 
-**Open:** criterion 3, VoiceOver on the iPhone.
+### 2026-10-24: VoiceOver on the iPhone
+
+Brian's iPhone (iPhone 15, iOS 27.0.1). The app wasn't installed, so it was installed for the check and uninstalled after. One reminder, "Test", Gentle or Firm, Break Through Focus off, Repeat Never, marked Done on its first nudge, then deleted. The text size started at the default and was put back.
+
+- Default size, My Day: "9:41 AM, Test, Done at 9:41 AM after one nudge, Done, button", then the hint. Pass.
+- Default size, Now (Last 24 Hours): "9:41 AM, Today, Test, Done after one nudge, Done, button", then the hint. Pass.
+- The largest accessibility size, both screens: the same. Pass.
+
+The checkmark isn't read on its own. Every criterion is ticked.
