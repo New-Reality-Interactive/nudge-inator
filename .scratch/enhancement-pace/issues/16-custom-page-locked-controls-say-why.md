@@ -76,3 +76,7 @@ On Brian's iPhone (iPhone 15, iOS 27.0.1), fresh install. Starting settings: Lar
 - Clean-up: Brian put back his text size and VoiceOver and deleted the test reminder. The app wasn't on the phone at the start, so it was uninstalled, and `devicectl` confirmed it's gone.
 - Every criterion is ticked, so the ticket is resolved.
 
+
+### 2026-10-24: the Repeat page's locked rows, checked on the iPhone
+
+Same phone, reinstalled from the same build. Brian checked the side effect of the `CheckmarkLabel` change on the Repeat page, with a reminder (Every Day, Break Through Focus off) falling due while that page was open. His screenshots, light and dark, showed the presets turning grey when locked, as intended. The Custom row turned fainter than them, though: a disabled `NavigationLink` fades its row on top of the secondary label. Brian chose to match the presets. Locked, the Custom row is now plain, with no link and no chevron, as the Edit form's locked rows are (`RepeatPage`). On the phone, after the fix: locked, Custom is the same grey as the presets with no chevron, in light and dark, portrait and landscape; unlocked, it looks as before. VoiceOver reads "Custom, dimmed", then the lock's reason. `scripts/test.sh` passed on both simulators.
