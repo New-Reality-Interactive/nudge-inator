@@ -6,6 +6,8 @@ import SwiftUI
 struct SegmentedChoiceSection<Selection: Hashable, Options: View, Rows: View, Footer: View>: View {
     let label: Text
     @Binding var selection: Selection
+    /// The selected option's name, which VoiceOver reads while the choice is locked.
+    let selectedTitle: Text
     let isLocked: Bool
     @ViewBuilder let options: () -> Options
     @ViewBuilder let rows: () -> Rows
@@ -20,12 +22,14 @@ struct SegmentedChoiceSection<Selection: Hashable, Options: View, Rows: View, Fo
                 LockableLabel(isLocked: isLocked) { label }
             }
             .segmentedPickerStyle(isMenu: dynamicTypeSize.isAccessibilitySize)
+            .lockedChoiceElement(isLocked, label: label, selectedTitle: selectedTitle)
             .lockedWhileNudging(isLocked)
             rows()
         } header: {
             if !dynamicTypeSize.isAccessibilitySize {
-                // VoiceOver reads the segments without the picker's label (device check, ticket
-                // 25), so the heading names them. At accessibility sizes the menu carries it.
+                // Unlocked, VoiceOver reads the segments without the picker's label (device check,
+                // ticket 25), so the heading names them. At accessibility sizes the menu carries it.
+                // Locked, the one element carries it too.
                 LockableLabel(isLocked: isLocked) { label }
             }
         } footer: {
@@ -39,11 +43,29 @@ extension SegmentedChoiceSection where Rows == EmptyView {
     init(
         label: Text,
         selection: Binding<Selection>,
+        selectedTitle: Text,
         isLocked: Bool,
         @ViewBuilder options: @escaping () -> Options,
         @ViewBuilder footer: @escaping () -> Footer
     ) {
-        self.init(label: label, selection: selection, isLocked: isLocked, options: options, rows: { EmptyView() }, footer: footer)
+        self.init(label: label, selection: selection, selectedTitle: selectedTitle, isLocked: isLocked, options: options, rows: { EmptyView() }, footer: footer)
+    }
+}
+
+private extension View {
+    /// Locked, the choice reads as one element, its label and selected option, so the hint that
+    /// `lockedWhileNudging` adds after it has an element to land on: VoiceOver reads segments one
+    /// by one and never reads the picker's own hint (ticket 08's device check). Unlocked, the
+    /// segments read as they always have.
+    @ViewBuilder
+    func lockedChoiceElement(_ isLocked: Bool, label: Text, selectedTitle: Text) -> some View {
+        if isLocked {
+            accessibilityElement(children: .ignore)
+                .accessibilityLabel(label)
+                .accessibilityValue(selectedTitle)
+        } else {
+            self
+        }
     }
 }
 

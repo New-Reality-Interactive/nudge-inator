@@ -4,7 +4,7 @@
 
 **Blocked by:** none.
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 Found during ticket 08's VoiceOver check, on Brian's iPhone (iPhone 15, iOS 27.0.1), 2026-10-22. Brian asked for this ticket.
 
@@ -38,4 +38,18 @@ Brian drives it by hand, one step at a time, with a go before each (`docs/agents
 4. **VoiceOver.** Turn VoiceOver on and swipe through Now's banners. Each button reads its own label: "Open Settings for notifications, button", then "Open Settings for alarms, button". Double-tapping one opens Settings.
 5. **Put back.** VoiceOver off, the text size as it was, notifications and alarms on again.
 
+## Before you start
+
+- Builds on: ticket 08: its Comments (2026-10-22, device checks passed) record the setup that showed the bug: a Gentle, Consistent · 30 min reminder Nudging, Break Through Focus off, on Brian's iPhone. They also give the hint's wording, now the short `LockNote.hint` ("Locked while it's nudging. Mark it Done or pause it to change it."). Ticket 12: the last criterion here, and the "Ticket 12's iPhone check" steps, carried over at Brian's request; run them in the same iPhone session as this ticket's VoiceOver check.
+- Watch for: the iOS 26.5 simulator can stop turning to landscape, and its "landscape" screenshots are then portrait (ticket 12's Comments). Look at one before trusting a run, and restart it with `xcrun simctl shutdown` then `boot` if needed. On `iPhone 15 - iOS 27.0` in `largest-text-landscape`, `testMyDay` still can't find the Filter button (ticket 11). The status is `needs-triage`; Brian decides whether it's ready.
+- Developer stops: agree the `tdd` seams (VoiceOver reading can't be unit-tested, so likely none: say so); the simulator pass if anything changes on screen; the device checks on the iPhone, one at a time: criteria 1-3 with VoiceOver, then ticket 12's iPhone check.
+
 ## Comments
+
+### 2026-10-23: built, device checks to come
+
+- Brian marked it `ready-for-agent` and agreed the approach and no `tdd` seams (VoiceOver reading can't be unit-tested).
+- The fix: while locked, `SegmentedChoiceSection` makes the picker one VoiceOver element (`accessibilityElement(children: .ignore)`) with the section's label and the selected option's name (`selectedTitle`), so `lockedWhileNudging`'s hint lands on it. It's the same at accessibility sizes, where the picker is a menu. Unlocked, nothing changes. Nothing changes on screen, so there was no screenshot pass; `scripts/test.sh` passed on both simulators.
+- Apple's docs confirm `.ignore` makes one new element whose label and value we set. They don't say whether the hint added after it lands on that element, whether VoiceOver still says "dimmed", or what happens to the menu's pop-up trait. All three are for the device check. Listen too for "Strength" read twice (heading, then element) at the default size. That's redundant, not wrong.
+- Review: no hard violations and no spec gaps. Fixed: `value` renamed `selectedTitle`, and comments clarified. Left alone: the locked/unlocked `if` gives the picker a new identity when the lock flips mid-edit. Its state is the binding, so nothing is lost. Also left: callers pass the selection's title alongside it (only two callers).
+- Out of scope, for Brian: the Custom page's Frequency and Ends pickers (`CustomRepeatPage.swift`) take `lockedWhileNudging` on a wrapping `Group`, so they probably have the same missing hint when a reminder starts nudging while that page is open. A follow-up ticket if wanted.
