@@ -219,7 +219,7 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
 
 - **Accent (Lagoon, `{colors.accent}`)** is `AccentColor`. It means **you can tap this**: buttons,
   links, menus, checkmarks, the selected tab, tag and filter tokens, the chosen count's ring, the
-  filled confirm button in each sheet, and **Done** on nudge cards.
+  filled confirm button in each sheet and on the Custom repeat page, and **Done** on nudge cards.
   - **Never** a status, decoration or background wash.
   - **The alarm** sits on a dark Lock Screen, so its tint pins `{colors.accent-dark}`. This is the
     only place a component pins a variant.
@@ -246,8 +246,8 @@ Rules:
 - **A nudge card takes its color from urgency only:** neutral, warning or negative. The urgency word
   and glyph always come with the color.
 - **Zero isn't a status.** A count of 0 uses `{colors.secondary-label}`, never red.
-- **Fill sparingly.** Only primary actions get an accent fill: the sheet's confirm button and the
-  nudge card's Done. My Day's per-row Done buttons are bordered, so a long list isn't a column of
+- **Fill sparingly.** Only primary actions get an accent fill: the sheet's confirm button (and the
+  Custom repeat page's, which takes its place there), and the nudge card's Done. My Day's per-row Done buttons are bordered, so a long list isn't a column of
   teal.
 - **Status and secondary text never sit on `{colors.tertiary-fill}`, except as large text.** The
   chosen count's number (Title 2 bold) is large text; its caption uses `{colors.label}`.

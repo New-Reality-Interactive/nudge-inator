@@ -20,6 +20,9 @@ final class ReminderForm: Identifiable {
     /// page has no control for some parts of a rule (BYMONTH, say), so the rule is kept as it
     /// came until a choice or the start changes (decision 5, ticket 25).
     private var setCustomRule: (rule: RepeatRule, choices: CustomRepeat, dueTime: Date)?
+    /// The Custom page's copy of the choices once a control on it changes them, or `nil` while it
+    /// shows the repeat's own. Only its checkmark makes them the repeat (ticket 17).
+    private var customPageDraft: CustomRepeat?
     var strength = Strength.firm
     /// The person's switch, as saved. Relentless ignores it but keeps it, so leaving Relentless
     /// gives it back; the form shows `breaksThroughFocus`.
@@ -123,9 +126,10 @@ final class ReminderForm: Identifiable {
     /// The Edit form, rather than New: its title and Save's label.
     var isEditing: Bool { original != nil }
 
-    /// Whether Cancel should ask before throwing the draft away (the mockup's `draftDirty`).
+    /// Whether Cancel should ask before throwing the draft away (the mockup's `draftDirty`). The
+    /// Custom page's choices count before its checkmark, so a swipe down there doesn't drop them.
     var hasChanges: Bool {
-        draft(tagIDs: tagIDs) != opened
+        draft(tagIDs: tagIDs) != opened || customPageDraft.map { $0 != repeatChoices } ?? false
     }
 
     /// `nil` repeats Never. A custom repeat's rule is built from its choices and the start, so a
@@ -133,9 +137,7 @@ final class ReminderForm: Identifiable {
     /// rule that isn't a preset's reads it into the Custom page's choices.
     var repeatRule: RepeatRule? {
         get {
-            guard let customRepeat else { return presetRule }
-            if let setCustomRule, setCustomRule.choices == customRepeat, setCustomRule.dueTime == dueTime { return setCustomRule.rule }
-            return currentEngine().repeatRule(for: customRepeat, startingAt: dueTime)
+            customRepeat.map(rule(for:)) ?? presetRule
         }
         set {
             if let preset = RepeatPreset(newValue) {
@@ -149,29 +151,52 @@ final class ReminderForm: Identifiable {
         }
     }
 
-    /// What the Custom page shows and edits: the custom choices, or, while the repeat is a preset
-    /// or Never, the choices that preset starts from. Those aren't stored: looking at the page
-    /// changes nothing, which matters most on a reminder that is locked while nudging (device
-    /// check, ticket 27). The first choice made on the page stores them, and the repeat is Custom.
-    var customChoices: CustomRepeat {
-        get { customRepeat ?? currentEngine().customRepeat(from: presetRule, startingAt: dueTime) }
-        set { customRepeat = newValue }
+    /// A custom repeat's rule: the one that was set while its choices and start are as it was
+    /// read, or else the one built from the choices.
+    private func rule(for choices: CustomRepeat) -> RepeatRule {
+        if let setCustomRule, setCustomRule.choices == choices, setCustomRule.dueTime == dueTime { return setCustomRule.rule }
+        return currentEngine().repeatRule(for: choices, startingAt: dueTime)
     }
 
-    /// The Custom page's summary sentence: of the choices it shows, which are not yet the repeat
-    /// while it is a preset or Never.
+    /// The repeat's choices: the custom choices, or, while the repeat is a preset or Never, the
+    /// choices that preset starts the Custom page from.
+    private var repeatChoices: CustomRepeat {
+        customRepeat ?? currentEngine().customRepeat(from: presetRule, startingAt: dueTime)
+    }
+
+    /// What the Custom page shows and edits: a copy of the repeat's choices. Only the page's
+    /// checkmark makes them the repeat, so looking at the page changes nothing, which matters
+    /// most on a reminder that is locked while nudging (device check, ticket 27), and Back drops
+    /// what was changed (ticket 17).
+    var customPageChoices: CustomRepeat {
+        get { customPageDraft ?? repeatChoices }
+        set { customPageDraft = newValue }
+    }
+
+    /// The Custom page's checkmark: the choices it shows become the repeat, even unchanged, so
+    /// from Never the weekly repeat it starts from can be chosen as it is.
+    func chooseCustomPageChoices() {
+        customRepeat = customPageChoices
+        customPageDraft = nil
+    }
+
+    /// The Custom page's Back: what was changed on it is dropped, and the repeat stays as it was.
+    func closeCustomPage() {
+        customPageDraft = nil
+    }
+
+    /// The Custom page's summary sentence, of the choices it shows.
     var customPageSummary: String {
-        currentEngine().repeatSummary(of: draft(tagIDs: tagIDs, repeatRule: customPageRule))
+        currentEngine().repeatSummary(of: draft(tagIDs: tagIDs, repeatRule: rule(for: customPageChoices)))
     }
 
     /// The Custom page's Next Times: when the choices it shows fall due.
     var customPageUpcomingDueTimes: [Date] {
-        currentEngine().upcomingDueTimes(of: draft(tagIDs: tagIDs, repeatRule: customPageRule), count: Self.nextTimesCount)
+        upcomingDueTimes(of: customPageChoices)
     }
 
-    /// The rule of the choices the Custom page shows.
-    private var customPageRule: RepeatRule? {
-        customRepeat == nil ? currentEngine().repeatRule(for: customChoices, startingAt: dueTime) : repeatRule
+    private func upcomingDueTimes(of choices: CustomRepeat) -> [Date] {
+        currentEngine().upcomingDueTimes(of: draft(tagIDs: tagIDs, repeatRule: rule(for: choices)), count: Self.nextTimesCount)
     }
 
     /// The Custom page's monthly choices for the start, each with its title ("On the fourth
@@ -183,7 +208,7 @@ final class ReminderForm: Identifiable {
 
     /// Under a monthly choice of the 29th to the 31st: such months are skipped. From the engine.
     var skippedMonthsNote: String? {
-        currentEngine().skippedMonthsNote(of: customChoices, startingAt: dueTime)
+        currentEngine().skippedMonthsNote(of: customPageChoices, startingAt: dueTime)
     }
 
     /// A weekday's name for the Custom page, in the engine's locale.
@@ -193,7 +218,7 @@ final class ReminderForm: Identifiable {
 
     /// The monthly choice the rule uses for the start, which the Custom page checks.
     var chosenMonthlyDay: CustomRepeat.MonthlyDay {
-        currentEngine().monthlyDay(of: customChoices, startingAt: dueTime)
+        currentEngine().monthlyDay(of: customPageChoices, startingAt: dueTime)
     }
 
     /// The Repeat row's preset, or `nil` when the rule is Custom. Setting a preset replaces a
@@ -228,8 +253,7 @@ final class ReminderForm: Identifiable {
     /// How many due times the Custom page's Next Times shows.
     static let nextTimesCount = 3
 
-    /// The Custom page's Next Times: the draft's next three due times from the engine, fewer if
-    /// the repeat ends first.
+    /// The draft's next three due times from the engine, fewer if the repeat ends first.
     var upcomingDueTimes: [Date] {
         currentEngine().upcomingDueTimes(of: draft(tagIDs: tagIDs), count: Self.nextTimesCount)
     }
@@ -262,7 +286,9 @@ final class ReminderForm: Identifiable {
         lockCheckedAt = now()
         // A lock that has arrived discards what was changed on the fields it locks, at once: their
         // controls are disabled now, and a value that can't be saved shouldn't stay on screen
-        // (the user's ruling, ticket 27). A title, notes or tags change is kept.
+        // (the user's ruling, ticket 27). A title, notes or tags change is kept. So is the Custom
+        // page's copy dropped, which isn't in the draft until its checkmark (ticket 17).
+        if lockedFields.contains(.repeatRule) { customPageDraft = nil }
         guard let original, lockedFields.contains(where: { $0.isChanged(from: original, to: draft(tagIDs: tagIDs)) }) else { return }
         restoreLockedFields(from: original)
     }
@@ -288,12 +314,21 @@ final class ReminderForm: Identifiable {
         original.map { Calendar.autoupdatingCurrent.isDate($0.dueTime, equalTo: dueTime, toGranularity: .minute) } ?? false
     }
 
-    /// Why the custom repeat can't be saved, shown on the Custom page whatever else blocks a save.
+    /// Why the custom repeat can't be saved.
     var repeatBlock: SaveBlock? {
-        guard let customRepeat else { return nil }
-        if currentEngine().endsBeforeStart(customRepeat, startingAt: dueTime) { return .endsBeforeStart }
-        let keepsItsSchedule = keepsItsStart && repeatRule == original?.repeatRule
-        if !keepsItsSchedule, upcomingDueTimes.isEmpty { return .noTimesLeft }
+        customRepeat.flatMap(block(of:))
+    }
+
+    /// Why the Custom page's choices can't be chosen, shown on the page whatever else blocks a
+    /// save. It disables the page's checkmark, as `saveBlock` disables Save.
+    var customPageBlock: SaveBlock? {
+        block(of: customPageChoices)
+    }
+
+    private func block(of choices: CustomRepeat) -> SaveBlock? {
+        if currentEngine().endsBeforeStart(choices, startingAt: dueTime) { return .endsBeforeStart }
+        let keepsItsSchedule = keepsItsStart && rule(for: choices) == original?.repeatRule
+        if !keepsItsSchedule, upcomingDueTimes(of: choices).isEmpty { return .noTimesLeft }
         return nil
     }
 

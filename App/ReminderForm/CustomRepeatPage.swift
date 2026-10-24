@@ -3,19 +3,23 @@ import SwiftUI
 
 /// The Custom repeat page (ticket 25), as the mockup's: the summary on top, then Frequency and
 /// its Every stepper, On (weekdays, or the monthly choices the start offers), Ends, and the Next
-/// Times it falls due. It edits the form's custom repeat as the person goes, so Back keeps it.
-/// The person never sees the rule (ADR 0003).
+/// Times it falls due. It edits a copy of the repeat's choices: its checkmark makes them the
+/// repeat, even unchanged, and Back drops them (ticket 17). The person never sees the rule
+/// (ADR 0003).
 struct CustomRepeatPage: View {
     @Bindable var form: ReminderForm
+    @Environment(\.dismiss) private var dismiss
     /// The start of the current minute, ticked while the page is open: Next Times' due times pass
     /// with no change the views can see (ticket 16), as the Now tab's badge counts do.
     @State private var minute = Date.now
 
     var body: some View {
         let isLocked = form.lockedFields.contains(.repeatRule)
+        // Read once: each read works out the choices' rule and due times.
+        let block = form.customPageBlock
         Form {
             if isLocked { RepeatLockSection() }
-            let choices = $form.customChoices
+            let choices = $form.customPageChoices
             Section {
             } header: {
                 Text("\(form.customPageSummary).", comment: "Top of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\".")
@@ -31,7 +35,7 @@ struct CustomRepeatPage: View {
             case .monthly: MonthlySection(form: form, isLocked: isLocked)
             case .daily, .yearly: EmptyView()
             }
-            EndsSection(choices: choices, start: form.dueTime, endsBeforeStart: form.repeatBlock == .endsBeforeStart, isLocked: isLocked)
+            EndsSection(choices: choices, start: form.dueTime, endsBeforeStart: block == .endsBeforeStart, isLocked: isLocked)
             NextTimesSection(form: form, minute: minute)
         }
         // On the Form, not the section, so exactly one loop ticks however many rows it has.
@@ -43,6 +47,29 @@ struct CustomRepeatPage: View {
         .centeredInReadableColumn()
         .navigationTitle(Text("Custom", comment: "Title of the Custom repeat page."))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar { toolbar(isLocked: isLocked, canChoose: block == nil) }
+        // After the checkmark this drops nothing: it has already made the copy the repeat.
+        .onDisappear { form.closeCustomPage() }
+    }
+
+    /// The checkmark, drawn as the form's own Save. Locked while nudging, as the page's other
+    /// controls are, and disabled while the choices can't be saved, as Save is.
+    @ToolbarContentBuilder
+    private func toolbar(isLocked: Bool, canChoose: Bool) -> some ToolbarContent {
+        ToolbarItem(placement: .confirmationAction) {
+            Button(role: .confirm) {
+                form.chooseCustomPageChoices()
+                dismiss()
+            } label: {
+                Label {
+                    Text("Done", comment: "The Custom repeat page's confirm button (a checkmark): its choices become the reminder's repeat.")
+                } icon: {
+                    Image(systemName: "checkmark")
+                }
+            }
+            .disabled(!canChoose)
+            .lockedWhileNudging(isLocked)
+        }
     }
 }
 
@@ -87,8 +114,8 @@ private struct WeekdaysSection: View {
         Section {
             ForEach(Self.order, id: \.self) { weekday in
                 CheckmarkRow(title: Text(verbatim: form.name(of: weekday)),
-                             isChecked: form.customChoices.weekdays.contains(weekday)) {
-                    form.customChoices.toggle(weekday)
+                             isChecked: form.customPageChoices.weekdays.contains(weekday)) {
+                    form.customPageChoices.toggle(weekday)
                 }
                 // Each day turns on and off on its own, as a checkbox does. Apple's docs give
                 // SwiftUI on iOS no checkbox trait (the checkbox toggle style is macOS only), so
@@ -115,7 +142,7 @@ private struct MonthlySection: View {
             ForEach(form.monthlyDays, id: \.day) { monthlyDay in
                 // The person's choice of one, read as "selected" as the Repeat page's presets are.
                 CheckmarkRow(title: Text(verbatim: monthlyDay.title), isChecked: monthlyDay.day == chosen) {
-                    form.customChoices.monthlyDay = monthlyDay.day
+                    form.customPageChoices.monthlyDay = monthlyDay.day
                 }
                 .lockedWhileNudging(isLocked)
             }
