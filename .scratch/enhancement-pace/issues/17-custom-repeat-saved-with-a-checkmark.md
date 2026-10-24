@@ -4,7 +4,7 @@
 
 **Blocked by:** 16.
 
-**Status:** needs-triage
+**Status:** resolved
 
 Found by Brian on his iPhone (iPhone 15, iOS 27.0.1), 2026-10-23, during ticket 13's follow-up device check. Brian asked for this ticket and chose the behavior.
 
@@ -19,10 +19,10 @@ On a reminder that repeats Never, Repeat → Custom shows "Weekly, every week, o
 Brian's choice (option "d"):
 
 - [x] The Custom page has a checkmark button in the top-right corner. Tapping it saves the page's choices as the repeat and returns to the Repeat page, where Custom is checked with its summary. This works even when no control was changed, so from Never the shown weekly repeat can be chosen as it is.
-- [ ] Back returns to the Repeat page and changes nothing: choices changed on the page are dropped, and the repeat stays as it was.
+- [x] Back returns to the Repeat page and changes nothing: choices changed on the page are dropped, and the repeat stays as it was.
 - [x] Opening Custom on a reminder that already repeats Custom shows its saved choices.
 - [x] Just opening and leaving the page still doesn't mark the repeat Custom (ticket 27).
-- [ ] The checkmark meets `docs/design/DESIGN.md` and matches the form's own Save checkmark. VoiceOver reads a label for it.
+- [x] The checkmark meets `docs/design/DESIGN.md` and matches the form's own Save checkmark. VoiceOver reads a label for it.
 
 ## Before you start
 
@@ -51,4 +51,14 @@ Brian's choice (option "d"):
 - Apple's docs say `dismiss` pops a pushed page. They're silent on whether `onDisappear` fires on a cancelled swipe back or a date picker's popover, so that's a device check.
 - Simulator check (`testFormPages`, `testCustomLocking`, both simulators, portrait, landscape and largest text, light and dark): the checkmark is the form's teal glass circle at the top right. From Never, tapping it went back to Repeat with Custom checked and "Every Saturday at 4:00 PM." under it. Locked, it's grey and disabled. Accessibility tree: "Done" button before the lock, "Done", disabled, after it. `scripts/test.sh` passed on both simulators.
 - Open: criterion 2 (Back drops the changes, including a cancelled swipe back, and the End Date picker keeps them) and criterion 5's VoiceOver label, on the iPhone.
+
+### 2026-10-24: device checks passed on the iPhone
+
+On Brian's iPhone (iPhone 15, iOS 27.0.1), fresh install. Starting settings: VoiceOver off, Larger Accessibility Sizes off. Test reminder: "Test 17", hours ahead, Break Through Focus off, never saved.
+
+- Back (criterion 2): from Every Day, Custom → Every 2 days (the summary followed) → Back. Repeat still had Every Day checked and Custom not; Custom opened again on Every day.
+- Kept changes (criterion 2): with Every 2 days set, a swipe back started and cancelled kept it, and so did choosing an end date with Ends → On Date and closing the calendar. The checkmark went back to Repeat with Custom checked and every 2 days with the end date under it.
+- VoiceOver (criterion 5): the checkmark read "Done, button"; activating it went back to Repeat with Custom checked.
+- Clean-up: Brian turned VoiceOver off and discarded the form. The app wasn't on the phone at the start, so it was uninstalled, and `devicectl` confirmed it's gone.
+- Every criterion is ticked, so the ticket is resolved.
 
