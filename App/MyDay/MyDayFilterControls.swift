@@ -1,52 +1,26 @@
 import SwiftUI
 
-/// The Filter button. In portrait it is a bordered button in the content, "Filter by Tags" or
-/// "Filter (2)"; in landscape the mockup moves it into the bar as an icon, with the number of
-/// tags chosen beside it, in the accent color, while the filter is on.
+/// The Filter button, in the bar beside New Reminder in both orientations (the tag-filter mockup):
+/// an icon, with the number of tags chosen beside it, in the accent color, while the filter is on.
 struct MyDayFilterButton: View {
-    enum Style {
-        case content
-        case bar
-    }
-
     /// How many tags (or No Tags) are chosen.
     let chosen: Int
-    let style: Style
     let open: () -> Void
 
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    private static let symbol = "line.3.horizontal.decrease"
+    /// A custom symbol in the asset catalog: a tag with filter lines, so it says it filters by tags.
+    private static let symbol = "tag.filter"
 
     var body: some View {
         Button(action: open) {
-            switch style {
-            case .content:
-                // Not a `Label`: its own layout leaves the title a narrow width and cuts it off
-                // at accessibility sizes. Here the text takes what the row has and wraps.
-                HStack(spacing: Design.Spacing.s2) {
-                    Image(systemName: Self.symbol)
+            HStack(spacing: Design.Spacing.s1) {
+                Image(Self.symbol)
+                if chosen > 0 {
+                    Text(chosen, format: .number)
+                        .font(.subheadline.weight(.semibold))
                         .accessibilityHidden(true)
-                    if chosen > 0 {
-                        Text("Filter (\(chosen))", comment: "My Day: the button that opens the tag filter, while tags are chosen. The placeholder is how many.")
-                    } else {
-                        Text("Filter by Tags", comment: "My Day: the button that opens the tag filter, while none is chosen.")
-                    }
-                }
-                .font(.subheadline.weight(.semibold))
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : nil)
-            case .bar:
-                HStack(spacing: Design.Spacing.s1) {
-                    Image(systemName: Self.symbol)
-                    if chosen > 0 {
-                        Text(chosen, format: .number)
-                            .font(.subheadline.weight(.semibold))
-                            .accessibilityHidden(true)
-                    }
                 }
             }
         }
-        .modifier(FilterButtonStyle(style: style))
         .accessibilityLabel(label)
     }
 
@@ -54,24 +28,7 @@ struct MyDayFilterButton: View {
         if chosen > 0 {
             Text("Filter by Tags, \(chosen) chosen", comment: "VoiceOver label of My Day's filter button while tags are chosen. The placeholder is how many.")
         } else {
-            Text("Filter by Tags", comment: "My Day: the button that opens the tag filter, while none is chosen.")
-        }
-    }
-}
-
-private struct FilterButtonStyle: ViewModifier {
-    let style: MyDayFilterButton.Style
-
-    func body(content: Content) -> some View {
-        switch style {
-        case .content:
-            content
-                .buttonStyle(.bordered)
-                .buttonBorderShape(.capsule)
-                // Regular is 34 pt tall; every button is at least 44 (DESIGN.md › Buttons).
-                .controlSize(.large)
-        case .bar:
-            content
+            Text("Filter by Tags", comment: "VoiceOver label of My Day's filter button while no tag is chosen.")
         }
     }
 }
@@ -149,8 +106,8 @@ private struct FilterTokenView: View {
 
 #Preview("Filter button and tokens") {
     VStack(alignment: .leading, spacing: Design.Spacing.s3) {
-        MyDayFilterButton(chosen: 0, style: .content) {}
-        MyDayFilterButton(chosen: 2, style: .content) {}
+        MyDayFilterButton(chosen: 0) {}
+        MyDayFilterButton(chosen: 2) {}
         MyDayFilterTokens(
             tokens: [
                 .init(kind: .tag(UUID()), tagText: "#health"),
