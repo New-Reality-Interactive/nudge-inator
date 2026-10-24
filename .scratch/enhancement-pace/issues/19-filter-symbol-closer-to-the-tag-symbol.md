@@ -45,7 +45,7 @@ What Apple's docs say (`apple-rag-mcp`):
 - [ ] `docs/design/DESIGN.md` uses red `{colors.badge}` only for the Now tab's nudging count, and says a count of 0 is never red. Record in Comments whether the filter count's badge fits that rule: a red capsule means the rule needs a line saying the Filter button's count is also drawn as the system's badge; a teal one means it needs a line for the accent-colored badge. Update DESIGN.md to match.
 - [ ] In the shots, the badge over the tag's dotted end is looked at, and Brian decides whether the symbol stays as it is or is mirrored. Record it in Comments.
 - [ ] VoiceOver reads the button once, as "Filter by Tags", with the count when tags are chosen, and does not read the count twice. Device check.
-- [ ] A new interactive HTML mockup, `docs/mockups/2026-10-24-…/` (`index.html` and a `README.md`, like the other dated mockups), is made first, and Brian approves it before any code changes: no symbol swap, no change to `MyDayFilterButton`, nothing in the app target until he has. It is a copy of `2026-10-23-tag-filter` changed only for this ticket, and its README lists what changed:
+- [x] A new interactive HTML mockup, `docs/mockups/2026-10-24-…/` (`index.html` and a `README.md`, like the other dated mockups), is made first, and Brian approves it before any code changes: no symbol swap, no change to `MyDayFilterButton`, nothing in the app target until he has. It is a copy of `2026-10-23-tag-filter` changed only for this ticket, and its README lists what changed:
   - The Filter button's count is a badge on the button, not text beside the icon. Choosing tags in the mockup shows it; choosing none hides it; it can be tried at counts of 1, 12 and 999. It is drawn as the system's standard badge (red), with a switch to the accent teal so Brian can see both, since the build may not be able to do teal.
   - The `"tag.filter"` entry in the mockup's symbol table is redrawn to match the new symbol: the `tag` outline with the three-line filter badge at the lower right. It is still a stand-in drawn in strokes.
   - The Tags tab's `tag` icon faces the right way. The mockups draw it mirrored: the narrow, dotted end is at the upper left, where the SF Symbols 27 `tag` has it at the upper right. The new mockup draws it as the real symbol is, everywhere it uses `tag`: the tab bar, the Tags row icons and the empty-state icon.
@@ -83,4 +83,29 @@ What Apple's docs say (`apple-rag-mcp`):
 - Checked in headless Chrome at portrait, landscape and AX5, with 1, 12 and 999 and both colors: the badge sits on the button's upper trailing corner, and 999 almost touches New Reminder's left edge (no overlap at 393 pt wide).
 - The mockup's `tag` is mirrored with a group transform on the old outline, so the dotted end is at the upper right. `tag.filter` is that outline in a mask with a circular cutout, plus three stroked lines. It is a stand-in, not the exported SVG.
 - Stopped here for Brian's approval of the mockup before any code changes.
+
+### 2026-10-24: Brian approved the mockup
+
+- Brian approved `docs/mockups/2026-10-24-filter-badge/`. He tried the teal badge (the **Badge color** control, which he first missed; a browser restoring the select's value without a change event was also fixed) and likes it, and he confirmed the Tags tab icon now faces the right way.
+- Not decided yet, so still open under their own criteria: whether the shipped badge can be teal (decided by what SwiftUI allows in the app), and whether the symbol stays or is mirrored (decided from the app's shots).
+
+### 2026-10-24: What the app does, and Brian's calls
+
+Built: the redrawn `tag.filter.svg` replaces the old one; `MyDayFilterButton` is an icon with `.badge(chosen)`; DESIGN.md's badge rule and symbol row are updated. The harness has a `BadgeBarShot` screen and `testMyDayFilterBadge`, because counts of 12 and 999 can't be reached by tapping tags; they show the real Filter button and New Reminder at a given count.
+
+- **Badge color:** the capsule stays the system's red. Tried on the iOS 27.0 simulator: `.tint(Color.accentColor)` on the button (already there for the icon), and `.badge(Text(chosen, format: .number).foregroundStyle(Color.white))`. Neither changed the capsule. Only UIKit's `UIBarButtonItem.Badge.backgroundColor` (iOS 26) can, which would mean bridging to the navigation item; not done, as the ticket says to keep the standard badge and not draw a custom one. The number is white on red in light and dark.
+- **DESIGN.md:** the filter count's badge is red, so the rule gets a line: the Now tab's nudging count and the Filter button's count are both the system's badge, and a count of 0 shows no badge, so it is never red. The symbol table row describes the new `tag.filter`. Symbol table checked for the old icon: only that one row named it.
+- **Largest text size (iOS 27.0 simulator):** the system draws the badge at the system text size, so it grows while the bar button doesn't. At the largest size 1 and 12 cover most of the tag icon, and 999 shows as "9…". `.dynamicTypeSize(...xxxLarge)` on the button changed nothing, so it was removed. **Brian's call: keep the system badge at every text size.** The chosen-tag tokens under the date still list what is chosen, and the VoiceOver label still has the count.
+- **Dotted end:** the badge covers the dot while tags are chosen, and the symbol still reads as a tag with filter lines. **Brian's call: keep the symbol as it is, not mirrored.**
+
+### 2026-10-24: Shots on both simulators
+
+`SHOTS_TESTS="testMyDay testMyDayFilterBadge"` in `portrait`, `landscape`, `largest-text` and `largest-text-landscape`, both simulators, 6 min 26 s, in `docs/screenshots/2026-10-24-ticket-19/<simulator>/<variant>/` (git-ignored): `myday-filtered` (count 1, a real tag chosen), `myday-badge-12`, `myday-badge-999`, and `myday` and `myday-filter` with no tag chosen.
+
+- **iOS 27.0:** the badge is on the Filter button's upper corner at every count. At the largest text size it grows with the text, covers the icon, and 999 reads "9…" (see the earlier Comment).
+- **iOS 26.5:** the badge stays small at the largest text size, in portrait and landscape; 999 reads "999" and sits on the corner without touching New Reminder. So the large-text problem is iOS 27's drawing, not something every phone shows. The only phone available is on iOS 27.x, so Brian will see the iOS 27 version on the device.
+- No badge when no tag is chosen, on both.
+- Landscape turned correctly on both simulators in every variant.
+- `scripts/mockup-shots.py` takes `myday-badge-12` and `myday-badge-999` from the filter badge mockup, so they can be put beside the app's.
+- The device check (VoiceOver reading the count once) and Brian's sign-off of the shots are still open. The iOS reviewer found no doc saying whether `.badge` is read on top of the label that already has the count, so the check is real: with 0, 1 and 12 chosen.
 

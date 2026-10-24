@@ -1,26 +1,22 @@
 import SwiftUI
 
-/// The Filter button, in the bar beside New Reminder in both orientations (the tag-filter mockup):
-/// an icon, with the number of tags chosen beside it, in the accent color, while the filter is on.
+/// The Filter button, in the bar beside New Reminder in both orientations (the filter-badge
+/// mockup): an icon that turns accent-colored while the filter is on, with the system's badge
+/// showing how many tags are chosen. A count of 0 hides the badge.
 struct MyDayFilterButton: View {
     /// How many tags (or No Tags) are chosen.
     let chosen: Int
     let open: () -> Void
 
-    /// A custom symbol in the asset catalog: a tag with filter lines, so it says it filters by tags.
+    /// A custom symbol in the asset catalog: the Tags tab's tag with a filter badge, so it says it
+    /// filters by tags.
     private static let symbol = "tag.filter"
 
     var body: some View {
         Button(action: open) {
-            HStack(spacing: Design.Spacing.s1) {
-                Image(Self.symbol)
-                if chosen > 0 {
-                    Text(chosen, format: .number)
-                        .font(.subheadline.weight(.semibold))
-                        .accessibilityHidden(true)
-                }
-            }
+            Image(Self.symbol)
         }
+        .badge(chosen)
         // The bar draws its icons monochrome, so the accent is set here, and only while the filter is
         // on, when the color means something (WWDC25, "Build a SwiftUI app with the new design").
         .tint(chosen > 0 ? Color.accentColor : nil)

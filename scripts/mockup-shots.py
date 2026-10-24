@@ -2,7 +2,7 @@
 """Screenshots of a mockup's screens in headless Chrome, named as scripts/screenshots.sh names the
 app's, so each pair can be compared (scripts/contact-sheet.sh). The screens are the as-built
 mockup's (docs/mockups/2026-10-21-as-built); a mockup copied from it keeps working, and the last few
-are only in the proposed pace mockup. A screen it
+are only in the proposed pace mockup, and the last two in the filter badge mockup. A screen it
 doesn't know is added to SCREENS: the JavaScript that shows it in the mockup, and how many pages.
 
 Usage: scripts/mockup-shots.py <mockup folder> <out folder> [screen ...]
@@ -48,6 +48,10 @@ SCREENS = {
   "form-new-escalating": ("openEditor();state.sheet.draft.pace='escalating';render()", 4),
   "form-new-consistent": ("openEditor();state.sheet.draft.pace='consistent';state.sheet.draft.wait=10;render()", 4),
   "form-new-relentless": ("openEditor();state.sheet.draft.strength='relentless';render()", 4),
+  # Only in the filter badge mockup (docs/mockups/2026-10-24-filter-badge): the Filter button's badge
+  # at counts the seed can't reach.
+  "myday-badge-12": ("prefs.badgeCount='12';state.tab='day';state.dayFilter.ids=[tags[0].id];nav()", 1),
+  "myday-badge-999": ("prefs.badgeCount='999';state.tab='day';state.dayFilter.ids=[tags[0].id];nav()", 1),
   "settings-default-pace": ("state.tab='settings';nav();push({kind:'defpace'})", 1),
   "settings-how-it-nudges-escalating": ("settings.defaultPace={pace:'escalating',wait:10};state.tab='settings';nav();push({kind:'hin'})", 4),
 }

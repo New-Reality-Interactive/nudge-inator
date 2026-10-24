@@ -188,10 +188,22 @@ final class ShotsUITests: XCTestCase {
         shot("myday", pages: 20, stopsAtEnd: true)
         openSheet("Filter", title: "Filter My Day")
         shot("myday-filter")
-        // The Filter button with a tag chosen: the count beside its icon.
+        // The Filter button with a tag chosen: its badge shows the count.
         tapText("#health", inSheet: true)
         barTap { tapButton(containing: "Done", inSheet: true) }
         shot("myday-filtered")
+    }
+
+    /// The Filter button's badge at counts the seed can't reach: 12 (two digits) and 999 (the most).
+    func testMyDayFilterBadge() {
+        for count in [12, 999] {
+            app = XCUIApplication()
+            app.launchEnvironment["SHOT_BADGE_COUNT"] = "\(count)"
+            app.launch()
+            _ = app.navigationBars.firstMatch.waitForExistence(timeout: 10)
+            shot("myday-badge-\(count)")
+            app.terminate()
+        }
     }
 
     func testTags() {

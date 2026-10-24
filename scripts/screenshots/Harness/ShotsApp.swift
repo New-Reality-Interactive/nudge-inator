@@ -25,9 +25,35 @@ struct ShotsApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(model)
-                .task { await ShotsSeed.launch(model) }
+            if let count = ProcessInfo.processInfo.environment["SHOT_BADGE_COUNT"].flatMap(Int.init) {
+                BadgeBarShot(chosen: count)
+                    .environment(model)
+            } else {
+                RootView()
+                    .environment(model)
+                    .task { await ShotsSeed.launch(model) }
+            }
+        }
+    }
+}
+
+/// My Day's bar with the Filter button at a count the seed can't reach (12, 999), since choosing
+/// that many tags takes as many taps. `SHOT_BADGE_COUNT` picks it. The bar is the real one: the
+/// Filter button and New Reminder, with My Day's title.
+struct BadgeBarShot: View {
+    let chosen: Int
+
+    var body: some View {
+        NavigationStack {
+            Color(.systemGroupedBackground)
+                .ignoresSafeArea()
+                .navigationTitle("My Day")
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        MyDayFilterButton(chosen: chosen) {}
+                    }
+                    ToolbarItem(placement: .primaryAction) { NewReminderButton() }
+                }
         }
     }
 }
