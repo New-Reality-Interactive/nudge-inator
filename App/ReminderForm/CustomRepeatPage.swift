@@ -3,9 +3,9 @@ import SwiftUI
 
 /// The Custom repeat page (ticket 25), as the mockup's: the summary on top, then Frequency and
 /// its Every stepper, On (weekdays, or the monthly choices the start offers), Ends, and the Next
-/// Times it falls due. It edits a copy of the repeat's choices: its checkmark makes them the
-/// repeat, even unchanged, and Back drops them (ticket 17). The person never sees the rule
-/// (ADR 0003).
+/// Times it falls due. It edits a copy of the Repeat page's choices: its checkmark makes them that
+/// page's choice, even unchanged, and Back drops them (tickets 17 and 22). The person never sees
+/// the rule (ADR 0003).
 struct CustomRepeatPage: View {
     @Bindable var form: ReminderForm
     @Environment(\.dismiss) private var dismiss
@@ -48,7 +48,7 @@ struct CustomRepeatPage: View {
         .navigationTitle(Text("Custom", comment: "Title of the Custom repeat page."))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar(isLocked: isLocked, canChoose: block == nil) }
-        // After the checkmark this drops nothing: it has already made the copy the repeat.
+        // After the checkmark this drops nothing: it has already made the copy the Repeat page's.
         .onDisappear { form.closeCustomPage() }
     }
 
@@ -62,7 +62,7 @@ struct CustomRepeatPage: View {
                 dismiss()
             } label: {
                 Label {
-                    Text("Done", comment: "The Custom repeat page's confirm button (a checkmark): its choices become the reminder's repeat.")
+                    Text("Done", comment: "The Custom repeat page's confirm button (a checkmark): its choices become the Repeat page's choice.")
                 } icon: {
                     Image(systemName: "checkmark")
                 }

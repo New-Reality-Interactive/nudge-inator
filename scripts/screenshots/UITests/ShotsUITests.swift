@@ -352,12 +352,17 @@ final class ShotsUITests: XCTestCase {
         barTap { app.navigationBars["Custom"].buttons["Done"].tap() }
         XCTAssert(app.navigationBars["Repeat"].waitForExistence(timeout: 3), "The checkmark didn't go back to Repeat")
         shot("form-custom-chosen", pages: 2)
+        reportFormPageAccessibility("repeat-chosen")
+        // Only the Repeat page's checkmark makes the choice the repeat (ticket 22).
+        barTap { app.navigationBars["Repeat"].buttons["Done"].tap() }
+        XCTAssert(app.navigationBars["New Reminder"].waitForExistence(timeout: 3), "The checkmark didn't go back to the form")
+        shot("form-repeat-chosen")
     }
 
     /// The Custom page of a reminder that starts nudging while it's open (ticket 16), light and
     /// dark, before and after the lock, and what VoiceOver gets for its controls once locked, in the
-    /// test log (`ACCESSIBILITY` lines). Each launch waits up to 210 seconds for the lock. It only
-    /// scrolls down: at the top of the sheet a drag down would close it.
+    /// test log (`ACCESSIBILITY` lines), then the locked Repeat page. Each launch waits up to 210
+    /// seconds for the lock. It only scrolls down: at the top of the sheet a drag down would close it.
     func testCustomLocking() {
         for dark in [false, true] {
             let name = dark ? "form-custom-locking-dark" : "form-custom-locking"
@@ -366,27 +371,34 @@ final class ShotsUITests: XCTestCase {
             openSheet("Edit", title: "Edit Reminder")
             hideKeyboard()
             tapText("Repeat", inSheet: true)
+            shot("\(name)-repeat-unlocked")
             tapText("Custom", inSheet: true)
             shot("\(name)-unlocked")
-            if !dark { reportCustomPageAccessibility(page: 0) }
+            if !dark { reportFormPageAccessibility("custom-unlocked") }
             let note = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Nudging now.")).firstMatch
             XCTAssert(note.waitForExistence(timeout: 210), "The Custom page didn't lock")
             for page in 1...5 {
                 shot("\(name)-locked-\(page)")
-                if !dark { reportCustomPageAccessibility(page: page) }
+                if !dark { reportFormPageAccessibility("custom-locked-\(page)") }
                 scroll(down: true)
             }
+            // Back to the Repeat page, locked too, with its checkmark (ticket 22).
+            barTap { app.navigationBars["Custom"].buttons.firstMatch.tap() }
+            XCTAssert(app.navigationBars["Repeat"].waitForExistence(timeout: 3), "Back didn't go to Repeat")
+            shot("\(name)-repeat-locked", pages: 2)
+            if !dark { reportFormPageAccessibility("repeat-locked") }
             app.terminate()
         }
     }
 
-    /// The lines of the accessibility tree on screen that name the Custom page's headings, choices,
-    /// steppers and checkmark: each one's type, label, value and whether it's disabled. Page 0 is
-    /// before the lock. XCUITest doesn't expose the hint, so that stays a device check.
-    private func reportCustomPageAccessibility(page: Int) {
+    /// The lines of the accessibility tree on screen that name the Repeat and Custom pages'
+    /// headings, choices, steppers and checkmarks: each one's type, label, value and whether it's
+    /// disabled, under `screen`, such as "custom-locked-2". XCUITest doesn't expose the hint, so
+    /// that stays a device check.
+    private func reportFormPageAccessibility(_ screen: String) {
         let names = ["Frequency", "Daily", "Weekly", "Monthly", "Yearly", "Every", "'On", "Ends", "Never", "After", "On Date", "End Date", "ncrement", "ecrement", "Done"]
         for line in app.debugDescription.split(separator: "\n") where names.contains(where: { line.contains($0) }) {
-            print("ACCESSIBILITY page \(page): \(line.trimmingCharacters(in: .whitespaces))")
+            print("ACCESSIBILITY \(screen): \(line.trimmingCharacters(in: .whitespaces))")
         }
     }
 

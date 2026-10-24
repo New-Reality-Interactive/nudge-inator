@@ -10,9 +10,12 @@ struct ReminderFormSheet: View {
     @Environment(AppModel.self) private var model: AppModel?
     @Environment(\.dismiss) private var dismiss
     @State private var isConfirmingDiscard = false
+    /// The pages pushed over the form. The stack removes a page when Back or a swipe pops it, so
+    /// the Repeat page's Back is when `.repeat` leaves the path (ticket 22).
+    @State private var pages: [ReminderFormPage] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $pages) {
             Form {
                 if form.isEditing { EditNoteSection(isLocked: !form.lockedFields.isEmpty) }
                 WhatSection(form: form)
@@ -36,6 +39,11 @@ struct ReminderFormSheet: View {
                 }
             }
             .toolbar { toolbar }
+        }
+        // Not the Repeat page's onDisappear: pushing Custom over it makes it disappear too. After
+        // its checkmark this drops nothing: the choice is already the repeat.
+        .onChange(of: pages) {
+            if !pages.contains(.repeat) { form.closeRepeatPage() }
         }
         // On the stack, not its root: the root is covered by the Repeat and Custom pages, which
         // lock too when the reminder falls due while they're open.
