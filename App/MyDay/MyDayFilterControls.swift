@@ -17,6 +17,9 @@ struct MyDayFilterButton: View {
             Image(Self.symbol)
         }
         .badge(chosen)
+        // The toolbar kept showing the old badge when a token took the count down (the iPhone and the
+        // simulator, ticket 19), though the tint followed, so each count is its own button.
+        .id(chosen)
         // The bar draws its icons monochrome, so the accent is set here, and only while the filter is
         // on, when the color means something (WWDC25, "Build a SwiftUI app with the new design").
         .tint(chosen > 0 ? Color.accentColor : nil)

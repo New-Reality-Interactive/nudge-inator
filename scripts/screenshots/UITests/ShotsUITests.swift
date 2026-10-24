@@ -194,6 +194,23 @@ final class ShotsUITests: XCTestCase {
         shot("myday-filtered")
     }
 
+    /// The Filter button's badge as tags come off the filter: the badge follows the count when a
+    /// token is removed from My Day, not only when the filter sheet closes (found on the iPhone,
+    /// ticket 19).
+    func testMyDayFilterBadgeFollowsTokens() {
+        launch(.app)
+        tab("My Day")
+        openSheet("Filter", title: "Filter My Day")
+        tapText("#health", inSheet: true)
+        tapText("#work", inSheet: true)
+        barTap { tapButton(containing: "Done", inSheet: true) }
+        shot("myday-badge-2-tags")
+        tapButton(containing: "Remove #work")
+        shot("myday-badge-1-tag-after-remove")
+        tapButton(containing: "Remove #health")
+        shot("myday-badge-0-tags-after-remove")
+    }
+
     /// The Filter button's badge at counts the seed can't reach: 12 (two digits) and 999 (the most).
     func testMyDayFilterBadge() {
         for count in [12, 999] {

@@ -109,3 +109,11 @@ Built: the redrawn `tag.filter.svg` replaces the old one; `MyDayFilterButton` is
 - `scripts/mockup-shots.py` takes `myday-badge-12` and `myday-badge-999` from the filter badge mockup, so they can be put beside the app's.
 - The device check (VoiceOver reading the count once) and Brian's sign-off of the shots are still open. The iOS reviewer found no doc saying whether `.badge` is read on top of the label that already has the count, so the check is real: with 0, 1 and 12 chosen.
 
+### 2026-10-24: iPhone check 2 found a stale badge
+
+On Brian's iPhone (iPhone 15, iOS 27.0.1), default text size, VoiceOver off: no badge with no tag chosen; choosing one then two tags in the filter sheet showed "1" then "2", in portrait and landscape, on the button's upper corner, over the dotted end (the symbol still reads as a tag with filter lines).
+
+**Bug:** removing tags from My Day (a token's x, or Clear) left the old count on the badge, in both orientations; the icon's tint did follow. Reproduced on the iOS 27.0 simulator with a new shot test, `testMyDayFilterBadgeFollowsTokens` (choose two tags, remove one, remove the other): the badge stayed "2" after the first and after the last removal. The simulator shots missed it because they only ever raised the count, through the sheet.
+
+**Fix:** `.id(chosen)` on the button, so each count is its own toolbar item and its badge is built again. The same test now shows "1" after the first removal and no badge after the second (iOS 27.0 simulator). Cause not found beyond that: `.badge` on a toolbar button doesn't refresh when the value changes without the sheet closing, and the docs say nothing about it.
+
