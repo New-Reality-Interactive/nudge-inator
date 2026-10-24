@@ -47,3 +47,13 @@ Not in scope: building the bridge in the app, or changing the badge.
 - Developer stops: an iPhone check of the spike, if it gets that far; Brian's decision on the recommendation.
 
 ## Comments
+
+### 2026-10-24: What Apple's docs say, before the spike
+
+Docs research with `apple-rag-mcp`, in `.scratch/enhancement-pace/research/21-uikit-or-swiftui-for-the-my-day-bar-button.md` (citations and the full list of checks are there). The spike hasn't been run, so no criterion is ticked. Reach and Costs still need the spike's answers to their checks; Buys, Elsewhere and Recommendation are open too.
+
+- **Reach:** the smallest documented route is a `UIViewControllerRepresentable` holding a `UINavigationController` with a `UIHostingController` root, with the bar's items on its `navigationItem.rightBarButtonItems`. Each piece is documented, but no page says how SwiftUI's `.toolbar`, `.navigationTitle` and pushes behave inside it (only macOS documents bridging). New Reminder, the title and My Day's pushes would move with it. Reaching the bar that SwiftUI's `NavigationStack` builds, from a representable or by walking views, depends on undocumented internals. A UIKit view in a `ToolbarItem` gets no UIKit badge, since `badge` is only on `UIBarButtonItem`.
+- **Buys:** `UIBarButtonItem.Badge` has `backgroundColor`, `foregroundColor` and `font`, all iOS 26.0+, so a teal badge is documented. Whether a set font keeps it small at AX5 on iOS 27 is not documented; that is the spike's main question. A teal badge would no longer match the Now tab's, which stays red because the docs say SwiftUI styling has no effect on `TabView` badges.
+- **Costs:** grouping: confirmed for UIKit-only bars (WWDC25 284: image items in `rightBarButtonItems` share one capsule); mixing UIKit and SwiftUI items in one bar is a check. VoiceOver: the docs say nothing for either framework; device check. Swift 6: confirmed, all of it is `@MainActor` app-target code, and NudgeEngine is untouched. Tests and harness: how XCUITest sees a UIKit badge is a check. iOS 26.1: confirmed, every API is iOS 26.0+, so no `#available`. The UIKit large content viewer is documented for standard UIKit bars (WWDC19 261); SwiftUI's isn't.
+- **Elsewhere:** confirmed from the code: no other bar button shows a count. The Now tab badge is a tab-bar badge, and ticket 20's clear-all icon is in the content, not the bar.
+- **Provisional recommendation:** keep SwiftUI, unless the spike shows a UIKit badge that stays bar-sized and teal at AX5 on the iOS 27.0 simulator and the iPhone. Bridging means moving My Day's bar and navigation to UIKit for one badge. Next: the spike, then Brian's decision.
