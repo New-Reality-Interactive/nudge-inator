@@ -4,7 +4,7 @@
 
 **Blocked by:** 18.
 
-**Status:** needs-triage
+**Status:** resolved
 
 Found during a device check after ticket 13's, on Brian's iPhone (iPhone 15, iOS 27.0.1), 2026-10-23. Ticket 13's Comments had flagged it as likely. Brian asked for this ticket.
 
@@ -31,12 +31,12 @@ On screen, in light and dark mode:
 
 ## What it should do
 
-- [ ] VoiceOver on each locked Frequency and Ends segment, the selected one too, reads the lock's reason, on an iPhone (phone and iOS version recorded). The menus at accessibility sizes still do.
-- [ ] VoiceOver on the locked Every stepper reads the reason, at the default and accessibility sizes.
-- [ ] Locked, the weekday names look dimmed, like the segments, in light and dark mode, and the steppers are plain text without their − and +, as the Edit form's locked Every row is (reworded, Brian, 2026-10-24: Comments).
-- [ ] Locked, the Frequency, On and Ends headings carry the `lock` glyph, as Strength and Pace do, and VoiceOver reads them as headings, not dimmed controls with a hint.
-- [ ] Next Times never lists a time that has passed while the page is open.
-- [ ] Unlocked, the page looks and reads as it does now.
+- [x] VoiceOver on each locked Frequency and Ends segment, the selected one too, reads the lock's reason, on an iPhone (phone and iOS version recorded). The menus at accessibility sizes still do.
+- [x] VoiceOver on the locked Every stepper reads the reason, at the default and accessibility sizes.
+- [x] Locked, the weekday names look dimmed, like the segments, in light and dark mode, and the steppers are plain text without their − and +, as the Edit form's locked Every row is (reworded, Brian, 2026-10-24: Comments).
+- [x] Locked, the Frequency, On and Ends headings carry the `lock` glyph, as Strength and Pace do, and VoiceOver reads them as headings, not dimmed controls with a hint.
+- [x] Next Times never lists a time that has passed while the page is open.
+- [x] Unlocked, the page looks and reads as it does now.
 
 ## Before you start
 
@@ -64,3 +64,15 @@ On screen, in light and dark mode:
 - Review: no hard violations. Fixed: the tick was a `.task` on a `Section`, which may run once per row or not at all when Next Times is empty, so it moved to the `Form` and the minute is passed in. Two comments made clearer. Left alone: the harness's force unwraps (screenshot tooling, as the rest of its seed), a third `EveryMinute` loop (the form's lock tick runs only while editing, and a New Reminder's Custom page needs it too), and the hand-listed Ends choices (`CustomRepeat.Ending` isn't `CaseIterable`, an engine change this ticket doesn't need).
 
 - Simulator check (`testCustomLocking`, both simulators, light and dark, default and largest text): the headings carry the `lock`, the weekday names and segments (menus at the largest size) are dimmed, and Every week is plain text with the `lock`. Next Times dropped today's time once it passed: at 1:19 PM, with the reminder due at 1:19, it started at Tomorrow. The walk now gives the reminder a 90-second lead time, since at the largest text on iOS 26.5 it reached the form after a 45-second lead had run out. One iOS 27 run was marked failed after both tests passed: Xcode crashed writing its result bundle (`CASTreeDataStructure … Unable to write data`).
+
+### 2026-10-24: device checks passed on the iPhone
+
+On Brian's iPhone (iPhone 15, iOS 27.0.1), fresh install. Starting settings: Larger Accessibility Sizes off, VoiceOver off. Test reminder: Weekly on Saturday and Sunday, saved at 1:52 PM to start at 1:57 PM, Break Through Focus off. Its Custom page was opened before 1:57 and left open as it fell due.
+
+- Unlocked, default size (criterion 6): "Frequency, heading"; "Daily, button, 1 of 4", "Selected, Weekly, button, 2 of 4", "Monthly, button, 3 of 4", "Yearly, button, 4 of 4"; "Every week, decrement, 1, dimmed, button" (at its minimum) and "Every week, increment, 1, button"; "On, heading"; each weekday "Monday, Switch Button, Off", then "Double-tap to toggle setting"; "Ends, heading"; "Selected, Never, button, 1 of 3" and the others; Next Times "Today, 1:57 PM" first. As before, with no lock reason.
+- Locked, default size (criteria 1, 2, 4, 5): "Frequency, heading"; "Frequency, Weekly, dimmed", then "Locked while it's nudging. Mark it Done or pause it to change it."; "Every week, dimmed", then the reason; "On, heading"; each weekday "Monday, dimmed, Switch Button, Off", then the reason; "Ends, heading"; "Ends, Never, dimmed", then the reason. Next Times started at "Tomorrow, 1:57 PM": today's time had passed.
+- Locked, largest size (criteria 1 and 2): the Frequency and Ends menus and Every week read with "dimmed" and the reason. Brian reported they matched what was expected.
+- On screen, light and dark (criteria 3 and 4): the Frequency, On and Ends headings carry the `lock`, "Every week" is plain text with the `lock` and no − or +, and the weekday names are grey.
+- Clean-up: Brian put back his text size and VoiceOver and deleted the test reminder. The app wasn't on the phone at the start, so it was uninstalled, and `devicectl` confirmed it's gone.
+- Every criterion is ticked, so the ticket is resolved.
+
