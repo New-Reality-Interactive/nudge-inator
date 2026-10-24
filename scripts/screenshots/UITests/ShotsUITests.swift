@@ -348,6 +348,10 @@ final class ShotsUITests: XCTestCase {
         shot("form-repeat", pages: 2)
         tapText("Custom", inSheet: true)
         shot("form-custom", pages: 3)
+        // The checkmark chooses the weekly repeat the page shows, unchanged, from Never (ticket 17).
+        barTap { app.navigationBars["Custom"].buttons["Done"].tap() }
+        XCTAssert(app.navigationBars["Repeat"].waitForExistence(timeout: 3), "The checkmark didn't go back to Repeat")
+        shot("form-custom-chosen", pages: 2)
     }
 
     /// The Custom page of a reminder that starts nudging while it's open (ticket 16), light and
@@ -364,22 +368,23 @@ final class ShotsUITests: XCTestCase {
             tapText("Repeat", inSheet: true)
             tapText("Custom", inSheet: true)
             shot("\(name)-unlocked")
+            if !dark { reportCustomPageAccessibility(page: 0) }
             let note = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Nudging now.")).firstMatch
             XCTAssert(note.waitForExistence(timeout: 210), "The Custom page didn't lock")
             for page in 1...5 {
                 shot("\(name)-locked-\(page)")
-                if !dark { reportLockedCustomPage(page: page) }
+                if !dark { reportCustomPageAccessibility(page: page) }
                 scroll(down: true)
             }
             app.terminate()
         }
     }
 
-    /// The lines of the accessibility tree on screen that name the locked Custom page's headings,
-    /// choices and steppers: each one's type, label, value and whether it's disabled. XCUITest
-    /// doesn't expose the hint, so that stays a device check.
-    private func reportLockedCustomPage(page: Int) {
-        let names = ["Frequency", "Daily", "Weekly", "Monthly", "Yearly", "Every", "'On", "Ends", "Never", "After", "On Date", "End Date", "ncrement", "ecrement"]
+    /// The lines of the accessibility tree on screen that name the Custom page's headings, choices,
+    /// steppers and checkmark: each one's type, label, value and whether it's disabled. Page 0 is
+    /// before the lock. XCUITest doesn't expose the hint, so that stays a device check.
+    private func reportCustomPageAccessibility(page: Int) {
+        let names = ["Frequency", "Daily", "Weekly", "Monthly", "Yearly", "Every", "'On", "Ends", "Never", "After", "On Date", "End Date", "ncrement", "ecrement", "Done"]
         for line in app.debugDescription.split(separator: "\n") where names.contains(where: { line.contains($0) }) {
             print("ACCESSIBILITY page \(page): \(line.trimmingCharacters(in: .whitespaces))")
         }

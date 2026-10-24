@@ -332,7 +332,8 @@ struct ReminderFormTests {
         form.strength = .relentless
         form.breakThroughFocus = false
         form.dueTime = NewYork.local(2026, 10, 15, 11)
-        form.customChoices.interval = 3
+        form.customPageChoices.interval = 3
+        form.chooseCustomPageChoices()
 
         clock.now = NewYork.local(2026, 10, 15, 9, 5)
         form.checkLock()
@@ -349,20 +350,24 @@ struct ReminderFormTests {
         #expect(model.engine.reminders.only?.strength == .firm)
     }
 
-    /// A custom repeat the reminder had when the form opened is what comes back, not a default.
+    /// A custom repeat the reminder had when the form opened is what comes back, not a default,
+    /// and the Custom page drops what was changed on it too (ticket 17).
     @Test func aLockArrivingRestoresASavedCustomRepeat() async throws {
         let model = try await launchedModel()
         let everyThreeDays = try #require(RepeatRule(frequency: .daily, interval: 3))
         let saved = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 15, 9), repeatRule: everyThreeDays, strength: .gentle)
         model.add(saved)
         let form = try editForm(of: saved.id, on: model)
-        form.customChoices.interval = 5
+        form.customPageChoices.interval = 5
+        form.chooseCustomPageChoices()
+        form.customPageChoices.interval = 7
 
         clock.now = NewYork.local(2026, 10, 15, 9, 5)
         form.checkLock()
 
         #expect(form.repeatRule == everyThreeDays)
-        #expect(form.customChoices.interval == 3)
+        #expect(form.customPageChoices.interval == 3)
+        #expect(!form.hasChanges)
     }
 
     /// A saved Consistent · 30 min comes back whole: the switch to Escalating and the wait changed
@@ -637,7 +642,7 @@ struct ReminderFormTests {
         form.dueTime = Self.monday
         form.repeatPreset = .everyTwoWeeks
 
-        form.customRepeat = form.customChoices
+        form.customRepeat = form.customPageChoices
 
         #expect(form.repeatPreset == nil)
         #expect(form.customRepeat == model.engine.customRepeat(from: .everyTwoWeeks, startingAt: Self.monday))
@@ -653,7 +658,7 @@ struct ReminderFormTests {
         model.add(daily)
         let form = try editForm(of: daily.id, on: model)
 
-        let shown = form.customChoices
+        let shown = form.customPageChoices
 
         #expect(shown == model.engine.customRepeat(from: .everyDay, startingAt: daily.dueTime))
         #expect(form.customRepeat == nil)
@@ -677,22 +682,77 @@ struct ReminderFormTests {
         #expect(form.customRepeat == nil)
     }
 
-    /// The first choice made on the page stores the choices: that is a change, and the repeat is
-    /// then Custom.
-    @Test func aChoiceOnTheCustomPageMakesTheRepeatCustom() async throws {
+    /// Device check, ticket 17: from Never, the weekly repeat the page shows couldn't be chosen as
+    /// it was. The checkmark chooses it with no control changed.
+    @Test func theCheckmarkChoosesTheShownChoicesFromNever() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.dueTime = Self.monday
+
+        form.chooseCustomPageChoices()
+
+        #expect(form.repeatPreset == nil)
+        #expect(form.repeatRule?.rrule == "FREQ=WEEKLY;BYDAY=MO")
+        #expect(form.repeatSummary == "Every Monday at 9:00\u{202F}AM")
+    }
+
+    /// Back drops what was changed on the page: the repeat stays as it was, and the page opens
+    /// again on it.
+    @Test func backDropsTheCustomPagesChanges() async throws {
         let model = try await launchedModel()
         let form = newForm(on: model)
         form.dueTime = Self.monday
         form.repeatPreset = .everyDay
 
-        form.customChoices.interval = 3
+        form.customPageChoices.interval = 3
+        form.closeCustomPage()
+
+        #expect(form.repeatPreset == .everyDay)
+        #expect(form.customPageChoices == model.engine.customRepeat(from: .everyDay, startingAt: Self.monday))
+        #expect(form.customPageSummary == "Every day at 9:00\u{202F}AM")
+    }
+
+    /// The page's changes aren't in the draft before its checkmark, but they count as changes,
+    /// so a swipe down on the Custom page can't drop them unasked.
+    @Test func theCustomPagesChangesCountAsChangesUntilBack() async throws {
+        let model = try await launchedModel()
+        let daily = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 16, 9), repeatRule: .everyDay, strength: .gentle)
+        model.add(daily)
+        let form = try editForm(of: daily.id, on: model)
+
+        form.customPageChoices.interval = 3
+        #expect(form.hasChanges)
+
+        // Changed back to what the repeat already is: nothing to lose.
+        form.customPageChoices.interval = 1
+        #expect(!form.hasChanges)
+
+        form.customPageChoices.interval = 3
+        form.closeCustomPage()
+        #expect(!form.hasChanges)
+    }
+
+    /// A choice made on the page changes the page's copy, which its summary shows. Only the
+    /// checkmark makes it the repeat, which is then Custom.
+    @Test func aChoiceOnTheCustomPageMakesTheRepeatCustomOnlyAtTheCheckmark() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.dueTime = Self.monday
+        form.repeatPreset = .everyDay
+
+        form.customPageChoices.interval = 3
+
+        #expect(form.customPageSummary == "Every 3 days at 9:00\u{202F}AM")
+        #expect(form.repeatPreset == .everyDay)
+
+        form.chooseCustomPageChoices()
 
         #expect(form.repeatPreset == nil)
         #expect(form.repeatRule?.rrule == "FREQ=DAILY;INTERVAL=3")
-        #expect(form.customChoices.interval == 3)
+        #expect(form.customPageChoices.interval == 3)
     }
 
-    /// Storing the choices a preset starts the page from, as the first control tap does, must not
+    /// Choosing the choices a preset starts the page from, as the checkmark does, must not
     /// change when the reminder falls due. The rule may be written differently (a weekly rule
     /// names its weekday), but the times are the same. Never is left out: it starts a weekly page.
     @Test(arguments: RepeatPreset.allCases.filter { $0 != .never })
@@ -703,13 +763,13 @@ struct ReminderFormTests {
         form.repeatPreset = preset
         let before = form.upcomingDueTimes
 
-        form.customChoices = form.customChoices
+        form.chooseCustomPageChoices()
 
         #expect(form.upcomingDueTimes == before)
     }
 
     /// Accepted (ticket 25): Every Month from the 31st uses the last day of a short month, but the
-    /// Custom page's "On the 31st" skips it, and says so in its footer. A control tap stores that.
+    /// Custom page's "On the 31st" skips it, and says so in its footer. The checkmark chooses that.
     @Test func storingEveryMonthsChoicesFromThe31stSkipsTheShortMonths() async throws {
         let model = try await launchedModel()
         let form = newForm(on: model)
@@ -717,7 +777,7 @@ struct ReminderFormTests {
         form.repeatPreset = .everyMonth
         #expect(form.upcomingDueTimes.prefix(2).last == NewYork.local(2026, 11, 30))
 
-        form.customChoices = form.customChoices
+        form.chooseCustomPageChoices()
 
         #expect(form.upcomingDueTimes.prefix(2).last == NewYork.local(2026, 12, 31))
     }
@@ -733,7 +793,7 @@ struct ReminderFormTests {
         model.add(custom)
         let form = try editForm(of: custom.id, on: model)
 
-        #expect(form.customChoices.interval == 3)
+        #expect(form.customPageChoices.interval == 3)
         #expect(form.repeatPreset == nil)
         #expect(form.repeatRule == custom.repeatRule)
     }
@@ -746,16 +806,16 @@ struct ReminderFormTests {
         form.dueTime = Self.monday
         form.repeatPreset = .everyTwoWeeks
 
-        form.customChoices.toggle(.wednesday)
-        #expect(form.upcomingDueTimes == [Self.monday, NewYork.local(2026, 10, 21), NewYork.local(2026, 11, 2)])
+        form.customPageChoices.toggle(.wednesday)
+        #expect(form.customPageUpcomingDueTimes == [Self.monday, NewYork.local(2026, 10, 21), NewYork.local(2026, 11, 2)])
 
-        form.customChoices.ending = .afterCount
-        form.customChoices.count = 2
-        #expect(form.upcomingDueTimes == [Self.monday, NewYork.local(2026, 10, 21)])
+        form.customPageChoices.ending = .afterCount
+        form.customPageChoices.count = 2
+        #expect(form.customPageUpcomingDueTimes == [Self.monday, NewYork.local(2026, 10, 21)])
         let expected = Reminder(title: "Water the plants", dueTime: Self.monday,
                                 repeatRule: try RepeatRule(rrule: "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE;COUNT=2"), strength: .firm)
-        #expect(form.repeatSummary == model.engine.repeatSummary(of: expected))
-        #expect(form.upcomingDueTimes == model.engine.upcomingDueTimes(of: expected, count: 3))
+        #expect(form.customPageSummary == model.engine.repeatSummary(of: expected))
+        #expect(form.customPageUpcomingDueTimes == model.engine.upcomingDueTimes(of: expected, count: 3))
     }
 
     /// Wednesday 28 October is October's last Wednesday; 18 November isn't November's.
@@ -764,7 +824,8 @@ struct ReminderFormTests {
         let form = newForm(on: model)
         form.dueTime = NewYork.local(2026, 10, 28)
         form.repeatPreset = .everyMonth
-        form.customChoices.monthlyDay = .lastWeekdayOfMonth
+        form.customPageChoices.monthlyDay = .lastWeekdayOfMonth
+        form.chooseCustomPageChoices()
         #expect(form.repeatRule?.rrule == "FREQ=MONTHLY;BYDAY=-1WE")
 
         form.dueTime = NewYork.local(2026, 11, 18)
@@ -777,14 +838,18 @@ struct ReminderFormTests {
         let form = newForm(on: model)
         form.title = "Water the plants"
         form.dueTime = Self.monday
-        form.customChoices.ending = .onDate
-        form.customChoices.endDate = NewYork.local(2026, 10, 18)
+        form.customPageChoices.ending = .onDate
+        form.customPageChoices.endDate = NewYork.local(2026, 10, 18)
+        #expect(form.customPageBlock == .endsBeforeStart)
+        form.chooseCustomPageChoices()
 
         #expect(form.repeatBlock == .endsBeforeStart)
         #expect(form.saveBlock == .endsBeforeStart)
         #expect(form.save(to: model) == false)
 
-        form.customChoices.endDate = Self.monday
+        form.customPageChoices.endDate = Self.monday
+        #expect(form.customPageBlock == nil)
+        form.chooseCustomPageChoices()
         #expect(form.saveBlock == nil)
         #expect(form.save(to: model))
     }
@@ -800,11 +865,16 @@ struct ReminderFormTests {
         #expect(form.upcomingDueTimes.isEmpty)
         #expect(form.saveBlock == nil)
 
-        form.customChoices.count = 5
+        #expect(form.customPageBlock == nil)
+
+        form.customPageChoices.count = 5
+        #expect(form.customPageBlock == .noTimesLeft)
+        form.chooseCustomPageChoices()
         #expect(form.repeatBlock == .noTimesLeft)
         #expect(form.saveBlock == .noTimesLeft)
 
-        form.customChoices.count = 30
+        form.customPageChoices.count = 30
+        form.chooseCustomPageChoices()
         #expect(form.saveBlock == nil)
         form.title = "Water the ferns"
         #expect(form.save(to: model))
@@ -815,10 +885,11 @@ struct ReminderFormTests {
         let form = newForm(on: model)
         form.title = "Pay the cleaner"
         form.dueTime = NewYork.local(2026, 10, 28)
-        form.customChoices.frequency = .monthly
-        form.customChoices.monthlyDay = .lastWeekdayOfMonth
-        form.customChoices.ending = .afterCount
-        form.customChoices.count = 5
+        form.customPageChoices.frequency = .monthly
+        form.customPageChoices.monthlyDay = .lastWeekdayOfMonth
+        form.customPageChoices.ending = .afterCount
+        form.customPageChoices.count = 5
+        form.chooseCustomPageChoices()
         #expect(form.save(to: model))
         let saved = try #require(model.engine.reminders.only)
         #expect(saved.repeatRule?.rrule == "FREQ=MONTHLY;BYDAY=-1WE;COUNT=5")
@@ -853,7 +924,10 @@ struct ReminderFormTests {
         #expect(model.engine.reminders.only?.repeatRule == summer.repeatRule)
 
         let again = try editForm(of: summer.id, on: model)
-        again.customChoices.toggle(.friday)
+        again.chooseCustomPageChoices()
+        #expect(again.repeatRule == summer.repeatRule)
+        again.customPageChoices.toggle(.friday)
+        again.chooseCustomPageChoices()
         #expect(again.repeatRule?.rrule == "FREQ=WEEKLY;BYDAY=MO,FR;COUNT=30")
     }
 
@@ -874,24 +948,25 @@ struct ReminderFormTests {
 
         switch control {
         case "daily every 3":
-            form.customChoices.frequency = .daily
-            form.customChoices.interval = 3
+            form.customPageChoices.frequency = .daily
+            form.customPageChoices.interval = 3
         case "monthly last Wednesday":
-            form.customChoices.frequency = .monthly
-            form.customChoices.monthlyDay = .lastWeekdayOfMonth
+            form.customPageChoices.frequency = .monthly
+            form.customPageChoices.monthlyDay = .lastWeekdayOfMonth
         case "monthly fourth Wednesday":
-            form.customChoices.frequency = .monthly
-            form.customChoices.monthlyDay = .weekdayOfMonth
+            form.customPageChoices.frequency = .monthly
+            form.customPageChoices.monthlyDay = .weekdayOfMonth
         case "monthly last day":
-            form.customChoices.frequency = .monthly
-            form.customChoices.monthlyDay = .lastDay
+            form.customPageChoices.frequency = .monthly
+            form.customPageChoices.monthlyDay = .lastDay
         case "yearly every 2":
-            form.customChoices.frequency = .yearly
-            form.customChoices.interval = 2
+            form.customPageChoices.frequency = .yearly
+            form.customPageChoices.interval = 2
         default:
-            form.customChoices.ending = .onDate
-            form.customChoices.endDate = NewYork.local(2026, 12, 1, 0)
+            form.customPageChoices.ending = .onDate
+            form.customPageChoices.endDate = NewYork.local(2026, 12, 1, 0)
         }
+        form.chooseCustomPageChoices()
 
         #expect(form.repeatRule?.rrule == rrule)
         #expect(form.repeatSummary == model.engine.repeatSummary(of: Reminder(
@@ -905,7 +980,7 @@ struct ReminderFormTests {
         let form = newForm(on: model)
         form.dueTime = Self.monday
         form.repeatPreset = .everyWeek
-        form.customRepeat = form.customChoices
+        form.customRepeat = form.customPageChoices
 
         form.dueTime = NewYork.local(2026, 10, 20)
 
