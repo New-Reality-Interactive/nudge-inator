@@ -1,0 +1,86 @@
+# 19: The Filter symbol is redrawn closer to the Tags tab's tag, and its count becomes a badge
+
+**What to build:** My Day's Filter button shows a redrawn `tag.filter` symbol: the Tags tab's `tag` outline with a three-line filter badge at the lower right, so the two icons read as related. The number of tags chosen stops being text beside the icon and becomes the system's badge on the button, like the badge on the Now tab's bell.
+
+**Blocked by:** none.
+
+**Status:** needs-triage
+
+Raised by Brian, 2026-10-24. Brian decides whether it's ready.
+
+## What changes
+
+Ticket 14 added `tag.filter`: a horizontal tag with three filter lines inside it. The Tags tab navigates to the Tags screen with the system `tag` symbol, and the Filter button opens the tag sheet as a filter. Brian wants the two to look related.
+
+The redrawn symbol replaces the SVG inside `App/Resources/Assets.xcassets/tag.filter.symbolset/`. It keeps the same symbol name and file name, and `Contents.json` doesn't change. `MyDayFilterButton` loads `"tag.filter"` by name (`App/MyDay/MyDayFilterControls.swift:11`), so the symbol swap needs no code change.
+
+The count changes too. `MyDayFilterButton` drops the `HStack` and the `Text` that shows the number of tags chosen beside the icon, and puts a badge on the button's content with `.badge(chosen)`. A count of 0 hides the badge on its own. The button keeps its accessibility label, which already says how many are chosen. The type's doc comment, which says the count sits "beside" the icon, is updated to match. The tint that turns the button accent-colored while a filter is on stays as it is.
+
+## The new symbol
+
+- **Source:** `~/Downloads/tag.filter.svg`, exported from the SF Symbols app (version 27.0) with File → Export Symbol. Template v7.0, SF Symbols' default annotations.
+- **Design:** Apple's own `tag` outline plus a three-line, decreasing-width filter badge at the lower right, with a circular cutout in the tag where the badge sits. The badge is about 8% larger than the first draft; Brian approved that size.
+- **Checked so far:** `actool` compiles it with no errors or warnings, including with the deployment target at iOS 26.1. It renders correctly at all nine weights, so the three sources (Ultralight-S, Regular-S, Black-S) interpolate. Each source is one path with the same structure.
+- **One layer:** the tag and badge are one layer, so hierarchical and palette rendering treat them as one. That's fine: the button draws monochrome, tinted with the accent color while a filter is on. Splitting the badge into its own layer would be separate work in SF Symbols.
+- **Orientation:** it matches the SF Symbols 27 `tag` template, with the narrow, dotted end at the upper right. Brian's Tags tab screenshot appears mirrored relative to it, so compare the two on the phone. Brian said to keep the new symbol as it is, and that stays true with the badge.
+- **Wider than the old one:** the badge hangs past the tag's right edge.
+- **The system badge lands on the dotted end:** the tag's dotted end is at the upper right, where the system badge lands, so the badge covers the dot. Brian saw a layout mock of this and chose to keep the symbol as it is. Mirroring the symbol is the fallback if it looks wrong in the shots.
+
+## The count as a badge
+
+What Apple's docs say (`apple-rag-mcp`):
+
+- **Confirmed:** SwiftUI's `badge(_:)` is documented as appearing in "list rows, tab bars, toolbar items, and menus". The WWDC25 session "Build a SwiftUI app with the new design" (session 323) badges a toolbar item by applying the modifier to its content. `UIBarButtonItem.badge` is iOS 26+ and supports navigation bars and toolbars. The app's minimum is iOS 26.1, so no `#available` path is needed.
+- **Not confirmed, so these are checks on the simulators and the iPhone:**
+  - **Color:** the system draws these red. SwiftUI documents no way to change a toolbar badge's background or text color. `UIBarButtonItem.Badge` has `backgroundColor` and `foregroundColor` in UIKit only. The `badge(_ label: Text?)` overload says styling the `Text` works, but it names no effect for toolbar items.
+  - **Placement and size:** the system decides them. Nothing says how the badge behaves at the largest text size, in landscape, or at counts of 10 and above. The most tags a person can choose is 999, so check that.
+  - **VoiceOver:** the label already includes the count, so the system may read it twice.
+
+## What it should do
+
+- [ ] `tag.filter.symbolset/tag.filter.svg` is the redrawn symbol. `actool` compiles the catalog with no errors or warnings, and `scripts/test.sh` passes.
+- [ ] My Day's Filter button shows the new symbol in the bar beside New Reminder, in portrait and landscape, with no tag chosen and with tags chosen. Shot on both simulators at the default and the largest text size. Brian signs off the shots.
+- [ ] The count is a system badge on the Filter button, not text beside the icon, and no badge shows when the count is 0. The badge shows in portrait and landscape, at the default and the largest text size, with counts of 1, 12 and 999. It isn't clipped at the trailing edge, and it doesn't push or crowd New Reminder. Shot on both simulators, and Brian signs off.
+- [ ] The badge's background is the teal accent color if the system allows it, and the system's standard badge if not. Try the SwiftUI options first: a tint, and `.badge(Text("\(chosen)").foregroundStyle(…))`, and look at the capsule in the shots. If the capsule stays system red, keep the standard badge; Brian has accepted that. Don't draw a custom badge, which would drop the system's placement and accessibility behavior. If the capsule does turn teal, its number stays legible in light and dark. Record in Comments which it is and what was tried.
+- [ ] `docs/design/DESIGN.md` uses red `{colors.badge}` only for the Now tab's nudging count, and says a count of 0 is never red. Record in Comments whether the filter count's badge fits that rule: a red capsule means the rule needs a line saying the Filter button's count is also drawn as the system's badge; a teal one means it needs a line for the accent-colored badge. Update DESIGN.md to match.
+- [ ] In the shots, the badge over the tag's dotted end is looked at, and Brian decides whether the symbol stays as it is or is mirrored. Record it in Comments.
+- [ ] VoiceOver reads the button once, as "Filter by Tags", with the count when tags are chosen, and does not read the count twice. Device check.
+- [ ] A new interactive HTML mockup, `docs/mockups/2026-10-24-…/` (`index.html` and a `README.md`, like the other dated mockups), is made first, and Brian approves it before any code changes: no symbol swap, no change to `MyDayFilterButton`, nothing in the app target until he has. It is a copy of `2026-10-23-tag-filter` changed only for this ticket, and its README lists what changed:
+  - The Filter button's count is a badge on the button, not text beside the icon. Choosing tags in the mockup shows it; choosing none hides it; it can be tried at counts of 1, 12 and 999. It is drawn as the system's standard badge (red), with a switch to the accent teal so Brian can see both, since the build may not be able to do teal.
+  - The `"tag.filter"` entry in the mockup's symbol table is redrawn to match the new symbol: the `tag` outline with the three-line filter badge at the lower right. It is still a stand-in drawn in strokes.
+  - The Tags tab's `tag` icon faces the right way. The mockups draw it mirrored: the narrow, dotted end is at the upper left, where the SF Symbols 27 `tag` has it at the upper right. The new mockup draws it as the real symbol is, everywhere it uses `tag`: the tab bar, the Tags row icons and the empty-state icon.
+  - The earlier dated mockups stay as they are.
+- [ ] `docs/design/DESIGN.md`'s symbol table (line 323) is checked for the old icon. Record the decision in Comments.
+
+## Before you start
+
+- Apple platform questions go through `apple-rag-mcp` (AGENTS.md). The relevant pages are "Creating custom symbol images for your app", SwiftUI's `badge(_:)`, and `UIBarButtonItem.badge`.
+- Start with the mockup. Brian's approval of it gates every code change; stop and ask for it before touching the app.
+- Developer stops:
+  - `tdd` seams: none, because it is a symbol swap and a view modifier. Say so.
+  - Simulator shots of `myday` and `myday-filter` at the default and largest text sizes, in both orientations, on both simulators, with counts of 1, 12 and 999.
+  - Whether the badge can be teal, shown in the shots. Brian has already said red is fine if it can't.
+  - Brian's call on the badge covering the dotted end.
+  - The offer of an iPhone run, for the VoiceOver check.
+  - The new dated mockup, made first and approved by Brian before any code changes (a mockup has no behaviour, so it skips `tdd`; say so).
+- Watch for: the iOS 26.5 simulator can stop turning to landscape. Look at a landscape shot before trusting it (ticket 15, Comments).
+
+## Comments
+
+### 2026-10-24: The count becomes a badge
+
+- Brian added a second change to this ticket: the Filter button's count becomes the system's badge (`.badge(chosen)`) instead of text beside the icon. The tag symbol stays as the ticket describes it, so orientation doesn't change.
+- Docs: `badge(_:)` is documented for toolbar items and the WWDC25 session shows it, so it is supported. The color, the placement at large sizes and at counts of 10 and above, and VoiceOver are not documented. They are checks, listed under "The count as a badge".
+- The badge lands on the tag's dotted end and covers the dot. Brian saw a layout mock of this and chose to keep the symbol as it is. If it looks wrong in the shots, mirroring the symbol is the fallback.
+- Ticket 15's Comments has a "Filter count color" item: the count is accent-colored in the mockup and monochrome in the app. The badge changes what that question means, because the count is no longer text in the bar's tint. Ticket 15 is not edited. The badge's color criterion here replaces the question.
+- Badge color, decided by Brian: he would like the badge background to be the teal accent color, but if the system can't do that, the standard badge (red) is fine. The ticket tries the SwiftUI options and keeps the system badge if the capsule stays red. A custom badge is not wanted.
+- Mockup: a new interactive HTML mockup, `docs/mockups/2026-10-24-…/`, is required, not optional. The count moving to a badge changes what `docs/mockups/2026-10-23-tag-filter/` shows. Brian also noticed that the mockups draw the Tags tab's `tag` icon facing the wrong way (the dotted end at the upper left; the real symbol has it at the upper right), and the new mockup corrects it. The dated mockups stay as they are.
+- Brian requires his approval of the new mockup before any code changes are made.
+
+### 2026-10-24: The mockup is made, waiting for Brian
+
+- `docs/mockups/2026-10-24-filter-badge/` is a copy of `2026-10-23-tag-filter` with the changes the criterion lists (README has them). No app code, symbol or test has changed. `tdd` is skipped: a mockup has no behaviour.
+- Checked in headless Chrome at portrait, landscape and AX5, with 1, 12 and 999 and both colors: the badge sits on the button's upper trailing corner, and 999 almost touches New Reminder's left edge (no overlap at 393 pt wide).
+- The mockup's `tag` is mirrored with a group transform on the old outline, so the dotted end is at the upper right. `tag.filter` is that outline in a mask with a circular cutout, plus three stroked lines. It is a stand-in, not the exported SVG.
+- Stopped here for Brian's approval of the mockup before any code changes.
+
