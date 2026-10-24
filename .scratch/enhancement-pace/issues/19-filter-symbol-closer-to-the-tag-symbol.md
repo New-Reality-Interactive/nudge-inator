@@ -4,7 +4,7 @@
 
 **Blocked by:** none.
 
-**Status:** needs-triage
+**Status:** resolved
 
 Raised by Brian, 2026-10-24. Brian decides whether it's ready.
 
@@ -39,8 +39,8 @@ What Apple's docs say (`apple-rag-mcp`):
 ## What it should do
 
 - [x] `tag.filter.symbolset/tag.filter.svg` is the redrawn symbol. `actool` compiles the catalog with no errors or warnings, and `scripts/test.sh` passes.
-- [ ] My Day's Filter button shows the new symbol in the bar beside New Reminder, in portrait and landscape, with no tag chosen and with tags chosen. Shot on both simulators at the default and the largest text size. Brian signs off the shots.
-- [ ] The count is a system badge on the Filter button, not text beside the icon, and no badge shows when the count is 0. The badge shows in portrait and landscape, at the default and the largest text size, with counts of 1, 12 and 999. It isn't clipped at the trailing edge, and it doesn't push or crowd New Reminder. Shot on both simulators, and Brian signs off.
+- [x] My Day's Filter button shows the new symbol in the bar beside New Reminder, in portrait and landscape, with no tag chosen and with tags chosen. Shot on both simulators at the default and the largest text size. Brian signs off the shots.
+- [x] The count is a system badge on the Filter button, not text beside the icon, and no badge shows when the count is 0. The badge shows in portrait and landscape, at the default and the largest text size, with counts of 1, 12 and 999. It isn't clipped at the trailing edge, and it doesn't push or crowd New Reminder. Shot on both simulators, and Brian signs off.
 - [x] The badge's background is the teal accent color if the system allows it, and the system's standard badge if not. Try the SwiftUI options first: a tint, and `.badge(Text("\(chosen)").foregroundStyle(…))`, and look at the capsule in the shots. If the capsule stays system red, keep the standard badge; Brian has accepted that. Don't draw a custom badge, which would drop the system's placement and accessibility behavior. If the capsule does turn teal, its number stays legible in light and dark. Record in Comments which it is and what was tried.
 - [x] `docs/design/DESIGN.md` uses red `{colors.badge}` only for the Now tab's nudging count, and says a count of 0 is never red. Record in Comments whether the filter count's badge fits that rule: a red capsule means the rule needs a line saying the Filter button's count is also drawn as the system's badge; a teal one means it needs a line for the accent-colored badge. Update DESIGN.md to match.
 - [x] In the shots, the badge over the tag's dotted end is looked at, and Brian decides whether the symbol stays as it is or is mirrored. Record it in Comments.
@@ -146,4 +146,8 @@ Brian's iPhone 15, iOS 27.0.1. Start: default text size, Larger Accessibility Si
 | 5. Clean up | Reminders deleted by Brian, text size and VoiceOver as at the start, app uninstalled. |
 
 The VoiceOver criterion is ticked. The two criteria that need Brian's sign-off of the simulator shots are not.
+
+### 2026-10-24: Brian signed off the shots
+
+Brian signed off the simulator shots (both simulators, portrait, landscape, largest text and largest-text landscape, in `docs/screenshots/2026-10-24-ticket-19/`) for the two criteria: the new symbol in the bar beside New Reminder, and the count as a system badge that isn't clipped or crowding New Reminder. At the accessibility sizes there is no badge (Brian's call, above), so the badge criterion's largest-size shots show none. Every criterion is ticked; ticket resolved.
 
