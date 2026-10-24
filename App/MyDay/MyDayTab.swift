@@ -18,9 +18,8 @@ struct MyDayTab: View {
     @State private var isFiltering = false
 
     var body: some View {
-        // In compact height (landscape) the date moves into the bar as the title's subtitle and
-        // the filter button into the bar's trailing buttons, as in the mockup, leaving the room
-        // to the list.
+        // In compact height (landscape) the date moves into the bar as the title's subtitle, as in
+        // the mockup, leaving the room to the list.
         let compact = verticalSizeClass == .compact
         NavigationStack(path: $path) {
             TabScreen(state: state) {
@@ -30,11 +29,10 @@ struct MyDayTab: View {
                         screen: screen,
                         reach: engine?.reach,
                         now: context.date,
-                        showsDateAndFilter: !compact,
+                        showsDate: !compact,
                         tapCount: { filter.tap($0) },
                         removeToken: remove,
                         clearTokens: { filter.clearTags() },
-                        openFilter: { isFiltering = true },
                         openDetails: { path.append(OpenedReminder(id: $0)) },
                         markDone: { model?.markDone($0) }
                     )
@@ -44,10 +42,8 @@ struct MyDayTab: View {
             .navigationSubtitle(compact ? todayText(.now) : Text(verbatim: ""))
             .reminderDetailsDestination()
             .toolbar {
-                if compact {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        MyDayFilterButton(chosen: checkedCount, style: .bar) { isFiltering = true }
-                    }
+                ToolbarItem(placement: .topBarTrailing) {
+                    MyDayFilterButton(chosen: checkedCount) { isFiltering = true }
                 }
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
             }
@@ -92,12 +88,11 @@ private struct MyDayList: View {
     /// mockup's `permBanner`).
     let reach: Reach?
     let now: Date
-    /// Portrait shows the date and the Filter button in the content; landscape has them in the bar.
-    let showsDateAndFilter: Bool
+    /// Portrait shows the date in the content; landscape has it in the bar.
+    let showsDate: Bool
     let tapCount: (MyDayCount) -> Void
     let removeToken: (MyDayScreen.FilterToken) -> Void
     let clearTokens: () -> Void
-    let openFilter: () -> Void
     let openDetails: (Reminder.ID) -> Void
     let markDone: (Reminder.ID) -> Void
 
@@ -106,14 +101,6 @@ private struct MyDayList: View {
     var body: some View {
         List {
             Section {
-                if showsDateAndFilter {
-                    plainRow {
-                        // The full width, so the label wraps at accessibility sizes instead of
-                        // being cut off.
-                        MyDayFilterButton(chosen: screen.filterTokens.count, style: .content, open: openFilter)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
                 if !screen.filterTokens.isEmpty {
                     plainRow {
                         MyDayFilterTokens(tokens: screen.filterTokens, summary: screen.filterSummary, remove: removeToken, clear: clearTokens)
@@ -127,7 +114,7 @@ private struct MyDayList: View {
                 }
             } header: {
                 VStack(alignment: .leading, spacing: Design.Spacing.s3) {
-                    if showsDateAndFilter {
+                    if showsDate {
                         todayText(now)
                             .subheadStyle()
                             .textCase(nil)

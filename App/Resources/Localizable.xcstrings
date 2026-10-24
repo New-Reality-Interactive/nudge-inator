@@ -840,34 +840,11 @@
     "Every nudge rings as an alarm." : {
       "comment" : "Under the reminder form's strength, when every nudge rings, as Relentless's do."
     },
-    "Filter (%lld)" : {
-      "comment" : "My Day: the button that opens the tag filter, while tags are chosen. The placeholder is how many.",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Filter (%lld)"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Filter (%lld)"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "Filter My Day" : {
       "comment" : "Title of My Day's tag filter sheet."
     },
     "Filter by Tags" : {
-      "comment" : "My Day: the button that opens the tag filter, while none is chosen."
+      "comment" : "VoiceOver label of My Day's filter button while no tag is chosen."
     },
     "Filter by Tags, %lld chosen" : {
       "comment" : "VoiceOver label of My Day's filter button while tags are chosen. The placeholder is how many.",
