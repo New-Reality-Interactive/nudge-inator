@@ -955,9 +955,9 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <legend>My Day's Filter badge</legend>
       <p class="why">The count is the system's badge on the Filter button. Choose a tag on My Day to see it; with none chosen there is no badge.</p>
       <label for="c-badge-color">Badge color</label>
-      <select id="c-badge-color"><option value="">System (red)</option><option value="accent">Accent (teal)</option></select>
+      <select id="c-badge-color" autocomplete="off"><option value="">System (red)</option><option value="accent">Accent (teal)</option></select>
       <label for="c-badge-count">Badge number</label>
-      <select id="c-badge-count"><option value="">The tags chosen</option><option value="1">1</option><option value="12">12</option><option value="999">999</option></select>
+      <select id="c-badge-count" autocomplete="off"><option value="">The tags chosen</option><option value="1">1</option><option value="12">12</option><option value="999">999</option></select>
     </fieldset>
     <fieldset>
       <legend>iPhone settings</legend>
@@ -3189,6 +3189,8 @@ document.getElementById("c-type").addEventListener("change", (e) => { if (e.targ
 document.getElementById("c-bold").addEventListener("change", (e) => { if (e.target.checked) document.documentElement.dataset.bold = ""; else delete document.documentElement.dataset.bold; });
 document.getElementById("c-badge-color").addEventListener("change", (e) => { if (e.target.value) document.documentElement.dataset.badge = e.target.value; else delete document.documentElement.dataset.badge; });
 document.getElementById("c-badge-count").addEventListener("change", (e) => { prefs.badgeCount = e.target.value; state.keepScroll = true; render(); });
+// A browser can restore a select's value on reload without a change event, so start from what they show.
+for (const id of ["c-badge-color", "c-badge-count"]) document.getElementById(id).dispatchEvent(new Event("change"));
 document.getElementById("c-reset").addEventListener("click", () => {
   seed();
   settings.defaultPace = { ...DEFAULT_PACE };
