@@ -113,6 +113,29 @@
     "%@." : {
       "comment" : "A repeat summary as a sentence, under the reminder form's Starts and under the Repeat page's Custom row. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".\nTop of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\"."
     },
+    "%lld chosen" : {
+      "comment" : "VoiceOver value of My Day's filter button while tags are chosen. The placeholder is how many.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld chosen"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld chosen"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld due today with %@." : {
       "comment" : "My Day's filter sheet: under the lists when tags are checked. 1: how many are due today. 2: the checked tags, such as \"#home and #money\" (Match All) or \"#home or #money\" (Match Any).",
       "localizations" : {
@@ -844,30 +867,7 @@
       "comment" : "Title of My Day's tag filter sheet."
     },
     "Filter by Tags" : {
-      "comment" : "VoiceOver label of My Day's filter button while no tag is chosen."
-    },
-    "Filter by Tags, %lld chosen" : {
-      "comment" : "VoiceOver label of My Day's filter button while tags are chosen. The placeholder is how many.",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Filter by Tags, %lld chosen"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Filter by Tags, %lld chosen"
-                }
-              }
-            }
-          }
-        }
-      }
+      "comment" : "VoiceOver label of My Day's filter button."
     },
     "Filtering by" : {
       "comment" : "VoiceOver label of the group of tokens for the tags My Day is filtered by."

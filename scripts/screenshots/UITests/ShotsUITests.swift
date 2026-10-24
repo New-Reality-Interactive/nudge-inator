@@ -211,6 +211,26 @@ final class ShotsUITests: XCTestCase {
         shot("myday-badge-0-tags-after-remove")
     }
 
+    /// What VoiceOver gets for the Filter button with none, one and two tags chosen: its label and
+    /// value, in the test log (`ACCESSIBILITY` lines). VoiceOver speaks the label, then the value.
+    func testMyDayFilterAccessibility() {
+        launch(.app)
+        tab("My Day")
+        func report(_ count: Int) {
+            let button = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Filter by Tags")).firstMatch
+            print("ACCESSIBILITY \(count) tags: label=\"\(button.label)\" value=\"\(button.value as? String ?? "nil")\"")
+        }
+        report(0)
+        openSheet("Filter", title: "Filter My Day")
+        tapText("#health", inSheet: true)
+        barTap { tapButton(containing: "Done", inSheet: true) }
+        report(1)
+        openSheet("Filter", title: "Filter My Day")
+        tapText("#work", inSheet: true)
+        barTap { tapButton(containing: "Done", inSheet: true) }
+        report(2)
+    }
+
     /// The Filter button's badge at counts the seed can't reach: 12 (two digits) and 999 (the most).
     func testMyDayFilterBadge() {
         for count in [12, 999] {

@@ -127,3 +127,9 @@ On Brian's iPhone (iOS 27.0.1), with Larger Accessibility Sizes turned on and th
 
 **Differs from the approved mockup:** `2026-10-24-filter-badge` shows the badge at every size. A frozen mockup isn't edited; this is the record of why the app doesn't match it at the accessibility sizes. DESIGN.md says so.
 
+### 2026-10-24: iPhone check 4: VoiceOver read the count twice
+
+Brian's iPhone (iOS 27.0.1), default text size, VoiceOver on: no tag chosen, "Filter by tags, button"; one tag, "Filter by tags, 1 chosen, 1, button"; two tags, "Filter by tags, 2 chosen, 2, button". The system badge adds its own count after the label, which already had it. That is what the iOS review warned the docs couldn't rule out.
+
+**Fix:** the label is always "Filter by Tags", and the count is the accessibility value ("1 chosen"), none when no tag is chosen. The string catalog has the value as a plural-variant entry and no longer has the old label's. A new shot test, `testMyDayFilterAccessibility`, prints what the Filter button exposes (the iOS 27.0 simulator): with none, label "Filter by Tags", value ""; with one, value "1 chosen"; with two, "2 chosen". An explicit value replaces the badge's own, in what the app exposes. Whether VoiceOver now speaks "Filter by tags, 1 chosen, button" needs the iPhone again. At the accessibility sizes the badge is hidden, and the value still carries the count.
+

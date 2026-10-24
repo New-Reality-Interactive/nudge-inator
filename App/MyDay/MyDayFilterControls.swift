@@ -33,14 +33,17 @@ struct MyDayFilterButton: View {
         // The bar draws its icons monochrome, so the accent is set here, and only while the filter is
         // on, when the color means something (WWDC25, "Build a SwiftUI app with the new design").
         .tint(chosen > 0 ? Color.accentColor : nil)
-        .accessibilityLabel(label)
+        .accessibilityLabel(Text("Filter by Tags", comment: "VoiceOver label of My Day's filter button."))
+        // The count is the value, not part of the label: with it in the label, VoiceOver read it twice,
+        // the badge adding its own after the label (an iPhone, iOS 27.0.1, ticket 19).
+        .accessibilityValue(value)
     }
 
-    private var label: Text {
+    private var value: Text {
         if chosen > 0 {
-            Text("Filter by Tags, \(chosen) chosen", comment: "VoiceOver label of My Day's filter button while tags are chosen. The placeholder is how many.")
+            Text("\(chosen) chosen", comment: "VoiceOver value of My Day's filter button while tags are chosen. The placeholder is how many.")
         } else {
-            Text("Filter by Tags", comment: "VoiceOver label of My Day's filter button while no tag is chosen.")
+            Text(verbatim: "")
         }
     }
 }
