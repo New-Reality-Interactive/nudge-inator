@@ -324,6 +324,6 @@ final class ShotsUITests: XCTestCase {
 
     func testTimeSensitiveOff() {
         launch(.timeSensitiveOff)
-        shot("banner-time-sensitive-off")
+        shot("banner-time-sensitive-off", pages: 3)
     }
 }
