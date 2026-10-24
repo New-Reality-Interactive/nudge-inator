@@ -38,19 +38,19 @@ What Apple's docs say (`apple-rag-mcp`):
 
 ## What it should do
 
-- [ ] `tag.filter.symbolset/tag.filter.svg` is the redrawn symbol. `actool` compiles the catalog with no errors or warnings, and `scripts/test.sh` passes.
+- [x] `tag.filter.symbolset/tag.filter.svg` is the redrawn symbol. `actool` compiles the catalog with no errors or warnings, and `scripts/test.sh` passes.
 - [ ] My Day's Filter button shows the new symbol in the bar beside New Reminder, in portrait and landscape, with no tag chosen and with tags chosen. Shot on both simulators at the default and the largest text size. Brian signs off the shots.
 - [ ] The count is a system badge on the Filter button, not text beside the icon, and no badge shows when the count is 0. The badge shows in portrait and landscape, at the default and the largest text size, with counts of 1, 12 and 999. It isn't clipped at the trailing edge, and it doesn't push or crowd New Reminder. Shot on both simulators, and Brian signs off.
-- [ ] The badge's background is the teal accent color if the system allows it, and the system's standard badge if not. Try the SwiftUI options first: a tint, and `.badge(Text("\(chosen)").foregroundStyle(…))`, and look at the capsule in the shots. If the capsule stays system red, keep the standard badge; Brian has accepted that. Don't draw a custom badge, which would drop the system's placement and accessibility behavior. If the capsule does turn teal, its number stays legible in light and dark. Record in Comments which it is and what was tried.
-- [ ] `docs/design/DESIGN.md` uses red `{colors.badge}` only for the Now tab's nudging count, and says a count of 0 is never red. Record in Comments whether the filter count's badge fits that rule: a red capsule means the rule needs a line saying the Filter button's count is also drawn as the system's badge; a teal one means it needs a line for the accent-colored badge. Update DESIGN.md to match.
-- [ ] In the shots, the badge over the tag's dotted end is looked at, and Brian decides whether the symbol stays as it is or is mirrored. Record it in Comments.
+- [x] The badge's background is the teal accent color if the system allows it, and the system's standard badge if not. Try the SwiftUI options first: a tint, and `.badge(Text("\(chosen)").foregroundStyle(…))`, and look at the capsule in the shots. If the capsule stays system red, keep the standard badge; Brian has accepted that. Don't draw a custom badge, which would drop the system's placement and accessibility behavior. If the capsule does turn teal, its number stays legible in light and dark. Record in Comments which it is and what was tried.
+- [x] `docs/design/DESIGN.md` uses red `{colors.badge}` only for the Now tab's nudging count, and says a count of 0 is never red. Record in Comments whether the filter count's badge fits that rule: a red capsule means the rule needs a line saying the Filter button's count is also drawn as the system's badge; a teal one means it needs a line for the accent-colored badge. Update DESIGN.md to match.
+- [x] In the shots, the badge over the tag's dotted end is looked at, and Brian decides whether the symbol stays as it is or is mirrored. Record it in Comments.
 - [ ] VoiceOver reads the button once, as "Filter by Tags", with the count when tags are chosen, and does not read the count twice. Device check.
 - [x] A new interactive HTML mockup, `docs/mockups/2026-10-24-…/` (`index.html` and a `README.md`, like the other dated mockups), is made first, and Brian approves it before any code changes: no symbol swap, no change to `MyDayFilterButton`, nothing in the app target until he has. It is a copy of `2026-10-23-tag-filter` changed only for this ticket, and its README lists what changed:
   - The Filter button's count is a badge on the button, not text beside the icon. Choosing tags in the mockup shows it; choosing none hides it; it can be tried at counts of 1, 12 and 999. It is drawn as the system's standard badge (red), with a switch to the accent teal so Brian can see both, since the build may not be able to do teal.
   - The `"tag.filter"` entry in the mockup's symbol table is redrawn to match the new symbol: the `tag` outline with the three-line filter badge at the lower right. It is still a stand-in drawn in strokes.
   - The Tags tab's `tag` icon faces the right way. The mockups draw it mirrored: the narrow, dotted end is at the upper left, where the SF Symbols 27 `tag` has it at the upper right. The new mockup draws it as the real symbol is, everywhere it uses `tag`: the tab bar, the Tags row icons and the empty-state icon.
   - The earlier dated mockups stay as they are.
-- [ ] `docs/design/DESIGN.md`'s symbol table (line 323) is checked for the old icon. Record the decision in Comments.
+- [x] `docs/design/DESIGN.md`'s symbol table (line 323) is checked for the old icon. Record the decision in Comments.
 
 ## Before you start
 
