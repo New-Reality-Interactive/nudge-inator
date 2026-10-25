@@ -146,6 +146,7 @@ struct TagReminderRowView: View {
     }
 }
 
+#if DEBUG
 #Preview("Home") {
     NavigationStack {
         let engine = Engine.myDayPreview()
@@ -153,3 +154,4 @@ struct TagReminderRowView: View {
             .reminderDetailsDestination()
     }
 }
+#endif

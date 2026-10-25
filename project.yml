@@ -19,6 +19,10 @@ settings:
     # Warnings are errors: a new toolchain's warnings otherwise pass unnoticed (pace ticket 01).
     SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    # One version and build number for the app and the widget. The build number stays 1 here: the
+    # Organizer's "Manage version and build number" raises it on upload (testflight-readiness 01).
+    MARKETING_VERSION: "1.1.0"
+    CURRENT_PROJECT_VERSION: "1"
 packages:
   NudgeEngine:
     path: Packages/NudgeEngine
@@ -44,6 +48,11 @@ targets:
       path: App/Info.plist
       properties:
         CFBundleDisplayName: Nudge-inator
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # Export compliance: the only cryptography is Insecure.SHA1 for alarm IDs, and nothing goes
+        # over a network. A feature that adds either revisits this (testflight-readiness 01).
+        ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         NSAlarmKitUsageDescription: "Nudge-inator rings an alarm to keep nudging you about a reminder until you mark it done."
@@ -70,6 +79,8 @@ targets:
       path: NudgeWidgets/Info.plist
       properties:
         CFBundleDisplayName: Nudge-inator Widgets
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:

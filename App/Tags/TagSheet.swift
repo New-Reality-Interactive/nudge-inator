@@ -180,6 +180,7 @@ struct TagSheet: View {
     }
 }
 
+#if DEBUG
 #Preview("New") {
     TagSheet(kind: .new, engine: .myDayPreview())
 }
@@ -190,3 +191,4 @@ struct TagSheet: View {
         TagSheet(kind: .rename(work), engine: engine)
     }
 }
+#endif

@@ -85,6 +85,7 @@ struct TagsTab: View {
     }
 }
 
+#if DEBUG
 #Preview("Light") {
     TagsTab(state: .ready, path: .constant(NavigationPath()), previewEngine: .myDayPreview())
 }
@@ -106,3 +107,4 @@ struct TagsTab: View {
 #Preview("Empty") {
     TagsTab(state: .ready, path: .constant(NavigationPath()))
 }
+#endif

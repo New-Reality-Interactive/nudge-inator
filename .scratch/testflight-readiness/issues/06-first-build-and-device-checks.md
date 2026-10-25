@@ -2,7 +2,7 @@
 
 **What to build:** Brian archives and uploads the first 1.1.0 build, installs it on his iPhone, and checks that the TestFlight build behaves like the debug build. The checks cover alarms, Time Sensitive nudges, the widget, the Open intent and the clean reinstall. The build then goes through Beta App Review to the external group, and the testers install it from What to Test, knowing what TestFlight shares. Spec stories 17–30 and 42.
 
-**Blocked by:** 01, 02, 03, 04.
+**Blocked by:** 01, 02, 03, 04, 07.
 
 **Status:** ready-for-human
 
@@ -27,3 +27,5 @@
 - Developer stops: every App Store Connect and Organizer step is Brian's; each device check is walked through one at a time per `docs/agents/device-testing.md`, waiting for Brian's go before each.
 
 ## Comments
+
+- Ticket 07 (rename `PreviewScheduler`, filed 2026-10-25 from ticket 01's review) is added to `Blocked by`, so it merges before the first archive. `Blocked by` still lists 01–04.
