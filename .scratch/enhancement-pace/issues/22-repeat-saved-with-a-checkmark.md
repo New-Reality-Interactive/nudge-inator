@@ -4,7 +4,7 @@
 
 **Blocked by:** 17.
 
-**Status:** needs-triage
+**Status:** resolved
 
 Brian asked for this ticket on 2026-10-24, after choosing ticket 17's checkmark for the Custom page.
 
@@ -14,12 +14,12 @@ Each row on the Repeat page sets the reminder's repeat as soon as it's tapped (`
 
 ## What it should do
 
-- [ ] The Repeat page has a checkmark button in the top-right corner. Tapping it saves the page's choice as the repeat and returns to the form. Tapped with nothing changed, it leaves the repeat as it was.
-- [ ] Back returns to the form and changes nothing: a choice made on the page is dropped, and the repeat stays as it was.
+- [x] The Repeat page has a checkmark button in the top-right corner. Tapping it saves the page's choice as the repeat and returns to the form. Tapped with nothing changed, it leaves the repeat as it was.
+- [x] Back returns to the form and changes nothing: a choice made on the page is dropped, and the repeat stays as it was.
 - [x] Opening the page shows the reminder's current repeat checked: a preset, Never, or Custom with its summary.
-- [ ] Only the checkmark on the page being left saves. The Custom page's checkmark writes its choices to the Repeat page's copy, not to the form. It returns to the Repeat page with Custom checked and its summary shown, and nothing reaches the form until the Repeat checkmark is tapped. Back on the Repeat page then drops that custom repeat too. Opening Custom again from the Repeat page shows the copy's choices.
+- [x] Only the checkmark on the page being left saves. The Custom page's checkmark writes its choices to the Repeat page's copy, not to the form. It returns to the Repeat page with Custom checked and its summary shown, and nothing reaches the form until the Repeat checkmark is tapped. Back on the Repeat page then drops that custom repeat too. Opening Custom again from the Repeat page shows the copy's choices.
 - [x] Cancel's confirmation (`hasChanges`) counts a choice on the Repeat page that hasn't been saved, as ticket 17 counts an unsaved Custom page edit (`customPageEdit`).
-- [ ] The checkmark meets `docs/design/DESIGN.md` and matches the form's own Save checkmark and the Custom page's checkmark (ticket 17). VoiceOver reads it as "Done", as on the Custom page.
+- [x] The checkmark meets `docs/design/DESIGN.md` and matches the form's own Save checkmark and the Custom page's checkmark (ticket 17). VoiceOver reads it as "Done", as on the Custom page.
 - [x] While the reminder is nudging, the checkmark is locked as the page's rows are (ticket 13: `lockedWhileNudging`, `RepeatLockSection`).
 
 ## Before you start
@@ -53,3 +53,13 @@ Each row on the Repeat page sets the reminder's repeat as soon as it's tapped (`
 - Simulator check (`testFormPages`, `testCustomLocking`, both simulators, portrait, landscape and largest text, light and dark): the Repeat page's checkmark is the same teal glass circle as Save and the Custom page's. After the Custom checkmark, Repeat shows Custom checked with "Every Saturday at 5:00 PM." under it, and after the Repeat checkmark the form's Repeat row reads Custom. Locked, it's grey and disabled, under the lock note. Accessibility tree: "Done" button before the lock, "Done", disabled, after it. `scripts/test.sh` passed on both simulators.
 - Harness gap, not from this ticket: `testCustomLocking`'s shots in the landscape run come out portrait, ticket 17's own ones too. `testFormPages` shows the Repeat page and its checkmark in landscape.
 - Open: criteria 1, 2 and 4 (the checkmark and Back on the iPhone: Back dropping a preset, Back dropping a custom repeat the Custom checkmark chose, a cancelled swipe back keeping the choice) and criterion 6's VoiceOver label, on the iPhone.
+
+### 2026-10-24: device checks; resolved
+
+On Brian's iPhone (iPhone 15, iOS 27.0.1), a fresh install (uninstalled afterwards), with one reminder repeating Every Day, edited and never saved:
+
+- Back on the Repeat page drops a preset: Every Week tapped, Back, and the form still read Every Day; reopening Repeat showed Every Day checked. Criterion 2.
+- Back drops a custom repeat from the Custom page's checkmark: the checkmark returned to Repeat with Custom checked and its summary shown; Back left the form on Every Day, and reopening Repeat showed Every Day checked. Every Week and the Repeat checkmark then set the form to Every Week, and the checkmark with nothing changed kept it. Criteria 1 and 4.
+- A cancelled swipe back: Every Month tapped, a swipe back stopped halfway, and the page stayed with Every Month checked; Back then left the form on Every Week. Criterion 2.
+- VoiceOver reads the Repeat page's checkmark as "Done, Button". Criterion 6.
+- The form showed Every Day at the VoiceOver check, not the Every Week left by the swipe check. A re-check found no fault: with Every Week chosen, going to Settings and back kept the form open on Every Week, so the form had been reopened between the checks.
