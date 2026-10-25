@@ -1,8 +1,8 @@
 import NudgeEngine
 import SwiftUI
 
-/// Settings: the permission banners, what the app may send (notifications and alarms), a way to
-/// open iOS Settings when something is off, Send a Test Nudge, the Default Pace, How It Nudges,
+/// Settings: the permission banners, About, what the app may send (notifications and alarms), a way
+/// to open iOS Settings when something is off, Send a Test Nudge, the Default Pace, How It Nudges,
 /// and Delete All Data.
 struct SettingsTab: View {
     let state: ScreenState
@@ -23,6 +23,7 @@ struct SettingsTab: View {
         NavigationStack {
             TabScreen(state: state) {
                 List {
+                    generalSection
                     nudgesSection
                     dataSection
                 }
@@ -72,6 +73,26 @@ struct SettingsTab: View {
         model != nil
     }
 
+    private var generalSection: some View {
+        Section {
+            NavigationLink {
+                AboutPage()
+            } label: {
+                SettingsRow(
+                    tile: .tileGray,
+                    symbol: "iphone",
+                    title: Text("About", comment: "Settings: row that opens the page with the privacy policy, support and the app's version and build number.")
+                )
+            }
+        } header: {
+            // The banners under the title, as the mockup's `viewSettings` puts them.
+            VStack(alignment: .leading, spacing: Design.Spacing.s5) {
+                PermissionBanners(reach: reach)
+                Text("General", comment: "Settings: header of the first section, with the About row.")
+            }
+        }
+    }
+
     private var nudgesSection: some View {
         Section {
             SettingsRow(
@@ -97,7 +118,7 @@ struct SettingsTab: View {
                         symbol: "gearshape",
                         title: Text("Open iOS Settings", comment: "Settings: row that opens the app's page in the iOS Settings app, where notifications and alarms can be turned on."),
                         titleColor: .accentColor,
-                        showsChevron: true
+                        accessory: .chevron
                     )
                 }
             }
@@ -131,11 +152,7 @@ struct SettingsTab: View {
                 )
             }
         } header: {
-            // The banners under the title, as the mockup's `viewSettings` puts them.
-            VStack(alignment: .leading, spacing: Design.Spacing.s5) {
-                PermissionBanners(reach: reach)
-                Text("Nudges", comment: "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and How It Nudges.")
-            }
+            Text("Nudges", comment: "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and How It Nudges.")
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s2) {
                 ForEach(SettingsStatus.footer(for: reach), id: \.self) { $0.text }

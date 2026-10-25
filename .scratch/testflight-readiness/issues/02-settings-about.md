@@ -11,14 +11,14 @@ This meets Guideline 5.1.1(i)'s in-app privacy link before the first archive. A 
 
 **Status:** ready-for-agent
 
-- [ ] A new dated mockup under `docs/mockups/` shows Settings with the About row and the About screen, and Brian approves it before anything is built.
-- [ ] Settings has an About row that opens the About screen, as in the mockup.
+- [x] A new dated mockup under `docs/mockups/` shows Settings with the About row and the About screen, and Brian approves it before anything is built.
+- [x] Settings has an About row that opens the About screen, as in the mockup.
 - [ ] The Privacy Policy and Support rows each open their URL in the system browser (manual check on a simulator).
-- [ ] The build section shows the version and build number from the bundle. A unit test checks the shown values against the bundle's `CFBundleShortVersionString` and `CFBundleVersion`.
-- [ ] Every label is a String Catalog string, and the screen meets `docs/design/DESIGN.md`.
+- [x] The build section shows the version and build number from the bundle. A unit test checks the shown values against the bundle's `CFBundleShortVersionString` and `CFBundleVersion`.
+- [x] Every label is a String Catalog string, and the screen meets `docs/design/DESIGN.md`.
 - [ ] Simulators (26.5 and 27.x): Settings and About in portrait, landscape and the largest text size, and the screenshot harness walks to About. VoiceOver reads each row as a link-like button and reads the version and build.
 - [ ] Offered to Brian, after the simulator pass: on the iPhone, both rows open their pages and the build section reads correctly (phone and iOS version recorded).
-- [ ] `scripts/test.sh` passes on both simulators.
+- [x] `scripts/test.sh` passes on both simulators.
 
 ## Before you start
 
@@ -27,3 +27,20 @@ This meets Guideline 5.1.1(i)'s in-app privacy link before the first archive. A 
 - Developer stops: Brian's approval of the mockup; agree the `tdd` seam for the version text; the simulator pass in `scripts/screenshots.sh`; VoiceOver; the offered iPhone run.
 
 ## Comments
+
+- 2026-10-25, mockup: `docs/mockups/2026-10-25-settings-about`. Brian approved it with one change:
+  the About row is in a **General** section above Nudges, not a headerless section at the end. The
+  permission banners stay under the title, so in the app they moved from the Nudges header to the
+  General header. DESIGN.md now lists the About, Privacy Policy and Support tiles (gray) and the
+  link row (accent label, `arrow.up.forward`, read as a link).
+- 2026-10-25, `tdd` seam (agreed with Brian): `AppBuild` (`App/Shell/AppBuild.swift`), read through
+  `Bundle.object(forInfoDictionaryKey:)`. `AppBuildTests` checks it against the running bundle's
+  `CFBundleShortVersionString` and `CFBundleVersion`, and that a missing or non-text value is nil.
+  About then shows "Unknown", a state the mockup doesn't draw (its README says so).
+- 2026-10-25, simulators (26.5 and 27.0): `SHOTS_TESTS=testSettings scripts/screenshots.sh` walks
+  to About (`settings-about`). Settings and About match the mockup in portrait, landscape and the
+  largest text size, where the rows stack like the other Settings rows. The harness shows version
+  1.0, build 1: its own bundle's, which shows the value is read at runtime.
+- Open: the Privacy Policy and Support rows opening their URLs (manual, simulator); VoiceOver
+  reading the link rows and the version and build; the offered iPhone run. `scripts/test.sh` passes
+  on both simulators.

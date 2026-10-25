@@ -2,7 +2,8 @@
 """Screenshots of a mockup's screens in headless Chrome, named as scripts/screenshots.sh names the
 app's, so each pair can be compared (scripts/contact-sheet.sh). The screens are the as-built
 mockup's (docs/mockups/2026-10-21-as-built); a mockup copied from it keeps working, and the last few
-are only in the proposed pace mockup, the filter badge mockup or the Match always shown mockup. A
+are only in the proposed pace mockup, the filter badge mockup, the Match always shown mockup or the
+Settings About mockup. A
 screen it doesn't know is added to SCREENS: the JavaScript that shows it in the mockup, and how many
 pages.
 
@@ -32,7 +33,7 @@ SCREENS = {
   "tag-home": ("state.tab='tags';nav();push({kind:'tag',id:'home'})", 2),
   "tags-edit": ("state.tab='tags';state.tagEdit=true;nav()", 1),
   "tag-new": ("state.tab='tags';nav();openTagSheet()", 1),
-  "settings": ("state.tab='settings';nav()", 2),
+  "settings": ("state.tab='settings';nav()", 3),
   "settings-how-it-nudges": ("state.tab='settings';nav();push({kind:'hin'})", 4),
   "form-new": ("openEditor()", 4),
   "form-tags": ("openEditor();state.sheet.page='tags';render()", 1),
@@ -63,6 +64,9 @@ SCREENS = {
   "myday-filter-2": ("state.tab='day';state.dayFilter.ids=sortTags(tags).slice(0,2).map(t=>t.id);nav();openDayFilter()", 1),
   "settings-default-pace": ("state.tab='settings';nav();push({kind:'defpace'})", 1),
   "settings-how-it-nudges-escalating": ("settings.defaultPace={pace:'escalating',wait:10};state.tab='settings';nav();push({kind:'hin'})", 4),
+  # Only in the Settings About mockup (docs/mockups/2026-10-25-settings-about), from testflight-readiness
+  # ticket 02: Settings' About page.
+  "settings-about": ("state.tab='settings';nav();push({kind:'about'})", 2),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}

@@ -434,7 +434,10 @@ final class ShotsUITests: XCTestCase {
     func testSettings() {
         launch(.app)
         tab("Settings")
-        shot("settings", pages: 2)
+        shot("settings", pages: 3)
+        tapText("About")
+        shot("settings-about", pages: 2)
+        back()
         tapText("Default Pace")
         shot("settings-default-pace")
         // A new wait, which the row under the label shows on return.
