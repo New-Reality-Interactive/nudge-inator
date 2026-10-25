@@ -153,7 +153,7 @@ Steps that need my developer account, App Store Connect, my website or my tester
 - **What TestFlight shares with me.** Apple's "Legal - TestFlight & Privacy" page: crash logs and usage information are collected automatically by Apple and shared with the developer, and testers "will not be able to opt out of this collection". Feedback (comments, screenshots, and device details such as model, iOS version, carrier, time zone and connection type) is also shared, and "may be associated with your name and email address". The developer "is not permitted to share this information with a third party." A screenshot can show reminder text. Stories 29, 30 and 42 tell testers this.
 - The docs don't say whether App Store validation rejects a widget whose version differs from the app's. Sharing one setting makes the question moot. Validate App would report it if it mattered.
 - Recorded here when known:
-  - Privacy policy URL: _(Brian)_
+  - Privacy policy URL: `https://newrealityinteractive.com/nudge-inator/privacy/` (published and checked, 2026-10-25)
   - Support URL: _(Brian)_
   - Marketing URL: _(Brian)_
   - Age-rating answers: None or No for every topic (Brian, 2026-10-25). Resulting rating: _(Brian)_
