@@ -97,6 +97,8 @@ struct MyDayFilterTokens: View {
     @State private var widths: [MyDayScreen.FilterToken.ID: CGFloat] = [:]
     @State private var moreWidth: CGFloat = 0
     @State private var rowWidth: CGFloat?
+    /// The shown token VoiceOver is on, by its place in the row.
+    @AccessibilityFocusState private var focusedPlace: Int?
 
     /// A token not measured yet, just chosen, counts as a whole row, so the row never draws more
     /// than three rows on its way to the right count.
@@ -111,8 +113,12 @@ struct MyDayFilterTokens: View {
         if !tokens.isEmpty {
             VStack(alignment: .leading, spacing: Design.Spacing.s2) {
                 FlowLayout {
-                    ForEach(tokens.prefix(shown)) { token in
-                        FilterTokenView(token: token) { remove(token) }
+                    // By place, not by tag: a removed token's place goes to the token after it, so
+                    // VoiceOver stays on that place and reads the new token, instead of leaving its
+                    // cursor over an empty spot (ticket 20; ticket 33 found the same with Done).
+                    ForEach(Array(tokens.prefix(shown).enumerated()), id: \.offset) { place, token in
+                        FilterTokenView(token: token) { remove(token, at: place) }
+                            .accessibilityFocused($focusedPlace, equals: place)
                     }
                     if shown < tokens.count {
                         MoreTokenView(count: tokens.count - shown, open: openFilter)
@@ -129,6 +135,17 @@ struct MyDayFilterTokens: View {
             .accessibilityElement(children: .contain)
             .accessibilityLabel(Text("Filtering by", comment: "VoiceOver label of the group of tokens for the tags My Day is filtered by."))
         }
+    }
+
+    /// The last shown token has no token after it to take its place, so VoiceOver moves to the
+    /// one before, in the same tap: moved after the token went, VoiceOver had begun reading the
+    /// removed token and was cut off. With the only token gone the row goes too, and VoiceOver
+    /// finds its own place (Brian's choice).
+    private func remove(_ token: MyDayScreen.FilterToken, at place: Int) {
+        if place == tokens.count - 1, place > 0, focusedPlace == place {
+            focusedPlace = place - 1
+        }
+        remove(token)
     }
 
     /// Every token at its own size, drawn hidden, so `shown` knows their widths before choosing.
@@ -170,6 +187,9 @@ private struct FilterTokenView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
+        // The next token's label, in a removed token's place, is spoken after what VoiceOver is
+        // saying, not over it.
+        .speechAnnouncementsQueued()
     }
 
     private var label: Text {

@@ -41,11 +41,11 @@ Revised by Brian twice on 2026-10-25 (Comments): first the pinned clear button b
 ## What it should do
 
 - [x] `tag.xmark.symbolset` is in the asset catalog, `actool` compiles the catalog with no errors or warnings, and `scripts/test.sh` passes.
-- [ ] The tokens wrap to at most three rows, and the Clear text is gone. With six tags chosen at the largest text size, at least three tags show, one per row at most, and "+N more" ends the third row, or sits below it when it doesn't fit beside the third row's only token; a tap on it opens the filter sheet. With six tags at the default size, all six show and there is no "+N more". Shot on both simulators, in portrait and landscape, at the default and the largest text size.
+- [x] The tokens wrap to at most three rows, and the Clear text is gone. With six tags chosen at the largest text size, at least three tags show, one per row at most, and "+N more" ends the third row, or sits below it when it doesn't fit beside the third row's only token; a tap on it opens the filter sheet. With six tags at the default size, all six show and there is no "+N more". Shot on both simulators, in portrait and landscape, at the default and the largest text size.
 - [x] The summary line reads "Due today with all selected tags" or "…any selected tags", by the Match setting, from two tags on; "Due today with the selected tag" with one; "Due today with no tags" with No Tags; and no line with no filter. Unit-tested in `MyDayScreenTests`.
-- [ ] While a tag or No Tags is chosen, a tap on the Filter button shows a menu with Filter by Tags (`tag.filter`) and Clear All Tags (`tag.xmark`), at every text size including the largest. Filter by Tags opens the sheet; Clear All Tags removes every tag and No Tags. With none chosen, a tap opens the sheet. A UI test on both simulators, then the iPhone.
+- [x] While a tag or No Tags is chosen, a tap on the Filter button shows a menu with Filter by Tags (`tag.filter`) and Clear All Tags (`tag.xmark`), at every text size including the largest. Filter by Tags opens the sheet; Clear All Tags removes every tag and No Tags. With none chosen, a tap opens the sheet. A UI test on both simulators, then the iPhone.
 - [x] The Filter button as a `Menu` keeps ticket 19's behaviour: the badge follows the count as tags are removed (including by Clear All Tags), and is hidden at the accessibility text sizes. Shot on both simulators.
-- [ ] VoiceOver still reads the Filter button as "Filter by Tags" with its "N chosen" value, both menu items can be reached with VoiceOver, the tokens read as they do today, "+N more" reads as "N more tags", and the group is still "Filtering by". Device check.
+- [x] VoiceOver still reads the Filter button as "Filter by Tags" with its "N chosen" value, both menu items can be reached with VoiceOver, the tokens read as they do today, "+N more" reads as "N more tags", and the group is still "Filtering by". Device check.
 - [x] `docs/design/DESIGN.md` shows the wrapping rows with "+N more", the Filter button's menu, the summary line and the `tag.xmark` icon: its Filter token entry (Tags section), the Filter button's entry and its symbol table.
 - [x] The Filter-badge mockup, `docs/mockups/2026-10-24-filter-badge/`, is extended with the new design: the three-row cap with "+N more", the summary line, and the Filter button's tap menu. Don't make a second mockup, and leave the older dated mockups as they are. Brian approves the mockup before any app code changes. Its README lists what changed.
 
@@ -160,3 +160,20 @@ Brian has the iPhone ready. Follow `docs/agents/device-testing.md`: note whether
 5. **Badge on the `Menu`:** the badge follows the count as tokens are removed one by one and after Clear All Tags.
 6. **First frame:** choosing tags, watch for the token rows jumping (drawing more rows, then fewer).
 
+
+### 2026-10-25: iPhone checks done; a VoiceOver focus fix
+
+On Brian's iPhone 15, iOS 27.0.1. The app was not installed before the run; it is uninstalled afterwards.
+
+1. **Layout call:** Brian keeps "+N more" on a row of its own. At the largest size: three tags, one per row, then "+3 more"; a tap opens the sheet. Layout criterion ticked.
+2. **Menu:** with tags chosen, and with No Tags, a tap on Filter shows Filter by Tags and Clear All Tags; both do what they say and the icons look right; with none chosen a tap opens the sheet. Default and largest size. Menu criterion ticked.
+3. **Large Content Viewer:** with tags chosen, a long press opens the menu and an item can be chosen from it. With none chosen, it shows the magnified toolbar, and lifting opens the sheet (the button's own action); sliding off does nothing.
+4. **VoiceOver:** Filter reads "Filter by Tags, button", and with two tags "Filter by Tags, 2 chosen, button, popup button"; the menu reads "Filter by Tags, button" and "Clear All Tags, button", and both work. The first token reads "Filtering by, Remove number sign appointments from the filter, button", the next "Remove number sign medications from the filter, button"; none twice. "+3 more" reads "3 more tags" and opens the sheet. VoiceOver criterion ticked, with the fix below.
+5. **Badge:** follows the count as tokens are removed and after Clear All Tags; hidden at the largest size, as ticket 19 has it.
+6. **First frame:** no jump in the token rows at the default or the largest size.
+
+**VoiceOver focus after removing a token (found in check 4; Brian: fix in this ticket).** VoiceOver's outline stayed over a removed token's empty place. Brian chose, of three options: the tokens are identified by their place in the row, so the next token takes a removed one's place and VoiceOver reads it there (`.speechAnnouncementsQueued()`); removing the last token moves focus to the one before, in the same tap; removing the only token leaves focus to VoiceOver, which went to "Zero, Done, dimmed, button" (Brian's choice). On the phone: no outline in any case; without VoiceOver removing a token looks as before.
+
+**Known edge, accepted by Brian:** VoiceOver begins reading the removed token's label and is cut off, whichever way focus goes, also with VoiceOver's own reset (the only token). Tried and dropped: moving focus half a second after the removal (still cut off); a low-priority `AccessibilityNotification.Announcement` "Removed #tag" (VoiceOver ran the two together; Brian: "sounded drunk").
+
+**Filed:** ticket 23, the filter sheet's Match section moving the tag rows under the finger (found by Brian in check 2).
