@@ -1,24 +1,25 @@
 import NudgeEngine
 import SwiftUI
 
-/// The filter sheet, the mockup's `dayFilterSheet`: check tags, choose Match All or Any, or No
-/// Tags. Changes apply as they are made, so My Day behind it follows, and Clear is the bar's
-/// leading button.
+/// The filter sheet, the mockup's `dayFilterSheet`: check tags, choose Match All or Any (from two
+/// tags), or No Tags. Changes apply as they are made, so My Day behind it follows, and Clear is the
+/// bar's leading button.
 struct MyDayFilterSheetView: View {
     let engine: Engine
     @Binding var filter: MyDayFilter
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var listHeight = NeverShorter()
 
     var body: some View {
         let sheet = MyDayFilterSheet(engine: engine, filter: filter)
         NavigationStack {
             List {
-                if sheet.showsMatch {
-                    Section {
-                        matchPicker
-                    }
+                // Always shown, so checking a tag doesn't move the rows under the finger.
+                Section {
+                    matchPicker
+                        .disabled(!sheet.canChooseMatch)
                 }
                 Section {
                     if sheet.tags.isEmpty {
@@ -30,17 +31,22 @@ struct MyDayFilterSheetView: View {
                 } header: {
                     Text("Tags", comment: "My Day's filter sheet: header of the list of tags.")
                 } footer: {
-                    if sheet.showsMatch {
-                        Text("All Tags shows reminders with every checked tag. Any Tag shows those with at least one.", comment: "My Day's filter sheet: under the tags when two or more are checked.")
-                    } else {
-                        Text("Check one or more tags.", comment: "My Day's filter sheet: under the tags.")
-                    }
+                    Text(sheet.tagsFooter)
                 }
                 Section {
                     noTagsRow(isChecked: sheet.isNoTagsChecked)
                 } footer: {
                     Text(sheet.result)
+                        .padding(.bottom, listHeight.extra)
                 }
+            }
+            .onScrollGeometryChange(for: CGSize.self) { geometry in
+                CGSize(width: geometry.containerSize.width, height: geometry.contentSize.height)
+            } action: { _, size in
+                listHeight.update(width: size.width, height: size.height)
+            }
+            .onChange(of: dynamicTypeSize) {
+                listHeight = NeverShorter()
             }
             .navigationTitle(Text("Filter My Day", comment: "Title of My Day's tag filter sheet."))
             .navigationBarTitleDisplayMode(.inline)
@@ -77,6 +83,28 @@ struct MyDayFilterSheetView: View {
             picker.pickerStyle(.menu)
         } else {
             picker.pickerStyle(.segmented)
+        }
+    }
+
+    /// Keeps the list from getting shorter while the sheet is open (ticket 23). A tap that shortens
+    /// the text under the tags, such as No Tags dropping the Match explanation, would otherwise make
+    /// a list scrolled to its end scroll back, moving every row under the finger. Blank space at
+    /// the end makes up the difference. A new width, from turning the phone, or a new text size
+    /// starts again.
+    private struct NeverShorter {
+        private var width: CGFloat = 0
+        private var tallest: CGFloat = 0
+        private(set) var extra: CGFloat = 0
+
+        /// `height` is the list's content height, `extra` included.
+        mutating func update(width: CGFloat, height: CGFloat) {
+            let natural = height - extra
+            if width != self.width {
+                self.width = width
+                tallest = natural
+            }
+            tallest = max(tallest, natural)
+            extra = tallest - natural
         }
     }
 

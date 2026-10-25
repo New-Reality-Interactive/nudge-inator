@@ -575,8 +575,8 @@
     "Change these in iOS Settings." : {
       "comment" : "Settings: last line of the footer under the Nudges rows."
     },
-    "Check one or more tags." : {
-      "comment" : "My Day's filter sheet: under the tags."
+    "Check one or more tags. Match needs two or more." : {
+      "comment" : "My Day's filter sheet: under the tags when fewer than two are checked. It says why the Match choice above them is dimmed."
     },
     "Choose Time" : {
       "comment" : "Opens the Edit Reminder form to choose a new time, so the reminder can resume."

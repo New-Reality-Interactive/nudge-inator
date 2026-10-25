@@ -26,15 +26,17 @@ This changes what's on screen, so it gets a new dated mockup first. The dated mo
 
 ## What it should do
 
-- [ ] Checking or unchecking any tag, checking or unchecking No Tags, and Clear leave every tag row where it was on screen. A UI test on both simulators compares each tag row's frame before and after each of those taps, starting from one tag and from two.
-- [ ] Match is shown with none, one or two tags checked, and with No Tags. It's disabled below two tags and with No Tags, and works from two tags on. Shots of each, on both simulators, in portrait and landscape, at the default and the largest text size (where Match is a menu), light and dark.
-- [ ] Match still chooses All Tags or Any Tag from two tags on, and the sheet's summary follows it. `MyDayFilterSheet` says whether Match can be used and which footer the Tags section shows, unit-tested in `MyDayScreenTests`, whose filter sheet test replaces its `showsMatch` checks.
-- [ ] The Tags footer below two tags says why Match is disabled, in the wording Brian approved in the mockup, with a translator comment.
+- [x] Checking or unchecking any tag, checking or unchecking No Tags, and Clear leave every tag row where it was on screen. A UI test on both simulators compares each tag row's frame before and after each of those taps, starting from one tag and from two.
+- [x] Match is shown with none, one or two tags checked, and with No Tags. It's disabled below two tags and with No Tags, and works from two tags on. Shots of each, on both simulators, in portrait and landscape, at the default and the largest text size (where Match is a menu), light and dark.
+- [x] Match still chooses All Tags or Any Tag from two tags on, and the sheet's summary follows it. `MyDayFilterSheet` says whether Match can be used and which footer the Tags section shows, unit-tested in `MyDayScreenTests`, whose filter sheet test replaces its `showsMatch` checks.
+- [x] The Tags footer below two tags says why Match is disabled, in the wording Brian approved in the mockup, with a translator comment.
 - [ ] VoiceOver reads the Match choice and its current value, says it's dimmed below two tags, and reads the footer's reason. Device check.
-- [ ] `docs/design/DESIGN.md` (Tags › Match control) and a new dated mockup show Match always shown and disabled below two tags. Brian approves the mockup before any app code changes.
+- [x] `docs/design/DESIGN.md` (Tags › Match control) and a new dated mockup show Match always shown and disabled below two tags. Brian approves the mockup before any app code changes.
 
 ## Before you start
 
+- Builds on: ticket 20 (merged in #64): the `2026-10-24-filter-badge` mockup as it left it, and `openMyDayFilter()` in `ShotsUITests`, which opens the sheet through the Filter menu once tags are chosen (its Comments, "Built to the revised design").
+- Watch for: the harness's `tapText` scrolls only down, so tags are checked in A to Z order (ticket 20's Comments, "Shots; a clipping fix"); landscape and the largest size need it.
 - Today the Match section's `if sheet.showsMatch` sits first in the sheet's `List`, and the Tags footer switches text on the same flag. The section stays first and loses its `if`; the footer still switches, but it sits below the rows, so a longer footer doesn't move them.
 - `matchPicker` is a segmented `Picker`, a `.menu` at accessibility sizes. `.disabled` goes on the picker in both styles. Check `apple-rag-mcp` for how VoiceOver reads a disabled `Picker` and how a disabled segmented one is drawn before relying on it; where the docs are silent, it's the device check.
 - `clearTags()` resets Match to All, and Clear stays disabled with no tags. Keep both.
@@ -50,3 +52,6 @@ This changes what's on screen, so it gets a new dated mockup first. The dated mo
 
 - 2026-10-25: reviewed and rewritten to the ticket format (Claude). Added: the other taps that move the rows (unchecking to one tag, No Tags, Clear); blocked by 20 for the mockup and `openMyDayFilter()`; a UI test that compares row frames; the unit test's change; Before you start. Option 2 is recommended, not decided. Status stays `needs-triage` until Brian chooses.
 - 2026-10-25, Brian: chose option 2, Match always shown and disabled below two tags. The options section is replaced by The design, and the criteria are rewritten for it. Status `ready-for-agent`.
+- 2026-10-25, Brian: approved the mockup `docs/mockups/2026-10-25-match-always-shown` and the footer below two tags, "Check one or more tags. Match needs two or more." Agreed seam: `MyDayFilterSheet.canChooseMatch` and `tagsFooter` replace `showsMatch`.
+- 2026-10-25: found by the row-frame test at the largest text size, both simulators: scrolled to the end of the sheet, No Tags (from two tags) shortened the Tags footer and the summary, so the list scrolled back and every row moved down 35 pt. Brian chose to keep the content from ever getting shorter while the sheet is open: `MyDayFilterSheetView.NeverShorter` adds blank space under the summary to make up the difference, starting again when the width changes. It shows only at the end of the list, below the summary.
+- 2026-10-25: shots and tests on both simulators (iPhone 15 Pro - iOS 26.5, iPhone 15 - iOS 27.0), in portrait, landscape and the largest text size, light and dark (`testMyDayFilterMatch`, `testMyDayFilterRowsStayPut`): Match dimmed with no tag, one tag and No Tags, working with two; every tag row stays put. The test log has Match disabled below two tags (`ACCESSIBILITY Match` lines). Apple's docs (`disabled(_:)`) confirm it stops interaction; they don't say how VoiceOver reads a disabled `Picker`, so that's the device check.

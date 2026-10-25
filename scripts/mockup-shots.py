@@ -2,8 +2,9 @@
 """Screenshots of a mockup's screens in headless Chrome, named as scripts/screenshots.sh names the
 app's, so each pair can be compared (scripts/contact-sheet.sh). The screens are the as-built
 mockup's (docs/mockups/2026-10-21-as-built); a mockup copied from it keeps working, and the last few
-are only in the proposed pace mockup, and the last two in the filter badge mockup. A screen it
-doesn't know is added to SCREENS: the JavaScript that shows it in the mockup, and how many pages.
+are only in the proposed pace mockup, the filter badge mockup or the Match always shown mockup. A
+screen it doesn't know is added to SCREENS: the JavaScript that shows it in the mockup, and how many
+pages.
 
 Usage: scripts/mockup-shots.py <mockup folder> <out folder> [screen ...]
 Writes <out>/<portrait|landscape|largest-text>/<screen>[-<page>].png. Needs Google Chrome.
@@ -56,6 +57,10 @@ SCREENS = {
   # Filter button's menu with them chosen.
   "myday-tokens-6": ("state.tab='day';state.dayFilter.ids=tags.slice(0,6).map(t=>t.id);nav()", 1),
   "myday-filter-menu": ("state.tab='day';state.dayFilter.ids=tags.slice(0,6).map(t=>t.id);nav();showFilterMenu(document.querySelector('[data-dayfilter]'))", 1),
+  # Only in the Match always shown mockup (docs/mockups/2026-10-25-match-always-shown), from ticket
+  # 23: the filter sheet with one tag (Match disabled) and two (Match working).
+  "myday-filter-1": ("state.tab='day';state.dayFilter.ids=sortTags(tags).slice(0,1).map(t=>t.id);nav();openDayFilter()", 1),
+  "myday-filter-2": ("state.tab='day';state.dayFilter.ids=sortTags(tags).slice(0,2).map(t=>t.id);nav();openDayFilter()", 1),
   "settings-default-pace": ("state.tab='settings';nav();push({kind:'defpace'})", 1),
   "settings-how-it-nudges-escalating": ("settings.defaultPace={pace:'escalating',wait:10};state.tab='settings';nav();push({kind:'hin'})", 4),
 }

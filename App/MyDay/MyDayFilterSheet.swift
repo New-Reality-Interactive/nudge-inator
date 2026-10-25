@@ -6,8 +6,11 @@ import NudgeEngine
 struct MyDayFilterSheet {
     var tags: [TagRow]
     var isNoTagsChecked: Bool
-    /// The Match control shows once two or more tags are checked.
-    var showsMatch: Bool
+    /// The Match control is always shown, so checking a tag doesn't move the rows, and can be
+    /// chosen once two or more tags are checked.
+    var canChooseMatch: Bool
+    /// Under the tags: why Match can't be chosen yet, or what its choices do.
+    var tagsFooter: LocalizedStringResource
     var result: LocalizedStringResource
 
     struct TagRow: Identifiable {
@@ -23,7 +26,10 @@ struct MyDayFilterSheet {
         let chosen = Set(filter.tagIDs)
         tags = engine.tagSummaries().map { TagRow(tag: $0.tag, isChecked: chosen.contains($0.tag.id)) }
         isNoTagsChecked = filter.noTags
-        showsMatch = filter.tagIDs.count > 1
+        canChooseMatch = filter.tagIDs.count > 1
+        tagsFooter = canChooseMatch
+            ? LocalizedStringResource("All Tags shows reminders with every checked tag. Any Tag shows those with at least one.", comment: "My Day's filter sheet: under the tags when two or more are checked.")
+            : LocalizedStringResource("Check one or more tags. Match needs two or more.", comment: "My Day's filter sheet: under the tags when fewer than two are checked. It says why the Match choice above them is dimmed.")
         let due = engine.myDay(tagFilter: filter.tagFilter).items.count
         if filter.noTags {
             result = LocalizedStringResource("\(due) due today without tags.", comment: "My Day's filter sheet: under the lists when No Tags is checked. The placeholder is how many are due today.")
