@@ -375,7 +375,12 @@ except in the tab and navigation bars. Verify names against the mockup.
   shows a menu: Filter by Tags (`tag.filter`) opens the filter sheet, Clear All Tags (`tag.xmark`)
   removes every tag at once. With none chosen a tap opens the sheet. No long press: at the
   accessibility sizes the bar uses it for the Large Content Viewer.
-  **Match control:** system segmented `Picker`, a menu at accessibility sizes.
+  **Match control:** system segmented `Picker`, a menu at accessibility sizes. Always shown, first
+  in the filter sheet above Tags, so checking a tag never moves the rows. Disabled below two
+  checked tags and with No Tags, keeping its current choice; the Tags footer then says "Check one
+  or more tags. Match needs two or more." While the sheet is open its list never gets shorter:
+  blank space under the summary makes up for text that shortens, so a list scrolled to its end
+  doesn't scroll back and move the rows.
 
 ### How It Nudges
 - **Token:** `how-it-nudges`. Inset grouped list, summary in the section footer, `{typography.footnote}`

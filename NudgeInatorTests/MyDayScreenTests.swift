@@ -313,7 +313,8 @@ struct MyDayScreenTests {
     }
 
     /// The mockup's `dayFilterSheet`: every tag by name with a check, No Tags, and a line saying
-    /// how many are due today with the filter on. The Match control appears from two tags.
+    /// how many are due today with the filter on. Match is always shown, and can be chosen from two
+    /// tags; below that the Tags footer says why.
     @Test func theFilterSheetListsTheTagsAndCountsWhatTheyLeave() async throws {
         let day = try await dayAtOnePM()
         var filter = MyDayFilter()
@@ -321,16 +322,19 @@ struct MyDayScreenTests {
 
         #expect(sheet().tags.map(\.text) == ["#health", "#home", "#work"])
         #expect(sheet().tags.map(\.isChecked) == [false, false, false])
-        #expect(!sheet().showsMatch)
+        #expect(!sheet().canChooseMatch)
+        #expect(plain(sheet().tagsFooter) == "Check one or more tags. Match needs two or more.")
         #expect(plain(sheet().result) == "Showing everything due today (9).")
 
         filter.toggle(day.health.id)
         #expect(sheet().tags.map(\.isChecked) == [true, false, false])
-        #expect(!sheet().showsMatch)
+        #expect(!sheet().canChooseMatch)
+        #expect(plain(sheet().tagsFooter) == "Check one or more tags. Match needs two or more.")
         #expect(plain(sheet().result) == "2 due today with #health.")
 
         filter.toggle(day.work.id)
-        #expect(sheet().showsMatch)
+        #expect(sheet().canChooseMatch)
+        #expect(plain(sheet().tagsFooter) == "All Tags shows reminders with every checked tag. Any Tag shows those with at least one.")
         #expect(plain(sheet().result) == "1 due today with #health and #work.")
         filter.match = .any
         #expect(plain(sheet().result) == "4 due today with #health or #work.")
@@ -338,7 +342,8 @@ struct MyDayScreenTests {
         filter.toggleNoTags()
         #expect(sheet().isNoTagsChecked)
         #expect(sheet().tags.map(\.isChecked) == [false, false, false])
-        #expect(!sheet().showsMatch)
+        #expect(!sheet().canChooseMatch)
+        #expect(plain(sheet().tagsFooter) == "Check one or more tags. Match needs two or more.")
         #expect(plain(sheet().result) == "2 due today without tags.")
     }
 

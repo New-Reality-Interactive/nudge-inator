@@ -26,15 +26,17 @@ This changes what's on screen, so it gets a new dated mockup first. The dated mo
 
 ## What it should do
 
-- [ ] Checking or unchecking any tag, checking or unchecking No Tags, and Clear leave every tag row where it was on screen. A UI test on both simulators compares each tag row's frame before and after each of those taps, starting from one tag and from two.
-- [ ] Match is shown with none, one or two tags checked, and with No Tags. It's disabled below two tags and with No Tags, and works from two tags on. Shots of each, on both simulators, in portrait and landscape, at the default and the largest text size (where Match is a menu), light and dark.
-- [ ] Match still chooses All Tags or Any Tag from two tags on, and the sheet's summary follows it. `MyDayFilterSheet` says whether Match can be used and which footer the Tags section shows, unit-tested in `MyDayScreenTests`, whose filter sheet test replaces its `showsMatch` checks.
-- [ ] The Tags footer below two tags says why Match is disabled, in the wording Brian approved in the mockup, with a translator comment.
-- [ ] VoiceOver reads the Match choice and its current value, says it's dimmed below two tags, and reads the footer's reason. Device check.
-- [ ] `docs/design/DESIGN.md` (Tags › Match control) and a new dated mockup show Match always shown and disabled below two tags. Brian approves the mockup before any app code changes.
+- [x] Checking or unchecking any tag, checking or unchecking No Tags, and Clear leave every tag row where it was on screen. A UI test on both simulators compares each tag row's frame before and after each of those taps, starting from one tag and from two.
+- [x] Match is shown with none, one or two tags checked, and with No Tags. It's disabled below two tags and with No Tags, and works from two tags on. Shots of each, on both simulators, in portrait and landscape, at the default and the largest text size (where Match is a menu), light and dark.
+- [x] Match still chooses All Tags or Any Tag from two tags on, and the sheet's summary follows it. `MyDayFilterSheet` says whether Match can be used and which footer the Tags section shows, unit-tested in `MyDayScreenTests`, whose filter sheet test replaces its `showsMatch` checks.
+- [x] The Tags footer below two tags says why Match is disabled, in the wording Brian approved in the mockup, with a translator comment.
+- [x] VoiceOver reads the Match choice and its current value, says it's dimmed below two tags, and reads the footer's reason. Device check. Agreed change: at the default size (segmented) it reads the reason in place of "dimmed" (Comments, "iPhone checks").
+- [x] `docs/design/DESIGN.md` (Tags › Match control) and a new dated mockup show Match always shown and disabled below two tags. Brian approves the mockup before any app code changes.
 
 ## Before you start
 
+- Builds on: ticket 20 (merged in #64): the `2026-10-24-filter-badge` mockup as it left it, and `openMyDayFilter()` in `ShotsUITests`, which opens the sheet through the Filter menu once tags are chosen (its Comments, "Built to the revised design").
+- Watch for: the harness's `tapText` scrolls only down, so tags are checked in A to Z order (ticket 20's Comments, "Shots; a clipping fix"); landscape and the largest size need it.
 - Today the Match section's `if sheet.showsMatch` sits first in the sheet's `List`, and the Tags footer switches text on the same flag. The section stays first and loses its `if`; the footer still switches, but it sits below the rows, so a longer footer doesn't move them.
 - `matchPicker` is a segmented `Picker`, a `.menu` at accessibility sizes. `.disabled` goes on the picker in both styles. Check `apple-rag-mcp` for how VoiceOver reads a disabled `Picker` and how a disabled segmented one is drawn before relying on it; where the docs are silent, it's the device check.
 - `clearTags()` resets Match to All, and Clear stays disabled with no tags. Keep both.
@@ -50,3 +52,28 @@ This changes what's on screen, so it gets a new dated mockup first. The dated mo
 
 - 2026-10-25: reviewed and rewritten to the ticket format (Claude). Added: the other taps that move the rows (unchecking to one tag, No Tags, Clear); blocked by 20 for the mockup and `openMyDayFilter()`; a UI test that compares row frames; the unit test's change; Before you start. Option 2 is recommended, not decided. Status stays `needs-triage` until Brian chooses.
 - 2026-10-25, Brian: chose option 2, Match always shown and disabled below two tags. The options section is replaced by The design, and the criteria are rewritten for it. Status `ready-for-agent`.
+- 2026-10-25, Brian: approved the mockup `docs/mockups/2026-10-25-match-always-shown` and the footer below two tags, "Check one or more tags. Match needs two or more." Agreed seam: `MyDayFilterSheet.canChooseMatch` and `tagsFooter` replace `showsMatch`.
+- 2026-10-25: found by the row-frame test at the largest text size, both simulators: scrolled to the end of the sheet, No Tags (from two tags) shortened the Tags footer and the summary, so the list scrolled back and every row moved down 35 pt. Brian chose to keep the content from ever getting shorter while the sheet is open: `MyDayFilterSheetView.NeverShorter` adds blank space under the summary to make up the difference, starting again when the width changes. It shows only at the end of the list, below the summary.
+- 2026-10-25: shots and tests on both simulators (iPhone 15 Pro - iOS 26.5, iPhone 15 - iOS 27.0), in portrait, landscape and the largest text size, light and dark (`testMyDayFilterMatch`, `testMyDayFilterRowsStayPut`): Match dimmed with no tag, one tag and No Tags, working with two; every tag row stays put. The test log has Match disabled below two tags (`ACCESSIBILITY Match` lines). Apple's docs (`disabled(_:)`) confirm it stops interaction; they don't say how VoiceOver reads a disabled `Picker`, so that's the device check.
+
+### 2026-10-25: iPhone check list (for a fresh session)
+
+Brian has the iPhone ready. Follow `docs/agents/device-testing.md`: note whether the app is installed first; one check at a time, waiting for Brian's go before each; record the phone and iOS version. Build from this branch (`2b502c9` or later). Every criterion except VoiceOver is ticked; these checks close it and the device items from the review.
+
+1. **Taps land (the bug):** in My Day's filter sheet, check three or four tags quickly in a row; each tap lands on the tag aimed at, crossing two tags both ways (checking the second, unchecking down to one), after No Tags and after Clear. At the default and the largest text size.
+2. **VoiceOver (criterion 5):** with none or one tag checked, and with No Tags, VoiceOver reads Match, its current value (All Tags) and that it's dimmed, then the footer's reason ("Check one or more tags. Match needs two or more."). With two tags it isn't dimmed and switches All Tags / Any Tag. At the default size (segmented) and at an accessibility size (menu). If it doesn't say dimmed, or the reason isn't reachable near Match, stop and discuss (the iOS review suggested an `.accessibilityHint` on the disabled picker).
+3. **No jump at the scroll end (`NeverShorter`):** at the largest text size, check two tags, scroll to the end, tap No Tags; the rows don't move, not even for a frame. Then close the sheet, reopen it and make No Tags the first tap: still no move.
+4. **Blank space:** after check 3, the space under the summary isn't odd to look at, and VoiceOver's focus box on the summary line isn't stretched by it in a way that confuses. Turning the phone or changing the text size with the sheet open clears it.
+
+### 2026-10-25: iPhone checks
+
+Brian's iPhone 15, iOS 27.0.1. The app wasn't installed before the run, so it was uninstalled after; Brian's text size was the default and was put back.
+
+1. **Taps land:** passed. Checking tags quickly in a row, crossing two tags both ways, after No Tags and after Clear, every tap landed on the tag aimed at, at the default and the largest size. Checking the second tag changes the Tags footer, so the end of the list moves, but no tag row does.
+2. **VoiceOver:** the first build failed. At the default size the segmented picker read only its segments ("Selected, All Tags, Button, 1 of 2", "Any Tag, Dimmed, Button, 2 of 2"): no "Match", and no "dimmed" on the current choice. The footer read correctly in both states. At the accessibility size the menu read "Match, All Tags" and "dimmed". Tried and dropped:
+   - An `accessibilityLabel` on the picker: no effect on the segments, and on the menu it replaced the value ("Match, Match").
+   - `accessibilityRepresentation` with the disabled menu: VoiceOver skipped Match altogether.
+
+   Kept (`MyDayFilterSheetView.matchPicker`): while Match is disabled, the menu gets the hint "Needs two or more checked tags.", and the segmented control is one element, labeled Match, with the current choice as its value and the same hint. Read on the phone, with no tag, one tag and No Tags: default size "Match, All Tags … Needs two or more checked tags"; accessibility size "Match, All Tags, Dimmed, Button, Pop-up button … Needs two or more checked tags". With two tags, both sizes read and switch as before. SwiftUI has no trait for dimmed, and the combined element isn't read as dimmed. Brian agreed that at the default size the reason stands in for "dimmed", and criterion 5 is ticked with that change.
+3. **No jump at the scroll end:** passed, from two tags and with No Tags as the first tap after reopening, at the largest size.
+4. **Blank space:** passed. It isn't visible as odd space. VoiceOver's focus box on the summary reaches well below the text, which Brian accepted. Turning the phone looks normal.

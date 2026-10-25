@@ -88,9 +88,9 @@ final class ShotsUITests: XCTestCase {
         pause(0.5)
     }
 
-    /// The first element whose label is `label`, of any type, scrolling down to find it: from the
-    /// top unless `inSheet`, where swiping down would close the sheet.
-    private func tapText(_ label: String, inSheet: Bool = false, scrolls: Int = 14) {
+    /// The first element on screen whose label is `label`, of any type, scrolling down up to
+    /// `scrolls` times to find it.
+    private func scrollTo(_ label: String, scrolls: Int = 14) -> XCUIElement? {
         // A row's label can carry its value: "Repeat, Never". Not the tab bar's buttons, named by
         // their symbols, which stay in the hierarchy under a sheet.
         let query = app.descendants(matching: .any).matching(NSPredicate(
@@ -99,15 +99,21 @@ final class ShotsUITests: XCTestCase {
         ))
         // The first one on screen: a sheet leaves the screens under it in the hierarchy.
         func onScreen() -> XCUIElement? { query.allElementsBoundByIndex.first { $0.isHittable } }
-        if !inSheet {
-            scrollToTop()
-        }
         var tries = 0
         while onScreen() == nil, tries < scrolls {
             scroll(down: true)
             tries += 1
         }
-        guard let element = onScreen() else {
+        return onScreen()
+    }
+
+    /// The first element whose label is `label`, of any type, scrolling down to find it: from the
+    /// top unless `inSheet`, where swiping down would close the sheet.
+    private func tapText(_ label: String, inSheet: Bool = false, scrolls: Int = 14) {
+        if !inSheet {
+            scrollToTop()
+        }
+        guard let element = scrollTo(label, scrolls: scrolls) else {
             XCTFail("No \(label):\n\(app.debugDescription)")
             return
         }
@@ -300,6 +306,102 @@ final class ShotsUITests: XCTestCase {
             clear.tap()
         }
         XCTAssertFalse(app.buttons["Remove No Tags from the filter"].exists, "Clear All Tags left No Tags")
+    }
+
+    /// The seed's tags, as the filter sheet lists them.
+    private let seedTags = ["#appointments", "#health", "#home", "#money", "#morning", "#travel", "#work"]
+
+    /// Where each tag row on screen is, by its tag.
+    private func tagRowFrames() -> [String: CGRect] {
+        var frames: [String: CGRect] = [:]
+        for tag in seedTags {
+            let row = app.buttons.matching(NSPredicate(format: "label == %@", tag)).allElementsBoundByIndex.first { $0.isHittable }
+            frames[tag] = row?.frame
+        }
+        return frames
+    }
+
+    /// Checks that `tap` left every tag row on screen where it was (ticket 23).
+    private func keepingTagRows(_ what: String, _ tap: () -> Void) {
+        let before = tagRowFrames()
+        tap()
+        let after = tagRowFrames()
+        XCTAssertFalse(before.isEmpty, "\(what): no tag row on screen")
+        for (tag, frame) in before {
+            XCTAssertEqual(after[tag], frame, "\(what) moved \(tag)")
+        }
+    }
+
+    /// `tapText` in the filter sheet, checking the tag rows stay where they were. It scrolls to the
+    /// row first, so only the tap is measured.
+    private func tapKeepingTagRows(_ label: String) {
+        _ = scrollTo(label)
+        keepingTagRows("Tapping \(label)") { tapText(label, inSheet: true) }
+    }
+
+    /// Checking or unchecking a tag, checking or unchecking No Tags, and Clear leave every tag row
+    /// where it was, starting from one tag and from two (ticket 23): Match is always shown above the
+    /// rows, so nothing appears there as the count crosses two.
+    func testMyDayFilterRowsStayPut() {
+        launch(.app)
+        tab("My Day")
+        // A to Z, since tapText scrolls only down.
+        for start in [["#appointments"], ["#appointments", "#health"]] {
+            openMyDayFilter()
+            start.forEach(tapKeepingTagRows)
+            tapKeepingTagRows("#home")
+            tapKeepingTagRows("#home")
+            tapKeepingTagRows("No Tags")
+            tapKeepingTagRows("No Tags")
+            barTap { tapButton(containing: "Done", inSheet: true) }
+            openMyDayFilter()
+            start.forEach(tapKeepingTagRows)
+            barTap {
+                keepingTagRows("Clear") {
+                    app.navigationBars["Filter My Day"].buttons["Clear"].tap()
+                    pause(0.8)
+                }
+                tapButton(containing: "Done", inSheet: true)
+            }
+        }
+    }
+
+    /// The filter sheet's Match choice with no tag, one tag and No Tags (dimmed) and with two tags
+    /// (working), light and dark (ticket 23). What VoiceOver gets for it is in the test log
+    /// (`ACCESSIBILITY` lines).
+    func testMyDayFilterMatch() {
+        for dark in [false, true] {
+            launch(.app, dark: dark)
+            let suffix = dark ? "-dark" : ""
+            tab("My Day")
+            openMyDayFilter()
+            func report(_ state: String) {
+                // A segmented control, whose segments carry the text, or at the accessibility sizes a
+                // menu button. A list drops it once scrolled out of view.
+                let segmented = app.segmentedControls.firstMatch
+                let menu = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Match")).firstMatch
+                if segmented.exists {
+                    let segments = segmented.buttons.allElementsBoundByIndex.map { "\($0.label)\($0.isSelected ? " (selected)" : "")" }
+                    print("ACCESSIBILITY Match, \(state): segments=\(segments) enabled=\(segmented.isEnabled)")
+                } else if menu.exists {
+                    print("ACCESSIBILITY Match, \(state): label=\"\(menu.label)\" value=\"\(menu.value as? String ?? "nil")\" enabled=\(menu.isEnabled)")
+                } else {
+                    print("ACCESSIBILITY Match, \(state): scrolled out of view")
+                }
+            }
+            shot("myday-filter-0\(suffix)")
+            report("no tags checked")
+            tapText("#appointments", inSheet: true)
+            shot("myday-filter-1\(suffix)")
+            report("one tag")
+            tapText("#health", inSheet: true)
+            shot("myday-filter-2\(suffix)")
+            report("two tags")
+            tapText("No Tags", inSheet: true)
+            shot("myday-filter-no-tags\(suffix)")
+            report("No Tags")
+            app.terminate()
+        }
     }
 
     /// The Filter button's badge at counts the seed can't reach: 12 (two digits) and 999 (the most).
