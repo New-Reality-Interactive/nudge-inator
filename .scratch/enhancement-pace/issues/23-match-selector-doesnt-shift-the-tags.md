@@ -4,7 +4,7 @@
 
 **Blocked by:** 20. Its code doesn't touch the sheet, but it edits the mockup this ticket copies (`docs/mockups/2026-10-24-filter-badge/`), and its `openMyDayFilter()` opens the sheet through the new Filter menu, which this ticket's shots use.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 Found by Brian on his iPhone 15, iOS 27.0.1, 2026-10-25, during ticket 20's device checks. Brian decides the design and whether it's ready.
 
