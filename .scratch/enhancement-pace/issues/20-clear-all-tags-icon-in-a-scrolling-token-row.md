@@ -44,7 +44,7 @@ Revised by Brian twice on 2026-10-25 (Comments): first the pinned clear button b
 - [ ] The tokens wrap to at most three rows, and the Clear text is gone. With six tags chosen at the largest text size, at least three tags show, one per row at most, and "+N more" ends the third row, or sits below it when it doesn't fit beside the third row's only token; a tap on it opens the filter sheet. With six tags at the default size, all six show and there is no "+N more". Shot on both simulators, in portrait and landscape, at the default and the largest text size.
 - [x] The summary line reads "Due today with all selected tags" or "…any selected tags", by the Match setting, from two tags on; "Due today with the selected tag" with one; "Due today with no tags" with No Tags; and no line with no filter. Unit-tested in `MyDayScreenTests`.
 - [ ] While a tag or No Tags is chosen, a tap on the Filter button shows a menu with Filter by Tags (`tag.filter`) and Clear All Tags (`tag.xmark`), at every text size including the largest. Filter by Tags opens the sheet; Clear All Tags removes every tag and No Tags. With none chosen, a tap opens the sheet. A UI test on both simulators, then the iPhone.
-- [ ] The Filter button as a `Menu` keeps ticket 19's behaviour: the badge follows the count as tags are removed (including by Clear All Tags), and is hidden at the accessibility text sizes. Shot on both simulators.
+- [x] The Filter button as a `Menu` keeps ticket 19's behaviour: the badge follows the count as tags are removed (including by Clear All Tags), and is hidden at the accessibility text sizes. Shot on both simulators.
 - [ ] VoiceOver still reads the Filter button as "Filter by Tags" with its "N chosen" value, both menu items can be reached with VoiceOver, the tokens read as they do today, "+N more" reads as "N more tags", and the group is still "Filtering by". Device check.
 - [x] `docs/design/DESIGN.md` shows the wrapping rows with "+N more", the Filter button's menu, the summary line and the `tag.xmark` icon: its Filter token entry (Tags section), the Filter button's entry and its symbol table.
 - [x] The Filter-badge mockup, `docs/mockups/2026-10-24-filter-badge/`, is extended with the new design: the three-row cap with "+N more", the summary line, and the Filter button's tap menu. Don't make a second mockup, and leave the older dated mockups as they are. Brian approves the mockup before any app code changes. Its README lists what changed.
@@ -146,5 +146,5 @@ The run exited 1: `testMyDayClearAllTags` failed in `largest-text` and `largest-
 - **Still open:**
   - The layout criterion needs Brian to confirm "+N more" on a row of its own.
   - The menu criterion's iPhone run.
-  - The badge criterion: look at the `myday-cleared` shots.
   - The VoiceOver device check.
+- **Badge criterion ticked:** the `myday-cleared` shots (iOS 27.0, portrait) show no badge and the plain icon after Clear All Tags, and the largest-size shots show no badge with six chosen.
