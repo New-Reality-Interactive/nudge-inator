@@ -2,7 +2,7 @@
 
 ### Issue tracker
 
-Issues and specs are local markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`. The open feature is `enhancement-pace` (1.1.0); `first-version` (1.0.0) is released. Versions and releases: `docs/agents/issue-tracker.md`.
+Issues and specs are local markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`. The open feature is `testflight-readiness`, the 1.1.0 TestFlight build, which delivers `enhancement-pace`'s story 48 (Beta install). `enhancement-pace` (1.1.0) and `first-version` (1.0.0) are released. Versions and releases: `docs/agents/issue-tracker.md`.
 
 A ticket is `resolved` only when every acceptance criterion is ticked. While one is open, its `Status:` stays as it was. Say which criterion is open and why, and resolve it with the user: meet it, or agree a change to it (reworded, or moved to a named ticket) and record that agreement in Comments.
 
