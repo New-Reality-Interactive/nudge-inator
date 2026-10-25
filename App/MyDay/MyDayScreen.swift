@@ -150,9 +150,18 @@ struct MyDayScreen {
         } else {
             filterTokens = chosenTags.map { FilterToken(kind: .tag($0.id), tagText: $0.label) }
         }
-        if chosenTags.count > 1 {
-            let list = filter.match.list(of: chosenTags.map(\.label))
-            filterSummary = LocalizedStringResource("Due today with \(list)", comment: "My Day: under the filter tokens when two or more tags are chosen. The placeholder lists them, such as \"#home and #money\" (Match All) or \"#home or #money\" (Match Any).")
+        // The tokens name the tags, so the line says only how they combine (ticket 20).
+        if filter.noTags {
+            filterSummary = LocalizedStringResource("Due today with no tags", comment: "My Day: under the No Tags filter token.")
+        } else if chosenTags.count == 1 {
+            filterSummary = LocalizedStringResource("Due today with the selected tag", comment: "My Day: under the filter token when one tag is chosen.")
+        } else if chosenTags.count > 1 {
+            filterSummary = switch filter.match {
+            case .all:
+                LocalizedStringResource("Due today with all selected tags", comment: "My Day: under the filter tokens when two or more tags are chosen and Match is All Tags.")
+            case .any:
+                LocalizedStringResource("Due today with any selected tags", comment: "My Day: under the filter tokens when two or more tags are chosen and Match is Any Tag.")
+            }
         } else {
             filterSummary = nil
         }

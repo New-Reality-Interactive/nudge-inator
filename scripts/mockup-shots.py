@@ -52,10 +52,10 @@ SCREENS = {
   # at counts the seed can't reach.
   "myday-badge-12": ("prefs.badgeCount='12';state.tab='day';state.dayFilter.ids=[tags[0].id];nav()", 1),
   "myday-badge-999": ("prefs.badgeCount='999';state.tab='day';state.dayFilter.ids=[tags[0].id];nav()", 1),
-  # Also in the filter badge mockup, from ticket 20: six tags in the one scrolling token row, and the
-  # same row set to wrap at the accessibility sizes.
+  # Also in the filter badge mockup, from ticket 20: six tags in the tokens' three rows, and the
+  # Filter button's menu with them chosen.
   "myday-tokens-6": ("state.tab='day';state.dayFilter.ids=tags.slice(0,6).map(t=>t.id);nav()", 1),
-  "myday-tokens-6-wrap": ("document.documentElement.dataset.axtokens='wrap';state.tab='day';state.dayFilter.ids=tags.slice(0,6).map(t=>t.id);nav()", 1),
+  "myday-filter-menu": ("state.tab='day';state.dayFilter.ids=tags.slice(0,6).map(t=>t.id);nav();showFilterMenu(document.querySelector('[data-dayfilter]'))", 1),
   "settings-default-pace": ("state.tab='settings';nav();push({kind:'defpace'})", 1),
   "settings-how-it-nudges-escalating": ("settings.defaultPace={pace:'escalating',wait:10};state.tab='settings';nav();push({kind:'hin'})", 4),
 }

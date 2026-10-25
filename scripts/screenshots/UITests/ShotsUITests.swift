@@ -147,6 +147,24 @@ final class ShotsUITests: XCTestCase {
         }
     }
 
+    /// My Day's Filter button, and with a tag chosen its menu (ticket 20), which also has an item
+    /// named Filter by Tags: the button is the topmost.
+    private var myDayFilterButtons: XCUIElementQuery {
+        app.buttons.matching(NSPredicate(format: "label == %@", "Filter by Tags"))
+    }
+
+    /// Opens My Day's filter sheet: with a tag chosen, through the Filter menu's Filter by Tags.
+    private func openMyDayFilter() {
+        barTap {
+            scrollToTop()
+            myDayFilterButtons.firstMatch.tap()
+            if app.buttons["Clear All Tags"].waitForExistence(timeout: 2) {
+                myDayFilterButtons.allElementsBoundByIndex.max { $0.frame.minY < $1.frame.minY }?.tap()
+            }
+            XCTAssert(app.navigationBars["Filter My Day"].waitForExistence(timeout: 3), "No Filter My Day sheet")
+        }
+    }
+
     /// A return in the focused title hides the keyboard, so the rows under it can be reached.
     private func hideKeyboard() {
         if app.keyboards.firstMatch.waitForExistence(timeout: 2) { app.typeText("\n") }
@@ -187,7 +205,7 @@ final class ShotsUITests: XCTestCase {
         launch(.app)
         tab("My Day")
         shot("myday", pages: 20, stopsAtEnd: true)
-        openSheet("Filter", title: "Filter My Day")
+        openMyDayFilter()
         shot("myday-filter")
         // The Filter button with a tag chosen: its badge shows the count.
         tapText("#health", inSheet: true)
@@ -201,7 +219,7 @@ final class ShotsUITests: XCTestCase {
     func testMyDayFilterBadgeFollowsTokens() {
         launch(.app)
         tab("My Day")
-        openSheet("Filter", title: "Filter My Day")
+        openMyDayFilter()
         tapText("#health", inSheet: true)
         tapText("#work", inSheet: true)
         barTap { tapButton(containing: "Done", inSheet: true) }
@@ -222,14 +240,66 @@ final class ShotsUITests: XCTestCase {
             print("ACCESSIBILITY \(count) tags: label=\"\(button.label)\" value=\"\(button.value as? String ?? "nil")\"")
         }
         report(0)
-        openSheet("Filter", title: "Filter My Day")
+        openMyDayFilter()
         tapText("#health", inSheet: true)
         barTap { tapButton(containing: "Done", inSheet: true) }
         report(1)
-        openSheet("Filter", title: "Filter My Day")
+        openMyDayFilter()
         tapText("#work", inSheet: true)
         barTap { tapButton(containing: "Done", inSheet: true) }
         report(2)
+    }
+
+    /// Six tags, wrapping to at most three rows with "+N more" past them, then the Filter button's
+    /// menu (ticket 20): a tap shows Filter by Tags and Clear All Tags, at every text size, and Clear
+    /// All Tags removes every tag. What VoiceOver gets is in the test log (`ACCESSIBILITY` lines).
+    func testMyDayClearAllTags() {
+        launch(.app)
+        tab("My Day")
+        let filter = myDayFilterButtons.firstMatch
+        // With none chosen the button isn't a menu: a tap opens the sheet.
+        openMyDayFilter()
+        // The sheet lists tags A to Z and tapText scrolls only down, so #appointments goes first: last,
+        // it was missed in landscape and at the largest size.
+        for tag in ["#appointments", "#home", "#health", "#work", "#money", "#morning"] {
+            tapText(tag, inSheet: true)
+        }
+        barTap { tapButton(containing: "Done", inSheet: true) }
+        XCTAssertEqual(filter.value as? String, "6 chosen", "A tag wasn't chosen")
+        shot("myday-tokens-6")
+        // The tokens' hidden measuring copies aren't elements.
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "label == %@", "Remove #home from the filter")).count, 1)
+        let more = app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", "more tags")).firstMatch
+        if more.exists {
+            print("ACCESSIBILITY more token: label=\"\(more.label)\"")
+            more.tap()
+            XCTAssert(app.navigationBars["Filter My Day"].waitForExistence(timeout: 3), "+N more didn't open the sheet")
+            barTap { tapButton(containing: "Done", inSheet: true) }
+        }
+        print("ACCESSIBILITY 6 tags: label=\"\(filter.label)\" value=\"\(filter.value as? String ?? "nil")\"")
+        let clear = app.buttons["Clear All Tags"]
+        barTap {
+            scrollToTop()
+            filter.tap()
+            XCTAssert(clear.waitForExistence(timeout: 3), "The Filter menu didn't open")
+            shot("myday-filter-menu")
+            print("ACCESSIBILITY menu items: \(myDayFilterButtons.count) named Filter by Tags, clear=\"\(clear.label)\"")
+            clear.tap()
+        }
+        shot("myday-cleared")
+        XCTAssertFalse(app.buttons["Remove #home from the filter"].exists, "Clear All Tags left a token")
+        XCTAssertEqual(filter.value as? String ?? "", "", "The Filter button still has a count")
+        // No Tags is cleared too.
+        openMyDayFilter()
+        tapText("No Tags", inSheet: true)
+        barTap { tapButton(containing: "Done", inSheet: true) }
+        barTap {
+            scrollToTop()
+            filter.tap()
+            XCTAssert(clear.waitForExistence(timeout: 3), "The Filter menu didn't open with No Tags")
+            clear.tap()
+        }
+        XCTAssertFalse(app.buttons["Remove No Tags from the filter"].exists, "Clear All Tags left No Tags")
     }
 
     /// The Filter button's badge at counts the seed can't reach: 12 (two digits) and 999 (the most).

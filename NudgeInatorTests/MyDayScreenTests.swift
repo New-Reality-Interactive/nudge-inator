@@ -270,9 +270,10 @@ struct MyDayScreenTests {
         #expect(plain(screen.emptyMessage) == expected)
     }
 
-    /// The mockup's filter tokens, one per chosen tag or "No Tags", and its "Due today with #a and
-    /// #b" line under them when two or more are chosen. Match Any says "or".
-    @Test func theChosenTagsShowAsTokensWithASummaryLineForSeveral() async throws {
+    /// The mockup's filter tokens, one per chosen tag or "No Tags", and the line under them that
+    /// says how they combine without naming them (ticket 20): "the selected tag" for one, from two
+    /// on all or any by the Match setting, and "no tags" for No Tags.
+    @Test func theChosenTagsShowAsTokensWithASummaryLine() async throws {
         let day = try await dayAtOnePM()
         var filter = MyDayFilter()
         func screen() -> MyDayScreen { MyDayScreen(engine: day.model.engine, filter: filter, now: clock.now) }
@@ -281,18 +282,18 @@ struct MyDayScreenTests {
 
         filter.toggle(day.health.id)
         #expect(screen().filterTokens.map(\.tagText) == ["#health"])
-        #expect(screen().filterSummary == nil)
+        #expect(screen().filterSummary.map(plain) == "Due today with the selected tag")
 
         filter.toggle(day.work.id)
         #expect(screen().filterTokens.map(\.tagText) == ["#health", "#work"])
-        #expect(screen().filterSummary.map(plain) == "Due today with #health and #work")
+        #expect(screen().filterSummary.map(plain) == "Due today with all selected tags")
         filter.match = .any
-        #expect(screen().filterSummary.map(plain) == "Due today with #health or #work")
+        #expect(screen().filterSummary.map(plain) == "Due today with any selected tags")
 
         filter.toggleNoTags()
         #expect(screen().filterTokens.map(\.kind) == [.noTags])
         #expect(screen().filterTokens.map(\.tagText) == [nil])
-        #expect(screen().filterSummary == nil)
+        #expect(screen().filterSummary.map(plain) == "Due today with no tags")
     }
 
     /// A tag deleted while it's chosen is no longer a filter. Left in, Match All would need a tag

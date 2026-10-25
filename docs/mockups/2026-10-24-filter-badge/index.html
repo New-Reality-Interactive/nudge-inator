@@ -573,22 +573,12 @@ li > .swipe { border-radius: 0; }
    accent color, and 44 pt tall like every other button. */
 .tokens { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: -4px 16px 14px; }
 .token { font: var(--subhead); letter-spacing: var(--subhead-track); display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px 12px 6px 14px; border: 0; border-radius: 99px; background: var(--tertiary-system-fill); color: var(--accent); font-weight: var(--semibold); cursor: pointer; overflow-wrap: anywhere; }
-/* My Day's tokens sit in one row that scrolls sideways, so the counts below stay put, and fade out
-   at the trailing edge while there are more to scroll to (ticket 20). Clearing them all is in the
-   Filter button's long-press menu. */
-.tokenrow { display: flex; align-items: center; margin: -4px 0 14px 16px; }
-.tokenrow .tokens { flex: 1; min-width: 0; margin: 0; padding-right: 16px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
-.tokenrow .tokens::-webkit-scrollbar { display: none; }
-.tokenrow .token { flex: none; white-space: nowrap; }
-.tokenrow .tokens[data-more] { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); }
-.tokenrow .tokens { cursor: grab; }
-.tokenrow .tokens.dragging { cursor: grabbing; }
-.tokenrow .tokens.dragging .token { pointer-events: none; }
-/* The control "Tokens at the accessibility sizes → Wrap": the row wraps there instead, and the
-   row keeps the screen's margin on both sides. */
-:root[data-type^="ax"][data-axtokens="wrap"] .tokenrow { margin-right: 16px; }
-:root[data-type^="ax"][data-axtokens="wrap"] .tokenrow .tokens { flex-wrap: wrap; overflow: visible; -webkit-mask-image: none; mask-image: none; }
-:root[data-type^="ax"][data-axtokens="wrap"] .tokenrow .token { flex: initial; white-space: normal; }
+/* My Day's tokens wrap to at most three rows, so the counts below stay near the top. Tokens that
+   don't fit go into a "+N more" token at the end, which opens the filter sheet; it lists every tag
+   (ticket 20). Clearing them all is in the Filter button's menu. */
+.tokenrow { margin: -4px 16px 14px; }
+.tokenrow .tokens { margin: 0; }
+.tokenrow .token[hidden] { display: none; }
 .filterrow .seg { min-width: 0; }
 .note-icon { display: inline-flex; vertical-align: -2px; }
 
@@ -674,7 +664,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .asheet.anchored { right: auto; bottom: auto; display: block; overflow-y: auto; scrollbar-width: none; border-radius: 26px; box-shadow: var(--shadow); }
 .asheet.anchored .grp { border-radius: 26px; }
 .asheet.anchored .asheet-btn { font: var(--body); letter-spacing: var(--body-track); }
-/* A menu (the Filter button's long press): items in the label color, each with its symbol before
+/* A menu (the Filter button's): items in the label color, each with its symbol before
    the text. iOS 26 menus share the Mac's layout, "selection indicator, icon, label, and accessory
    item" (WWDC25, "Get to know the new design system"); the app's shots confirm the side. */
 .asheet.menu .asheet-btn { display: flex; align-items: center; justify-content: flex-start; gap: 12px; color: var(--label); text-align: left; }
@@ -978,9 +968,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <select id="c-badge-color" autocomplete="off"><option value="">System (red)</option><option value="accent">Accent (teal)</option></select>
       <label for="c-badge-count">Badge number</label>
       <select id="c-badge-count" autocomplete="off"><option value="">The tags chosen</option><option value="1">1</option><option value="12">12</option><option value="999">999</option></select>
-      <label for="c-axtokens">Tokens at the accessibility sizes</label>
-      <select id="c-axtokens" autocomplete="off"><option value="">Scroll in one row</option><option value="wrap">Wrap</option></select>
-      <p class="why">My Day's chosen tags scroll in one row: drag it, or use the wheel or trackpad. At AX1 to AX5 the row can wrap instead, to compare. While tags are chosen, long-press (or right-click) the Filter button for Clear All Tags.</p>
+      <p class="why">My Day's chosen tags wrap to at most three rows; the rest go into "+N more". While tags are chosen, a tap on the Filter button shows its menu: Filter by Tags and Clear All Tags.</p>
     </fieldset>
     <fieldset>
       <legend>iPhone settings</legend>
@@ -1691,7 +1679,8 @@ function viewDay() {
       default: return rel(it.at);
     }
   };
-  const emptyDay = `<li class="empty">${st ? st.empty : "Nothing is due today"}${dayFilterOn() ? ` ${esc(dayFilterPhrase())}` : ""}.</li>`;
+  // The summary line under the tokens names the filter, so the empty row doesn't repeat it (ticket 20).
+  const emptyDay = `<li class="empty">${st ? st.empty : "Nothing is due today"}.</li>`;
   const date = `${LONGDAY[NOW.getDay()]}, ${LONGMON[NOW.getMonth()]} ${NOW.getDate()}`;
   // Filter is a bar button beside New Reminder in both orientations (ticket 14). In compact height
   // the header shrinks too: the date is the title's subtitle. iOS 18 has no navigationSubtitle, so
@@ -1755,13 +1744,14 @@ function dayFilterBarButton() {
   const f = state.dayFilter, n = f.none ? 1 : f.ids.length;
   const icon = I("tag.filter", 24, true);
   if (!n) return `<button type="button" class="btn bar icon glass" data-dayfilter aria-haspopup="dialog" aria-label="Filter by Tags">${icon}</button>`;
-  return `<button type="button" class="btn bar icon glass filter-on" data-dayfilter aria-haspopup="dialog" aria-label="Filter by Tags, ${n} chosen">${icon}<span class="bar-badge" aria-hidden="true">${prefs.badgeCount || n}</span></button>`;
+  return `<button type="button" class="btn bar icon glass filter-on" data-dayfilter aria-haspopup="menu" aria-label="Filter by Tags, ${n} chosen">${icon}<span class="bar-badge" aria-hidden="true">${prefs.badgeCount || n}</span></button>`;
 }
 function dayFilterTokens() {
   const f = state.dayFilter;
-  if (f.none) return `<div class="tokenrow" role="group" aria-label="Filtering by"><div class="tokens"><button type="button" class="token" data-cleardayfilter aria-label="Remove No Tags from the filter">No Tags${I("xmark", 14)}</button></div></div>`;
+  if (f.none) return `<div class="tokenrow" role="group" aria-label="Filtering by"><div class="tokens"><button type="button" class="token" data-cleardayfilter aria-label="Remove No Tags from the filter">No Tags${I("xmark", 14)}</button></div></div><p class="subhead" style="margin-top:-6px">Due today with no tags</p>`;
   if (!f.ids.length) return "";
-  const match = f.ids.length > 1 ? `<p class="subhead" style="margin-top:-6px">Due today ${esc(dayFilterPhrase())}</p>` : "";
+  const which = f.ids.length > 1 ? `${f.match === "any" ? "any" : "all"} selected tags` : "the selected tag";
+  const match = `<p class="subhead" style="margin-top:-6px">Due today with ${which}</p>`;
   return `${filterTokens(dayFilterTags())}${match}`;
 }
 function openDayFilter() {
@@ -1822,10 +1812,11 @@ function tagEditRow(t) {
 }
 /* The Tags tab and My Day each have a tag filter, so the Match control takes a scope: "" for the
    Tags tab, "day" for My Day. It names its input and ids. */
-/* My Day's chosen tags, each a button that removes it, in one scrolling row. */
+/* My Day's chosen tags, each a button that removes it, wrapping to at most three rows. */
 function filterTokens(selected) {
   const token = (t) => `<button type="button" class="token" data-removedayfilter="${t.id}" aria-label="Remove #${esc(t.name)} from the filter">#${esc(t.name)}${I("xmark", 14)}</button>`;
-  return `<div class="tokenrow" role="group" aria-label="Filtering by"><div class="tokens">${selected.map(token).join("")}</div></div>`;
+  const more = `<button type="button" class="token more" data-moredayfilter aria-haspopup="dialog" hidden></button>`;
+  return `<div class="tokenrow" role="group" aria-label="Filtering by"><div class="tokens">${selected.map(token).join("")}${more}</div></div>`;
 }
 /* The accessibility text sizes (AX1 to AX5). */
 const isAX = () => (document.documentElement.dataset.type || "").startsWith("ax");
@@ -2796,13 +2787,37 @@ function render() {
 
   document.title = `${pageTitle(top)} · Nudge-inator`;
   document.querySelectorAll("textarea.grow").forEach(growField);
-  document.querySelectorAll(".tokenrow .tokens").forEach(fadeTokens);
+  document.querySelectorAll(".tokenrow .tokens").forEach(capTokens);
   updateControls();
   applyFocus();
 }
-/* The token row fades at its trailing end only while there are more tokens to scroll to. */
-function fadeTokens(row) { row.toggleAttribute("data-more", row.scrollWidth - row.scrollLeft - row.clientWidth > 1); }
-document.addEventListener("scroll", (e) => { if (e.target.matches?.(".tokenrow .tokens")) fadeTokens(e.target); }, { capture: true, passive: true });
+/* Keeps the tokens to three rows: past that, the last ones are hidden and "+N more" takes their
+   place, one more hidden at a time until it fits, but never the third row's only token: then "+N
+   more" takes a row of its own, so three tags still show (as the app). A row starts where a token
+   sits no further right than the one before it. */
+const MAX_TOKEN_ROWS = 3;
+function tokenRows(row) {
+  let rows = 0, last = Infinity;
+  for (const el of row.children) { if (el.hidden) continue; if (el.offsetLeft <= last) rows++; last = el.offsetLeft; }
+  return rows;
+}
+function capTokens(row) {
+  const tokens = [...row.querySelectorAll(".token:not(.more)")], more = row.querySelector(".more");
+  if (!more || tokenRows(row) <= MAX_TOKEN_ROWS) return;
+  more.hidden = false;
+  for (let shown = tokens.length - 1; shown > 0; shown--) {
+    tokens[shown].hidden = true;
+    const n = tokens.length - shown;
+    more.textContent = `+${n} more`;
+    more.setAttribute("aria-label", `${n} more ${n === 1 ? "tag" : "tags"}`);
+    if (tokenRows(row) <= MAX_TOKEN_ROWS) return;
+    // Would hiding one more token leave the last row empty? Then "+N more" keeps a row of its own.
+    more.hidden = tokens[shown - 1].hidden = true;
+    const emptiesLastRow = tokenRows(row) < MAX_TOKEN_ROWS;
+    more.hidden = tokens[shown - 1].hidden = false;
+    if (emptiesLastRow) return;
+  }
+}
 /* Sizes a wrapping one-paragraph field to its text, for browsers without field-sizing. */
 function growField(f) { f.style.height = "auto"; f.style.height = `${f.scrollHeight}px`; }
 /* Landscape only: scrolling down shrinks the tab bar to the current tab, and scrolling up brings it
@@ -2866,38 +2881,6 @@ function endSwipe(e) {
   row.parentElement.classList.remove("dragging");
   setSwipe(row, Math.abs(x) > 40 ? Math.sign(x) * SWIPE_OPEN : 0);
 }
-/* A phone scrolls the token row with a finger; a mouse drags it, and a vertical wheel scrolls it
-   sideways. A drag doesn't count as a tap on a token. */
-let tokenDrag = null;
-main.addEventListener("pointerdown", (e) => {
-  const row = e.target.closest(".tokenrow .tokens");
-  if (!row || e.button !== 0 || e.pointerType === "touch") return;
-  tokenDrag = { row, x0: e.clientX, left: row.scrollLeft, id: e.pointerId, active: false };
-});
-main.addEventListener("pointermove", (e) => {
-  if (!tokenDrag || e.pointerId !== tokenDrag.id) return;
-  const dx = (e.clientX - tokenDrag.x0) / phoneScale();
-  if (!tokenDrag.active) {
-    if (Math.abs(dx) < 6) return;
-    tokenDrag.active = true;
-    try { tokenDrag.row.setPointerCapture(e.pointerId); } catch {}
-    tokenDrag.row.classList.add("dragging");
-  }
-  tokenDrag.row.scrollLeft = tokenDrag.left - dx;
-});
-function endTokenDrag(e) {
-  if (!tokenDrag || e.pointerId !== tokenDrag.id) return;
-  if (tokenDrag.active) { swallowClick = true; tokenDrag.row.classList.remove("dragging"); }
-  tokenDrag = null;
-}
-main.addEventListener("pointerup", endTokenDrag);
-main.addEventListener("pointercancel", endTokenDrag);
-main.addEventListener("wheel", (e) => {
-  const row = e.target.closest(".tokenrow .tokens");
-  if (!row || row.scrollWidth <= row.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-  row.scrollLeft += e.deltaY;
-  e.preventDefault();
-}, { passive: false });
 main.addEventListener("pointerup", endSwipe);
 main.addEventListener("pointercancel", endSwipe);
 // The click that ends a drag isn't a tap on the row.
@@ -3017,7 +3000,8 @@ const CLICK = {
   addtag: () => addDraftTag(),
   sheetCancel: () => cancelSheet(),
   sheetClose: () => closeSheet(),
-  dayfilter: () => openDayFilter(),
+  dayfilter: (v, t) => (t.classList.contains("filter-on") ? showFilterMenu(t) : openDayFilter()),
+  moredayfilter: () => openDayFilter(),
   daystatus: (v) => { state.dayStatus = state.dayStatus === v ? null : v; refresh(`[data-daystatus="${v}"]`); announce(dayNews()); },
   daystatusclear: () => { const v = state.dayStatus; state.dayStatus = null; refresh(`[data-daystatus="${v}"]`); announce(dayNews()); },
   daytag: (v) => {
@@ -3085,29 +3069,17 @@ document.addEventListener("click", (e) => {
   pressed = t;
   if (key) CLICK[key](t.dataset[key], t);
 });
-/* While tags are chosen, a long press on the Filter button shows its menu, as SwiftUI's Menu with a
-   primary action does: a tap still opens the filter (ticket 20). A right-click shows it too, for a
-   mouse. The click that ends a long press doesn't open the filter. */
-let filterHold = null, swallowFilterClick = false;
+/* While a tag or No Tags is chosen, a tap on the Filter button shows its menu, as SwiftUI's Menu
+   does (ticket 20): Filter by Tags opens the filter sheet, Clear All Tags removes every tag. With
+   none chosen, the tap opens the sheet. No long press, which the Large Content Viewer takes at the
+   accessibility sizes. */
 function showFilterMenu(btn) {
   pressed = btn;
   ask({ style: "sheet", menu: true, buttons: [
+    { label: "Filter by Tags", icon: "tag.filter", run: () => { state.sheet = { kind: "dayfilter", ret: btn }; state.focus = "sheet"; } },
     { label: "Clear All Tags", icon: "tag.xmark", run: () => { state.dayFilter = newDayFilter(); state.focus = "[data-dayfilter]"; announce(dayNews()); } },
     { label: "Cancel", role: "cancel" }] });
 }
-document.addEventListener("pointerdown", (e) => {
-  swallowFilterClick = false;
-  const btn = e.target.closest("[data-dayfilter].filter-on");
-  if (!btn || e.button !== 0) return;
-  filterHold = setTimeout(() => { filterHold = null; swallowFilterClick = true; showFilterMenu(btn); }, 500);
-}, true);
-for (const t of ["pointerup", "pointercancel"]) document.addEventListener(t, () => { clearTimeout(filterHold); filterHold = null; }, true);
-document.addEventListener("contextmenu", (e) => { const btn = e.target.closest("[data-dayfilter].filter-on"); if (btn) { e.preventDefault(); showFilterMenu(btn); } });
-document.addEventListener("click", (e) => {
-  if (!swallowFilterClick) return;
-  swallowFilterClick = false;
-  if (!e.target.closest(".asheet")) { e.stopPropagation(); e.preventDefault(); }
-}, true);
 /* Focus after Done: the title of the item
    now at the same position in that list, else the one before it, else the section's header. Never a
    Done button. Call it before the item is removed; it works by position, so a reminder with several
@@ -3273,9 +3245,8 @@ document.getElementById("c-type").addEventListener("change", (e) => { if (e.targ
 document.getElementById("c-bold").addEventListener("change", (e) => { if (e.target.checked) document.documentElement.dataset.bold = ""; else delete document.documentElement.dataset.bold; });
 document.getElementById("c-badge-color").addEventListener("change", (e) => { if (e.target.value) document.documentElement.dataset.badge = e.target.value; else delete document.documentElement.dataset.badge; });
 document.getElementById("c-badge-count").addEventListener("change", (e) => { prefs.badgeCount = e.target.value; state.keepScroll = true; render(); });
-document.getElementById("c-axtokens").addEventListener("change", (e) => { if (e.target.value) document.documentElement.dataset.axtokens = e.target.value; else delete document.documentElement.dataset.axtokens; state.keepScroll = true; render(); });
 // A browser can restore a select's value on reload without a change event, so start from what they show.
-for (const id of ["c-badge-color", "c-badge-count", "c-axtokens"]) document.getElementById(id).dispatchEvent(new Event("change"));
+for (const id of ["c-badge-color", "c-badge-count"]) document.getElementById(id).dispatchEvent(new Event("change"));
 document.getElementById("c-reset").addEventListener("click", () => {
   seed();
   settings.defaultPace = { ...DEFAULT_PACE };

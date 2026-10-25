@@ -33,7 +33,7 @@ struct MyDayTab: View {
                         showsDate: !compact,
                         tapCount: { filter.tap($0) },
                         removeToken: remove,
-                        clearTokens: { filter.clearTags() },
+                        openFilter: { isFiltering = true },
                         openDetails: { path.append(OpenedReminder(id: $0)) },
                         markDone: { model?.markDone($0) }
                     )
@@ -44,7 +44,12 @@ struct MyDayTab: View {
             .reminderDetailsDestination()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    MyDayFilterButton(chosen: checkedCount, showsBadge: !dynamicTypeSize.isAccessibilitySize) { isFiltering = true }
+                    MyDayFilterButton(
+                        chosen: checkedCount,
+                        showsBadge: !dynamicTypeSize.isAccessibilitySize,
+                        open: { isFiltering = true },
+                        clear: { filter.clearTags() }
+                    )
                 }
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
             }
@@ -93,7 +98,7 @@ private struct MyDayList: View {
     let showsDate: Bool
     let tapCount: (MyDayCount) -> Void
     let removeToken: (MyDayScreen.FilterToken) -> Void
-    let clearTokens: () -> Void
+    let openFilter: () -> Void
     let openDetails: (Reminder.ID) -> Void
     let markDone: (Reminder.ID) -> Void
 
@@ -104,7 +109,7 @@ private struct MyDayList: View {
             Section {
                 if !screen.filterTokens.isEmpty {
                     plainRow {
-                        MyDayFilterTokens(tokens: screen.filterTokens, summary: screen.filterSummary, remove: removeToken, clear: clearTokens)
+                        MyDayFilterTokens(tokens: screen.filterTokens, summary: screen.filterSummary, remove: removeToken, openFilter: openFilter)
                     }
                 }
                 plainRow {
