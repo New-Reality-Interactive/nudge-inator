@@ -324,7 +324,7 @@ except in the tab and navigation bars. Verify names against the mockup.
 
 | Use | Symbols |
 |---|---|
-| Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `tag.filter` (custom, in the asset catalog: the Tags tab's `tag` with a three-line filter badge at the lower right: Filter by Tags) |
+| Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `tag.filter` (custom, in the asset catalog: the Tags tab's `tag` with a three-line filter badge at the lower right: Filter by Tags, the button and its menu item), `tag.xmark` (custom, in the asset catalog: the same `tag` with a × badge at the lower right: Clear All Tags, in the Filter button's menu) |
 | Tabs | `bell` (Now), `calendar` (My Day), `tag` (Tags), `gearshape` (Settings) |
 | Urgency | `arrow.up` (High), `alarm` (Urgent) |
 | Status | `checkmark.circle.fill` (Done), `bell.slash`, `clock`, `exclamationmark.triangle`, `lock` (a field locked while nudging, always beside its reason as text) |
@@ -366,8 +366,16 @@ except in the tab and navigation bars. Verify names against the mockup.
 ### Tags
 - **Tag token field / tag token:** `tag-token`, system-drawn. **Tag tile:** a round gray tile with `tag`,
   decorative.
-- **Filter token:** `filter-token`, a 44 pt capsule with `xmark`. **Match control:** system segmented
-  `Picker`, a menu at accessibility sizes.
+- **Filter token:** `filter-token`, a 44 pt capsule with `xmark`. On My Day the tokens wrap to at
+  most three rows; the rest go into a **+N more** token in the same capsule, which opens the filter
+  sheet. If it doesn't fit beside the third row's only token, it takes a row of its own, so three
+  tags still show. Under them a summary line says how the tags combine without naming them: "Due
+  today with the selected tag" for one, "…all selected tags" or "…any selected tags" from two on,
+  "Due today with no tags" for No Tags. **Filter button:** `tag.filter` in the bar. While any tag (or No Tags) is chosen a tap
+  shows a menu: Filter by Tags (`tag.filter`) opens the filter sheet, Clear All Tags (`tag.xmark`)
+  removes every tag at once. With none chosen a tap opens the sheet. No long press: at the
+  accessibility sizes the bar uses it for the Large Content Viewer.
+  **Match control:** system segmented `Picker`, a menu at accessibility sizes.
 
 ### How It Nudges
 - **Token:** `how-it-nudges`. Inset grouped list, summary in the section footer, `{typography.footnote}`

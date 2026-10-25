@@ -182,6 +182,29 @@
         }
       }
     },
+    "%lld more tags" : {
+      "comment" : "VoiceOver label of My Day's \"+N more\" filter token. The placeholder is how many more tags are chosen.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more tag"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more tags"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld nudges over %@, then it gives up." : {
       "comment" : "How It Nudges footer. 1: how many nudges a reminder sends before it gives up. 2: how long that takes from the due time, such as \"2 hr, 18 min\".",
       "localizations" : {
@@ -397,6 +420,29 @@
     "**Time Sensitive is off.** High nudges come as ordinary notifications, so a Focus can hold them." : {
       "comment" : "Permission banner, when the app's Time Sensitive notifications are turned off. Keep the first sentence bold."
     },
+    "+%lld more" : {
+      "comment" : "My Day: the filter token after the tags that fit in three rows. The placeholder is how many more are chosen. Opens the filter.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld more"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "+%lld more"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "A new schedule applies from the next time it's due. A new strength, pace or Break Through Focus setting applies from the next nudge." : {
       "comment" : "Top of the Edit Reminder form when the reminder isn't nudging: when changes apply."
     },
@@ -571,7 +617,10 @@
       "comment" : "Under the Custom repeat page's weekdays."
     },
     "Clear" : {
-      "comment" : "My Day's filter sheet: removes every tag from the filter.\nMy Day: removes every tag from the filter."
+      "comment" : "My Day's filter sheet: removes every tag from the filter."
+    },
+    "Clear All Tags" : {
+      "comment" : "My Day: the item in the Filter button's menu that removes every tag from the filter."
     },
     "Coming Up" : {
       "comment" : "Now: section header for reminders due soon."
@@ -691,8 +740,17 @@
     "Due %@" : {
       "comment" : "Nudge card: under the title of a reminder with no tags. The placeholder is its due time, such as \"9:00 AM\"."
     },
-    "Due today with %@" : {
-      "comment" : "My Day: under the filter tokens when two or more tags are chosen. The placeholder lists them, such as \"#home and #money\" (Match All) or \"#home or #money\" (Match Any)."
+    "Due today with all selected tags" : {
+      "comment" : "My Day: under the filter tokens when two or more tags are chosen and Match is All Tags."
+    },
+    "Due today with any selected tags" : {
+      "comment" : "My Day: under the filter tokens when two or more tags are chosen and Match is Any Tag."
+    },
+    "Due today with no tags" : {
+      "comment" : "My Day: under the No Tags filter token."
+    },
+    "Due today with the selected tag" : {
+      "comment" : "My Day: under the filter token when one tag is chosen."
     },
     "During a Focus, Normal nudges wait until High, unless you allow %@ in that Focus." : {
       "comment" : "How It Nudges footer. The placeholder is the app's name."
@@ -867,7 +925,7 @@
       "comment" : "Title of My Day's tag filter sheet."
     },
     "Filter by Tags" : {
-      "comment" : "VoiceOver label of My Day's filter button."
+      "comment" : "My Day: the item in the Filter button's menu that opens the filter.\nVoiceOver label of My Day's filter button."
     },
     "Filtering by" : {
       "comment" : "VoiceOver label of the group of tokens for the tags My Day is filtered by."
