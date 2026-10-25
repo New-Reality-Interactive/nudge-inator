@@ -3,10 +3,24 @@
 # (scripts/test.sh), so that stays a local step before each commit (AGENTS.md, Testing).
 name: Checks
 
+# Skipped when a change touches only tickets, docs or Markdown. docs/design/DESIGN.md stays in:
+# the color-set check reads it. The last matching pattern wins.
 on:
   pull_request:
+    paths:
+      - "**"
+      - "!.scratch/**"
+      - "!docs/**"
+      - "!**/*.md"
+      - "docs/design/DESIGN.md"
   push:
     branches: [main]
+    paths:
+      - "**"
+      - "!.scratch/**"
+      - "!docs/**"
+      - "!**/*.md"
+      - "docs/design/DESIGN.md"
 
 jobs:
   checks:
