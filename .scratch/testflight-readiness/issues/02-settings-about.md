@@ -13,11 +13,11 @@ This meets Guideline 5.1.1(i)'s in-app privacy link before the first archive. A 
 
 - [x] A new dated mockup under `docs/mockups/` shows Settings with the About row and the About screen, and Brian approves it before anything is built.
 - [x] Settings has an About row that opens the About screen, as in the mockup.
-- [ ] The Privacy Policy and Support rows each open their URL in the system browser (manual check on a simulator).
+- [x] The Privacy Policy and Support rows each open their URL in the system browser (manual check on a simulator).
 - [x] The build section shows the version and build number from the bundle. A unit test checks the shown values against the bundle's `CFBundleShortVersionString` and `CFBundleVersion`.
 - [x] Every label is a String Catalog string, and the screen meets `docs/design/DESIGN.md`.
-- [ ] Simulators (26.5 and 27.x): Settings and About in portrait, landscape and the largest text size, and the screenshot harness walks to About. VoiceOver reads each row as a link-like button and reads the version and build.
-- [ ] Offered to Brian, after the simulator pass: on the iPhone, both rows open their pages and the build section reads correctly (phone and iOS version recorded).
+- [x] Simulators (26.5 and 27.x): Settings and About in portrait, landscape and the largest text size, and the screenshot harness walks to About.
+- [ ] On the iPhone (phone and iOS version recorded): both rows open their pages, the build section reads correctly, and VoiceOver reads each link row as a link and reads the version and build.
 - [x] `scripts/test.sh` passes on both simulators.
 
 ## Before you start
@@ -41,6 +41,12 @@ This meets Guideline 5.1.1(i)'s in-app privacy link before the first archive. A 
   to About (`settings-about`). Settings and About match the mockup in portrait, landscape and the
   largest text size, where the rows stack like the other Settings rows. The harness shows version
   1.0, build 1: its own bundle's, which shows the value is read at runtime.
-- Open: the Privacy Policy and Support rows opening their URLs (manual, simulator); VoiceOver
-  reading the link rows and the version and build; the offered iPhone run. `scripts/test.sh` passes
-  on both simulators.
+- 2026-10-25, links (manual, iPhone 15 - iOS 27.0 simulator, Brian): Privacy Policy and Support
+  each opened Safari, on a 404 since the pages aren't published yet. The simulator's log shows the
+  URLs opened: `https://newrealityinteractive.com/nudge-inator/privacy/` and
+  `https://newrealityinteractive.com/nudge-inator/support/`. About showed version 1.1.0, build 1.
+- 2026-10-25, criteria changed (agreed with Brian): the VoiceOver check moved from the simulators
+  (criterion 6) to the iPhone run (criterion 7), since checking it in Accessibility Inspector on
+  the simulator took too long. Brian took the offered iPhone run, so criterion 7 is a check, not
+  an offer. It runs in a fresh session (review.md, Session size).
+- Open: criterion 7, the iPhone run.
