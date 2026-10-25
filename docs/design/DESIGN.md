@@ -237,7 +237,8 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
   size, so it covers the icon. The chosen-tag tokens and the VoiceOver label carry the count there.
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
   action is `{colors.tile-green}`. Settings rows: red (Notifications, Delete All Data), orange
-  (Alarms), gray (Open iOS Settings, Default Pace, How It Nudges), blue (Send a Test Nudge). Tiles are icons for rows, not
+  (Alarms), gray (About, Open iOS Settings, Default Pace, How It Nudges, and About's Privacy Policy
+  and Support), blue (Send a Test Nudge). Tiles are icons for rows, not
   statuses, so "one color, one meaning" does not apply to them.
 
 Rules:
@@ -407,8 +408,10 @@ except in the tab and navigation bars. Verify names against the mockup.
 - Icon tile, label in `{typography.body}`, trailing status in `{colors.secondary-label}` (or
   `{colors.negative}` when off) or a chevron. A row that opens a page to set a value shows the
   value under the label in `{typography.body}` `{colors.secondary-label}`, with the chevron
-  (Default Pace: "Consistent · 10 min"), so it never shares the line with the label. Tile colors
-  are listed under Colors.
+  (Default Pace: "Consistent · 10 min"), so it never shares the line with the label. A row that
+  opens a web page (About's Privacy Policy and Support) has its label in the accent color and
+  `arrow.up.forward` in place of the chevron, and VoiceOver reads it as a link. Tile colors are
+  listed under Colors.
 
 ### Swipe actions
 - **Token:** `swipe-done`. Trailing swipe shows Done: green tile, white `checkmark` and the word

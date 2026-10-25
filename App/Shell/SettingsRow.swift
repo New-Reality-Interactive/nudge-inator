@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// DESIGN.md's Settings row: an icon tile, the label in body, and a trailing status or chevron. A
+/// DESIGN.md's Settings row: an icon tile, the label in body, and a trailing status or accessory. A
 /// row that opens a page to set a value, as Default Pace does, shows the value under the label
 /// instead, so it never shares the line with it. The tile is decoration, so VoiceOver reads the
 /// label, the value and the status as one element. Stacked at accessibility sizes, where beside
@@ -14,7 +14,20 @@ struct SettingsRow: View {
     var value: Text?
     var status: Text?
     var statusIsNegative = false
-    var showsChevron = false
+    var accessory: Accessory?
+
+    /// What ends the row: a chevron, or for a row that leaves the app, as About's links do,
+    /// `arrow.up.forward`.
+    enum Accessory {
+        case chevron, link
+
+        var symbol: String {
+            switch self {
+            case .chevron: "chevron.right"
+            case .link: "arrow.up.forward"
+            }
+        }
+    }
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .body) private var tileSize: CGFloat = Design.Size.settingsTile
@@ -56,8 +69,8 @@ struct SettingsRow: View {
                     .font(.body)
                     .foregroundStyle(statusIsNegative ? Color.negative : Color(uiColor: .secondaryLabel))
             }
-            if showsChevron {
-                Image(systemName: "chevron.right")
+            if let accessory {
+                Image(systemName: accessory.symbol)
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(Color(uiColor: .tertiaryLabel))
                     .accessibilityHidden(true)
@@ -75,7 +88,7 @@ struct SettingsRow: View {
     List {
         SettingsRow(tile: .tileRed, symbol: "bell", title: Text(verbatim: "Notifications"), status: Text(verbatim: "Off"), statusIsNegative: true)
         SettingsRow(tile: .tileOrange, symbol: "alarm", title: Text(verbatim: "Alarms"), status: Text(verbatim: "On"))
-        SettingsRow(tile: .tileGray, symbol: "gearshape", title: Text(verbatim: "Open iOS Settings"), titleColor: .accentColor, showsChevron: true)
+        SettingsRow(tile: .tileGray, symbol: "gearshape", title: Text(verbatim: "Open iOS Settings"), titleColor: .accentColor, accessory: .chevron)
     }
 }
 

@@ -446,6 +446,9 @@
     "A new schedule applies from the next time it's due. A new strength, pace or Break Through Focus setting applies from the next nudge." : {
       "comment" : "Top of the Edit Reminder form when the reminder isn't nudging: when changes apply."
     },
+    "About" : {
+      "comment" : "Settings: row that opens the page with the privacy policy, support and the app's version and build number.\nTitle of the page in Settings with the privacy policy, support and the app's version."
+    },
     "Add" : {
       "comment" : "The New Reminder form's confirm button (a checkmark).\nThe Tags page's button that adds the typed tag to the reminder."
     },
@@ -565,6 +568,9 @@
     },
     "Break Through Focus is off, so during a Focus every nudge waits, unless you allow %@ in that Focus." : {
       "comment" : "How It Nudges footer, for a reminder whose Break Through Focus switch is off. The placeholder is the app's name."
+    },
+    "Build" : {
+      "comment" : "About page: row showing the app's build number, such as \"12\"."
     },
     "Can't Open Your Reminders" : {
       "comment" : "Title shown when the app can't read its stored reminders, for example before the first unlock after a restart."
@@ -942,6 +948,9 @@
     "Frequency" : {
       "comment" : "The Custom repeat page's choice of Daily, Weekly, Monthly or Yearly."
     },
+    "General" : {
+      "comment" : "Settings: header of the first section, with the About row."
+    },
     "Gentle" : {
       "comment" : "Strength name: the reminder nudges gently."
     },
@@ -1313,6 +1322,9 @@
     "Pausing stops the nudging. Anything due while it's paused is skipped, not missed." : {
       "comment" : "Reminder details: under Pause Reminder."
     },
+    "Privacy Policy" : {
+      "comment" : "About page: row that opens the app's privacy policy on the website, in the web browser."
+    },
     "Relentless" : {
       "comment" : "Strength name: the reminder nudges hardest."
     },
@@ -1423,6 +1435,9 @@
     "Strength" : {
       "comment" : "The reminder form's strength choice: Gentle, Firm or Relentless."
     },
+    "Support" : {
+      "comment" : "About page: row that opens the app's support page on the website, in the web browser."
+    },
     "Tag Deleted" : {
       "comment" : "A tag's screen after the tag was deleted."
     },
@@ -1455,6 +1470,12 @@
     },
     "These follow the start date. Change it to pick another day." : {
       "comment" : "Under the Custom repeat page's monthly days."
+    },
+    "These pages open in your web browser." : {
+      "comment" : "About page: under the Privacy Policy and Support rows."
+    },
+    "This Build" : {
+      "comment" : "About page: header of the section with the app's version and build number."
     },
     "This deletes every reminder, tag and all history from this iPhone, and cancels every nudge and alarm. It can't be undone." : {
       "comment" : "Settings: under the question asked before deleting everything."
@@ -1489,6 +1510,9 @@
     "Tomorrow" : {
       "comment" : "The Custom repeat page's Next Times: a due time tomorrow."
     },
+    "Unknown" : {
+      "comment" : "About page: shown for the version or build number when the app can't read it."
+    },
     "Urgent nudges come as ordinary notifications, which silent mode can mute and a Focus can hold." : {
       "comment" : "Settings: footer under the Nudges rows, when neither alarms nor Time Sensitive can deliver Urgent nudges."
     },
@@ -1498,6 +1522,9 @@
     "Urgent nudges ring as alarms, even in silent mode and in every Focus." : {
       "comment" : "Settings: footer under the Nudges rows, when alarms are allowed."
     },
+    "Version" : {
+      "comment" : "About page: row showing the app's version, such as \"1.1.0\"."
+    },
     "Weekly" : {
       "comment" : "The Custom repeat page's frequency."
     },
@@ -1506,6 +1533,9 @@
     },
     "When it really matters, your iPhone rings and vibrates like an alarm, even on silent and in a Focus. Stopping the alarm only quiets it: the next nudge still comes, and only Done ends the reminder." : {
       "comment" : "Onboarding and How It Nudges: under \"Urgent nudges ring as alarms\"."
+    },
+    "When you send feedback, include the version and build." : {
+      "comment" : "About page: under the version and build number, for beta testers sending feedback."
     },
     "Yearly" : {
       "comment" : "The Custom repeat page's frequency."
