@@ -30,7 +30,7 @@ This changes what's on screen, so it gets a new dated mockup first. The dated mo
 - [x] Match is shown with none, one or two tags checked, and with No Tags. It's disabled below two tags and with No Tags, and works from two tags on. Shots of each, on both simulators, in portrait and landscape, at the default and the largest text size (where Match is a menu), light and dark.
 - [x] Match still chooses All Tags or Any Tag from two tags on, and the sheet's summary follows it. `MyDayFilterSheet` says whether Match can be used and which footer the Tags section shows, unit-tested in `MyDayScreenTests`, whose filter sheet test replaces its `showsMatch` checks.
 - [x] The Tags footer below two tags says why Match is disabled, in the wording Brian approved in the mockup, with a translator comment.
-- [ ] VoiceOver reads the Match choice and its current value, says it's dimmed below two tags, and reads the footer's reason. Device check.
+- [x] VoiceOver reads the Match choice and its current value, says it's dimmed below two tags, and reads the footer's reason. Device check. Agreed change: at the default size (segmented) it reads the reason in place of "dimmed" (Comments, "iPhone checks").
 - [x] `docs/design/DESIGN.md` (Tags › Match control) and a new dated mockup show Match always shown and disabled below two tags. Brian approves the mockup before any app code changes.
 
 ## Before you start
@@ -64,3 +64,16 @@ Brian has the iPhone ready. Follow `docs/agents/device-testing.md`: note whether
 2. **VoiceOver (criterion 5):** with none or one tag checked, and with No Tags, VoiceOver reads Match, its current value (All Tags) and that it's dimmed, then the footer's reason ("Check one or more tags. Match needs two or more."). With two tags it isn't dimmed and switches All Tags / Any Tag. At the default size (segmented) and at an accessibility size (menu). If it doesn't say dimmed, or the reason isn't reachable near Match, stop and discuss (the iOS review suggested an `.accessibilityHint` on the disabled picker).
 3. **No jump at the scroll end (`NeverShorter`):** at the largest text size, check two tags, scroll to the end, tap No Tags; the rows don't move, not even for a frame. Then close the sheet, reopen it and make No Tags the first tap: still no move.
 4. **Blank space:** after check 3, the space under the summary isn't odd to look at, and VoiceOver's focus box on the summary line isn't stretched by it in a way that confuses. Turning the phone or changing the text size with the sheet open clears it.
+
+### 2026-10-25: iPhone checks
+
+Brian's iPhone 15, iOS 27.0.1. The app wasn't installed before the run, so it was uninstalled after; Brian's text size was the default and was put back.
+
+1. **Taps land:** passed. Checking tags quickly in a row, crossing two tags both ways, after No Tags and after Clear, every tap landed on the tag aimed at, at the default and the largest size. Checking the second tag changes the Tags footer, so the end of the list moves, but no tag row does.
+2. **VoiceOver:** the first build failed. At the default size the segmented picker read only its segments ("Selected, All Tags, Button, 1 of 2", "Any Tag, Dimmed, Button, 2 of 2"): no "Match", and no "dimmed" on the current choice. The footer read correctly in both states. At the accessibility size the menu read "Match, All Tags" and "dimmed". Tried and dropped:
+   - An `accessibilityLabel` on the picker: no effect on the segments, and on the menu it replaced the value ("Match, Match").
+   - `accessibilityRepresentation` with the disabled menu: VoiceOver skipped Match altogether.
+
+   Kept (`MyDayFilterSheetView.matchPicker`): while Match is disabled, the menu gets the hint "Needs two or more checked tags.", and the segmented control is one element, labeled Match, with the current choice as its value and the same hint. Read on the phone, with no tag, one tag and No Tags: default size "Match, All Tags … Needs two or more checked tags"; accessibility size "Match, All Tags, Dimmed, Button, Pop-up button … Needs two or more checked tags". With two tags, both sizes read and switch as before. SwiftUI has no trait for dimmed, and the combined element isn't read as dimmed. Brian agreed that at the default size the reason stands in for "dimmed", and criterion 5 is ticked with that change.
+3. **No jump at the scroll end:** passed, from two tags and with No Tags as the first tap after reopening, at the largest size.
+4. **Blank space:** passed. It isn't visible as odd space. VoiceOver's focus box on the summary reaches well below the text, which Brian accepted. Turning the phone looks normal.

@@ -1016,6 +1016,9 @@
     "My Day" : {
       "comment" : "Tab bar: the tab with today's reminders in time order"
     },
+    "Needs two or more checked tags." : {
+      "comment" : "My Day's filter sheet: VoiceOver's reason the Match choice is disabled."
+    },
     "Never" : {
       "comment" : "Repeat preset, on the Repeat page and the form's Repeat row: the reminder doesn't repeat.\nThe Custom repeat page's Ends choice: it repeats for ever."
     },

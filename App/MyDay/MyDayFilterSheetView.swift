@@ -18,8 +18,7 @@ struct MyDayFilterSheetView: View {
             List {
                 // Always shown, so checking a tag doesn't move the rows under the finger.
                 Section {
-                    matchPicker
-                        .disabled(!sheet.canChooseMatch)
+                    matchPicker(canChoose: sheet.canChooseMatch)
                 }
                 Section {
                     if sheet.tags.isEmpty {
@@ -72,17 +71,40 @@ struct MyDayFilterSheetView: View {
 
     /// A segmented control, or a menu at accessibility sizes, where a segmented one would cut its
     /// labels off (DESIGN.md › Tags).
-    @ViewBuilder private var matchPicker: some View {
+    ///
+    /// Disabled, VoiceOver gets the reason as a hint. The menu reads "Match" and its value itself,
+    /// but the segmented control reads only its segments, without "Match" or "dimmed" on the
+    /// current one (iPhone 15, iOS 27.0.1), so disabled it's one element with both. That element
+    /// isn't read as dimmed; the reason stands in for it. Representing it with the disabled menu
+    /// (`accessibilityRepresentation`) hid it from VoiceOver altogether.
+    @ViewBuilder private func matchPicker(canChoose: Bool) -> some View {
+        let label = Text("Match", comment: "My Day's filter sheet: label of the choice between All Tags and Any Tag.")
+        let reason = Text("Needs two or more checked tags.", comment: "My Day's filter sheet: VoiceOver's reason the Match choice is disabled.")
         let picker = Picker(selection: $filter.match) {
-            Text("All Tags", comment: "My Day's filter sheet: the Match choice that needs every checked tag.").tag(MyDayFilter.Match.all)
-            Text("Any Tag", comment: "My Day's filter sheet: the Match choice that needs at least one checked tag.").tag(MyDayFilter.Match.any)
+            matchText(.all).tag(MyDayFilter.Match.all)
+            matchText(.any).tag(MyDayFilter.Match.any)
         } label: {
-            Text("Match", comment: "My Day's filter sheet: label of the choice between All Tags and Any Tag.")
+            label
         }
+        .disabled(!canChoose)
         if dynamicTypeSize.isAccessibilitySize {
             picker.pickerStyle(.menu)
+                .accessibilityHint(reason, isEnabled: !canChoose)
+        } else if canChoose {
+            picker.pickerStyle(.segmented)
         } else {
             picker.pickerStyle(.segmented)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(label)
+                .accessibilityValue(matchText(filter.match))
+                .accessibilityHint(reason)
+        }
+    }
+
+    private func matchText(_ match: MyDayFilter.Match) -> Text {
+        switch match {
+        case .all: Text("All Tags", comment: "My Day's filter sheet: the Match choice that needs every checked tag.")
+        case .any: Text("Any Tag", comment: "My Day's filter sheet: the Match choice that needs at least one checked tag.")
         }
     }
 
