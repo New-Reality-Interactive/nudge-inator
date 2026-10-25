@@ -573,6 +573,22 @@ li > .swipe { border-radius: 0; }
    accent color, and 44 pt tall like every other button. */
 .tokens { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: -4px 16px 14px; }
 .token { font: var(--subhead); letter-spacing: var(--subhead-track); display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px 12px 6px 14px; border: 0; border-radius: 99px; background: var(--tertiary-system-fill); color: var(--accent); font-weight: var(--semibold); cursor: pointer; overflow-wrap: anywhere; }
+/* My Day's tokens sit in one row that scrolls sideways, so the counts below stay put, and fade out
+   at the trailing edge while there are more to scroll to (ticket 20). Clearing them all is in the
+   Filter button's long-press menu. */
+.tokenrow { display: flex; align-items: center; margin: -4px 0 14px 16px; }
+.tokenrow .tokens { flex: 1; min-width: 0; margin: 0; padding-right: 16px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+.tokenrow .tokens::-webkit-scrollbar { display: none; }
+.tokenrow .token { flex: none; white-space: nowrap; }
+.tokenrow .tokens[data-more] { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); }
+.tokenrow .tokens { cursor: grab; }
+.tokenrow .tokens.dragging { cursor: grabbing; }
+.tokenrow .tokens.dragging .token { pointer-events: none; }
+/* The control "Tokens at the accessibility sizes → Wrap": the row wraps there instead, and the
+   row keeps the screen's margin on both sides. */
+:root[data-type^="ax"][data-axtokens="wrap"] .tokenrow { margin-right: 16px; }
+:root[data-type^="ax"][data-axtokens="wrap"] .tokenrow .tokens { flex-wrap: wrap; overflow: visible; -webkit-mask-image: none; mask-image: none; }
+:root[data-type^="ax"][data-axtokens="wrap"] .tokenrow .token { flex: initial; white-space: normal; }
 .filterrow .seg { min-width: 0; }
 .note-icon { display: inline-flex; vertical-align: -2px; }
 
@@ -658,6 +674,10 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .asheet.anchored { right: auto; bottom: auto; display: block; overflow-y: auto; scrollbar-width: none; border-radius: 26px; box-shadow: var(--shadow); }
 .asheet.anchored .grp { border-radius: 26px; }
 .asheet.anchored .asheet-btn { font: var(--body); letter-spacing: var(--body-track); }
+/* A menu (the Filter button's long press): items in the label color, each with its symbol before
+   the text. iOS 26 menus share the Mac's layout, "selection indicator, icon, label, and accessory
+   item" (WWDC25, "Get to know the new design system"); the app's shots confirm the side. */
+.asheet.menu .asheet-btn { display: flex; align-items: center; justify-content: flex-start; gap: 12px; color: var(--label); text-align: left; }
 /* A banner flicked away (mockup only): the iPhone hides it, and the app isn't told. */
 .btn.flick { font: var(--subhead); letter-spacing: var(--subhead-track); justify-self: center; background: rgba(0, 0, 0, 0.8); color: #fff; border-radius: 99px; padding: 6px 16px; }
 
@@ -958,6 +978,9 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <select id="c-badge-color" autocomplete="off"><option value="">System (red)</option><option value="accent">Accent (teal)</option></select>
       <label for="c-badge-count">Badge number</label>
       <select id="c-badge-count" autocomplete="off"><option value="">The tags chosen</option><option value="1">1</option><option value="12">12</option><option value="999">999</option></select>
+      <label for="c-axtokens">Tokens at the accessibility sizes</label>
+      <select id="c-axtokens" autocomplete="off"><option value="">Scroll in one row</option><option value="wrap">Wrap</option></select>
+      <p class="why">My Day's chosen tags scroll in one row: drag it, or use the wheel or trackpad. At AX1 to AX5 the row can wrap instead, to compare. While tags are chosen, long-press (or right-click) the Filter button for Clear All Tags.</p>
     </fieldset>
     <fieldset>
       <legend>iPhone settings</legend>
@@ -1099,6 +1122,9 @@ const SYMBOLS = {
   /* tag.filter: the tag with a three-line filter badge at the lower right, in a circular cutout of
      the tag. The badge hangs past the tag's edge. */
   "tag.filter": { d: `<mask id="tf-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff" stroke="none"/><circle cx="17.3" cy="17.3" r="6.4" fill="#000" stroke="none"/></mask><g mask="url(#tf-cut)"><g transform="matrix(-1 0 0 1 24 0)">${TAG}${dot(8.3, 8.6, 1.5)}</g></g><path d="M14.7 15.2h5.2M15.9 17.5h2.8M16.9 19.8h0.8"/>`, scale: 0.96 },
+  /* tag.xmark: the same tag and cutout as tag.filter, with an × badge instead, so it reads as
+     "remove tags": the Filter menu's Clear All Tags (ticket 20). A stand-in for tag.xmark.symbolset. */
+  "tag.xmark": { d: `<mask id="tx-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff" stroke="none"/><circle cx="17.3" cy="17.3" r="6.4" fill="#000" stroke="none"/></mask><g mask="url(#tx-cut)"><g transform="matrix(-1 0 0 1 24 0)">${TAG}${dot(8.3, 8.6, 1.5)}</g></g><path d="M15.1 15.1 19.5 19.5M19.5 15.1 15.1 19.5"/>`, scale: 0.96 },
   "tray": { d: '<path d="M3.5 13.5H8l1.5 2.5h5l1.5-2.5h4.5"/><path d="M6.4 4.5h11.2a1.5 1.5 0 0 1 1.4 1l1.5 7.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5l1.5-7.5a1.5 1.5 0 0 1 .9-1z"/>' },
   "clock": { d: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3.2 2"/>' },
   "lock": { d: '<rect x="5.5" y="10.5" width="13" height="10" rx="2.2"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/>', scale: 0.96 },
@@ -1733,7 +1759,7 @@ function dayFilterBarButton() {
 }
 function dayFilterTokens() {
   const f = state.dayFilter;
-  if (f.none) return `<div class="tokens" role="group" aria-label="Filtering by"><button type="button" class="token" data-cleardayfilter aria-label="Remove No Tags from the filter">No Tags${I("xmark", 14)}</button></div>`;
+  if (f.none) return `<div class="tokenrow" role="group" aria-label="Filtering by"><div class="tokens"><button type="button" class="token" data-cleardayfilter aria-label="Remove No Tags from the filter">No Tags${I("xmark", 14)}</button></div></div>`;
   if (!f.ids.length) return "";
   const match = f.ids.length > 1 ? `<p class="subhead" style="margin-top:-6px">Due today ${esc(dayFilterPhrase())}</p>` : "";
   return `${filterTokens(dayFilterTags())}${match}`;
@@ -1796,11 +1822,10 @@ function tagEditRow(t) {
 }
 /* The Tags tab and My Day each have a tag filter, so the Match control takes a scope: "" for the
    Tags tab, "day" for My Day. It names its input and ids. */
-/* My Day's chosen tags, each a button that removes it. */
+/* My Day's chosen tags, each a button that removes it, in one scrolling row. */
 function filterTokens(selected) {
   const token = (t) => `<button type="button" class="token" data-removedayfilter="${t.id}" aria-label="Remove #${esc(t.name)} from the filter">#${esc(t.name)}${I("xmark", 14)}</button>`;
-  const clear = selected.length > 1 ? `<button type="button" class="btn plain" data-cleardayfilter>Clear</button>` : "";
-  return `<div class="tokens" role="group" aria-label="Filtering by">${selected.map(token).join("")}${clear}</div>`;
+  return `<div class="tokenrow" role="group" aria-label="Filtering by"><div class="tokens">${selected.map(token).join("")}</div></div>`;
 }
 /* The accessibility text sizes (AX1 to AX5). */
 const isAX = () => (document.documentElement.dataset.type || "").startsWith("ax");
@@ -2613,7 +2638,7 @@ function anchorOf(el) {
 }
 function alertButton(b, i, base) {
   const role = { cancel: " cancelb", destructive: " destr" }[b.role] ?? "";
-  return `<button type="button" class="${base}${role}" data-alert-btn="${i}">${esc(b.label)}</button>`;
+  return `<button type="button" class="${base}${role}" data-alert-btn="${i}">${b.icon ? I(b.icon, 20) : ""}<span>${esc(b.label)}</span></button>`;
 }
 /* iOS 26 (SwiftUI's confirmationDialog): the dialog grows out of the button that opened it, lined
    up with that button's nearer edge, below it in the top half of the screen and above it in the
@@ -2634,7 +2659,7 @@ function anchoredSheetUI(a) {
   const cancel = indexed.filter(([b]) => b.role === "cancel").map(([b, i]) => `<button type="button" class="sr-only" data-alert-btn="${i}">${esc(b.label)}</button>`).join("");
   const title = a.title ? `<h2 class="asheet-title" id="al-h">${esc(a.title)}</h2>` : "";
   const message = a.message ? `<p class="asheet-text">${esc(a.message)}</p>` : "";
-  return `<div class="overlay"><div class="scrim clear" data-alert-scrim></div><div class="asheet anchored" style="left:${Math.round(left)}px;width:${w}px;${pos}" role="alertdialog" aria-modal="true" ${a.title ? 'aria-labelledby="al-h"' : 'aria-label="Confirm"'}>
+  return `<div class="overlay"><div class="scrim clear" data-alert-scrim></div><div class="asheet anchored${a.menu ? " menu" : ""}" style="left:${Math.round(left)}px;width:${w}px;${pos}" role="${a.menu ? "menu" : "alertdialog"}" aria-modal="true" ${a.title ? 'aria-labelledby="al-h"' : `aria-label="${a.menu ? "Filter" : "Confirm"}"`}>
       <div class="grp">${title}${message}${actions}</div>${cancel}
     </div></div>`;
 }
@@ -2771,9 +2796,13 @@ function render() {
 
   document.title = `${pageTitle(top)} · Nudge-inator`;
   document.querySelectorAll("textarea.grow").forEach(growField);
+  document.querySelectorAll(".tokenrow .tokens").forEach(fadeTokens);
   updateControls();
   applyFocus();
 }
+/* The token row fades at its trailing end only while there are more tokens to scroll to. */
+function fadeTokens(row) { row.toggleAttribute("data-more", row.scrollWidth - row.scrollLeft - row.clientWidth > 1); }
+document.addEventListener("scroll", (e) => { if (e.target.matches?.(".tokenrow .tokens")) fadeTokens(e.target); }, { capture: true, passive: true });
 /* Sizes a wrapping one-paragraph field to its text, for browsers without field-sizing. */
 function growField(f) { f.style.height = "auto"; f.style.height = `${f.scrollHeight}px`; }
 /* Landscape only: scrolling down shrinks the tab bar to the current tab, and scrolling up brings it
@@ -2837,6 +2866,38 @@ function endSwipe(e) {
   row.parentElement.classList.remove("dragging");
   setSwipe(row, Math.abs(x) > 40 ? Math.sign(x) * SWIPE_OPEN : 0);
 }
+/* A phone scrolls the token row with a finger; a mouse drags it, and a vertical wheel scrolls it
+   sideways. A drag doesn't count as a tap on a token. */
+let tokenDrag = null;
+main.addEventListener("pointerdown", (e) => {
+  const row = e.target.closest(".tokenrow .tokens");
+  if (!row || e.button !== 0 || e.pointerType === "touch") return;
+  tokenDrag = { row, x0: e.clientX, left: row.scrollLeft, id: e.pointerId, active: false };
+});
+main.addEventListener("pointermove", (e) => {
+  if (!tokenDrag || e.pointerId !== tokenDrag.id) return;
+  const dx = (e.clientX - tokenDrag.x0) / phoneScale();
+  if (!tokenDrag.active) {
+    if (Math.abs(dx) < 6) return;
+    tokenDrag.active = true;
+    try { tokenDrag.row.setPointerCapture(e.pointerId); } catch {}
+    tokenDrag.row.classList.add("dragging");
+  }
+  tokenDrag.row.scrollLeft = tokenDrag.left - dx;
+});
+function endTokenDrag(e) {
+  if (!tokenDrag || e.pointerId !== tokenDrag.id) return;
+  if (tokenDrag.active) { swallowClick = true; tokenDrag.row.classList.remove("dragging"); }
+  tokenDrag = null;
+}
+main.addEventListener("pointerup", endTokenDrag);
+main.addEventListener("pointercancel", endTokenDrag);
+main.addEventListener("wheel", (e) => {
+  const row = e.target.closest(".tokenrow .tokens");
+  if (!row || row.scrollWidth <= row.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+  row.scrollLeft += e.deltaY;
+  e.preventDefault();
+}, { passive: false });
 main.addEventListener("pointerup", endSwipe);
 main.addEventListener("pointercancel", endSwipe);
 // The click that ends a drag isn't a tap on the row.
@@ -3024,6 +3085,29 @@ document.addEventListener("click", (e) => {
   pressed = t;
   if (key) CLICK[key](t.dataset[key], t);
 });
+/* While tags are chosen, a long press on the Filter button shows its menu, as SwiftUI's Menu with a
+   primary action does: a tap still opens the filter (ticket 20). A right-click shows it too, for a
+   mouse. The click that ends a long press doesn't open the filter. */
+let filterHold = null, swallowFilterClick = false;
+function showFilterMenu(btn) {
+  pressed = btn;
+  ask({ style: "sheet", menu: true, buttons: [
+    { label: "Clear All Tags", icon: "tag.xmark", run: () => { state.dayFilter = newDayFilter(); state.focus = "[data-dayfilter]"; announce(dayNews()); } },
+    { label: "Cancel", role: "cancel" }] });
+}
+document.addEventListener("pointerdown", (e) => {
+  swallowFilterClick = false;
+  const btn = e.target.closest("[data-dayfilter].filter-on");
+  if (!btn || e.button !== 0) return;
+  filterHold = setTimeout(() => { filterHold = null; swallowFilterClick = true; showFilterMenu(btn); }, 500);
+}, true);
+for (const t of ["pointerup", "pointercancel"]) document.addEventListener(t, () => { clearTimeout(filterHold); filterHold = null; }, true);
+document.addEventListener("contextmenu", (e) => { const btn = e.target.closest("[data-dayfilter].filter-on"); if (btn) { e.preventDefault(); showFilterMenu(btn); } });
+document.addEventListener("click", (e) => {
+  if (!swallowFilterClick) return;
+  swallowFilterClick = false;
+  if (!e.target.closest(".asheet")) { e.stopPropagation(); e.preventDefault(); }
+}, true);
 /* Focus after Done: the title of the item
    now at the same position in that list, else the one before it, else the section's header. Never a
    Done button. Call it before the item is removed; it works by position, so a reminder with several
@@ -3189,8 +3273,9 @@ document.getElementById("c-type").addEventListener("change", (e) => { if (e.targ
 document.getElementById("c-bold").addEventListener("change", (e) => { if (e.target.checked) document.documentElement.dataset.bold = ""; else delete document.documentElement.dataset.bold; });
 document.getElementById("c-badge-color").addEventListener("change", (e) => { if (e.target.value) document.documentElement.dataset.badge = e.target.value; else delete document.documentElement.dataset.badge; });
 document.getElementById("c-badge-count").addEventListener("change", (e) => { prefs.badgeCount = e.target.value; state.keepScroll = true; render(); });
+document.getElementById("c-axtokens").addEventListener("change", (e) => { if (e.target.value) document.documentElement.dataset.axtokens = e.target.value; else delete document.documentElement.dataset.axtokens; state.keepScroll = true; render(); });
 // A browser can restore a select's value on reload without a change event, so start from what they show.
-for (const id of ["c-badge-color", "c-badge-count"]) document.getElementById(id).dispatchEvent(new Event("change"));
+for (const id of ["c-badge-color", "c-badge-count", "c-axtokens"]) document.getElementById(id).dispatchEvent(new Event("change"));
 document.getElementById("c-reset").addEventListener("click", () => {
   seed();
   settings.defaultPace = { ...DEFAULT_PACE };
