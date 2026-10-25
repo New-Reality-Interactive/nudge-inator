@@ -62,6 +62,23 @@ if grep -rn --include='*.swift' 'AlarmManager\.shared\.authorizationState' App N
   failed+=("alarm-authorization-read")
 fi
 
+# App/Resources/PrivacyInfo.xcprivacy gives UserDefaults the reason CA92.1: the app reading its own
+# standard defaults. A suite would be a different reason (1C8F.1 for the App Group's), and the widget
+# has no manifest, so a UserDefaults there would be an undeclared required reason API. Shipped
+# sources only: the tests make suites on purpose. NudgeShared counts as the widget's, which links it.
+step "UserDefaults stays within the privacy manifest"
+defaults_ok=true
+if grep -rn --include='*.swift' 'UserDefaults(suiteName:' App NudgeWidgets Packages/NudgeShared Packages/NudgeEngine/Sources; then
+  defaults_ok=false
+fi
+if grep -rn --include='*.swift' 'UserDefaults' NudgeWidgets Packages/NudgeShared; then
+  defaults_ok=false
+fi
+if ! $defaults_ok; then
+  echo "FAIL: App/Resources/PrivacyInfo.xcprivacy declares UserDefaults as CA92.1 (the app's own standard defaults) and the widget has no manifest: update the manifest first" >&2
+  failed+=("userdefaults-manifest")
+fi
+
 # xcodebuild, not `swift test`: SwiftPM's command line copies the engine's String Catalog without
 # compiling it, so every string would fall back to its key and plural variants would never apply.
 step "xcodebuild test (NudgeEngine, macOS)"

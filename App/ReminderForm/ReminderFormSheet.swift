@@ -383,6 +383,7 @@ struct RepeatSummarySentence: View {
     }
 }
 
+#if DEBUG
 #Preview("New") {
     ReminderFormSheet(form: .preview())
 }
@@ -400,3 +401,4 @@ struct RepeatSummarySentence: View {
 #Preview("Locked") {
     ReminderFormSheet(form: .previewNudging())
 }
+#endif

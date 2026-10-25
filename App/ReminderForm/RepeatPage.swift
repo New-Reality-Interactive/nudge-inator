@@ -93,6 +93,7 @@ struct RepeatLockSection: View {
     }
 }
 
+#if DEBUG
 #Preview("Preset") {
     NavigationStack {
         RepeatPage(form: .preview())
@@ -105,3 +106,4 @@ struct RepeatLockSection: View {
     }
     .preferredColorScheme(.dark)
 }
+#endif

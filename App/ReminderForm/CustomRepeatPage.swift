@@ -292,6 +292,7 @@ extension RepeatRule.Frequency {
     }
 }
 
+#if DEBUG
 #Preview("Weekly") {
     NavigationStack {
         CustomRepeatPage(form: .previewCustom(from: .everyTwoWeeks))
@@ -317,3 +318,4 @@ extension RepeatRule.Frequency {
         CustomRepeatPage(form: .previewNudging())
     }
 }
+#endif

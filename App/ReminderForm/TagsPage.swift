@@ -61,6 +61,7 @@ struct TagsPage: View {
     }
 }
 
+#if DEBUG
 #Preview("Tags") {
     NavigationStack {
         TagsPage(form: .preview(tags: ["home", "money", "errands"]))
@@ -73,3 +74,4 @@ struct TagsPage: View {
     }
     .environment(\.dynamicTypeSize, .accessibility5)
 }
+#endif

@@ -175,6 +175,7 @@ private struct ComingUpHeader: View {
     }
 }
 
+#if DEBUG
 #Preview("Light") {
     NowTab(state: .ready, path: .constant([]), preview: .preview())
 }
@@ -196,3 +197,4 @@ private struct ComingUpHeader: View {
 #Preview("Empty") {
     NowTab(state: .ready, path: .constant([]))
 }
+#endif

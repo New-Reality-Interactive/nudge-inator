@@ -173,6 +173,7 @@ private struct MyDayList: View {
     }
 }
 
+#if DEBUG
 #Preview("Light") {
     MyDayTab(state: .ready, path: .constant([]), previewEngine: .myDayPreview())
 }
@@ -194,3 +195,4 @@ private struct MyDayList: View {
 #Preview("Empty") {
     MyDayTab(state: .ready, path: .constant([]))
 }
+#endif
