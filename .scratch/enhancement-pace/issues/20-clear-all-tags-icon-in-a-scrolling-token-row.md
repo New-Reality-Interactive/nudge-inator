@@ -4,7 +4,7 @@
 
 **Blocked by:** 19 (`19-filter-symbol-closer-to-the-tag-symbol`), for ordering only, not for code. Both tickets edit `App/MyDay/MyDayFilterControls.swift` and `docs/design/DESIGN.md`, so build this one after 19 has merged.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 Raised by Brian, 2026-10-24. Brian decides whether it's ready.
 
