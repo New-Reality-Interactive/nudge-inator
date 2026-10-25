@@ -148,3 +148,15 @@ The run exited 1: `testMyDayClearAllTags` failed in `largest-text` and `largest-
   - The menu criterion's iPhone run.
   - The VoiceOver device check.
 - **Badge criterion ticked:** the `myday-cleared` shots (iOS 27.0, portrait) show no badge and the plain icon after Clear All Tags, and the largest-size shots show no badge with six chosen.
+
+### 2026-10-25: iPhone check list (for a fresh session)
+
+Brian has the iPhone ready. Follow `docs/agents/device-testing.md`: note whether the app is installed first; one check at a time, waiting for Brian's go before each; record the phone and iOS version. Build from this branch (`4757a42` or later).
+
+1. **Layout call:** show Brian six tags at the largest text size, three tags one per row then "+3 more" on its own row. He confirms, or picks "+N more" in place of the third tag. Then tick or change the layout criterion.
+2. **Menu (criterion 4):** with tags chosen, a tap on Filter shows Filter by Tags and Clear All Tags; Filter by Tags opens the sheet; Clear All Tags removes every tag; the same with No Tags; with none chosen a tap opens the sheet. At default and at the largest text size.
+3. **Large Content Viewer:** at an accessibility size, a long press on Filter with tags chosen; what shows, and what lifting the finger does (the menu or nothing, not the sheet without a menu).
+4. **VoiceOver (criterion 6):** the Filter button reads "Filter by Tags" with "N chosen"; both menu items can be reached and activated; tokens read "Remove #tag from the filter"; "+N more" reads "N more tags" and opens the sheet; the group reads "Filtering by"; no token is read twice.
+5. **Badge on the `Menu`:** the badge follows the count as tokens are removed one by one and after Clear All Tags.
+6. **First frame:** choosing tags, watch for the token rows jumping (drawing more rows, then fewer).
+
