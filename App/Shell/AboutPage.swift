@@ -30,16 +30,14 @@ struct AboutPage: View {
                 Text("These pages open in your web browser.", comment: "About page: under the Privacy Policy and Support rows.")
             }
             Section {
-                LabeledContent {
-                    value(build.version)
-                } label: {
-                    Text("Version", comment: "About page: row showing the app's version, such as \"1.1.0\".")
-                }
-                LabeledContent {
-                    value(build.buildNumber)
-                } label: {
-                    Text("Build", comment: "About page: row showing the app's build number, such as \"12\".")
-                }
+                buildInfoRow(
+                    label: Text("Version", comment: "About page: row showing the app's version, such as \"1.1.0\"."),
+                    value: build.version
+                )
+                buildInfoRow(
+                    label: Text("Build", comment: "About page: row showing the app's build number, such as \"12\"."),
+                    value: build.buildNumber
+                )
             } header: {
                 Text("This Build", comment: "About page: header of the section with the app's version and build number.")
             } footer: {
@@ -61,7 +59,21 @@ struct AboutPage: View {
         .accessibilityAddTraits(.isLink)
     }
 
-    private func value(_ text: String?) -> Text {
+    /// On the iPhone, VoiceOver read `LabeledContent`'s label and value as two stops, so the row is
+    /// one element with the label and value set on it ("Version, 1.1.0").
+    private func buildInfoRow(label: Text, value: String?) -> some View {
+        let value = valueText(value)
+        return LabeledContent {
+            value
+        } label: {
+            label
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label)
+        .accessibilityValue(value)
+    }
+
+    private func valueText(_ text: String?) -> Text {
         if let text {
             Text(verbatim: text)
         } else {
