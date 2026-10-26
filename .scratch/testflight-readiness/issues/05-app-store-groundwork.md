@@ -44,3 +44,5 @@ Spec stories 34–41.
   Notes for Brian's edit: "reminder" and "nudge" come from `GLOSSARY.md`; the keywords leave them out because the name and subtitle already carry them. "alarm", "focus" and "silent" name what Relentless and Break through Focus do. "task", "todo", "habit" and "timer" are the words people may search for instead of "reminder"; the glossary avoids "task" for the app's own screens, so these are search terms only. Alternate subtitle, 26: `Nudges until you mark Done`. Plain words, no idioms (story 35).
 
   **Criterion 6.** _(Brian: edit the drafts; the result is recorded here.)_
+
+- 2026-10-25 (Brian, via agent): Pricing and Availability checked in App Store Connect. Price is Free and availability is the United States only. Apple Silicon Mac and Apple Vision Pro availability are off, distribution is Public with the Apple School Manager reduced price off, tax category is App Store software, last-compatible versions are iOS, All. Criterion 3 stays open: the Free Apps agreement is not yet confirmed as the only agreement needed (Business tab). Canada was considered and left out for now.
