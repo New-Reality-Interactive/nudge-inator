@@ -10,7 +10,7 @@ Spec stories 34–41.
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] The redone website spec publishes the support page at `https://newrealityinteractive.com/nudge-inator/support/`, with how to reach Brian and no beta section (the beta is invite-only). Brian records the URL under the spec's Further Notes.
 - [x] Brian submits the age-rating questionnaire with None or No for every topic (confirmed on 2026-10-25), and the resulting rating is recorded under Further Notes.
