@@ -17,6 +17,7 @@
 - [ ] Device check: the Open intent opens the reminder from the alarm. If it doesn't, the `AppIntentsPackage` fix becomes a ticket of its own (spec, "App Intents in the archive").
 - [ ] Device check: Delete All Data, uninstall, then install from TestFlight leaves no AlarmKit alarms behind.
 - [ ] Settings › About on the TestFlight install shows 1.1.0 and the Organizer's build number.
+- [ ] After the first build uploads, an external group exists with the two testers, invited by email (moved from ticket 04, criterion 7; an internal group already exists, which App Store Connect Help says must come first).
 - [ ] The build is submitted to Beta App Review, approved, and added to the external group. Whatever Beta App Review asks about alarms that ring through silent mode and Focus is recorded in the spec (story 23).
 - [ ] A tester sends feedback from the TestFlight app, and Brian reads it in the Organizer or App Store Connect.
 
@@ -29,3 +30,4 @@
 ## Comments
 
 - Ticket 07 (rename `PreviewScheduler`, filed 2026-10-25 from ticket 01's review) is added to `Blocked by`, so it merges before the first archive. `Blocked by` still lists 01–04.
+- 2026-10-25: Ticket 04's criterion 7 (the external group with the two testers) moved here, agreed with Brian. See ticket 04's Comments.
