@@ -18,7 +18,7 @@ Spec stories 12–16.
 - [x] The agent drafts the beta app description, in plain English (U.S.), with the TestFlight-sharing line from spec story 42.
 - [x] Brian enters the test information: the description, the feedback email, the marketing URL `https://newrealityinteractive.com/nudge-inator/`, and the privacy policy URL from ticket 03.
 - [ ] The agent drafts Beta App Review notes (at most 4,000 characters) that name each behavior and how to see it: a reminder nudges until it's marked Done; Relentless reminders ring as AlarmKit alarms through silent mode and Focus; Break through Focus; Time Sensitive nudges; the onboarding permission requests. No sign-in or demo account.
-- [ ] Brian enters the Beta App Review contact details and the notes.
+- [x] Brian enters the Beta App Review contact details and the notes.
 - [ ] An external group exists with the two testers, invited by email.
 
 ## Before you start
@@ -77,3 +77,4 @@ Spec stories 12–16.
 - 2026-10-25 (Brian): Created the app record (criterion 1). He reported no name conflict, so the name stays "Nudge-inator".
 - 2026-10-25 (Brian): Published the App Privacy label (criterion 2). His screenshot shows "Data Not Collected", "Data is not collected from this app", published by him, and the Privacy Policy URL `https://newrealityinteractive.com/nudge-inator/privacy/` set on the same page. The page lists the iOS App as "1.0 Prepare for Submission".
 - 2026-10-25 (Brian): Entered the test information in English (U.S.) (criteria 3 and 4). His PDF of the Test Information page shows the description (965 of 4,000 characters used), a feedback email, the marketing URL and the privacy policy URL, with Save greyed out. The feedback email is not recorded here, by design. Not yet filled: the Beta App Review contact and notes (criterion 6).
+- 2026-10-25 (Brian): Entered the Beta App Review contact and notes (criterion 6). His screenshot shows the contact fields filled (not recorded here, by design), Sign-in required unchecked, the full six-point notes ending with "use Consistent with a 2 minute wait." (1,206 characters left of 4,000), and the page "Saved". The License Agreement field stays empty, so Apple's standard terms apply.
