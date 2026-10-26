@@ -150,7 +150,7 @@ extension HowItNudgesSentence {
 extension HowItNudges {
     /// A strength's ladder from an engine with the given permissions, for previews.
     static func preview(_ strength: Strength, _ permissions: PermissionStates = PermissionStates(alarms: .allowed), breakThroughFocus: Bool = true) -> HowItNudges {
-        Engine(clock: SystemClock(), scheduler: PreviewScheduler(), permissions: permissions)
+        Engine(clock: SystemClock(), scheduler: NoOpScheduler(), permissions: permissions)
             .howItNudges(strength, breakThroughFocus: breakThroughFocus)
     }
 }

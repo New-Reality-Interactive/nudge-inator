@@ -8,13 +8,19 @@ No `tdd`: the ticket has no behaviour, and the compiler and the Release archive 
 
 **Blocked by:** 01.
 
-**Status:** ready-for-agent
+**Status:** resolved
 
-- [ ] No `PreviewScheduler` remains under `App/`, `NudgeWidgets/`, `Packages/` or `NudgeInatorTests/` (a grep shows none).
-- [ ] `NoOpScheduler`'s doc comment says what it does and why it ships in Release.
-- [ ] `PreviewClock` is still inside `#if DEBUG`.
-- [ ] `xcodebuild archive` of the `NudgeInator` scheme in Release succeeds, with no export or upload. This is the check that caught the original failure.
-- [ ] `scripts/test.sh` passes on both simulators.
+- [x] No `PreviewScheduler` remains under `App/`, `NudgeWidgets/`, `Packages/` or `NudgeInatorTests/` (a grep shows none).
+- [x] `NoOpScheduler`'s doc comment says what it does and why it ships in Release.
+- [x] `PreviewClock` is still inside `#if DEBUG`.
+- [x] `xcodebuild archive` of the `NudgeInator` scheme in Release succeeds, with no export or upload. This is the check that caught the original failure.
+- [x] `scripts/test.sh` passes on both simulators.
+
+## Before you start
+
+- Builds on: ticket 01: it took `#if DEBUG` off `PreviewScheduler` so the Release archive compiles; its Comments say why the rename was chosen. Tickets 02–05 left nothing this one needs.
+- Watch for: `PreviewClock` stays under `#if DEBUG`. The archive check is `xcodebuild archive` of the `NudgeInator` scheme in Release, with no export or upload.
+- Developer stops: none expected. No `tdd` (the ticket has no behaviour) and no screenshots. Ticket 06, the first build, waits for this to merge.
 
 ## Comments
 

@@ -16,7 +16,7 @@ extension ReminderDetails {
         var reminder = reminder
         let engineTags = tags.map { Tag(name: $0) }
         reminder.tagIDs = engineTags.map(\.id)
-        var engine = Engine(clock: clock, scheduler: PreviewScheduler())
+        var engine = Engine(clock: clock, scheduler: NoOpScheduler())
         engine.update(tags: engineTags)
         engine.update(reminders: [reminder])
         if let pausedAt {

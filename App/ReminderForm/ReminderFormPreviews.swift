@@ -5,7 +5,7 @@ import NudgeEngine
 /// Forms for previews, over an engine with no adapters, so they need no app model.
 extension ReminderForm {
     static func preview(tags: [String] = []) -> ReminderForm {
-        var engine = Engine(clock: PreviewClock(), scheduler: PreviewScheduler())
+        var engine = Engine(clock: PreviewClock(), scheduler: NoOpScheduler())
         engine.update(tags: tags.map { Tag(name: $0) })
         return ReminderForm(engine: { engine }, now: { .now }, defaultPace: .shipped)
     }
@@ -30,7 +30,7 @@ extension ReminderForm {
     }
 
     private static func edit(_ reminder: Reminder) -> ReminderForm {
-        var engine = Engine(clock: PreviewClock(), scheduler: PreviewScheduler())
+        var engine = Engine(clock: PreviewClock(), scheduler: NoOpScheduler())
         engine.update(reminders: [reminder])
         return ReminderForm(engine: { engine }, editing: reminder.id, now: { .now }) ?? preview()
     }

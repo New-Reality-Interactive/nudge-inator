@@ -35,7 +35,7 @@ struct HowItNudgesPage: View {
 
     private var pageContent: HowItNudgesPageContent {
         if let model { return HowItNudgesPageContent(model: model) }
-        return HowItNudgesPageContent(pace: previewDefaultPace.pace, engine: Engine(clock: SystemClock(), scheduler: PreviewScheduler(), permissions: previewPermissions))
+        return HowItNudgesPageContent(pace: previewDefaultPace.pace, engine: Engine(clock: SystemClock(), scheduler: NoOpScheduler(), permissions: previewPermissions))
     }
 }
 

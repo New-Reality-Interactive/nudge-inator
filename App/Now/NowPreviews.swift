@@ -21,7 +21,7 @@ extension NowScreen {
             Reminder(title: "Stretch break", dueTime: ago(60), strength: .firm),
         ]
         let clock = PreviewClock(now: ago(170))
-        var engine = Engine(clock: clock, scheduler: PreviewScheduler())
+        var engine = Engine(clock: clock, scheduler: NoOpScheduler())
         engine.update(tags: [home])
         engine.update(reminders: reminders)
         engine.markDone(reminders[5].id)

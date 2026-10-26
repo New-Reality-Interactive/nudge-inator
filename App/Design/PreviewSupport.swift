@@ -1,9 +1,11 @@
 import Foundation
 import NudgeEngine
 
-/// An adapter that drops every plan, for previews' engines, which need no app model. Not behind
-/// `#if DEBUG`: the How It Nudges page builds such an engine when it has no model.
-struct PreviewScheduler: SchedulerAdapter {
+/// A `SchedulerAdapter` whose `apply(_:)` does nothing, for an engine that has no app model to
+/// schedule for. Not behind `#if DEBUG`: shipping code builds such an engine (the How It Nudges
+/// page when it has no model, and the strength sections' preview helper), so the Release build
+/// needs it.
+struct NoOpScheduler: SchedulerAdapter {
     func apply(_ plan: SchedulePlan) {}
 }
 
