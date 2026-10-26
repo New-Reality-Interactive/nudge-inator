@@ -15,8 +15,8 @@ Spec stories 12–16.
 
 - [x] The app record exists for `com.newrealityinteractive.nudgeinator`: name "Nudge-inator", SKU `nudgeinator`, primary language English (U.S.). If the name is taken, Brian records the name chosen instead, and ticket 05's name drafts follow it.
 - [x] The App Privacy label is "Data Not Collected", and the agent confirms it still matches the app and the manifest.
-- [ ] The agent drafts the beta app description, in plain English (U.S.), with the TestFlight-sharing line from spec story 42.
-- [ ] Brian enters the test information: the description, the feedback email, the marketing URL `https://newrealityinteractive.com/nudge-inator/`, and the privacy policy URL from ticket 03.
+- [x] The agent drafts the beta app description, in plain English (U.S.), with the TestFlight-sharing line from spec story 42.
+- [x] Brian enters the test information: the description, the feedback email, the marketing URL `https://newrealityinteractive.com/nudge-inator/`, and the privacy policy URL from ticket 03.
 - [ ] The agent drafts Beta App Review notes (at most 4,000 characters) that name each behavior and how to see it: a reminder nudges until it's marked Done; Relentless reminders ring as AlarmKit alarms through silent mode and Focus; Break through Focus; Time Sensitive nudges; the onboarding permission requests. No sign-in or demo account.
 - [ ] Brian enters the Beta App Review contact details and the notes.
 - [ ] An external group exists with the two testers, invited by email.
@@ -76,3 +76,4 @@ Spec stories 12–16.
   **What Brian does next.** Criterion 1 (app record), then enter the label from criterion 2, the description and test information (criterion 4: description, feedback email, marketing URL `https://newrealityinteractive.com/nudge-inator/`, privacy policy URL `https://newrealityinteractive.com/nudge-inator/privacy/`), then the review contact and notes (criterion 6), then the external group (criterion 7). Enter each URL once: a field with data can be changed but not cleared. Report back what App Store Connect said, including whether the name was taken, and the agent records it here and in the spec's Further Notes.
 - 2026-10-25 (Brian): Created the app record (criterion 1). He reported no name conflict, so the name stays "Nudge-inator".
 - 2026-10-25 (Brian): Published the App Privacy label (criterion 2). His screenshot shows "Data Not Collected", "Data is not collected from this app", published by him, and the Privacy Policy URL `https://newrealityinteractive.com/nudge-inator/privacy/` set on the same page. The page lists the iOS App as "1.0 Prepare for Submission".
+- 2026-10-25 (Brian): Entered the test information in English (U.S.) (criteria 3 and 4). His PDF of the Test Information page shows the description (965 of 4,000 characters used), a feedback email, the marketing URL and the privacy policy URL, with Save greyed out. The feedback email is not recorded here, by design. Not yet filled: the Beta App Review contact and notes (criterion 6).
