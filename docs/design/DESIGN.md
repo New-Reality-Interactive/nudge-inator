@@ -181,7 +181,7 @@ components:
 
 This is the design contract for implementation stories. A story that draws UI cites a section here
 and meets it. It was extracted from the 2026-10-03 design doc and pruned to the
-[first-version spec](../../.scratch/first-version/spec.md). Vocabulary comes from
+[first-version spec](https://github.com/New-Reality-Interactive/nudge-inator/blob/tickets-archive/.scratch/first-version/spec.md). Vocabulary comes from
 [GLOSSARY.md](../../GLOSSARY.md): say Done, Nudging, Missed, Strength and Urgency, not synonyms.
 
 **Precedence.** This doc owns tokens and rules: colors, type, spacing, shapes, and "one color, one
@@ -192,7 +192,7 @@ is the as-built one changed for pace; the enhancement-pace tickets build to it. 
 on a token value, this doc wins and the mockup gets fixed.
 If they disagree on a screen's layout, the mockup wins: the proposed one, for what it changes. The mockup's HTML still carries code from
 the 2026-10-02 mockup (Snooze, quiet hours, Live Activity); anything the
-[spec](../../.scratch/first-version/spec.md) puts out of scope is not a requirement.
+[spec](https://github.com/New-Reality-Interactive/nudge-inator/blob/tickets-archive/.scratch/first-version/spec.md) puts out of scope is not a requirement.
 
 ## Brand & Style
 
