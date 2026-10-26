@@ -10,11 +10,12 @@ tool at its step.
 
 ## Start
 
-The developer runs `/clear` and types `/implement .scratch/<feature>/issues/<NN>-<slug>.md`.
+The developer runs `/clear` and types `/implement #<n>`, `<n>` being the ticket's issue number.
 Everything else the ticket needs is in the ticket, under **Before you start** (below).
 
-1. Check every ticket in `Blocked by` is `resolved` on `main`. If one isn't, stop and say which.
-2. Branch from an up-to-date `main`: `<feature>-<NN>-<slug>`, such as `pace-02-as-built-mockup`.
+1. Check every issue blocking it is closed (`issue-tracker.md`, Blocked by). If one isn't, stop and say which.
+2. Branch from an up-to-date `main`: `<feature>-<n>-<slug>`, such as `tags-83-filter-sheet`, `<feature>`
+   being the slug in the milestone's description.
 3. Read the ticket, its Before you start, the Comments of the tickets it builds on, and the spec
    sections it names (`review.md`, Session size).
 
@@ -47,30 +48,29 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
 9. A change that calls for the full screenshot walk (`device-testing.md`, Simulator
    screenshots) runs it now. Rerun `scripts/test.sh` if anything changed since its last run, push, then run
    `mattpocock-skills:pr` and open the PR to `main` with `gh pr create`, titled
-   `Ticket <NN> (<folder>): <short summary>`, `<folder>` being the ticket's folder under
-   `.scratch/`. A hook refuses a body without the `pr` skill's sections. Give the developer the
+   `#<n> (<feature>): <short summary>`, with `Closes #<n>` as the body's last line before the
+   attribution, so the merge closes the ticket. A hook refuses a body without the `pr` skill's sections. Give the developer the
    link and stop.
 
 ## When the PR is merged
 
 10. `git switch main && git pull`, check the merge commit is there, and delete the local branch
     with `git branch -d`. If the ticket went sideways, suggest `/retro` before `/clear`.
-11. Find the next ticket: the lowest-numbered open ticket in the feature whose `Blocked by`
-    tickets are all resolved. If none is left, the feature is ready to release: follow
+11. Find the next ticket: the lowest-numbered open sub-issue of the feature's spec with no open
+    blocker. If none is left, the feature is ready to release: follow
     `issue-tracker.md`, Features and versions, and tell the developer which steps are theirs.
-12. Write its **Before you start** into the ticket, uncommitted (the ticket's own branch commits
-    it), and give the developer one line, then stop:
+12. Add its **Before you start** to the issue body, and give the developer one line, then stop:
 
-    > Run `/clear`, `/model` → <model>, effort <level> (<why>), then `/implement <ticket path>`.
+    > Run `/clear`, `/model` → <model>, effort <level> (<why>), then `/implement #<n>`.
 
 ### Before you start
 
-A section in the ticket, above `## Comments`, written when the ticket before it merges:
+A section at the end of the issue body, written when the ticket before it merges:
 
 ```markdown
 ## Before you start
 
-- Builds on: ticket <NN>: <what it left that this one needs, and where in its Comments>.
+- Builds on: #<n>: <what it left that this one needs, and which of its comments says so>.
 - Watch for: <anything earlier tickets found that this one could trip on>.
 - Developer stops: <seams to agree | simulator check | device check | approval of X>.
 ```
