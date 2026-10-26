@@ -7,9 +7,9 @@
 **Status:** ready-for-human
 
 - [x] What to Test in `docs/release-notes/1.1.0-testflight.md` says, in plain words: that the build lasts 90 days; what TestFlight shares with the developer (crash logs and usage information collected automatically with no opt-out, plus any feedback sent); and that a feedback screenshot shows whatever is on screen, reminder text included. Brian approves it.
-- [ ] `scripts/test.sh` passes on both simulators on the commit that's archived.
+- [x] `scripts/test.sh` passes on both simulators on the commit that's archived.
 - [ ] Brian archives the `NudgeInator` scheme, runs Validate App, and distributes with "TestFlight & App Store", with automatic signing, symbol upload and "Manage version and build number" on. A validation failure's message goes in Comments.
-- [ ] Comments has one line per uploaded build: build number, date, commit, and what changed since the last build.
+- [x] Comments has one line per uploaded build: build number, date, commit, and what changed since the last build.
 - [ ] Brian pastes What to Test into the build.
 - [ ] Device check: a Relentless reminder rings as an alarm at its due time under a Focus on the TestFlight install.
 - [ ] Device check: a Gentle reminder's Time Sensitive nudge arrives on the TestFlight install.
@@ -33,3 +33,5 @@
 - 2026-10-25: Ticket 04's criterion 7 (the external group with the two testers) moved here, agreed with Brian. See ticket 04's Comments.
 - 2026-10-25: What to Test drafted in `docs/release-notes/1.1.0-testflight.md` (90 days, what TestFlight shares, screenshots show reminder text). Awaiting Brian's approval, so criterion 1 stays open. `scripts/test.sh` passed on both simulators on the branch (docs-only change over `main`); criterion 2 stays open until it's confirmed on the commit Brian archives. The sentence on tapping Share Beta Feedback after a screenshot isn't confirmed by Apple's docs yet: Brian checks it on the TestFlight app.
 - 2026-10-25: Brian approved What to Test as drafted (criterion 1 ticked).
+- 2026-10-25: `scripts/test.sh` passed on both simulators on b3c4406, the commit archived (criterion 2 ticked). Validate App succeeded. Brian chose Xcode 27's "App Store Connect" method (the "TestFlight & App Store" one; it showed no options screen), so criterion 3 stays open: automatic signing, symbol upload and "Manage version and build number" can't be confirmed from it.
+- Build 1.1.0 (1), 2026-10-25, commit b3c4406: the first build; nothing earlier to compare with.
