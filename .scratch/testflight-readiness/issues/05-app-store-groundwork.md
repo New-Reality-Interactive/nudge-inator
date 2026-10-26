@@ -14,7 +14,7 @@ Spec stories 34–41.
 
 - [ ] The redone website spec publishes the support page at `https://newrealityinteractive.com/nudge-inator/support/`, with how to reach Brian and no beta section (the beta is invite-only). Brian records the URL under the spec's Further Notes.
 - [ ] Brian submits the age-rating questionnaire with None or No for every topic (confirmed on 2026-10-25), and the resulting rating is recorded under Further Notes.
-- [ ] The price is free and availability is the United States only, and the Free Apps agreement is confirmed as the only agreement needed.
+- [x] The price is free and availability is the United States only, and the Free Apps agreement is confirmed as the only agreement needed.
 - [x] The spec notes that premium add-ons later need the Paid Apps agreement, banking and tax, and a new country needs its localization first (already under Implementation Decisions, "Pricing and countries"; checked, not rewritten).
 - [x] The agent drafts the App Store name, subtitle and keywords in English (U.S.) from `GLOSSARY.md`: the name 2–30 characters, the subtitle at most 30, the keywords at most 100 characters in total. The drafts say which is the App Store name and which is the home-screen name (`CFBundleDisplayName`, "Nudge-inator").
 - [ ] Brian edits the drafts, and the result is recorded in Comments.
@@ -46,3 +46,5 @@ Spec stories 34–41.
   **Criterion 6.** _(Brian: edit the drafts; the result is recorded here.)_
 
 - 2026-10-25 (Brian, via agent): Pricing and Availability checked in App Store Connect. Price is Free and availability is the United States only. Apple Silicon Mac and Apple Vision Pro availability are off, distribution is Public with the Apple School Manager reduced price off, tax category is App Store software, last-compatible versions are iOS, All. Criterion 3 stays open: the Free Apps agreement is not yet confirmed as the only agreement needed (Business tab). Canada was considered and left out for now.
+
+- 2026-10-25 (Brian, via agent): Business tab checked. The Free Apps Agreement is Active (Oct 14, 2026 – Oct 13, 2027), so it meets what a free app needs. The Paid Apps Agreement is also Active (Oct 16, 2026), with a bank account and a U.S. W-9 on file, so the later premium add-ons won't wait on those. Nothing is pending. Criterion 3 ticked.
