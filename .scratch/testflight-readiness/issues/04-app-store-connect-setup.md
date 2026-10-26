@@ -13,7 +13,7 @@ Spec stories 12–16.
 
 **Status:** ready-for-human
 
-- [ ] The app record exists for `com.newrealityinteractive.nudgeinator`: name "Nudge-inator", SKU `nudgeinator`, primary language English (U.S.). If the name is taken, Brian records the name chosen instead, and ticket 05's name drafts follow it.
+- [x] The app record exists for `com.newrealityinteractive.nudgeinator`: name "Nudge-inator", SKU `nudgeinator`, primary language English (U.S.). If the name is taken, Brian records the name chosen instead, and ticket 05's name drafts follow it.
 - [ ] The App Privacy label is "Data Not Collected", and the agent confirms it still matches the app and the manifest.
 - [ ] The agent drafts the beta app description, in plain English (U.S.), with the TestFlight-sharing line from spec story 42.
 - [ ] Brian enters the test information: the description, the feedback email, the marketing URL `https://newrealityinteractive.com/nudge-inator/`, and the privacy policy URL from ticket 03.
@@ -74,3 +74,4 @@ Spec stories 12–16.
   (About 3,000 characters.)
 
   **What Brian does next.** Criterion 1 (app record), then enter the label from criterion 2, the description and test information (criterion 4: description, feedback email, marketing URL `https://newrealityinteractive.com/nudge-inator/`, privacy policy URL `https://newrealityinteractive.com/nudge-inator/privacy/`), then the review contact and notes (criterion 6), then the external group (criterion 7). Enter each URL once: a field with data can be changed but not cleared. Report back what App Store Connect said, including whether the name was taken, and the agent records it here and in the spec's Further Notes.
+- 2026-10-25 (Brian): Created the app record (criterion 1). He reported no name conflict, so the name stays "Nudge-inator".
