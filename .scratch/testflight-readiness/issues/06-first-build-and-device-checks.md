@@ -6,7 +6,7 @@
 
 **Status:** ready-for-human
 
-- [ ] What to Test in `docs/release-notes/1.1.0-testflight.md` says, in plain words: that the build lasts 90 days; what TestFlight shares with the developer (crash logs and usage information collected automatically with no opt-out, plus any feedback sent); and that a feedback screenshot shows whatever is on screen, reminder text included. Brian approves it.
+- [x] What to Test in `docs/release-notes/1.1.0-testflight.md` says, in plain words: that the build lasts 90 days; what TestFlight shares with the developer (crash logs and usage information collected automatically with no opt-out, plus any feedback sent); and that a feedback screenshot shows whatever is on screen, reminder text included. Brian approves it.
 - [ ] `scripts/test.sh` passes on both simulators on the commit that's archived.
 - [ ] Brian archives the `NudgeInator` scheme, runs Validate App, and distributes with "TestFlight & App Store", with automatic signing, symbol upload and "Manage version and build number" on. A validation failure's message goes in Comments.
 - [ ] Comments has one line per uploaded build: build number, date, commit, and what changed since the last build.
@@ -32,3 +32,4 @@
 - Ticket 07 (rename `PreviewScheduler`, filed 2026-10-25 from ticket 01's review) is added to `Blocked by`, so it merges before the first archive. `Blocked by` still lists 01–04.
 - 2026-10-25: Ticket 04's criterion 7 (the external group with the two testers) moved here, agreed with Brian. See ticket 04's Comments.
 - 2026-10-25: What to Test drafted in `docs/release-notes/1.1.0-testflight.md` (90 days, what TestFlight shares, screenshots show reminder text). Awaiting Brian's approval, so criterion 1 stays open. `scripts/test.sh` passed on both simulators on the branch (docs-only change over `main`); criterion 2 stays open until it's confirmed on the commit Brian archives. The sentence on tapping Share Beta Feedback after a screenshot isn't confirmed by Apple's docs yet: Brian checks it on the TestFlight app.
+- 2026-10-25: Brian approved What to Test as drafted (criterion 1 ticked).
