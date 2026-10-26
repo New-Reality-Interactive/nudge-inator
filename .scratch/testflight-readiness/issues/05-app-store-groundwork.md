@@ -17,7 +17,7 @@ Spec stories 34–41.
 - [x] The price is free and availability is the United States only, and the Free Apps agreement is confirmed as the only agreement needed.
 - [x] The spec notes that premium add-ons later need the Paid Apps agreement, banking and tax, and a new country needs its localization first (already under Implementation Decisions, "Pricing and countries"; checked, not rewritten).
 - [x] The agent drafts the App Store name, subtitle and keywords in English (U.S.) from `GLOSSARY.md`: the name 2–30 characters, the subtitle at most 30, the keywords at most 100 characters in total. The drafts say which is the App Store name and which is the home-screen name (`CFBundleDisplayName`, "Nudge-inator").
-- [ ] Brian edits the drafts, and the result is recorded in Comments.
+- [x] Brian edits the drafts, and the result is recorded in Comments.
 
 ## Before you start
 
@@ -52,3 +52,11 @@ Spec stories 34–41.
 - 2026-10-25 (Brian, via agent): Age ratings are set. The Age Ratings page shows Age 4+ for 172 countries or regions (the lowest rating, as the spec expected), General Audiences for Brazil, and All Ages for South Korea and Vietnam. The rating is recorded under the spec's Further Notes. Criterion 2 ticked. The screenshot was cropped: it didn't show the United States in the list, and it didn't show the questionnaire answers, so those rest on Brian's confirmation of None or No for every topic.
 
 - 2026-10-25 (Brian, via agent): Support page published. The agent fetched `https://newrealityinteractive.com/nudge-inator/support/`: HTTP 200, no redirect, how to reach Brian by email, and no mention of the beta or TestFlight. The URL is recorded in the spec's Further Notes. Criterion 1 ticked.
+
+- 2026-10-25 (Brian, via agent): Final text, entered in App Store Connect (English U.S.) and read back from his PDF of the iOS App Version 1.1.0 page. Brian kept all three drafts unchanged. The version page now holds the matching version, 1.1.0.
+  - App Store name: `Nudge-inator` (App Information; the home-screen name stays `CFBundleDisplayName`, "Nudge-inator").
+  - Subtitle: `Reminders that keep nudging` (27 of 30).
+  - Keywords: `alarm,repeat,recurring,focus,silent,task,todo,habit,timer,persistent,urgent,alert,notify,schedule` (97 of 100).
+  - Support URL: `https://newrealityinteractive.com/nudge-inator/support/`.
+  - Marketing URL: `https://newrealityinteractive.com/nudge-inator` on the version page, without the trailing slash that ticket 04 used for TestFlight. The bare form redirects to the slash form, so both work. Criterion 6 ticked.
+  - Left for the App Store submission spec: description, promotional text, copyright, screenshots, release option (agent suggests manual), App Review contact and notes.
