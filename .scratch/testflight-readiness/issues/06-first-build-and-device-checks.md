@@ -6,11 +6,11 @@
 
 **Status:** ready-for-human
 
-- [x] What to Test in `docs/release-notes/1.1.0-testflight.md` says, in plain words: that the build lasts 90 days; what TestFlight shares with the developer (crash logs and usage information collected automatically with no opt-out, plus any feedback sent); and that a feedback screenshot shows whatever is on screen, reminder text included. Brian approves it.
+- [ ] What to Test in `docs/release-notes/1.1.0-testflight.md` says, in plain words: that the build lasts 90 days; what TestFlight shares with the developer (crash logs and usage information collected automatically with no opt-out, plus any feedback sent); and that a feedback screenshot shows whatever is on screen, reminder text included. Brian approves it.
 - [x] `scripts/test.sh` passes on both simulators on the commit that's archived.
 - [x] Brian archives the `NudgeInator` scheme, runs Validate App, and distributes with "TestFlight & App Store", with automatic signing, symbol upload and "Manage version and build number" on. A validation failure's message goes in Comments.
 - [x] Comments has one line per uploaded build: build number, date, commit, and what changed since the last build.
-- [x] Brian pastes What to Test into the build.
+- [ ] Brian pastes What to Test into the build.
 - [x] Device check: a Relentless reminder rings as an alarm at its due time under a Focus on the TestFlight install.
 - [x] Device check: a Gentle reminder's Time Sensitive nudge arrives on the TestFlight install.
 - [x] Device check: the widget extension's alarm presentation and its Open button work.
@@ -42,3 +42,4 @@
 - 2026-10-25: Device check on the TestFlight install (iPhone 15, iOS 27.0.1; Do Not Disturb on, silent switch on): a Relentless reminder due 9:46 PM, then Delete All Data, uninstall, reinstall from TestFlight. Nothing rang and no notification arrived afterwards, so no alarm was left behind (criterion 18 ticked).
 - 2026-10-25: Brian confirmed criterion 3: the upload used automatic signing, symbol upload and "Manage version and build number" (the options screen didn't show them).
 - 2026-10-25: Brian confirmed he pasted What to Test into the build (criterion 5 ticked).
+- 2026-10-26: Brian asked for What to Test to separate steps for new users from steps for people who had the app before. Rewritten in `docs/release-notes/1.1.0-testflight.md`. The 2026-10-25 approval was of the earlier wording, so criterion 1 is open again for the new text, and criterion 5 (pasted) is open until Brian pastes the new text into build 1.1.0 (1), which App Store Connect lets him edit without a new build.
