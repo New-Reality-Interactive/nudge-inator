@@ -11,10 +11,10 @@
 - [ ] Brian archives the `NudgeInator` scheme, runs Validate App, and distributes with "TestFlight & App Store", with automatic signing, symbol upload and "Manage version and build number" on. A validation failure's message goes in Comments.
 - [x] Comments has one line per uploaded build: build number, date, commit, and what changed since the last build.
 - [ ] Brian pastes What to Test into the build.
-- [ ] Device check: a Relentless reminder rings as an alarm at its due time under a Focus on the TestFlight install.
+- [x] Device check: a Relentless reminder rings as an alarm at its due time under a Focus on the TestFlight install.
 - [ ] Device check: a Gentle reminder's Time Sensitive nudge arrives on the TestFlight install.
-- [ ] Device check: the widget extension's alarm presentation and its Open button work.
-- [ ] Device check: the Open intent opens the reminder from the alarm. If it doesn't, the `AppIntentsPackage` fix becomes a ticket of its own (spec, "App Intents in the archive").
+- [x] Device check: the widget extension's alarm presentation and its Open button work.
+- [x] Device check: the Open intent opens the reminder from the alarm. If it doesn't, the `AppIntentsPackage` fix becomes a ticket of its own (spec, "App Intents in the archive").
 - [ ] Device check: Delete All Data, uninstall, then install from TestFlight leaves no AlarmKit alarms behind.
 - [x] Settings › About on the TestFlight install shows 1.1.0 and the Organizer's build number.
 - [x] After the first build uploads, an external group exists with the two testers, invited by email (moved from ticket 04, criterion 7; an internal group already exists, which App Store Connect Help says must come first).
@@ -37,3 +37,4 @@
 - Build 1.1.0 (1), 2026-10-25, commit b3c4406: the first build; nothing earlier to compare with.
 - 2026-10-25: Build 1.1.0 (1) is in the internal group (Brian installed it from TestFlight) and shows Waiting for Review in the external group. Brian invited the two testers by email (criterion 11 ticked). Beta App Review approval is still to come (criterion 12).
 - 2026-10-25: Device check, Settings › About on the TestFlight install (iPhone 15, iOS 27.0.1) shows 1.1.0 and build 1, matching App Store Connect's 1.1.0 (1) (criterion 10 ticked).
+- 2026-10-25: Device check on the TestFlight install (iPhone 15, iOS 27.0.1; Do Not Disturb on, silent switch on, volume 75%): a Relentless reminder with Break Through Focus rang audibly at its due time. The alarm showed title, time, app name, an Open button and a Stop slider. Open, then Face ID, opened the reminder's detail screen. That ticks criteria 6, 7 and 8; the `AppIntentsPackage` fix isn't needed. Brian cleaned up with Delete All Data.
