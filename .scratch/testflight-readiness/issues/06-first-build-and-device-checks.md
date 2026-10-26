@@ -10,7 +10,7 @@
 - [x] `scripts/test.sh` passes on both simulators on the commit that's archived.
 - [x] Brian archives the `NudgeInator` scheme, runs Validate App, and distributes with "TestFlight & App Store", with automatic signing, symbol upload and "Manage version and build number" on. A validation failure's message goes in Comments.
 - [x] Comments has one line per uploaded build: build number, date, commit, and what changed since the last build.
-- [ ] Brian pastes What to Test into the build.
+- [x] Brian pastes What to Test into the build.
 - [x] Device check: a Relentless reminder rings as an alarm at its due time under a Focus on the TestFlight install.
 - [x] Device check: a Gentle reminder's Time Sensitive nudge arrives on the TestFlight install.
 - [x] Device check: the widget extension's alarm presentation and its Open button work.
@@ -41,3 +41,4 @@
 - 2026-10-25: Device check on the TestFlight install (iPhone 15, iOS 27.0.1; Do Not Disturb on, silent switch on): a Gentle reminder with a Consistent 2 min pace and Break Through Focus on delivered its nudge 5 (first of the Time Sensitive nudges) through Do Not Disturb, with no sound because the silent switch was on (criterion 15 ticked). The first try, with Break Through Focus off, was held as an ordinary notification: with the switch off the engine never sends Time Sensitive (`NudgingStatus.nudgeDelivery`), so that run was a wrong setup, not a failure. The check's wording should have said Break Through Focus on.
 - 2026-10-25: Device check on the TestFlight install (iPhone 15, iOS 27.0.1; Do Not Disturb on, silent switch on): a Relentless reminder due 9:46 PM, then Delete All Data, uninstall, reinstall from TestFlight. Nothing rang and no notification arrived afterwards, so no alarm was left behind (criterion 18 ticked).
 - 2026-10-25: Brian confirmed criterion 3: the upload used automatic signing, symbol upload and "Manage version and build number" (the options screen didn't show them).
+- 2026-10-25: Brian confirmed he pasted What to Test into the build (criterion 5 ticked).
