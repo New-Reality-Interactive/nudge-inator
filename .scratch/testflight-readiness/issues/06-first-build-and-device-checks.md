@@ -4,7 +4,7 @@
 
 **Blocked by:** 01, 02, 03, 04, 07.
 
-**Status:** ready-for-human
+**Status:** resolved
 
 - [x] What to Test in `docs/release-notes/1.1.0-testflight.md` says, in plain words: that the build lasts 90 days; what TestFlight shares with the developer (crash logs and usage information collected automatically with no opt-out, plus any feedback sent); and that a feedback screenshot shows whatever is on screen, reminder text included. Brian approves it.
 - [x] `scripts/test.sh` passes on both simulators on the commit that's archived.
@@ -19,7 +19,7 @@
 - [x] Settings › About on the TestFlight install shows 1.1.0 and the Organizer's build number.
 - [x] After the first build uploads, an external group exists with the two testers, invited by email (moved from ticket 04, criterion 7; an internal group already exists, which App Store Connect Help says must come first).
 - [x] The build is submitted to Beta App Review, approved, and added to the external group. Whatever Beta App Review asks about alarms that ring through silent mode and Focus is recorded in the spec (story 23).
-- [ ] A tester sends feedback from the TestFlight app, and Brian reads it in the Organizer or App Store Connect.
+- [x] An external tester installs the build from TestFlight. (Reworded 2026-10-26: it required a tester's TestFlight feedback read by Brian. See Comments.)
 
 ## Before you start
 
@@ -46,3 +46,4 @@
 - 2026-10-26: Brian approved the new What to Test wording (criterion 1 ticked again). Criterion 5 stays open until he pastes it into the build.
 - 2026-10-26: Brian pasted the new What to Test into build 1.1.0 (1) (Test Details, shown as Saved); criterion 5 ticked.
 - 2026-10-26: Beta App Review approved build 1.1.0 (1) and it is in the external group, with six testers invited, one of whom had installed it. Apple asked nothing about alarms through silent mode and Focus, so there is nothing to record in the spec for story 23 (criterion 12 ticked).
+- 2026-10-26: Agreed with Brian: closing this ticket and the feature no longer waits for tester feedback. Criterion 13 is reworded from "A tester sends feedback from the TestFlight app, and Brian reads it in the Organizer or App Store Connect" to "An external tester installs the build from TestFlight", which is met: one invited tester has installed it. The feedback route (spec stories 30 and 42: Share Beta Feedback, read in App Store Connect) wasn't exercised. The one piece of feedback so far, a request for a badge count of nudging reminders on the app icon, came outside TestFlight. Brian owns any later feedback; a fix it needs is its own ticket.
