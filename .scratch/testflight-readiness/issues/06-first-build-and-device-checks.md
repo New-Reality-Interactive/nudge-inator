@@ -16,7 +16,7 @@
 - [ ] Device check: the widget extension's alarm presentation and its Open button work.
 - [ ] Device check: the Open intent opens the reminder from the alarm. If it doesn't, the `AppIntentsPackage` fix becomes a ticket of its own (spec, "App Intents in the archive").
 - [ ] Device check: Delete All Data, uninstall, then install from TestFlight leaves no AlarmKit alarms behind.
-- [ ] Settings › About on the TestFlight install shows 1.1.0 and the Organizer's build number.
+- [x] Settings › About on the TestFlight install shows 1.1.0 and the Organizer's build number.
 - [x] After the first build uploads, an external group exists with the two testers, invited by email (moved from ticket 04, criterion 7; an internal group already exists, which App Store Connect Help says must come first).
 - [ ] The build is submitted to Beta App Review, approved, and added to the external group. Whatever Beta App Review asks about alarms that ring through silent mode and Focus is recorded in the spec (story 23).
 - [ ] A tester sends feedback from the TestFlight app, and Brian reads it in the Organizer or App Store Connect.
@@ -36,3 +36,4 @@
 - 2026-10-25: `scripts/test.sh` passed on both simulators on b3c4406, the commit archived (criterion 2 ticked). Validate App succeeded. Brian chose Xcode 27's "App Store Connect" method (the "TestFlight & App Store" one; it showed no options screen), so criterion 3 stays open: automatic signing, symbol upload and "Manage version and build number" can't be confirmed from it.
 - Build 1.1.0 (1), 2026-10-25, commit b3c4406: the first build; nothing earlier to compare with.
 - 2026-10-25: Build 1.1.0 (1) is in the internal group (Brian installed it from TestFlight) and shows Waiting for Review in the external group. Brian invited the two testers by email (criterion 11 ticked). Beta App Review approval is still to come (criterion 12).
+- 2026-10-25: Device check, Settings › About on the TestFlight install (iPhone 15, iOS 27.0.1) shows 1.1.0 and build 1, matching App Store Connect's 1.1.0 (1) (criterion 10 ticked).
