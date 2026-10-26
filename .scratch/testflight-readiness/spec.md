@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: released
 Version: 1.1.0
 
 # Nudge-inator: TestFlight readiness
