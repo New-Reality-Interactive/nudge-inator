@@ -6,7 +6,7 @@
 
 **Status:** ready-for-human
 
-- [ ] What to Test in `docs/release-notes/1.1.0-testflight.md` says, in plain words: that the build lasts 90 days; what TestFlight shares with the developer (crash logs and usage information collected automatically with no opt-out, plus any feedback sent); and that a feedback screenshot shows whatever is on screen, reminder text included. Brian approves it.
+- [x] What to Test in `docs/release-notes/1.1.0-testflight.md` says, in plain words: that the build lasts 90 days; what TestFlight shares with the developer (crash logs and usage information collected automatically with no opt-out, plus any feedback sent); and that a feedback screenshot shows whatever is on screen, reminder text included. Brian approves it.
 - [x] `scripts/test.sh` passes on both simulators on the commit that's archived.
 - [x] Brian archives the `NudgeInator` scheme, runs Validate App, and distributes with "TestFlight & App Store", with automatic signing, symbol upload and "Manage version and build number" on. A validation failure's message goes in Comments.
 - [x] Comments has one line per uploaded build: build number, date, commit, and what changed since the last build.
@@ -43,3 +43,4 @@
 - 2026-10-25: Brian confirmed criterion 3: the upload used automatic signing, symbol upload and "Manage version and build number" (the options screen didn't show them).
 - 2026-10-25: Brian confirmed he pasted What to Test into the build (criterion 5 ticked).
 - 2026-10-26: Brian asked for What to Test to separate steps for new users from steps for people who had the app before. Rewritten in `docs/release-notes/1.1.0-testflight.md`. The 2026-10-25 approval was of the earlier wording, so criterion 1 is open again for the new text, and criterion 5 (pasted) is open until Brian pastes the new text into build 1.1.0 (1), which App Store Connect lets him edit without a new build.
+- 2026-10-26: Brian approved the new What to Test wording (criterion 1 ticked again). Criterion 5 stays open until he pastes it into the build.
