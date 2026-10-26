@@ -18,7 +18,7 @@
 - [x] Device check: Delete All Data, uninstall, then install from TestFlight leaves no AlarmKit alarms behind.
 - [x] Settings › About on the TestFlight install shows 1.1.0 and the Organizer's build number.
 - [x] After the first build uploads, an external group exists with the two testers, invited by email (moved from ticket 04, criterion 7; an internal group already exists, which App Store Connect Help says must come first).
-- [ ] The build is submitted to Beta App Review, approved, and added to the external group. Whatever Beta App Review asks about alarms that ring through silent mode and Focus is recorded in the spec (story 23).
+- [x] The build is submitted to Beta App Review, approved, and added to the external group. Whatever Beta App Review asks about alarms that ring through silent mode and Focus is recorded in the spec (story 23).
 - [ ] A tester sends feedback from the TestFlight app, and Brian reads it in the Organizer or App Store Connect.
 
 ## Before you start
@@ -45,3 +45,4 @@
 - 2026-10-26: Brian asked for What to Test to separate steps for new users from steps for people who had the app before. Rewritten in `docs/release-notes/1.1.0-testflight.md`. The 2026-10-25 approval was of the earlier wording, so criterion 1 is open again for the new text, and criterion 5 (pasted) is open until Brian pastes the new text into build 1.1.0 (1), which App Store Connect lets him edit without a new build.
 - 2026-10-26: Brian approved the new What to Test wording (criterion 1 ticked again). Criterion 5 stays open until he pastes it into the build.
 - 2026-10-26: Brian pasted the new What to Test into build 1.1.0 (1) (Test Details, shown as Saved); criterion 5 ticked.
+- 2026-10-26: Beta App Review approved build 1.1.0 (1) and it is in the external group, with six testers invited, one of whom had installed it. Apple asked nothing about alarms through silent mode and Focus, so there is nothing to record in the spec for story 23 (criterion 12 ticked).
