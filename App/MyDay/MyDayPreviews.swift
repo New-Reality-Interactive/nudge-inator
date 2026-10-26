@@ -21,7 +21,7 @@ extension Engine {
             Reminder(title: "Take the bins out", tagIDs: [home.id], dueTime: now.addingTimeInterval(90 * 60), strength: .firm),
         ]
         let clock = PreviewClock(now: ago(280))
-        var engine = Engine(clock: clock, scheduler: PreviewScheduler())
+        var engine = Engine(clock: clock, scheduler: NoOpScheduler())
         engine.update(tags: [home, health, work])
         engine.update(reminders: reminders)
         clock.now = ago(270)
