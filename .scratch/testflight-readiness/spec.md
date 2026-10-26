@@ -155,7 +155,7 @@ Steps that need my developer account, App Store Connect, my website or my tester
 - Recorded here when known:
   - Privacy policy URL: `https://newrealityinteractive.com/nudge-inator/privacy/` (published and checked, 2026-10-25)
   - Support URL: `https://newrealityinteractive.com/nudge-inator/support/` (published and checked, 2026-10-25)
-  - Marketing URL: `https://newrealityinteractive.com/nudge-inator/` (TestFlight test information, ticket 04). The App Store version page holds `https://newrealityinteractive.com/nudge-inator` without the slash, which redirects to the slash form (checked 2026-10-25)
+  - Marketing URL: `https://newrealityinteractive.com/nudge-inator/`, the same in TestFlight's test information (ticket 04) and on the App Store version page (Brian, 2026-10-25)
   - Age-rating answers: None or No for every topic (Brian, 2026-10-25). Resulting rating (App Store Connect Age Ratings page, 2026-10-25): Age 4+ in 172 countries or regions, General Audiences in Brazil, All Ages in South Korea and Vietnam
   - App Store Connect Help findings: stories 31 and 41 (2026-10-25)
   - In-app privacy link: Settings › About, agent ticket (story 43, 2026-10-25)

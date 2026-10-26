@@ -58,5 +58,5 @@ Spec stories 34–41.
   - Subtitle: `Reminders that keep nudging` (27 of 30).
   - Keywords: `alarm,repeat,recurring,focus,silent,task,todo,habit,timer,persistent,urgent,alert,notify,schedule` (97 of 100).
   - Support URL: `https://newrealityinteractive.com/nudge-inator/support/`.
-  - Marketing URL: `https://newrealityinteractive.com/nudge-inator` on the version page, without the trailing slash that ticket 04 used for TestFlight. The bare form redirects to the slash form, so both work. Criterion 6 ticked.
+  - Marketing URL: `https://newrealityinteractive.com/nudge-inator/` on the version page, the same as ticket 04's TestFlight entry (Brian first entered it without the slash, then changed it). Criterion 6 ticked.
   - Left for the App Store submission spec: description, promotional text, copyright, screenshots, release option (agent suggests manual), App Review contact and notes.
