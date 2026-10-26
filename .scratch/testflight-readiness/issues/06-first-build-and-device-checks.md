@@ -15,7 +15,7 @@
 - [x] Device check: a Gentle reminder's Time Sensitive nudge arrives on the TestFlight install.
 - [x] Device check: the widget extension's alarm presentation and its Open button work.
 - [x] Device check: the Open intent opens the reminder from the alarm. If it doesn't, the `AppIntentsPackage` fix becomes a ticket of its own (spec, "App Intents in the archive").
-- [ ] Device check: Delete All Data, uninstall, then install from TestFlight leaves no AlarmKit alarms behind.
+- [x] Device check: Delete All Data, uninstall, then install from TestFlight leaves no AlarmKit alarms behind.
 - [x] Settings › About on the TestFlight install shows 1.1.0 and the Organizer's build number.
 - [x] After the first build uploads, an external group exists with the two testers, invited by email (moved from ticket 04, criterion 7; an internal group already exists, which App Store Connect Help says must come first).
 - [ ] The build is submitted to Beta App Review, approved, and added to the external group. Whatever Beta App Review asks about alarms that ring through silent mode and Focus is recorded in the spec (story 23).
@@ -39,3 +39,4 @@
 - 2026-10-25: Device check, Settings › About on the TestFlight install (iPhone 15, iOS 27.0.1) shows 1.1.0 and build 1, matching App Store Connect's 1.1.0 (1) (criterion 10 ticked).
 - 2026-10-25: Device check on the TestFlight install (iPhone 15, iOS 27.0.1; Do Not Disturb on, silent switch on, volume 75%): a Relentless reminder with Break Through Focus rang audibly at its due time. The alarm showed title, time, app name, an Open button and a Stop slider. Open, then Face ID, opened the reminder's detail screen. That ticks criteria 6, 7 and 8; the `AppIntentsPackage` fix isn't needed. Brian cleaned up with Delete All Data.
 - 2026-10-25: Device check on the TestFlight install (iPhone 15, iOS 27.0.1; Do Not Disturb on, silent switch on): a Gentle reminder with a Consistent 2 min pace and Break Through Focus on delivered its nudge 5 (first of the Time Sensitive nudges) through Do Not Disturb, with no sound because the silent switch was on (criterion 15 ticked). The first try, with Break Through Focus off, was held as an ordinary notification: with the switch off the engine never sends Time Sensitive (`NudgingStatus.nudgeDelivery`), so that run was a wrong setup, not a failure. The check's wording should have said Break Through Focus on.
+- 2026-10-25: Device check on the TestFlight install (iPhone 15, iOS 27.0.1; Do Not Disturb on, silent switch on): a Relentless reminder due 9:46 PM, then Delete All Data, uninstall, reinstall from TestFlight. Nothing rang and no notification arrived afterwards, so no alarm was left behind (criterion 18 ticked).
