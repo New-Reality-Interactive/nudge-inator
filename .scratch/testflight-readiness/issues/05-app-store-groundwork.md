@@ -12,7 +12,7 @@ Spec stories 34–41.
 
 **Status:** ready-for-human
 
-- [ ] The redone website spec publishes the support page at `https://newrealityinteractive.com/nudge-inator/support/`, with how to reach Brian and no beta section (the beta is invite-only). Brian records the URL under the spec's Further Notes.
+- [x] The redone website spec publishes the support page at `https://newrealityinteractive.com/nudge-inator/support/`, with how to reach Brian and no beta section (the beta is invite-only). Brian records the URL under the spec's Further Notes.
 - [x] Brian submits the age-rating questionnaire with None or No for every topic (confirmed on 2026-10-25), and the resulting rating is recorded under Further Notes.
 - [x] The price is free and availability is the United States only, and the Free Apps agreement is confirmed as the only agreement needed.
 - [x] The spec notes that premium add-ons later need the Paid Apps agreement, banking and tax, and a new country needs its localization first (already under Implementation Decisions, "Pricing and countries"; checked, not rewritten).
@@ -50,3 +50,5 @@ Spec stories 34–41.
 - 2026-10-25 (Brian, via agent): Business tab checked. The Free Apps Agreement is Active (Oct 14, 2026 – Oct 13, 2027), so it meets what a free app needs. The Paid Apps Agreement is also Active (Oct 16, 2026), with a bank account and a U.S. W-9 on file, so the later premium add-ons won't wait on those. Nothing is pending. Criterion 3 ticked.
 
 - 2026-10-25 (Brian, via agent): Age ratings are set. The Age Ratings page shows Age 4+ for 172 countries or regions (the lowest rating, as the spec expected), General Audiences for Brazil, and All Ages for South Korea and Vietnam. The rating is recorded under the spec's Further Notes. Criterion 2 ticked. The screenshot was cropped: it didn't show the United States in the list, and it didn't show the questionnaire answers, so those rest on Brian's confirmation of None or No for every topic.
+
+- 2026-10-25 (Brian, via agent): Support page published. The agent fetched `https://newrealityinteractive.com/nudge-inator/support/`: HTTP 200, no redirect, how to reach Brian by email, and no mention of the beta or TestFlight. The URL is recorded in the spec's Further Notes. Criterion 1 ticked.

@@ -154,7 +154,7 @@ Steps that need my developer account, App Store Connect, my website or my tester
 - The docs don't say whether App Store validation rejects a widget whose version differs from the app's. Sharing one setting makes the question moot. Validate App would report it if it mattered.
 - Recorded here when known:
   - Privacy policy URL: `https://newrealityinteractive.com/nudge-inator/privacy/` (published and checked, 2026-10-25)
-  - Support URL: _(Brian)_
+  - Support URL: `https://newrealityinteractive.com/nudge-inator/support/` (published and checked, 2026-10-25)
   - Marketing URL: _(Brian)_
   - Age-rating answers: None or No for every topic (Brian, 2026-10-25). Resulting rating (App Store Connect Age Ratings page, 2026-10-25): Age 4+ in 172 countries or regions, General Audiences in Brazil, All Ages in South Korea and Vietnam
   - App Store Connect Help findings: stories 31 and 41 (2026-10-25)
