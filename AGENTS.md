@@ -2,7 +2,7 @@
 
 ### Issue tracker
 
-Issues and specs are GitHub issues: one milestone per feature, a `spec` issue with its tickets as sub-issues. See `docs/agents/issue-tracker.md`. No feature is open. `testflight-readiness` (the 1.1.0 TestFlight build), `enhancement-pace` (1.1.0) and `first-version` (1.0.0) are released; their tickets are at the `tickets-archive` tag. Versions and releases: `docs/agents/issue-tracker.md`.
+Issues and specs are GitHub issues: one milestone per feature, a `spec` issue with its tickets as sub-issues. See `docs/agents/issue-tracker.md`. `icon-badge` (1.2.0) is the open feature: its spec is [#80](https://github.com/New-Reality-Interactive/nudge-inator/issues/80). `testflight-readiness` (the 1.1.0 TestFlight build), `enhancement-pace` (1.1.0) and `first-version` (1.0.0) are released; their tickets are at the `tickets-archive` tag. Versions and releases: `docs/agents/issue-tracker.md`.
 
 A ticket is `resolved` only when every acceptance criterion is ticked. While one is open, the issue stays open. Say which criterion is open and why, and resolve it with the user: meet it, or agree a change to it (reworded, or moved to a named ticket) and record that agreement in Comments.
 

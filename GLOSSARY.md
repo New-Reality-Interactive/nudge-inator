@@ -93,3 +93,9 @@ A one-word label (`#home`) on a reminder, used only to filter. Never shown in al
 
 **My Day**:
 Today's occurrences in time order, with Done, Nudging, Missed and Left counts.
+
+**Icon badge**:
+The number on the app's home-screen icon: how many reminders have an occurrence that is Nudging. It is the same count as the Now badge. It is not a Nudge.
+
+**Now badge**:
+The number on the Now tab: how many reminders have an occurrence that is Nudging. The Icon badge shows the same count.
