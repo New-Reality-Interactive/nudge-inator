@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """Screenshots of a mockup's screens in headless Chrome, named as scripts/screenshots.sh names the
-app's, so each pair can be compared (scripts/contact-sheet.sh). The screens are the as-built
-mockup's (docs/mockups/2026-10-21-as-built); a mockup copied from it keeps working, and the last few
-are only in the proposed pace mockup, the filter badge mockup, the Match always shown mockup or the
-Settings About mockup. A
-screen it doesn't know is added to SCREENS: the JavaScript that shows it in the mockup, and how many
+app's, so each pair can be compared (scripts/contact-sheet.sh). The screens are the mockup
+template's (docs/mockups/*-mockup-template), so a version or change mockup copied from it keeps
+working. A screen it doesn't know is added to SCREENS: the JavaScript that shows it in the mockup, and how many
 pages.
 
 Usage: scripts/mockup-shots.py <mockup folder> <out folder> [screen ...]
@@ -37,35 +35,32 @@ SCREENS = {
   "settings-how-it-nudges": ("state.tab='settings';nav();push({kind:'hin'})", 4),
   "form-new": ("openEditor()", 4),
   "form-tags": ("openEditor();state.sheet.page='tags';render()", 1),
-  "form-repeat": ("openEditor();state.sheet.page='repeat';render()", 2),
-  "form-custom": ("openEditor();state.sheet.page='repeat';render();document.querySelector('[data-repeat=custom]').click()", 3),
+  "form-repeat": ("openEditor();document.querySelector('[data-sheet-page=repeat]').click()", 2),
+  "form-custom": ("openEditor();document.querySelector('[data-sheet-page=repeat]').click();document.querySelector('[data-repeat=custom]').click()", 3),
   "onboarding": ("state.sheet={kind:'onboard'};render()", 1),
   "banner-notifications-off": ("perm.notifications=false;render()", 4),
   "settings-notifications-off": ("perm.notifications=false;state.tab='settings';nav()", 2),
   "banner-alarms-off": ("perm.alarms=false;render()", 3),
   "settings-alarms-off": ("perm.alarms=false;state.tab='settings';nav()", 1),
   "banner-time-sensitive-off": ("perm.timeSensitive=false;render()", 1),
-  # Only in the proposed pace mockup (docs/mockups/2026-10-21-proposed-pace).
+  # Pace and strength (enhancement-pace).
   "details-relentless": ("push({kind:'rem',id:'r7'})", 4),
   "form-new-escalating": ("openEditor();state.sheet.draft.pace='escalating';render()", 4),
   "form-new-consistent": ("openEditor();state.sheet.draft.pace='consistent';state.sheet.draft.wait=10;render()", 4),
   "form-new-relentless": ("openEditor();state.sheet.draft.strength='relentless';render()", 4),
-  # Only in the filter badge mockup (docs/mockups/2026-10-24-filter-badge): the Filter button's badge
-  # at counts the seed can't reach.
+  # The Filter button's badge at counts the seed can't reach.
   "myday-badge-12": ("prefs.badgeCount='12';state.tab='day';state.dayFilter.ids=[tags[0].id];nav()", 1),
   "myday-badge-999": ("prefs.badgeCount='999';state.tab='day';state.dayFilter.ids=[tags[0].id];nav()", 1),
-  # Also in the filter badge mockup, from ticket 20: six tags in the tokens' three rows, and the
+  # Six tags in the tokens' three rows, and the
   # Filter button's menu with them chosen.
   "myday-tokens-6": ("state.tab='day';state.dayFilter.ids=tags.slice(0,6).map(t=>t.id);nav()", 1),
   "myday-filter-menu": ("state.tab='day';state.dayFilter.ids=tags.slice(0,6).map(t=>t.id);nav();showFilterMenu(document.querySelector('[data-dayfilter]'))", 1),
-  # Only in the Match always shown mockup (docs/mockups/2026-10-25-match-always-shown), from ticket
-  # 23: the filter sheet with one tag (Match disabled) and two (Match working).
+  # The filter sheet with one tag (Match disabled) and two (Match working).
   "myday-filter-1": ("state.tab='day';state.dayFilter.ids=sortTags(tags).slice(0,1).map(t=>t.id);nav();openDayFilter()", 1),
   "myday-filter-2": ("state.tab='day';state.dayFilter.ids=sortTags(tags).slice(0,2).map(t=>t.id);nav();openDayFilter()", 1),
   "settings-default-pace": ("state.tab='settings';nav();push({kind:'defpace'})", 1),
   "settings-how-it-nudges-escalating": ("settings.defaultPace={pace:'escalating',wait:10};state.tab='settings';nav();push({kind:'hin'})", 4),
-  # Only in the Settings About mockup (docs/mockups/2026-10-25-settings-about), from testflight-readiness
-  # ticket 02: Settings' About page.
+  # Settings' About page.
   "settings-about": ("state.tab='settings';nav();push({kind:'about'})", 2),
 }
 # Variant: JavaScript that sets it up.
