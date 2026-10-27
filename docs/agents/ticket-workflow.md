@@ -14,6 +14,7 @@ The developer runs `/clear` and types `/implement #<n>`, `<n>` being the ticket'
 Everything else the ticket needs is in the ticket, under **Before you start** (below).
 
 1. Check every issue blocking it is closed (`issue-tracker.md`, Blocked by). If one isn't, stop and say which.
+   If the ticket can't be built backwards compatible (`issue-tracker.md`, Features and versions), stop and say what breaks.
 2. Branch from an up-to-date `main`: `<feature>-<n>-<slug>`, such as `tags-83-filter-sheet`, `<feature>`
    being the slug in the milestone's description.
 3. Read the ticket, its Before you start, the Comments of the tickets it builds on, and the spec
