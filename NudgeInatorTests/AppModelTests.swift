@@ -621,6 +621,29 @@ struct AppModelTests {
         #expect(NowScreen.badgeCount(of: model.engine) == 1)
     }
 
+    /// A Relentless reminder rings as an alarm, which tells the app nothing when it comes due with
+    /// the app in front. The minute the Now badge redraws, the model re-plans if the count changed,
+    /// and only then (icon-badge spec, criterion 8).
+    @Test func eachMinuteTheIconBadgeCatchesUpWithTheNowBadgeIfItChanged() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        let alex = Reminder(title: "Reply to Alex", dueTime: NewYork.local(2026, 10, 15, 8, 40), strength: .relentless)
+        let model = await launchedModel(store: store)
+        model.add(alex)
+        await model.waitUntilApplied()
+        #expect(center.badgeCounts.last == 0)
+
+        clock.now = NewYork.local(2026, 10, 15, 8, 40)
+        model.minutePassed()
+        await model.waitUntilApplied()
+        #expect(center.badgeCounts.last == 1)
+
+        let badgeSets = center.badgeCounts.count
+        clock.now = NewYork.local(2026, 10, 15, 8, 41)
+        model.minutePassed()
+        await model.waitUntilApplied()
+        #expect(center.badgeCounts.count == badgeSets)
+    }
+
     /// A Done the engine ignores, here from a banner left from an earlier occurrence, applies no
     /// plan of its own. The icon may be stale (two reminders came due while the app was
     /// suspended), and the app is awake, so it sets the live count anyway (icon-badge spec,

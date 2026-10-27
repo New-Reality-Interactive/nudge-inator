@@ -68,6 +68,10 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     /// background, and the response may beat the app model's setup.
     private var unreportedDones: [DeliveredNudge] = []
 
+    /// The current count of the last plan handed to `apply(_:)`, which the Icon badge shows once
+    /// that plan is applied. `nil` before the first.
+    private(set) var plannedBadgeCount: Int?
+
     weak var events: (any NotificationAdapterEvents)? {
         didSet { Task { await reportDones() } }
     }
@@ -103,6 +107,7 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     }
 
     func apply(_ plan: SchedulePlan) {
+        plannedBadgeCount = plan.currentBadgeCount
         let previous = applying
         applying = Task {
             await previous?.value

@@ -211,6 +211,14 @@ final class AppModel {
         replan()
     }
 
+    /// The tab shell's minute tick, while the app is in front. An alarm coming due, or an
+    /// occurrence closing as Missed, tells the app nothing, so the Icon badge catches up with the
+    /// Now badge here: a re-plan, only when the count has changed.
+    func minutePassed() {
+        guard engine.badgeCount != notifications.plannedBadgeCount else { return }
+        replan()
+    }
+
     /// A fresh plan from what the engine holds, for when time has moved on with no event: it
     /// refills the notifications past the 64 the system keeps pending (ticket 18), and sets the
     /// Icon badge to the live count.

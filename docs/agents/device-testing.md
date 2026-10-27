@@ -65,3 +65,5 @@ When closing an acceptance criterion needs device checks that need the person, w
 4. Report the result and confirm it with them before the next check.
 
 If a run doesn't do what you said it would, stop and explain before running anything else. Once the last check is done, list every check and its result, so the person can see none is left.
+
+A check that runs the app's model sets the Icon badge from its own store, and the badge can't be read back to restore it. If the app was installed before the run, have the person open it once at the end: App opened sets their own count again.

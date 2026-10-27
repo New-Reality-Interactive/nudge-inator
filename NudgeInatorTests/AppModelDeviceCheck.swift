@@ -49,7 +49,10 @@ struct StoreProtectionDeviceCheck {
 /// when they were scheduled. `deinit` removes them again in case a test failed first, and
 /// cancels the app's alarms only once the check has seen it held none, so any are its own.
 /// Notification permission is asked for only when the run says the app wasn't installed
-/// (`TEST_RUNNER_NUDGE_FRESH_INSTALL=1`); uninstalling afterwards resets it.
+/// (`TEST_RUNNER_NUDGE_FRESH_INSTALL=1`); uninstalling afterwards resets it. Each plan sets the
+/// Icon badge from the check's store, and the badge can't be read back to restore: opening the
+/// app once afterwards sets the person's count again (`device-testing.md`, Device-check
+/// walkthrough).
 @MainActor
 @Suite(.enabled(
     if: DeviceCheck.isPhysicalDevice && ProcessInfo.processInfo.environment["NUDGE_ACTION_CHECK"] == "1",
