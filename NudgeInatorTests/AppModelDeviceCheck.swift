@@ -85,7 +85,7 @@ final class NudgeActionDeviceCheck {
         let center = UNUserNotificationCenter.current()
         if await center.notificationSettings().authorizationStatus == .notDetermined,
            ProcessInfo.processInfo.environment["NUDGE_FRESH_INSTALL"] == "1" {
-            _ = try await center.requestAuthorization(options: [.alert, .sound])
+            _ = try await center.requestAuthorization(options: [.alert, .sound, .badge])
         }
         try #require(await center.notificationSettings().authorizationStatus == .authorized, "Allow notifications for Nudge-inator, or set TEST_RUNNER_NUDGE_FRESH_INSTALL=1 on a fresh install")
         try #require(try AlarmManager.shared.alarms.isEmpty, "Nudge-inator already holds alarms; the check would cancel them")

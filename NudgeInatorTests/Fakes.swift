@@ -121,6 +121,16 @@ final class FakeNotificationCenter: UserNotificationCenter {
         }
         return settings.authorizationStatus == .authorized
     }
+
+    /// Every count passed to `setBadgeCount(_:)`, in order, including ones it threw for.
+    private(set) var badgeCounts: [Int] = []
+    /// When set, every `setBadgeCount(_:)` throws it.
+    var badgeError: (any Error)?
+
+    func setBadgeCount(_ count: Int) async throws {
+        badgeCounts.append(count)
+        if let badgeError { throw badgeError }
+    }
 }
 
 /// Records what the notification adapter reports, as the app model will receive it (ticket 21).
@@ -136,6 +146,9 @@ final class FakeNotificationEvents: NotificationAdapterEvents {
     func schedulingFailed(_ error: any Error) {
         schedulingErrors.append(error)
     }
+
+    /// The app model's tests cover what a presentation does.
+    func notificationPresented() {}
 }
 
 /// A store file, in the temporary directory unless given another, deleted with SQLite's side

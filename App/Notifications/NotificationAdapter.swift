@@ -1,6 +1,7 @@
 import Foundation
 import UserNotifications
 import NudgeEngine
+import os
 
 /// What the notification adapter reports to the app model, which owns the engine (ticket 21).
 @MainActor
@@ -14,6 +15,9 @@ protocol NotificationAdapterEvents: AnyObject {
     /// The center turned a request down. `notificationsNotAllowed` means the person turned
     /// notifications off, so read `permissions(updating:)` again and hand them to the engine.
     func schedulingFailed(_ error: any Error)
+    /// A notification arrived with the app in front. Its occurrence may have just come due, after
+    /// the last plan counted, so re-plan for the Icon badge's live count.
+    func notificationPresented()
 }
 
 /// The nudge a delivered notification was for, as its request's `userInfo` carries it.
@@ -133,6 +137,13 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
             if let firstError {
                 events?.schedulingFailed(firstError)
             }
+            // In this task, so `waitUntilApplied()` waits for it: a Done chosen on a locked phone
+            // wakes the app only until its response handler returns.
+            do {
+                try await center.setBadgeCount(plan.currentBadgeCount)
+            } catch {
+                Self.logger.error("The icon badge wasn't set: \(error, privacy: .public)")
+            }
         }
     }
 
@@ -215,9 +226,10 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     /// Shows the notification prompt, when onboarding asks (ticket 31). Returns whether the
     /// person allowed notifications.
     func requestAuthorization() async throws -> Bool {
-        // Not .timeSensitive, which is deprecated: the entitlement and each request's
-        // interruption level make a nudge Time Sensitive, so it isn't part of the prompt.
-        try await center.requestAuthorization(options: [.alert, .sound])
+        // Badges for the Icon badge. Not .timeSensitive, which is deprecated: the entitlement and
+        // each request's interruption level make a nudge Time Sensitive, so it isn't part of the
+        // prompt.
+        try await center.requestAuthorization(options: [.alert, .sound, .badge])
     }
 
     /// The person's response to a delivered notification, from the center's delegate. Returns
@@ -227,6 +239,11 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         guard actionIdentifier == Self.doneActionIdentifier, let nudge else { return }
         unreportedDones.append(nudge)
         await reportDones()
+    }
+
+    /// A notification arrived with the app in front, from the center's delegate.
+    func handlePresentation() {
+        events?.notificationPresented()
     }
 
     /// Returns once every plan handed to `apply(_:)` so far has reached the center.
@@ -290,6 +307,10 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     }
 }
 
+extension NotificationAdapter {
+    static let logger = Logger(subsystem: "com.newrealityinteractive.nudgeinator", category: "NotificationAdapter")
+}
+
 /// The center's delegate. Apple: it must be set before the app finishes launching, and without
 /// `didReceive` "your app never responds to custom actions". Not the adapter itself, because the
 /// center may call it off the main actor; `Sendable` since its one property is a `weak let` to a
@@ -323,13 +344,15 @@ final class NotificationResponder: NSObject, UNUserNotificationCenterDelegate, S
         }
     }
 
-    /// Without this, a nudge that fires while the app is open isn't shown at all.
+    /// Without this, a nudge that fires while the app is open isn't shown at all. No `.badge`: the
+    /// model re-plans instead, so the icon gets the live count.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping @Sendable (UNNotificationPresentationOptions) -> Void
     ) {
-        Task { @MainActor in
+        Task { @MainActor [adapter] in
+            adapter?.handlePresentation()
             completionHandler([.banner, .list, .sound])
         }
     }

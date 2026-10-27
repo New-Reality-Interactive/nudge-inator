@@ -203,14 +203,42 @@ struct NotificationAdapterTests {
         #expect(events.dones.isEmpty)
     }
 
-    /// `UNAuthorizationOptions.timeSensitive` is deprecated: the entitlement and the interruption
-    /// level make a notification Time Sensitive, not the prompt.
-    @Test func authorizationIsRequestedForAlertsAndSoundsOnly() async throws {
+    /// Badges too, for the Icon badge (icon-badge spec, decision 5). `UNAuthorizationOptions.timeSensitive`
+    /// is deprecated: the entitlement and the interruption level make a notification Time
+    /// Sensitive, not the prompt.
+    @Test func authorizationIsRequestedForAlertsSoundsAndBadges() async throws {
         let adapter = adapter()
 
         _ = try await adapter.requestAuthorization()
 
-        #expect(center.requestedAuthorizationOptions == [[.alert, .sound]])
+        #expect(center.requestedAuthorizationOptions == [[.alert, .sound, .badge]])
+    }
+
+    /// Every plan sets the Icon badge to its current count, even one with nothing to schedule,
+    /// and `waitUntilApplied()` waits for it, so a Done's response handler does too.
+    @Test func eachPlanSetsTheIconBadgeToItsCurrentCount() async throws {
+        let adapter = adapter()
+
+        adapter.apply(SchedulePlan(items: [nudge(2, at: NewYork.local(2026, 10, 16, 9, 10), .normal, .notification)], currentBadgeCount: 2))
+        adapter.apply(SchedulePlan(items: [], currentBadgeCount: 0))
+        await adapter.waitUntilApplied()
+
+        #expect(center.badgeCounts == [2, 0])
+    }
+
+    /// A badge the center turns down, as it may with badges off, isn't a scheduling failure: the
+    /// nudges still reach the person.
+    @Test func aBadgeTheCenterTurnsDownIsntReportedAsASchedulingFailure() async throws {
+        let adapter = adapter()
+        let events = FakeNotificationEvents()
+        adapter.events = events
+        center.badgeError = UNError(.notificationsNotAllowed)
+
+        adapter.apply(SchedulePlan(items: [nudge(2, at: NewYork.local(2026, 10, 16, 9, 10), .normal, .notification)], currentBadgeCount: 1))
+        await adapter.waitUntilApplied()
+
+        #expect(events.schedulingErrors.isEmpty)
+        #expect(center.pending.count == 1)
     }
 
     /// No notifications not-determined state: until the person answers, nothing is denied, and

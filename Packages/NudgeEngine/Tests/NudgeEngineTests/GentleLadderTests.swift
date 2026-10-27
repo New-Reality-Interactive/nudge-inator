@@ -89,7 +89,8 @@ struct GentleLadderTests {
 
         clock.now = dueTime
         _ = engine()
-        #expect(scheduler.lastPlan == planBeforeDue)
+        // The items only: the plan's current count goes from 0 to 1 at the due time.
+        #expect(scheduler.lastPlan?.items == planBeforeDue.items)
     }
 
     /// Urgency from the mockup's How It Nudges table: Gentle is Normal for nudges 1–4, then

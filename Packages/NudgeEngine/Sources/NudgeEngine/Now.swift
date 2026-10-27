@@ -49,6 +49,12 @@ extension Engine {
             .inTimeOrder(titles: titles, at: \.occurrence.dueTime, of: \.reminderID)
     }
 
+    /// The Now badge's count, which the Icon badge shows too: how many reminders are Nudging. Paused
+    /// ones aren't, since Pause closes the occurrence as Skipped.
+    public var badgeCount: Int {
+        nudgingOccurrences().count
+    }
+
     /// The Now tab's Last 24 Hours: occurrences that closed (Done, Missed or Skipped) from 24 hours
     /// before now up to now, both ends in, newest first. Measured in hours, not local days, so a
     /// DST change doesn't stretch or shrink it.

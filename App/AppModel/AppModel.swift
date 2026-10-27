@@ -208,6 +208,13 @@ final class AppModel {
         }
         refreshPermissions()
         await permissionsRefresh?.value
+        replan()
+    }
+
+    /// A fresh plan from what the engine holds, for when time has moved on with no event: it
+    /// refills the notifications past the 64 the system keeps pending (ticket 18), and sets the
+    /// Icon badge to the live count.
+    private func replan() {
         perform { $0.update(reminders: $0.reminders) }
     }
 
@@ -450,7 +457,14 @@ extension AppModel: NotificationAdapterEvents, AlarmAdapterEvents {
             await queueDone(nudge)
             return
         }
+        let open = engine.openOccurrence(for: nudge.reminderID)
         perform { $0.markDone(nudge.reminderID, nudgeFiredAt: nudge.fireTime) }
+        // A Done the engine ignores applies no plan, yet the icon may be stale from occurrences
+        // that came due or Missed while the app was suspended. The app is awake, so it sets the
+        // live count.
+        if engine.openOccurrence(for: nudge.reminderID) == open {
+            replan()
+        }
         await waitUntilApplied()
     }
 
@@ -481,5 +495,11 @@ extension AppModel: NotificationAdapterEvents, AlarmAdapterEvents {
 
     func alarmAuthorizationChanged() {
         refreshPermissions()
+    }
+
+    /// A nudge arrived with the app in front: the plan built when its occurrence was still to come
+    /// counted it out, so a fresh one sets the Icon badge to match the Now badge.
+    func notificationPresented() {
+        replan()
     }
 }

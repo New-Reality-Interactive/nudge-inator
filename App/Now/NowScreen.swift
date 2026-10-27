@@ -54,7 +54,7 @@ struct NowScreen {
     /// The Now tab's badge: how many reminders are nudging. Zero hides it. Static, so the tab bar
     /// counts without building the whole screen.
     static func badgeCount(of engine: Engine) -> Int {
-        engine.nudgingOccurrences().count
+        engine.badgeCount
     }
 
     /// Under the title: today's date and what's nudging. The count is bold, which the view turns
