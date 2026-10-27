@@ -3,7 +3,7 @@ import Testing
 import NudgeEngine
 
 /// Expected values are literals from the mockup's How It Nudges table
-/// (`docs/mockups/archive/2026-10-04-first-version/index.html`).
+/// (`docs/mockups/archive/2026-10-04-first-version/index.html` at the `tickets-archive` tag).
 struct FirmAndRelentlessLadderTests {
     let dueTime = Date(timeIntervalSinceReferenceDate: 800_000_000)
     let scheduler = FakeScheduler()

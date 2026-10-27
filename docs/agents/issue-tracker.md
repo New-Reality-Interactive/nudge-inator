@@ -38,7 +38,7 @@ From 1.2.0 on, a feature updates in place: when it changes a capability, its spe
 
 Bugs found while no feature is open go in a patch milestone (`1.1.1`), whose spec issue is the `Version:` line and one line on what it fixes.
 
-When a feature's last ticket is resolved and merged, it's released: the spec issue and the milestone are closed, the developer tags `v<version>` on `main` and sets `MARKETING_VERSION` in `project.yml`, and AGENTS.md's open feature moves to the next one.
+When a feature's last ticket is resolved and merged, it's released. The agent opens a release PR that adds the version mockup, `docs/mockups/<version>/` (such as `1.2.0`): copied from the latest version mockup, as the template's README says, drawing the app as built at that version with working mockup controls. It's checked against the app with the screenshot walk (`docs/agents/device-testing.md`, Simulator screenshots) for the screens the release changed (`SHOTS_TESTS`), on both simulators, in portrait, landscape and the largest text size; the whole walk is only for a mockup first lined up with the app. The PR also deletes the change mockups the version mockup takes in. Once that PR merges, the spec issue and the milestone are closed, the developer tags `v<version>` on `main` and sets `MARKETING_VERSION` in `project.yml`, and AGENTS.md's open feature moves to the next one. The agent then runs the whole walk in portrait on the `iPhone 15 - iOS 27.0` simulator (`SHOTS_VARIANTS=portrait SIMULATORS="iPhone 15 - iOS 27.0"`), zips it as `screenshots-<version>.zip` and attaches it to the version's GitHub Release (`gh release upload v<version>`, after `gh release create v<version>` if there's none). The screenshots never go in the repo.
 
 ## Tickets before GitHub Issues
 

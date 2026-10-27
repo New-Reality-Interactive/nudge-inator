@@ -16,7 +16,7 @@ Single-context: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agen
 
 ### Design system
 
-Colors, type, spacing, shapes and components are in `docs/design/DESIGN.md`. UI stories meet it; screen layout is the mockup under `docs/mockups/`.
+Colors, type, spacing, shapes and components are in `docs/design/DESIGN.md`. UI stories meet it; screen layout is the latest version mockup, `docs/mockups/<version>/`, or a change's mockup for what it changes. New mockups start from `docs/mockups/*-mockup-template/`.
 
 ### Code review and session size
 
