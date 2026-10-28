@@ -12,6 +12,12 @@ struct DeleteReminderTests {
     /// Every day at 9:00 from Thursday 15 October 2026.
     let pills = Reminder(title: "Take the pills", dueTime: NewYork.local(2026, 10, 15), repeatRule: .everyDay, strength: .firm)
 
+    func restamped(_ item: SchedulePlan.Item, _ count: Int) -> SchedulePlan.Item {
+        var item = item
+        item.predictedBadgeCount = count
+        return item
+    }
+
     func engine(for reminders: [Reminder]) -> Engine {
         var engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone)
         engine.update(reminders: reminders)
@@ -31,6 +37,7 @@ struct DeleteReminderTests {
     }
 
     /// The bins are Nudging too, so both reminders have a ladder in the plan when the pills go.
+    /// Only the bins' stamps change: the pills no longer count toward the Icon badge.
     @Test func deletingOneReminderLeavesAnothersPlanItemsUnchanged() throws {
         let bins = Reminder(title: "Put the bins out", dueTime: NewYork.local(2026, 10, 15, 9, 15), strength: .relentless)
         clock.now = NewYork.local(2026, 10, 15, 9, 40)
@@ -41,7 +48,9 @@ struct DeleteReminderTests {
 
         let plan = try #require(scheduler.lastPlan)
         #expect(!binsItemsBefore.isEmpty)
-        #expect(plan.items == binsItemsBefore)
+        #expect(plan.items.map { restamped($0, 0) } == binsItemsBefore.map { restamped($0, 0) })
+        #expect(binsItemsBefore.allSatisfy { $0.predictedBadgeCount == 2 })
+        #expect(plan.items.allSatisfy { $0.predictedBadgeCount == 1 })
         #expect(engine.openOccurrence(for: bins.id)?.dueTime == NewYork.local(2026, 10, 15, 9, 15))
     }
 

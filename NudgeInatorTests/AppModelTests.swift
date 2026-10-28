@@ -644,6 +644,56 @@ struct AppModelTests {
         #expect(center.badgeCounts.count == badgeSets)
     }
 
+    /// Done from a notification closes Call's occurrence, so the pending notifications of Water, due
+    /// while Call was still Nudging, are re-stamped with the lower count (icon-badge spec,
+    /// decision 4: `content.badge` is fixed, so a stamp left from before would be wrong).
+    @Test func aDoneFromANotificationRestampsThePendingNotifications() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        let water = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 15, 9), strength: .gentle)
+        clock.now = NewYork.local(2026, 10, 15, 8, 45)
+        let (model, notifications) = model(store: store)
+        await model.launch()
+        model.add(call)
+        model.add(water)
+        await model.waitUntilApplied()
+        func waterStamps() -> [Int] {
+            center.pending.filter { $0.content.title == water.title }.compactMap { $0.content.badge?.intValue }
+        }
+        #expect(waterStamps().first == 2)
+
+        await chooseDone(on: notifications, nudgeFiredAt: NewYork.local(2026, 10, 15, 8, 40))
+
+        #expect(!waterStamps().isEmpty && waterStamps().allSatisfy { $0 == 1 })
+    }
+
+    /// An occurrence that closes as Missed at its give-up sends no alert, so nothing tells the app
+    /// (icon-badge spec, decision 10). The minute tick re-plans, and the pending notifications keep
+    /// the stamps of the new plan: the next reminder's nudges carry the count without the one that
+    /// gave up.
+    @Test func anOccurrenceThatGaveUpLeadsToARebuiltPlanWithFreshStamps() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        let alex = Reminder(title: "Reply to Alex", dueTime: NewYork.local(2026, 10, 15, 8, 40), strength: .gentle)
+        let water = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 16, 9), strength: .gentle)
+        clock.now = NewYork.local(2026, 10, 15, 8, 45)
+        let model = await launchedModel(store: store)
+        model.add(alex)
+        model.add(water)
+        await model.waitUntilApplied()
+        #expect(center.badgeCounts.last == 1)
+        // Gentle gives up at +8 h 4 min 4 s, so Water's nudges, tomorrow, find Alex already gone.
+        let stampBefore = try #require(center.pending.first { $0.content.title == water.title }).content.badge
+        #expect(stampBefore == 1)
+
+        clock.now = NewYork.local(2026, 10, 15, 17)
+        model.minutePassed()
+        await model.waitUntilApplied()
+
+        #expect(center.badgeCounts.last == 0)
+        #expect(model.engine.badgeCount == 0)
+        let stamps = center.pending.filter { $0.content.title == water.title }.map(\.content.badge)
+        #expect(!stamps.isEmpty && stamps.allSatisfy { $0 == 1 })
+    }
+
     /// A Done the engine ignores, here from a banner left from an earlier occurrence, applies no
     /// plan of its own. The icon may be stale (two reminders came due while the app was
     /// suspended), and the app is awake, so it sets the live count anyway (icon-badge spec,

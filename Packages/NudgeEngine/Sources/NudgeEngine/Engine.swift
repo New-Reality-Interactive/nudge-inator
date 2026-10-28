@@ -340,7 +340,53 @@ public struct Engine {
     private mutating func applyPlan() {
         pruneAlarmLimitRecords()
         fallBackAlarmsPastTheCap()
-        scheduler.apply(plan())
+        scheduler.apply(stamped(plan()))
+    }
+
+    /// The plan with each item's predicted Icon badge count. Apart from `plan()` because only the
+    /// plan the scheduler gets needs it. Each reminder's Nudging spans are worked out once, not
+    /// once per item: with every item reading every reminder, 100 reminders took seconds.
+    private func stamped(_ plan: SchedulePlan) -> SchedulePlan {
+        let fireTimes = plan.items.map(\.fireTime).sorted()
+        let windows = windows(reaching: fireTimes)
+        let spans = reminders.flatMap { reminder in
+            windows.flatMap { nudgingSpans(of: reminder, in: $0) }
+        }
+        // Occurrences of one reminder never overlap, so the spans open at a time are the starts
+        // reached minus the ends reached.
+        let starts = spans.map(\.start).sorted()
+        let ends = spans.map(\.end).sorted()
+        var plan = plan
+        for index in plan.items.indices {
+            let time = plan.items[index].fireTime
+            plan.items[index].predictedBadgeCount = starts.count(atOrBefore: time) - ends.count(atOrBefore: time)
+        }
+        return plan
+    }
+
+    /// Where an occurrence can be Nudging at one of `fireTimes` (in order): it closes within the
+    /// give-up span of its due time, so only due times in the span before a fire time matter.
+    /// Overlapping windows are merged, so one far-off item doesn't make every reminder's due times
+    /// from now to then be read.
+    private func windows(reaching fireTimes: [Date]) -> [ClosedRange<Date>] {
+        var windows: [ClosedRange<Date>] = []
+        for fireTime in fireTimes {
+            if let last = windows.last, fireTime - giveUpLimit.span <= last.upperBound {
+                windows[windows.count - 1] = last.lowerBound...fireTime
+            } else {
+                windows.append(fireTime - giveUpLimit.span...fireTime)
+            }
+        }
+        return windows
+    }
+
+    /// When the reminder's occurrences due in `window` are Nudging, if nothing happens before then:
+    /// from falling due to giving up, being taken over, or a Done or Pause already recorded. Read
+    /// ahead, so these are the closings the Now badge will show when each time comes.
+    private func nudgingSpans(of reminder: Reminder, in window: ClosedRange<Date>) -> [(start: Date, end: Date)] {
+        dueTimes(of: reminder, in: window).compactMap { dueTime in
+            reading(of: reminder.id, dueAt: dueTime, asOf: .distantFuture)?.closing.map { (dueTime, $0.closedAt) }
+        }
     }
 
     /// No plan item fires more than the give-up span before now, so older records can't apply.
@@ -546,14 +592,18 @@ public struct Engine {
 
     /// `occurrence(of:dueAt:)` with how it closed, `nil` while it is Nudging. Done's is recorded;
     /// the others' come from the clock.
-    func reading(of reminderID: Reminder.ID, dueAt dueTime: Date) -> (occurrence: Occurrence, closing: Closing?)? {
-        guard dueTime <= clock.now, let reminder = reminder(reminderID) else { return nil }
+    ///
+    /// `now` is the clock's unless given: with `.distantFuture` every occurrence has closed, so
+    /// its `closing` says when it will, if nothing happens before then.
+    func reading(of reminderID: Reminder.ID, dueAt dueTime: Date, asOf now: Date? = nil) -> (occurrence: Occurrence, closing: Closing?)? {
+        let now = now ?? clock.now
+        guard dueTime <= now, let reminder = reminder(reminderID) else { return nil }
         let isFixed = historyByReminder[reminderID]?.saved.closedOccurrences[dueTime] != nil
         guard isFixed || (reminder.latestDueTime(atOrBefore: dueTime, calendar: calendar) == dueTime
             && !isBeforeScheduleChange(dueTime, of: reminderID))
         else { return nil }
         let next = reminder.nextDueTime(after: dueTime, calendar: calendar)
-        return occurrence(of: reminder, dueAt: dueTime, takenOverAt: next.flatMap { $0 <= clock.now ? $0 : nil })
+        return occurrence(of: reminder, dueAt: dueTime, takenOverAt: next.flatMap { $0 <= now ? $0 : nil }, asOf: now)
     }
 
     /// The occurrence's state from the clock, and how it closed. `takeOverTime` is when the next
@@ -624,6 +674,18 @@ public struct Replaced<Value> {
 
 extension Replaced: Equatable where Value: Equatable {}
 extension Replaced: Sendable where Value: Sendable {}
+
+private extension Array where Element == Date {
+    /// How many are at or before `time`, for an array in order.
+    func count(atOrBefore time: Date) -> Int {
+        var low = 0, high = count
+        while low < high {
+            let middle = (low + high) / 2
+            if self[middle] <= time { low = middle + 1 } else { high = middle }
+        }
+        return low
+    }
+}
 
 private extension Array {
     /// The value in force when a nudge fired at `fireTime`: the first one replaced at or after it,

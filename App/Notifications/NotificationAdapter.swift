@@ -272,6 +272,8 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         content.body = item.body
         content.interruptionLevel = item.deliveryKind == .timeSensitiveNotification ? .timeSensitive : .active
         content.categoryIdentifier = Self.categoryIdentifier
+        // The system applies it on arrival, even with the app closed. The engine predicted it.
+        content.badge = NSNumber(value: item.predictedBadgeCount)
         content.userInfo = [
             Self.reminderIDKey: item.reminderID.uuidString,
             Self.dueTimeKey: item.dueTime.timeIntervalSinceReferenceDate,
@@ -305,6 +307,7 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         return request.content.title == pending.content.title
             && request.content.body == pending.content.body
             && request.content.interruptionLevel == pending.content.interruptionLevel
+            && request.content.badge == pending.content.badge
     }
 
     private static func isNudge(_ identifier: String) -> Bool {
