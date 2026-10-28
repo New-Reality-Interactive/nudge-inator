@@ -33,7 +33,8 @@ struct NotificationAdapterTests {
         of reminderID: UUID = pills,
         dueAt dueTime: Date = pillsDueTime,
         title: String = "Take the pills",
-        isPastAlarmLimit: Bool = false
+        isPastAlarmLimit: Bool = false,
+        predictedBadgeCount: Int = 0
     ) -> SchedulePlan.Item {
         SchedulePlan.Item(
             reminderID: reminderID,
@@ -45,7 +46,8 @@ struct NotificationAdapterTests {
             urgency: urgency,
             title: title,
             deliveryKind: deliveryKind,
-            isPastAlarmLimit: isPastAlarmLimit
+            isPastAlarmLimit: isPastAlarmLimit,
+            predictedBadgeCount: predictedBadgeCount
         )
     }
 
@@ -431,6 +433,35 @@ struct NotificationAdapterTests {
 
         let request = try #require(pending().only)
         #expect(request.content.title == "Take the blue pills")
+    }
+
+    /// `content.badge` is a fixed number the system applies when the notification arrives, so each
+    /// request carries the count the engine predicted for its fire time (icon-badge spec, decision 4).
+    @Test func eachRequestStampsItsPlannedCountOnTheIcon() async throws {
+        let adapter = adapter()
+
+        adapter.apply(SchedulePlan(items: [
+            nudge(1, at: NewYork.local(2026, 10, 16, 9, 10), .normal, .notification, predictedBadgeCount: 3),
+            nudge(2, at: NewYork.local(2026, 10, 16, 9, 30), .high, .notification, predictedBadgeCount: 0),
+        ]))
+        await adapter.waitUntilApplied()
+
+        #expect(pending().map(\.content.badge) == [3, 0])
+    }
+
+    /// Nothing else about the nudge changed, as when another reminder's Done lowers the count.
+    @Test func aChangeToTheStampAloneReplacesThePendingRequest() async throws {
+        let adapter = adapter()
+        let fireTime = NewYork.local(2026, 10, 16, 9, 10)
+        adapter.apply(SchedulePlan(items: [nudge(2, at: fireTime, .high, .notification, predictedBadgeCount: 2)]))
+        await adapter.waitUntilApplied()
+        let addedBefore = center.added.count
+
+        adapter.apply(SchedulePlan(items: [nudge(2, at: fireTime, .high, .notification, predictedBadgeCount: 1)]))
+        await adapter.waitUntilApplied()
+
+        #expect(center.added.count == addedBefore + 1)
+        #expect(try #require(pending().only).content.badge == 1)
     }
 
     @Test func applyingTheSamePlanAgainAddsNothing() async throws {

@@ -36,6 +36,11 @@ public struct SchedulePlan: Equatable, Sendable {
         /// notification itself carries only the title and body.
         public var isPastAlarmLimit: Bool
 
+        /// How many reminders are Nudging when this nudge fires, which a notification stamps on the
+        /// Icon badge. Alarms can't carry it. Predicted when the plan is built, so it counts the
+        /// occurrences that close by give-up or take-over before then (icon-badge spec, decision 4).
+        public var predictedBadgeCount: Int
+
         public init(
             reminderID: Reminder.ID,
             dueTime: Date,
@@ -45,7 +50,8 @@ public struct SchedulePlan: Equatable, Sendable {
             urgency: Urgency,
             title: String,
             deliveryKind: DeliveryKind,
-            isPastAlarmLimit: Bool = false
+            isPastAlarmLimit: Bool = false,
+            predictedBadgeCount: Int = 0
         ) {
             self.reminderID = reminderID
             self.dueTime = dueTime
@@ -56,6 +62,7 @@ public struct SchedulePlan: Equatable, Sendable {
             self.title = title
             self.deliveryKind = deliveryKind
             self.isPastAlarmLimit = isPastAlarmLimit
+            self.predictedBadgeCount = predictedBadgeCount
         }
 
         /// The notification body, for example "Nudge 3 of 20 · High", in the app's language.
