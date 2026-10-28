@@ -58,10 +58,12 @@ struct RootView: View {
         return NowScreen.badgeCount(of: model.engine)
     }
 
-    /// Sets `minute` at the start of each minute until the view goes away.
+    /// Sets `minute` at the start of each minute until the view goes away, and tells the model, so
+    /// the Icon badge keeps up with the Now badge.
     private func tickEveryMinute() async {
         while (try? await EveryMinute.sleepUntilNext()) != nil {
             minute = .now
+            model?.minutePassed()
         }
     }
 }

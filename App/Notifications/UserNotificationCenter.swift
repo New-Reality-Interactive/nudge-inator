@@ -22,6 +22,8 @@ protocol UserNotificationCenter: AnyObject {
     func setDelegate(_ delegate: any UNUserNotificationCenterDelegate)
     func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool
     func notificationSettings() async -> NotificationSettingsSnapshot
+    /// The Icon badge. Zero hides it.
+    func setBadgeCount(_ count: Int) async throws
 }
 
 /// The real center.
@@ -59,6 +61,10 @@ final class SystemNotificationCenter: UserNotificationCenter {
 
     func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool {
         try await center.requestAuthorization(options: options)
+    }
+
+    func setBadgeCount(_ count: Int) async throws {
+        try await center.setBadgeCount(count)
     }
 
     func notificationSettings() async -> NotificationSettingsSnapshot {

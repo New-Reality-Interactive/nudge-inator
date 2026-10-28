@@ -39,7 +39,7 @@ final class PendingLimitDeviceCheck {
         // resets the answer (AGENTS.md › Testing).
         if await center.notificationSettings().authorizationStatus == .notDetermined,
            ProcessInfo.processInfo.environment["NUDGE_FRESH_INSTALL"] == "1" {
-            _ = try await center.requestAuthorization(options: [.alert, .sound])
+            _ = try await center.requestAuthorization(options: [.alert, .sound, .badge])
         }
         let status = await center.notificationSettings().authorizationStatus
         try #require(status == .authorized || status == .provisional, "Allow notifications for Nudge-inator, or set TEST_RUNNER_NUDGE_FRESH_INSTALL=1 on a fresh install")

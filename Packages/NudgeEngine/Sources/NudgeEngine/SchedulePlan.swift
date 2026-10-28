@@ -3,10 +3,14 @@ import Foundation
 /// The alarms and notifications that should be pending.
 public struct SchedulePlan: Equatable, Sendable {
     public var items: [Item]
+    /// The Icon badge's count when the plan was built: how many reminders are Nudging, the
+    /// engine's `badgeCount`, which the Now badge shows too.
+    public var currentBadgeCount: Int
 
     /// Public so the app's adapter tests can hand an adapter a plan without running the engine.
-    public init(items: [Item]) {
+    public init(items: [Item], currentBadgeCount: Int = 0) {
         self.items = items
+        self.currentBadgeCount = currentBadgeCount
     }
 
     /// One planned nudge. It carries only the reminder's title, never its notes or tags.

@@ -138,8 +138,10 @@ public struct Engine {
         self.permissions = permissions
     }
 
-    /// Replaces the whole list: App opened, and the store's reload. It reports what is already
-    /// true, so it isn't checked against the lock. The edit form sends `edit(_:)` instead.
+    /// Replaces the whole list: App opened, the store's reload, and the app's re-plan when time
+    /// has moved on with no event, such as a nudge arriving with the app in front. It reports what
+    /// is already true, so it isn't checked against the lock. The edit form sends `edit(_:)`
+    /// instead.
     public mutating func update(reminders: [Reminder]) {
         self.reminders = reminders
         applyPlan()
@@ -380,7 +382,7 @@ public struct Engine {
                 items += ladder(of: reminder, dueAt: next, takenOverAt: reminder.nextDueTime(after: next, calendar: calendar))
             }
             return items
-        })
+        }, currentBadgeCount: badgeCount)
     }
 
     /// An occurrence's ladder, stopped where the next occurrence takes over (the mockup's

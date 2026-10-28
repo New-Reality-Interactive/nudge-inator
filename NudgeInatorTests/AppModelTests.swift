@@ -594,6 +594,96 @@ struct AppModelTests {
         withExtendedLifetime(model) {}
     }
 
+    /// The Icon badge shows the Now badge's count (icon-badge spec, decision 1), set from the plan
+    /// that launch, App opened and each event apply. A Done from a notification sets it before the
+    /// response handler returns, while the app is still awake.
+    @Test func theIconBadgeFollowsTheNowBadgeThroughLaunchAppOpenedEventsAndADoneFromANotification() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        try store.save(StoredData(reminders: [call], tags: [], histories: [:]))
+        let water = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 15, 8, 30), strength: .gentle)
+        let (model, notifications) = model(store: store)
+
+        await model.launch()
+        await model.waitUntilApplied()
+        #expect(center.badgeCounts.last == 0)
+
+        clock.now = NewYork.local(2026, 10, 15, 8, 45)
+        await model.appOpened()
+        await model.waitUntilApplied()
+        #expect(center.badgeCounts.last == 1)
+
+        model.add(water)
+        await model.waitUntilApplied()
+        #expect(center.badgeCounts.last == 2)
+
+        await chooseDone(on: notifications, nudgeFiredAt: NewYork.local(2026, 10, 15, 8, 40))
+        #expect(center.badgeCounts.last == 1)
+        #expect(NowScreen.badgeCount(of: model.engine) == 1)
+    }
+
+    /// A Relentless reminder rings as an alarm, which tells the app nothing when it comes due with
+    /// the app in front. The minute the Now badge redraws, the model re-plans if the count changed,
+    /// and only then (icon-badge spec, criterion 8).
+    @Test func eachMinuteTheIconBadgeCatchesUpWithTheNowBadgeIfItChanged() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        let alex = Reminder(title: "Reply to Alex", dueTime: NewYork.local(2026, 10, 15, 8, 40), strength: .relentless)
+        let model = await launchedModel(store: store)
+        model.add(alex)
+        await model.waitUntilApplied()
+        #expect(center.badgeCounts.last == 0)
+
+        clock.now = NewYork.local(2026, 10, 15, 8, 40)
+        model.minutePassed()
+        await model.waitUntilApplied()
+        #expect(center.badgeCounts.last == 1)
+
+        let badgeSets = center.badgeCounts.count
+        clock.now = NewYork.local(2026, 10, 15, 8, 41)
+        model.minutePassed()
+        await model.waitUntilApplied()
+        #expect(center.badgeCounts.count == badgeSets)
+    }
+
+    /// A Done the engine ignores, here from a banner left from an earlier occurrence, applies no
+    /// plan of its own. The icon may be stale (two reminders came due while the app was
+    /// suspended), and the app is awake, so it sets the live count anyway (icon-badge spec,
+    /// decision 4).
+    @Test func aDoneTheEngineIgnoresStillSetsTheIconBadgeToTheLiveCount() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        let water = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 15, 8, 30), strength: .gentle)
+        let (model, notifications) = model(store: store)
+        await model.launch()
+        model.add(call)
+        model.add(water)
+        await model.waitUntilApplied()
+        #expect(center.badgeCounts.last == 0)
+
+        clock.now = NewYork.local(2026, 10, 15, 8, 45)
+        await chooseDone(on: notifications, nudgeFiredAt: NewYork.local(2026, 10, 15, 8, 20))
+
+        #expect(model.engine.openOccurrence(for: call.id) != nil)
+        #expect(center.badgeCounts.last == 2)
+    }
+
+    /// A nudge delivered with the app in front: the last plan was built before its occurrence came
+    /// due, so it counted it out. The delivery re-plans, so the plan carries the live count
+    /// (icon-badge spec, criterion 8).
+    @Test func aNudgeDeliveredWithTheAppInFrontSetsTheIconBadgeToTheLiveCount() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        let (model, notifications) = model(store: store)
+        await model.launch()
+        model.add(call)
+        await model.waitUntilApplied()
+        #expect(center.badgeCounts.last == 0)
+
+        clock.now = NewYork.local(2026, 10, 15, 8, 40)
+        notifications.handlePresentation()
+        await model.waitUntilApplied()
+
+        #expect(center.badgeCounts.last == 1)
+        #expect(NowScreen.badgeCount(of: model.engine) == 1)
+    }
+
     /// The alarm's Open: the ring stops (ticket 02 B), and the app shows the reminder's details,
     /// where Done is then the same `markDone` as everywhere else in the app.
     @Test func openStopsTheAlarmThatRangAndShowsTheRemindersDetailsWhereDoneClosesItsOccurrence() async throws {
