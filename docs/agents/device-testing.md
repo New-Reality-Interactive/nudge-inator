@@ -55,6 +55,19 @@ Lessons from ticket 29:
 - A Form section footer sits below its field and goes behind the keyboard; in compact height put such a message in the section header.
 - VoiceOver speaks "#" as "number sign".
 
+## Archive and upload (TestFlight)
+
+How a feature's build reaches App Store Connect (`icon-badge` #99; 1.1.0 went through the Organizer). The archive is taken from the merged `main` commit, after `scripts/test.sh` passed on both simulators there. `MARKETING_VERSION` is already set by the upload ticket's PR; `CURRENT_PROJECT_VERSION` stays 1, and the export step raises it.
+
+1. `scripts/archive-and-upload.sh` regenerates the project, archives (Release, scheme `NudgeInator`, warnings as errors from `project.yml`) into `.build/release/`, checks that the app and the widget report `MARKETING_VERSION`, and stops.
+2. Validation, in the Organizer. Apple's docs say Validate App lets you confirm the app is ready "without submitting it yet". The script has no `xcodebuild` validation step: `xcodebuild` accepts the `validation` method only with `destination: upload`, and the docs don't say whether that sends the build to App Store Connect or equals Validate App. So the developer opens the archive (`open .build/release/NudgeInator.xcarchive` adds it to the Organizer) and runs Validate App; once they say it passed, `scripts/archive-and-upload.sh record-validated` records it. Put what validation reported in the ticket's Comments; a failure's message too.
+3. On the developer's go only, `scripts/archive-and-upload.sh upload` uploads that archive with `scripts/export-options.plist`: App Store Connect method, automatic signing, symbols uploaded, version and build number managed, `testFlightInternalTestingOnly` off. It refuses unless validation was recorded for this archive on this commit. It uses the Apple ID signed into Xcode; no API key or secret exists.
+4. The developer confirms in App Store Connect that the build processed, pastes What to Test (`docs/release-notes/`), and adds the build to the internal group.
+
+Organizer fallback, if a command-line step fails: Product > Archive, Validate App, then Distribute App with **TestFlight & App Store**, never **TestFlight Internal Only**, whose build can never go to the App Store. Keep automatic signing, symbol upload and "Manage version and build number" on (Xcode 27 may skip the options screen).
+
+The TestFlight install replaces the Xcode copy on the phone: note what was installed first, and leave the phone as found.
+
 ## Device-check walkthrough
 
 When closing an acceptance criterion needs device checks that need the person, walk them through one check at a time, so none is missed. For each check:
