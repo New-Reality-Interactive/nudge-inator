@@ -43,6 +43,9 @@ SCREENS = {
   "banner-alarms-off": ("perm.alarms=false;render()", 3),
   "settings-alarms-off": ("perm.alarms=false;state.tab='settings';nav()", 1),
   "banner-time-sensitive-off": ("perm.timeSensitive=false;render()", 1),
+  # Settings' Badges row (icon-badge #85). A mockup without it draws Settings with no Badges row.
+  "settings-badges-off": ("perm.badges='denied';state.tab='settings';nav()", 2),
+  "settings-badges-not-set": ("perm.badges='notDetermined';state.tab='settings';nav()", 2),
   # Pace and strength (enhancement-pace).
   "details-relentless": ("push({kind:'rem',id:'r7'})", 4),
   "form-new-escalating": ("openEditor();state.sheet.draft.pace='escalating';render()", 4),
