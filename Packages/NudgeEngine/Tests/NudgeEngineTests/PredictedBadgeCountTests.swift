@@ -5,6 +5,7 @@ import NudgeEngine
 /// The count each planned nudge carries (icon-badge spec, decisions 4 and 8): how many reminders
 /// are Nudging at its fire time, so a notification that arrives with the app closed stamps the
 /// icon with a number that is right then.
+@Suite(.serialized)
 struct PredictedBadgeCountTests {
     let clock = FakeClock(now: NewYork.local(2026, 10, 16, 6))
     let scheduler = FakeScheduler()
@@ -134,11 +135,9 @@ struct PredictedBadgeCountTests {
         #expect(after.count == before.count && after.allSatisfy { $0 == 2 })
     }
 
-    /// Every planned nudge reads every reminder, so the stamping must stay cheap for a long list: this
-    /// is 100 daily reminders, in debug, with room to spare.
-    @Test func stampingAHundredDailyRemindersIsQuick() {
-        clock.now = NewYork.local(2026, 10, 16, 7, 30)
-        let reminders = (0..<100).map { index in
+    /// Daily reminders spread over the day.
+    func dailyReminders(count: Int) -> [Reminder] {
+        (0..<count).map { index in
             Reminder(
                 title: "Reminder \(index)",
                 dueTime: NewYork.local(2026, 10, 16, 6 + index % 14, index % 60),
@@ -146,28 +145,46 @@ struct PredictedBadgeCountTests {
                 strength: index.isMultiple(of: 2) ? .gentle : .firm
             )
         }
+    }
 
-        let elapsed = ContinuousClock().measure { _ = engine(holding: reminders) }
+    /// How long stamping each list takes, as the fastest of five rounds with the two lists
+    /// alternating, so a busy moment on the Mac slows both. The speed tests below compare these
+    /// two times and never hold one to a fixed limit that load alone could exceed.
+    func fastestStamping(of baseline: [Reminder], and compared: [Reminder]) -> (baseline: Duration, compared: Duration) {
+        func stamp(_ reminders: [Reminder]) -> Duration {
+            ContinuousClock().measure { _ = engine(holding: reminders) }
+        }
+        var fastest = (baseline: stamp(baseline), compared: stamp(compared))
+        for _ in 1..<5 {
+            fastest.baseline = min(fastest.baseline, stamp(baseline))
+            fastest.compared = min(fastest.compared, stamp(compared))
+        }
+        return fastest
+    }
 
-        #expect(elapsed < .seconds(1))
+    /// Every planned nudge reads every reminder, so the stamping must grow with the list, not with
+    /// the list times the plan: four times the reminders is about four times the work, where
+    /// reading every reminder per item would make it about sixteen. Healthy runs measured 5.4 times
+    /// and the per-item reading 17.6, so 10 sits between them. It doesn't catch a slowdown that
+    /// scales with the list.
+    @Test func stampingGrowsInStepWithTheReminders() {
+        clock.now = NewYork.local(2026, 10, 16, 7, 30)
+
+        let time = fastestStamping(of: dailyReminders(count: 50), and: dailyReminders(count: 200))
+
+        #expect(time.compared < time.baseline * 10, "50 reminders took \(time.baseline), 200 took \(time.compared)")
     }
 
     /// One reminder due far ahead puts the plan's last fire time far ahead, and every other reminder
-    /// is then read up to it.
+    /// is then read up to it. One more window to read about doubles the time (measured 2.1 times);
+    /// reading everything up to next year took about 150 times as long. The margin is 10.
     @Test func aReminderDueNextYearDoesntSlowTheStamping() {
         clock.now = NewYork.local(2026, 10, 16, 7, 30)
-        var reminders = (0..<100).map { index in
-            Reminder(
-                title: "Reminder \(index)",
-                dueTime: NewYork.local(2026, 10, 16, 6 + index % 14, index % 60),
-                repeatRule: .everyDay,
-                strength: index.isMultiple(of: 2) ? .gentle : .firm
-            )
-        }
-        reminders.append(Reminder(title: "Renew the passport", dueTime: NewYork.local(2027, 10, 16), strength: .gentle))
+        let without = dailyReminders(count: 100)
+        let with = without + [Reminder(title: "Renew the passport", dueTime: NewYork.local(2027, 10, 16), strength: .gentle)]
 
-        let elapsed = ContinuousClock().measure { _ = engine(holding: reminders) }
+        let time = fastestStamping(of: without, and: with)
 
-        #expect(elapsed < .seconds(1))
+        #expect(time.compared < time.baseline * 10, "without it \(time.baseline), with it \(time.compared)")
     }
 }
