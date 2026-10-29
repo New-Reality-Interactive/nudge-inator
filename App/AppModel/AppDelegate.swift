@@ -26,6 +26,10 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             // say which thread evaluates it.
             let opener = model.alarmOpener
             AppDependencyManager.shared.add(dependency: opener)
+            // The alarm's Stop runs `RefreshBadgeIntent` in this process too (ticket 87), and
+            // reaches the model through this refresher.
+            let refresher = model.badgeRefresher
+            AppDependencyManager.shared.add(dependency: refresher)
             Task { await model.launch() }
         }
         return true
@@ -57,9 +61,14 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             clock: clock,
             openStore: openStore,
             notifications: NotificationAdapter(center: SystemNotificationCenter(), clock: clock),
-            alarms: AlarmAdapter(manager: SystemAlarmManager(), clock: clock, openIntent: { item, alarmID in
-                OpenReminderIntent(alarmID: alarmID, reminderID: item.reminderID)
-            }),
+            alarms: AlarmAdapter(
+                manager: SystemAlarmManager(),
+                clock: clock,
+                openIntent: { item, alarmID in
+                    OpenReminderIntent(alarmID: alarmID, reminderID: item.reminderID)
+                },
+                stopIntent: { RefreshBadgeIntent() }
+            ),
             doneQueue: doneQueue
         )
     }

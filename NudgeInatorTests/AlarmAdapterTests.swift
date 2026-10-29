@@ -684,6 +684,41 @@ struct AlarmAdapterTests {
         #expect(intent.alarmID == call.id)
         #expect(intent.reminderID == Self.pills)
     }
+
+    /// Ticket 87 passes the Stop intent in, which refreshes the badge. Every alarm carries one, so
+    /// any Stop runs app code.
+    @Test func aStopIntentGoesOnEveryAlarm() async throws {
+        let adapter = AlarmAdapter(manager: manager, clock: clock, stopIntent: { TestStopIntent() })
+
+        adapter.apply(SchedulePlan(items: [
+            nudge(4, at: NewYork.local(2026, 10, 16, 9, 10)),
+            nudge(5, at: NewYork.local(2026, 10, 16, 9, 20)),
+        ]))
+        await adapter.waitUntilApplied()
+
+        #expect(manager.scheduleCalls.count == 2)
+        #expect(manager.scheduleCalls.allSatisfy { $0.stopIntent is TestStopIntent })
+    }
+
+    /// Without one, Stop is the system's alone and runs no app code.
+    @Test func withoutAStopIntentTheAlarmCarriesNone() async throws {
+        let adapter = adapter()
+
+        adapter.apply(SchedulePlan(items: [nudge(4, at: NewYork.local(2026, 10, 16, 9, 10))]))
+        await adapter.waitUntilApplied()
+
+        let call = try #require(manager.scheduleCalls.first)
+        #expect(call.stopIntent == nil)
+    }
+}
+
+/// Stands in for ticket 87's Stop intent.
+struct TestStopIntent: LiveActivityIntent {
+    static let title: LocalizedStringResource = "Stop"
+
+    func perform() async throws -> some IntentResult {
+        .result()
+    }
 }
 
 /// Stands in for ticket 20's Open intent.

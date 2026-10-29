@@ -19,6 +19,7 @@ protocol AlarmManaging: AnyObject {
         id: Alarm.ID,
         schedule: Alarm.Schedule,
         attributes: AlarmAttributes<NudgeAlarmMetadata>,
+        stopIntent: (any LiveActivityIntent)?,
         secondaryIntent: (any LiveActivityIntent)?
     ) async throws
     func cancel(id: Alarm.ID) throws
@@ -38,13 +39,17 @@ final class SystemAlarmManager: AlarmManaging {
         id: Alarm.ID,
         schedule: Alarm.Schedule,
         attributes: AlarmAttributes<NudgeAlarmMetadata>,
+        stopIntent: (any LiveActivityIntent)?,
         secondaryIntent: (any LiveActivityIntent)?
     ) async throws {
-        // `.alarm` "behaves like a traditional alarm", unlike the countdown-style init. No stop
-        // intent: Stop needs no app code (ADR 0001).
+        // `.alarm` "behaves like a traditional alarm", unlike the countdown-style init. The stop
+        // intent only refreshes the badge and stops nothing itself. Apple's docs don't say whether
+        // the system still silences the ring once a stop intent is set (Open's doesn't, ticket 02
+        // B): ticket 87's device check (ADR 0001).
         let configuration = AlarmManager.AlarmConfiguration.alarm(
             schedule: schedule,
             attributes: attributes,
+            stopIntent: stopIntent,
             secondaryIntent: secondaryIntent
         )
         _ = try await AlarmManager.shared.schedule(id: id, configuration: configuration)
