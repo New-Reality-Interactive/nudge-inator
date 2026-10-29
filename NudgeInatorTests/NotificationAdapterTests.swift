@@ -268,7 +268,38 @@ struct NotificationAdapterTests {
 
         let states = await adapter.permissions(updating: PermissionStates(alarms: .denied))
 
-        #expect(states == PermissionStates(notifications: notifications, alarms: .denied, timeSensitive: timeSensitive))
+        // Field by field: badges are read too, and have their own test below.
+        #expect(states.notifications == notifications)
+        #expect(states.timeSensitive == timeSensitive)
+        #expect(states.alarms == .denied)
+    }
+
+    /// Badges come from the settings' badge setting, never from the prompt's answer (spec #80,
+    /// decision 5). iOS gives a provisional app no badges, and an install upgraded from 1.1.0
+    /// reads `notSupported` until the app asks again with `.badge` (#89), so it isn't Off.
+    @Test(arguments: [
+        (UNAuthorizationStatus.notDetermined, UNNotificationSetting.notSupported, BadgePermission.notDetermined),
+        (.notDetermined, .disabled, .notDetermined),
+        (.authorized, .enabled, .allowed),
+        (.authorized, .disabled, .denied),
+        (.authorized, .notSupported, .notDetermined),
+        (.ephemeral, .enabled, .allowed),
+        (.provisional, .enabled, .denied),
+        (.provisional, .notSupported, .denied),
+        (.denied, .disabled, .denied),
+        (.denied, .enabled, .denied),
+    ])
+    func theBadgeSettingBecomesTheBadgePermission(
+        status: UNAuthorizationStatus,
+        badgeSetting: UNNotificationSetting,
+        expected: BadgePermission
+    ) async {
+        let adapter = adapter()
+        center.settings = NotificationSettingsSnapshot(authorizationStatus: status, timeSensitiveSetting: .enabled, badgeSetting: badgeSetting)
+
+        let states = await adapter.permissions(updating: PermissionStates())
+
+        #expect(states.badges == expected)
     }
 
     /// Apple: scheduling while not authorized fails with `notificationsNotAllowed`.

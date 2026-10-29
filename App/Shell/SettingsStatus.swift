@@ -6,6 +6,7 @@ import UIKit
 struct SettingsStatus: Equatable {
     let notifications: NotificationsStatus
     let alarms: AlarmsStatus
+    let badges: BadgesStatus
     let openSettings: OpenSettings?
     let canSendTestNudge: Bool
 
@@ -20,10 +21,15 @@ struct SettingsStatus: Equatable {
         case .denied: alarms = .off
         case .notDetermined: alarms = .notSet
         }
+        switch states.badges {
+        case .allowed: badges = .on
+        case .denied: badges = .off
+        case .notDetermined: badges = .notSet
+        }
         // Alarms first: only the app's page in Settings reaches them, and it links on to Notifications.
         if alarms == .off {
             openSettings = .appSettings
-        } else if notifications.isOff {
+        } else if notifications.isOff || badges == .off {
             openSettings = .notificationSettings
         } else {
             openSettings = nil
@@ -33,7 +39,8 @@ struct SettingsStatus: Equatable {
 
     /// Where the Open iOS Settings row goes.
     enum OpenSettings: Equatable {
-        /// The app's notification settings, where the notification and Time Sensitive switches are.
+        /// The app's notification settings, where the notification, Time Sensitive and Badges
+        /// switches are.
         case notificationSettings
         /// The app's own page in Settings, which is where to turn alarms back on.
         case appSettings
@@ -69,6 +76,16 @@ enum AlarmsStatus: Equatable {
     case notSet
 
     var isOff: Bool { self == .off }
+}
+
+/// Not a problem to flag even when off (DESIGN.md › Settings row), so it has no `isOff`: the row
+/// shows it in the secondary label color whatever it says.
+enum BadgesStatus: Equatable {
+    case on
+    /// Denied, provisional, or notifications off: the same to the person, with the same fix.
+    case off
+    /// Before onboarding's prompt, or an install upgraded from 1.1.0 until the app asks again.
+    case notSet
 }
 
 /// One sentence of the footer under Settings' Nudges rows.

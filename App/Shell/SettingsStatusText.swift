@@ -22,6 +22,16 @@ extension AlarmsStatus {
     }
 }
 
+extension BadgesStatus {
+    var text: Text {
+        switch self {
+        case .on: Text("On", comment: "Settings: status of the Badges row when the app icon may show a badge.")
+        case .off: Text("Off", comment: "Settings: status of the Badges row when badges or notifications are turned off in iOS Settings.")
+        case .notSet: Text("Not Set", comment: "Settings: status of the Badges row before the person has been asked about badges, or just after an update while the app turns them on.")
+        }
+    }
+}
+
 extension FooterSentence {
     var text: Text {
         switch self {

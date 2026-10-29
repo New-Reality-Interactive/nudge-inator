@@ -5,16 +5,21 @@ public struct PermissionStates: Equatable, Sendable {
     public var notifications: NotificationPermission
     public var alarms: AlarmPermission
     public var timeSensitive: TimeSensitiveSetting
+    /// Only Settings' Badges row reads it: iOS shows no Icon badge while badges are off, so the
+    /// plan is the same either way. A change still re-plans, as any permission change does.
+    public var badges: BadgePermission
 
     /// The defaults are a fresh install before anything is denied, as in the mockup's `perm`.
     public init(
         notifications: NotificationPermission = .allowed,
         alarms: AlarmPermission = .notDetermined,
-        timeSensitive: TimeSensitiveSetting = .on
+        timeSensitive: TimeSensitiveSetting = .on,
+        badges: BadgePermission = .notDetermined
     ) {
         self.notifications = notifications
         self.alarms = alarms
         self.timeSensitive = timeSensitive
+        self.badges = badges
     }
 }
 
@@ -37,6 +42,14 @@ public enum AlarmPermission: Equatable, Sendable {
 public enum TimeSensitiveSetting: Equatable, Sendable {
     case on
     case off
+}
+
+/// Whether the Icon badge may show, from the app's badge setting. Not determined covers both
+/// before the prompt and an install upgraded from 1.1.0, whose prompt never asked for badges.
+public enum BadgePermission: Equatable, Sendable {
+    case allowed
+    case denied
+    case notDetermined
 }
 
 /// What can still reach the person: how a nudge of each urgency arrives with Break through Focus
