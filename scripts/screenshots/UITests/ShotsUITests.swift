@@ -7,7 +7,7 @@ import XCTest
 final class ShotsUITests: XCTestCase {
     /// The harness's `SHOT_SCENARIO`s (`ShotsApp.Scenario`, which can't be imported here).
     enum ShotScenario: String {
-        case app, onboarding, notificationsOff, alarmsOff, timeSensitiveOff, customLocking
+        case app, onboarding, notificationsOff, alarmsOff, timeSensitiveOff, badgesOff, badgesNotSet, customLocking
     }
 
     private var app: XCUIApplication!
@@ -600,5 +600,16 @@ final class ShotsUITests: XCTestCase {
     func testTimeSensitiveOff() {
         launch(.timeSensitiveOff)
         shot("banner-time-sensitive-off", pages: 3)
+    }
+
+    /// The mockup's screens of the same names (`docs/mockups/2026-10-28-settings-badges/`).
+    func testBadges() {
+        launch(.badgesOff)
+        tab("Settings")
+        // Pages, as for `settings`: at the largest text the row is below the first.
+        shot("settings-badges-off", pages: 3)
+        launch(.badgesNotSet)
+        tab("Settings")
+        shot("settings-badges-not-set", pages: 3)
     }
 }

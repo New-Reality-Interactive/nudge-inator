@@ -554,6 +554,9 @@
     "Any Tag" : {
       "comment" : "My Day's filter sheet: the Match choice that needs at least one checked tag."
     },
+    "Badges" : {
+      "comment" : "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging."
+    },
     "Below is how each strength nudges a new reminder at your Default Pace, %@, with Break Through Focus on." : {
       "comment" : "How It Nudges page: under the points at the top, before the three strengths' schedules. The placeholder is the Default Pace, such as \"Consistent · 10 min\" or \"Escalating\"."
     },
@@ -1091,7 +1094,7 @@
       "comment" : "Settings: footer under the Nudges rows."
     },
     "Not Set" : {
-      "comment" : "Settings: status of the Alarms row before the person has been asked about alarms."
+      "comment" : "Settings: status of the Alarms row before the person has been asked about alarms.\nSettings: status of the Badges row before the person has been asked about badges, or just after an update while the app turns them on."
     },
     "Notes" : {
       "comment" : "The reminder form's notes field."
@@ -1257,10 +1260,10 @@
       "comment" : "Settings: dismisses the message that deleting failed."
     },
     "Off" : {
-      "comment" : "Reminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Notifications row when notifications are turned off."
+      "comment" : "Reminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off."
     },
     "On" : {
-      "comment" : "Header of the Custom repeat page's days: the weekdays, or the day of the month.\nReminder details: Break Through Focus is on.\nSettings: status of the Alarms row when alarms are allowed.\nSettings: status of the Notifications row when notifications and Time Sensitive are allowed."
+      "comment" : "Header of the Custom repeat page's days: the weekdays, or the day of the month.\nReminder details: Break Through Focus is on.\nSettings: status of the Alarms row when alarms are allowed.\nSettings: status of the Badges row when the app icon may show a badge.\nSettings: status of the Notifications row when notifications and Time Sensitive are allowed."
     },
     "On %@, from the start date. Change it to pick another day." : {
       "comment" : "Under the Custom repeat page's frequency when it's yearly. The placeholder is the start's day and month, such as \"28 October\"."
@@ -1302,7 +1305,7 @@
       "comment" : "VoiceOver label of the notifications-off banner's Open Settings button."
     },
     "Open iOS Settings" : {
-      "comment" : "Settings: row that opens the app's page in the iOS Settings app, where notifications and alarms can be turned on."
+      "comment" : "Settings: row that opens the app's page in the iOS Settings app, where notifications, alarms and badges can be turned on."
     },
     "Opens the reminder's details." : {
       "comment" : "VoiceOver hint on a nudge card's title and on a Now row: tapping it opens the reminder's details."

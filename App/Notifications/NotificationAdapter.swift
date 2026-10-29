@@ -152,9 +152,9 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         }
     }
 
-    /// `states` with the notifications and Time Sensitive fields read from the center. Alarms are
-    /// the alarm adapter's (ticket 19). Read at launch and on every foreground: the person can turn
-    /// Time Sensitive off after the first one arrives.
+    /// `states` with the notifications, Time Sensitive and badges fields read from the center.
+    /// Alarms are the alarm adapter's (ticket 19). Read at launch and on every foreground: the
+    /// person can turn Time Sensitive or Badges off in iOS Settings at any time.
     func permissions(updating states: PermissionStates) async -> PermissionStates {
         let settings = await center.notificationSettings()
         var states = states
@@ -174,6 +174,24 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
             states.timeSensitive = .on
         default:
             states.timeSensitive = .off
+        }
+        // From the badge setting, never from the prompt's answer, which says only that some
+        // option was granted (spec #80, decision 5). Apple ("Asking permission to use
+        // notifications") gives a provisional app no badges.
+        switch (settings.authorizationStatus, settings.badgeSetting) {
+        case (.notDetermined, _):
+            states.badges = .notDetermined
+        case (.denied, _), (.provisional, _):
+            states.badges = .denied
+        case (_, .enabled):
+            states.badges = .allowed
+        // Allowed by a prompt that didn't ask for badges: an install upgraded from 1.1.0, until
+        // the app asks again (#89). Off would point at a switch that isn't there.
+        case (_, .notSupported):
+            states.badges = .notDetermined
+        // `.disabled`, and any setting a later iOS adds.
+        default:
+            states.badges = .denied
         }
         return states
     }

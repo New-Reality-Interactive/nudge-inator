@@ -26,6 +26,34 @@ struct SettingsStatusTests {
         #expect(SettingsStatus(PermissionStates(alarms: alarms)).alarms == expected)
     }
 
+    /// Provisional and notifications off already read as denied badges, from the adapter.
+    @Test(arguments: [
+        (BadgePermission.allowed, BadgesStatus.on),
+        (.denied, .off),
+        (.notDetermined, .notSet),
+    ])
+    func theBadgesRowFollowsTheBadgeState(badges: BadgePermission, expected: BadgesStatus) {
+        #expect(SettingsStatus(PermissionStates(badges: badges)).badges == expected)
+    }
+
+    @Test(arguments: [
+        PermissionStates(alarms: .allowed, badges: .denied),
+        PermissionStates(alarms: .notDetermined, badges: .denied),
+    ])
+    func badgesOffOpenTheAppsNotificationSettings(states: PermissionStates) {
+        #expect(SettingsStatus(states).openSettings == .notificationSettings)
+    }
+
+    @Test(arguments: [BadgePermission.allowed, .notDetermined])
+    func badgesOnOrNotSetOfferNoWayToOpenSettings(badges: BadgePermission) {
+        #expect(SettingsStatus(PermissionStates(alarms: .allowed, badges: badges)).openSettings == nil)
+    }
+
+    /// Only the app's page reaches alarms, and it links on to Notifications, where Badges is.
+    @Test func deniedAlarmsStillOpenTheAppsPageWhenBadgesAreOff() {
+        #expect(SettingsStatus(PermissionStates(alarms: .denied, badges: .denied)).openSettings == .appSettings)
+    }
+
     @Test func onlyAStatusThatIsOffIsFlaggedAsAProblem() {
         #expect(NotificationsStatus.on.isOff == false)
         #expect(NotificationsStatus.timeSensitiveOff.isOff)

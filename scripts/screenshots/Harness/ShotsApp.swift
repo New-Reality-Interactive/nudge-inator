@@ -13,6 +13,9 @@ struct ShotsApp: App {
         /// First launch, nothing asked yet.
         case onboarding
         case notificationsOff, alarmsOff, timeSensitiveOff
+        /// Everything allowed but badges: turned off in iOS Settings, or never asked for, as on an
+        /// install upgraded from 1.1.0 (#86).
+        case badgesOff, badgesNotSet
         /// Everything allowed, plus a Custom reminder that starts nudging a minute or two after
         /// launch, so its Custom page can be open as it locks (ticket 16). `SHOT_DARK` shows it dark.
         case customLocking
@@ -92,12 +95,16 @@ enum ShotsSeed {
         case .notificationsOff:
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .denied, timeSensitiveSetting: .disabled)
         case .alarmsOff:
-            center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled)
+            center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .enabled)
             manager.authorizationState = .denied
         case .timeSensitiveOff:
-            center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .disabled)
+            center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .disabled, badgeSetting: .enabled)
+        case .badgesOff:
+            center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .disabled)
+        case .badgesNotSet:
+            center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .notSupported)
         case .app, .customLocking:
-            center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled)
+            center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .enabled)
         }
         let store = try! ReminderStore(location: .inMemory)
         let model = AppModel(

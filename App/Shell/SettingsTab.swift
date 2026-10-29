@@ -1,9 +1,9 @@
 import NudgeEngine
 import SwiftUI
 
-/// Settings: the permission banners, About, what the app may send (notifications and alarms), a way
-/// to open iOS Settings when something is off, Send a Test Nudge, the Default Pace, How It Nudges,
-/// and Delete All Data.
+/// Settings: the permission banners, About, what the app may send (notifications, alarms and
+/// badges), a way to open iOS Settings when something is off, Send a Test Nudge, the Default Pace,
+/// How It Nudges, and Delete All Data.
 struct SettingsTab: View {
     let state: ScreenState
     /// What previews show, since they have no app model: the permissions and how they leave
@@ -109,6 +109,13 @@ struct SettingsTab: View {
                 status: status.alarms.text,
                 statusIsNegative: status.alarms.isOff
             )
+            // Gray even when Off: badges off isn't a problem to flag (DESIGN.md › Settings row).
+            SettingsRow(
+                tile: .tileRed,
+                symbol: "app.badge",
+                title: Text("Badges", comment: "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging."),
+                status: status.badges.text
+            )
             if let openSettings = status.openSettings {
                 Button {
                     openSettings.open()
@@ -116,7 +123,7 @@ struct SettingsTab: View {
                     SettingsRow(
                         tile: .tileGray,
                         symbol: "gearshape",
-                        title: Text("Open iOS Settings", comment: "Settings: row that opens the app's page in the iOS Settings app, where notifications and alarms can be turned on."),
+                        title: Text("Open iOS Settings", comment: "Settings: row that opens the app's page in the iOS Settings app, where notifications, alarms and badges can be turned on."),
                         titleColor: .accentColor,
                         accessory: .chevron
                     )
@@ -240,6 +247,10 @@ struct SettingsTab: View {
         previewPermissions: PermissionStates(notifications: .denied, alarms: .denied),
         previewReach: Reach(normal: nil, high: nil, urgent: nil)
     )
+}
+
+#Preview("Badges off") {
+    SettingsTab(state: .ready, previewPermissions: PermissionStates(alarms: .allowed, badges: .denied))
 }
 
 #Preview("Alarms allowed, Time Sensitive off") {

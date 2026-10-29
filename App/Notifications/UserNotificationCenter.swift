@@ -5,6 +5,8 @@ import UserNotifications
 struct NotificationSettingsSnapshot: Equatable, Sendable {
     var authorizationStatus: UNAuthorizationStatus
     var timeSensitiveSetting: UNNotificationSetting
+    /// `notSupported` before the prompt, and after one that didn't ask for badges.
+    var badgeSetting: UNNotificationSetting = .notSupported
 }
 
 /// The calls the notification adapter makes on `UNUserNotificationCenter`, so tests can swap in a
@@ -71,7 +73,8 @@ final class SystemNotificationCenter: UserNotificationCenter {
         let settings = await center.notificationSettings()
         return NotificationSettingsSnapshot(
             authorizationStatus: settings.authorizationStatus,
-            timeSensitiveSetting: settings.timeSensitiveSetting
+            timeSensitiveSetting: settings.timeSensitiveSetting,
+            badgeSetting: settings.badgeSetting
         )
     }
 }

@@ -117,7 +117,9 @@ final class FakeNotificationCenter: UserNotificationCenter {
         requestedAuthorizationOptions.append(options)
         whileRequestingAuthorization?()
         if settings.authorizationStatus == .notDetermined {
-            settings = NotificationSettingsSnapshot(authorizationStatus: promptAnswer, timeSensitiveSetting: settings.timeSensitiveSetting)
+            // Allowing a prompt that names badges allows them too.
+            let badgeSetting: UNNotificationSetting = promptAnswer == .authorized && options.contains(.badge) ? .enabled : settings.badgeSetting
+            settings = NotificationSettingsSnapshot(authorizationStatus: promptAnswer, timeSensitiveSetting: settings.timeSensitiveSetting, badgeSetting: badgeSetting)
         }
         return settings.authorizationStatus == .authorized
     }
