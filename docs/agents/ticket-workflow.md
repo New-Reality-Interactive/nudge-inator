@@ -31,7 +31,8 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
    `scripts/screenshots.sh` for its visual criteria, on both simulators, in the background at
    the same time (`device-testing.md`, Simulator screenshots), except the full walk, which that
    section puts once before the PR. Make the fixes from the review
-   and from the screenshots after both finish, rerun `scripts/test.sh`, then commit.
+   and from the screenshots after both finish, rerun `scripts/test.sh` (not when every fix changes
+   only comments, `review.md`), then commit.
 
 ## The developer's check
 
