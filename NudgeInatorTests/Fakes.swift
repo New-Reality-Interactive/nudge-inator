@@ -120,6 +120,10 @@ final class FakeNotificationCenter: UserNotificationCenter {
             // Allowing a prompt that names badges allows them too.
             let badgeSetting: UNNotificationSetting = promptAnswer == .authorized && options.contains(.badge) ? .enabled : settings.badgeSetting
             settings = NotificationSettingsSnapshot(authorizationStatus: promptAnswer, timeSensitiveSetting: settings.timeSensitiveSetting, badgeSetting: badgeSetting)
+        } else if settings.authorizationStatus == .authorized, settings.badgeSetting == .notSupported, options.contains(.badge) {
+            // No prompt, as on the iPhone (device experiment, #82): an install authorized before
+            // it asked for badges gets them by asking again.
+            settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: settings.timeSensitiveSetting, badgeSetting: .enabled)
         }
         return settings.authorizationStatus == .authorized
     }

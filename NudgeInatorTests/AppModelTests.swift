@@ -219,6 +219,22 @@ struct AppModelTests {
         #expect(center.pending.count == 20)
     }
 
+    /// #89: an install upgraded from 1.1.0 answered the prompt before it asked for badges. Opening
+    /// the app, at launch or coming forward, asks again, once the first ask has turned badges on.
+    @Test func anUpgradedInstallAsksForBadgesWhenTheAppIsOpenedAndGetsThem() async throws {
+        center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .notSupported)
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+
+        await model.appOpened()
+
+        #expect(center.requestedAuthorizationOptions == [[.alert, .sound, .badge]])
+        #expect(model.permissions.badges == .allowed)
+
+        await model.appOpened()
+
+        #expect(center.requestedAuthorizationOptions.count == 1)
+    }
+
     /// The app hears notifications were turned off only when the center turns a request down.
     @Test func notificationsTurnedOffAreReadAgainWhenTheCenterRefusesARequest() async throws {
         let model = await launchedModel(store: try ReminderStore(location: .inMemory))

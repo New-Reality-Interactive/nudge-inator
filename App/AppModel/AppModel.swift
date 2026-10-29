@@ -195,8 +195,9 @@ final class AppModel {
         await launchTryingAnUnreadStoreAgain()
     }
 
-    /// App opened (ticket 07): permissions read again, then a fresh plan, which also refills the
-    /// notifications past the 64 the system keeps pending (ticket 18).
+    /// App opened (ticket 07): badges asked for again if an upgraded install lacks them (#89),
+    /// permissions read again, then a fresh plan, which also refills the notifications past the
+    /// 64 the system keeps pending (ticket 18).
     func appOpened() async {
         await launchTryingAnUnreadStoreAgain()
         // AlarmKit sent no update for a change made in Settings while the app was suspended
@@ -206,6 +207,9 @@ final class AppModel {
         if !isAskingForPermissions, !promptsJustAnswered {
             await alarms.refreshAuthorization()
         }
+        // Before the read, so it finds badges on. An install upgraded from 1.1.0 has no Badges
+        // row in iOS Settings to turn them on with (#89).
+        await notifications.requestBadgesIfMissing()
         refreshPermissions()
         await permissionsRefresh?.value
         replan()

@@ -216,6 +216,40 @@ struct NotificationAdapterTests {
         #expect(center.requestedAuthorizationOptions == [[.alert, .sound, .badge]])
     }
 
+    /// An install upgraded from 1.1.0 answered a prompt that asked only for alerts and sounds, so
+    /// iOS shows no Badges row for it. Asking again with `.badge` shows no prompt and turns badges
+    /// on (device experiment, #82; icon-badge spec, decision 5).
+    @Test func anAuthorizedInstallWithNoBadgeSettingAsksAgainWithBadges() async {
+        let adapter = adapter()
+        center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .notSupported)
+
+        await adapter.requestBadgesIfMissing()
+
+        #expect(center.requestedAuthorizationOptions == [[.alert, .sound, .badge]])
+    }
+
+    /// Not determined: a request would show the prompt before onboarding. Denied, provisional and
+    /// ephemeral are the person's answer or the system's. A badge setting of `enabled` needs
+    /// nothing, and `disabled` is the person's choice in Settings.
+    @Test(arguments: [
+        (UNAuthorizationStatus.notDetermined, UNNotificationSetting.notSupported),
+        (.notDetermined, .enabled),
+        (.denied, .notSupported),
+        (.denied, .disabled),
+        (.provisional, .notSupported),
+        (.ephemeral, .notSupported),
+        (.authorized, .enabled),
+        (.authorized, .disabled),
+    ])
+    func anyOtherStateAsksNothing(status: UNAuthorizationStatus, badgeSetting: UNNotificationSetting) async {
+        let adapter = adapter()
+        center.settings = NotificationSettingsSnapshot(authorizationStatus: status, timeSensitiveSetting: .enabled, badgeSetting: badgeSetting)
+
+        await adapter.requestBadgesIfMissing()
+
+        #expect(center.requestedAuthorizationOptions.isEmpty)
+    }
+
     /// Every plan sets the Icon badge to its current count, even one with nothing to schedule,
     /// and `waitUntilApplied()` waits for it, so a Done's response handler does too.
     @Test func eachPlanSetsTheIconBadgeToItsCurrentCount() async throws {
