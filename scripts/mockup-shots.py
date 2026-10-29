@@ -50,7 +50,8 @@ SCREENS = {
   "badges-not-determined": ("perm.badges='notDetermined';render()", 1),
   "badges-off-banners": ("perm.badges='denied';perm.alarms=false;perm.timeSensitive=false;render()", 1),
   "myday-badges-off": ("perm.badges='denied';state.tab='day';nav()", 1),
-  "settings-badges-off": ("perm.badges='denied';state.tab='settings';nav()", 1),
+  "settings-badges-off": ("perm.badges='denied';state.tab='settings';nav()", 2),
+  "settings-badges-not-set": ("perm.badges='notDetermined';state.tab='settings';nav()", 2),
   # Pace and strength (enhancement-pace).
   "details-relentless": ("push({kind:'rem',id:'r7'})", 4),
   "form-new-escalating": ("openEditor();state.sheet.draft.pace='escalating';render()", 4),

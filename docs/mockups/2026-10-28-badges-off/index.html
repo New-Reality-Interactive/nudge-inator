@@ -958,7 +958,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <label><input type="checkbox" id="c-perm-t" checked> Time Sensitive allowed</label>
       <label for="c-perm-b">Badges</label>
       <select id="c-perm-b"><option value="allowed" selected>Allowed</option><option value="notDetermined">Not determined</option><option value="provisional">Provisional</option><option value="denied">Denied (off in Settings)</option></select>
-      <p class="why">The badges-off line (#85) shows for Provisional and Denied while notifications are allowed.</p>
+      <p class="why">The badges-off line (#85) shows on Now and My Day for Provisional and Denied while notifications are allowed. Settings shows a Badges row.</p>
     </fieldset>
     <fieldset>
       <legend>iPhone</legend>
@@ -1591,12 +1591,21 @@ function permBanner() {
   if (!perm.timeSensitive) out += `<div class="banner info" role="note">${I("bell", 22)}<div><p><strong>Time Sensitive is off.</strong> High nudges come as ordinary notifications, so a Focus can hold them.</p><button type="button" class="btn bordered small" data-ios-settings>Open Settings</button></div></div>`;
   return out;
 }
-/* The badges-off line (icon-badge #85), under the banners. Only when notifications are allowed: with
+/* Provisional gets no badge permission from iOS, so it reads as denied. */
+const badgesOff = () => ["provisional", "denied"].includes(perm.badges);
+/* Settings' Badges row (icon-badge #85). Gray even when off, unlike the other rows: badges being
+   off isn't a problem to flag. Not Set as Alarms says before onboarding; after an upgrade from
+   1.1.0 the app turns badges on itself, so it never points the person at a switch. */
+function badgesStatus() {
+  if (!perm.notifications || badgesOff()) return "Off";
+  return perm.badges === "notDetermined" ? "Not Set" : "On";
+}
+/* The badges-off line (icon-badge #85), under the banners on Now and My Day; Settings has its row. Only when notifications are allowed: with
    them off, the notifications-off banner already sends the person to the same Settings page. Not
    determined shows none, as the banners don't: onboarding asks, and an upgraded install is asked
    again without a prompt. */
 function badgeLine() {
-  if (!perm.notifications || !["provisional", "denied"].includes(perm.badges)) return "";
+  if (!perm.notifications || !badgesOff()) return "";
   return `<div class="badgeline" role="note">${I("app.badge", 20)}<div><p><strong>Badges are off.</strong> The app icon can't show how many reminders are nudging you.</p><button type="button" class="btn" data-ios-settings aria-label="Open Settings for badges">Open Settings</button></div></div>`;
 }
 
@@ -1980,7 +1989,8 @@ function settingsSections() {
     { title: "Nudges", body: `<div class="sec"><ul class="list icons">
     <li><div class="cell"><span class="ico" style="background:var(--tile-red)">${I("bell", 19)}</span><span class="main">Notifications</span><span class="trail">${ok(perm.notifications && perm.timeSensitive, "On", perm.notifications ? "On · Time Sensitive off" : "Off")}</span></div></li>
     <li><div class="cell"><span class="ico" style="background:var(--tile-orange)">${I("alarm", 19)}</span><span class="main">Alarms</span><span class="trail">${ok(perm.alarms, "On", "Off")}</span></div></li>
-    ${!perm.notifications || !perm.alarms || !perm.timeSensitive ? `<li><button type="button" class="cell tint" data-ios-settings><span class="ico" style="background:var(--tile-gray)">${I("gearshape", 19)}</span><span class="main">Open iOS Settings</span>${chev}</button></li>` : ""}
+    <li><div class="cell"><span class="ico" style="background:var(--tile-red)">${I("app.badge", 19)}</span><span class="main">Badges</span><span class="trail" style="color:var(--secondary-label)">${badgesStatus()}</span></div></li>
+    ${!perm.notifications || !perm.alarms || !perm.timeSensitive || badgesOff() ? `<li><button type="button" class="cell tint" data-ios-settings><span class="ico" style="background:var(--tile-gray)">${I("gearshape", 19)}</span><span class="main">Open iOS Settings</span>${chev}</button></li>` : ""}
     <li><button type="button" class="cell tint" data-test ${perm.notifications ? "" : "disabled"}><span class="ico" style="background:var(--tile-blue)">${I("bell", 19)}</span><span class="main">Send a Test Nudge</span></button></li>
     <li><button type="button" class="cell" data-defpace><span class="ico" style="background:var(--tile-gray)">${I("clock", 19)}</span><span class="main">Default Pace</span><span class="trail">${paceText(settings.defaultPace)}</span>${chev}</button></li>
     <li><button type="button" class="cell" data-hin><span class="ico" style="background:var(--tile-gray)">${I("info.circle", 19)}</span><span class="main">How It Nudges</span>${chev}</button></li>
@@ -2031,7 +2041,7 @@ function viewDefaultPace() {
 function viewSettings() {
   const sections = settingsSections();
   return `${navBar({ title: "Settings" })}
-  ${permBanner()}${badgeLine()}
+  ${permBanner()}
   ${sections.map((x) => `<h2 class="sec-h">${x.title}</h2>${x.body}`).join("\n")}`;
 }
 /* The app's pages on the website, opened in the system browser (Guideline 5.1.1(i)). */
