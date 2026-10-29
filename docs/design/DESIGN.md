@@ -235,7 +235,7 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
   accessibility text sizes the Filter button has no badge: on iOS 27 the system draws it at the text
   size, so it covers the icon. The chosen-tag tokens and the VoiceOver label carry the count there.
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
-  action is `{colors.tile-green}`. Settings rows: red (Notifications, Delete All Data), orange
+  action is `{colors.tile-green}`. Settings rows: red (Notifications, Badges, Delete All Data), orange
   (Alarms), gray (About, Open iOS Settings, Default Pace, How It Nudges, and About's Privacy Policy
   and Support), blue (Send a Test Nudge). Tiles are icons for rows, not
   statuses, so "one color, one meaning" does not apply to them.
@@ -405,7 +405,9 @@ except in the tab and navigation bars. Verify names against the mockup.
 
 ### Settings row
 - Icon tile, label in `{typography.body}`, trailing status in `{colors.secondary-label}` (or
-  `{colors.negative}` when off) or a chevron. A row that opens a page to set a value shows the
+  `{colors.negative}` when off) or a chevron. The Badges row is the exception: its status is
+  `{colors.secondary-label}` even when off, since badges being off isn't a problem to flag (it
+  says On, Off or Not Set; icon-badge #85). A row that opens a page to set a value shows the
   value under the label in `{typography.body}` `{colors.secondary-label}`, with the chevron
   (Default Pace: "Consistent · 10 min"), so it never shares the line with the label. A row that
   opens a web page (About's Privacy Policy and Support) has its label in the accent color and
