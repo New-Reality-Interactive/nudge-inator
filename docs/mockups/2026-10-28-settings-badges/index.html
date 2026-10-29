@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Nudge-inator badges off</title>
+<title>Nudge-inator Settings badges</title>
 <style>
 /* ============ Colors =============
    Follows Apple's HIG "Color" and "Dark Mode" pages (docs/apple/design). Every token is a dynamic color
@@ -567,15 +567,6 @@ li > .swipe { border-radius: 0; }
 /* The icon takes the border's color. */
 .banner > .i { color: var(--negative); } .banner.info > .i { color: var(--warning); }
 .banner p { font: var(--subhead); letter-spacing: var(--subhead-track); margin: 0 0 8px; }
-/* The badges-off line (icon-badge #85): its own line beside the banners, not one of them, since a
-   badge is not a Nudge and its being off isn't an error, so it borrows neither a banner's card nor
-   its status colors. */
-.badgeline { display: flex; gap: 10px; align-items: flex-start; margin: 0 16px 16px; padding: 0 2px; }
-/* Closer to a banner above it, so the two read as one group. */
-.banner + .badgeline { margin-top: -6px; }
-.badgeline > .i { color: var(--secondary-label); flex: none; margin-top: 1px; }
-.badgeline p { font: var(--subhead); letter-spacing: var(--subhead-track); margin: 0; }
-.badgeline .btn { font: var(--subhead); letter-spacing: var(--subhead-track); font-weight: var(--semibold); padding: 0; min-height: 44px; justify-content: flex-start; text-align: left; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 16px 18px; }
 .chip { font: var(--footnote); letter-spacing: var(--footnote-track); display: inline-flex; gap: 5px; align-items: center; background: var(--secondary-system-grouped-background); border-radius: 99px; padding: 5px 11px; }
 /* Tags tab: the chosen tags, each a capsule that removes it. They're tappable, so they use the
@@ -873,7 +864,6 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 :root[data-type^="ax"] .events li { flex-wrap: wrap; gap: 0 10px; }
 :root[data-type^="ax"] .events time { width: auto; }
 :root[data-type^="ax"] .banner { flex-direction: column; }
-:root[data-type^="ax"] .badgeline { flex-direction: column; gap: 6px; }
 :root[data-type^="ax"] .banner .btn.small { display: flex; width: 100%; border-radius: 10px; padding: 8px 14px; text-align: center; }
 /* The whole row or card opens the reminder, not just its title, so the target is large; the
    buttons in it sit on top and keep their own actions. */
@@ -958,7 +948,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <label><input type="checkbox" id="c-perm-t" checked> Time Sensitive allowed</label>
       <label for="c-perm-b">Badges</label>
       <select id="c-perm-b"><option value="allowed" selected>Allowed</option><option value="notDetermined">Not determined</option><option value="provisional">Provisional</option><option value="denied">Denied (off in Settings)</option></select>
-      <p class="why">The badges-off line (#85) shows on Now and My Day for Provisional and Denied while notifications are allowed. Settings shows a Badges row.</p>
+      <p class="why">Settings' Badges row (#85): On, Off (Provisional or Denied) or Not Set. Nothing else in the app shows the badge setting.</p>
     </fieldset>
     <fieldset>
       <legend>iPhone</legend>
@@ -1600,14 +1590,6 @@ function badgesStatus() {
   if (!perm.notifications || badgesOff()) return "Off";
   return perm.badges === "notDetermined" ? "Not Set" : "On";
 }
-/* The badges-off line (icon-badge #85), under the banners on Now and My Day; Settings has its row. Only when notifications are allowed: with
-   them off, the notifications-off banner already sends the person to the same Settings page. Not
-   determined shows none, as the banners don't: onboarding asks, and an upgraded install is asked
-   again without a prompt. */
-function badgeLine() {
-  if (!perm.notifications || !badgesOff()) return "";
-  return `<div class="badgeline" role="note">${I("app.badge", 20)}<div><p><strong>Badges are off.</strong> The app icon can't show how many reminders are nudging you.</p><button type="button" class="btn" data-ios-settings aria-label="Open Settings for badges">Open Settings</button></div></div>`;
-}
 
 function nudgeCard(o) {
   const r = remById(o.reminderId), cap = capOf(r), tl = tagLine(r), bt = btActs(r);
@@ -1661,7 +1643,7 @@ function viewNow() {
   const closed = occurrences.filter((o) => o.closedAt && NOW - L(o.closedAt) <= 864e5 && NOW >= L(o.closedAt)).sort((a, b) => L(b.closedAt) - L(a.closedAt));
   return `${navBar({ title: "Now", trailing: plusBtn })}
   <p class="subhead">${shortDate(NOW)} · ${nudge.length ? `<strong style="color:var(--negative)">${plural(nudge.length, "reminder")} nudging you</strong>` : "Nothing is nudging you"}</p>
-  ${permBanner()}${badgeLine()}
+  ${permBanner()}
   <section class="sec" aria-labelledby="h-nudge">
     <h2 class="sec-h big" id="h-nudge">Nudging</h2>
     ${nudge.length ? nudge.map((o) => swipeable(nudgeCard(o), o)).join("") : `<div class="list"><p class="empty"><strong>All clear.</strong> Nothing needs you right now.</p></div>`}
@@ -1725,9 +1707,9 @@ function viewDay() {
     ? navBar({ title: "My Day", subtitle: date, trailing })
     : `${navBar({ title: "My Day", trailing })}
   <p class="subhead">${date}</p>
-  ${permBanner()}${badgeLine()}`;
+  ${permBanner()}`;
   return `${head}
-  ${compactHead ? permBanner() + badgeLine() : ""}
+  ${compactHead ? permBanner() : ""}
   ${dayFilterTokens()}
   <div class="counts" role="group" aria-label="Today's counts. Choose one to show only those.">
     ${Object.keys(DAY_STATUS).map((k) => countButton(k, items)).join("")}

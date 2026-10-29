@@ -43,13 +43,7 @@ SCREENS = {
   "banner-alarms-off": ("perm.alarms=false;render()", 3),
   "settings-alarms-off": ("perm.alarms=false;state.tab='settings';nav()", 1),
   "banner-time-sensitive-off": ("perm.timeSensitive=false;render()", 1),
-  # The badges-off line beside the banners (icon-badge #85). A mockup without it draws the screen
-  # with badges on.
-  "badges-off": ("perm.badges='denied';render()", 1),
-  "badges-off-provisional": ("perm.badges='provisional';render()", 1),
-  "badges-not-determined": ("perm.badges='notDetermined';render()", 1),
-  "badges-off-banners": ("perm.badges='denied';perm.alarms=false;perm.timeSensitive=false;render()", 1),
-  "myday-badges-off": ("perm.badges='denied';state.tab='day';nav()", 1),
+  # Settings' Badges row (icon-badge #85). A mockup without it draws Settings with no Badges row.
   "settings-badges-off": ("perm.badges='denied';state.tab='settings';nav()", 2),
   "settings-badges-not-set": ("perm.badges='notDetermined';state.tab='settings';nav()", 2),
   # Pace and strength (enhancement-pace).
