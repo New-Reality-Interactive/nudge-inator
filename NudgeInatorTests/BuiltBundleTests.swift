@@ -14,15 +14,15 @@ struct BuiltBundleTests {
     }
 
     /// The literal is the pin: a release edits this and `MARKETING_VERSION` in project.yml together.
-    @Test func theVersionIs1_1_0AndTheWidgetHasTheSame() throws {
+    @Test func theVersionIs1_2_0AndTheWidgetHasTheSame() throws {
         let widget = try #require(Self.widget)
 
-        #expect(Self.app.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String == "1.1.0")
-        #expect(widget.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String == "1.1.0")
+        #expect(Self.app.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String == "1.2.0")
+        #expect(widget.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String == "1.2.0")
     }
 
-    /// The repo's number is a placeholder: the Organizer raises it for the app and widget together
-    /// on upload. They must start equal, as App Store Connect reads one number for the archive.
+    /// The repo's number is a placeholder: the export step or the Organizer raises it for the app and
+    /// widget together on upload. They must start equal, as App Store Connect reads one number for the archive.
     @Test func theWidgetsBuildNumberIsTheApps() throws {
         let widget = try #require(Self.widget)
 

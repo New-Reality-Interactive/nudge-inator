@@ -20,8 +20,9 @@ settings:
     SWIFT_TREAT_WARNINGS_AS_ERRORS: YES
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     # One version and build number for the app and the widget. The build number stays 1 here: the
-    # Organizer's "Manage version and build number" raises it on upload (testflight-readiness 01).
-    MARKETING_VERSION: "1.1.0"
+    # export step (scripts/export-options.plist) or the Organizer, with "Manage version and build
+    # number" on, raises it on upload (testflight-readiness 01, #99).
+    MARKETING_VERSION: "1.2.0"
     CURRENT_PROJECT_VERSION: "1"
 packages:
   NudgeEngine:
