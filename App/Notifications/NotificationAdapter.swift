@@ -249,10 +249,26 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     /// Shows the notification prompt, when onboarding asks (ticket 31). Returns whether the
     /// person allowed notifications.
     func requestAuthorization() async throws -> Bool {
-        // Badges for the Icon badge. Not .timeSensitive, which is deprecated: the entitlement and
-        // each request's interruption level make a nudge Time Sensitive, so it isn't part of the
-        // prompt.
-        try await center.requestAuthorization(options: [.alert, .sound, .badge])
+        try await center.requestAuthorization(options: Self.authorizationOptions)
+    }
+
+    /// Badges for the Icon badge. Not .timeSensitive, which is deprecated: the entitlement and
+    /// each request's interruption level make a nudge Time Sensitive, so it isn't part of the
+    /// prompt.
+    private static let authorizationOptions: UNAuthorizationOptions = [.alert, .sound, .badge]
+
+    /// Asks again, with badges, for an install upgraded from 1.1.0, whose answer to the prompt
+    /// predates `.badge`: iOS shows no prompt and turns badges on (#89, device experiment #82).
+    /// Only when notifications are authorized and the badge setting is `notSupported`. Not
+    /// determined would show the prompt before onboarding; `disabled` is the person's choice.
+    func requestBadgesIfMissing() async {
+        let settings = await center.notificationSettings()
+        guard settings.authorizationStatus == .authorized, settings.badgeSetting == .notSupported else { return }
+        do {
+            _ = try await center.requestAuthorization(options: Self.authorizationOptions)
+        } catch {
+            Self.logger.error("The request for badges failed: \(error, privacy: .public)")
+        }
     }
 
     /// The person's response to a delivered notification, from the center's delegate. Returns
