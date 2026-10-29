@@ -38,6 +38,9 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
     /// one there is no Open button, only the system Stop: a button with no intent would do nothing,
     /// and ticket 02 showed that Open without `stop(id:)` can leave a locked phone ringing.
     private let openIntent: (SchedulePlan.Item, Alarm.ID) -> (any LiveActivityIntent)?
+    /// The intent the alert's Stop runs: ticket 87's, which only refreshes the badge. Without one,
+    /// Stop is the system's alone. Either way it only silences the ring (ADR 0001).
+    private let stopIntent: () -> (any LiveActivityIntent)?
     /// The latest apply. The manager's `schedule` is async but `apply(_:)` isn't, so each apply
     /// runs in a task that waits for the one before, and plans reach the manager in the order given.
     private var applying: Task<Void, Never>?
@@ -69,11 +72,13 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
         manager: any AlarmManaging,
         clock: any EngineClock,
         openIntent: @escaping (SchedulePlan.Item, Alarm.ID) -> (any LiveActivityIntent)? = { _, _ in nil },
+        stopIntent: @escaping () -> (any LiveActivityIntent)? = { nil },
         authorizationReadLimit: Duration = .seconds(2)
     ) {
         self.manager = manager
         self.clock = clock
         self.openIntent = openIntent
+        self.stopIntent = stopIntent
         self.authorizationReadLimit = authorizationReadLimit
         let updates = manager.authorizationUpdates()
         // Weak, so the observation doesn't keep the adapter alive. The app keeps one adapter for
@@ -164,6 +169,7 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
                     id: id,
                     schedule: .fixed(item.fireTime),
                     attributes: Self.attributes(for: item, hasOpenButton: intent != nil),
+                    stopIntent: stopIntent(),
                     secondaryIntent: intent
                 )
             } catch AlarmManager.AlarmError.maximumLimitReached {

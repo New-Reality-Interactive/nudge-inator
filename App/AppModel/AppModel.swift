@@ -299,6 +299,27 @@ final class AppModel {
         }
     }
 
+    /// The alarm's Stop, through ticket 87's intent: the Icon badge set to the live count, since a
+    /// Relentless reminder that came due while the app was suspended changed nothing on the icon
+    /// (icon-badge spec, decision 6). Always a re-plan, unlike the minute tick: the icon may have
+    /// drifted from the last plan while the app was suspended. Nothing else: Stop only silences
+    /// the ring (ADR 0001), and a re-plan never cancels an alarm that is ringing. Not the unlock
+    /// retry, since the phone may be locked; before the first unlock there is no count to set.
+    /// Returns once the badge is set, for the intent to wait on.
+    func refreshBadge() async {
+        await launch()
+        replan()
+        await waitUntilApplied()
+    }
+
+    /// What `RefreshBadgeIntent` calls, registered with `AppDependencyManager` at launch, as
+    /// `alarmOpener` is.
+    var badgeRefresher: BadgeRefresher {
+        BadgeRefresher { [self] in
+            await refreshBadge()
+        }
+    }
+
     /// The route, which is then cleared: the tab shell follows each one once.
     func takeRoute() -> Route? {
         defer { route = nil }

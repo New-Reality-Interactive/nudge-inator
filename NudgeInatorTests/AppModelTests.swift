@@ -777,6 +777,45 @@ struct AppModelTests {
         #expect(model.route == .reminderDetails(call.id))
     }
 
+    /// The alarm's Stop, from the intent it runs, through the refresher the app registers at
+    /// launch (set by hand here, as for Open). The icon was stale: the last plan came before the
+    /// alarm rang. Stop sets the live count and does nothing else (ADR 0001): no alarm stopped or
+    /// cancelled, the occurrence still Nudging, and its 17 alarms all still held.
+    @Test func theStopIntentSetsTheIconBadgeToTheLiveCountAndLeavesTheOccurrenceNudging() async throws {
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+        model.add(call)
+        await model.waitUntilApplied()
+        #expect(center.badgeCounts.last == 0)
+        let ringing = try #require(manager.scheduled.first { $0.fireDate == NewYork.local(2026, 10, 15, 9, 32, 30) })
+        clock.now = NewYork.local(2026, 10, 15, 9, 33)
+        manager.ring(ringing.id)
+        let intent = RefreshBadgeIntent()
+        intent.refresher = model.badgeRefresher
+
+        _ = try await intent.perform()
+
+        #expect(center.badgeCounts.last == 1)
+        #expect(manager.stoppedIDs.isEmpty)
+        #expect(manager.cancelledIDs.isEmpty)
+        #expect(model.engine.openOccurrence(for: call.id)?.state == .nudging(nudgeNumber: 4))
+        #expect(manager.scheduled.count == 17)
+    }
+
+    /// A Stop before the first unlock since a restart, when the store can't be read: there is no
+    /// count to set, so the icon is left alone until the store opens (as for a queued Done).
+    @Test func aStopWhileTheStoreCantBeReadLeavesTheIconBadgeAlone() async throws {
+        let model = model(openingStoreWith: { throw StoreWontOpen() }).model
+
+        await model.refreshBadge()
+
+        guard case .storeUnreadable = model.launchState else {
+            Issue.record("Launched as \(model.launchState)")
+            return
+        }
+        #expect(center.badgeCounts.isEmpty)
+        #expect(manager.scheduleCalls.isEmpty)
+    }
+
     /// An alarm left from a reminder since deleted, for example. The details screen says it isn't
     /// found (ticket 27), rather than the person landing on Now with no word of why.
     @Test func openForAReminderTheAppDoesntHoldShowsItsDetailsToSayNotFound() async throws {

@@ -182,6 +182,7 @@ final class FakeAlarmManager: AlarmManaging {
         var id: Alarm.ID
         var schedule: Alarm.Schedule
         var attributes: AlarmAttributes<NudgeAlarmMetadata>
+        var stopIntent: (any LiveActivityIntent)?
         var secondaryIntent: (any LiveActivityIntent)?
         var state: Alarm.State = .scheduled
 
@@ -205,9 +206,10 @@ final class FakeAlarmManager: AlarmManaging {
         id: Alarm.ID,
         schedule: Alarm.Schedule,
         attributes: AlarmAttributes<NudgeAlarmMetadata>,
+        stopIntent: (any LiveActivityIntent)?,
         secondaryIntent: (any LiveActivityIntent)?
     ) async throws {
-        let alarm = Scheduled(id: id, schedule: schedule, attributes: attributes, secondaryIntent: secondaryIntent)
+        let alarm = Scheduled(id: id, schedule: schedule, attributes: attributes, stopIntent: stopIntent, secondaryIntent: secondaryIntent)
         scheduleCalls.append(alarm)
         defer { whileScheduling?() }
         if let scheduleError { throw scheduleError }
