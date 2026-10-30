@@ -55,9 +55,9 @@ When a feature's last ticket is resolved and merged, it's released, in this orde
    - adds the version mockup, `docs/mockups/<version>/` (such as `1.2.0`): copied from the latest version mockup, as the template's README says, drawing the app as built at that version with working mockup controls. It's checked against the app with the screenshot walk (`docs/agents/device-testing.md`, Simulator screenshots) for the screens the release changed (`SHOTS_TESTS`), on both simulators, in portrait, landscape and the largest text size; the whole walk is only for a mockup first lined up with the app;
    - deletes the change mockups the version mockup takes in;
    - sets `MARKETING_VERSION` in `project.yml`, and the version `BuiltBundleTests` pins;
-   - for a TestFlight build, adds its What to Test note to `docs/release-notes/` and passes a trial archive (`docs/agents/device-testing.md`, Archive and upload).
+   - adds the TestFlight build's What to Test note to `docs/release-notes/` and passes a trial archive (`docs/agents/device-testing.md`, Archive and upload).
 2. **Release.** Once it merges, the agent tags `v<version>` (annotated) on the merge commit on `main` and pushes the tag, then runs the whole walk in portrait on the `iPhone 15 - iOS 27.0` simulator (`SHOTS_VARIANTS=portrait SIMULATORS="iPhone 15 - iOS 27.0"`), zips it as `screenshots-<version>.zip`, and attaches it to the GitHub Release (`gh release create v<version>`, then `gh release upload v<version>`). The screenshots never go in the repo. It closes the spec issue and the milestone.
-3. **TestFlight build**, from the pushed tag: `docs/agents/device-testing.md`, Archive and upload. The developer's steps are the go before the upload and the App Store Connect steps after it.
+3. **TestFlight build**, for every release, from the pushed tag: `docs/agents/device-testing.md`, Archive and upload. The developer's steps are the go before the upload and the App Store Connect steps after it.
 
 ## Tickets before GitHub Issues
 
