@@ -57,7 +57,7 @@ Lessons from ticket 29:
 
 ## Archive and upload (TestFlight)
 
-How a release's build reaches App Store Connect (`icon-badge` #99; 1.1.0 went through the Organizer). The build comes last, from the release itself: the release PR has merged, and `v<version>` is tagged, pushed and has its GitHub Release (`docs/agents/issue-tracker.md`, Features and versions). The release PR set `MARKETING_VERSION`; `CURRENT_PROJECT_VERSION` stays 1, and the export step raises it.
+How a release's build reaches App Store Connect (`icon-badge` #99; 1.1.0 went through the Organizer). The build comes last, from the release itself: the release PR has merged, and `v<version>` is tagged, pushed and has its GitHub Release (`docs/agents/release.md`). The release PR set `MARKETING_VERSION`; `CURRENT_PROJECT_VERSION` stays 1, and the export step raises it.
 
 1. Check out the tag (`git switch --detach v<version>`) and run `scripts/test.sh` on both simulators there.
 2. `scripts/archive-and-upload.sh` regenerates the project, archives (Release, scheme `NudgeInator`, warnings as errors from `project.yml`) into `.build/release/`, checks that the app and the widget report `MARKETING_VERSION`, and stops. It refuses anything but a clean checkout of `v<MARKETING_VERSION>` that is pushed to origin.

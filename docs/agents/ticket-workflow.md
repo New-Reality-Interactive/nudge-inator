@@ -14,7 +14,7 @@ The developer runs `/clear` and types `/implement #<n>`, `<n>` being the ticket'
 Everything else the ticket needs is in the ticket, under **Before you start** (below).
 
 1. Check every issue blocking it is closed (`issue-tracker.md`, Blocked by). If one isn't, stop and say which.
-   If the ticket can't be built backwards compatible (`issue-tracker.md`, Features and versions), stop and say what breaks.
+   If the ticket can't be built backwards compatible (`release.md`, Features and versions), stop and say what breaks.
 2. Branch from an up-to-date `main`: `<feature>-<n>-<slug>`, such as `tags-83-filter-sheet`, `<feature>`
    being the slug in the milestone's description.
 3. Read the ticket, its Before you start, the Comments of the tickets it builds on, and the spec
@@ -23,10 +23,8 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
 ## During `/implement`
 
 4. Choose the `tdd` seams, starting from the spec's Testing Decisions, and record them in the
-   ticket's Comments before the first test, then go on: the developer doesn't agree them first,
-   and raises a seam in the PR review if one is wrong. Where the skill says to wait for the seams
-   to be agreed, this step replaces it. A ticket with no behaviour (docs, a mockup) skips `tdd`;
-   say so.
+   ticket's Comments before the first test, then go on (global rule: the developer raises a
+   wrong seam in review). A ticket with no behaviour (docs, a mockup) skips `tdd`; say so.
 5. Run `mattpocock-skills:domain-modeling` when a name isn't in `GLOSSARY.md`, and
    `mattpocock-skills:diagnosing-bugs` when something fails and a first look doesn't explain it.
 6. Test with `scripts/test.sh`.
@@ -46,8 +44,10 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
    - Neither: go straight to step 9, with the evidence in the PR body. The developer's approval
      of the PR is the check.
 
-   A failed check goes back to step 4. The ticket is `resolved` only when every criterion is
-   ticked (AGENTS.md, Issue tracker).
+   A failed check goes back to step 4. A ticket is `resolved` only when every acceptance
+   criterion is ticked; while one is open, the issue stays open. Say which criterion is open and
+   why, and resolve it with the developer: meet it, or agree a change to it (reworded, or moved
+   to a named ticket) and record that agreement in Comments.
 
 ## PR
 
@@ -64,7 +64,7 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
     with `git branch -d`. If the ticket went sideways, suggest `/retro` before `/clear`.
 11. Find the next ticket: the lowest-numbered open sub-issue of the feature's spec with no open
     blocker. If none is left, the feature is ready to release: follow
-    `issue-tracker.md`, Features and versions, and tell the developer which steps are theirs.
+    `release.md`, and tell the developer which steps are theirs.
 12. Add its **Before you start** to the issue body, and give the developer one line, then stop:
 
     > Run `/clear`, `/model` → <model>, effort <level> (<why>), then `/implement #<n>`.

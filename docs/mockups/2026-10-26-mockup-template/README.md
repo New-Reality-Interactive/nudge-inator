@@ -12,8 +12,7 @@ Open [`index.html`](index.html) in a browser. It's a single file with no depende
 ## Using it
 
 - **A version mockup** (`docs/mockups/<version>/`, such as `1.2.0`): made in a feature's release
-  PR, before `v<version>` is tagged and pushed (`docs/agents/issue-tracker.md`, Features and
-  versions). Copy the latest version mockup, which already draws the app as it was, or this
+  PR, before `v<version>` is tagged and pushed (`docs/agents/release.md`). Copy the latest version mockup, which already draws the app as it was, or this
   template if none exists, and bring every screen to the app as built. Its README lists what
   changed since the version before. Check the screens the release changed against the app with
   the screenshot walk (`docs/agents/device-testing.md`, Simulator screenshots). Once merged it's
