@@ -185,7 +185,7 @@ and meets it. It was extracted from the 2026-10-03 design doc and pruned to the
 [GLOSSARY.md](../../GLOSSARY.md): say Done, Nudging, Missed, Strength and Urgency, not synonyms.
 
 **Precedence.** This doc owns tokens and rules: colors, type, spacing, shapes, and "one color, one
-meaning". The latest version mockup, such as the [1.1.0 mockup](../mockups/1.1.0/index.html),
+meaning". The latest version mockup, such as the [1.2.0 mockup](../mockups/1.2.0/index.html),
 owns how each screen is composed; a change's mockup (`docs/mockups/<YYYY-MM-dd>-<change>/`) is it
 changed for a feature, and that feature's tickets build to it. If they disagree on a token value,
 this doc wins and the mockup gets fixed.
