@@ -94,7 +94,7 @@ Brian decides these at sign-off. Each is drawn as described.
    and Apply at first. My Day's sheet keeps Clear and Done: it applies each change at once, so it
    never holds unsaved changes.
 5. **New still opens the new reminder's details after Add,** as on Now and My Day; Back shows it in
-   the list.
+   the list. Signed off by Brian: it works as on Now and My Day.
 
 ## Known differences
 
