@@ -370,7 +370,10 @@ except in the tab and navigation bars. Verify names against the mockup.
   `{typography.subhead}` (chosen tags bold), wrapping. Trailing: the status label, or a small
   `button-bordered` **Done** on My Day. Chevron `chevron.right` in `{colors.tertiary-label}`.
 - **On the Reminders tab:** the due time (time over its day, as on Now's Coming Up), the title,
-  the tags under it, and the status label trailing. No notes and no strength badge.
+  the tags under it, and the status label trailing. No notes and no strength badge. Rows are
+  separated as in every grouped list. Under the Due Today chip a row shows today's occurrence, as
+  My Day does: its time ("6:30 AM Today") and its status (Done once it's done), and sorting by Due
+  Date uses that time. With several today, the open one, else the last.
 
 ### Status label
 - **Token:** `status-label`. `{typography.subhead}` semibold. Done green with `checkmark.circle.fill`;

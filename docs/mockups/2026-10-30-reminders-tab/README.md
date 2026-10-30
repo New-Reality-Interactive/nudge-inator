@@ -16,7 +16,9 @@ Open [`index.html`](index.html) in a browser. It's a single file with no depende
   shows its due time, title, tags and status label, and no notes. A row's status is the details
   page's hero status: Nudging, Coming up, Paused, Done, Missed or Skipped. Its due time is the open
   occurrence's while Nudging, otherwise the next one, otherwise the latest occurrence's. A Paused
-  row shows the due time it would be Skipped at.
+  row shows the due time it would be Skipped at. Under the Due Today chip a row shows today's
+  occurrence instead, as My Day does: its time and its status, so a reminder done this morning
+  reads "6:30 AM Today, Done", not tomorrow's time.
 - **Search** under the navigation bar: titles and notes, ignoring case and diacritics, the trimmed
   text as one phrase. Cancel shows while the field is focused or has text, and Clear
   (`xmark.circle.fill`) once there's text, as the system draws them.
@@ -103,6 +105,8 @@ Brian decides these at sign-off. Each is drawn as described.
    the list. Signed off by Brian: it works as on Now and My Day.
 6. **The list sorts by Created or Due Date, from a Sort menu,** not only by creation date as the
    spec has it. Brian's call at sign-off, so the spec's sort lines and story change to match.
+7. **Under Due Today a row shows today's occurrence,** its time and status, not the next one.
+   Brian's call at sign-off, so the spec's due-time line gains this case.
 
 ## Known differences
 

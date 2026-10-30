@@ -918,6 +918,10 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 /* A row leaving the list: it fades and its height closes up. */
 .list > li.leaving { overflow: hidden; opacity: 0; height: 0 !important; }
 .list > li.leaving::after { display: none; }
+/* A swipe row is opaque and above its list item, so its separator is drawn on the row itself and
+   slides with it. */
+.list > li:has(> .swipe)::after { display: none; }
+.list > li:not(:last-child) > .swipe > .swipe-row::after { content: ""; position: absolute; left: var(--inset, 16px); right: 0; bottom: 0; height: 1px; transform: scaleY(0.5); background: var(--separator); }
 .unavailable .btn { margin-top: 18px; }
 /* The Filter button's badge: none at the accessibility sizes (DESIGN.md). */
 :root[data-type^="ax"] [data-remfilter] .bar-badge { display: none; }
@@ -1917,6 +1921,14 @@ function remDue(r) {
   const latest = occsOf(r.id)[0];
   return latest ? L(latest.scheduledFor) : L(r.dtstart);
 }
+/* Under Due Today a row shows today's occurrence, as My Day does: its time and its status. With
+   several today, the open one, else the last. Brian's call at sign-off: the next time, tomorrow's
+   once today's is Done, read as wrong under a chip called Due Today. */
+function remToday(r) {
+  const its = todayItems().filter((it) => it.r.id === r.id);
+  return its.find((it) => isOpen(it.status)) ?? its.at(-1);
+}
+const remShown = (r) => (state.rems.due && remToday(r)) || { at: remDue(r), status: remStatus(r) };
 /* The chip a Status lights: exactly Nudging, or exactly Missed. */
 function chipOf(status) {
   if (status.length !== 1) return null;
@@ -1949,7 +1961,7 @@ function remRows(f = state.rems.filter, due = state.rems.due) {
   const q = fold(state.rems.q.trim()), today = new Set(todayItems().map((it) => it.r.id));
   const rows = reminders.map((r, i) => ({ r, i }))
     .filter(({ r }) => r.id === state.rems.pinned || remPasses(r, f, q, due, today))
-    .map((x) => ({ ...x, k: state.rems.sort.by === "due" ? remDue(x.r) : L(x.r.createdAt) }))
+    .map((x) => ({ ...x, k: state.rems.sort.by === "due" ? remShown(x.r).at : L(x.r.createdAt) }))
     .sort((a, b) => a.k - b.k || a.i - b.i).map(({ r }) => r);
   return state.rems.sort.dir === "desc" ? rows.reverse() : rows;
 }
@@ -2013,7 +2025,7 @@ function searchBar() {
    swipe is hidden from assistive technology; the app gives every row Delete, and Nudging rows
    Done, as VoiceOver actions, which the visually hidden buttons stand in for here. */
 function remListRow(r) {
-  const st = remStatus(r), d = remDue(r), tl = tagLine(r, state.rems.filter.tags.ids);
+  const { at: d, status: st } = remShown(r), tl = tagLine(r, state.rems.filter.tags.ids);
   const occ = st === "NUDGING" && openOccs().find((o) => o.reminderId === r.id);
   const cell = `<button type="button" class="cell" data-open="${r.id}">
     <span class="time">${hm(d)}<small>${dayLabel(d)}</small></span>
