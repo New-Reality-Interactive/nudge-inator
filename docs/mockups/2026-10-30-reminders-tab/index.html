@@ -3188,6 +3188,8 @@ function closeSwipes(except) { main.querySelectorAll(".swipe-row[data-x]").forEa
 main.addEventListener("pointerdown", (e) => {
   const row = e.target.closest(".swipe-row");
   swallowClick = false;
+  // A press on a revealed action keeps its row open, so the tap lands on the action.
+  if (e.target.closest(".swipe-act")) return;
   closeSwipes(row);
   if (!row || e.button !== 0) return;
   swipe = { row, x0: e.clientX, y0: e.clientY, base: Number(row.dataset.x || 0), x: 0, id: e.pointerId, active: false };
