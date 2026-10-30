@@ -893,13 +893,13 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .sfield input:focus { outline: none; }
 .sfield:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
 .sfield .sclear { display: grid; place-items: center; min-width: 32px; min-height: 32px; border: 0; background: none; color: var(--secondary-label); cursor: pointer; padding: 0; }
-/* The header row: the count at the leading edge, then the sort toggle and the chips. It wraps, and
+/* The header row: the count at the leading edge, then the Sort button and the chips. It wraps, and
    at the accessibility sizes it stacks, so nothing is cut off and a later control can join it. */
 .remhead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 0 16px 12px; }
 .remcount { font: var(--subhead); letter-spacing: var(--subhead-track); margin: 0; color: var(--secondary-label); font-variant-numeric: tabular-nums; }
 .remctl { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 :root[data-type^="ax"] .remhead { flex-direction: column; align-items: flex-start; }
-/* The sort toggle: a round 44 pt button with the custom calendar-and-arrow symbol. */
+/* The Sort button: a round 44 pt button with arrow.up.arrow.down. It opens the Sort menu. */
 .sortbtn { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 99px; background: var(--tertiary-system-fill); color: var(--accent); cursor: pointer; padding: 0; }
 :root[data-type^="ax"] .sortbtn { width: auto; height: auto; min-width: 44px; min-height: 44px; padding: 6px; }
 /* A filter chip: a 44 pt capsule. Off: accent text on the tertiary fill, like a filter token. On:
@@ -923,6 +923,8 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 :root[data-type^="ax"] [data-remfilter] .bar-badge { display: none; }
 /* The Filter button's menu: items in the label color, each with its symbol before the text (from
    the template, ticket 20). */
+.asheet .mcheck { display: inline-flex; width: 18px; min-width: 1.1em; flex: none; }
+.asheet-btn.msect { border-top: 8px solid var(--tertiary-system-fill); }
 .asheet.menu .asheet-btn { display: flex; align-items: center; justify-content: flex-start; gap: 12px; color: var(--label); text-align: left; }
 /* The filter sheet's date rows: the date pill, then the switch. */
 .remreset { display: flex; justify-content: center; margin: 16px 16px 24px; }
@@ -1141,7 +1143,7 @@ function gearPath() {
   }
   return `<path d="${d}Z"/><circle cx="12" cy="12" r="3.1"/>`;
 }
-/* The calendar symbol's outline, shared with the sort toggle's custom symbols. */
+/* The calendar symbol's outline. */
 const CAL = `<rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.2V7.5a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v1.7z" fill="currentColor"/>${dot(8, 13)}${dot(12, 13)}${dot(16, 13)}${dot(8, 16.8)}${dot(12, 16.8)}`;
 const TAG = '<path d="M3.8 5.3v5.6a2 2 0 0 0 .6 1.4l7.9 7.9a2 2 0 0 0 2.8 0l4.8-4.8a2 2 0 0 0 0-2.8L12 4.7a2 2 0 0 0-1.4-.6H5a1.2 1.2 0 0 0-1.2 1.2z"/>';
 const SYMBOLS = {
@@ -1149,11 +1151,8 @@ const SYMBOLS = {
   "bell": { d: '<path d="M18 16.5V11a6 6 0 0 0-12 0v5.5L4.5 18.2h15z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/>', dy: -0.3 },
   "bell.slash": { d: '<path d="M18 16.5V11a6 6 0 0 0-12 0v5.5L4.5 18.2h15z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/><path d="M3.5 3.2 20.5 21"/>', dy: -0.3 },
   "calendar": { d: CAL, scale: 0.96 },
-  /* calendar.arrow.up and calendar.arrow.down: the sort toggle's custom symbols (#107), made from
-     calendar as tag.filter is from tag: an arrow in a circular cutout at the lower right. Up is
-     oldest first (ascending), down is newest first. Stand-ins for the asset catalog's symbol sets. */
-  "calendar.arrow.up": { d: `<mask id="cu-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff" stroke="none"/><circle cx="17.6" cy="17.6" r="6.6" fill="#000" stroke="none"/></mask><g mask="url(#cu-cut)">${CAL}</g><path d="M17.6 21.8v-8M14.6 16.8l3-3 3 3"/>`, scale: 0.96 },
-  "calendar.arrow.down": { d: `<mask id="cd-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff" stroke="none"/><circle cx="17.6" cy="17.6" r="6.6" fill="#000" stroke="none"/></mask><g mask="url(#cd-cut)">${CAL}</g><path d="M17.6 13.4v8M14.6 18.4l3 3 3-3"/>`, scale: 0.96 },
+  /* arrow.up.arrow.down: the Reminders tab's Sort menu (#107). */
+  "arrow.up.arrow.down": { d: '<path d="M8 19.5V4.5M4.2 8.3 8 4.5l3.8 3.8M16 4.5v15M12.2 15.7l3.8 3.8 3.8-3.8"/>' },
   "square.stack": { d: '<rect x="3.5" y="9" width="17" height="11.5" rx="2.5"/><path d="M5.8 6.2h12.4M8.3 3.5h7.4"/>', scale: 0.96 },
   "gearshape": { d: gearPath(), scale: 0.98 },
   "plus": { d: '<path d="M12 4.5v15M4.5 12h15"/>' },
@@ -1882,7 +1881,7 @@ function dayTrail(it) {
 }
 
 /* ============ Reminders tab (#107) ============
-   Every reminder in any state, by creation date. The header row holds the count, the sort toggle
+   Every reminder in any state, by creation date or due date. The header row holds the count, the Sort button
    and three chips; Search sits under the bar; Filter and New are bar buttons. Search, the chip and
    the sheet's filters are screen state that a launch resets. The sort direction is a setting kept
    across launches, like the Default pace, and Delete All Data sets it back to oldest first.
@@ -1890,12 +1889,14 @@ function dayTrail(it) {
 function newRemFilter() { return { tags: { ids: [], match: "all", none: false }, status: [], strength: [], from: null, to: null }; }
 /* q: the search text. due: the Due Today chip. filter: the sheet's applied filters, whose Status
    the Nudging and Missed chips show. pinned: a reminder just made, shown until the filters change. */
-function newRemsState() { return { q: "", due: false, filter: newRemFilter(), sort: "asc", pinned: null }; }
+function newRemsState() { return { q: "", due: false, filter: newRemFilter(), sort: { by: "created", dir: "asc" }, pinned: null }; }
 const REM_STATUSES = ["NUDGING", "UPCOMING", "PAUSED", "ACKED", "MISSED", "SKIPPED"];
 const STRENGTHS = ["gentle", "firm", "relentless"];
 /* The chips, in order: key, name, and the Status it stands for (Due Today stands for none). */
 const REM_CHIPS = [["nudging", "Nudging", "NUDGING"], ["due", "Due Today", null], ["missed", "Missed", "MISSED"]];
-const SORT_VALUE = { asc: "Oldest first", desc: "Newest first" };
+/* The Sort menu: what the list sorts by, and each one's two orders, ascending first. */
+const SORT_BY = { created: ["Created", "Oldest First", "Newest First"], due: ["Due Date", "Earliest First", "Latest First"] };
+const sortValue = ({ by, dir }) => `${SORT_BY[by][0]}, ${SORT_BY[by][dir === "asc" ? 1 : 2]}`;
 const toggled = (list, v) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 /* A reminder's status: the details page's hero status. Nudging while an occurrence is; Paused;
    Coming up while a due time is ahead; otherwise how its latest occurrence closed. */
@@ -1942,14 +1943,15 @@ function remPasses(r, f, q, due, today) {
   const d = (f.from || f.to) && dateField(remDue(r));
   return !((f.from && d < f.from) || (f.to && d > f.to));
 }
-/* The rows shown, oldest first or newest first. Due Today is what My Day lists for today, whatever
-   its state. Reminders made at the same moment keep the order they were added in. */
+/* The rows shown, by creation date or by the due time each row shows, either way round. Due Today is
+   what My Day lists for today, whatever its state. Ties keep the order the reminders were added in. */
 function remRows(f = state.rems.filter, due = state.rems.due) {
   const q = fold(state.rems.q.trim()), today = new Set(todayItems().map((it) => it.r.id));
   const rows = reminders.map((r, i) => ({ r, i }))
     .filter(({ r }) => r.id === state.rems.pinned || remPasses(r, f, q, due, today))
-    .sort((a, b) => L(a.r.createdAt) - L(b.r.createdAt) || a.i - b.i).map(({ r }) => r);
-  return state.rems.sort === "desc" ? rows.reverse() : rows;
+    .map((x) => ({ ...x, k: state.rems.sort.by === "due" ? remDue(x.r) : L(x.r.createdAt) }))
+    .sort((a, b) => a.k - b.k || a.i - b.i).map(({ r }) => r);
+  return state.rems.sort.dir === "desc" ? rows.reverse() : rows;
 }
 /* The Filter button's badge: how many of the sheet's sections are in use (Tags, Status, Strength,
    date range). A Status that a lit chip already shows doesn't count; search and Due Today never do. */
@@ -1973,10 +1975,22 @@ function remFilterButton() {
   if (!n) return `<button type="button" class="btn bar icon glass" data-remfilter aria-haspopup="${popup}" aria-label="Filter">${icon}</button>`;
   return `<button type="button" class="btn bar icon glass filter-on" data-remfilter aria-haspopup="menu" aria-label="Filter, ${plural(n, "filter")} on">${icon}<span class="bar-badge" aria-hidden="true">${n}</span></button>`;
 }
-/* The sort toggle: label "Sort by Created", value the direction. Each tap flips it. */
+/* The Sort button: label "Sort", value the choice ("Created, Oldest First"). It opens the Sort menu. */
 function sortButton() {
-  const s = state.rems.sort;
-  return `<button type="button" class="sortbtn" data-remsort aria-label="Sort by Created, ${SORT_VALUE[s]}" title="Sort by Created: ${SORT_VALUE[s]}">${I(s === "asc" ? "calendar.arrow.up" : "calendar.arrow.down", 24)}</button>`;
+  const v = sortValue(state.rems.sort);
+  return `<button type="button" class="sortbtn" data-remsort aria-haspopup="menu" aria-label="Sort, ${v}" title="Sort: ${v}">${I("arrow.up.arrow.down", 22)}</button>`;
+}
+/* The Sort menu: Created or Due Date, then that one's two orders. Each choice applies at once and
+   is remembered; the menu closes as iOS's does. */
+function showSortMenu(btn) {
+  pressed = btn;
+  const s = state.rems.sort, [, up, down] = SORT_BY[s.by];
+  const set = (next) => () => { state.rems.sort = { ...s, ...next }; state.rems.pinned = null; state.focus = "[data-remsort]"; announce(sortValue(state.rems.sort)); };
+  ask({ style: "sheet", menu: true, buttons: [
+    ...Object.entries(SORT_BY).map(([by, [label]]) => ({ label, checked: s.by === by, run: set({ by }) })),
+    { label: up, checked: s.dir === "asc", section: true, run: set({ dir: "asc" }) },
+    { label: down, checked: s.dir === "desc", run: set({ dir: "desc" }) },
+    { label: "Cancel", role: "cancel" }] });
 }
 function remChip([k, label]) {
   const on = litChip() === k;
@@ -2995,7 +3009,10 @@ function anchorOf(el) {
 }
 function alertButton(b, i, base) {
   const role = { cancel: " cancelb", destructive: " destr" }[b.role] ?? "";
-  return `<button type="button" class="${base}${role}" data-alert-btn="${i}">${b.icon ? I(b.icon, 20) : ""}<span>${esc(b.label)}</span></button>`;
+  // A menu's picker items lead with a checkmark on the chosen one; a section starts a new group.
+  const pick = "checked" in b ? `<span class="mcheck">${b.checked ? I("checkmark", 18) : ""}</span>` : "";
+  const aria = "checked" in b ? ` role="menuitemradio" aria-checked="${b.checked}"` : "";
+  return `<button type="button" class="${base}${role}${b.section ? " msect" : ""}" data-alert-btn="${i}"${aria}>${pick}${b.icon ? I(b.icon, 20) : ""}<span>${esc(b.label)}</span></button>`;
 }
 /* iOS 26 (SwiftUI's confirmationDialog): the dialog grows out of the button that opened it, lined
    up with that button's nearer edge, below it in the top half of the screen and above it in the
@@ -3363,7 +3380,7 @@ const CLICK = {
   cleardayfilter: () => { state.dayFilter = newDayFilter(); refresh(state.sheet ? "sheet" : "[data-dayfilter]"); announce(dayNews()); },
   // The Reminders tab (#107).
   remfilter: (v, t) => (sheetFilterOn() ? showRemFilterMenu(t) : openRemFilter(t)),
-  remsort: () => { state.rems.sort = state.rems.sort === "asc" ? "desc" : "asc"; refresh("[data-remsort]"); announce(SORT_VALUE[state.rems.sort]); },
+  remsort: (v, el) => showSortMenu(el),
   remchip: (v) => { setChip(v); refresh(`[data-remchip="${v}"]`); announce(remCountNews()); },
   // The field's clear button and Cancel both empty the search.
   remqclear: () => { state.rems.q = ""; state.rems.pinned = null; refresh("#rem-q"); announce(remCountNews()); },

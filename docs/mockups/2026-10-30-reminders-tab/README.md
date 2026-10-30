@@ -11,7 +11,8 @@ Open [`index.html`](index.html) in a browser. It's a single file with no depende
 
 - **A fifth tab, Reminders** (`list.bullet.clipboard`), between My Day and Tags. The Now badge
   stays on Now. Landscape fits all five tabs, with their titles beside their symbols.
-- **The Reminders list:** every reminder once, sorted by creation date (oldest first). Each row
+- **The Reminders list:** every reminder once, sorted by creation date (oldest first) until the
+  Sort menu says otherwise. Each row
   shows its due time, title, tags and status label, and no notes. A row's status is the details
   page's hero status: Nudging, Coming up, Paused, Done, Missed or Skipped. Its due time is the open
   occurrence's while Nudging, otherwise the next one, otherwise the latest occurrence's. A Paused
@@ -21,12 +22,17 @@ Open [`index.html`](index.html) in a browser. It's a single file with no depende
   (`xmark.circle.fill`) once there's text, as the system draws them.
 - **The header row**, above the rows: the count, always the reminders shown out of every reminder
   ("3 reminders out of 14", and "14 reminders out of 14" with nothing narrowing the list, so it
-  never reads as all of them; Brian's call at sign-off), then the sort toggle and the
+  never reads as all of them; Brian's call at sign-off), then the Sort button and the
   Nudging, Due Today and Missed chips. It wraps at the default sizes and stacks at the
   accessibility sizes.
-- **The sort toggle:** the custom symbols `calendar.arrow.up` (oldest first) and
-  `calendar.arrow.down` (newest first), each made from `calendar` with an arrow in a cutout at the
-  lower right, as `tag.filter` is made from `tag`. VoiceOver reads "Sort by Created" and the direction.
+- **The Sort menu:** a 44 pt round button with `arrow.up.arrow.down` opens a menu: **Created** or
+  **Due Date**, then that one's order (Oldest First or Newest First; Earliest First or Latest
+  First), the chosen ones checked. Due Date sorts by the due time each row shows. A choice applies
+  at once, keeps the other half (switching to Due Date keeps "newest" as "latest"), and is
+  remembered. Ties keep the order the reminders were made in. VoiceOver reads "Sort" and the value
+  ("Created, Oldest First"). Brian's call at sign-off: this replaced a one-tap toggle by creation
+  date with custom `calendar.arrow.up` and `calendar.arrow.down` symbols, which read as a due-date
+  sort and couldn't show what's due next under a chip.
 - **The chips:** a 44 pt capsule each, accent text on the tertiary fill when off, and the accent fill
   with a `checkmark` when on. Only one is on at a time; a second tap turns it off. Applying a
   Status that lights Nudging or Missed turns Due Today off, as one chip at a time requires.
@@ -95,6 +101,8 @@ Brian decides these at sign-off. Each is drawn as described.
    never holds unsaved changes.
 5. **New still opens the new reminder's details after Add,** as on Now and My Day; Back shows it in
    the list. Signed off by Brian: it works as on Now and My Day.
+6. **The list sorts by Created or Due Date, from a Sort menu,** not only by creation date as the
+   spec has it. Brian's call at sign-off, so the spec's sort lines and story change to match.
 
 ## Known differences
 

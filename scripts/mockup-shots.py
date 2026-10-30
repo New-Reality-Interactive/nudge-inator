@@ -67,7 +67,10 @@ SCREENS = {
   "settings-about": ("state.tab='settings';nav();push({kind:'about'})", 2),
   # The Reminders tab (reminders-tab #107). Only a mockup with that tab draws these.
   "reminders": ("state.tab='rems';nav()", 3),
-  "reminders-newest": ("state.tab='rems';state.rems.sort='desc';nav()", 1),
+  "reminders-newest": ("state.tab='rems';state.rems.sort.dir='desc';nav()", 1),
+  "reminders-sort-menu": ("state.tab='rems';nav();showSortMenu(document.querySelector('[data-remsort]'))", 1),
+  "reminders-due-date": ("state.tab='rems';state.rems.sort.by='due';nav()", 2),
+  "reminders-chip-due-today-by-due-date": ("state.tab='rems';state.rems.sort.by='due';setChip('due');nav()", 1),
   "reminders-chip-nudging": ("state.tab='rems';setChip('nudging');nav()", 1),
   "reminders-chip-due-today": ("state.tab='rems';setChip('due');nav()", 2),
   "reminders-chip-missed": ("state.tab='rems';setChip('missed');nav()", 1),

@@ -168,7 +168,7 @@ components:
     rounded: '{rounded.full}'
     minHeight: '{spacing.row-min}'
     typography: '{typography.subhead}'
-  sort-toggle:
+  sort-button:
     background: '{colors.tertiary-fill}'
     glyph: '{colors.accent}'
     rounded: '{rounded.full}'
@@ -233,7 +233,7 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
 
 - **Accent (Lagoon, `{colors.accent}`)** is `AccentColor`. It means **you can tap this**: buttons,
   links, menus, checkmarks, the selected tab, tag and filter tokens, filter chips (their text, or
-  their fill while on), the sort toggle, the chosen count's ring, the filled confirm button in each
+  their fill while on), the Sort button, the chosen count's ring, the filled confirm button in each
   sheet and on the Repeat and Custom repeat pages, and **Done** on nudge cards.
   - **Never** a status, decoration or background wash.
   - **The alarm** sits on a dark Lock Screen, so its tint pins `{colors.accent-dark}`. This is the
@@ -328,7 +328,7 @@ Depth comes from the system's layers, never custom shadows.
 Corners are concentric and native. Nothing uses a shape the system wouldn't draw.
 - `{rounded.control}` (10): buttons, inset lists.
 - `{rounded.card}` (12): nudge cards and permission banners.
-- `{rounded.full}`: bar buttons, filter tokens, filter chips, the sort toggle, the strength badge,
+- `{rounded.full}`: bar buttons, filter tokens, filter chips, the Sort button, the strength badge,
   the nudge meter, small buttons.
 - The search field's shape is set by the system. The 2026-10-03 doc gave the search bar
   `{rounded.control}`; the mockup draws iOS 26's capsule, a simulator check.
@@ -347,7 +347,7 @@ except in the tab and navigation bars. Verify names against the mockup.
 | Use | Symbols |
 |---|---|
 | Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `magnifyingglass` and `xmark.circle.fill` (Search, drawn by the system), `tag.filter` (custom, in the asset catalog: the Tags tab's `tag` with a three-line filter badge at the lower right: Filter by Tags, the button and its menu item), `tag.xmark` (custom, in the asset catalog: the same `tag` with a × badge at the lower right: Clear All Tags, in the Filter button's menu), `line.3.horizontal.decrease` (the Reminders tab's Filter button and its Filter menu item; `xmark` is its Clear All Filters) |
-| Sort | `calendar.arrow.up` and `calendar.arrow.down` (custom, in the asset catalog: `calendar` with an up or down arrow in a cutout at the lower right, as `tag.filter` is made: the sort toggle, oldest first and newest first) |
+| Sort | `arrow.up.arrow.down` (the Reminders tab's Sort button, which opens the Sort menu) |
 | Tabs | `bell` (Now), `calendar` (My Day), `list.bullet.clipboard` (Reminders), `tag` (Tags), `gearshape` (Settings) |
 | Urgency | `arrow.up` (High), `alarm` (Urgent) |
 | Status | `checkmark.circle.fill` (Done), `bell.slash`, `clock`, `exclamationmark.triangle`, `lock` (a field locked while nudging, always beside its reason as text) |
@@ -415,16 +415,18 @@ except in the tab and navigation bars. Verify names against the mockup.
   count in `{typography.subhead}` `{colors.secondary-label}`: the reminders shown out of every
   reminder, in every case, so a filtered list never reads as all of them ("3 reminders out of 14",
   "14 reminders out of 14"). One string with both numbers, one VoiceOver element.
-  Trailing: the sort toggle, then the chips Nudging, Due Today and Missed, `{spacing.2}` apart. It
+  Trailing: the Sort button, then the chips Nudging, Due Today and Missed, `{spacing.2}` apart. It
   wraps at the default sizes and stacks at the accessibility sizes, never truncating or overlapping
   the count.
 - **Filter chip:** `filter-chip`, a 44 pt capsule in `{typography.subhead}` semibold. Off: accent text
   on `{colors.tertiary-fill}`. On: `{colors.accent}` fill, `{colors.on-accent}` text and a leading
   `checkmark`, so on and off don't differ by color alone; VoiceOver reads it as a button with the
   selected trait. One chip is on at a time.
-- **Sort toggle:** `sort-toggle`, a 44 pt round button on `{colors.tertiary-fill}` with
-  `calendar.arrow.up` (oldest first) or `calendar.arrow.down` (newest first) in the accent color.
-  Its label is "Sort by Created" and its value the direction ("Oldest first", "Newest first").
+- **Sort button:** `sort-button`, a 44 pt round button on `{colors.tertiary-fill}` with
+  `arrow.up.arrow.down` in the accent color. It opens the Sort menu: a picker of Created or Due
+  Date, then a picker of that one's order (Oldest First or Newest First; Earliest First or Latest
+  First), the chosen ones checked, as SwiftUI's `Picker` inside a `Menu` draws them. Its label is
+  "Sort" and its value the choice ("Created, Oldest First").
 - **Filter button:** `line.3.horizontal.decrease` in the bar, beside New. Its badge counts how
   many of the filter sheet's sections are in use (Tags, Status, Strength, Due Date). A Status a lit
   chip already shows doesn't count, nor do search and Due Today. While the count is above 0 the
