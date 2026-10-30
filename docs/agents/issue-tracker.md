@@ -25,6 +25,7 @@ GitHub shares one number space across issues and PRs, so a bare `#42` may be eit
 - **Comments**: issue comments, including each agreed change to a criterion.
 - **A new ticket**, including a bug found while working another, goes in the open feature's milestone as a sub-issue of its spec. A released feature's milestone gets no new tickets.
 - **A split ticket**: the new part is its own issue. The tickets the original blocked are also blocked by the new one, and both issues' comments record the split.
+- **After creating, splitting or merging tickets**, run `scripts/check-spec-tickets.sh <spec>`. It fails when the spec's Tickets list, its sub-issues, the native blockers, the milestone, the triage labels or the `#<n>` mentions in ticket bodies disagree. It can't tell that a mention of a real ticket is stale, so reread the mentions in a split ticket and in the tickets it touched.
 
 ## Released features
 
