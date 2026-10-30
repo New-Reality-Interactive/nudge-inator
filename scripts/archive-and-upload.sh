@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
 # Takes the Release archive to App Store Connect as a TestFlight build (#99). The steps run apart:
-#   scripts/archive-and-upload.sh                   archives main, checks the versions, and stops.
-#   scripts/archive-and-upload.sh record-validated  records that the developer's Validate App in the
-#                                                   Organizer passed for this archive. Run it only
-#                                                   after they say it did.
-#   scripts/archive-and-upload.sh upload            uploads that archive. Run it only on the
-#                                                   developer's go: the upload publishes to App
-#                                                   Store Connect.
-# There is no xcodebuild validation step: its `validation` method is only accepted with
-# `destination: upload`, and Apple's docs don't say whether that sends the build to App Store
-# Connect. Upload refuses unless validation was recorded for this archive on this commit. Uses the
-# Apple ID signed into Xcode; no API key or other secret. Env: ALLOW_DIRTY=1 archives a branch or
-# uncommitted changes as a dry run, which can't be recorded as validated or uploaded.
+#   scripts/archive-and-upload.sh         archives the release tag v<MARKETING_VERSION>, checks the
+#                                         versions, and stops.
+#   scripts/archive-and-upload.sh upload  uploads that archive. Run it only on the developer's go:
+#                                         the upload publishes to App Store Connect.
+# There is no separate validation step: xcodebuild accepts its `validation` method only with
+# `destination: upload`, and run that way it sent the build to App Store Connect (1.2.0, #99).
+# App Store Connect checks the build as it takes the upload. Uses the Apple ID signed into Xcode;
+# no API key or other secret. Env: ALLOW_DIRTY=1 archives any commit or uncommitted changes as a
+# trial (the release PR's), which can't be uploaded.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -20,7 +17,7 @@ out="$PWD/.build/release"
 archive="$out/NudgeInator.xcarchive"
 logs="$out/logs"
 options="$PWD/scripts/export-options.plist"
-validated="$out/validated"
+archived="$out/archived"
 dry_run="$out/dry-run"
 mkdir -p "$logs"
 
@@ -40,19 +37,24 @@ xcodebuild_logged() {
 
 require_archive() {
   [ -d "$archive" ] || fail "no archive. Run scripts/archive-and-upload.sh first."
-  [ ! -e "$dry_run" ] || fail "the archive is a dry run (ALLOW_DIRTY). Archive main, committed."
+  [ ! -e "$dry_run" ] || fail "the archive is a trial (ALLOW_DIRTY). Archive the release tag, committed."
 }
 
-# Identifies the archive and the commit it was built from, so a validation can't be reused for
-# another build.
+# Identifies the archive and the commit it was built from, so an upload can't send a build of
+# another commit.
 fingerprint() { echo "$(git rev-parse HEAD) $(plist "$archive/Info.plist" CreationDate)"; }
 
 case "$mode" in
   archive)
-    rm -rf "$archive" "$validated" "$dry_run"
-    if [ -n "$(git status --porcelain)" ] || [ "$(git branch --show-current)" != main ]; then
-      [ -n "${ALLOW_DIRTY:-}" ] || fail "archive a committed, up-to-date main (ALLOW_DIRTY=1 for a dry run)."
+    rm -rf "$archive" "$archived" "$dry_run"
+    expected="$(sed -n 's/^ *MARKETING_VERSION: "\(.*\)"/\1/p' project.yml)"
+    [ -n "$expected" ] || fail "no MARKETING_VERSION in project.yml"
+    # The build is the release: taken from its pushed tag, never from a commit that may still move.
+    if [ -n "$(git status --porcelain)" ] || ! git tag --points-at HEAD | grep -qx "v$expected"; then
+      [ -n "${ALLOW_DIRTY:-}" ] || fail "check out the release tag v$expected, committed (ALLOW_DIRTY=1 for a trial)."
       touch "$dry_run"
+    elif [ -z "$(git ls-remote --tags origin "refs/tags/v$expected")" ]; then
+      fail "tag v$expected isn't pushed to origin. The release is tagged and pushed before its build."
     fi
     step "Archive (Release, scheme NudgeInator) at $(git rev-parse --short HEAD)"
     xcodegen generate > "$logs/xcodegen.log" 2>&1 || fail "xcodegen generate (see $logs/xcodegen.log)"
@@ -61,8 +63,6 @@ case "$mode" in
       -allowProvisioningUpdates || fail "archive"
 
     step "Versions"
-    expected="$(sed -n 's/^ *MARKETING_VERSION: "\(.*\)"/\1/p' project.yml)"
-    [ -n "$expected" ] || fail "no MARKETING_VERSION in project.yml"
     app="$archive/Products/Applications/NudgeInator.app"
     widget="$(echo "$app"/PlugIns/*.appex)"
     for bundle in "$app" "$widget"; do
@@ -72,21 +72,19 @@ case "$mode" in
       [ "$version" = "$expected" ] || fail "$(basename "$bundle") reports $version, project.yml says $expected"
     done
 
+    fingerprint > "$archived"
     echo
-    echo "Archived $(fingerprint). Nothing is validated or uploaded."
-    echo "Next: open $archive (it joins the Organizer), run Validate App, then"
-    echo "scripts/archive-and-upload.sh record-validated"
-    ;;
-  record-validated)
-    require_archive
-    fingerprint > "$validated"
-    echo "Recorded: Validate App passed for $(cat "$validated"). On the developer's go:"
-    echo "scripts/archive-and-upload.sh upload"
+    if [ -e "$dry_run" ]; then
+      echo "Trial archive of $(fingerprint). It can't be uploaded."
+    else
+      echo "Archived v$expected: $(fingerprint). Nothing is uploaded. On the developer's go:"
+      echo "scripts/archive-and-upload.sh upload"
+    fi
     ;;
   upload)
     require_archive
-    [ -f "$validated" ] && [ "$(cat "$validated")" = "$(fingerprint)" ] \
-      || fail "validation isn't recorded for this archive on this commit (record-validated)."
+    [ -f "$archived" ] && [ "$(cat "$archived")" = "$(fingerprint)" ] \
+      || fail "the archive wasn't made from this commit. Archive the release tag again."
     step "Upload to App Store Connect"
     xcodebuild_logged "$logs/upload.log" -exportArchive -archivePath "$archive" \
       -exportPath "$out/upload" -exportOptionsPlist "$options" \
@@ -94,5 +92,5 @@ case "$mode" in
     echo
     echo "Uploaded. Confirm in App Store Connect that the build processed."
     ;;
-  *) fail "unknown mode '$mode' (archive, record-validated, upload)" ;;
+  *) fail "unknown mode '$mode' (archive, upload)" ;;
 esac
