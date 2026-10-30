@@ -8,6 +8,10 @@ An iPhone app that keeps nudging you about a reminder, the way an iOS Alarm keep
 Something you want to be nudged about, with a due time, optional repeat, and any number of tags.
 _Avoid_: Task, alarm
 
+**Creation date**:
+The moment a reminder was added. It never changes: editing, Done, Pause and Resume leave it as it was. "Created" on screen.
+_Avoid_: Date added, start (a reminder's Start is its first due time)
+
 **Occurrence**:
 One due instance of a reminder. A reminder has at most one open occurrence at a time.
 _Avoid_: Instance, run
@@ -26,6 +30,14 @@ _Avoid_: Ping, alert
 
 **Nudging**:
 The state of an occurrence that has come due and is not yet done.
+
+**Coming up**:
+The status of a reminder that isn't Nudging or Paused and has a due time ahead. Now's Coming Up section lists those due in the next 7 days.
+_Avoid_: Upcoming, scheduled, pending
+
+**Status label**:
+The word, with its color, that says a reminder's or occurrence's status: Nudging, Coming up, Paused, Done, Missed or Skipped.
+_Avoid_: Status badge (a badge is a count)
 
 **Locked**:
 The state of a Nudging reminder's due time, repeat, strength, pace and Break through Focus. They can't be edited until the occurrence closes. Title, notes and tags stay editable.
@@ -93,6 +105,14 @@ A one-word label (`#home`) on a reminder, used only to filter. Never shown in al
 
 **My Day**:
 Today's occurrences in time order, with Done, Nudging, Missed and Left counts.
+
+**Due Today**:
+The reminders My Day lists for today, whatever their status, Done and Missed included. On the Reminders tab it is one of the quick filter chips.
+_Avoid_: Today (alone), due now
+
+**Reminders tab**:
+The tab that lists every reminder once, in any status, by creation date, with search and filters.
+_Avoid_: All Reminders, list, library
 
 **Icon badge**:
 The number on the app's home-screen icon: how many reminders have an occurrence that is Nudging. It is the same count as the Now badge. It is not a Nudge.
