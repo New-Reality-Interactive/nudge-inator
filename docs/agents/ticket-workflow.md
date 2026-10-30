@@ -1,7 +1,7 @@
 # Ticket workflow
 
 Every ticket is one `/implement` run, from a fresh session, plus this project's additions around
-it. The skill states the ticket's title, builds with `tdd` at seams agreed beforehand, runs the
+it. The skill states the ticket's title, builds with `tdd` at the seams it records, runs the
 tests, reviews with `code-review` and commits. This file adds what comes before, during and after.
 
 Only the developer can start `/implement` (and `/retro`): it runs only when typed as a command,
@@ -22,8 +22,11 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
 
 ## During `/implement`
 
-4. Propose the `tdd` seams and wait for the developer to agree them before the first test. A
-   ticket with no behaviour (docs, a mockup) skips `tdd`; say so.
+4. Choose the `tdd` seams, starting from the spec's Testing Decisions, and record them in the
+   ticket's Comments before the first test, then go on: the developer doesn't agree them first,
+   and raises a seam in the PR review if one is wrong. Where the skill says to wait for the seams
+   to be agreed, this step replaces it. A ticket with no behaviour (docs, a mockup) skips `tdd`;
+   say so.
 5. Run `mattpocock-skills:domain-modeling` when a name isn't in `GLOSSARY.md`, and
    `mattpocock-skills:diagnosing-bugs` when something fails and a first look doesn't explain it.
 6. Test with `scripts/test.sh`.
@@ -40,7 +43,8 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
    - Device checks, from the criteria or AGENTS.md's offer of an iPhone run: walk them through
      one at a time (`device-testing.md`).
    - A criterion the developer judges, such as approving a mockup: show it and ask.
-   - Neither: show the evidence and ask whether it's ready.
+   - Neither: go straight to step 9, with the evidence in the PR body. The developer's approval
+     of the PR is the check.
 
    A failed check goes back to step 4. The ticket is `resolved` only when every criterion is
    ticked (AGENTS.md, Issue tracker).
@@ -74,7 +78,7 @@ A section at the end of the issue body, written when the ticket before it merges
 
 - Builds on: #<n>: <what it left that this one needs, and which of its comments says so>.
 - Watch for: <anything earlier tickets found that this one could trip on>.
-- Developer stops: <seams to agree | simulator check | device check | approval of X>.
+- Developer stops: <simulator check | device check | approval of X | none>.
 ```
 
 ## Choosing a model and effort

@@ -17,8 +17,9 @@ GitHub shares one number space across issues and PRs, so a bare `#42` may be eit
 
 ## Features, specs and tickets
 
-- **Feature**: one milestone per feature, titled with its version (`1.2.0`). The milestone description names the feature's slug (`enhancement-tags`), used in branch names.
+- **Feature**: one milestone per feature, titled with its version (`1.2.0`). Its description is the feature's slug (`enhancement-tags`, used in branch names), a blank line, a one-paragraph summary, a blank line, and `Spec: #<n>` once the spec exists. The open feature is the open milestone (AGENTS.md).
 - **Spec**: one issue labelled `spec`, in the feature's milestone. Its body starts with a `Version:` line and a `Compatibility:` line (Features and versions).
+- **Spec questions**: the developer answers only product choices. A point the code, the docs or an ADR already settles is written into the draft as a decision, under "Assumed (change if wrong)", with its source. Before sending the questions, check every recommendation against the others and against the brief, so a conflict between two answers is asked in the first round, not found after it.
 - **Ticket**: one issue per ticket, a sub-issue of the spec and in the same milestone, numbered by GitHub (`#83`). A ticket starts `ready-for-agent`, or `ready-for-human` when its steps are the developer's.
 - **Blocked by**: GitHub's native issue dependencies: `gh api --method POST repos/New-Reality-Interactive/nudge-inator/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`, where `<blocker-db-id>` is `gh api repos/New-Reality-Interactive/nudge-inator/issues/<n> --jq .id` (the database id, not the `#number`). A ticket is unblocked when every blocker is closed.
 - **Resolved**: the ticket is closed as completed, by its PR's `Closes #<n>` or by hand. AGENTS.md says when a ticket may be resolved.
@@ -48,7 +49,15 @@ When a feature changes a capability, its spec plans how that data migrates. The 
 
 Bugs found while no feature is open go in a patch milestone (`1.1.1`), whose spec issue is the `Version:` and `Compatibility:` lines and one line on what it fixes.
 
-When a feature's last ticket is resolved and merged, it's released. The agent opens a release PR that adds the version mockup, `docs/mockups/<version>/` (such as `1.2.0`): copied from the latest version mockup, as the template's README says, drawing the app as built at that version with working mockup controls. It's checked against the app with the screenshot walk (`docs/agents/device-testing.md`, Simulator screenshots) for the screens the release changed (`SHOTS_TESTS`), on both simulators, in portrait, landscape and the largest text size; the whole walk is only for a mockup first lined up with the app. The PR also deletes the change mockups the version mockup takes in. The same PR moves AGENTS.md's open feature to the next one. Once it merges, the agent closes the spec issue and the milestone, and tags `v<version>` (annotated) on the merge commit on `main` and pushes the tag; the developer sets `MARKETING_VERSION` in `project.yml`. A feature that uploads a build is the exception: its upload ticket's PR sets `MARKETING_VERSION`, before the archive, so nothing is left for the developer. The agent then runs the whole walk in portrait on the `iPhone 15 - iOS 27.0` simulator (`SHOTS_VARIANTS=portrait SIMULATORS="iPhone 15 - iOS 27.0"`), zips it as `screenshots-<version>.zip` and attaches it to the version's GitHub Release (`gh release upload v<version>`, after `gh release create v<version>` if there's none). The screenshots never go in the repo.
+When a feature's last ticket is resolved and merged, it's released, in this order:
+
+1. **Release PR.** The agent opens one that:
+   - adds the version mockup, `docs/mockups/<version>/` (such as `1.2.0`): copied from the latest version mockup, as the template's README says, drawing the app as built at that version with working mockup controls. It's checked against the app with the screenshot walk (`docs/agents/device-testing.md`, Simulator screenshots) for the screens the release changed (`SHOTS_TESTS`), on both simulators, in portrait, landscape and the largest text size; the whole walk is only for a mockup first lined up with the app;
+   - deletes the change mockups the version mockup takes in;
+   - sets `MARKETING_VERSION` in `project.yml`, and the version `BuiltBundleTests` pins;
+   - adds the TestFlight build's What to Test note to `docs/release-notes/` and passes a trial archive (`docs/agents/device-testing.md`, Archive and upload).
+2. **Release.** Once it merges, the agent tags `v<version>` (annotated) on the merge commit on `main` and pushes the tag, then runs the whole walk in portrait on the `iPhone 15 - iOS 27.0` simulator (`SHOTS_VARIANTS=portrait SIMULATORS="iPhone 15 - iOS 27.0"`), zips it as `screenshots-<version>.zip`, and attaches it to the GitHub Release (`gh release create v<version>`, then `gh release upload v<version>`). The screenshots never go in the repo. It closes the spec issue and the milestone.
+3. **TestFlight build**, for every release, from the pushed tag: `docs/agents/device-testing.md`, Archive and upload. The developer's steps are the go before the upload and the App Store Connect steps after it.
 
 ## Tickets before GitHub Issues
 
