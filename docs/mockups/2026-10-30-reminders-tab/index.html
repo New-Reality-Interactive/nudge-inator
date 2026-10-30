@@ -925,6 +925,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
    the template, ticket 20). */
 .asheet.menu .asheet-btn { display: flex; align-items: center; justify-content: flex-start; gap: 12px; color: var(--label); text-align: left; }
 /* The filter sheet's date rows: the date pill, then the switch. */
+.remreset { display: flex; justify-content: center; margin: 16px 16px 24px; }
 .daterow { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 16px; flex-wrap: wrap; }
 .daterow > label:first-child { flex: 1; min-width: 0; }
 .daterow .pill-input { font: var(--body); }
@@ -2045,7 +2046,8 @@ function remDone(occId, el) {
 }
 
 /* The filter sheet edits a draft of the applied filters. Apply applies it and closes; Reset clears
-   the draft, which changes nothing until Apply; closing without Apply discards it. */
+   the draft, which changes nothing until Apply. Cancel, tapping above the sheet or swiping it down
+   discards the draft, asking first once it differs from what's applied (HIG Sheets). */
 function openRemFilter(ret = document.activeElement) {
   state.sheet = { kind: "remfilter", draft: structuredClone(state.rems.filter), ret };
   state.focus = "sheet"; render();
@@ -2069,7 +2071,7 @@ function showRemFilterMenu(btn) {
 }
 function remFilterSheet() {
   const d = state.sheet.draft, n = remRows(d).length;
-  const reset = `<button type="button" class="btn bar glass" data-remreset ${JSON.stringify(d) === JSON.stringify(newRemFilter()) ? "disabled" : ""}>Reset</button>`;
+  const reset = `<button type="button" class="btn bordered" data-remreset ${JSON.stringify(d) === JSON.stringify(newRemFilter()) ? "disabled" : ""}>Reset</button>`;
   const apply = `<button type="button" class="btn bar prominent" data-remapply>Apply</button>`;
   const check = (attr, v, label, on, sub = "") => `<li><button type="button" class="cell" role="checkbox" aria-checked="${on}" ${attr}="${v}"><span class="main"><span class="t">${label}</span>${sub}</span>${on ? CHECK : ""}</button></li>`;
   const tagRows = sortTags(tags).map((t) => check("data-remtag", t.id, `#${esc(t.name)}`, d.tags.ids.includes(t.id))).join("");
@@ -2081,7 +2083,7 @@ function remFilterSheet() {
     const pill = d[k] ? `<label class="pill-input dtpill">${datePill(d[k])}<input type="date" id="rf-${k}" data-remdate="${k}" value="${d[k]}"${lim} aria-label="${label}"></label>` : "";
     return `<li><div class="daterow"><label for="rf-${k}-on">${label}</label>${pill}<input type="checkbox" class="switch" role="switch" id="rf-${k}-on" data-remdateon="${k}" ${d[k] ? "checked" : ""}></div></li>`;
   };
-  return `${sheetNav(reset, "Filter Reminders", apply)}
+  return `${sheetNav(cancelButton(), "Filter Reminders", apply)}
   <div class="sheet-body" tabindex="-1">
     ${matchControl(d.tags, "rem", d.tags.ids.length < 2 || d.tags.none)}
     <h3 class="sec-h">Tags</h3>
@@ -2096,6 +2098,7 @@ function remFilterSheet() {
     <div class="sec"><ul class="list">${dateRow("from", "From")}${dateRow("to", "To")}</ul>
     <p class="sec-f">Both days are included. A reminder with nothing more coming is found by its last due date.</p></div>
     <p class="sec-f" style="margin:0 32px">Apply shows ${plural(n, "reminder")}.</p>
+    <div class="remreset">${reset}</div>
   </div>`;
 }
 
@@ -2706,7 +2709,9 @@ function closeSheet() {
   render();
 }
 function cancelSheet() {
-  if (state.sheet.kind === "editor" && draftDirty()) {
+  const sh = state.sheet;
+  const dirty = sh.kind === "editor" ? draftDirty() : sh.kind === "remfilter" && JSON.stringify(sh.draft) !== JSON.stringify(state.rems.filter);
+  if (dirty) {
     ask({ style: "sheet", buttons: [{ label: "Discard Changes", role: "destructive", run: closeSheet }, { label: "Keep Editing", role: "cancel" }] });
   } else closeSheet();
 }
@@ -3444,7 +3449,7 @@ document.addEventListener("click", (e) => {
   // Tapping outside an iOS 26 action sheet cancels it.
   if (e.target.matches("[data-alert-scrim]") && state.alert) { answerAlert(state.alert.buttons.findIndex((b) => b.role === "cancel")); return; }
   // Tapping above the Reminders filter sheet closes it without applying, as swiping it down does.
-  if (e.target.matches("[data-sheet-scrim]") && state.sheet) { closeSheet(); return; }
+  if (e.target.matches("[data-sheet-scrim]") && state.sheet) { cancelSheet(); return; }
   const t = e.target.closest("button, [data-tab]");
   const key = t && Object.keys(t.dataset).find((k) => CLICK[k]);
   pressed = t;

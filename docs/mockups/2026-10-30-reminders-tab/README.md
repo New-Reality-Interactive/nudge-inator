@@ -39,9 +39,11 @@ Open [`index.html`](index.html) in a browser. It's a single file with no depende
 - **The filter sheet, "Filter Reminders":** Match and Tags with No Tags (as My Day's), Status (six,
   several allowed), Strength (three, several allowed) and Due Date (From and To, each a switch and
   a date pill that can't pass the other end). Its footer says how many reminders Apply shows,
-  with the search and chip as they are. **Reset**
-  clears the draft, **Apply** applies it and closes, and tapping above the sheet (swiping it down on
-  the iPhone) closes it without applying.
+  with the search and chip as they are. The bar is **Cancel** (`xmark`) leading and **Apply**
+  trailing, as the HIG's Sheets page pairs them; **Reset**, at the bottom, clears the draft.
+  **Apply** applies it and closes. Cancel, tapping above the sheet (swiping it down on the iPhone)
+  or Escape closes it without applying, and asks first (Discard Changes, Keep Editing) once the
+  draft differs from what's applied.
 - **Swipe left** on a row: Done (`swipe-done`) at the edge and Delete (red tile, `trash`) beside it
   on a Nudging row, Delete only on any other row. There's no full swipe and nothing on the right.
   Delete asks first, in the details page's words.
@@ -82,12 +84,15 @@ Brian decides these at sign-off. Each is drawn as described.
    field in the Reminders toolbar". The field always shows under the large title
    (`navigationBarDrawer(displayMode: .always)`). Apple's docs prefer search in a bottom toolbar,
    but under a five-tab bar this tab has no bottom toolbar, and the spec calls placement a
-   preference to check on the simulators. If it's signed off, the spec's line changes to match.
+   preference to check on the simulators. Signed off by Brian, so the spec's line changes to match.
 2. **Done at the edge, Delete inside it,** as Done sits alone at the edge on Now and My Day.
+   Signed off by Brian.
 3. **The header row sits above the rows,** like a section header, not inside the first row's
-   white cell.
-4. **The filter sheet's bar is Reset and Apply,** as My Day's sheet is Clear and Done. The
-   sheet closes without applying when swiped down.
+   white cell. Signed off by Brian, with the count reading "N reminders out of M".
+4. **The filter sheet's bar is Cancel and Apply, with Reset at the bottom,** and closing it with
+   a changed draft asks first, as the HIG's Sheets page asks. Signed off by Brian; this drew Reset
+   and Apply at first. My Day's sheet keeps Clear and Done: it applies each change at once, so it
+   never holds unsaved changes.
 5. **New still opens the new reminder's details after Add,** as on Now and My Day; Back shows it in
    the list.
 

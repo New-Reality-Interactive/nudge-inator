@@ -431,7 +431,10 @@ except in the tab and navigation bars. Verify names against the mockup.
   button takes the accent color. While any sheet filter is on, a lit chip's Status included, a tap
   shows a menu: Filter (`line.3.horizontal.decrease`) opens the sheet, Clear All Filters (`xmark`)
   removes every sheet filter. With none on, a tap opens the sheet. No long press, as on My Day.
-- **Filter sheet ("Filter Reminders"):** Reset (glass) leading, Apply (accent capsule) trailing.
+- **Filter sheet ("Filter Reminders"):** Cancel (`xmark`, the form's cancel button) leading,
+  Apply (accent capsule) trailing, and Reset, a bordered button, at the bottom under the footer.
+  Cancel, tapping above or swiping down discards the draft, asking first (Discard Changes, Keep
+  Editing) once it differs from what's applied.
   Match and Tags with No Tags as on My Day, then Status, Strength and Due Date. Status and
   Strength are checkmark lists. Due Date has From and To, each a switch with a date pill beside it
   while on. The footer counts what Apply would show.
