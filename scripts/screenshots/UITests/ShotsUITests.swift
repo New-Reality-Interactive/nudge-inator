@@ -602,7 +602,7 @@ final class ShotsUITests: XCTestCase {
         shot("banner-time-sensitive-off", pages: 3)
     }
 
-    /// The mockup's screens of the same names (`docs/mockups/2026-10-28-settings-badges/`).
+    /// The mockup's screens of the same names (`docs/mockups/1.2.0/`).
     func testBadges() {
         launch(.badgesOff)
         tab("Settings")
