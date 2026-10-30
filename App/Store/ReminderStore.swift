@@ -48,14 +48,29 @@ struct ReminderStore {
     private let container: ModelContainer
     private var context: ModelContext { container.mainContext }
 
-    init(location: StoreLocation) throws {
+    /// Opens the store, migrating one saved under an older schema. A reminder from before the
+    /// creation date existed gets `now`, the same instant for all of them, saved once.
+    init(location: StoreLocation, now: Date = .now) throws {
         let configuration = Self.configuration(for: location)
-        container = try ModelContainer(for: Self.schema, configurations: configuration)
+        container = try ModelContainer(for: Self.schema, migrationPlan: StoreMigrationPlan.self, configurations: configuration)
+        try backfillCreationDates(with: now)
     }
 
-    nonisolated private static let schema = Schema([
-        ReminderRecord.self, ClosedOccurrenceRecord.self, PauseSpanRecord.self, ReplacedTitleRecord.self, TagRecord.self,
-    ])
+    nonisolated private static let schema = Schema(versionedSchema: StoreSchemaV2.self)
+
+    /// Gives the reminders without a creation date one instant, so they sort by `position` and before
+    /// every reminder made afterwards. The lightweight stage can only add the property with its
+    /// default, `.distantPast`, so 1.2.0's reminders arrive with that and are stamped here, once:
+    /// a later open finds none left. A reminder saved without `Engine.add` is stamped the same way.
+    private func backfillCreationDates(with now: Date) throws {
+        let noDate = Date.distantPast
+        let records = try context.fetch(FetchDescriptor<ReminderRecord>(predicate: #Predicate { $0.createdAt == noDate }))
+        guard !records.isEmpty else { return }
+        for record in records {
+            record.createdAt = now
+        }
+        try context.save()
+    }
 
     /// Where and how SwiftData keeps the store. Its own function so a test can check the App Group
     /// location without opening the real store.
@@ -200,6 +215,7 @@ private extension ReminderRecord {
         strength = reminder.strength.storedValue
         (paceKind, paceWait) = reminder.pace.storedValue
         breakThroughFocus = reminder.breakThroughFocus
+        createdAt = reminder.createdAt
     }
 
     func reminder() throws -> Reminder {
@@ -212,7 +228,8 @@ private extension ReminderRecord {
             repeatRule: try storedRepeatRule(),
             strength: try Strength(storedValue: strength),
             pace: try Pace(storedKind: paceKind, wait: paceWait),
-            breakThroughFocus: breakThroughFocus
+            breakThroughFocus: breakThroughFocus,
+            createdAt: createdAt
         )
     }
 

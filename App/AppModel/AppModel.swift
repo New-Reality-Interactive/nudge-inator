@@ -331,7 +331,7 @@ final class AppModel {
     }
 
     func add(_ reminder: Reminder) {
-        perform { $0.update(reminders: $0.reminders + [reminder]) }
+        perform { $0.add(reminder) }
     }
 
     func markDone(_ reminderID: Reminder.ID) {

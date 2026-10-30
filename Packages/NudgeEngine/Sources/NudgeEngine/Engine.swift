@@ -147,6 +147,14 @@ public struct Engine {
         applyPlan()
     }
 
+    /// Adds a new reminder after the ones the engine holds and plans its nudges. Its creation date
+    /// is now, from the engine's clock, whatever the reminder carries in.
+    public mutating func add(_ reminder: Reminder) {
+        var added = reminder
+        added.createdAt = clock.now
+        update(reminders: reminders + [added])
+    }
+
     /// Replaces the whole tag list: App opened, and the store's reload. Like `update(reminders:)`,
     /// it reports what is already true, so the names aren't checked.
     public mutating func update(tags: [Tag]) {
@@ -317,7 +325,10 @@ public struct Engine {
         if edited.title != current.title {
             historyByReminder[edited.id, default: History()].saved.replacedTitles.append(Replaced(value: current.title, replacedAt: clock.now))
         }
-        reminders = reminders.map { $0.id == edited.id ? edited : $0 }
+        // The creation date never changes, so the edit keeps the one the reminder has.
+        var kept = edited
+        kept.createdAt = current.createdAt
+        reminders = reminders.map { $0.id == kept.id ? kept : $0 }
         applyPlan()
     }
 

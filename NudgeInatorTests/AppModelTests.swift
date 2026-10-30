@@ -17,7 +17,7 @@ struct AppModelTests {
     let manager = FakeAlarmManager()
     /// Thursday 15 October 2026 at 8:40, once. Firm sends nudges 1–3 at 8:40, 9:10 and 9:25 as
     /// notifications, then rings nudges 4–20 as alarms from 9:32:30, so it reaches both adapters.
-    let call = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 8, 40), strength: .firm)
+    let call = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 8, 40), strength: .firm, createdAt: NewYork.local(2026, 10, 15, 8))
 
     /// A model before launch, as the app delegate builds it, over new adapters on the shared fakes.
     func model(store: ReminderStore) -> (model: AppModel, notifications: NotificationAdapter) {
@@ -80,7 +80,7 @@ struct AppModelTests {
     /// over the same fakes, and its store opens the same file.
     @Test func aRelaunchedModelHasTheSameOccurrencesAndPlan() async throws {
         let storeFile = TemporaryStoreFile()
-        let water = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 15, 9, 5), strength: .firm)
+        let water = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 15, 9, 5), strength: .firm, createdAt: clock.now)
         let model = await launchedModel(store: try ReminderStore(location: .file(storeFile.url)))
         model.add(call)
         model.add(water)
@@ -103,6 +103,71 @@ struct AppModelTests {
         #expect(Set(manager.scheduled.map(\.id)) == alarms)
         #expect(center.added.count == added)
         #expect(manager.scheduleCalls.count == scheduled)
+    }
+
+    /// Adding stamps now as the creation date, and the store keeps it.
+    @Test func addingAReminderSavesItsCreationDateAsNow() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        let model = await launchedModel(store: store)
+        clock.now = NewYork.local(2026, 10, 15, 8, 20)
+        var unstamped = call
+        unstamped.createdAt = .distantPast
+
+        model.add(unstamped)
+
+        #expect(model.engine.reminders.map(\.createdAt) == [NewYork.local(2026, 10, 15, 8, 20)])
+        #expect(try store.load().reminders.map(\.createdAt) == [NewYork.local(2026, 10, 15, 8, 20)])
+    }
+
+    /// The migration changes no identifier and plans nothing new: a launch over 1.2.0's store holds
+    /// the notifications and alarms that a model which had added the reminder itself holds.
+    @Test func aLaunchAfterMigrationPlansTheSameNudgesAsBefore() async throws {
+        let before = AppModelTests()
+        let beforeModel = await before.launchedModel(store: try ReminderStore(location: .inMemory))
+        beforeModel.add(call)
+        await beforeModel.waitUntilApplied()
+        let storeFile = TemporaryStoreFile()
+        try Version1Store.write(to: storeFile.url, reminders: [call], tags: [], histories: [:])
+
+        let migrated = await launchedModel(store: try ReminderStore(location: .file(storeFile.url)))
+        await migrated.waitUntilApplied()
+
+        #expect(!center.pending.isEmpty)
+        #expect(Set(center.pending.map(\.identifier)) == Set(before.center.pending.map(\.identifier)))
+        #expect(Set(manager.scheduled.map(\.id)) == Set(before.manager.scheduled.map(\.id)))
+        #expect(center.added.count == before.center.added.count)
+        #expect(manager.scheduleCalls.count == before.manager.scheduleCalls.count)
+        #expect(migrated.engine.reminders.map(\.id) == [call.id])
+    }
+
+    /// A Done queued before the update, while the store was shut, still lands on the first launch
+    /// over the migrated store.
+    @Test func aDoneQueuedBeforeTheUpdateStillLandsOverAMigratedStore() async throws {
+        let folder = FileManager.default.temporaryDirectory.appending(path: "AppModelTests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let queue = DoneQueue(folder: folder)
+        try queue.makeFolder()
+        try queue.add(QueuedDone(reminderID: call.id, dueTime: call.dueTime, doneAt: NewYork.local(2026, 10, 15, 8, 45)))
+        let storeFile = TemporaryStoreFile()
+        try Version1Store.write(to: storeFile.url, reminders: [call], tags: [], histories: [:])
+        clock.now = NewYork.local(2026, 10, 15, 8, 50)
+        let notifications = NotificationAdapter(center: center, clock: clock)
+        let model = AppModel(
+            clock: clock,
+            openStore: { try ReminderStore(location: .file(storeFile.url)) },
+            notifications: notifications,
+            alarms: AlarmAdapter(manager: manager, clock: clock),
+            defaultPaceRecord: .temporary,
+            doneQueue: queue,
+            timeZone: NewYork.timeZone
+        )
+
+        await model.launch()
+        await model.waitUntilApplied()
+
+        #expect(model.engine.latestOccurrence(for: call.id)?.state == .done)
+        #expect(try ReminderStore(location: .file(storeFile.url)).load().histories[call.id]?.closedOccurrences[call.dueTime]?.state == .done)
+        #expect(try queue.dones().isEmpty)
     }
 
     /// Yields until `condition` holds, for events that reach the model through an adapter's own
