@@ -19,6 +19,8 @@ struct ShotsApp: App {
         /// Everything allowed, plus a Custom reminder that starts nudging a minute or two after
         /// launch, so its Custom page can be open as it locks (ticket 16). `SHOT_DARK` shows it dark.
         case customLocking
+        /// Everything allowed, and no reminder at all: the Reminders tab's first empty state.
+        case noReminders
     }
 
     @State private var model: AppModel
@@ -103,10 +105,11 @@ enum ShotsSeed {
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .disabled)
         case .badgesNotSet:
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .notSupported)
-        case .app, .customLocking:
+        case .app, .customLocking, .noReminders:
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .enabled)
         }
         let store = try! ReminderStore(location: .inMemory)
+        if scenario != .noReminders { try! store.save(storedBeforeLaunch()) }
         let model = AppModel(
             clock: clock,
             openStore: { store },
@@ -121,7 +124,7 @@ enum ShotsSeed {
 
     static func launch(_ model: AppModel, scenario: ShotsApp.Scenario) async {
         await model.launch()
-        if !isSeeded {
+        if !isSeeded, scenario != .noReminders {
             isSeeded = true
             seedMockupData(into: model)
             if scenario == .customLocking { seedCustomLocking(into: model) }
@@ -133,13 +136,10 @@ enum ShotsSeed {
     /// mockup's 8:20 AM as now. Times are now plus or minus the mockup's gaps, so the screens show
     /// the same states whenever this runs.
     static func seedMockupData(into model: AppModel) {
-        let now = Calendar.current.dateInterval(of: .minute, for: .now)!.start
-        func at(_ minutes: Double, days: Double = 0) -> Date {
-            now.addingTimeInterval(minutes * 60 + days * 86_400)
-        }
         var tags: [String: Tag.ID] = [:]
         for name in ["home", "health", "work", "money", "morning", "appointments", "travel"] {
-            tags[name] = try! model.createTag(named: name)!.id
+            // #health came from the store, with the physio exercises.
+            tags[name] = model.engine.tags.first { $0.name == name }?.id ?? (try! model.createTag(named: name)!.id)
         }
         func tagged(_ names: String...) -> [Tag.ID] { names.map { tags[$0]! } }
         let everyThreeDays = RepeatRule(frequency: .daily, interval: 3)!
@@ -170,12 +170,29 @@ enum ShotsSeed {
         // 5:00 PM every week, paused before yesterday's.
         let grandma = Reminder(title: "Call Grandma", dueTime: at(520, days: -8), repeatRule: .everyWeek, strength: .gentle)
 
-        clock.frozenNow = at(-200, days: -18)
-        for reminder in [bins, alex, meds, stretch, plants, rent, dentist, passport, standUp, status, dog, grandma] {
+        // 12:00 PM four days ago, given up a day later.
+        let carService = Reminder(title: "Book the car service", notes: "The garage closes at 5.", dueTime: at(220, days: -4), strength: .gentle)
+
+        // Each is added at the mockup's creation date (its `createdAt`), so the Reminders tab lists
+        // them in its order, and before anything happens to it. The clock only moves forward.
+        func add(_ reminder: Reminder, daysAgo: Double, _ hour: Double, _ minute: Double) {
+            clock.frozenNow = on(daysAgo: daysAgo, hour, minute)
             model.add(reminder)
         }
+        add(rent, daysAgo: 273, 18, 44)
+        add(bins, daysAgo: 269, 19, 5)
+        add(standUp, daysAgo: 269, 19, 12)
+        add(status, daysAgo: 268, 9, 0)
+        add(dog, daysAgo: 240, 7, 45)
+        add(meds, daysAgo: 213, 8, 12)
+        add(plants, daysAgo: 184, 10, 2)
+        add(grandma, daysAgo: 114, 16, 30)
+        add(passport, daysAgo: 39, 9, 15)
+        add(stretch, daysAgo: 28, 12, 30)
         clock.frozenNow = at(81, days: -18)
         model.markDone(passport.id)
+        add(dentist, daysAgo: 14, 11, 20)
+        add(carService, daysAgo: 13, 13, 0)
         clock.frozenNow = at(-28, days: -7)
         model.markDone(bins.id)
         clock.frozenNow = at(-60, days: -1)
@@ -183,11 +200,50 @@ enum ShotsSeed {
         model.markDone(dog.id)
         clock.frozenNow = at(-15, days: -1)
         model.pause(grandma.id)
+        add(alex, daysAgo: 1, 21, 40)
         clock.frozenNow = at(-76)
         model.markDone(meds.id)
         clock.frozenNow = at(-62)
         model.markDone(dog.id)
         clock.frozenNow = nil
+    }
+
+    /// Now, to the minute, read once: the mockup's 8:20 AM.
+    private static let seedNow = Calendar.current.dateInterval(of: .minute, for: .now)!.start
+
+    /// `minutes` and `days` from the mockup's 8:20 AM. Days are calendar days, so a daylight
+    /// saving change between then and now keeps the time of day.
+    private static func at(_ minutes: Double, days: Double = 0) -> Date {
+        Calendar.current.date(byAdding: .day, value: Int(days), to: seedNow)!.addingTimeInterval(minutes * 60)
+    }
+
+    /// The time of day `hour`:`minute` on the day `daysAgo` before the mockup's.
+    private static func on(daysAgo: Double, _ hour: Double, _ minute: Double) -> Date {
+        at(hour * 60 + minute - 500, days: -daysAgo)
+    }
+
+    /// The mockup's physio exercises, with #health: every day at 7:00 PM up to two days ago, the
+    /// day before's Done at 7:12, the last one Skipped by a pause that ended after it. Only the
+    /// store can hold a pause that ended with nothing left to resume at, so the seed saves it
+    /// there before launch.
+    private static func storedBeforeLaunch() -> StoredData {
+        let health = Tag(name: "health")
+        let lastDay = Calendar.current.dateComponents([.year, .month, .day], from: on(daysAgo: 2, 19, 0))
+        let physio = Reminder(
+            title: "Physio exercises",
+            notes: "Shoulder routine, 3 sets.",
+            tagIDs: [health.id],
+            dueTime: on(daysAgo: 16, 19, 0),
+            repeatRule: RepeatRule(frequency: .daily, end: .untilDate(year: lastDay.year!, month: lastDay.month!, day: lastDay.day!))!,
+            strength: .firm,
+            pace: .consistent(wait: 15 * 60),
+            createdAt: on(daysAgo: 17, 17, 20)
+        )
+        let history = ReminderHistory(
+            closedOccurrences: [on(daysAgo: 3, 19, 0): Closing(state: .done, closedAt: on(daysAgo: 3, 19, 12), nudgesSent: 1)],
+            pauseSpans: [PauseSpan(start: on(daysAgo: 2, 18, 0), end: on(daysAgo: 1, 9, 0))]
+        )
+        return StoredData(reminders: [physio], tags: [health], histories: [physio.id: history])
     }
 
     /// Weekly on today and tomorrow, at the first whole minute at least 90 seconds away: time for

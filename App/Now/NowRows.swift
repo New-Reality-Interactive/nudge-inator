@@ -8,7 +8,7 @@ struct ComingUpRowView: View {
     let openDetails: () -> Void
 
     var body: some View {
-        NowRowLayout(openDetails: openDetails) {
+        ReminderRowLayout(openDetails: openDetails) {
             TimeColumn(time: row.time, day: row.day)
         } main: {
             Text(verbatim: row.title)
@@ -29,7 +29,7 @@ struct ClosedRowView: View {
     let openDetails: () -> Void
 
     var body: some View {
-        NowRowLayout(openDetails: openDetails) {
+        ReminderRowLayout(openDetails: openDetails) {
             TimeColumn(time: row.time, day: row.day)
         } main: {
             Text(verbatim: row.title)
@@ -43,10 +43,10 @@ struct ClosedRowView: View {
     }
 }
 
-/// The mockup's `.cell`: a time column, the main text, and a trailing item, then DESIGN.md's
-/// chevron. The row is a button that opens the reminder. At accessibility sizes they stack and
-/// wrap. VoiceOver reads the row as one element.
-private struct NowRowLayout<Leading: View, Main: View, Trailing: View>: View {
+/// The mockup's `.cell`, on Now and the Reminders tab: a time column, the main text, and a
+/// trailing item, then DESIGN.md's chevron. The row is a button that opens the reminder. At
+/// accessibility sizes they stack and wrap. VoiceOver reads the row as one element.
+struct ReminderRowLayout<Leading: View, Main: View, Trailing: View>: View {
     let openDetails: () -> Void
     @ViewBuilder let leading: () -> Leading
     @ViewBuilder let main: () -> Main
@@ -99,7 +99,7 @@ private struct NowRowLayout<Leading: View, Main: View, Trailing: View>: View {
 }
 
 /// The time, with its day ("Today", "Tomorrow" or a short date) under it.
-private struct TimeColumn: View {
+struct TimeColumn: View {
     let time: String
     let day: String
 

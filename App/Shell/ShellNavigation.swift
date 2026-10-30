@@ -14,15 +14,17 @@ struct OpenedTag: Hashable {
     var id: Tag.ID
 }
 
-/// Where the tab shell is: the selected tab, and the reminders pushed on Now and on My Day. A route from
-/// outside the screens (the alarm's Open) and a tap on a card or row both end up here, so they
-/// push the same details.
+/// Where the tab shell is: the selected tab, and the reminders pushed on Now, My Day and
+/// Reminders. A route from outside the screens (the alarm's Open) and a tap on a card or row both
+/// end up here, so they push the same details.
 struct ShellNavigation {
     var selection: AppTab
     /// The reminder details pushed on Now, oldest first.
     var nowPath: [OpenedReminder] = []
     /// The reminder details pushed on My Day. A route never sets it: Open goes to Now.
     var dayPath: [OpenedReminder] = []
+    /// The reminder details pushed on Reminders. A route never sets it.
+    var remindersPath: [OpenedReminder] = []
 
     /// What is pushed on Tags: a tag's screen, then a reminder's details from it. A route never
     /// sets it.

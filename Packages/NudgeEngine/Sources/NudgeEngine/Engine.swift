@@ -338,7 +338,7 @@ public struct Engine {
         openOccurrence(for: reminderID) == nil ? [] : Set(LockedField.allCases)
     }
 
-    private func reminder(_ reminderID: Reminder.ID) -> Reminder? {
+    func reminder(_ reminderID: Reminder.ID) -> Reminder? {
         reminders.first { $0.id == reminderID }
     }
 

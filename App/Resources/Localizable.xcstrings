@@ -88,6 +88,28 @@
         }
       }
     },
+    "%@, %@, %@, %@" : {
+      "comment" : "VoiceOver label of a Reminders tab row with no tags. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, %3$@, %4$@"
+          }
+        }
+      }
+    },
+    "%@, %@, %@, %@, tags: %@" : {
+      "comment" : "VoiceOver label of a Reminders tab row. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\". 5: its tags, such as \"#home and #errands\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, %3$@, %4$@, tags: %5$@"
+          }
+        }
+      }
+    },
     "%@, nudge %lld of %lld, urgency %@. %@. %@" : {
       "comment" : "VoiceOver value of a nudge card after its last nudge. 1: the strength, such as \"Gentle\". 2: the nudges sent. 3: the most it sends. 4: the urgency now, such as \"High\". 5: the tags and due time, such as \"#home · due 9:00 AM\". 6: the card's line saying that was the last nudge and when it closes as Missed.",
       "localizations" : {
@@ -930,6 +952,9 @@
     "Every nudge rings as an alarm." : {
       "comment" : "Under the reminder form's strength, when every nudge rings, as Relentless's do."
     },
+    "Every reminder you make shows here, whatever its state." : {
+      "comment" : "Reminders tab: under the title when there are no reminders at all."
+    },
     "Filter My Day" : {
       "comment" : "Title of My Day's tag filter sheet."
     },
@@ -1068,6 +1093,9 @@
     },
     "No Reminders" : {
       "comment" : "A tag's screen when no reminder has the tag."
+    },
+    "No Reminders Yet" : {
+      "comment" : "Reminders tab: title when there are no reminders at all."
     },
     "No Tags" : {
       "comment" : "My Day's filter sheet: the row that shows only reminders without tags.\nMy Day: the filter token that shows only reminders without tags.\nTags: title when there are no tags yet."
@@ -1336,6 +1364,9 @@
     },
     "Reminder Not Found" : {
       "comment" : "Reminder details: title when the reminder isn't there."
+    },
+    "Reminders" : {
+      "comment" : "Tab bar: the tab listing every reminder in any state"
     },
     "Reminders keep coming back until you tap Done: at a steady pace, or more often and more insistently." : {
       "comment" : "Onboarding and How It Nudges: under \"Nudges until you're done\"."

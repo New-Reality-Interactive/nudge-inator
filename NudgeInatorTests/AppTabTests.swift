@@ -2,13 +2,13 @@ import Foundation
 import Testing
 @testable import NudgeInator
 
-/// The tab shell's four tabs, against the mockup's `TABS` and `ROOTS` (index.html).
+/// The tab shell's five tabs, against the mockup's `TABS` and `ROOTS` (index.html).
 struct AppTabTests {
     @Test func theTabsAreInTheMockupsOrderWithItsTitlesAndSymbols() {
         let tabs = AppTab.allCases.map { (String(localized: $0.title), $0.systemImage) }
 
-        #expect(tabs.map(\.0) == ["Now", "My Day", "Tags", "Settings"])
-        #expect(tabs.map(\.1) == ["bell", "calendar", "tag", "gearshape"])
+        #expect(tabs.map(\.0) == ["Now", "My Day", "Reminders", "Tags", "Settings"])
+        #expect(tabs.map(\.1) == ["bell", "calendar", "list.bullet.clipboard", "tag", "gearshape"])
     }
 
     /// The mockup's Open goes to Now with the reminder pushed (index.html, `data-alarm="open"`),

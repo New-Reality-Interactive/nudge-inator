@@ -176,9 +176,40 @@ struct SmallBorderedButtonStyle: ButtonStyle {
 /// DESIGN.md's Status label for a reminder that is paused, in the secondary label color.
 struct PausedLabel: View {
     var body: some View {
-        Text("Paused", comment: "Status label: the reminder is paused.")
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Color(uiColor: .secondaryLabel))
+        ReminderStatusLabel(status: .paused)
+    }
+}
+
+/// A reminder's status label, in DESIGN.md's Status label colors: Nudging red, Paused and Coming
+/// up in the secondary label color, a closed occurrence as the Now tab's status label. The details
+/// page's hero and the Reminders tab's rows.
+struct ReminderStatusLabel: View {
+    let status: ReminderStatus
+
+    var body: some View {
+        switch status {
+        case .nudging:
+            // The label's word and color don't depend on the nudge number.
+            StatusLabel(state: .nudging(nudgeNumber: 0))
+        case .closed(let state):
+            StatusLabel(state: state)
+        case .paused, .comingUp:
+            Text(status.name)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color(uiColor: .secondaryLabel))
+        }
+    }
+}
+
+extension ReminderStatus {
+    /// The status label's word, for VoiceOver to read with the rest of a row.
+    var name: LocalizedStringResource {
+        switch self {
+        case .nudging: OccurrenceState.nudging(nudgeNumber: 0).statusName
+        case .closed(let state): state.statusName
+        case .paused: LocalizedStringResource("Paused", comment: "Status label: the reminder is paused.")
+        case .comingUp: LocalizedStringResource("Coming up", comment: "Status label: the reminder isn't due yet.")
+        }
     }
 }
 
