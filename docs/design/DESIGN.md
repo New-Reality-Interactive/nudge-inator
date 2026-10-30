@@ -64,7 +64,7 @@ colors:
   tile-orange: '#C55300'
   tile-gray: '#6C6C70'
   tile-blue: '#1E6EF4'
-  # Swipe action tile.
+  # Swipe action tiles: Done green, Delete red (tile-red above).
   tile-green: '#008932'
 typography:
   # Platform text styles only. Sizes are at the default (Large) size and scale with Dynamic Type.
@@ -160,6 +160,19 @@ components:
     text: '{colors.accent}'
     rounded: '{rounded.full}'
     minHeight: '{spacing.row-min}'
+  filter-chip:
+    background: '{colors.tertiary-fill}'
+    text: '{colors.accent}'
+    selected-background: '{colors.accent}'
+    selected-text: '{colors.on-accent}'
+    rounded: '{rounded.full}'
+    minHeight: '{spacing.row-min}'
+    typography: '{typography.subhead}'
+  sort-button:
+    background: '{colors.tertiary-fill}'
+    glyph: '{colors.accent}'
+    rounded: '{rounded.full}'
+    size: '{spacing.row-min}'
   permission-banner:
     background: '{colors.cell}'
     border-notifications-off: '{colors.negative}'
@@ -173,6 +186,8 @@ components:
     urgency-urgent: '{colors.negative}'
   swipe-done:
     background: '{colors.tile-green}'
+  swipe-delete:
+    background: '{colors.tile-red}'
   alarm-tint:
     stop-open-tint: '{colors.accent-dark}'
 ---
@@ -217,8 +232,9 @@ by name wherever iOS provides one. Custom colors are asset-catalog color sets wi
 Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
 
 - **Accent (Lagoon, `{colors.accent}`)** is `AccentColor`. It means **you can tap this**: buttons,
-  links, menus, checkmarks, the selected tab, tag and filter tokens, the chosen count's ring, the
-  filled confirm button in each sheet and on the Repeat and Custom repeat pages, and **Done** on nudge cards.
+  links, menus, checkmarks, the selected tab, tag and filter tokens, filter chips (their text, or
+  their fill while on), the Sort button, the chosen count's ring, the filled confirm button in each
+  sheet and on the Repeat and Custom repeat pages, and **Done** on nudge cards.
   - **Never** a status, decoration or background wash.
   - **The alarm** sits on a dark Lock Screen, so its tint pins `{colors.accent-dark}`. This is the
     only place a component pins a variant.
@@ -229,13 +245,14 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
 - **Positive (green)** means **done or on**: the Done status and switches that are on. No button
   uses it.
 - **Neutral (gray)** marks **Normal urgency**, tags, strength badges and counts of 0.
-- **Badge (`{colors.badge}`)** is the Now tab's nudging count and My Day's Filter button's count of
-  tags chosen, both as the system draws them (red; SwiftUI can't recolor the Filter button's, and
-  the app doesn't bridge to UIKit for it). A count of 0 shows no badge, so it is never red. At the
-  accessibility text sizes the Filter button has no badge: on iOS 27 the system draws it at the text
-  size, so it covers the icon. The chosen-tag tokens and the VoiceOver label carry the count there.
+- **Badge (`{colors.badge}`)** is the Now tab's nudging count, My Day's Filter button's count of
+  tags chosen, and the Reminders Filter button's count of filter sheet sections in use, all as the
+  system draws them (red; SwiftUI can't recolor a Filter button's, and the app doesn't bridge to
+  UIKit for it). A count of 0 shows no badge, so it is never red. At the accessibility text sizes
+  neither Filter button has a badge: on iOS 27 the system draws it at the text size, so it covers
+  the icon. My Day's chosen-tag tokens and each button's VoiceOver label carry the count there.
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
-  action is `{colors.tile-green}`. Settings rows: red (Notifications, Badges, Delete All Data), orange
+  actions are `{colors.tile-green}` (Done) and `{colors.tile-red}` (Delete). Settings rows: red (Notifications, Badges, Delete All Data), orange
   (Alarms), gray (About, Open iOS Settings, Default Pace, How It Nudges, and About's Privacy Policy
   and Support), blue (Send a Test Nudge). Tiles are icons for rows, not
   statuses, so "one color, one meaning" does not apply to them.
@@ -294,7 +311,9 @@ buttons keep their default size. Counts and times are numerals through the syste
 
 Depth comes from the system's layers, never custom shadows.
 - **Liquid Glass only in the functional layer:** the tab bar, bar buttons, and the like, in the
-  regular variant. The content layer uses ordinary fills.
+  regular variant. The content layer uses ordinary fills. The search field, which the 2026-10-03
+  doc listed here as "the Search circle and field", is the system's, as `searchable` draws it in
+  the place it's given (under the navigation bar on the Reminders tab).
 - **Navigation bars have no background.** Content scrolls under the glass buttons behind the system's
   scroll edge effect.
 - **Dark mode uses elevated backgrounds** for sheets and alerts: `{colors.grouped-background-dark-elevated}`
@@ -309,7 +328,10 @@ Depth comes from the system's layers, never custom shadows.
 Corners are concentric and native. Nothing uses a shape the system wouldn't draw.
 - `{rounded.control}` (10): buttons, inset lists.
 - `{rounded.card}` (12): nudge cards and permission banners.
-- `{rounded.full}`: bar buttons, filter tokens, the strength badge, the nudge meter, small buttons.
+- `{rounded.full}`: bar buttons, filter tokens, filter chips, the Sort button, the strength badge,
+  the nudge meter, small buttons.
+- The search field's shape is set by the system. The 2026-10-03 doc gave the search bar
+  `{rounded.control}`; the mockup draws iOS 26's capsule, a simulator check.
 - `{rounded.token}` (7): tag tokens, drawn by the system.
 - `{rounded.sheet}` (38): sheet tops, set by the system.
 
@@ -324,8 +346,9 @@ except in the tab and navigation bars. Verify names against the mockup.
 
 | Use | Symbols |
 |---|---|
-| Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `tag.filter` (custom, in the asset catalog: the Tags tab's `tag` with a three-line filter badge at the lower right: Filter by Tags, the button and its menu item), `tag.xmark` (custom, in the asset catalog: the same `tag` with a × badge at the lower right: Clear All Tags, in the Filter button's menu) |
-| Tabs | `bell` (Now), `calendar` (My Day), `tag` (Tags), `gearshape` (Settings) |
+| Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `magnifyingglass` and `xmark.circle.fill` (Search, drawn by the system), `tag.filter` (custom, in the asset catalog: the Tags tab's `tag` with a three-line filter badge at the lower right: Filter by Tags, the button and its menu item), `tag.xmark` (custom, in the asset catalog: the same `tag` with a × badge at the lower right: Clear All Tags, in the Filter button's menu), `line.3.horizontal.decrease` (the Reminders tab's Filter button and its Filter menu item; `xmark` is its Clear All Filters) |
+| Sort | `arrow.up.arrow.down` (the Reminders tab's Sort button, which opens the Sort menu) |
+| Tabs | `bell` (Now), `calendar` (My Day), `list.bullet.clipboard` (Reminders), `tag` (Tags), `gearshape` (Settings) |
 | Urgency | `arrow.up` (High), `alarm` (Urgent) |
 | Status | `checkmark.circle.fill` (Done), `bell.slash`, `clock`, `exclamationmark.triangle`, `lock` (a field locked while nudging, always beside its reason as text) |
 
@@ -346,6 +369,11 @@ except in the tab and navigation bars. Verify names against the mockup.
 - Inset grouped row. Time and title in `{typography.body}`; tag and detail line in
   `{typography.subhead}` (chosen tags bold), wrapping. Trailing: the status label, or a small
   `button-bordered` **Done** on My Day. Chevron `chevron.right` in `{colors.tertiary-label}`.
+- **On the Reminders tab:** the due time (time over its day, as on Now's Coming Up), the title,
+  the tags under it, and the status label trailing. No notes and no strength badge. Rows are
+  separated as in every grouped list. Under the Due Today chip a row shows today's occurrence, as
+  My Day does: its time ("6:30 AM Today") and its status (Done once it's done), and sorting by Due
+  Date uses that time. With several today, the open one, else the last.
 
 ### Status label
 - **Token:** `status-label`. `{typography.subhead}` semibold. Done green with `checkmark.circle.fill`;
@@ -382,6 +410,46 @@ except in the tab and navigation bars. Verify names against the mockup.
   blank space under the summary makes up for text that shortens, so a list scrolled to its end
   doesn't scroll back and move the rows.
 
+### Reminders tab
+- **Search:** the system's search field (`searchable`), always shown under the navigation bar, with
+  the prompt "Search titles and notes". The system draws its `magnifyingglass`, its clear button,
+  and Cancel while it's focused or has text.
+- **Header row:** the first row of the list, above the rows' group, not in a cell. Leading: the
+  count in `{typography.subhead}` `{colors.secondary-label}`: the reminders shown out of every
+  reminder, in every case, so a filtered list never reads as all of them ("3 reminders out of 14",
+  "14 reminders out of 14"). One string with both numbers, one VoiceOver element.
+  Trailing: the Sort button, then the chips Nudging, Due Today and Missed, `{spacing.2}` apart. It
+  wraps at the default sizes and stacks at the accessibility sizes, never truncating or overlapping
+  the count.
+- **Filter chip:** `filter-chip`, a 44 pt capsule in `{typography.subhead}` semibold. Off: accent text
+  on `{colors.tertiary-fill}`. On: `{colors.accent}` fill, `{colors.on-accent}` text and a leading
+  `checkmark`, so on and off don't differ by color alone; VoiceOver reads it as a button with the
+  selected trait. One chip is on at a time.
+- **Sort button:** `sort-button`, a 44 pt round button on `{colors.tertiary-fill}` with
+  `arrow.up.arrow.down` in the accent color. It opens the Sort menu: a picker of Created or Due
+  Date, then a picker of that one's order (Oldest First or Newest First; Earliest First or Latest
+  First), the chosen ones checked, as SwiftUI's `Picker` inside a `Menu` draws them. Its label is
+  "Sort" and its value the choice ("Created, Oldest First"). Sorted by Due Date, a row keeps its
+  place while search, chip, filters and sort stay as they are, so Done doesn't move it; changing any
+  of them, or leaving the tab, sorts again.
+- **Filter button:** `line.3.horizontal.decrease` in the bar, beside New. Its badge counts how
+  many of the filter sheet's sections are in use (Tags, Status, Strength, Due Date). A Status a lit
+  chip already shows doesn't count, nor do search and Due Today. While the count is above 0 the
+  button takes the accent color. While any sheet filter is on, a lit chip's Status included, a tap
+  shows a menu: Filter (`line.3.horizontal.decrease`) opens the sheet, Clear All Filters (`xmark`)
+  removes every sheet filter. With none on, a tap opens the sheet. No long press, as on My Day.
+- **Filter sheet ("Filter Reminders"):** Cancel (`xmark`, the form's cancel button) leading,
+  Apply (accent capsule) trailing, and Reset, a bordered button, at the bottom under the footer.
+  Cancel, tapping above or swiping down discards the draft, asking first (Discard Changes, Keep
+  Editing) once it differs from what's applied.
+  Match and Tags with No Tags as on My Day, then Status, Strength and Due Date. Status and
+  Strength are checkmark lists. Due Date has From and To, each a switch with a date pill beside it
+  while on. The footer counts what Apply would show.
+- **Empty states:** `ContentUnavailableView`. With no reminders: `list.bullet.clipboard`, "No
+  Reminders Yet" and a bordered New Reminder button. When search or filters match nothing:
+  `magnifyingglass` or `line.3.horizontal.decrease`, a title, a line naming what's narrowing the
+  list, and a bordered Clear button. The header row stays above it.
+
 ### How It Nudges
 - **Token:** `how-it-nudges`. Inset grouped list, summary in the section footer, `{typography.footnote}`
   rows. Each row leads with a small urgency dot, then urgency word, time range and Via label.
@@ -415,8 +483,11 @@ except in the tab and navigation bars. Verify names against the mockup.
   listed under Colors.
 
 ### Swipe actions
-- **Token:** `swipe-done`. Trailing swipe shows Done: green tile, white `checkmark` and the word
-  "Done". There is no Snooze.
+- **Token:** `swipe-done`, `swipe-delete`. Trailing swipe shows Done: green tile, white `checkmark`
+  and the word "Done". On the Reminders tab, Delete sits beside it: red tile, white `trash` and the
+  word "Delete". Done is offered only while Nudging, at the edge; a row that isn't Nudging shows
+  Delete alone. Delete asks first. Nothing is on the leading edge, there's no full swipe (ADR 0001),
+  and each tile always shows its glyph and its word. There is no Snooze.
 
 ### Alarm
 - **Token:** `alarm-tint`. iOS draws everything except the title, the secondary **Open** button and
@@ -438,7 +509,7 @@ except in the tab and navigation bars. Verify names against the mockup.
 
 Dropped from the 2026-10-03 doc because the first version has no such feature: quiet hours (indigo
 `quiet`, chip, markers), Snooze (teal tile, Snooze button, alarm Snooze fill), Not Done and Undo
-(status message), History, Search, Export Data, Siri & Shortcuts, Version row, Live Activity,
+(status message), History, Export Data, Siri & Shortcuts, Version row, Live Activity,
 Assistive Access, carry-over ("Starts higher"), the Skipped badge variants for iOS 18 and 27, and
 every iOS 18 and 27 branch. Restore from git history (`DESIGN.md` of 2026-10-03) when a feature returns.
 

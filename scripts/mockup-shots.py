@@ -65,6 +65,29 @@ SCREENS = {
   "settings-how-it-nudges-escalating": ("settings.defaultPace={pace:'escalating',wait:10};state.tab='settings';nav();push({kind:'hin'})", 4),
   # Settings' About page.
   "settings-about": ("state.tab='settings';nav();push({kind:'about'})", 2),
+  # The Reminders tab (reminders-tab #107). Only a mockup with that tab draws these.
+  "reminders": ("state.tab='rems';nav()", 3),
+  "reminders-newest": ("state.tab='rems';state.rems.sort.dir='desc';nav()", 1),
+  "reminders-sort-menu": ("state.tab='rems';nav();showSortMenu(document.querySelector('[data-remsort]'))", 1),
+  "reminders-due-date": ("state.tab='rems';state.rems.sort.by='due';nav()", 2),
+  "reminders-chip-due-today-by-due-date": ("state.tab='rems';state.rems.sort.by='due';setChip('due');nav()", 1),
+  "reminders-chip-nudging": ("state.tab='rems';setChip('nudging');nav()", 1),
+  "reminders-chip-due-today": ("state.tab='rems';setChip('due');nav()", 2),
+  "reminders-chip-missed": ("state.tab='rems';setChip('missed');nav()", 1),
+  "reminders-search": ("state.tab='rems';state.rems.q='pill';nav()", 1),
+  "reminders-filter-badge": ("state.tab='rems';state.rems.filter.strength=['firm'];state.rems.filter.tags.ids=['home'];nav()", 1),
+  "reminders-filter-menu": ("state.tab='rems';state.rems.filter.strength=['firm'];nav();showRemFilterMenu(document.querySelector('[data-remfilter]'))", 1),
+  "reminders-filter": ("state.tab='rems';nav();openRemFilter()", 3),
+  "reminders-filter-chosen": ("state.tab='rems';nav();openRemFilter();Object.assign(state.sheet.draft,{status:['ACKED','MISSED'],strength:['firm'],from:'2026-09-21',to:'2026-09-28'});state.sheet.draft.tags.ids=['home','money'];render()", 3),
+  "reminders-swipe-nudging": ("state.tab='rems';nav();setTimeout(()=>revealSwipe(firstRow('NUDGING')),10)", 1),
+  "reminders-swipe-other": ("state.tab='rems';nav();setTimeout(()=>revealSwipe(firstRow('UPCOMING')),10)", 1),
+  "reminders-delete": ("state.tab='rems';nav();setTimeout(()=>{revealSwipe('r4');document.querySelector('[data-rid=r4] .swipe-act.del').click()},10)", 1),
+  "reminders-after-done": ("state.tab='rems';nav();ack('o1');render()", 1),
+  "reminders-empty": ("reminders=[];occurrences=[];state.tab='rems';nav()", 1),
+  "reminders-no-match-search": ("state.tab='rems';state.rems.q='zebra';nav()", 1),
+  "reminders-no-match-chip": ("state.tab='rems';setChip('nudging');state.rems.q='plants';nav()", 1),
+  "reminders-no-match-filters": ("state.tab='rems';state.rems.filter.strength=['relentless'];state.rems.filter.tags.none=true;nav()", 1),
+  "reminders-new": ("state.tab='rems';nav();openEditor()", 1),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}
