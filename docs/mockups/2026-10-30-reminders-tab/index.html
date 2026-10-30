@@ -1958,7 +1958,10 @@ function remBadge(f = state.rems.filter) {
 /* Any of the sheet's filters in use, a Status a lit chip shows included: then Filter's tap shows the menu. */
 const sheetFilterOn = (f = state.rems.filter) => remBadge(f) > 0 || f.status.length > 0;
 /* What VoiceOver hears when the list narrows or widens: the count. */
-const remCountNews = () => plural(remRows().length, "reminder");
+/* The header row's count: what's shown out of every reminder, in every case, so a filtered list
+   never reads as all of them. The app ships it as one string with both numbers. */
+const remCount = (n) => `${plural(n, "reminder")} out of ${reminders.length}`;
+const remCountNews = () => remCount(remRows().length);
 
 /* The Filter button: line.3.horizontal.decrease in a glass circle. While a filter the badge counts
    is on, it's accent-colored and the system's badge shows the count. While any sheet filter is on
@@ -1980,7 +1983,7 @@ function remChip([k, label]) {
 }
 /* The header row: the list's first row, above its rows. */
 function remHeader(n) {
-  return `<div class="remhead"><p class="remcount" id="rem-count">${plural(n, "reminder")}</p>
+  return `<div class="remhead"><p class="remcount" id="rem-count">${remCount(n)}</p>
     <div class="remctl" role="group" aria-label="Sort and quick filters">${sortButton()}${REM_CHIPS.map(remChip).join("")}</div></div>`;
 }
 /* Search, under the navigation bar. It matches titles and notes, not tags. */

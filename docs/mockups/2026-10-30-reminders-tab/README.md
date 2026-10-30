@@ -19,7 +19,9 @@ Open [`index.html`](index.html) in a browser. It's a single file with no depende
 - **Search** under the navigation bar: titles and notes, ignoring case and diacritics, the trimmed
   text as one phrase. Cancel shows while the field is focused or has text, and Clear
   (`xmark.circle.fill`) once there's text, as the system draws them.
-- **The header row**, above the rows: the count ("14 reminders"), then the sort toggle and the
+- **The header row**, above the rows: the count, always the reminders shown out of every reminder
+  ("3 reminders out of 14", and "14 reminders out of 14" with nothing narrowing the list, so it
+  never reads as all of them; Brian's call at sign-off), then the sort toggle and the
   Nudging, Due Today and Missed chips. It wraps at the default sizes and stacks at the
   accessibility sizes.
 - **The sort toggle:** the custom symbols `calendar.arrow.up` (oldest first) and

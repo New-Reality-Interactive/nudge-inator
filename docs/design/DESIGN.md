@@ -412,7 +412,9 @@ except in the tab and navigation bars. Verify names against the mockup.
   the prompt "Search titles and notes". The system draws its `magnifyingglass`, its clear button,
   and Cancel while it's focused or has text.
 - **Header row:** the first row of the list, above the rows' group, not in a cell. Leading: the
-  count in `{typography.subhead}` `{colors.secondary-label}` ("14 reminders"), one VoiceOver element.
+  count in `{typography.subhead}` `{colors.secondary-label}`: the reminders shown out of every
+  reminder, in every case, so a filtered list never reads as all of them ("3 reminders out of 14",
+  "14 reminders out of 14"). One string with both numbers, one VoiceOver element.
   Trailing: the sort toggle, then the chips Nudging, Due Today and Missed, `{spacing.2}` apart. It
   wraps at the default sizes and stacks at the accessibility sizes, never truncating or overlapping
   the count.
