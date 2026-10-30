@@ -429,7 +429,9 @@ except in the tab and navigation bars. Verify names against the mockup.
   `arrow.up.arrow.down` in the accent color. It opens the Sort menu: a picker of Created or Due
   Date, then a picker of that one's order (Oldest First or Newest First; Earliest First or Latest
   First), the chosen ones checked, as SwiftUI's `Picker` inside a `Menu` draws them. Its label is
-  "Sort" and its value the choice ("Created, Oldest First").
+  "Sort" and its value the choice ("Created, Oldest First"). Sorted by Due Date, a row keeps its
+  place while search, chip, filters and sort stay as they are, so Done doesn't move it; changing any
+  of them, or leaving the tab, sorts again.
 - **Filter button:** `line.3.horizontal.decrease` in the bar, beside New. Its badge counts how
   many of the filter sheet's sections are in use (Tags, Status, Strength, Due Date). A Status a lit
   chip already shows doesn't count, nor do search and Due Today. While the count is above 0 the

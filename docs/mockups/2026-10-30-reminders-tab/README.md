@@ -107,6 +107,10 @@ Brian decides these at sign-off. Each is drawn as described.
    spec has it. Brian's call at sign-off, so the spec's sort lines and story change to match.
 7. **Under Due Today a row shows today's occurrence,** its time and status, not the next one.
    Brian's call at sign-off, so the spec's due-time line gains this case.
+8. **Sorted by Due Date, a row keeps its place** while the search, chip, filters and sort stay as
+   they are: Done, or going Missed, changes its due time but doesn't move it. Changing any of them,
+   or leaving the tab, sorts again. Brian's call at sign-off, so "no state change moves a row"
+   holds under both sorts.
 
 ## Known differences
 

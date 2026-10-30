@@ -1959,11 +1959,28 @@ function remPasses(r, f, q, due, today) {
    what My Day lists for today, whatever its state. Ties keep the order the reminders were added in. */
 function remRows(f = state.rems.filter, due = state.rems.due) {
   const q = fold(state.rems.q.trim()), today = new Set(todayItems().map((it) => it.r.id));
-  const rows = reminders.map((r, i) => ({ r, i }))
+  let rows = reminders.map((r, i) => ({ r, i }))
     .filter(({ r }) => r.id === state.rems.pinned || remPasses(r, f, q, due, today))
     .map((x) => ({ ...x, k: state.rems.sort.by === "due" ? remShown(x.r).at : L(x.r.createdAt) }))
     .sort((a, b) => a.k - b.k || a.i - b.i).map(({ r }) => r);
-  return state.rems.sort.dir === "desc" ? rows.reverse() : rows;
+  if (state.rems.sort.dir === "desc") rows.reverse();
+  return f === state.rems.filter && due === state.rems.due ? keepRemOrder(rows) : rows;
+}
+/* Sorted by Due Date, a row keeps its place while the search, chip, filters and sort stay as they
+   are: Done, or going Missed, moves its due time but not the row. Changing any of them, or leaving
+   the tab, sorts again (Brian's call at sign-off). A row not seen before takes its sorted place. */
+let remOrder = null;
+function keepRemOrder(rows) {
+  if (state.rems.sort.by !== "due") { remOrder = null; return rows; }
+  const r = state.rems, sig = JSON.stringify([r.q, r.due, r.filter, r.sort]);
+  if (remOrder?.sig === sig) {
+    const byId = new Map(rows.map((x) => [x.id, x])), was = new Set(remOrder.ids);
+    const kept = remOrder.ids.filter((id) => byId.has(id));
+    let j = 0;
+    rows = rows.map((x) => (was.has(x.id) ? byId.get(kept[j++]) : x));
+  }
+  remOrder = { sig, ids: rows.map((x) => x.id) };
+  return rows;
 }
 /* The Filter button's badge: how many of the sheet's sections are in use (Tags, Status, Strength,
    date range). A Status that a lit chip already shows doesn't count; search and Due Today never do. */
@@ -3352,6 +3369,7 @@ const CLICK = {
     // Tapping the shrunken tab bar's tab brings the bar back, as on iOS.
     if (state.tab === v && document.getElementById("tabbar").classList.contains("min")) { setTabMin(false); return; }
     if (state.tab === v) state.stacks[v] = []; // tapping the current tab pops to its root
+    else remOrder = null; // leaving a tab: Reminders sorts again when it's next shown
     state.tab = v;
     nav();
   },
