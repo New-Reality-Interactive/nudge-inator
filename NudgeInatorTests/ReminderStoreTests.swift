@@ -11,8 +11,11 @@ struct ReminderStoreTests {
     let storeFile = TemporaryStoreFile()
     var fileURL: URL { storeFile.url }
 
+    /// Most fixtures here have no creation date (`.distantPast`), which opening a store backfills
+    /// with the instant it is given, as for 1.2.0's reminders. Opening at `.distantPast` leaves
+    /// them as saved; `StoreMigrationTests` covers the backfill.
     func store() throws -> ReminderStore {
-        try ReminderStore(location: .file(fileURL))
+        try ReminderStore(location: .file(fileURL), now: .distantPast)
     }
 
     @Test func aReminderWithTagsAndARepeatReadsBackEqualAfterARelaunch() throws {
@@ -25,7 +28,8 @@ struct ReminderStoreTests {
             dueTime: Date(timeIntervalSince1970: 1_791_000_000),
             repeatRule: .everyDay,
             strength: .firm,
-            breakThroughFocus: false
+            breakThroughFocus: false,
+            createdAt: Date(timeIntervalSince1970: 1_790_900_000)
         )
         let saved = StoredData(reminders: [pills], tags: [home, health], histories: [:])
 

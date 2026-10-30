@@ -205,6 +205,25 @@ struct ReminderFormTests {
         #expect(model.engine.comingUp().map(\.reminderID) == [saved.id])
     }
 
+    /// The creation date is when Save was chosen, not when the form opened, and an edit keeps it.
+    @Test func savingANewReminderSetsItsCreationDateToNowAndAnEditKeepsIt() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        form.title = "Feed the cat"
+        clock.now = NewYork.local(2026, 10, 15, 8, 30)
+
+        #expect(form.save(to: model))
+
+        let saved = try #require(model.engine.reminders.only)
+        #expect(saved.createdAt == NewYork.local(2026, 10, 15, 8, 30))
+        clock.now = NewYork.local(2026, 10, 15, 8, 45)
+        let edit = try editForm(of: saved.id, on: model)
+        edit.title = "Feed the cats"
+        #expect(edit.save(to: model))
+        #expect(model.engine.reminders.only?.title == "Feed the cats")
+        #expect(model.engine.reminders.only?.createdAt == NewYork.local(2026, 10, 15, 8, 30))
+    }
+
     @Test(arguments: ["Home", "#home", " HOME "])
     func typingAnExistingTagsNameAttachesThatTag(typed: String) async throws {
         let model = try await launchedModel()
@@ -404,7 +423,7 @@ struct ReminderFormTests {
 
     @Test func aSaveAfterTheReminderStartedNudgingIsTurnedDownAndTheFormLocks() async throws {
         let model = try await launchedModel()
-        let later = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 9), strength: .firm)
+        let later = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 9), strength: .firm, createdAt: clock.now)
         model.add(later)
         let form = try editForm(of: later.id, on: model)
         #expect(form.lockedFields.isEmpty)
@@ -427,7 +446,7 @@ struct ReminderFormTests {
     /// the title then saves with the pace as it was.
     @Test func aSaveThatChangesTheWaitAfterTheReminderStartedNudgingIsTurnedDown() async throws {
         let model = try await launchedModel()
-        let later = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 9), strength: .firm, pace: .consistent(wait: 30 * 60))
+        let later = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 9), strength: .firm, pace: .consistent(wait: 30 * 60), createdAt: clock.now)
         model.add(later)
         let form = try editForm(of: later.id, on: model)
 

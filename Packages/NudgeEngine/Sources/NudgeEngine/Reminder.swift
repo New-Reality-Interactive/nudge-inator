@@ -20,6 +20,9 @@ public struct Reminder: Identifiable, Equatable, Sendable {
     /// it but keeps it, so switching back to Firm or Gentle gives it back: read
     /// `breaksThroughFocus` for how the reminder acts.
     public var breakThroughFocus: Bool
+    /// The moment the reminder was added: `Engine.add(_:)` sets it from the engine's clock, and
+    /// nothing changes it afterwards. `.distantPast` until then (GLOSSARY.md, Creation date).
+    public var createdAt: Date
 
     public init(
         id: UUID = UUID(),
@@ -30,7 +33,8 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         repeatRule: RepeatRule? = nil,
         strength: Strength,
         pace: Pace = .escalating,
-        breakThroughFocus: Bool = true
+        breakThroughFocus: Bool = true,
+        createdAt: Date = .distantPast
     ) {
         self.id = id
         self.title = title
@@ -41,6 +45,7 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         self.strength = strength
         self.pace = pace
         self.breakThroughFocus = breakThroughFocus
+        self.createdAt = createdAt
     }
 }
 
