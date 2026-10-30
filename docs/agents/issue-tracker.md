@@ -18,46 +18,19 @@ GitHub shares one number space across issues and PRs, so a bare `#42` may be eit
 ## Features, specs and tickets
 
 - **Feature**: one milestone per feature, titled with its version (`1.2.0`). Its description is the feature's slug (`enhancement-tags`, used in branch names), a blank line, a one-paragraph summary, a blank line, and `Spec: #<n>` once the spec exists. The open feature is the open milestone (AGENTS.md).
-- **Spec**: one issue labelled `spec`, in the feature's milestone. Its body starts with a `Version:` line and a `Compatibility:` line (Features and versions).
-- **Spec questions**: the developer answers only product choices. A point the code, the docs or an ADR already settles is written into the draft as a decision, under "Assumed (change if wrong)", with its source. Before sending the questions, check every recommendation against the others and against the brief, so a conflict between two answers is asked in the first round, not found after it.
+- **Spec**: one issue labelled `spec`, in the feature's milestone. Its body starts with a `Version:` line and a `Compatibility:` line (`release.md`, Features and versions).
 - **Ticket**: one issue per ticket, a sub-issue of the spec and in the same milestone, numbered by GitHub (`#83`). A ticket starts `ready-for-agent`, or `ready-for-human` when its steps are the developer's.
 - **Blocked by**: GitHub's native issue dependencies: `gh api --method POST repos/New-Reality-Interactive/nudge-inator/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`, where `<blocker-db-id>` is `gh api repos/New-Reality-Interactive/nudge-inator/issues/<n> --jq .id` (the database id, not the `#number`). A ticket is unblocked when every blocker is closed.
-- **Resolved**: the ticket is closed as completed, by its PR's `Closes #<n>` or by hand. AGENTS.md says when a ticket may be resolved.
+- **Resolved**: the ticket is closed as completed, by its PR's `Closes #<n>` or by hand. `ticket-workflow.md` says when a ticket may be resolved.
 - **Comments**: issue comments, including each agreed change to a criterion.
 - **A new ticket**, including a bug found while working another, goes in the open feature's milestone as a sub-issue of its spec. A released feature's milestone gets no new tickets.
 - **A split ticket**: the new part is its own issue. The tickets the original blocked are also blocked by the new one, and both issues' comments record the split.
 
-## Features and versions
+## Released features
 
-Each feature is one release, versioned on the spec's `Version:` line and in its milestone title, chosen when the spec is written:
+`icon-badge` (1.2.0, spec [#80](https://github.com/New-Reality-Interactive/nudge-inator/issues/80)), `testflight-readiness` (the 1.1.0 TestFlight build), `enhancement-pace` (1.1.0) and `first-version` (1.0.0). The last three's tickets are at the `tickets-archive` tag (Tickets before GitHub Issues).
 
-- **Major:** something existing stops working for people who update: a capability removed, or data that can't carry over.
-- **Minor:** a new capability, or an existing one extended, that carries existing reminders and settings forward.
-- **Patch:** fixes only.
-
-**Backwards compatible.** Every version carries forward everything the version before it left on the phone:
-
-- the store, with its reminders, tags and histories;
-- the Done queue;
-- the settings and onboarding records;
-- pending notifications and AlarmKit alarms, which survive even an uninstall;
-- the identifiers that name all of these.
-
-When a feature changes a capability, its spec plans how that data migrates. The spec's `Compatibility:` line says what carries forward, or names the break the developer accepted. A change that can't stay backwards compatible stops all work: before the spec is agreed or a ticket starts, tell the developer what breaks, for whom, and the options. Only the developer can accept a break, and accepting one makes the version major.
-
-**Reconcile the version.** When the developer proposes a version for a milestone, check it against the change, by the rules above. If they don't match, say so before the spec is agreed, with the version the rules give and why. The developer decides; the spec's `Version:` line and the milestone title follow. Check again whenever the scope changes.
-
-Bugs found while no feature is open go in a patch milestone (`1.1.1`), whose spec issue is the `Version:` and `Compatibility:` lines and one line on what it fixes.
-
-When a feature's last ticket is resolved and merged, it's released, in this order:
-
-1. **Release PR.** The agent opens one that:
-   - adds the version mockup, `docs/mockups/<version>/` (such as `1.2.0`): copied from the latest version mockup, as the template's README says, drawing the app as built at that version with working mockup controls. It's checked against the app with the screenshot walk (`docs/agents/device-testing.md`, Simulator screenshots) for the screens the release changed (`SHOTS_TESTS`), on both simulators, in portrait, landscape and the largest text size; the whole walk is only for a mockup first lined up with the app;
-   - deletes the change mockups the version mockup takes in;
-   - sets `MARKETING_VERSION` in `project.yml`, and the version `BuiltBundleTests` pins;
-   - adds the TestFlight build's What to Test note to `docs/release-notes/` and passes a trial archive (`docs/agents/device-testing.md`, Archive and upload).
-2. **Release.** Once it merges, the agent tags `v<version>` (annotated) on the merge commit on `main` and pushes the tag, then runs the whole walk in portrait on the `iPhone 15 - iOS 27.0` simulator (`SHOTS_VARIANTS=portrait SIMULATORS="iPhone 15 - iOS 27.0"`), zips it as `screenshots-<version>.zip`, and attaches it to the GitHub Release (`gh release create v<version>`, then `gh release upload v<version>`). The screenshots never go in the repo. It closes the spec issue and the milestone.
-3. **TestFlight build**, for every release, from the pushed tag: `docs/agents/device-testing.md`, Archive and upload. The developer's steps are the go before the upload and the App Store Connect steps after it.
+A bug found while no feature is open go in a patch milestone (`1.1.1`), whose spec issue is the `Version:` and `Compatibility:` lines and one line on what it fixes.
 
 ## Tickets before GitHub Issues
 
