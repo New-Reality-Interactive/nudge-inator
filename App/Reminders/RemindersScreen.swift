@@ -26,6 +26,8 @@ struct RemindersScreen {
 
         var id: Reminder.ID { reminder.id }
         var title: String { reminder.title }
+        /// Done is offered only while Nudging (DESIGN.md, Swipe actions). Every row offers Delete.
+        var offersDone: Bool { status == .nudging }
     }
 
     init(engine: Engine) {

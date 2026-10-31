@@ -47,6 +47,15 @@ struct RemindersScreenTests {
         #expect(stretch.tags == ["#health", "#work"])
     }
 
+    /// The trailing swipe's Done, and the row's Done VoiceOver action. Every row offers Delete.
+    @Test func onlyANudgingRowOffersDone() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        let screen = RemindersScreen(engine: day.model.engine)
+
+        #expect(screen.rows.filter(\.offersDone).map(\.title) == ["Reply to Alex"])
+    }
+
     @Test func doneChangesARowsStatusInPlace() async throws {
         let day = try await fixture.dayAtOnePM()
         let before = RemindersScreen(engine: day.model.engine).rows.map(\.id)
@@ -56,6 +65,42 @@ struct RemindersScreenTests {
         let after = RemindersScreen(engine: day.model.engine)
         #expect(after.rows.map(\.id) == before)
         #expect(after.rows.first { $0.id == day.alex.id }?.status == .closed(.done))
+    }
+
+    /// A Nudging row's Done is `AppModel.markDone(_:)`, as on Now, My Day and the details page.
+    @Test func aNudgingRowsDoneCancelsItsNudgesAndLowersBothBadgesByOne() async throws {
+        let day = try await fixture.dayAtOnePM()
+        let center = fixture.center
+        #expect(NowScreen.badgeCount(of: day.model.engine) == 1)
+        #expect(center.badgeCounts.last == 1)
+        #expect(center.pending.contains { $0.identifier.contains(day.alex.id.uuidString) })
+
+        day.model.markDone(day.alex.id)
+        await day.model.waitUntilApplied()
+
+        #expect(NowScreen.badgeCount(of: day.model.engine) == 0)
+        #expect(center.badgeCounts.last == 0)
+        #expect(!center.pending.contains { $0.identifier.contains(day.alex.id.uuidString) })
+    }
+
+    /// A row's Delete, once confirmed, is `AppModel.delete(_:)`, as on the details page. Reply to
+    /// Alex is Firm and Nudging, so it has alarms; the only ones before 8 PM today.
+    @Test func deletingANudgingRowRemovesItAndCancelsItsNudgesAndAlarms() async throws {
+        let day = try await fixture.dayAtOnePM()
+        let center = fixture.center, manager = fixture.manager
+        let beforeEight = NewYork.local(2026, 10, 16, 20)
+        let before = RemindersScreen(engine: day.model.engine).rows.map(\.title)
+        #expect(manager.scheduled.contains { $0.fireDate.map { $0 < beforeEight } ?? false })
+
+        day.model.delete(day.alex.id)
+        await day.model.waitUntilApplied()
+
+        let after = RemindersScreen(engine: day.model.engine).rows.map(\.title)
+        #expect(after.count == before.count - 1)
+        #expect(after == before.filter { $0 != "Reply to Alex" })
+        #expect(!center.pending.contains { $0.identifier.contains(day.alex.id.uuidString) })
+        #expect(!manager.scheduled.contains { $0.fireDate.map { $0 < beforeEight } ?? false })
+        #expect(NowScreen.badgeCount(of: day.model.engine) == 0)
     }
 
     @Test func aNewReminderShowsLastAsTheNewestCreated() async throws {

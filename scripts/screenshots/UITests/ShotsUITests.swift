@@ -445,6 +445,58 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-empty")
     }
 
+    /// The mockup's `reminders-swipe-nudging`, `reminders-swipe-other`, `reminders-delete` and
+    /// `reminders-after-done` (#110): the trailing swipe on a Nudging and a Coming up row, the
+    /// Delete question (cancelled), then Done from the swipe, which leaves the row in place.
+    func testRemindersSwipe() {
+        launch(.app)
+        tab("Reminders")
+        func swipe(_ title: String) {
+            scrollToTop()
+            guard let row = scrollTo(title) else {
+                XCTFail("No \(title):\n\(app.debugDescription)")
+                return
+            }
+            // At the largest text four scrolls up can leave the first row under the bar.
+            var tries = 0
+            while row.frame.minY < app.navigationBars.firstMatch.frame.maxY, tries < 8 {
+                scroll(down: false)
+                tries += 1
+            }
+            // With another row's actions still open, the first swipe only closes them.
+            func opened() -> Bool {
+                let delete = app.buttons["Delete"].firstMatch
+                return delete.exists && row.frame.minY...row.frame.maxY ~= delete.frame.midY
+            }
+            for _ in 0..<3 where !opened() {
+                row.swipeLeft()
+                pause(0.8)
+            }
+        }
+        swipe("Take the bins out")
+        shot("reminders-swipe-nudging")
+        swipe("Water the plants")
+        shot("reminders-swipe-other")
+        swipe("Pay rent")
+        app.buttons["Delete"].firstMatch.tap()
+        shot("reminders-delete")
+        // Drawn as a popover with no Cancel, so a tap outside it is the cancel. At the largest
+        // text it fills the screen, so the tap goes to the popover's own dismiss region.
+        let cancel = app.buttons["Cancel"].firstMatch
+        let outside = app.otherElements["PopoverDismissRegion"].firstMatch
+        if cancel.exists {
+            cancel.tap()
+        } else if outside.exists {
+            outside.tap()
+        } else {
+            app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.1)).tap()
+        }
+        pause(0.5)
+        swipe("Take the bins out")
+        app.buttons["Done"].firstMatch.tap()
+        shot("reminders-after-done")
+    }
+
     func testSettings() {
         launch(.app)
         tab("Settings")

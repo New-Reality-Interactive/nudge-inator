@@ -115,14 +115,10 @@ private struct NudgeCardRow: View {
             // No full swipe, so a stray swipe can't mark it Done. Hidden from VoiceOver, which
             // has the card's own Done button (the mockup's `swipeable`).
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                Button(action: markDone) {
-                    Label {
-                        Text("Done", comment: "Nudge card's swipe action: marks the reminder Done and stops its nudges.")
-                    } icon: {
-                        Image(systemName: "checkmark")
-                    }
-                }
-                .tint(Color.tileGreen)
+                SwipeDoneTile(
+                    label: Text("Done", comment: "Nudge card's swipe action: marks the reminder Done and stops its nudges."),
+                    action: markDone
+                )
                 .accessibilityHidden(true)
             }
     }
