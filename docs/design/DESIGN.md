@@ -488,6 +488,14 @@ except in the tab and navigation bars. Verify names against the mockup.
   word "Delete". Done is offered only while Nudging, at the edge; a row that isn't Nudging shows
   Delete alone. Delete asks first. Nothing is on the leading edge, there's no full swipe (ADR 0001),
   and each tile always shows its glyph and its word. There is no Snooze.
+- **Where each swipe appears:** a Nudging row offers Done as a trailing swipe on every screen it
+  appears on (Now, My Day and Reminders), and Done means the same on each. Delete's swipe is on
+  the Reminders tab only, where reminders are managed; Now and My Day are for acting on the day,
+  so a destructive swipe never sits beside Done there. On those two screens a row that isn't
+  Nudging (Coming up, Last 24 Hours, closed) has no swipe.
+- **A swipe is a shortcut,** never the only way: Done is also the Done button on Now and My Day and
+  on the details page, Delete is also on the details page, and VoiceOver gets both as the row's own
+  actions. A new screen that adds swipes follows this section.
 
 ### Alarm
 - **Token:** `alarm-tint`. iOS draws everything except the title, the secondary **Open** button and
