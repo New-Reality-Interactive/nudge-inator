@@ -7,7 +7,8 @@ struct ReminderDetails {
     var reminder: Reminder
     /// The reminder's tags as "#home". Only tags the engine holds, as the tag filters do.
     var tags: [String]
-    var status: Status
+    /// The hero's status word, the engine's, as the Reminders tab's rows show it.
+    var status: ReminderStatus
     /// The Nudging Now card, with its Done, while the reminder is nudging.
     var card: NudgeCard?
     /// How the latest occurrence closed and when, once one has. A Nudging one has no row: the
@@ -40,16 +41,6 @@ struct ReminderDetails {
         return LocalizedStringResource("Tags: \(list)", comment: "VoiceOver label of a reminder's tags on its details. The placeholder lists them, such as \"#home and #errands\".")
     }
 
-    /// The hero's status word, from DESIGN.md's Status label.
-    enum Status: Equatable {
-        case nudging
-        case paused
-        /// Not due yet: its next due time is ahead.
-        case comingUp
-        /// Nothing more is coming, so how the latest occurrence closed.
-        case closed(OccurrenceState)
-    }
-
     /// A closed occurrence, for the Schedule's last occurrence row.
     struct LastOccurrence: Equatable {
         var state: OccurrenceState
@@ -74,8 +65,9 @@ struct ReminderDetails {
     /// `nil` when the engine doesn't hold the reminder: an ID that was never one, or a reminder
     /// that was deleted while its details were open. The screen then says it wasn't found.
     init?(engine: Engine, id: Reminder.ID) {
-        guard let reminder = engine.reminders.first(where: { $0.id == id }) else { return nil }
+        guard let reminder = engine.reminders.first(where: { $0.id == id }), let status = engine.status(of: id) else { return nil }
         self.reminder = reminder
+        self.status = status
         tags = engine.tagLabels(for: reminder.tagIDs)
         card = NudgeCard(engine: engine, reminder: reminder)
         let latest = engine.latestOccurrence(for: id)
@@ -86,20 +78,8 @@ struct ReminderDetails {
         showsLockNote = !engine.lockedFields(of: id).isEmpty
         howItNudges = engine.howItNudges(reminder.strength, pace: reminder.pace, breakThroughFocus: reminder.breakThroughFocus)
 
-        // The open occurrence's own due time isn't "next", whatever the clock says. The engine
-        // reads "at or after now", so a second time is asked for in case the first is that one.
-        let openDueTime = engine.openOccurrence(for: id)?.dueTime ?? .distantPast
-        let nextDueTime = engine.upcomingDueTimes(of: reminder, count: 2).first { $0 > openDueTime }
+        let nextDueTime = engine.nextDueTime(of: reminder)
         let isPaused = engine.isPaused(id)
-        if card != nil {
-            status = .nudging
-        } else if isPaused {
-            status = .paused
-        } else if nextDueTime != nil {
-            status = .comingUp
-        } else {
-            status = latest.map { .closed($0.state) } ?? .comingUp
-        }
         if isPaused {
             next = .paused
         } else {

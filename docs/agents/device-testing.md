@@ -26,7 +26,7 @@ The iOS 26.5 simulator's own `mediaanalysisd` (the Photos analysis daemon inside
 
 ## Simulator screenshots
 
-The recipe for a story's visual criteria (AGENTS.md, Testing), and for checking a mockup against the app. `scripts/screenshots.sh` takes a screenshot of every screen on each simulator in the matrix, in portrait, landscape and the largest text size (`accessibility-extra-extra-extra-large`), light appearance:
+The recipe for a story's visual criteria (AGENTS.md, Testing), and for checking a mockup against the app. `scripts/screenshots.sh` takes a screenshot of every screen on each simulator in the matrix, in portrait, landscape and the largest text size (`accessibility-extra-extra-extra-large`), light appearance. The iOS 26.5 simulator skips landscape: it doesn't turn for the UI test, so every "landscape" shot it took was portrait (#109, 2026-10-30, three runs), and landscape is checked on iOS 27.0 alone:
 
 1. Run `scripts/screenshots.sh`. It writes `docs/screenshots/<today>/<simulator>/<portrait|landscape|largest-text>/<screen>.png` (git-ignored). `SHOTS_OUT` changes the folder, `SHOTS_VARIANTS` runs fewer variants (`SHOTS_VARIANTS=portrait`), and `SIMULATORS` works as in `scripts/test.sh`. The simulators are shot at the same time, each one's variants one after the other, so a run takes as long as the slower simulator plus the build. Each simulator's progress lines start with `[<simulator>]`, and a failure names the simulator and variant. `SHOTS_TESTS` runs only some of the walk's tests (`SHOTS_TESTS="testSettings testForm"`), with a `SHOTS_OUT` of its own, since each variant's folder is emptied first.
    - Which tests a change needs: trace each changed view to the screens that use it, and from them to the `ShotsUITests` methods that reach them. A component in `App/Design/` is traced the same way, to its call sites. Add any screen that shows a string whose value changed. Run the whole walk only for a change with no call sites to trace: the design tokens, a shared view modifier, or the harness's seed. It runs once before the PR, not before review.
@@ -36,7 +36,7 @@ The recipe for a story's visual criteria (AGENTS.md, Testing), and for checking 
 
 What the harness can't do: the times are now plus or minus the mockup's gaps, so they differ from the mockup's fixed 8:20 AM, and the system's own UI (notifications, the alarm, permission prompts) isn't in it.
 
-Two simulator quirks it works around (iOS 26.5 simulator, Xcode 27.1): in landscape, a tap on a navigation bar button never lands and `swipeUp()` doesn't scroll, though rows and tabs take taps. So bar buttons are tapped after turning the phone to portrait and back, and scrolling is a coordinate drag. The simulator's first keyboard also shows a tip over the sheet, which the walk dismisses. That can't be undone: the tip doesn't come back on that simulator, for any app.
+Two simulator quirks it works around (iOS 26.5 simulator, Xcode 27.1, before landscape was skipped there): in landscape, a tap on a navigation bar button never lands and `swipeUp()` doesn't scroll, though rows and tabs take taps. So bar buttons are tapped after turning the phone to portrait and back, and scrolling is a coordinate drag. The simulator's first keyboard also shows a tip over the sheet, which the walk dismisses. That can't be undone: the tip doesn't come back on that simulator, for any app.
 
 ## Manual device checks: build, install, clean up
 

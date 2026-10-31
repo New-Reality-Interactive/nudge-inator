@@ -1,9 +1,9 @@
 import SwiftUI
 
-/// The tab shell: Now, My Day, Tags and Settings, in the system tab bar, under onboarding on first
-/// launch. It follows the model's route (the alarm's Open) and shows each tab's content for the
-/// launch state. Without a model (the app hosting tests, and previews) every tab shows its empty
-/// state.
+/// The tab shell: Now, My Day, Reminders, Tags and Settings, in the system tab bar, under
+/// onboarding on first launch. It follows the model's route (the alarm's Open) and shows each
+/// tab's content for the launch state. Without a model (the app hosting tests, and previews) every
+/// tab shows its empty state.
 struct RootView: View {
     @Environment(AppModel.self) private var model: AppModel?
     @State private var navigation = ShellNavigation()
@@ -23,6 +23,9 @@ struct RootView: View {
             .badge(nowBadge(in: state, at: minute))
             Tab(AppTab.myDay.title, systemImage: AppTab.myDay.systemImage, value: .myDay) {
                 MyDayTab(state: state, path: $navigation.dayPath)
+            }
+            Tab(AppTab.reminders.title, systemImage: AppTab.reminders.systemImage, value: .reminders) {
+                RemindersTab(state: state, path: $navigation.remindersPath)
             }
             Tab(AppTab.tags.title, systemImage: AppTab.tags.systemImage, value: .tags) {
                 TagsTab(state: state, path: $navigation.tagPath)

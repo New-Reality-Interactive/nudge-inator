@@ -265,7 +265,7 @@ private struct DetailsHero: View {
                 : AnyLayout(HStackLayout(spacing: Design.Spacing.s3))
             layout {
                 StrengthBadge(strength: details.strength)
-                StatusWord(status: details.status)
+                ReminderStatusLabel(status: details.status)
             }
             if let tagsLabel = details.tagsVoiceOverLabel {
                 // Tokens, joined by spaces: they are not a sentence. Ticket 29 makes them buttons.
@@ -276,32 +276,6 @@ private struct DetailsHero: View {
             }
         }
         .padding(.vertical, Design.Spacing.s1)
-    }
-}
-
-/// The hero's status, in DESIGN.md's Status label colors: Nudging red, Paused and Coming up in the
-/// secondary label color, a closed occurrence as the Now tab's status label.
-private struct StatusWord: View {
-    let status: ReminderDetails.Status
-
-    var body: some View {
-        switch status {
-        case .nudging:
-            // The label's word and color don't depend on the nudge number.
-            StatusLabel(state: .nudging(nudgeNumber: 0))
-        case .closed(let state):
-            StatusLabel(state: state)
-        case .paused:
-            secondary(Text("Paused", comment: "Status label: the reminder is paused."))
-        case .comingUp:
-            secondary(Text("Coming up", comment: "Status label: the reminder isn't due yet."))
-        }
-    }
-
-    private func secondary(_ text: Text) -> some View {
-        text
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Color(uiColor: .secondaryLabel))
     }
 }
 

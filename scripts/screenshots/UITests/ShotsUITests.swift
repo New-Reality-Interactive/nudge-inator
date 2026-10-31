@@ -7,7 +7,7 @@ import XCTest
 final class ShotsUITests: XCTestCase {
     /// The harness's `SHOT_SCENARIO`s (`ShotsApp.Scenario`, which can't be imported here).
     enum ShotScenario: String {
-        case app, onboarding, notificationsOff, alarmsOff, timeSensitiveOff, badgesOff, badgesNotSet, customLocking
+        case app, onboarding, notificationsOff, alarmsOff, timeSensitiveOff, badgesOff, badgesNotSet, customLocking, noReminders
     }
 
     private var app: XCUIApplication!
@@ -429,6 +429,20 @@ final class ShotsUITests: XCTestCase {
         openSheet("New Tag", title: "New Tag")
         dismissKeyboardTip()
         shot("tag-new")
+    }
+
+    /// The mockup's `reminders` and `reminders-empty`: every reminder in creation-date order, a
+    /// row in each status, then a row's details pushed on the tab (#109).
+    func testReminders() {
+        launch(.app)
+        tab("Reminders")
+        shot("reminders", pages: 20, stopsAtEnd: true)
+        scrollToTop()
+        tapText("Book the car service")
+        shot("reminders-details")
+        launch(.noReminders)
+        tab("Reminders")
+        shot("reminders-empty")
     }
 
     func testSettings() {
