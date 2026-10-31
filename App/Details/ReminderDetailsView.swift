@@ -227,21 +227,7 @@ private struct DeleteButton: View {
                 Image(systemName: "trash")
             }
         }
-        .confirmationDialog(
-            Text("Delete “\(title)”?", comment: "Asked before deleting a reminder from its details. The placeholder is its title."),
-            isPresented: $isConfirming,
-            titleVisibility: .visible
-        ) {
-            Button(role: .destructive, action: confirm) {
-                Text("Delete Reminder", comment: "Confirms deleting the reminder.")
-            }
-            Button(role: .cancel) {
-            } label: {
-                Text("Cancel", comment: "Keeps the reminder instead of deleting it.")
-            }
-        } message: {
-            Text("This deletes its history too, and cancels any nudges and alarms.", comment: "Under the question asked before deleting a reminder.")
-        }
+        .deleteReminderConfirmation(title: title, isPresented: $isConfirming, confirm: confirm)
     }
 }
 

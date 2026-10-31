@@ -48,14 +48,10 @@ struct MyDayRowView: View {
         // it), so Done would be offered twice. VoiceOver has the row's own Done button.
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             if item.offersDone && !voiceOverEnabled {
-                Button(action: markDone) {
-                    Label {
-                        Text("Done", comment: "My Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.")
-                    } icon: {
-                        Image(systemName: "checkmark")
-                    }
-                }
-                .tint(Color.tileGreen)
+                SwipeDoneTile(
+                    label: Text("Done", comment: "My Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges."),
+                    action: markDone
+                )
             }
         }
     }

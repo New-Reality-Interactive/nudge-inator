@@ -684,7 +684,7 @@
       "comment" : "Settings: row that opens the page setting the pace every new reminder starts with. Under it, that pace, such as \"Consistent · 10 min\".\nTitle of the page in Settings that sets the pace every new reminder starts with."
     },
     "Delete" : {
-      "comment" : "Settings: confirms deleting every reminder, tag and all history.\nTags: confirms deleting the tag. The reminders that have it are kept."
+      "comment" : "Reminders tab: a row's swipe action and VoiceOver action that asks before deleting the reminder.\nSettings: confirms deleting every reminder, tag and all history.\nTags: confirms deleting the tag. The reminders that have it are kept."
     },
     "Delete %@" : {
       "comment" : "VoiceOver label of a tag's Delete button in Edit mode. The placeholder is the tag, such as \"#home\"."
@@ -702,7 +702,7 @@
       "comment" : "Confirms deleting the reminder.\nReminder details: opens the question that asks before deleting the reminder."
     },
     "Delete “%@”?" : {
-      "comment" : "Asked before deleting a reminder from its details. The placeholder is its title."
+      "comment" : "Asked before deleting a reminder, from its details or a Reminders tab row. The placeholder is its title."
     },
     "Deleting a tag removes it from its reminders. The reminders aren't deleted." : {
       "comment" : "Tags, Edit mode: under the list."
@@ -714,7 +714,7 @@
       "comment" : "Asked when cancelling a reminder form with changes."
     },
     "Done" : {
-      "comment" : "My Day's filter sheet: closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nStatus label: an occurrence closed as Done.\nTags: leaves Edit mode.\nThe Custom repeat page's confirm button (a checkmark): its choices become the Repeat page's choice.\nThe Repeat page's confirm button (a checkmark): its choice becomes the reminder's repeat.\nThe tag sheet's confirm button (a checkmark)."
+      "comment" : "My Day's filter sheet: closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label: an occurrence closed as Done.\nTags: leaves Edit mode.\nThe Custom repeat page's confirm button (a checkmark): its choices become the Repeat page's choice.\nThe Repeat page's confirm button (a checkmark): its choice becomes the reminder's repeat.\nThe tag sheet's confirm button (a checkmark)."
     },
     "Done after %lld nudges" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence closed as Done. The placeholder is how many nudges it sent.",
