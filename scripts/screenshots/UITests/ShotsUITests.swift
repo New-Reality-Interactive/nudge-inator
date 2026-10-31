@@ -445,6 +445,30 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-empty")
     }
 
+    /// The mockup's `reminders-sort-menu`, `reminders-newest` and `reminders-due-date` (#115): the
+    /// header row's Sort menu open at Created, Oldest First, then Newest First chosen, then Due
+    /// Date, which keeps the order as Latest First, with the menu open again to show it checked.
+    func testRemindersSort() {
+        launch(.app)
+        tab("Reminders")
+        let sort = app.buttons["Sort"].firstMatch
+        func choose(_ item: String) {
+            sort.tap()
+            pause(0.5)
+            app.buttons[item].firstMatch.tap()
+            pause(0.5)
+        }
+        sort.tap()
+        shot("reminders-sort-menu")
+        app.buttons["Newest First"].firstMatch.tap()
+        shot("reminders-newest")
+        choose("Due Date")
+        shot("reminders-due-date", pages: 2)
+        scrollToTop()
+        sort.tap()
+        shot("reminders-sort-menu-due-date")
+    }
+
     /// The mockup's `reminders-swipe-nudging`, `reminders-swipe-other`, `reminders-delete` and
     /// `reminders-after-done` (#110): the trailing swipe on a Nudging and a Coming up row, the
     /// Delete question (cancelled), then Done from the swipe, which leaves the row in place.

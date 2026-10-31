@@ -1,26 +1,37 @@
 import NudgeEngine
 import SwiftUI
 
-/// Reminders: every reminder once, in any state, oldest created first, each opening its details.
-/// A row's status and due time change as time passes with no change to the engine (a due time
-/// passes, an occurrence gives up), so the list is read again at the start of every minute.
+/// Reminders: every reminder once, in any state, in the Sort menu's order, each opening its
+/// details. A row's status and due time change as time passes with no change to the engine (a due
+/// time passes, an occurrence gives up), so the list is read again at the start of every minute.
+///
+/// The rows keep the order they had when the tab was chosen, the sort changed or the store was
+/// read, so Done or going Missed doesn't move a row sorted by Due Date. Pushing details keeps it;
+/// leaving the tab and coming back sorts again.
 struct RemindersTab: View {
     let state: ScreenState
     /// The reminders whose details are pushed on Reminders.
     @Binding var path: [OpenedReminder]
+    /// Whether Reminders is the chosen tab. Choosing it again sorts again; `onAppear` isn't relied
+    /// on for that, since the docs don't say a tab's content appears again on each return.
+    var isChosen = true
     /// What previews show, since they have no app model.
     var previewEngine: Engine?
 
     @Environment(AppModel.self) private var model: AppModel?
+    @State private var keptOrder: KeptOrder?
+    /// The sort previews show, since they have no app model to keep it.
+    @State private var previewSort = RemindersSort.createdOldestFirst
 
     var body: some View {
         NavigationStack(path: $path) {
             TabScreen(state: state) {
                 TimelineView(.everyMinute) { _ in
-                    let screen = engine.map { RemindersScreen(engine: $0) }
+                    let screen = engine.map { RemindersScreen(engine: $0, sort: sort.wrappedValue, keptOrder: keptOrder?.ids(for: sort.wrappedValue)) }
                     if let screen, screen.emptyState == nil {
                         RemindersListView(
                             screen: screen,
+                            sort: sort,
                             openDetails: { path.append(OpenedReminder(id: $0)) },
                             markDone: { model?.markDone($0) },
                             delete: { id in withAnimation { model?.delete(id) } }
@@ -36,10 +47,40 @@ struct RemindersTab: View {
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
             }
         }
+        .onAppear(perform: keepOrder)
+        .onChange(of: isChosen) { if isChosen { keepOrder() } }
+        .onChange(of: sort.wrappedValue) { keepOrder() }
+        .onChange(of: state) { keepOrder() }
     }
 
     private var engine: Engine? {
         model?.engine ?? previewEngine
+    }
+
+    /// The model's, which outlives a relaunch, or the previews' own.
+    private var sort: Binding<RemindersSort> {
+        if let model {
+            Binding { model.remindersSort } set: { model.remindersSort = $0 }
+        } else {
+            $previewSort
+        }
+    }
+
+    /// The rows' order as the engine sorts them now, kept until the list's inputs next change.
+    private func keepOrder() {
+        let sort = sort.wrappedValue
+        keptOrder = engine.map { KeptOrder(sort: sort, ids: $0.remindersList(sortedBy: sort).items.map(\.reminder.id)) }
+    }
+
+    /// An order kept for one sort. Until `onChange` keeps one for a new sort, the first frame
+    /// drawn with it sorts afresh rather than show the old sort's order.
+    private struct KeptOrder {
+        let sort: RemindersSort
+        let ids: [Reminder.ID]
+
+        func ids(for sort: RemindersSort) -> [Reminder.ID]? {
+            sort == self.sort ? ids : nil
+        }
     }
 
     /// As Tags': the text points to the toolbar's +, with no button of its own.
@@ -58,19 +99,26 @@ struct RemindersTab: View {
 
 private struct RemindersListView: View {
     let screen: RemindersScreen
+    @Binding var sort: RemindersSort
     let openDetails: (Reminder.ID) -> Void
     let markDone: (Reminder.ID) -> Void
     let delete: (Reminder.ID) -> Void
 
     var body: some View {
         List {
-            ForEach(screen.rows) { row in
-                RemindersRowView(
-                    row: row,
-                    openDetails: { openDetails(row.id) },
-                    markDone: { markDone(row.id) },
-                    delete: { delete(row.id) }
-                )
+            Section {
+                ForEach(screen.rows) { row in
+                    RemindersRowView(
+                        row: row,
+                        openDetails: { openDetails(row.id) },
+                        markDone: { markDone(row.id) },
+                        delete: { delete(row.id) }
+                    )
+                }
+            } header: {
+                // Above the rows' group, not in a cell, as the mockup draws it.
+                RemindersHeaderRow(count: screen.countText, sort: $sort)
+                    .textCase(nil)
             }
         }
     }

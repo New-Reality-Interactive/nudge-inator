@@ -34,6 +34,23 @@ struct RemindersListTests {
         #expect(titles == ["Migrated first", "Migrated second", "Migrated third", "Made yesterday", "Made this morning"])
     }
 
+    /// Newest First is not the reverse of Oldest First: reminders that tie still read in the
+    /// order they were added (#115's seams comment).
+    @Test func newestFirstPutsTheLatestCreatedFirstWithTiesInTheOrderTheyWereAdded() {
+        let migrated = NewYork.local(2026, 10, 10)
+        let engine = engine(holding: [
+            reminder("Made yesterday", createdAt: NewYork.local(2026, 10, 15)),
+            reminder("Migrated first", createdAt: migrated),
+            reminder("Migrated second", createdAt: migrated),
+            reminder("Made this morning", createdAt: NewYork.local(2026, 10, 16, 8)),
+            reminder("Migrated third", createdAt: migrated),
+        ])
+
+        let titles = engine.remindersList(sortedBy: RemindersSort(field: .created, order: .descending)).items.map(\.reminder.title)
+
+        #expect(titles == ["Made this morning", "Made yesterday", "Migrated first", "Migrated second", "Migrated third"])
+    }
+
     /// One reminder in each status at 13:00, made one after another so the list is in this order.
     struct OneOfEach {
         var engine: Engine
@@ -111,6 +128,29 @@ struct RemindersListTests {
             NewYork.local(2026, 10, 14, 9),
             NewYork.local(2026, 10, 16, 9),
         ])
+    }
+
+    /// By the due time each row shows. Morning meds and Physio exercises are both due at 9:00
+    /// today, and keep the order they were added in either way round.
+    @Test func dueDateSortsByEachRowsDueTimeBothWaysWithTiesInTheOrderTheyWereAdded() {
+        let day = oneOfEach()
+        func titles(_ order: RemindersSort.Order) -> [String] {
+            day.engine.remindersList(sortedBy: RemindersSort(field: .dueDate, order: order)).items.map(\.reminder.title)
+        }
+
+        #expect(titles(.ascending) == [
+            "Book the car service", "Morning meds", "Physio exercises", "Reply to Alex", "Walk the dog", "Stretch break", "Dentist appointment",
+        ])
+        #expect(titles(.descending) == [
+            "Dentist appointment", "Stretch break", "Walk the dog", "Reply to Alex", "Morning meds", "Physio exercises", "Book the car service",
+        ])
+    }
+
+    @Test func theTotalIsEveryReminderTheEngineHolds() {
+        let day = oneOfEach()
+
+        #expect(day.engine.remindersList().total == 7)
+        #expect(engine(holding: []).remindersList().total == 0)
     }
 
     @Test func doneMissedPauseAndResumeNeverMoveARow() throws {
