@@ -952,9 +952,6 @@
     "Every nudge rings as an alarm." : {
       "comment" : "Under the reminder form's strength, when every nudge rings, as Relentless's do."
     },
-    "Every reminder you make shows here, whatever its state." : {
-      "comment" : "Reminders tab: under the title when there are no reminders at all."
-    },
     "Filter My Day" : {
       "comment" : "Title of My Day's tag filter sheet."
     },
@@ -1092,10 +1089,7 @@
       }
     },
     "No Reminders" : {
-      "comment" : "A tag's screen when no reminder has the tag."
-    },
-    "No Reminders Yet" : {
-      "comment" : "Reminders tab: title when there are no reminders at all."
+      "comment" : "A tag's screen when no reminder has the tag.\nReminders tab: title when there are no reminders at all."
     },
     "No Tags" : {
       "comment" : "My Day's filter sheet: the row that shows only reminders without tags.\nMy Day: the filter token that shows only reminders without tags.\nTags: title when there are no tags yet."
@@ -1486,6 +1480,9 @@
     },
     "Tap + to add a tag, or add tags to a reminder when you create or edit it." : {
       "comment" : "Tags: how to add a tag when there are none."
+    },
+    "Tap + to make one. Every reminder you make shows here, whatever its state." : {
+      "comment" : "Reminders tab: under the title when there are no reminders at all."
     },
     "Test nudge" : {
       "comment" : "Title of the notification that Settings' Send a Test Nudge sends."

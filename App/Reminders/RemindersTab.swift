@@ -21,7 +21,7 @@ struct RemindersTab: View {
                     if let screen, screen.emptyState == nil {
                         RemindersListView(screen: screen, openDetails: { path.append(OpenedReminder(id: $0)) })
                     } else {
-                        noRemindersYet
+                        noReminders
                     }
                 }
             }
@@ -37,28 +37,16 @@ struct RemindersTab: View {
         model?.engine ?? previewEngine
     }
 
-    /// Centered when it fits; at the largest text sizes it scrolls, so New Reminder can be reached
-    /// above the tab bar.
-    private var noRemindersYet: some View {
-        ViewThatFits(in: .vertical) {
-            noRemindersYetContent
-            ScrollView { noRemindersYetContent }
-        }
-    }
-
-    private var noRemindersYetContent: some View {
+    /// As Tags': the text points to the toolbar's +, with no button of its own.
+    private var noReminders: some View {
         ContentUnavailableView {
             Label {
-                Text("No Reminders Yet", comment: "Reminders tab: title when there are no reminders at all.")
+                Text("No Reminders", comment: "Reminders tab: title when there are no reminders at all.")
             } icon: {
                 Image(systemName: AppTab.reminders.systemImage)
             }
         } description: {
-            Text("Every reminder you make shows here, whatever its state.", comment: "Reminders tab: under the title when there are no reminders at all.")
-        } actions: {
-            NewReminderButton()
-                .labelStyle(.titleAndIcon)
-                .buttonStyle(SmallBorderedButtonStyle())
+            Text("Tap + to make one. Every reminder you make shows here, whatever its state.", comment: "Reminders tab: under the title when there are no reminders at all.")
         }
     }
 }
