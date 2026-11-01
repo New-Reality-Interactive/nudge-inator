@@ -22,14 +22,14 @@ extension RemindersSort.Field {
 }
 
 extension RemindersSort {
-    /// The Sort button's VoiceOver value and its menu item's label, "Created, Oldest First". A whole
-    /// phrase for each choice, not the menu's two words joined, so a translation can word it as one.
+    /// The Sort button's VoiceOver value, "Created, Oldest First". A whole phrase for each choice,
+    /// not the menu's two words joined, so a translation can word it as one.
     var accessibilityValue: LocalizedStringResource {
         switch (field, order) {
-        case (.created, .ascending): LocalizedStringResource("Created, Oldest First", comment: "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Created, Oldest First.")
-        case (.created, .descending): LocalizedStringResource("Created, Newest First", comment: "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Created, Newest First.")
-        case (.dueDate, .ascending): LocalizedStringResource("Due Date, Earliest First", comment: "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Due Date, Earliest First.")
-        case (.dueDate, .descending): LocalizedStringResource("Due Date, Latest First", comment: "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Due Date, Latest First.")
+        case (.created, .ascending): LocalizedStringResource("Created, Oldest First", comment: "VoiceOver value of the Reminders tab's Sort button: sorted by Created, Oldest First.")
+        case (.created, .descending): LocalizedStringResource("Created, Newest First", comment: "VoiceOver value of the Reminders tab's Sort button: sorted by Created, Newest First.")
+        case (.dueDate, .ascending): LocalizedStringResource("Due Date, Earliest First", comment: "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Earliest First.")
+        case (.dueDate, .descending): LocalizedStringResource("Due Date, Latest First", comment: "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Latest First.")
         }
     }
 }
@@ -94,11 +94,9 @@ private struct RemindersSortButton: View {
             ForEach(RemindersSort.Field.allCases, id: \.self) { field in
                 Section {
                     ForEach(RemindersSort.Order.allCases, id: \.self) { order in
-                        let choice = RemindersSort(field: field, order: order)
-                        Toggle(isOn: isChosen(choice)) {
+                        Toggle(isOn: isChosen(RemindersSort(field: field, order: order))) {
                             Text(field.title(of: order))
                         }
-                        .accessibilityLabel(Text(choice.accessibilityValue))
                     }
                 } header: {
                     Text(field.title)

@@ -711,10 +711,10 @@
       "comment" : "Reminders tab's Sort menu: the header of the section that sorts by when each reminder was made."
     },
     "Created, Newest First" : {
-      "comment" : "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Created, Newest First."
+      "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Created, Newest First."
     },
     "Created, Oldest First" : {
-      "comment" : "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Created, Oldest First."
+      "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Created, Oldest First."
     },
     "Custom" : {
       "comment" : "The Repeat page's row that opens the custom repeat page.\nThe reminder form's Repeat row when the repeat is a custom rule.\nTitle of the Custom repeat page."
@@ -817,10 +817,10 @@
       "comment" : "Reminders tab's Sort menu: the header of the section that sorts by the due time each row shows."
     },
     "Due Date, Earliest First" : {
-      "comment" : "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Due Date, Earliest First."
+      "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Earliest First."
     },
     "Due Date, Latest First" : {
-      "comment" : "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Due Date, Latest First."
+      "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Latest First."
     },
     "Due today with all selected tags" : {
       "comment" : "My Day: under the filter tokens when two or more tags are chosen and Match is All Tags."
