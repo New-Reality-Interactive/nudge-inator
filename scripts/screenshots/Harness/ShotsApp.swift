@@ -117,6 +117,7 @@ enum ShotsSeed {
             alarms: AlarmAdapter(manager: manager, clock: clock),
             onboardingRecord: onboarding,
             defaultPaceRecord: DefaultPaceRecord(defaults: defaults),
+            remindersSortRecord: RemindersSortRecord(defaults: defaults),
             doneQueue: .temporary
         )
         return model

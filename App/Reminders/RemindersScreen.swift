@@ -2,10 +2,12 @@ import Foundation
 import NudgeEngine
 
 /// What the Reminders tab shows, read from the engine at one moment: every reminder once, in the
-/// engine's order, with its status, due time and tags. A value, so the tests and previews read it
-/// with no view.
+/// Sort menu's order, with its status, due time and tags, and the header row's count. A value, so
+/// the tests and previews read it with no view.
 struct RemindersScreen {
     let rows: [Row]
+    /// Every reminder the engine holds: the count's "out of" number.
+    let total: Int
     /// Which empty state the tab shows in place of the list, or `nil` when it has rows.
     let emptyState: EmptyState?
 
@@ -30,8 +32,25 @@ struct RemindersScreen {
         var offersDone: Bool { status == .nudging }
     }
 
-    init(engine: Engine) {
-        rows = engine.remindersList().items.map { item in
+    /// The rows shown: the count's first number.
+    var shownCount: Int { rows.count }
+
+    /// The header row's count, "3 reminders out of 14", read as one VoiceOver element.
+    var countText: LocalizedStringResource { Self.countText(shown: shownCount, of: total) }
+
+    static func countText(shown: Int, of total: Int) -> LocalizedStringResource {
+        LocalizedStringResource("\(shown) reminders out of \(total)", comment: "Reminders tab: the header row's count, in every case, even with nothing narrowing the list. 1: the reminders shown. 2: every reminder.")
+    }
+
+    /// `keptOrder` is the rows' order when the list's inputs (the sort, and later search, chip and
+    /// filters) last changed. Sorted by Due Date, Done or going Missed changes a row's due time, so
+    /// the rows keep that order rather than move under the person (spec #104, Decision 35). A
+    /// reminder it doesn't hold, added since, goes where the sort puts it.
+    init(engine: Engine, sort: RemindersSort = .createdOldestFirst, keptOrder: [Reminder.ID]? = nil) {
+        let list = engine.remindersList(sortedBy: sort)
+        let items = keptOrder.map { Self.items(list.items, keeping: $0) } ?? list.items
+        total = list.total
+        rows = items.map { item in
             Row(
                 reminder: item.reminder,
                 status: item.status,
@@ -41,5 +60,17 @@ struct RemindersScreen {
             )
         }
         emptyState = engine.reminders.isEmpty ? .noReminders : nil
+    }
+
+    /// `sorted` in `keptOrder`, without the reminders it no longer holds, and with each one it
+    /// didn't hold at its index in `sorted`.
+    private static func items(_ sorted: [RemindersList.Item], keeping keptOrder: [Reminder.ID]) -> [RemindersList.Item] {
+        let kept = Set(keptOrder)
+        let byID = Dictionary(uniqueKeysWithValues: sorted.map { ($0.reminder.id, $0) })
+        var items = keptOrder.compactMap { byID[$0] }
+        for (index, item) in sorted.enumerated() where !kept.contains(item.reminder.id) {
+            items.insert(item, at: min(index, items.count))
+        }
+        return items
     }
 }

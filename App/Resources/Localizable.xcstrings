@@ -273,6 +273,39 @@
         }
       }
     },
+    "%lld reminders out of %lld" : {
+      "comment" : "Reminders tab: the header row's count, in every case, even with nothing narrowing the list. 1: the reminders shown. 2: every reminder.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@reminders@ out of %2$lld"
+          },
+          "substitutions" : {
+            "reminders" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld reminders use this tag. It's removed from them, and they aren't deleted." : {
       "comment" : "Tags: the message of the question that asks before deleting a tag. The placeholder is how many reminders have the tag.",
       "localizations" : {
@@ -674,6 +707,15 @@
     "Couldn't Delete Your Data" : {
       "comment" : "Settings: title of the message shown when deleting everything failed."
     },
+    "Created" : {
+      "comment" : "Reminders tab's Sort menu: the header of the section that sorts by when each reminder was made."
+    },
+    "Created, Newest First" : {
+      "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Created, Newest First."
+    },
+    "Created, Oldest First" : {
+      "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Created, Oldest First."
+    },
     "Custom" : {
       "comment" : "The Repeat page's row that opens the custom repeat page.\nThe reminder form's Repeat row when the repeat is a custom rule.\nTitle of the Custom repeat page."
     },
@@ -771,6 +813,15 @@
     "Due %@" : {
       "comment" : "Nudge card: under the title of a reminder with no tags. The placeholder is its due time, such as \"9:00 AM\"."
     },
+    "Due Date" : {
+      "comment" : "Reminders tab's Sort menu: the header of the section that sorts by the due time each row shows."
+    },
+    "Due Date, Earliest First" : {
+      "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Earliest First."
+    },
+    "Due Date, Latest First" : {
+      "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Latest First."
+    },
     "Due today with all selected tags" : {
       "comment" : "My Day: under the filter tokens when two or more tags are chosen and Match is All Tags."
     },
@@ -791,6 +842,9 @@
     },
     "Each Gentle or Firm reminder has a Break Through Focus switch. Turn it off and a Focus can hold its nudges, and nothing rings. Relentless always breaks through." : {
       "comment" : "Onboarding and How It Nudges: under \"You choose what breaks through\"."
+    },
+    "Earliest First" : {
+      "comment" : "Reminders tab's Sort menu, sorted by Due Date: the earliest due time at the top."
     },
     "Edit" : {
       "comment" : "Reminder details: the toolbar button that opens the Edit Reminder form.\nTags: enters Edit mode, where a tag can be renamed or deleted."
@@ -1026,6 +1080,9 @@
     "Later" : {
       "comment" : "A tag's screen: header of the reminders due after today."
     },
+    "Latest First" : {
+      "comment" : "Reminders tab's Sort menu, sorted by Due Date: the latest due time at the top."
+    },
     "Left" : {
       "comment" : "My Day: the caption of the count of occurrences still to come today."
     },
@@ -1067,6 +1124,9 @@
     },
     "New reminders start with this pace. Changing it doesn't change the reminders you already have." : {
       "comment" : "Default Pace page: under the Pace and Every controls."
+    },
+    "Newest First" : {
+      "comment" : "Reminders tab's Sort menu, sorted by Created: the reminder made last at the top."
     },
     "Next" : {
       "comment" : "Reminder details, Schedule: when the reminder is next due."
@@ -1284,6 +1344,9 @@
     "Off" : {
       "comment" : "Reminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off."
     },
+    "Oldest First" : {
+      "comment" : "Reminders tab's Sort menu, sorted by Created: the reminder made first at the top."
+    },
     "On" : {
       "comment" : "Header of the Custom repeat page's days: the weekdays, or the day of the month.\nReminder details: Break Through Focus is on.\nSettings: status of the Alarms row when alarms are allowed.\nSettings: status of the Badges row when the app icon may show a badge.\nSettings: status of the Notifications row when notifications and Time Sensitive are allowed."
     },
@@ -1450,6 +1513,9 @@
     },
     "Skipped: the reminder was paused" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that closed because its reminder was paused."
+    },
+    "Sort" : {
+      "comment" : "VoiceOver label of the Reminders tab's Sort button, which opens the Sort menu."
     },
     "Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them." : {
       "comment" : "Reminder details: under Schedule while the reminder is nudging, why five fields can't be edited."

@@ -111,6 +111,72 @@ struct RemindersScreenTests {
         #expect(RemindersScreen(engine: day.model.engine).rows.last?.title == "Renew the passport")
     }
 
+    @Test func theRowsFollowTheSort() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        let newest = RemindersScreen(engine: day.model.engine, sort: RemindersSort(field: .created, order: .descending))
+        let earliest = RemindersScreen(engine: day.model.engine, sort: RemindersSort(field: .dueDate, order: .ascending))
+
+        // The fixture adds its reminders at one moment, so Newest First keeps the order added.
+        #expect(newest.rows.first?.title == "Take the bins out")
+        // Given up at 9:30 today, the earliest due time a row shows.
+        #expect(earliest.rows.first?.title == "Team stand-up")
+        #expect(earliest.rows.last?.title == "Dentist appointment")
+    }
+
+    /// The header row's count: the rows shown out of every reminder, even with nothing narrowing
+    /// the list, in one string with plural variants.
+    @Test func theCountIsTheRowsShownOutOfEveryReminder() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        let screen = RemindersScreen(engine: day.model.engine)
+
+        #expect(screen.shownCount == screen.rows.count)
+        #expect(screen.total == day.model.engine.reminders.count)
+        #expect(String(localized: screen.countText) == "10 reminders out of 10")
+        #expect(String(localized: RemindersScreen.countText(shown: 1, of: 14)) == "1 reminder out of 14")
+    }
+
+    @Test func deletingARowLowersTheCountByOne() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        day.model.delete(day.alex.id)
+
+        #expect(String(localized: RemindersScreen(engine: day.model.engine).countText) == "9 reminders out of 9")
+    }
+
+    /// At 6:31 the next morning Morning meds is Nudging, due 6:30 today. Done moves its due time to
+    /// tomorrow, which sorts it last, but the row keeps its place until the list's inputs change.
+    @Test func sortedByDueDateARowKeepsItsPlaceAfterDoneUntilTheListSortsAgain() async throws {
+        let day = try await fixture.dayAtOnePM()
+        fixture.clock.now = NewYork.local(2026, 10, 17, 6, 31)
+        let sort = RemindersSort(field: .dueDate, order: .ascending)
+        let kept = RemindersScreen(engine: day.model.engine, sort: sort).rows.map(\.id)
+        #expect(RemindersScreen(engine: day.model.engine, sort: sort).rows.first { $0.id == day.meds.id }?.status == .nudging)
+
+        day.model.markDone(day.meds.id)
+
+        let keptScreen = RemindersScreen(engine: day.model.engine, sort: sort, keptOrder: kept)
+        #expect(keptScreen.rows.map(\.id) == kept)
+        #expect(keptScreen.rows.first { $0.id == day.meds.id }?.day == "Tomorrow")
+        let sortedAgain = RemindersScreen(engine: day.model.engine, sort: sort)
+        #expect(sortedAgain.rows.last?.id == day.meds.id)
+    }
+
+    /// A reminder added since the order was kept goes where the sort puts it; a deleted one leaves.
+    @Test func aKeptOrderTakesANewReminderWhereTheSortPutsItAndDropsADeletedOne() async throws {
+        let day = try await fixture.dayAtOnePM()
+        let sort = RemindersSort(field: .dueDate, order: .ascending)
+        let kept = RemindersScreen(engine: day.model.engine, sort: sort).rows.map(\.id)
+
+        day.model.delete(day.dentist.id)
+        let passport = Reminder(title: "Renew the passport", dueTime: NewYork.local(2026, 10, 16, 9), strength: .gentle)
+        day.model.add(passport)
+
+        let screen = RemindersScreen(engine: day.model.engine, sort: sort, keptOrder: kept)
+        #expect(screen.rows.map(\.id) == [passport.id] + kept.filter { $0 != day.dentist.id })
+    }
+
     @Test func withNoRemindersTheEmptyStateSaysThereAreNoneYet() async throws {
         let model = try await fixture.launchedModel()
 

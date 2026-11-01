@@ -31,6 +31,7 @@ final class DefaultPaceTests {
             notifications: NotificationAdapter(center: center, clock: clock),
             alarms: AlarmAdapter(manager: manager, clock: clock),
             defaultPaceRecord: try record(),
+            remindersSortRecord: .temporary,
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )

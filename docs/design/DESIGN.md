@@ -426,12 +426,13 @@ except in the tab and navigation bars. Verify names against the mockup.
   `checkmark`, so on and off don't differ by color alone; VoiceOver reads it as a button with the
   selected trait. One chip is on at a time.
 - **Sort button:** `sort-button`, a 44 pt round button on `{colors.tertiary-fill}` with
-  `arrow.up.arrow.down` in the accent color. It opens the Sort menu: a picker of Created or Due
-  Date, then a picker of that one's order (Oldest First or Newest First; Earliest First or Latest
-  First), the chosen ones checked, as SwiftUI's `Picker` inside a `Menu` draws them. Its label is
-  "Sort" and its value the choice ("Created, Oldest First"). Sorted by Due Date, a row keeps its
-  place while search, chip, filters and sort stay as they are, so Done doesn't move it; changing any
-  of them, or leaving the tab, sorts again.
+  `arrow.up.arrow.down` in the accent color. It opens the Sort menu: a section headed Created (Oldest
+  First, Newest First) and one headed Due Date (Earliest First, Latest First), one choice checked
+  across both, each choice a `Toggle` in a `Section` of a SwiftUI `Menu`, since the system drops the
+  header of a section with a `Picker`. One tap applies a choice and closes the menu. Its label is
+  "Sort" and its value the choice ("Created, Oldest First"), and VoiceOver reads each header, then
+  its choices. Sorted by Due Date, a row keeps its place while search, chip, filters and sort stay
+  as they are, so Done doesn't move it; changing any of them, or leaving the tab, sorts again.
 - **Filter button:** `line.3.horizontal.decrease` in the bar, beside New. Its badge counts how
   many of the filter sheet's sections are in use (Tags, Status, Strength, Due Date). A Status a lit
   chip already shows doesn't count, nor do search and Due Today. While the count is above 0 the
