@@ -90,7 +90,8 @@ private struct RemindersSortButton: View {
     var body: some View {
         Menu {
             // Toggles in the menu's sections, not pickers: the system drops the header of a section
-            // that holds a picker, or that a picker holds.
+            // that holds a picker, or that a picker holds. Apple's docs don't say so; seen on the
+            // iOS 26.5 and 27.0 simulators (#115).
             ForEach(RemindersSort.Field.allCases, id: \.self) { field in
                 Section {
                     ForEach(RemindersSort.Order.allCases, id: \.self) { order in

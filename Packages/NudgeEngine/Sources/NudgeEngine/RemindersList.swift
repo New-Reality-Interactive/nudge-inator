@@ -12,7 +12,7 @@ public enum ReminderStatus: Equatable, Sendable {
 }
 
 /// How the Reminders tab's list is ordered: the Sort menu's choice.
-public struct RemindersSort: Hashable, Sendable {
+public struct RemindersSort: Equatable, Sendable {
     public var field: Field
     public var order: Order
 

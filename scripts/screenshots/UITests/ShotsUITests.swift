@@ -447,7 +447,7 @@ final class ShotsUITests: XCTestCase {
 
     /// The mockup's `reminders-sort-menu`, `reminders-newest` and `reminders-due-date` (#115): the
     /// header row's Sort menu open at Created, Oldest First, then Newest First chosen, then Due
-    /// Date, which keeps the order as Latest First, with the menu open again to show it checked.
+    /// Date, Latest First chosen, with the menu open again to show it checked.
     func testRemindersSort() {
         launch(.app)
         tab("Reminders")
