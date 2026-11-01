@@ -185,4 +185,62 @@ struct RemindersScreenTests {
         #expect(screen.rows.isEmpty)
         #expect(screen.emptyState == .noReminders)
     }
+
+    private func filter(_ chip: RemindersChip) -> RemindersFilter {
+        var filter = RemindersFilter()
+        filter.toggle(chip)
+        return filter
+    }
+
+    @Test func theCountEqualsTheRowsShownWithAChipOn() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        let nudging = RemindersScreen(engine: day.model.engine, filter: filter(.nudging))
+        let missed = RemindersScreen(engine: day.model.engine, filter: filter(.missed))
+
+        #expect(nudging.rows.map(\.title) == ["Reply to Alex"])
+        #expect(String(localized: nudging.countText) == "1 reminder out of 10")
+        #expect(missed.rows.map(\.title) == ["Team stand-up"])
+        #expect(String(localized: missed.countText) == "1 reminder out of 10")
+    }
+
+    /// Spec #104, Edge cases: the row leaves, the count reads 0 and the no-match empty state
+    /// appears, never the one that says there are no reminders. The chip staying on is the filter's.
+    @Test func theLastNudgingReminderMarkedDoneUnderTheChipLeavesTheNoMatchEmptyState() async throws {
+        let day = try await fixture.dayAtOnePM()
+        let nudging = filter(.nudging)
+        #expect(RemindersScreen(engine: day.model.engine, filter: nudging).emptyState == nil)
+
+        day.model.markDone(day.alex.id)
+
+        let screen = RemindersScreen(engine: day.model.engine, filter: nudging)
+        #expect(screen.rows.isEmpty)
+        #expect(String(localized: screen.countText) == "0 reminders out of 10")
+        #expect(screen.emptyState == .noMatch)
+    }
+
+    @Test func aRowTheChipNowExcludesDropsOutOfAKeptOrder() async throws {
+        let day = try await fixture.dayAtOnePM()
+        let nudging = filter(.nudging)
+        let kept = RemindersScreen(engine: day.model.engine, filter: nudging).rows.map(\.id)
+
+        day.model.markDone(day.alex.id)
+
+        #expect(RemindersScreen(engine: day.model.engine, filter: nudging, keptOrder: kept).rows.isEmpty)
+    }
+
+    /// Spec #104, Decision 20: until the chip next changes, which takes the known IDs again.
+    @Test func aNewReminderShowsEvenIfTheChipWouldHideItUntilTheChipNextChanges() async throws {
+        let day = try await fixture.dayAtOnePM()
+        let known = Set(day.model.engine.reminders.map(\.id))
+        let passport = Reminder(title: "Renew the passport", dueTime: NewYork.local(2026, 10, 30), strength: .gentle)
+
+        day.model.add(passport)
+
+        let shown = RemindersScreen(engine: day.model.engine, filter: filter(.nudging), knownIDs: known)
+        #expect(shown.rows.map(\.title) == ["Reply to Alex", "Renew the passport"])
+        #expect(String(localized: shown.countText) == "2 reminders out of 11")
+        let changed = RemindersScreen(engine: day.model.engine, filter: filter(.nudging), knownIDs: Set(day.model.engine.reminders.map(\.id)))
+        #expect(changed.rows.map(\.title) == ["Reply to Alex"])
+    }
 }

@@ -34,13 +34,30 @@ extension RemindersSort {
     }
 }
 
-/// The Reminders list's header row (DESIGN.md, Reminders tab): the count leading, the controls
-/// trailing. When they don't fit side by side, and always at the accessibility sizes, the
-/// controls go under the count, where they wrap, so neither is cut off and the chips (#111, #116)
-/// join the controls without a new layout.
+extension RemindersChip {
+    var title: LocalizedStringResource {
+        switch self {
+        case .nudging: LocalizedStringResource("Nudging", comment: "Reminders tab: the header row's chip that shows only Nudging reminders.")
+        case .missed: LocalizedStringResource("Missed", comment: "Reminders tab: the header row's chip that shows only Missed reminders.")
+        }
+    }
+
+    /// The no-match empty state's line while this chip is what's narrowing the list.
+    var noMatchText: LocalizedStringResource {
+        switch self {
+        case .nudging: LocalizedStringResource("No Nudging reminders.", comment: "Reminders tab: under the title when the Nudging chip leaves nothing.")
+        case .missed: LocalizedStringResource("No Missed reminders.", comment: "Reminders tab: under the title when the Missed chip leaves nothing.")
+        }
+    }
+}
+
+/// The Reminders list's header row (DESIGN.md, Reminders tab): the count leading, the Sort button
+/// and the chips trailing. When they don't fit side by side, and always at the accessibility sizes,
+/// the controls go under the count, where they wrap, so neither is cut off.
 struct RemindersHeaderRow: View {
     let count: LocalizedStringResource
     @Binding var sort: RemindersSort
+    @Binding var filter: RemindersFilter
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -77,7 +94,40 @@ struct RemindersHeaderRow: View {
     private var controls: some View {
         FlowLayout(spacing: Design.Spacing.s2) {
             RemindersSortButton(sort: $sort)
+            ForEach(RemindersChip.allCases, id: \.self) { chip in
+                RemindersChipButton(chip: chip, isOn: filter.chip == chip) { filter.toggle(chip) }
+            }
         }
+    }
+}
+
+/// DESIGN.md's `filter-chip`: a 44 pt capsule, with a leading checkmark while on so on and off
+/// don't differ by color alone. VoiceOver reads a button with the selected trait while on.
+private struct RemindersChipButton: View {
+    let chip: RemindersChip
+    let isOn: Bool
+    let toggle: () -> Void
+
+    var body: some View {
+        Button(action: toggle) {
+            HStack(spacing: Design.Spacing.s1) {
+                if isOn {
+                    Image(systemName: "checkmark")
+                        .accessibilityHidden(true)
+                }
+                Text(chip.title)
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(isOn ? Color.onAccent : Color.accentColor)
+            .padding(.horizontal, Design.Spacing.s3)
+            .padding(.vertical, Design.Spacing.s1)
+            .frame(minHeight: Design.Spacing.rowMin)
+            .background(Capsule().fill(isOn ? Color.accentColor : Color(uiColor: .tertiarySystemFill)))
+            .modifier(IncreasedContrastEdge())
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 }
 
@@ -112,6 +162,7 @@ private struct RemindersSortButton: View {
                 .padding(Design.Spacing.s1)
                 .frame(minWidth: Design.Spacing.rowMin, minHeight: Design.Spacing.rowMin)
                 .background(Capsule().fill(Color(uiColor: .tertiarySystemFill)))
+                .modifier(IncreasedContrastEdge())
         }
         .accessibilityLabel(Text("Sort", comment: "VoiceOver label of the Reminders tab's Sort button, which opens the Sort menu."))
         .accessibilityValue(Text(sort.accessibilityValue))
@@ -128,14 +179,29 @@ private struct RemindersSortButton: View {
     }
 }
 
+/// The mockup's edge on the header row's capsules with Increase Contrast on, where the tertiary
+/// fill alone hardly shows.
+private struct IncreasedContrastEdge: ViewModifier {
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    func body(content: Content) -> some View {
+        content.overlay {
+            if contrast == .increased {
+                Capsule().strokeBorder(Color(uiColor: .systemGray))
+            }
+        }
+    }
+}
+
 #if DEBUG
 #Preview("Header row") {
     @Previewable @State var sort = RemindersSort.createdOldestFirst
+    @Previewable @State var filter = RemindersFilter()
     List {
         Section {
             Text(verbatim: "Row")
         } header: {
-            RemindersHeaderRow(count: RemindersScreen.countText(shown: 12, of: 14), sort: $sort)
+            RemindersHeaderRow(count: RemindersScreen.countText(shown: 12, of: 14), sort: $sort, filter: $filter)
                 .textCase(nil)
         }
     }
@@ -143,11 +209,12 @@ private struct RemindersSortButton: View {
 
 #Preview("Header row, largest text") {
     @Previewable @State var sort = RemindersSort(field: .dueDate, order: .descending)
+    @Previewable @State var filter = RemindersFilter(statuses: [.missed])
     List {
         Section {
             Text(verbatim: "Row")
         } header: {
-            RemindersHeaderRow(count: RemindersScreen.countText(shown: 1, of: 14), sort: $sort)
+            RemindersHeaderRow(count: RemindersScreen.countText(shown: 1, of: 14), sort: $sort, filter: $filter)
                 .textCase(nil)
         }
     }

@@ -686,6 +686,9 @@
     "Clear All Tags" : {
       "comment" : "My Day: the item in the Filter button's menu that removes every tag from the filter."
     },
+    "Clear Filters" : {
+      "comment" : "Reminders tab: the no-match empty state's button that turns off what's narrowing the list."
+    },
     "Coming Up" : {
       "comment" : "Now: section header for reminders due soon."
     },
@@ -1093,7 +1096,7 @@
       "comment" : "My Day's filter sheet: label of the choice between All Tags and Any Tag."
     },
     "Missed" : {
-      "comment" : "My Day: the caption of the count of occurrences missed today.\nStatus label: an occurrence closed without Done, by its give-up limit or a take-over."
+      "comment" : "My Day: the caption of the count of occurrences missed today.\nReminders tab: the header row's chip that shows only Missed reminders.\nStatus label: an occurrence closed without Done, by its give-up limit or a take-over."
     },
     "Missed: gave up after the limit" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that reached its give-up limit (20 nudges or 24 hours)."
@@ -1147,6 +1150,15 @@
           }
         }
       }
+    },
+    "No Matches" : {
+      "comment" : "Reminders tab: title when reminders exist but what's narrowing the list leaves none."
+    },
+    "No Missed reminders." : {
+      "comment" : "Reminders tab: under the title when the Missed chip leaves nothing."
+    },
+    "No Nudging reminders." : {
+      "comment" : "Reminders tab: under the title when the Nudging chip leaves nothing."
     },
     "No Reminders" : {
       "comment" : "A tag's screen when no reminder has the tag.\nReminders tab: title when there are no reminders at all."
@@ -1284,7 +1296,7 @@
       "comment" : "Body of the notification that Settings' Send a Test Nudge sends."
     },
     "Nudging" : {
-      "comment" : "My Day: the caption of the count of occurrences nudging now.\nNow: section header for the reminders nudging you now.\nStatus label: an occurrence that has come due and isn't Done yet."
+      "comment" : "My Day: the caption of the count of occurrences nudging now.\nNow: section header for the reminders nudging you now.\nReminders tab: the header row's chip that shows only Nudging reminders.\nStatus label: an occurrence that has come due and isn't Done yet."
     },
     "Nudging Now" : {
       "comment" : "Reminder details: section header above the card of a reminder that is nudging."

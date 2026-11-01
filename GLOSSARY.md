@@ -110,6 +110,10 @@ Today's occurrences in time order, with Done, Nudging, Missed and Left counts.
 The reminders My Day lists for today, whatever their status, Done and Missed included. On the Reminders tab it is one of the quick filter chips.
 _Avoid_: Today (alone), due now
 
+**Quick filter chip**:
+A one-tap filter in the Reminders tab's header row: Nudging, Due Today or Missed. One is on at a time. Nudging and Missed are the Status filter shown on screen.
+_Avoid_: Filter pill, toggle
+
 **Reminders tab**:
 The tab that lists every reminder once, in any status, by creation date, with search and filters.
 _Avoid_: All Reminders, list, library

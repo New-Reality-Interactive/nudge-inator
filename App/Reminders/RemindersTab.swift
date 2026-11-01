@@ -5,9 +5,11 @@ import SwiftUI
 /// details. A row's status and due time change as time passes with no change to the engine (a due
 /// time passes, an occurrence gives up), so the list is read again at the start of every minute.
 ///
-/// The rows keep the order they had when the tab was chosen, the sort changed or the store was
-/// read, so Done or going Missed doesn't move a row sorted by Due Date. Pushing details keeps it;
+/// The rows keep the order they had when the tab was chosen, the sort or filter changed or the store
+/// was read, so Done or going Missed doesn't move a row sorted by Due Date. Pushing details keeps it;
 /// leaving the tab and coming back sorts again.
+///
+/// The filter is screen state, so a launch resets it and Back from details keeps it.
 struct RemindersTab: View {
     let state: ScreenState
     /// The reminders whose details are pushed on Reminders.
@@ -20,6 +22,10 @@ struct RemindersTab: View {
 
     @Environment(AppModel.self) private var model: AppModel?
     @State private var keptOrder: KeptOrder?
+    @State private var filter = RemindersFilter()
+    /// What the engine held when the filter last changed: `RemindersScreen.list(engine:sort:filter:knownIDs:)`.
+    /// Not taken again on returning to the tab, which doesn't change the filter.
+    @State private var knownIDs: Set<Reminder.ID>?
     /// The sort previews show, since they have no app model to keep it.
     @State private var previewSort = RemindersSort.createdOldestFirst
 
@@ -27,14 +33,23 @@ struct RemindersTab: View {
         NavigationStack(path: $path) {
             TabScreen(state: state) {
                 TimelineView(.everyMinute) { _ in
-                    let screen = engine.map { RemindersScreen(engine: $0, sort: sort.wrappedValue, keptOrder: keptOrder?.ids(for: sort.wrappedValue)) }
-                    if let screen, screen.emptyState == nil {
+                    let screen = engine.map {
+                        RemindersScreen(
+                            engine: $0,
+                            sort: sort.wrappedValue,
+                            filter: filter,
+                            keptOrder: keptOrder?.ids(for: sort.wrappedValue, filter: filter),
+                            knownIDs: knownIDs
+                        )
+                    }
+                    if let screen, screen.emptyState != .noReminders {
                         RemindersListView(
                             screen: screen,
-                            sort: sort,
+                            sort: sort.transaction(Self.noAnimation),
+                            filter: $filter.transaction(Self.noAnimation),
                             openDetails: { path.append(OpenedReminder(id: $0)) },
                             markDone: { model?.markDone($0) },
-                            delete: { id in withAnimation { model?.delete(id) } }
+                            delete: { model?.delete($0) }
                         )
                     } else {
                         noReminders
@@ -47,15 +62,32 @@ struct RemindersTab: View {
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
             }
         }
-        .onAppear(perform: keepOrder)
-        .onChange(of: isChosen) { if isChosen { keepOrder() } }
-        .onChange(of: sort.wrappedValue) { keepOrder() }
-        .onChange(of: state) { keepOrder() }
+        .onAppear {
+            if knownIDs == nil {
+                takeKnownIDs()
+            } else {
+                keepOrder(knownIDs: knownIDs)
+            }
+        }
+        .onChange(of: isChosen) { if isChosen { keepOrder(knownIDs: knownIDs) } }
+        .onChange(of: sort.wrappedValue) { keepOrder(knownIDs: knownIDs) }
+        .onChange(of: filter) {
+            if let list = takeKnownIDs() { announceCount(of: list) }
+        }
+        .onChange(of: state) { takeKnownIDs() }
     }
 
     private var engine: Engine? {
         model?.engine ?? previewEngine
     }
+
+    /// A chip or a Sort choice redraws the list at once, as the mockup does. Only a row a state
+    /// change takes out animates.
+    private static let noAnimation = {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        return transaction
+    }()
 
     /// The model's, which outlives a relaunch, or the previews' own.
     private var sort: Binding<RemindersSort> {
@@ -67,19 +99,42 @@ struct RemindersTab: View {
     }
 
     /// The rows' order as the engine sorts them now, kept until the list's inputs next change.
-    private func keepOrder() {
+    /// `knownIDs` is passed, not read, since the docs don't say a read of `@State` sees a write
+    /// made earlier in the same `onChange`.
+    @discardableResult
+    private func keepOrder(knownIDs: Set<Reminder.ID>?) -> RemindersList? {
         let sort = sort.wrappedValue
-        keptOrder = engine.map { KeptOrder(sort: sort, ids: $0.remindersList(sortedBy: sort).items.map(\.reminder.id)) }
+        let list = engine.map { RemindersScreen.list(engine: $0, sort: sort, filter: filter, knownIDs: knownIDs) }
+        keptOrder = list.map { KeptOrder(sort: sort, filter: filter, ids: $0.items.map(\.reminder.id)) }
+        return list
     }
 
-    /// An order kept for one sort. Until `onChange` keeps one for a new sort, the first frame
-    /// drawn with it sorts afresh rather than show the old sort's order.
+    /// Takes what the engine holds now as known, and keeps the rows' order under it.
+    @discardableResult
+    private func takeKnownIDs() -> RemindersList? {
+        let known = engine.map { Set($0.reminders.map(\.id)) }
+        knownIDs = known
+        return keepOrder(knownIDs: known)
+    }
+
+    /// VoiceOver stays on the chip, so it says the new count, as the mockup does. Low priority, so
+    /// it follows the chip's own "selected" rather than cutting it off (WWDC23, "Build accessible
+    /// apps with SwiftUI and UIKit").
+    private func announceCount(of list: RemindersList) {
+        var count = AttributedString(String(localized: RemindersScreen.countText(shown: list.items.count, of: list.total)))
+        count.accessibilitySpeechAnnouncementPriority = .low
+        AccessibilityNotification.Announcement(count).post()
+    }
+
+    /// An order kept for one sort and filter. Until `onChange` keeps one for a new one, the first
+    /// frame drawn with it sorts afresh rather than show the old order.
     private struct KeptOrder {
         let sort: RemindersSort
+        let filter: RemindersFilter
         let ids: [Reminder.ID]
 
-        func ids(for sort: RemindersSort) -> [Reminder.ID]? {
-            sort == self.sort ? ids : nil
+        func ids(for sort: RemindersSort, filter: RemindersFilter) -> [Reminder.ID]? {
+            sort == self.sort && filter == self.filter ? ids : nil
         }
     }
 
@@ -100,9 +155,12 @@ struct RemindersTab: View {
 private struct RemindersListView: View {
     let screen: RemindersScreen
     @Binding var sort: RemindersSort
+    @Binding var filter: RemindersFilter
     let openDetails: (Reminder.ID) -> Void
     let markDone: (Reminder.ID) -> Void
     let delete: (Reminder.ID) -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         List {
@@ -115,11 +173,45 @@ private struct RemindersListView: View {
                         delete: { delete(row.id) }
                     )
                 }
+                if screen.emptyState == .noMatch {
+                    RemindersNoMatchView(chip: filter.chip) { filter = RemindersFilter() }
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
             } header: {
-                // Above the rows' group, not in a cell, as the mockup draws it.
-                RemindersHeaderRow(count: screen.countText, sort: $sort)
+                // Above the rows' group, not in a cell, as the mockup draws it. It stays above the
+                // no-match empty state, so the chip can be turned off here.
+                RemindersHeaderRow(count: screen.countText, sort: $sort, filter: $filter)
                     .textCase(nil)
             }
+        }
+        // By the rows, not `withAnimation` around Done and Delete: a row can also leave on the
+        // minute, when the clock alone takes it out of the filter.
+        .animation(reduceMotion ? nil : .default, value: screen.rows.map(\.id))
+    }
+}
+
+/// Says nothing matches, never that there are no reminders, and names what's narrowing the list.
+private struct RemindersNoMatchView: View {
+    let chip: RemindersChip?
+    let clear: () -> Void
+
+    var body: some View {
+        ContentUnavailableView {
+            Label {
+                Text("No Matches", comment: "Reminders tab: title when reminders exist but what's narrowing the list leaves none.")
+            } icon: {
+                Image(systemName: "line.3.horizontal.decrease")
+            }
+        } description: {
+            if let chip {
+                Text(chip.noMatchText)
+            }
+        } actions: {
+            Button(action: clear) {
+                Text("Clear Filters", comment: "Reminders tab: the no-match empty state's button that turns off what's narrowing the list.")
+            }
+            .buttonStyle(.bordered)
         }
     }
 }
@@ -214,5 +306,12 @@ private struct RemindersRowView: View {
 
 #Preview("Empty") {
     RemindersTab(state: .ready, path: .constant([]))
+}
+
+#Preview("No match") {
+    List {
+        RemindersNoMatchView(chip: .nudging) {}
+            .listRowBackground(Color.clear)
+    }
 }
 #endif
