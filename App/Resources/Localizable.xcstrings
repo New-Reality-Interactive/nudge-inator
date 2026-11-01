@@ -708,13 +708,13 @@
       "comment" : "Settings: title of the message shown when deleting everything failed."
     },
     "Created" : {
-      "comment" : "Reminders tab's Sort menu: sort by when each reminder was made."
+      "comment" : "Reminders tab's Sort menu: the header of the section that sorts by when each reminder was made."
     },
     "Created, Newest First" : {
-      "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Created, Newest First."
+      "comment" : "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Created, Newest First."
     },
     "Created, Oldest First" : {
-      "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Created, Oldest First."
+      "comment" : "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Created, Oldest First."
     },
     "Custom" : {
       "comment" : "The Repeat page's row that opens the custom repeat page.\nThe reminder form's Repeat row when the repeat is a custom rule.\nTitle of the Custom repeat page."
@@ -814,13 +814,13 @@
       "comment" : "Nudge card: under the title of a reminder with no tags. The placeholder is its due time, such as \"9:00 AM\"."
     },
     "Due Date" : {
-      "comment" : "Reminders tab's Sort menu: sort by the due time each row shows."
+      "comment" : "Reminders tab's Sort menu: the header of the section that sorts by the due time each row shows."
     },
     "Due Date, Earliest First" : {
-      "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Earliest First."
+      "comment" : "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Due Date, Earliest First."
     },
     "Due Date, Latest First" : {
-      "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Latest First."
+      "comment" : "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Due Date, Latest First."
     },
     "Due today with all selected tags" : {
       "comment" : "My Day: under the filter tokens when two or more tags are chosen and Match is All Tags."
@@ -1395,9 +1395,6 @@
     "Opens the reminder's details." : {
       "comment" : "VoiceOver hint on a nudge card's title and on a Now row: tapping it opens the reminder's details."
     },
-    "Order" : {
-      "comment" : "Reminders tab's Sort menu: the name of its choice of order, such as Oldest First."
-    },
     "Pace" : {
       "comment" : "Reminder details, Schedule: how the waits between the reminder's nudges are spaced.\nThe pace choice, in the reminder form and on Settings' Default Pace page: Escalating or Consistent."
     },
@@ -1519,9 +1516,6 @@
     },
     "Sort" : {
       "comment" : "VoiceOver label of the Reminders tab's Sort button, which opens the Sort menu."
-    },
-    "Sort By" : {
-      "comment" : "Reminders tab's Sort menu: the name of its choice of Created or Due Date."
     },
     "Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them." : {
       "comment" : "Reminder details: under Schedule while the reminder is nudging, why five fields can't be edited."

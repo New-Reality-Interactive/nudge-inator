@@ -2,15 +2,15 @@ import NudgeEngine
 import SwiftUI
 
 extension RemindersSort.Field {
-    /// The Sort menu's choice of field.
+    /// The header of the Sort menu's section for this field.
     var title: LocalizedStringResource {
         switch self {
-        case .created: LocalizedStringResource("Created", comment: "Reminders tab's Sort menu: sort by when each reminder was made.")
-        case .dueDate: LocalizedStringResource("Due Date", comment: "Reminders tab's Sort menu: sort by the due time each row shows.")
+        case .created: LocalizedStringResource("Created", comment: "Reminders tab's Sort menu: the header of the section that sorts by when each reminder was made.")
+        case .dueDate: LocalizedStringResource("Due Date", comment: "Reminders tab's Sort menu: the header of the section that sorts by the due time each row shows.")
         }
     }
 
-    /// The Sort menu's choice of order, in this field's words.
+    /// The Sort menu's choice of this field in `order`, in this field's words.
     func title(of order: RemindersSort.Order) -> LocalizedStringResource {
         switch (self, order) {
         case (.created, .ascending): LocalizedStringResource("Oldest First", comment: "Reminders tab's Sort menu, sorted by Created: the reminder made first at the top.")
@@ -22,14 +22,14 @@ extension RemindersSort.Field {
 }
 
 extension RemindersSort {
-    /// The Sort button's VoiceOver value, "Created, Oldest First". A whole phrase for each choice,
-    /// not the menu's two words joined, so a translation can word it as one.
+    /// The Sort button's VoiceOver value and its menu item's label, "Created, Oldest First". A whole
+    /// phrase for each choice, not the menu's two words joined, so a translation can word it as one.
     var accessibilityValue: LocalizedStringResource {
         switch (field, order) {
-        case (.created, .ascending): LocalizedStringResource("Created, Oldest First", comment: "VoiceOver value of the Reminders tab's Sort button: sorted by Created, Oldest First.")
-        case (.created, .descending): LocalizedStringResource("Created, Newest First", comment: "VoiceOver value of the Reminders tab's Sort button: sorted by Created, Newest First.")
-        case (.dueDate, .ascending): LocalizedStringResource("Due Date, Earliest First", comment: "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Earliest First.")
-        case (.dueDate, .descending): LocalizedStringResource("Due Date, Latest First", comment: "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Latest First.")
+        case (.created, .ascending): LocalizedStringResource("Created, Oldest First", comment: "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Created, Oldest First.")
+        case (.created, .descending): LocalizedStringResource("Created, Newest First", comment: "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Created, Newest First.")
+        case (.dueDate, .ascending): LocalizedStringResource("Due Date, Earliest First", comment: "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Due Date, Earliest First.")
+        case (.dueDate, .descending): LocalizedStringResource("Due Date, Latest First", comment: "VoiceOver, the Reminders tab's Sort button's value and its menu item: sorted by Due Date, Latest First.")
         }
     }
 }
@@ -81,27 +81,28 @@ struct RemindersHeaderRow: View {
     }
 }
 
-/// DESIGN.md's `sort-button`: a 44 pt round button that opens the Sort menu, a picker of the field
-/// and one of its order, each with its choice checked as the system draws a picker in a menu. A
-/// choice applies at once; changing the field keeps the order.
+/// DESIGN.md's `sort-button`: a 44 pt round button that opens the Sort menu, a section for each
+/// field with its two orders, the chosen one checked. Any change is one open and one tap: a choice
+/// applies at once and closes the menu.
 private struct RemindersSortButton: View {
     @Binding var sort: RemindersSort
 
     var body: some View {
         Menu {
-            Picker(selection: $sort.field) {
-                ForEach(RemindersSort.Field.allCases, id: \.self) { field in
-                    Text(field.title).tag(field)
+            // Toggles in the menu's sections, not pickers: the system drops the header of a section
+            // that holds a picker, or that a picker holds.
+            ForEach(RemindersSort.Field.allCases, id: \.self) { field in
+                Section {
+                    ForEach(RemindersSort.Order.allCases, id: \.self) { order in
+                        let choice = RemindersSort(field: field, order: order)
+                        Toggle(isOn: isChosen(choice)) {
+                            Text(field.title(of: order))
+                        }
+                        .accessibilityLabel(Text(choice.accessibilityValue))
+                    }
+                } header: {
+                    Text(field.title)
                 }
-            } label: {
-                Text("Sort By", comment: "Reminders tab's Sort menu: the name of its choice of Created or Due Date.")
-            }
-            Picker(selection: $sort.order) {
-                ForEach(RemindersSort.Order.allCases, id: \.self) { order in
-                    Text(sort.field.title(of: order)).tag(order)
-                }
-            } label: {
-                Text("Order", comment: "Reminders tab's Sort menu: the name of its choice of order, such as Oldest First.")
             }
         } label: {
             Image(systemName: "arrow.up.arrow.down")
@@ -115,6 +116,16 @@ private struct RemindersSortButton: View {
         }
         .accessibilityLabel(Text("Sort", comment: "VoiceOver label of the Reminders tab's Sort button, which opens the Sort menu."))
         .accessibilityValue(Text(sort.accessibilityValue))
+    }
+
+    /// Checked while `choice` is the sort, so one item in the whole menu is. A tap on the checked
+    /// one leaves it chosen, as a picker's does.
+    private func isChosen(_ choice: RemindersSort) -> Binding<Bool> {
+        Binding {
+            sort == choice
+        } set: { _ in
+            sort = choice
+        }
     }
 }
 

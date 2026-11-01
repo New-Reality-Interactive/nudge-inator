@@ -12,7 +12,7 @@ public enum ReminderStatus: Equatable, Sendable {
 }
 
 /// How the Reminders tab's list is ordered: the Sort menu's choice.
-public struct RemindersSort: Equatable, Sendable {
+public struct RemindersSort: Hashable, Sendable {
     public var field: Field
     public var order: Order
 
@@ -23,7 +23,6 @@ public struct RemindersSort: Equatable, Sendable {
         case dueDate
     }
 
-    /// Kept when the field changes, so Newest First becomes Latest First.
     public enum Order: String, CaseIterable, Sendable {
         /// Oldest First, or Earliest First.
         case ascending

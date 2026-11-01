@@ -452,17 +452,18 @@ final class ShotsUITests: XCTestCase {
         launch(.app)
         tab("Reminders")
         let sort = app.buttons["Sort"].firstMatch
-        func choose(_ item: String) {
-            sort.tap()
-            pause(0.5)
-            app.buttons[item].firstMatch.tap()
-            pause(0.5)
+        // By its order's words: VoiceOver's label for the item is the whole choice.
+        func item(_ order: String) -> XCUIElement {
+            app.buttons.matching(NSPredicate(format: "label CONTAINS %@", order)).firstMatch
         }
         sort.tap()
         shot("reminders-sort-menu")
-        app.buttons["Newest First"].firstMatch.tap()
+        item("Newest First").tap()
         shot("reminders-newest")
-        choose("Due Date")
+        sort.tap()
+        pause(0.5)
+        item("Latest First").tap()
+        pause(0.5)
         shot("reminders-due-date", pages: 2)
         scrollToTop()
         sort.tap()
