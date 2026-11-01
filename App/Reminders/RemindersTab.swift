@@ -213,8 +213,15 @@ private struct RemindersListView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismissSearch) private var dismissSearch
     @AccessibilityFocusState private var countFocused: Bool
+    @Namespace private var headerID
 
     var body: some View {
+        ScrollViewReader { proxy in
+            list(proxy)
+        }
+    }
+
+    private func list(_ proxy: ScrollViewProxy) -> some View {
         List {
             Section {
                 ForEach(screen.rows) { row in
@@ -228,6 +235,9 @@ private struct RemindersListView: View {
                 if screen.emptyState == .noMatch {
                     RemindersNoMatchView(filter: filter) {
                         clearFilters()
+                        // Where the keyboard or large text meant scrolling to the button, the rows
+                        // come back with the count and chips off screen otherwise.
+                        proxy.scrollTo(headerID, anchor: .top)
                         // Ends the search too, if it's still active, so Cancel and the keyboard go with its text.
                         dismissSearch()
                         countFocused = true
@@ -240,6 +250,7 @@ private struct RemindersListView: View {
                 // no-match empty state, so the chip can be turned off here.
                 RemindersHeaderRow(count: screen.countText, sort: $sort, filter: $filter, countFocus: $countFocused)
                     .textCase(nil)
+                    .id(headerID)
             }
         }
         // By the rows, not `withAnimation` around Done and Delete: a row can also leave on the

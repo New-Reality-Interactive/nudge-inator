@@ -579,10 +579,7 @@ final class ShotsUITests: XCTestCase {
         clearSearch.tap()
         pause(0.8)
         shot("reminders-search-cleared")
-        // Where a small screen had to scroll to the button, the list stays scrolled and the chips
-        // are off screen, so this starts again.
-        launch(.app)
-        tab("Reminders")
+        // Clearing scrolls back to the top, so the chips are on screen.
         app.buttons["Nudging"].firstMatch.tap()
         field.tap()
         field.typeText("zzz")
