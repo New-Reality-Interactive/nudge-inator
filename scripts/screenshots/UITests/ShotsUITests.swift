@@ -445,6 +445,30 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-empty")
     }
 
+    /// Opens a Reminders row's trailing swipe, scrolling to the row first.
+    private func swipe(_ title: String) {
+        scrollToTop()
+        guard let row = scrollTo(title) else {
+            XCTFail("No \(title):\n\(app.debugDescription)")
+            return
+        }
+        // At the largest text four scrolls up can leave the first row under the bar.
+        var tries = 0
+        while row.frame.minY < app.navigationBars.firstMatch.frame.maxY, tries < 8 {
+            scroll(down: false)
+            tries += 1
+        }
+        // With another row's actions still open, the first swipe only closes them.
+        func opened() -> Bool {
+            let delete = app.buttons["Delete"].firstMatch
+            return delete.exists && row.frame.minY...row.frame.maxY ~= delete.frame.midY
+        }
+        for _ in 0..<3 where !opened() {
+            row.swipeLeft()
+            pause(0.8)
+        }
+    }
+
     /// The mockup's `reminders-sort-menu`, `reminders-newest` and `reminders-due-date` (#115): the
     /// header row's Sort menu open at Created, Oldest First, then Newest First chosen, then Due
     /// Date, Latest First chosen, with the menu open again to show it checked.
@@ -472,28 +496,6 @@ final class ShotsUITests: XCTestCase {
     func testRemindersSwipe() {
         launch(.app)
         tab("Reminders")
-        func swipe(_ title: String) {
-            scrollToTop()
-            guard let row = scrollTo(title) else {
-                XCTFail("No \(title):\n\(app.debugDescription)")
-                return
-            }
-            // At the largest text four scrolls up can leave the first row under the bar.
-            var tries = 0
-            while row.frame.minY < app.navigationBars.firstMatch.frame.maxY, tries < 8 {
-                scroll(down: false)
-                tries += 1
-            }
-            // With another row's actions still open, the first swipe only closes them.
-            func opened() -> Bool {
-                let delete = app.buttons["Delete"].firstMatch
-                return delete.exists && row.frame.minY...row.frame.maxY ~= delete.frame.midY
-            }
-            for _ in 0..<3 where !opened() {
-                row.swipeLeft()
-                pause(0.8)
-            }
-        }
         swipe("Take the bins out")
         shot("reminders-swipe-nudging")
         swipe("Water the plants")
@@ -516,6 +518,35 @@ final class ShotsUITests: XCTestCase {
         swipe("Take the bins out")
         app.buttons["Done"].firstMatch.tap()
         shot("reminders-after-done")
+    }
+
+    /// The mockup's `reminders-chip-nudging` and `reminders-chip-missed`, and the no-match empty
+    /// state (#111): each chip on, then every Nudging row marked Done from its swipe under the
+    /// chip, which leaves the chip on with no rows, then Clear Filters.
+    func testRemindersChips() {
+        launch(.app)
+        tab("Reminders")
+        let nudging = app.buttons["Nudging"].firstMatch
+        let missed = app.buttons["Missed"].firstMatch
+        missed.tap()
+        pause(0.5)
+        shot("reminders-chip-missed")
+        scrollToTop()
+        nudging.tap()
+        pause(0.5)
+        shot("reminders-chip-nudging")
+        scrollToTop()
+        for title in ["Take the bins out", "Reply to Alex about the lease"] {
+            swipe(title)
+            app.buttons["Done"].firstMatch.tap()
+            pause(0.8)
+        }
+        shot("reminders-no-match-chip")
+        let clear = app.buttons["Clear Filters"].firstMatch
+        XCTAssert(clear.exists, "No Clear Filters:\n\(app.debugDescription)")
+        clear.tap()
+        pause(0.5)
+        shot("reminders-chips-cleared")
     }
 
     func testSettings() {

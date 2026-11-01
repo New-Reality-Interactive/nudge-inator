@@ -39,6 +39,68 @@ public struct RemindersSort: Equatable, Sendable {
     public static let createdOldestFirst = RemindersSort(field: .created, order: .ascending)
 }
 
+/// A quick filter chip in the Reminders tab's header row. Each is `RemindersFilter`'s Status shown
+/// on screen.
+public enum RemindersChip: CaseIterable, Sendable {
+    case nudging
+    case missed
+
+    var status: RemindersFilter.Status {
+        switch self {
+        case .nudging: .nudging
+        case .missed: .missed
+        }
+    }
+}
+
+/// What the Reminders tab's list is narrowed by. Nothing chosen narrows nothing.
+public struct RemindersFilter: Equatable, Sendable {
+    /// The statuses a reminder may have to be shown: it matches any chosen.
+    public var statuses: Set<Status>
+
+    /// A status as its status label says it, whatever closed the occurrence.
+    public enum Status: Sendable {
+        case nudging
+        case comingUp
+        case paused
+        case done
+        case missed
+        case skipped
+    }
+
+    public init(statuses: Set<Status> = []) {
+        self.statuses = statuses
+    }
+
+    /// The chip that's lit: the one whose status is exactly the Status chosen.
+    public var chip: RemindersChip? {
+        RemindersChip.allCases.first { statuses == [$0.status] }
+    }
+
+    /// Turns the chip on, which sets Status to it and so turns any other off, or turns it off,
+    /// which clears Status.
+    public mutating func toggle(_ chip: RemindersChip) {
+        statuses = self.chip == chip ? [] : [chip.status]
+    }
+
+    func matches(_ status: ReminderStatus) -> Bool {
+        statuses.isEmpty || statuses.contains(Status(status))
+    }
+}
+
+extension RemindersFilter.Status {
+    init(_ status: ReminderStatus) {
+        switch status {
+        case .nudging, .closed(.nudging): self = .nudging
+        case .paused: self = .paused
+        case .comingUp: self = .comingUp
+        case .closed(.done): self = .done
+        case .closed(.missed): self = .missed
+        case .closed(.skipped): self = .skipped
+        }
+    }
+}
+
 /// The Reminders tab's list: every reminder the engine holds, once, in the Sort menu's order.
 public struct RemindersList: Equatable, Sendable {
     public var items: [Item]
@@ -65,8 +127,14 @@ extension Engine {
     /// The Reminders tab's list as it stands now, in `sort`'s order. Reminders that tie (1.2.0's,
     /// which share their migration instant, or two due at one time) keep the engine's order, which
     /// is the order they were added in, under both orders: Newest First isn't Oldest First reversed.
-    public func remindersList(sortedBy sort: RemindersSort = .createdOldestFirst) -> RemindersList {
-        let items = reminders.map(listItem(of:))
+    /// Only reminders `filter` matches are listed, and those in `exempt`, whatever it says: a reminder
+    /// just made shows until the filter next changes (spec #104, Decision 20).
+    public func remindersList(
+        sortedBy sort: RemindersSort = .createdOldestFirst,
+        filteredBy filter: RemindersFilter = RemindersFilter(),
+        alwaysShowing exempt: Set<Reminder.ID> = []
+    ) -> RemindersList {
+        let items = reminders.map(listItem(of:)).filter { filter.matches($0.status) || exempt.contains($0.reminder.id) }
         let key: (RemindersList.Item) -> Date = switch sort.field {
         case .created: \.reminder.createdAt
         case .dueDate: \.dueTime
