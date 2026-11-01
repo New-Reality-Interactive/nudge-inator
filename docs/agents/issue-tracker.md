@@ -17,7 +17,7 @@ GitHub shares one number space across issues and PRs, so a bare `#42` may be eit
 
 ## Features, specs and tickets
 
-- **Feature**: one milestone per feature, titled with its version (`1.2.0`). Its description is the feature's slug (`enhancement-tags`, used in branch names), a blank line, a one-paragraph summary, a blank line, and `Spec: #<n>` once the spec exists. The open feature is the open milestone (AGENTS.md).
+- **Feature**: one milestone per feature, titled with its version (`1.2.0`). Its description is the feature's slug (`enhancement-tags`, used in branch names), a blank line, a one-paragraph summary, a blank line, and `Spec: #<n>` once the spec exists. The open feature is the lowest-numbered open milestone (AGENTS.md). A later feature's milestone can be created, and its spec published there, while an earlier one is still open.
 - **Spec**: one issue labelled `spec`, in the feature's milestone. Its body starts with a `Version:` line and a `Compatibility:` line (`release.md`, Features and versions).
 - **Ticket**: one issue per ticket, a sub-issue of the spec and in the same milestone, numbered by GitHub (`#83`). A ticket starts `ready-for-agent`, or `ready-for-human` when its steps are the developer's.
 - **Blocked by**: GitHub's native issue dependencies: `gh api --method POST repos/New-Reality-Interactive/nudge-inator/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`, where `<blocker-db-id>` is `gh api repos/New-Reality-Interactive/nudge-inator/issues/<n> --jq .id` (the database id, not the `#number`). A ticket is unblocked when every blocker is closed.
@@ -49,7 +49,7 @@ When set to `yes`, PRs run through the same labels and states as issues, using t
 
 ## When a skill says "publish to the issue tracker"
 
-Create a GitHub issue in the open feature's milestone. A spec gets the `spec` label; a ticket becomes a sub-issue of its spec.
+A ticket is a GitHub issue in its spec's milestone, as a sub-issue of the spec. A spec gets the `spec` label and goes in its own feature's milestone.
 
 ## When a skill says "fetch the relevant ticket"
 

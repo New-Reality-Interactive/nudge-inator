@@ -4,7 +4,7 @@
 
 ### Issue tracker
 
-Issues and specs are GitHub issues: one milestone per feature, a `spec` issue with its tickets as sub-issues. See `docs/agents/issue-tracker.md`. The open feature is the open milestone: `gh api 'repos/New-Reality-Interactive/nudge-inator/milestones?state=open' --jq '.[].title'`; its description names the slug and the spec. With none open, a bug found now goes in a patch milestone.
+Issues and specs are GitHub issues: one milestone per feature, a `spec` issue with its tickets as sub-issues. See `docs/agents/issue-tracker.md`. The open feature is the lowest-numbered open milestone: `gh api 'repos/New-Reality-Interactive/nudge-inator/milestones?state=open' --jq '[.[].title] | sort_by(split(".") | map(tonumber)) | first'`; its description names the slug and the spec. A higher open milestone is a later feature, already specced: its spec and tickets go there, and nothing else does. With none open, a bug found now goes in a patch milestone.
 
 ### Releases
 
