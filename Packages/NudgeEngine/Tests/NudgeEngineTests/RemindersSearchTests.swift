@@ -129,13 +129,4 @@ struct RemindersSearchTests {
         #expect(shown.items.count == 1)
         #expect(shown.total == 7)
     }
-
-    /// Decision 20: a reminder just made shows until the search next changes.
-    @Test func aReminderBeingShownPassesWhateverTheSearchSays() {
-        let day = fixture.oneOfEach()
-
-        let shown = day.engine.remindersList(filteredBy: RemindersFilter(search: "dentist"), alwaysShowing: [day.alex.id])
-
-        #expect(shown.items.map(\.reminder.title) == ["Reply to Alex", "Dentist appointment"])
-    }
 }

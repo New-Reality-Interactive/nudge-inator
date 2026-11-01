@@ -26,9 +26,6 @@ struct RemindersTab: View {
     /// What's in the search field, spaces included. `filter` holds it trimmed, so a space typed after
     /// a word doesn't change the list's inputs.
     @State private var searchText = ""
-    /// What the engine held when the filter last changed: `RemindersScreen.list(engine:sort:filter:knownIDs:)`.
-    /// Not taken again on returning to the tab, which doesn't change the filter.
-    @State private var knownIDs: Set<Reminder.ID>?
     /// Set by Clear Filters, whose result VoiceOver reads from the count once focus moves there.
     @State private var skipNextAnnouncement = false
     /// The sort previews show, since they have no app model to keep it.
@@ -43,8 +40,7 @@ struct RemindersTab: View {
                             engine: $0,
                             sort: sort.wrappedValue,
                             filter: filter,
-                            keptOrder: keptOrder?.ids(for: sort.wrappedValue, filter: filter),
-                            knownIDs: knownIDs
+                            keptOrder: keptOrder?.ids(for: sort.wrappedValue, filter: filter)
                         )
                     }
                     if let screen, screen.emptyState != .noReminders {
@@ -74,17 +70,11 @@ struct RemindersTab: View {
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
             }
         }
-        .onAppear {
-            if knownIDs == nil {
-                takeKnownIDs()
-            } else {
-                keepOrder(knownIDs: knownIDs)
-            }
-        }
-        .onChange(of: isChosen) { if isChosen { keepOrder(knownIDs: knownIDs) } }
-        .onChange(of: sort.wrappedValue) { keepOrder(knownIDs: knownIDs) }
+        .onAppear { keepOrder() }
+        .onChange(of: isChosen) { if isChosen { keepOrder() } }
+        .onChange(of: sort.wrappedValue) { keepOrder() }
         .onChange(of: filter) { old, new in
-            let list = takeKnownIDs()
+            let list = keepOrder()
             // Not on each letter typed, as the mockup doesn't: VoiceOver is reading the letters.
             let isTyping = new.search != old.search && !new.search.isEmpty
             if skipNextAnnouncement {
@@ -93,7 +83,7 @@ struct RemindersTab: View {
                 announceCount(of: list)
             }
         }
-        .onChange(of: state) { takeKnownIDs() }
+        .onChange(of: state) { keepOrder() }
     }
 
     private var engine: Engine? {
@@ -129,22 +119,12 @@ struct RemindersTab: View {
     }
 
     /// The rows' order as the engine sorts them now, kept until the list's inputs next change.
-    /// `knownIDs` is passed, not read, since the docs don't say a read of `@State` sees a write
-    /// made earlier in the same `onChange`.
     @discardableResult
-    private func keepOrder(knownIDs: Set<Reminder.ID>?) -> RemindersList? {
+    private func keepOrder() -> RemindersList? {
         let sort = sort.wrappedValue
-        let list = engine.map { RemindersScreen.list(engine: $0, sort: sort, filter: filter, knownIDs: knownIDs) }
+        let list = engine?.remindersList(sortedBy: sort, filteredBy: filter)
         keptOrder = list.map { KeptOrder(sort: sort, filter: filter, ids: $0.items.map(\.reminder.id)) }
         return list
-    }
-
-    /// Takes what the engine holds now as known, and keeps the rows' order under it.
-    @discardableResult
-    private func takeKnownIDs() -> RemindersList? {
-        let known = engine.map { Set($0.reminders.map(\.id)) }
-        knownIDs = known
-        return keepOrder(knownIDs: known)
     }
 
     /// VoiceOver stays on the chip, so it says the new count, as the mockup does. Low priority, so

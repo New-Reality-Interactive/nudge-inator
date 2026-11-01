@@ -146,14 +146,12 @@ extension Engine {
     /// The Reminders tab's list as it stands now, in `sort`'s order. Reminders that tie (1.2.0's,
     /// which share their migration instant, or two due at one time) keep the engine's order, which
     /// is the order they were added in, under both orders: Newest First isn't Oldest First reversed.
-    /// Only reminders `filter` matches are listed, and those in `exempt`, whatever it says: a reminder
-    /// just made shows until the filter next changes (spec #104, Decision 20).
+    /// Only reminders `filter` matches are listed, even one just made (spec #104, Decision 20).
     public func remindersList(
         sortedBy sort: RemindersSort = .createdOldestFirst,
-        filteredBy filter: RemindersFilter = RemindersFilter(),
-        alwaysShowing exempt: Set<Reminder.ID> = []
+        filteredBy filter: RemindersFilter = RemindersFilter()
     ) -> RemindersList {
-        let items = reminders.map(listItem(of:)).filter { filter.matches($0) || exempt.contains($0.reminder.id) }
+        let items = reminders.map(listItem(of:)).filter(filter.matches)
         let key: (RemindersList.Item) -> Date = switch sort.field {
         case .created: \.reminder.createdAt
         case .dueDate: \.dueTime

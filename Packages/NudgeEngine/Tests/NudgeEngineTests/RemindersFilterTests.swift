@@ -8,10 +8,10 @@ import Testing
 struct RemindersFilterTests {
     let fixture = RemindersListTests()
 
-    func titles(_ engine: Engine, _ chip: RemindersChip?, alwaysShowing new: Set<Reminder.ID> = []) -> [String] {
+    func titles(_ engine: Engine, _ chip: RemindersChip?) -> [String] {
         var filter = RemindersFilter()
         if let chip { filter.toggle(chip) }
-        return engine.remindersList(filteredBy: filter, alwaysShowing: new).items.map(\.reminder.title)
+        return engine.remindersList(filteredBy: filter).items.map(\.reminder.title)
     }
 
     @Test func theNudgingChipShowsOnlyNudgingReminders() {
@@ -121,12 +121,5 @@ struct RemindersFilterTests {
 
         #expect(titles(day.engine, .nudging) == [])
         #expect(titles(day.engine, nil).contains("Reply to Alex"))
-    }
-
-    /// Decision 20: a reminder just made shows until the chip next changes.
-    @Test func aReminderBeingShownPassesWhateverTheFilterSays() {
-        let day = fixture.oneOfEach()
-
-        #expect(titles(day.engine, .nudging, alwaysShowing: [day.dentist.id]) == ["Reply to Alex", "Dentist appointment"])
     }
 }

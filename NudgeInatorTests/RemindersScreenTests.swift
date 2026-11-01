@@ -229,19 +229,16 @@ struct RemindersScreenTests {
         #expect(RemindersScreen(engine: day.model.engine, filter: nudging, keptOrder: kept).rows.isEmpty)
     }
 
-    /// Spec #104, Decision 20: until the chip next changes, which takes the known IDs again.
-    @Test func aNewReminderShowsEvenIfTheChipWouldHideItUntilTheChipNextChanges() async throws {
+    /// Spec #104, Decision 20: a reminder shows only if it passes what's narrowing the list, even
+    /// one just made on this tab.
+    @Test func aNewReminderTheChipWouldHideDoesntShow() async throws {
         let day = try await fixture.dayAtOnePM()
-        let known = Set(day.model.engine.reminders.map(\.id))
-        let passport = Reminder(title: "Renew the passport", dueTime: NewYork.local(2026, 10, 30), strength: .gentle)
 
-        day.model.add(passport)
+        day.model.add(Reminder(title: "Renew the passport", dueTime: NewYork.local(2026, 10, 30), strength: .gentle))
 
-        let shown = RemindersScreen(engine: day.model.engine, filter: filter(.nudging), knownIDs: known)
-        #expect(shown.rows.map(\.title) == ["Reply to Alex", "Renew the passport"])
-        #expect(String(localized: shown.countText) == "2 reminders out of 11")
-        let changed = RemindersScreen(engine: day.model.engine, filter: filter(.nudging), knownIDs: Set(day.model.engine.reminders.map(\.id)))
-        #expect(changed.rows.map(\.title) == ["Reply to Alex"])
+        let shown = RemindersScreen(engine: day.model.engine, filter: filter(.nudging))
+        #expect(shown.rows.map(\.title) == ["Reply to Alex"])
+        #expect(String(localized: shown.countText) == "1 reminder out of 11")
     }
 
     @Test func theCountEqualsTheRowsShownUnderASearch() async throws {
@@ -264,18 +261,23 @@ struct RemindersScreenTests {
         #expect(screen.emptyState == .noMatch)
     }
 
-    /// Spec #104, Decision 20: until the search next changes, which takes the known IDs again.
-    @Test func aNewReminderShowsEvenIfTheSearchWouldHideItUntilTheSearchNextChanges() async throws {
+    @Test func aNewReminderTheSearchWouldHideDoesntShow() async throws {
         let day = try await fixture.dayAtOnePM()
-        let known = Set(day.model.engine.reminders.map(\.id))
-        let search = RemindersFilter(search: "alex")
 
         day.model.add(Reminder(title: "Renew the passport", dueTime: NewYork.local(2026, 10, 30), strength: .gentle))
 
-        let shown = RemindersScreen(engine: day.model.engine, filter: search, knownIDs: known)
-        #expect(shown.rows.map(\.title) == ["Reply to Alex", "Renew the passport"])
-        let changed = RemindersScreen(engine: day.model.engine, filter: search, knownIDs: Set(day.model.engine.reminders.map(\.id)))
-        #expect(changed.rows.map(\.title) == ["Reply to Alex"])
+        let shown = RemindersScreen(engine: day.model.engine, filter: RemindersFilter(search: "alex"))
+        #expect(shown.rows.map(\.title) == ["Reply to Alex"])
+        #expect(String(localized: shown.countText) == "1 reminder out of 11")
+    }
+
+    @Test func aNewReminderThatMatchesTheSearchShows() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        day.model.add(Reminder(title: "Call Alex back", dueTime: NewYork.local(2026, 10, 30), strength: .gentle))
+
+        let shown = RemindersScreen(engine: day.model.engine, filter: RemindersFilter(search: "alex"))
+        #expect(shown.rows.map(\.title) == ["Reply to Alex", "Call Alex back"])
     }
 
     /// Whole strings for each case, never built from pieces (CODING_STANDARDS.md). The mockup's

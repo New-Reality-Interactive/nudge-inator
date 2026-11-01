@@ -47,15 +47,14 @@ struct RemindersScreen {
     /// `keptOrder` is the rows' order when the list's inputs (the sort, and the filter's search and
     /// chip) last changed. Sorted by Due Date, Done or going Missed changes a row's due time, so
     /// the rows keep that order rather than move under the person (spec #104, Decision 35). A
-    /// reminder it doesn't hold, added since, goes where the sort puts it. `knownIDs`: see `list`.
+    /// reminder it doesn't hold, added since, goes where the sort puts it.
     init(
         engine: Engine,
         sort: RemindersSort = .createdOldestFirst,
         filter: RemindersFilter = RemindersFilter(),
-        keptOrder: [Reminder.ID]? = nil,
-        knownIDs: Set<Reminder.ID>? = nil
+        keptOrder: [Reminder.ID]? = nil
     ) {
-        let list = Self.list(engine: engine, sort: sort, filter: filter, knownIDs: knownIDs)
+        let list = engine.remindersList(sortedBy: sort, filteredBy: filter)
         let items = keptOrder.map { Self.items(list.items, keeping: $0) } ?? list.items
         total = list.total
         rows = items.map { item in
@@ -68,14 +67,6 @@ struct RemindersScreen {
             )
         }
         emptyState = engine.reminders.isEmpty ? .noReminders : (rows.isEmpty ? .noMatch : nil)
-    }
-
-    /// The engine's list for the screen. `knownIDs` is what the engine held when the filter last
-    /// changed: a reminder it doesn't hold is new, and shows even if the filter would hide it,
-    /// until the filter next changes (spec #104, Decision 20).
-    static func list(engine: Engine, sort: RemindersSort, filter: RemindersFilter, knownIDs: Set<Reminder.ID>?) -> RemindersList {
-        let new = knownIDs.map { known in Set(engine.reminders.map(\.id).filter { !known.contains($0) }) } ?? []
-        return engine.remindersList(sortedBy: sort, filteredBy: filter, alwaysShowing: new)
     }
 
     /// `sorted` in `keptOrder`, without the reminders it no longer holds, and with each one it
