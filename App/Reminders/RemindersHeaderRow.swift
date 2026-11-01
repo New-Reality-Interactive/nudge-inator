@@ -51,9 +51,10 @@ extension RemindersChip {
     }
 }
 
-/// The Reminders list's header row (DESIGN.md, Reminders tab): the count leading, the Sort button
-/// and the chips trailing. When they don't fit side by side, and always at the accessibility sizes,
-/// the controls go under the count, where they wrap, so neither is cut off.
+/// The Reminders list's header row (DESIGN.md, Reminders tab): the count on its own line, then the
+/// chips at the leading edge, wrapping if they must so none is cut off, and the Sort button at the
+/// trailing edge. At the accessibility sizes the Sort button goes on a line of its own: beside it, a
+/// lit chip is too narrow for its word, which breaks mid-word.
 struct RemindersHeaderRow: View {
     let count: LocalizedStringResource
     @Binding var sort: RemindersSort
@@ -62,24 +63,19 @@ struct RemindersHeaderRow: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        if dynamicTypeSize.isAccessibilitySize {
-            stacked
-        } else {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: Design.Spacing.controlGap) {
-                    countText
-                    Spacer(minLength: 0)
-                    controls
-                }
-                stacked
-            }
-        }
-    }
-
-    private var stacked: some View {
         VStack(alignment: .leading, spacing: Design.Spacing.s2) {
             countText
-            controls
+            if dynamicTypeSize.isAccessibilitySize {
+                chips
+                RemindersSortButton(sort: $sort)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            } else {
+                HStack(alignment: .top, spacing: Design.Spacing.s2) {
+                    chips
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    RemindersSortButton(sort: $sort)
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -91,9 +87,8 @@ struct RemindersHeaderRow: View {
             .foregroundStyle(Color(uiColor: .secondaryLabel))
     }
 
-    private var controls: some View {
+    private var chips: some View {
         FlowLayout(spacing: Design.Spacing.s2) {
-            RemindersSortButton(sort: $sort)
             ForEach(RemindersChip.allCases, id: \.self) { chip in
                 RemindersChipButton(chip: chip, isOn: filter.chip == chip) { filter.toggle(chip) }
             }

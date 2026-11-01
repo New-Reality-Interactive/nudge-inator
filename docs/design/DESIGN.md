@@ -414,13 +414,14 @@ except in the tab and navigation bars. Verify names against the mockup.
 - **Search:** the system's search field (`searchable`), always shown under the navigation bar, with
   the prompt "Search titles and notes". The system draws its `magnifyingglass`, its clear button,
   and Cancel while it's focused or has text.
-- **Header row:** the first row of the list, above the rows' group, not in a cell. Leading: the
-  count in `{typography.subhead}` `{colors.secondary-label}`: the reminders shown out of every
-  reminder, in every case, so a filtered list never reads as all of them ("3 reminders out of 14",
-  "14 reminders out of 14"). One string with both numbers, one VoiceOver element.
-  Trailing: the Sort button, then the chips Nudging, Due Today and Missed, `{spacing.2}` apart. It
-  wraps at the default sizes and stacks at the accessibility sizes, never truncating or overlapping
-  the count.
+- **Header row:** the first row of the list, above the rows' group, not in a cell. First line, in
+  every size and orientation: the count in `{typography.subhead}` `{colors.secondary-label}`: the
+  reminders shown out of every reminder, in every case, so a filtered list never reads as all of
+  them ("3 reminders out of 14", "14 reminders out of 14"). One string with both numbers, one
+  VoiceOver element. Under it: the chips Nudging, Due Today and Missed at the leading edge,
+  `{spacing.2}` apart, and the Sort button at the trailing edge of their first line. The chips wrap
+  when they must. At the accessibility sizes the Sort button takes its own line under them, still at
+  the trailing edge, so a chip's word never breaks and nothing truncates or overlaps.
 - **Filter chip:** `filter-chip`, a 44 pt capsule in `{typography.subhead}` semibold. Off: accent text
   on `{colors.tertiary-fill}`. On: `{colors.accent}` fill, `{colors.on-accent}` text and a leading
   `checkmark`, so on and off don't differ by color alone; VoiceOver reads it as a button with the
