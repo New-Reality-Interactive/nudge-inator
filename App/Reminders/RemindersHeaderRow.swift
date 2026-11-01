@@ -59,6 +59,9 @@ struct RemindersHeaderRow: View {
     let count: LocalizedStringResource
     @Binding var sort: RemindersSort
     @Binding var filter: RemindersFilter
+    /// Lets the screen put VoiceOver on the count, which reads the new result when the control that
+    /// changed it (Clear Filters) has left the screen. Previews have no screen to do that.
+    var countFocus: AccessibilityFocusState<Bool>.Binding?
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -80,11 +83,17 @@ struct RemindersHeaderRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    @ViewBuilder
     private var countText: some View {
-        Text(count)
+        let text = Text(count)
             .font(.subheadline)
             .monospacedDigit()
             .foregroundStyle(Color(uiColor: .secondaryLabel))
+        if let countFocus {
+            text.accessibilityFocused(countFocus)
+        } else {
+            text
+        }
     }
 
     private var chips: some View {

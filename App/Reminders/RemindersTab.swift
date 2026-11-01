@@ -26,6 +26,8 @@ struct RemindersTab: View {
     /// What the engine held when the filter last changed: `RemindersScreen.list(engine:sort:filter:knownIDs:)`.
     /// Not taken again on returning to the tab, which doesn't change the filter.
     @State private var knownIDs: Set<Reminder.ID>?
+    /// Set by Clear Filters, whose result VoiceOver reads from the count once focus moves there.
+    @State private var skipNextAnnouncement = false
     /// The sort previews show, since they have no app model to keep it.
     @State private var previewSort = RemindersSort.createdOldestFirst
 
@@ -47,6 +49,11 @@ struct RemindersTab: View {
                             screen: screen,
                             sort: sort.transaction(Self.noAnimation),
                             filter: $filter.transaction(Self.noAnimation),
+                            clearFilters: {
+                                // Focus goes to the count, which reads the result itself.
+                                skipNextAnnouncement = true
+                                filter = RemindersFilter()
+                            },
                             openDetails: { path.append(OpenedReminder(id: $0)) },
                             markDone: { model?.markDone($0) },
                             delete: { model?.delete($0) }
@@ -72,7 +79,12 @@ struct RemindersTab: View {
         .onChange(of: isChosen) { if isChosen { keepOrder(knownIDs: knownIDs) } }
         .onChange(of: sort.wrappedValue) { keepOrder(knownIDs: knownIDs) }
         .onChange(of: filter) {
-            if let list = takeKnownIDs() { announceCount(of: list) }
+            let list = takeKnownIDs()
+            if skipNextAnnouncement {
+                skipNextAnnouncement = false
+            } else if let list {
+                announceCount(of: list)
+            }
         }
         .onChange(of: state) { takeKnownIDs() }
     }
@@ -156,11 +168,13 @@ private struct RemindersListView: View {
     let screen: RemindersScreen
     @Binding var sort: RemindersSort
     @Binding var filter: RemindersFilter
+    let clearFilters: () -> Void
     let openDetails: (Reminder.ID) -> Void
     let markDone: (Reminder.ID) -> Void
     let delete: (Reminder.ID) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AccessibilityFocusState private var countFocused: Bool
 
     var body: some View {
         List {
@@ -174,14 +188,17 @@ private struct RemindersListView: View {
                     )
                 }
                 if screen.emptyState == .noMatch {
-                    RemindersNoMatchView(chip: filter.chip) { filter = RemindersFilter() }
+                    RemindersNoMatchView(chip: filter.chip) {
+                        clearFilters()
+                        countFocused = true
+                    }
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
                 }
             } header: {
                 // Above the rows' group, not in a cell, as the mockup draws it. It stays above the
                 // no-match empty state, so the chip can be turned off here.
-                RemindersHeaderRow(count: screen.countText, sort: $sort, filter: $filter)
+                RemindersHeaderRow(count: screen.countText, sort: $sort, filter: $filter, countFocus: $countFocused)
                     .textCase(nil)
             }
         }
