@@ -57,6 +57,11 @@ public enum RemindersChip: CaseIterable, Sendable {
 public struct RemindersFilter: Equatable, Sendable {
     /// The statuses a reminder may have to be shown: it matches any chosen.
     public var statuses: Set<Status>
+    /// The phrase a reminder's title or notes must contain, without leading or trailing whitespace,
+    /// so a space typed after a word doesn't change the filter. Empty narrows nothing.
+    public var search: String {
+        didSet { search = Self.trimmed(search) }
+    }
 
     /// A status as its status label says it, whatever closed the occurrence.
     public enum Status: Sendable {
@@ -68,8 +73,9 @@ public struct RemindersFilter: Equatable, Sendable {
         case skipped
     }
 
-    public init(statuses: Set<Status> = []) {
+    public init(statuses: Set<Status> = [], search: String = "") {
         self.statuses = statuses
+        self.search = Self.trimmed(search)
     }
 
     /// The chip that's lit: the one whose status is exactly the Status chosen.
@@ -83,8 +89,21 @@ public struct RemindersFilter: Equatable, Sendable {
         statuses = self.chip == chip ? [] : [chip.status]
     }
 
-    func matches(_ status: ReminderStatus) -> Bool {
+    func matches(_ item: RemindersList.Item) -> Bool {
+        matches(item.status) && matchesSearch(item.reminder)
+    }
+
+    private func matches(_ status: ReminderStatus) -> Bool {
         statuses.isEmpty || statuses.contains(Status(status))
+    }
+
+    /// Ignores case and diacritics. A tag's name isn't searched.
+    private func matchesSearch(_ reminder: Reminder) -> Bool {
+        search.isEmpty || reminder.title.localizedStandardContains(search) || reminder.notes.localizedStandardContains(search)
+    }
+
+    private static func trimmed(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 
@@ -134,7 +153,7 @@ extension Engine {
         filteredBy filter: RemindersFilter = RemindersFilter(),
         alwaysShowing exempt: Set<Reminder.ID> = []
     ) -> RemindersList {
-        let items = reminders.map(listItem(of:)).filter { filter.matches($0.status) || exempt.contains($0.reminder.id) }
+        let items = reminders.map(listItem(of:)).filter { filter.matches($0) || exempt.contains($0.reminder.id) }
         let key: (RemindersList.Item) -> Date = switch sort.field {
         case .created: \.reminder.createdAt
         case .dueDate: \.dueTime

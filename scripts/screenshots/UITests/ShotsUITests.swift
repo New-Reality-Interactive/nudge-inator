@@ -458,6 +458,13 @@ final class ShotsUITests: XCTestCase {
             scroll(down: false)
             tries += 1
         }
+        // A swipe that starts behind the tab bar moves the tab bar's selection instead.
+        let tabBar = app.tabBars.firstMatch
+        tries = 0
+        while tabBar.exists, row.frame.midY > tabBar.frame.minY, tries < 4 {
+            scroll(down: true)
+            tries += 1
+        }
         // With another row's actions still open, the first swipe only closes them.
         func opened() -> Bool {
             let delete = app.buttons["Delete"].firstMatch
@@ -542,11 +549,50 @@ final class ShotsUITests: XCTestCase {
             pause(0.8)
         }
         shot("reminders-no-match-chip")
-        let clear = app.buttons["Clear Filters"].firstMatch
-        XCTAssert(clear.exists, "No Clear Filters:\n\(app.debugDescription)")
+        // At the largest text, under the search field, the button starts below the screen.
+        guard let clear = scrollTo("Clear Filters") else {
+            XCTFail("No Clear Filters:\n\(app.debugDescription)")
+            return
+        }
         clear.tap()
         pause(0.5)
         shot("reminders-chips-cleared")
+    }
+
+    /// The mockup's `reminders-search` (#112): the field empty under the title, with text, then a
+    /// search that finds nothing, alone and under a chip, each cleared from the empty state's button.
+    func testRemindersSearch() {
+        launch(.app)
+        tab("Reminders")
+        shot("reminders-search-empty")
+        let field = app.searchFields.firstMatch
+        XCTAssert(field.waitForExistence(timeout: 5), "No search field:\n\(app.debugDescription)")
+        field.tap()
+        field.typeText("pill")
+        pause(0.5)
+        shot("reminders-search-text")
+        field.typeText("zzz")
+        pause(0.5)
+        shot("reminders-no-match-search")
+        let clearSearch = app.buttons["Clear Search"].firstMatch
+        XCTAssert(clearSearch.exists, "No Clear Search:\n\(app.debugDescription)")
+        clearSearch.tap()
+        pause(0.8)
+        shot("reminders-search-cleared")
+        // Where a small screen had to scroll to the button, the list stays scrolled and the chips
+        // are off screen, so this starts again.
+        launch(.app)
+        tab("Reminders")
+        app.buttons["Nudging"].firstMatch.tap()
+        field.tap()
+        field.typeText("zzz")
+        pause(0.5)
+        shot("reminders-no-match-search-chip")
+        let clearBoth = app.buttons["Clear Search and Filters"].firstMatch
+        XCTAssert(clearBoth.exists, "No Clear Search and Filters:\n\(app.debugDescription)")
+        clearBoth.tap()
+        pause(0.8)
+        shot("reminders-search-chip-cleared")
     }
 
     func testSettings() {

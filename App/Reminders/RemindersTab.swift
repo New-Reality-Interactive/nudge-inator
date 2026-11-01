@@ -9,7 +9,7 @@ import SwiftUI
 /// was read, so Done or going Missed doesn't move a row sorted by Due Date. Pushing details keeps it;
 /// leaving the tab and coming back sorts again.
 ///
-/// The filter is screen state, so a launch resets it and Back from details keeps it.
+/// The filter, search included, is screen state, so a launch resets it and Back from details keeps it.
 struct RemindersTab: View {
     let state: ScreenState
     /// The reminders whose details are pushed on Reminders.
@@ -23,6 +23,9 @@ struct RemindersTab: View {
     @Environment(AppModel.self) private var model: AppModel?
     @State private var keptOrder: KeptOrder?
     @State private var filter = RemindersFilter()
+    /// What's in the search field, spaces included. `filter` holds it trimmed, so a space typed after
+    /// a word doesn't change the list's inputs.
+    @State private var searchText = ""
     /// What the engine held when the filter last changed: `RemindersScreen.list(engine:sort:filter:knownIDs:)`.
     /// Not taken again on returning to the tab, which doesn't change the filter.
     @State private var knownIDs: Set<Reminder.ID>?
@@ -52,6 +55,7 @@ struct RemindersTab: View {
                             clearFilters: {
                                 // Focus goes to the count, which reads the result itself.
                                 skipNextAnnouncement = true
+                                searchText = ""
                                 filter = RemindersFilter()
                             },
                             openDetails: { path.append(OpenedReminder(id: $0)) },
@@ -63,6 +67,7 @@ struct RemindersTab: View {
                     }
                 }
             }
+            .modifier(RemindersSearchField(isShown: engine?.reminders.isEmpty == false, text: searchField))
             .navigationTitle(Text(AppTab.reminders.title))
             .reminderDetailsDestination()
             .toolbar {
@@ -78,11 +83,13 @@ struct RemindersTab: View {
         }
         .onChange(of: isChosen) { if isChosen { keepOrder(knownIDs: knownIDs) } }
         .onChange(of: sort.wrappedValue) { keepOrder(knownIDs: knownIDs) }
-        .onChange(of: filter) {
+        .onChange(of: filter) { old, new in
             let list = takeKnownIDs()
+            // Not on each letter typed, as the mockup doesn't: VoiceOver is reading the letters.
+            let isTyping = new.search != old.search && !new.search.isEmpty
             if skipNextAnnouncement {
                 skipNextAnnouncement = false
-            } else if let list {
+            } else if !isTyping, let list {
                 announceCount(of: list)
             }
         }
@@ -100,6 +107,17 @@ struct RemindersTab: View {
         transaction.disablesAnimations = true
         return transaction
     }()
+
+    /// Typing redraws the list at once, as a chip does.
+    private var searchField: Binding<String> {
+        Binding {
+            searchText
+        } set: {
+            searchText = $0
+            filter.search = $0
+        }
+        .transaction(Self.noAnimation)
+    }
 
     /// The model's, which outlives a relaunch, or the previews' own.
     private var sort: Binding<RemindersSort> {
@@ -164,6 +182,25 @@ struct RemindersTab: View {
     }
 }
 
+/// The search field under the title, while there's anything to search: the no-reminders empty state
+/// has none, as the mockup draws it.
+private struct RemindersSearchField: ViewModifier {
+    let isShown: Bool
+    @Binding var text: String
+
+    func body(content: Content) -> some View {
+        if isShown {
+            content.searchable(
+                text: $text,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: Text("Search titles and notes", comment: "Reminders tab: the search field's prompt.")
+            )
+        } else {
+            content
+        }
+    }
+}
+
 private struct RemindersListView: View {
     let screen: RemindersScreen
     @Binding var sort: RemindersSort
@@ -174,6 +211,7 @@ private struct RemindersListView: View {
     let delete: (Reminder.ID) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dismissSearch) private var dismissSearch
     @AccessibilityFocusState private var countFocused: Bool
 
     var body: some View {
@@ -188,8 +226,10 @@ private struct RemindersListView: View {
                     )
                 }
                 if screen.emptyState == .noMatch {
-                    RemindersNoMatchView(chip: filter.chip) {
+                    RemindersNoMatchView(filter: filter) {
                         clearFilters()
+                        // Ends the search too, if it's still active, so Cancel and the keyboard go with its text.
+                        dismissSearch()
                         countFocused = true
                     }
                         .listRowBackground(Color.clear)
@@ -210,23 +250,23 @@ private struct RemindersListView: View {
 
 /// Says nothing matches, never that there are no reminders, and names what's narrowing the list.
 private struct RemindersNoMatchView: View {
-    let chip: RemindersChip?
+    let filter: RemindersFilter
     let clear: () -> Void
 
     var body: some View {
         ContentUnavailableView {
             Label {
-                Text("No Matches", comment: "Reminders tab: title when reminders exist but what's narrowing the list leaves none.")
+                Text(filter.noMatchTitle)
             } icon: {
-                Image(systemName: "line.3.horizontal.decrease")
+                Image(systemName: filter.noMatchSystemImage)
             }
         } description: {
-            if let chip {
-                Text(chip.noMatchText)
+            if let text = filter.noMatchText {
+                Text(text)
             }
         } actions: {
             Button(action: clear) {
-                Text("Clear Filters", comment: "Reminders tab: the no-match empty state's button that turns off what's narrowing the list.")
+                Text(filter.noMatchClearTitle)
             }
             .buttonStyle(.bordered)
         }
@@ -325,9 +365,23 @@ private struct RemindersRowView: View {
     RemindersTab(state: .ready, path: .constant([]))
 }
 
-#Preview("No match") {
+#Preview("No match, chip") {
     List {
-        RemindersNoMatchView(chip: .nudging) {}
+        RemindersNoMatchView(filter: RemindersFilter(statuses: [.nudging])) {}
+            .listRowBackground(Color.clear)
+    }
+}
+
+#Preview("No match, search") {
+    List {
+        RemindersNoMatchView(filter: RemindersFilter(search: "zebra")) {}
+            .listRowBackground(Color.clear)
+    }
+}
+
+#Preview("No match, search and chip") {
+    List {
+        RemindersNoMatchView(filter: RemindersFilter(statuses: [.missed], search: "zebra")) {}
             .listRowBackground(Color.clear)
     }
 }

@@ -243,4 +243,62 @@ struct RemindersScreenTests {
         let changed = RemindersScreen(engine: day.model.engine, filter: filter(.nudging), knownIDs: Set(day.model.engine.reminders.map(\.id)))
         #expect(changed.rows.map(\.title) == ["Reply to Alex"])
     }
+
+    @Test func theCountEqualsTheRowsShownUnderASearch() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        let screen = RemindersScreen(engine: day.model.engine, filter: RemindersFilter(search: "alex"))
+
+        #expect(screen.rows.map(\.title) == ["Reply to Alex"])
+        #expect(String(localized: screen.countText) == "1 reminder out of 10")
+        #expect(screen.emptyState == nil)
+    }
+
+    @Test func aSearchThatFindsNothingLeavesTheNoMatchEmptyState() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        let screen = RemindersScreen(engine: day.model.engine, filter: RemindersFilter(search: "zebra"))
+
+        #expect(screen.rows.isEmpty)
+        #expect(String(localized: screen.countText) == "0 reminders out of 10")
+        #expect(screen.emptyState == .noMatch)
+    }
+
+    /// Spec #104, Decision 20: until the search next changes, which takes the known IDs again.
+    @Test func aNewReminderShowsEvenIfTheSearchWouldHideItUntilTheSearchNextChanges() async throws {
+        let day = try await fixture.dayAtOnePM()
+        let known = Set(day.model.engine.reminders.map(\.id))
+        let search = RemindersFilter(search: "alex")
+
+        day.model.add(Reminder(title: "Renew the passport", dueTime: NewYork.local(2026, 10, 30), strength: .gentle))
+
+        let shown = RemindersScreen(engine: day.model.engine, filter: search, knownIDs: known)
+        #expect(shown.rows.map(\.title) == ["Reply to Alex", "Renew the passport"])
+        let changed = RemindersScreen(engine: day.model.engine, filter: search, knownIDs: Set(day.model.engine.reminders.map(\.id)))
+        #expect(changed.rows.map(\.title) == ["Reply to Alex"])
+    }
+
+    /// Whole strings for each case, never built from pieces (CODING_STANDARDS.md). The mockup's
+    /// `noMatch()` draws the same three.
+    @Test func theNoMatchWordingFollowsTheSearchAndTheChip() {
+        let chip = filter(.nudging)
+        let search = RemindersFilter(search: "zebra")
+        let both = RemindersFilter(statuses: [.missed], search: "zebra")
+
+        #expect(String(localized: chip.noMatchTitle) == "No Matches")
+        #expect(chip.noMatchText.map { String(localized: $0) } == "No Nudging reminders.")
+        #expect(String(localized: chip.noMatchClearTitle) == "Clear Filters")
+
+        #expect(String(localized: search.noMatchTitle) == "No Results for “zebra”")
+        #expect(search.noMatchText.map { String(localized: $0) } == "Check the spelling or try a new search.")
+        #expect(String(localized: search.noMatchClearTitle) == "Clear Search")
+
+        #expect(String(localized: both.noMatchTitle) == "No Results for “zebra”")
+        #expect(both.noMatchText.map { String(localized: $0) } == "No Missed reminders match this search.")
+        #expect(String(localized: both.noMatchClearTitle) == "Clear Search and Filters")
+    }
+
+    @Test func theNoMatchTitleQuotesTheSearchTrimmed() {
+        #expect(String(localized: RemindersFilter(search: "  zebra ").noMatchTitle) == "No Results for “zebra”")
+    }
 }

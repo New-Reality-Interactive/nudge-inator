@@ -44,8 +44,8 @@ struct RemindersScreen {
         LocalizedStringResource("\(shown) reminders out of \(total)", comment: "Reminders tab: the header row's count, in every case, even with nothing narrowing the list. 1: the reminders shown. 2: every reminder.")
     }
 
-    /// `keptOrder` is the rows' order when the list's inputs (the sort, and later search, chip and
-    /// filters) last changed. Sorted by Due Date, Done or going Missed changes a row's due time, so
+    /// `keptOrder` is the rows' order when the list's inputs (the sort, and the filter's search and
+    /// chip) last changed. Sorted by Due Date, Done or going Missed changes a row's due time, so
     /// the rows keep that order rather than move under the person (spec #104, Decision 35). A
     /// reminder it doesn't hold, added since, goes where the sort puts it. `knownIDs`: see `list`.
     init(
@@ -88,5 +88,40 @@ struct RemindersScreen {
             items.insert(item, at: min(index, items.count))
         }
         return items
+    }
+}
+
+/// The no-match empty state's wording, which names what's narrowing the list. Each case is a whole
+/// string, as the mockup's `noMatch()` draws them.
+extension RemindersFilter {
+    var noMatchTitle: LocalizedStringResource {
+        if search.isEmpty {
+            LocalizedStringResource("No Matches", comment: "Reminders tab: title when reminders exist but what's narrowing the list leaves none.")
+        } else {
+            LocalizedStringResource("No Results for “\(search)”", comment: "Reminders tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces.")
+        }
+    }
+
+    /// The line under the title, or `nil` when nothing names what's narrowing the list.
+    var noMatchText: LocalizedStringResource? {
+        switch (chip, search.isEmpty) {
+        case (let chip?, true): chip.noMatchText
+        case (let chip?, false): chip.noMatchSearchText
+        case (nil, false): LocalizedStringResource("Check the spelling or try a new search.", comment: "Reminders tab: under the title when a search alone finds nothing.")
+        case (nil, true): nil
+        }
+    }
+
+    /// The label of the button that turns off whatever's narrowing the list.
+    var noMatchClearTitle: LocalizedStringResource {
+        switch (statuses.isEmpty, search.isEmpty) {
+        case (true, false): LocalizedStringResource("Clear Search", comment: "Reminders tab: the no-match empty state's button when only a search is narrowing the list.")
+        case (false, false): LocalizedStringResource("Clear Search and Filters", comment: "Reminders tab: the no-match empty state's button when a search and filters are narrowing the list.")
+        default: LocalizedStringResource("Clear Filters", comment: "Reminders tab: the no-match empty state's button that turns off what's narrowing the list.")
+        }
+    }
+
+    var noMatchSystemImage: String {
+        search.isEmpty ? "line.3.horizontal.decrease" : "magnifyingglass"
     }
 }

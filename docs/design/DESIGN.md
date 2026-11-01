@@ -411,8 +411,9 @@ except in the tab and navigation bars. Verify names against the mockup.
   doesn't scroll back and move the rows.
 
 ### Reminders tab
-- **Search:** the system's search field (`searchable`), always shown under the navigation bar, with
-  the prompt "Search titles and notes". The system draws its `magnifyingglass`, its clear button,
+- **Search:** the system's search field (`searchable`), always shown under the navigation bar while
+  there are reminders (the no-reminders empty state has none), with the prompt "Search titles and
+  notes". The system draws its `magnifyingglass`, its clear button,
   and Cancel while it's focused or has text.
 - **Header row:** the first row of the list, above the rows' group, not in a cell. First line, in
   every size and orientation: the count in `{typography.subhead}` `{colors.secondary-label}`: the

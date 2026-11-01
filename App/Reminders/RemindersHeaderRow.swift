@@ -49,6 +49,14 @@ extension RemindersChip {
         case .missed: LocalizedStringResource("No Missed reminders.", comment: "Reminders tab: under the title when the Missed chip leaves nothing.")
         }
     }
+
+    /// The no-match empty state's line while this chip and a search are what's narrowing the list.
+    var noMatchSearchText: LocalizedStringResource {
+        switch self {
+        case .nudging: LocalizedStringResource("No Nudging reminders match this search.", comment: "Reminders tab: under the title when a search finds nothing under the Nudging chip.")
+        case .missed: LocalizedStringResource("No Missed reminders match this search.", comment: "Reminders tab: under the title when a search finds nothing under the Missed chip.")
+        }
+    }
 }
 
 /// The Reminders list's header row (DESIGN.md, Reminders tab): the count on its own line, then the
