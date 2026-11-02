@@ -75,11 +75,12 @@ struct RemindersTab: View {
         .onChange(of: sort.wrappedValue) { keepOrder() }
         .onChange(of: filter) { old, new in
             let list = keepOrder()
-            // Not on each letter typed, as the mockup doesn't: VoiceOver is reading the letters.
-            let isTyping = new.search != old.search && !new.search.isEmpty
+            // Not for the search's text: while typing VoiceOver is reading the letters, and when the
+            // search ends it moves to the count, which reads the result and would cut this off.
+            let isSearchText = new.search != old.search
             if skipNextAnnouncement {
                 skipNextAnnouncement = false
-            } else if !isTyping, let list {
+            } else if !isSearchText, let list {
                 announceCount(of: list)
             }
         }
@@ -192,6 +193,7 @@ private struct RemindersListView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dismissSearch) private var dismissSearch
+    @Environment(\.isSearching) private var isSearching
     @AccessibilityFocusState private var countFocused: Bool
     @Namespace private var headerID
 
@@ -233,6 +235,9 @@ private struct RemindersListView: View {
                     .id(headerID)
             }
         }
+        // Cancel moves VoiceOver to the bar's New button, which cut the count's announcement off (seen
+        // on the iPhone in #112), so it goes to the count, as Clear Search does.
+        .onChange(of: isSearching) { if !isSearching { countFocused = true } }
         // By the rows, not `withAnimation` around Done and Delete: a row can also leave on the
         // minute, when the clock alone takes it out of the filter.
         .animation(reduceMotion ? nil : .default, value: screen.rows.map(\.id))
