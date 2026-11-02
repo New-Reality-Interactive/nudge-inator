@@ -893,21 +893,9 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .sfield input:focus { outline: none; }
 .sfield:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
 .sfield .sclear { display: grid; place-items: center; min-width: 32px; min-height: 32px; border: 0; background: none; color: var(--secondary-label); cursor: pointer; padding: 0; }
-/* The header row: the count at the leading edge and the Sort button at the trailing edge, on one
-   line. At the accessibility sizes they stack, the Sort button still at the trailing edge, so nothing
-   is cut off and a later control can join it. */
+/* The header row: the count alone. The Sort button is a bar button. */
 .remhead { display: flex; flex-direction: column; gap: 8px; margin: 0 16px 12px; }
-.remline { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.remline .sortbtn { flex: none; }
-:root[data-type^="ax"] .remline { flex-direction: column; align-items: stretch; }
-:root[data-type^="ax"] .remline .sortbtn { align-self: flex-end; }
 .remcount { font: var(--subhead); letter-spacing: var(--subhead-track); margin: 0; color: var(--secondary-label); font-variant-numeric: tabular-nums; }
-/* Choice B for a search with filters on: the bar is gone, so a line under the count says so. */
-.remnote { display: block; }
-/* The Sort button: a round 44 pt button with arrow.up.arrow.down. It opens the Sort menu. */
-.sortbtn { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 99px; background: var(--tertiary-system-fill); color: var(--accent); cursor: pointer; padding: 0; }
-:root[data-type^="ax"] .sortbtn { width: auto; height: auto; min-width: 44px; min-height: 44px; padding: 6px; }
-:root[data-contrast="more"] .sortbtn { box-shadow: inset 0 0 0 1px var(--system-gray); }
 /* A Reminders row: due time, title and tags, then the status label. */
 .remrow .cell .time small { white-space: nowrap; }
 /* Two trailing swipe actions: Done (Nudging rows only) at the edge and Delete beside it. */
@@ -1038,9 +1026,6 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <button type="button" class="cbtn" id="c-rem-swipe-o">Show the swipe on a Coming up row</button>
       <button type="button" class="cbtn" id="c-rem-leave">Status of Nudging on, then show a row's swipe</button>
       <p class="why">Tap Done: under a Status of Nudging the row animates out and the count drops. With no filter on, the row stays where it is with its new status label.</p>
-      <label for="c-rem-search">During a search, with filters on (#113)</label>
-      <select id="c-rem-search" autocomplete="off"><option value="a">A: the bar stays, with the Filter badge</option><option value="b">B: the bar goes; a line under the count</option></select>
-      <p class="why">Type in the search field with a filter applied to see it.</p>
       <button type="button" class="cbtn" id="c-rem-none">No reminders at all</button>
       <p class="why">Reset the mockup brings the reminders back.</p>
     </fieldset>
@@ -1890,8 +1875,8 @@ function dayTrail(it) {
 }
 
 /* ============ Reminders tab (#107) ============
-   Every reminder in any state, by creation date or due date. The header row holds the count and the Sort
-   button; Search sits under the bar; Filter and New are bar buttons. Search and the sheet's filters
+   Every reminder in any state, by creation date or due date. The header row holds the count; Search sits
+   under the bar; Filter, Sort and New are bar buttons. Search and the sheet's filters
    are screen state that a launch resets. The sort direction is a setting kept
    across launches, like the Default pace, and Delete All Data sets it back to oldest first.
    Narrowing: search and every sheet section all apply together. */
@@ -1982,10 +1967,11 @@ function remFilterButton() {
   if (!n) return `<button type="button" class="btn bar icon glass" data-remfilter aria-haspopup="${popup}" aria-label="Filter">${icon}</button>`;
   return `<button type="button" class="btn bar icon glass filter-on" data-remfilter aria-haspopup="menu" aria-label="Filter, ${plural(n, "filter")} on">${icon}<span class="bar-badge" aria-hidden="true">${n}</span></button>`;
 }
-/* The Sort button: label "Sort", value the choice ("Created, Oldest First"). It opens the Sort menu. */
+/* The Sort button: a bar button, monochrome like New, between Filter and New. Label "Sort", value
+   the choice ("Created, Oldest First"). It opens the Sort menu. */
 function sortButton() {
   const v = sortValue(state.rems.sort);
-  return `<button type="button" class="sortbtn" data-remsort aria-haspopup="menu" aria-label="Sort, ${v}" title="Sort: ${v}">${I("arrow.up.arrow.down", 22)}</button>`;
+  return `<button type="button" class="btn bar icon glass" data-remsort aria-haspopup="menu" aria-label="Sort, ${v}" title="Sort: ${v}">${I("arrow.up.arrow.down", 24, true)}</button>`;
 }
 /* The Sort menu: one picker of four choices, in a section headed Created and one headed Due Date,
    each choice naming its order, the chosen one checked. One tap applies a choice, which is
@@ -2001,12 +1987,9 @@ function showSortMenu(btn) {
       ...[["asc", up], ["desc", down]].map(([dir, label]) => ({ label, aria: `${head}, ${label}`, checked: s.by === by && s.dir === dir, run: set({ by, dir }) }))]),
     { label: "Cancel", role: "cancel" }] });
 }
-/* The header row: the list's first row, above its rows. Under choice B, a search with filters on
-   adds a line, since the bar and its badge are gone. */
-const remSearchHidesBar = () => prefs.remSearch === "b" && state.rems.q.trim() && remBadge() > 0;
+/* The header row: the list's first row, above its rows. */
 function remHeader(n) {
-  const note = remSearchHidesBar() ? ` <span class="remnote">${plural(remBadge(), "filter")} on</span>` : "";
-  return `<div class="remhead"><div class="remline"><p class="remcount" id="rem-count">${remCount(n)}${note}</p>${sortButton()}</div></div>`;
+  return `<div class="remhead"><p class="remcount" id="rem-count">${remCount(n)}</p></div>`;
 }
 /* Search, under the navigation bar. It matches titles and notes, not tags. */
 function searchBar() {
@@ -2047,7 +2030,7 @@ function viewRems() {
   }
   const rows = remRows();
   const list = rows.length ? `<div class="sec"><ul class="list remrow" aria-label="Reminders">${rows.map(remListRow).join("")}</ul></div>` : noMatch();
-  return `${remSearchHidesBar() ? "" : navBar({ title: "Reminders", trailing: remFilterButton() + plusBtn })}${searchBar()}${remHeader(rows.length)}${list}`;
+  return `${navBar({ title: "Reminders", trailing: remFilterButton() + sortButton() + plusBtn })}${searchBar()}${remHeader(rows.length)}${list}`;
 }
 /* Done from a row's swipe: the same act as Done on Now. The row stays where it is with its new
    status label, unless an active status filter now leaves it out: then it animates out, the count
@@ -3690,7 +3673,6 @@ function revealSwipe(rid) {
 }
 document.getElementById("c-rem-swipe-n").addEventListener("click", () => { showRemsTab(); revealSwipe(firstRow("NUDGING")); });
 document.getElementById("c-rem-swipe-o").addEventListener("click", () => { showRemsTab(); revealSwipe(firstRow("UPCOMING")); });
-document.getElementById("c-rem-search").addEventListener("change", (e) => { prefs.remSearch = e.target.value; state.keepScroll = true; render(); });
 document.getElementById("c-rem-leave").addEventListener("click", () => {
   state.rems = { ...newRemsState(), sort: state.rems.sort };
   state.rems.filter.status = ["NUDGING"];
