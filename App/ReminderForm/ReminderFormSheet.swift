@@ -9,7 +9,6 @@ struct ReminderFormSheet: View {
     @Bindable var form: ReminderForm
     @Environment(AppModel.self) private var model: AppModel?
     @Environment(\.dismiss) private var dismiss
-    @State private var isConfirmingDiscard = false
     /// The pages pushed over the form. The stack removes a page when Back or a swipe pops it, so
     /// the Repeat page's Back is when `.repeat` leaves the path (ticket 22).
     @State private var pages: [ReminderFormPage] = []
@@ -55,27 +54,7 @@ struct ReminderFormSheet: View {
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button(role: .cancel) {
-                if form.hasChanges { isConfirmingDiscard = true } else { dismiss() }
-            } label: {
-                Label {
-                    Text("Cancel", comment: "The form's cancel button (an xmark).")
-                } icon: {
-                    Image(systemName: "xmark")
-                }
-            }
-            .confirmationDialog(Text("Discard your changes?", comment: "Asked when cancelling a reminder form with changes."),
-                                isPresented: $isConfirmingDiscard, titleVisibility: .hidden) {
-                Button(role: .destructive) {
-                    dismiss()
-                } label: {
-                    Text("Discard Changes", comment: "Throws away the reminder form's changes and closes it.")
-                }
-                Button(role: .cancel) {
-                } label: {
-                    Text("Keep Editing", comment: "Goes back to the reminder form without discarding.")
-                }
-            }
+            DiscardingCancelButton(hasChanges: form.hasChanges)
         }
         ToolbarItem(placement: .confirmationAction) {
             Button(role: .confirm) {
@@ -359,9 +338,9 @@ extension Strength {
 
     var title: LocalizedStringResource {
         switch self {
-        case .gentle: LocalizedStringResource("Gentle", comment: "Strength name: the reminder nudges gently.")
-        case .firm: LocalizedStringResource("Firm", comment: "Strength name.")
-        case .relentless: LocalizedStringResource("Relentless", comment: "Strength name: the reminder nudges hardest.")
+        case .gentle: LocalizedStringResource("Gentle", comment: "Strength name, in the form and the Reminders filter sheet: the reminder nudges gently.")
+        case .firm: LocalizedStringResource("Firm", comment: "Strength name, in the form and the Reminders filter sheet.")
+        case .relentless: LocalizedStringResource("Relentless", comment: "Strength name, in the form and the Reminders filter sheet: the reminder nudges hardest.")
         }
     }
 }

@@ -204,6 +204,39 @@
         }
       }
     },
+    "%lld filters on" : {
+      "comment" : "VoiceOver value of the Reminders tab's Filter button while the sheet's filters are on. The placeholder is how many of its sections are in use.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@ on"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg filter"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg filters"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld more tags" : {
       "comment" : "VoiceOver label of My Day's \"+N more\" filter token. The placeholder is how many more tags are chosen.",
       "localizations" : {
@@ -601,13 +634,49 @@
       }
     },
     "All Tags" : {
-      "comment" : "My Day's filter sheet: the Match choice that needs every checked tag."
+      "comment" : "A filter sheet: the Match choice that needs every checked tag."
     },
     "All Tags shows reminders with every checked tag. Any Tag shows those with at least one." : {
-      "comment" : "My Day's filter sheet: under the tags when two or more are checked."
+      "comment" : "A filter sheet: under the tags when two or more are checked."
     },
     "Any Tag" : {
-      "comment" : "My Day's filter sheet: the Match choice that needs at least one checked tag."
+      "comment" : "A filter sheet: the Match choice that needs at least one checked tag."
+    },
+    "Apply" : {
+      "comment" : "Reminders' filter sheet's confirm button (a checkmark): applies the choices and closes the sheet."
+    },
+    "Apply shows %lld reminders." : {
+      "comment" : "Reminders' filter sheet: above Reset. The placeholder is how many reminders the list would show with these filters and the search as it is.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apply shows %#@n@."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "Badges" : {
       "comment" : "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging."
@@ -634,13 +703,13 @@
       "comment" : "Title shown when the app can't read its stored reminders, for example before the first unlock after a restart."
     },
     "Cancel" : {
-      "comment" : "Closes the alert without choosing a new time.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nSettings: keeps your data instead of deleting it.\nThe form's cancel button (an xmark).\nThe tag sheet's cancel button (an xmark)."
+      "comment" : "A sheet's cancel button (an xmark): the reminder form's and the Reminders filter's.\nCloses the alert without choosing a new time.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nSettings: keeps your data instead of deleting it.\nThe tag sheet's cancel button (an xmark)."
     },
     "Change these in iOS Settings." : {
       "comment" : "Settings: last line of the footer under the Nudges rows."
     },
     "Check one or more tags. Match needs two or more." : {
-      "comment" : "My Day's filter sheet: under the tags when fewer than two are checked. It says why the Match choice above them is dimmed."
+      "comment" : "A filter sheet: under the tags when fewer than two are checked. It says why the Match choice above them is dimmed."
     },
     "Check the spelling or try a new search." : {
       "comment" : "Reminders tab: under the title when a search alone finds nothing."
@@ -686,6 +755,9 @@
     "Clear" : {
       "comment" : "My Day's filter sheet: removes every tag from the filter."
     },
+    "Clear All Filters" : {
+      "comment" : "Reminders tab: the item in the Filter button's menu that removes every sheet filter, and leaves the search."
+    },
     "Clear All Tags" : {
       "comment" : "My Day: the item in the Filter button's menu that removes every tag from the filter."
     },
@@ -702,7 +774,7 @@
       "comment" : "Now: section header for reminders due soon."
     },
     "Coming up" : {
-      "comment" : "Status label: the reminder isn't due yet."
+      "comment" : "Status label, and a Status row in the Reminders filter sheet: the reminder isn't due yet."
     },
     "Completed" : {
       "comment" : "A tag's screen: header of the reminders with nothing more to come."
@@ -762,13 +834,13 @@
       "comment" : "Tags, Edit mode: under the list."
     },
     "Discard Changes" : {
-      "comment" : "Throws away the reminder form's changes and closes it."
+      "comment" : "Throws away a sheet's changes and closes it."
     },
     "Discard your changes?" : {
-      "comment" : "Asked when cancelling a reminder form with changes."
+      "comment" : "Asked when cancelling a sheet with changes: the reminder form or the Reminders filter."
     },
     "Done" : {
-      "comment" : "My Day's filter sheet: closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label: an occurrence closed as Done.\nTags: leaves Edit mode.\nThe Custom repeat page's confirm button (a checkmark): its choices become the Repeat page's choice.\nThe Repeat page's confirm button (a checkmark): its choice becomes the reminder's repeat.\nThe tag sheet's confirm button (a checkmark)."
+      "comment" : "My Day's filter sheet's confirm button (a checkmark): closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.\nTags: leaves Edit mode.\nThe Custom repeat page's confirm button (a checkmark): its choices become the Repeat page's choice.\nThe Repeat page's confirm button (a checkmark): its choice becomes the reminder's repeat.\nThe tag sheet's confirm button (a checkmark)."
     },
     "Done after %lld nudges" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence closed as Done. The placeholder is how many nudges it sent.",
@@ -1018,8 +1090,14 @@
     "Every nudge rings as an alarm." : {
       "comment" : "Under the reminder form's strength, when every nudge rings, as Relentless's do."
     },
+    "Filter" : {
+      "comment" : "Reminders tab: the item in the Filter button's menu that opens the filter sheet.\nVoiceOver label of the Reminders tab's Filter button."
+    },
     "Filter My Day" : {
       "comment" : "Title of My Day's tag filter sheet."
+    },
+    "Filter Reminders" : {
+      "comment" : "Title of the Reminders tab's filter sheet."
     },
     "Filter by Tags" : {
       "comment" : "My Day: the item in the Filter button's menu that opens the filter.\nVoiceOver label of My Day's filter button."
@@ -1028,7 +1106,7 @@
       "comment" : "VoiceOver label of the group of tokens for the tags My Day is filtered by."
     },
     "Firm" : {
-      "comment" : "Strength name."
+      "comment" : "Strength name, in the form and the Reminders filter sheet."
     },
     "For a reminder with Break Through Focus on, High nudges are Time Sensitive, so they get through a Focus." : {
       "comment" : "Settings: footer under the Nudges rows, when Time Sensitive is on."
@@ -1043,7 +1121,7 @@
       "comment" : "Settings: header of the first section, with the About row."
     },
     "Gentle" : {
-      "comment" : "Strength name: the reminder nudges gently."
+      "comment" : "Strength name, in the form and the Reminders filter sheet: the reminder nudges gently."
     },
     "Gives up after %lld nudges or %@, whichever comes first." : {
       "comment" : "Under the reminder form's strength. 1: the give-up limit's nudge count. 2: its span, such as \"24 hours\".",
@@ -1081,7 +1159,7 @@
       "comment" : "Reminder details: under \"Reminder Not Found\"."
     },
     "Keep Editing" : {
-      "comment" : "Goes back to the reminder form without discarding."
+      "comment" : "Goes back to a sheet without discarding its changes."
     },
     "Last 24 Hours" : {
       "comment" : "Now: section header for occurrences closed in the last 24 hours."
@@ -1102,10 +1180,10 @@
       "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging."
     },
     "Match" : {
-      "comment" : "My Day's filter sheet: label of the choice between All Tags and Any Tag."
+      "comment" : "A filter sheet: label of the choice between All Tags and Any Tag."
     },
     "Missed" : {
-      "comment" : "My Day: the caption of the count of occurrences missed today.\nReminders tab: the header row's chip that shows only Missed reminders.\nStatus label: an occurrence closed without Done, by its give-up limit or a take-over."
+      "comment" : "My Day: the caption of the count of occurrences missed today.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed without Done, by its give-up limit or a take-over."
     },
     "Missed: gave up after the limit" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that reached its give-up limit (20 nudges or 24 hours)."
@@ -1120,7 +1198,7 @@
       "comment" : "Tab bar: the tab with today's reminders in time order"
     },
     "Needs two or more checked tags." : {
-      "comment" : "My Day's filter sheet: VoiceOver's reason the Match choice is disabled."
+      "comment" : "A filter sheet: VoiceOver's reason the Match choice is disabled."
     },
     "Never" : {
       "comment" : "Repeat preset, on the Repeat page and the form's Repeat row: the reminder doesn't repeat.\nThe Custom repeat page's Ends choice: it repeats for ever."
@@ -1163,18 +1241,6 @@
     "No Matches" : {
       "comment" : "Reminders tab: title when reminders exist but what's narrowing the list leaves none."
     },
-    "No Missed reminders match this search." : {
-      "comment" : "Reminders tab: under the title when a search finds nothing under the Missed chip."
-    },
-    "No Missed reminders." : {
-      "comment" : "Reminders tab: under the title when the Missed chip leaves nothing."
-    },
-    "No Nudging reminders match this search." : {
-      "comment" : "Reminders tab: under the title when a search finds nothing under the Nudging chip."
-    },
-    "No Nudging reminders." : {
-      "comment" : "Reminders tab: under the title when the Nudging chip leaves nothing."
-    },
     "No Reminders" : {
       "comment" : "A tag's screen when no reminder has the tag.\nReminders tab: title when there are no reminders at all."
     },
@@ -1182,7 +1248,7 @@
       "comment" : "Reminders tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces."
     },
     "No Tags" : {
-      "comment" : "My Day's filter sheet: the row that shows only reminders without tags.\nMy Day: the filter token that shows only reminders without tags.\nTags: title when there are no tags yet."
+      "comment" : "A filter sheet: the row that shows only reminders without tags.\nMy Day: the filter token that shows only reminders without tags.\nTags: title when there are no tags yet."
     },
     "No account and no server. Your reminders stay on this iPhone and in your own backups." : {
       "comment" : "Onboarding and How It Nudges: under \"Stays on your iPhone\"."
@@ -1193,11 +1259,17 @@
     "No reminders use this tag." : {
       "comment" : "Tags: the message of the question that asks before deleting a tag that no reminder has."
     },
+    "No reminders with these filters match this search." : {
+      "comment" : "Reminders tab: under the title when a search finds nothing under the filter sheet's filters."
+    },
+    "No reminders with these filters." : {
+      "comment" : "Reminders tab: under the title when the filter sheet's filters leave nothing."
+    },
     "No tags yet. Add one above." : {
       "comment" : "The Tags page's list when there are no tags."
     },
     "No tags yet. Add them when you edit a reminder." : {
-      "comment" : "My Day's filter sheet: the Tags list when no tag exists."
+      "comment" : "A filter sheet: the Tags list when no tag exists."
     },
     "None" : {
       "comment" : "Reminder details, Schedule: nothing is left to come.\nThe reminder form's Tags row when no tag is chosen."
@@ -1314,7 +1386,7 @@
       "comment" : "Body of the notification that Settings' Send a Test Nudge sends."
     },
     "Nudging" : {
-      "comment" : "My Day: the caption of the count of occurrences nudging now.\nNow: section header for the reminders nudging you now.\nReminders tab: the header row's chip that shows only Nudging reminders.\nStatus label: an occurrence that has come due and isn't Done yet."
+      "comment" : "My Day: the caption of the count of occurrences nudging now.\nNow: section header for the reminders nudging you now.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence that has come due and isn't Done yet."
     },
     "Nudging Now" : {
       "comment" : "Reminder details: section header above the card of a reminder that is nudging."
@@ -1402,7 +1474,7 @@
       "comment" : "Nudge card: under the Done button."
     },
     "Only reminders without tags" : {
-      "comment" : "My Day's filter sheet: under No Tags."
+      "comment" : "A filter sheet: under No Tags."
     },
     "Open" : {
       "comment" : "Alarm button: opens the app on the reminder, where Done is. Shown on the Lock Screen; keep it short."
@@ -1432,7 +1504,7 @@
       "comment" : "Reminder details: stops the reminder's nudging until it is resumed."
     },
     "Paused" : {
-      "comment" : "A tag's screen: header of the paused reminders.\nReminder details, Schedule: the reminder is paused, so nothing is next.\nStatus label: the reminder is paused."
+      "comment" : "A tag's screen: header of the paused reminders.\nReminder details, Schedule: the reminder is paused, so nothing is next.\nStatus label, and a Status row in the Reminders filter sheet: the reminder is paused."
     },
     "Paused: this one will be skipped" : {
       "comment" : "My Day: under the title of an occurrence due later today whose reminder is paused."
@@ -1444,7 +1516,7 @@
       "comment" : "About page: row that opens the app's privacy policy on the website, in the web browser."
     },
     "Relentless" : {
-      "comment" : "Strength name: the reminder nudges hardest."
+      "comment" : "Strength name, in the form and the Reminders filter sheet: the reminder nudges hardest."
     },
     "Relentless always rings, so it always breaks through a Focus." : {
       "comment" : "Under Break Through Focus when the strength is Relentless, which shows the switch on and dimmed."
@@ -1478,6 +1550,9 @@
     },
     "Repeats" : {
       "comment" : "Reminder details, Schedule: how often the reminder comes due."
+    },
+    "Reset" : {
+      "comment" : "Reminders' filter sheet: clears the choices. Nothing changes until Apply."
     },
     "Resume Reminder" : {
       "comment" : "Reminder details: brings a paused reminder back at its next time."
@@ -1541,8 +1616,14 @@
     "Showing only Nudging" : {
       "comment" : "My Day: under the counts while Nudging is chosen."
     },
+    "Shows reminders with any checked status." : {
+      "comment" : "Reminders' filter sheet: under the list of statuses."
+    },
+    "Shows reminders with any checked strength." : {
+      "comment" : "Reminders' filter sheet: under the list of strengths."
+    },
     "Skipped" : {
-      "comment" : "Status label: an occurrence closed because its reminder was paused."
+      "comment" : "Status label, and a Status row in the Reminders filter sheet: an occurrence closed because its reminder was paused."
     },
     "Skipped: the reminder was paused" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that closed because its reminder was paused."
@@ -1556,11 +1637,14 @@
     "Starts" : {
       "comment" : "The reminder form's start date and time."
     },
+    "Status" : {
+      "comment" : "Reminders' filter sheet: header of the list of statuses."
+    },
     "Stays on your iPhone" : {
       "comment" : "Onboarding and How It Nudges: the title of the point about privacy."
     },
     "Strength" : {
-      "comment" : "The reminder form's strength choice: Gentle, Firm or Relentless."
+      "comment" : "Reminders' filter sheet: header of the list of strengths.\nThe reminder form's strength choice: Gentle, Firm or Relentless."
     },
     "Support" : {
       "comment" : "About page: row that opens the app's support page on the website, in the web browser."
@@ -1572,7 +1656,7 @@
       "comment" : "The New Tag and Rename Tag sheet's field for the tag's name."
     },
     "Tags" : {
-      "comment" : "My Day's filter sheet: header of the list of tags.\nTab bar: the tab listing your tags\nThe reminder form's row that opens the Tags page.\nTitle of the reminder form's Tags page."
+      "comment" : "A filter sheet: header of the list of tags.\nTab bar: the tab listing your tags\nThe reminder form's row that opens the Tags page.\nTitle of the reminder form's Tags page."
     },
     "Tags: %@" : {
       "comment" : "VoiceOver label of a reminder's tags on its details. The placeholder lists them, such as \"#home and #errands\"."

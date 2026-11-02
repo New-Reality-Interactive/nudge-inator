@@ -81,8 +81,7 @@ struct RemindersSearchTests {
 
     @Test func clearingTheSearchReturnsTheListAsItWas() {
         let engine = fixture.oneOfEach().engine
-        var filter = RemindersFilter()
-        filter.toggle(.nudging)
+        var filter = RemindersFilter(statuses: [.nudging])
         let before = engine.remindersList(filteredBy: filter)
 
         filter.search = "dentist"
@@ -92,22 +91,18 @@ struct RemindersSearchTests {
         #expect(engine.remindersList(filteredBy: filter) == before)
     }
 
-    @Test func aChipAppliesToTheResults() {
+    @Test func aStatusAppliesToTheResults() {
         let day = fixture.oneOfEach()
         var filter = RemindersFilter(search: "e")
         #expect(day.engine.remindersList(filteredBy: filter).items.count > 1)
 
-        filter.toggle(.nudging)
+        filter.statuses = [.nudging]
 
         #expect(day.engine.remindersList(filteredBy: filter).items.map(\.reminder.title) == ["Reply to Alex"])
-        #expect(filter.search == "e")
-        filter.toggle(.nudging)
-        #expect(filter.search == "e")
     }
 
-    @Test func aChipAndASearchThatShareNothingShowNothing() {
-        var filter = RemindersFilter(search: "dentist")
-        filter.toggle(.nudging)
+    @Test func aStatusAndASearchThatShareNothingShowNothing() {
+        let filter = RemindersFilter(statuses: [.nudging], search: "dentist")
 
         #expect(fixture.oneOfEach().engine.remindersList(filteredBy: filter).items.isEmpty)
     }

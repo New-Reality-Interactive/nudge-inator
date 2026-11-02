@@ -9,7 +9,8 @@ import SwiftUI
 /// was read, so Done or going Missed doesn't move a row sorted by Due Date. Pushing details keeps it;
 /// leaving the tab and coming back sorts again.
 ///
-/// The filter, search included, is screen state, so a launch resets it and Back from details keeps it.
+/// The sheet's filters and the search are screen state, so a launch resets them and Back from
+/// details keeps them.
 struct RemindersTab: View {
     let state: ScreenState
     /// The reminders whose details are pushed on Reminders.
@@ -22,12 +23,17 @@ struct RemindersTab: View {
 
     @Environment(AppModel.self) private var model: AppModel?
     @State private var keptOrder: KeptOrder?
-    @State private var filter = RemindersFilter()
+    /// What's applied from the filter sheet.
+    @State private var choices = RemindersFilterChoices()
+    @State private var isFiltering = false
+    /// Apply was tapped, so the count takes VoiceOver when the sheet has closed.
+    @State private var wasApplied = false
+    /// Each one puts VoiceOver on the count.
+    @State private var countFocusRequests = 0
     /// What's in the search field, spaces included. `filter` holds it trimmed, so a space typed after
     /// a word doesn't change the list's inputs.
     @State private var searchText = ""
-    /// Set by Clear Filters, whose result VoiceOver reads from the count once focus moves there.
-    @State private var skipNextAnnouncement = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// The sort previews show, since they have no app model to keep it.
     @State private var previewSort = RemindersSort.createdOldestFirst
 
@@ -46,13 +52,12 @@ struct RemindersTab: View {
                     if let screen, screen.emptyState != .noReminders {
                         RemindersListView(
                             screen: screen,
-                            sort: sort.transaction(Self.noAnimation),
-                            filter: $filter.transaction(Self.noAnimation),
+                            filter: filter,
+                            countFocusRequests: countFocusRequests,
                             clearFilters: {
                                 // Focus goes to the count, which reads the result itself.
-                                skipNextAnnouncement = true
                                 searchText = ""
-                                filter = RemindersFilter()
+                                choices = RemindersFilterChoices()
                             },
                             openDetails: { path.append(OpenedReminder(id: $0)) },
                             markDone: { model?.markDone($0) },
@@ -63,27 +68,48 @@ struct RemindersTab: View {
                     }
                 }
             }
-            .modifier(RemindersSearchField(isShown: engine?.reminders.isEmpty == false, text: searchField))
+            .modifier(RemindersSearchField(isShown: hasReminders, text: searchField))
             .navigationTitle(Text(AppTab.reminders.title))
             .reminderDetailsDestination()
             .toolbar {
+                if hasReminders {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        RemindersFilterButton(
+                            sectionsInUse: appliedChoices.sectionsInUse,
+                            showsBadge: !dynamicTypeSize.isAccessibilitySize,
+                            open: { isFiltering = true },
+                            clear: {
+                                apply(RemindersFilterChoices())
+                                countFocusRequests += 1
+                            }
+                        )
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        RemindersSortButton(sort: sort.transaction(Self.noAnimation))
+                    }
+                    // Filter and Sort share a glass group, and New stands apart (Brian, #113).
+                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
+                }
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
+            }
+            // Closing the sheet moves VoiceOver to the bar's New button, which cut an announcement of
+            // the count off (seen on the iPhone), so it goes to the count, as Clear Filters does.
+            .sheet(isPresented: $isFiltering, onDismiss: {
+                if wasApplied { countFocusRequests += 1 }
+                wasApplied = false
+            }) {
+                if let engine {
+                    RemindersFilterSheetView(engine: engine, applied: appliedChoices, search: searchText) {
+                        apply($0)
+                        wasApplied = true
+                    }
+                }
             }
         }
         .onAppear { keepOrder() }
         .onChange(of: isChosen) { if isChosen { keepOrder() } }
         .onChange(of: sort.wrappedValue) { keepOrder() }
-        .onChange(of: filter) { old, new in
-            let list = keepOrder()
-            // Not for the search's text: while typing VoiceOver is reading the letters, and when the
-            // search ends it moves to the count, which reads the result and would cut this off.
-            let isSearchText = new.search != old.search
-            if skipNextAnnouncement {
-                skipNextAnnouncement = false
-            } else if !isSearchText, let list {
-                announceCount(of: list)
-            }
-        }
+        .onChange(of: filter) { keepOrder() }
         .onChange(of: state) { keepOrder() }
     }
 
@@ -91,7 +117,30 @@ struct RemindersTab: View {
         model?.engine ?? previewEngine
     }
 
-    /// A chip or a Sort choice redraws the list at once, as the mockup does. Only a row a state
+    private var hasReminders: Bool {
+        engine?.reminders.isEmpty == false
+    }
+
+    /// What's applied, without tags deleted since.
+    private var appliedChoices: RemindersFilterChoices {
+        keepingExistingTags(choices)
+    }
+
+    private func keepingExistingTags(_ filter: RemindersFilterChoices) -> RemindersFilterChoices {
+        filter.keeping(tagsIn: Set(engine?.tags.map(\.id) ?? []))
+    }
+
+    /// What narrows the list: the sheet's filters and the search, together.
+    private var filter: RemindersFilter {
+        appliedChoices.narrowing(search: searchText)
+    }
+
+    /// Apply and Clear All Filters: the list redraws at once. The search stays as it is.
+    private func apply(_ new: RemindersFilterChoices) {
+        withTransaction(Self.noAnimation) { choices = new }
+    }
+
+    /// A filter or a Sort choice redraws the list at once, as the mockup does. Only a row a state
     /// change takes out animates.
     private static let noAnimation = {
         var transaction = Transaction()
@@ -99,15 +148,9 @@ struct RemindersTab: View {
         return transaction
     }()
 
-    /// Typing redraws the list at once, as a chip does.
+    /// Typing redraws the list at once.
     private var searchField: Binding<String> {
-        Binding {
-            searchText
-        } set: {
-            searchText = $0
-            filter.search = $0
-        }
-        .transaction(Self.noAnimation)
+        $searchText.transaction(Self.noAnimation)
     }
 
     /// The model's, which outlives a relaunch, or the previews' own.
@@ -120,21 +163,10 @@ struct RemindersTab: View {
     }
 
     /// The rows' order as the engine sorts them now, kept until the list's inputs next change.
-    @discardableResult
-    private func keepOrder() -> RemindersList? {
+    private func keepOrder() {
         let sort = sort.wrappedValue
         let list = engine?.remindersList(sortedBy: sort, filteredBy: filter)
         keptOrder = list.map { KeptOrder(sort: sort, filter: filter, ids: $0.items.map(\.reminder.id)) }
-        return list
-    }
-
-    /// VoiceOver stays on the chip, so it says the new count, as the mockup does. Low priority, so
-    /// it follows the chip's own "selected" rather than cutting it off (WWDC23, "Build accessible
-    /// apps with SwiftUI and UIKit").
-    private func announceCount(of list: RemindersList) {
-        var count = AttributedString(String(localized: RemindersScreen.countText(shown: list.items.count, of: list.total)))
-        count.accessibilitySpeechAnnouncementPriority = .low
-        AccessibilityNotification.Announcement(count).post()
     }
 
     /// An order kept for one sort and filter. Until `onChange` keeps one for a new one, the first
@@ -164,18 +196,21 @@ struct RemindersTab: View {
 }
 
 /// The search field under the title, while there's anything to search: the no-reminders empty state
-/// has none, as the mockup draws it.
+/// has none, as the mockup draws it. The bar stays during a search, so its Filter button and badge
+/// still say the sheet's filters are on (Brian's call, #113).
 private struct RemindersSearchField: ViewModifier {
     let isShown: Bool
     @Binding var text: String
 
     func body(content: Content) -> some View {
         if isShown {
-            content.searchable(
-                text: $text,
-                placement: .navigationBarDrawer(displayMode: .always),
-                prompt: Text("Search titles and notes", comment: "Reminders tab: the search field's prompt.")
-            )
+            content
+                .searchable(
+                    text: $text,
+                    placement: .navigationBarDrawer(displayMode: .always),
+                    prompt: Text("Search titles and notes", comment: "Reminders tab: the search field's prompt.")
+                )
+                .searchPresentationToolbarBehavior(.avoidHidingContent)
         } else {
             content
         }
@@ -184,8 +219,9 @@ private struct RemindersSearchField: ViewModifier {
 
 private struct RemindersListView: View {
     let screen: RemindersScreen
-    @Binding var sort: RemindersSort
-    @Binding var filter: RemindersFilter
+    let filter: RemindersFilter
+    /// Each new value puts VoiceOver on the count, which reads the result itself.
+    let countFocusRequests: Int
     let clearFilters: () -> Void
     let openDetails: (Reminder.ID) -> Void
     let markDone: (Reminder.ID) -> Void
@@ -220,10 +256,10 @@ private struct RemindersListView: View {
                     RemindersNoMatchView(filter: filter) {
                         clearFilters()
                         // Where the keyboard or large text meant scrolling to the button, the rows
-                        // come back with the count and chips off screen otherwise. `.bottom`, not
+                        // come back with the count off screen otherwise. `.bottom`, not
                         // `.top`, which puts the header under the bar: the scroll view runs behind
                         // it. The header comes first, so this stops at the list's own top. During a
-                        // search it waits for the bar, which comes back over the header otherwise.
+                        // search it waits for the title, which comes back over the header otherwise.
                         if isSearching {
                             scrollsToHeader = true
                         } else {
@@ -238,8 +274,8 @@ private struct RemindersListView: View {
                 }
             } header: {
                 // Above the rows' group, not in a cell, as the mockup draws it. It stays above the
-                // no-match empty state, so the chip can be turned off here.
-                RemindersHeaderRow(count: screen.countText, sort: $sort, filter: $filter, countFocus: $countFocused)
+                // no-match empty state.
+                RemindersHeaderRow(count: screen.countText, countFocus: $countFocused)
                     .textCase(nil)
                     .id(headerID)
             }
@@ -254,6 +290,7 @@ private struct RemindersListView: View {
                 proxy.scrollTo(headerID, anchor: .bottom)
             }
         }
+        .onChange(of: countFocusRequests) { countFocused = true }
         // By the rows, not `withAnimation` around Done and Delete: a row can also leave on the
         // minute, when the clock alone takes it out of the filter.
         .animation(reduceMotion ? nil : .default, value: screen.rows.map(\.id))
@@ -308,8 +345,7 @@ private struct RemindersRowView: View {
             Text(verbatim: row.title)
                 .font(.body)
             if !row.tags.isEmpty {
-                // Tokens, joined by spaces: they are not a sentence.
-                Text(verbatim: row.tags.joined(separator: " "))
+                Text(tagLine)
                     .font(.subheadline)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
@@ -336,6 +372,17 @@ private struct RemindersRowView: View {
         .deleteReminderConfirmation(title: row.title, isPresented: $isConfirmingDelete, confirm: delete)
     }
 
+    /// Tokens, joined by spaces: they are not a sentence. The filter's are bold (DESIGN.md).
+    private var tagLine: AttributedString {
+        var line = AttributedString()
+        for (index, tag) in row.tags.enumerated() {
+            var text = AttributedString(index == 0 ? tag.text : " " + tag.text)
+            if tag.isChosen { text.inlinePresentationIntent = .stronglyEmphasized }
+            line += text
+        }
+        return line
+    }
+
     private var doneLabel: Text {
         Text("Done", comment: "Reminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.")
     }
@@ -349,7 +396,7 @@ private struct RemindersRowView: View {
         guard !row.tags.isEmpty else {
             return LocalizedStringResource("\(row.title), \(status), \(row.day), \(row.time)", comment: "VoiceOver label of a Reminders tab row with no tags. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\".")
         }
-        let tags = row.tags.formatted(.list(type: .and))
+        let tags = row.tags.map(\.text).formatted(.list(type: .and))
         return LocalizedStringResource("\(row.title), \(status), \(row.day), \(row.time), tags: \(tags)", comment: "VoiceOver label of a Reminders tab row. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\". 5: its tags, such as \"#home and #errands\".")
     }
 }
@@ -377,9 +424,9 @@ private struct RemindersRowView: View {
     RemindersTab(state: .ready, path: .constant([]))
 }
 
-#Preview("No match, chip") {
+#Preview("No match, filters") {
     List {
-        RemindersNoMatchView(filter: RemindersFilter(statuses: [.nudging])) {}
+        RemindersNoMatchView(filter: RemindersFilter(statuses: [.nudging, .paused])) {}
             .listRowBackground(Color.clear)
     }
 }
@@ -391,7 +438,7 @@ private struct RemindersRowView: View {
     }
 }
 
-#Preview("No match, search and chip") {
+#Preview("No match, search and filters") {
     List {
         RemindersNoMatchView(filter: RemindersFilter(statuses: [.missed], search: "zebra")) {}
             .listRowBackground(Color.clear)

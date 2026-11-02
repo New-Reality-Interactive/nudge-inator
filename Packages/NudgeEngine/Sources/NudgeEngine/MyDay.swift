@@ -53,8 +53,7 @@ extension MyDay.Item {
     }
 }
 
-/// My Day's tag filter, as the mockup's `inDayFilter` applies it. It covers today only: filtering
-/// every reminder by several tags is out of scope.
+/// The tag filter of My Day and the Reminders tab, as the mockup's `inDayFilter` applies it.
 public enum TagFilter: Equatable, Sendable {
     case off
     /// Items whose reminder has every one of the tags. With none chosen, every item.
@@ -63,6 +62,14 @@ public enum TagFilter: Equatable, Sendable {
     case matchAny(Set<Tag.ID>)
     /// Items whose reminder has no tags.
     case noTags
+
+    /// The tags chosen, which a row shows in bold.
+    public var chosen: Set<Tag.ID> {
+        switch self {
+        case .matchAll(let chosen), .matchAny(let chosen): chosen
+        case .off, .noTags: []
+        }
+    }
 
     /// Whether a reminder with `tagIDs`, the ones of its tags that still exist, passes.
     func includes(_ tagIDs: Set<Tag.ID>) -> Bool {

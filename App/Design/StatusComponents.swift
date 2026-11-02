@@ -103,13 +103,13 @@ extension OccurrenceState {
     var statusName: LocalizedStringResource {
         switch self {
         case .done:
-            LocalizedStringResource("Done", comment: "Status label: an occurrence closed as Done.")
+            LocalizedStringResource("Done", comment: "Status label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.")
         case .nudging:
-            LocalizedStringResource("Nudging", comment: "Status label: an occurrence that has come due and isn't Done yet.")
+            LocalizedStringResource("Nudging", comment: "Status label, and a Status row in the Reminders filter sheet: an occurrence that has come due and isn't Done yet.")
         case .missed:
-            LocalizedStringResource("Missed", comment: "Status label: an occurrence closed without Done, by its give-up limit or a take-over.")
+            LocalizedStringResource("Missed", comment: "Status label, and a Status row in the Reminders filter sheet: an occurrence closed without Done, by its give-up limit or a take-over.")
         case .skipped:
-            LocalizedStringResource("Skipped", comment: "Status label: an occurrence closed because its reminder was paused.")
+            LocalizedStringResource("Skipped", comment: "Status label, and a Status row in the Reminders filter sheet: an occurrence closed because its reminder was paused.")
         }
     }
 }
@@ -207,8 +207,8 @@ extension ReminderStatus {
         switch self {
         case .nudging: OccurrenceState.nudging(nudgeNumber: 0).statusName
         case .closed(let state): state.statusName
-        case .paused: LocalizedStringResource("Paused", comment: "Status label: the reminder is paused.")
-        case .comingUp: LocalizedStringResource("Coming up", comment: "Status label: the reminder isn't due yet.")
+        case .paused: LocalizedStringResource("Paused", comment: "Status label, and a Status row in the Reminders filter sheet: the reminder is paused.")
+        case .comingUp: LocalizedStringResource("Coming up", comment: "Status label, and a Status row in the Reminders filter sheet: the reminder isn't due yet.")
         }
     }
 }

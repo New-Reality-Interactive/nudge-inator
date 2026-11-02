@@ -39,32 +39,21 @@ public struct RemindersSort: Equatable, Sendable {
     public static let createdOldestFirst = RemindersSort(field: .created, order: .ascending)
 }
 
-/// A quick filter chip in the Reminders tab's header row. Each is `RemindersFilter`'s Status shown
-/// on screen.
-public enum RemindersChip: CaseIterable, Sendable {
-    case nudging
-    case missed
-
-    var status: RemindersFilter.Status {
-        switch self {
-        case .nudging: .nudging
-        case .missed: .missed
-        }
-    }
-}
-
 /// What the Reminders tab's list is narrowed by. Nothing chosen narrows nothing.
 public struct RemindersFilter: Equatable, Sendable {
+    public var tags: TagFilter
     /// The statuses a reminder may have to be shown: it matches any chosen.
     public var statuses: Set<Status>
+    /// The strengths a reminder may have to be shown: it matches any chosen.
+    public var strengths: Set<Strength>
     /// The phrase a reminder's title or notes must contain, without leading or trailing whitespace,
     /// so a space typed after a word doesn't change the filter. Empty narrows nothing.
     public var search: String {
         didSet { search = Self.trimmed(search) }
     }
 
-    /// A status as its status label says it, whatever closed the occurrence.
-    public enum Status: Sendable {
+    /// A status as its status label says it, whatever closed the occurrence. In the sheet's order.
+    public enum Status: CaseIterable, Sendable {
         case nudging
         case comingUp
         case paused
@@ -73,28 +62,28 @@ public struct RemindersFilter: Equatable, Sendable {
         case skipped
     }
 
-    public init(statuses: Set<Status> = [], search: String = "") {
+    public init(tags: TagFilter = .off, statuses: Set<Status> = [], strengths: Set<Strength> = [], search: String = "") {
+        self.tags = tags
         self.statuses = statuses
+        self.strengths = strengths
         self.search = Self.trimmed(search)
     }
 
-    /// The chip that's lit: the one whose status is exactly the Status chosen.
-    public var chip: RemindersChip? {
-        RemindersChip.allCases.first { statuses == [$0.status] }
+    /// Whether the filter sheet is narrowing the list. Search isn't part of it.
+    public var hasSheetFilters: Bool {
+        tags != .off || !statuses.isEmpty || !strengths.isEmpty
     }
 
-    /// Turns the chip on, which sets Status to it and so turns any other off, or turns it off,
-    /// which clears Status.
-    public mutating func toggle(_ chip: RemindersChip) {
-        statuses = self.chip == chip ? [] : [chip.status]
-    }
-
-    func matches(_ item: RemindersList.Item) -> Bool {
-        matches(item.status) && matchesSearch(item.reminder)
+    func matches(_ item: RemindersList.Item, tagIDs: Set<Tag.ID>) -> Bool {
+        matches(item.status) && matchesStrength(item.reminder) && tags.includes(tagIDs) && matchesSearch(item.reminder)
     }
 
     private func matches(_ status: ReminderStatus) -> Bool {
         statuses.isEmpty || statuses.contains(Status(status))
+    }
+
+    private func matchesStrength(_ reminder: Reminder) -> Bool {
+        strengths.isEmpty || strengths.contains(reminder.strength)
     }
 
     /// Ignores case and diacritics. A tag's name isn't searched.
@@ -151,7 +140,11 @@ extension Engine {
         sortedBy sort: RemindersSort = .createdOldestFirst,
         filteredBy filter: RemindersFilter = RemindersFilter()
     ) -> RemindersList {
-        let items = reminders.map(listItem(of:)).filter(filter.matches)
+        // The store may hand back a deleted tag's ID; it is no tag.
+        let existingTagIDs = Set(tags.map(\.id))
+        let items = reminders.map(listItem(of:)).filter {
+            filter.matches($0, tagIDs: existingTagIDs.intersection($0.reminder.tagIDs))
+        }
         let key: (RemindersList.Item) -> Date = switch sort.field {
         case .created: \.reminder.createdAt
         case .dueDate: \.dueTime
