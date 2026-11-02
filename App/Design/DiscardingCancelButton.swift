@@ -1,10 +1,11 @@
 import SwiftUI
 
 /// A sheet's Cancel (`xmark`): it closes the sheet, asking first while there are changes to lose.
-/// A sheet with changes also disables interactive dismissal, so a swipe down can't lose them.
+/// A sheet with changes also disables interactive dismissal, so a swipe down can't lose them. The
+/// system draws the dialog as a popover with Discard Changes alone: a tap outside it is Keep Editing.
 struct DiscardingCancelButton: View {
     let hasChanges: Bool
-    /// The sheet's, so a swipe down can ask too (`onDismissAttempt`).
+    /// The sheet's, so a swipe down can ask too, where it uses `onDismissAttempt`.
     @Binding var isConfirming: Bool
 
     @Environment(\.dismiss) private var dismiss

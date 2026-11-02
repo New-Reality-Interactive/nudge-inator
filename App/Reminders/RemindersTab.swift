@@ -24,7 +24,7 @@ struct RemindersTab: View {
     @Environment(AppModel.self) private var model: AppModel?
     @State private var keptOrder: KeptOrder?
     /// What's applied from the filter sheet.
-    @State private var sheetFilter = RemindersSheetFilter()
+    @State private var choices = RemindersFilterChoices()
     @State private var isFiltering = false
     /// What's in the search field, spaces included. `filter` holds it trimmed, so a space typed after
     /// a word doesn't change the list's inputs.
@@ -52,7 +52,7 @@ struct RemindersTab: View {
                             clearFilters: {
                                 // Focus goes to the count, which reads the result itself.
                                 searchText = ""
-                                sheetFilter = RemindersSheetFilter()
+                                choices = RemindersFilterChoices()
                             },
                             openDetails: { path.append(OpenedReminder(id: $0)) },
                             markDone: { model?.markDone($0) },
@@ -70,10 +70,10 @@ struct RemindersTab: View {
                 if hasReminders {
                     ToolbarItem(placement: .topBarTrailing) {
                         RemindersFilterButton(
-                            sectionsInUse: appliedSheetFilter.sectionsInUse,
+                            sectionsInUse: appliedChoices.sectionsInUse,
                             showsBadge: !dynamicTypeSize.isAccessibilitySize,
                             open: { isFiltering = true },
-                            clear: { apply(RemindersSheetFilter()) }
+                            clear: { apply(RemindersFilterChoices()) }
                         )
                     }
                     ToolbarItem(placement: .topBarTrailing) {
@@ -84,7 +84,7 @@ struct RemindersTab: View {
             }
             .sheet(isPresented: $isFiltering) {
                 if let engine {
-                    RemindersFilterSheetView(engine: engine, applied: appliedSheetFilter, search: searchText, apply: apply)
+                    RemindersFilterSheetView(engine: engine, applied: appliedChoices, search: searchText, apply: apply)
                 }
             }
         }
@@ -104,23 +104,23 @@ struct RemindersTab: View {
     }
 
     /// What's applied, without tags deleted since.
-    private var appliedSheetFilter: RemindersSheetFilter {
-        keepingExistingTags(sheetFilter)
+    private var appliedChoices: RemindersFilterChoices {
+        keepingExistingTags(choices)
     }
 
-    private func keepingExistingTags(_ filter: RemindersSheetFilter) -> RemindersSheetFilter {
+    private func keepingExistingTags(_ filter: RemindersFilterChoices) -> RemindersFilterChoices {
         filter.keeping(tagsIn: Set(engine?.tags.map(\.id) ?? []))
     }
 
     /// What narrows the list: the sheet's filters and the search, together.
     private var filter: RemindersFilter {
-        appliedSheetFilter.narrowing(search: searchText)
+        appliedChoices.narrowing(search: searchText)
     }
 
     /// Apply and Clear All Filters: the list redraws at once and VoiceOver hears the new count.
     /// The search stays as it is.
-    private func apply(_ new: RemindersSheetFilter) {
-        withTransaction(Self.noAnimation) { sheetFilter = new }
+    private func apply(_ new: RemindersFilterChoices) {
+        withTransaction(Self.noAnimation) { choices = new }
         if let list = engine?.remindersList(sortedBy: sort.wrappedValue, filteredBy: keepingExistingTags(new).narrowing(search: searchText)) {
             announceCount(of: list)
         }
@@ -252,7 +252,7 @@ private struct RemindersListView: View {
                         // come back with the count off screen otherwise. `.bottom`, not
                         // `.top`, which puts the header under the bar: the scroll view runs behind
                         // it. The header comes first, so this stops at the list's own top. During a
-                        // search it waits for the bar, which comes back over the header otherwise.
+                        // search it waits for the title, which comes back over the header otherwise.
                         if isSearching {
                             scrollsToHeader = true
                         } else {
@@ -337,8 +337,7 @@ private struct RemindersRowView: View {
             Text(verbatim: row.title)
                 .font(.body)
             if !row.tags.isEmpty {
-                // Tokens, joined by spaces: they are not a sentence.
-                Text(verbatim: row.tags.joined(separator: " "))
+                Text(tagLine)
                     .font(.subheadline)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
@@ -365,6 +364,17 @@ private struct RemindersRowView: View {
         .deleteReminderConfirmation(title: row.title, isPresented: $isConfirmingDelete, confirm: delete)
     }
 
+    /// Tokens, joined by spaces: they are not a sentence. The filter's are bold (DESIGN.md).
+    private var tagLine: AttributedString {
+        var line = AttributedString()
+        for (index, tag) in row.tags.enumerated() {
+            var text = AttributedString(index == 0 ? tag.text : " " + tag.text)
+            if tag.isChosen { text.inlinePresentationIntent = .stronglyEmphasized }
+            line += text
+        }
+        return line
+    }
+
     private var doneLabel: Text {
         Text("Done", comment: "Reminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.")
     }
@@ -378,7 +388,7 @@ private struct RemindersRowView: View {
         guard !row.tags.isEmpty else {
             return LocalizedStringResource("\(row.title), \(status), \(row.day), \(row.time)", comment: "VoiceOver label of a Reminders tab row with no tags. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\".")
         }
-        let tags = row.tags.formatted(.list(type: .and))
+        let tags = row.tags.map(\.text).formatted(.list(type: .and))
         return LocalizedStringResource("\(row.title), \(status), \(row.day), \(row.time), tags: \(tags)", comment: "VoiceOver label of a Reminders tab row. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\". 5: its tags, such as \"#home and #errands\".")
     }
 }

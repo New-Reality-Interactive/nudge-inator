@@ -3,7 +3,7 @@ import NudgeEngine
 
 /// What the Reminders filter sheet has chosen, applied or as a draft. Search isn't part of it, so
 /// Apply, Reset and Clear All Filters leave the search as it is. The tags are My Day's.
-struct RemindersSheetFilter: Equatable {
+struct RemindersFilterChoices: Equatable {
     var tags = TagChoice()
     private(set) var statuses: Set<RemindersFilter.Status> = []
     private(set) var strengths: Set<Strength> = []
@@ -12,8 +12,6 @@ struct RemindersSheetFilter: Equatable {
     var sectionsInUse: Int {
         [tags.isOn, !statuses.isEmpty, !strengths.isEmpty].count { $0 }
     }
-
-    var isOn: Bool { sectionsInUse > 0 }
 
     func isChosen(_ status: RemindersFilter.Status) -> Bool { statuses.contains(status) }
 
@@ -33,7 +31,7 @@ struct RemindersSheetFilter: Equatable {
     }
 
     /// The filter without tags that no longer exist, as My Day's.
-    func keeping(tagsIn existing: Set<Tag.ID>) -> RemindersSheetFilter {
+    func keeping(tagsIn existing: Set<Tag.ID>) -> RemindersFilterChoices {
         var kept = self
         kept.tags = tags.keeping(tagsIn: existing)
         return kept

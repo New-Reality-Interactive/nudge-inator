@@ -7,7 +7,7 @@ struct MyDayFilterSheet {
     let choice: TagChoiceRows
     var result: LocalizedStringResource
 
-    var tags: [TagChoiceRows.Row] { choice.rows }
+    var tags: [TagChoiceRows.Row] { choice.tags }
     var isNoTagsChecked: Bool { choice.isNoTagsChecked }
     var canChooseMatch: Bool { choice.canChooseMatch }
     var tagsFooter: LocalizedStringResource { choice.footer }

@@ -73,3 +73,13 @@ struct RemindersSortButton: View {
         }
     }
 }
+
+#if DEBUG
+#Preview("Sort button") {
+    @Previewable @State var sort = RemindersSort.createdOldestFirst
+    NavigationStack {
+        Text(verbatim: "List")
+            .toolbar { RemindersSortButton(sort: $sort) }
+    }
+}
+#endif

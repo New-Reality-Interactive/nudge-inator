@@ -13,14 +13,12 @@ struct RemindersFilterSheetTests {
     let money = Tag(name: "money")
 
     @Test func theBadgeCountsTheSectionsInUseNotTheChoices() {
-        var filter = RemindersSheetFilter()
+        var filter = RemindersFilterChoices()
         #expect(filter.sectionsInUse == 0)
-        #expect(!filter.isOn)
 
         filter.toggle(RemindersFilter.Status.done)
         filter.toggle(RemindersFilter.Status.missed)
         #expect(filter.sectionsInUse == 1)
-        #expect(filter.isOn)
 
         filter.toggle(Strength.firm)
         #expect(filter.sectionsInUse == 2)
@@ -31,7 +29,7 @@ struct RemindersFilterSheetTests {
     }
 
     @Test func noTagsCountsAsTheTagsSection() {
-        var filter = RemindersSheetFilter()
+        var filter = RemindersFilterChoices()
 
         filter.tags.toggleNoTags()
 
@@ -39,18 +37,18 @@ struct RemindersFilterSheetTests {
     }
 
     @Test func aChoiceTappedAgainComesOff() {
-        var filter = RemindersSheetFilter()
+        var filter = RemindersFilterChoices()
 
         filter.toggle(Strength.firm)
         filter.toggle(RemindersFilter.Status.done)
         filter.toggle(Strength.firm)
         filter.toggle(RemindersFilter.Status.done)
 
-        #expect(filter == RemindersSheetFilter())
+        #expect(filter == RemindersFilterChoices())
     }
 
     @Test func theListIsNarrowedByEverySectionAndTheSearchItIsGiven() {
-        var filter = RemindersSheetFilter()
+        var filter = RemindersFilterChoices()
         filter.tags.toggle(home.id)
         filter.toggle(RemindersFilter.Status.paused)
         filter.toggle(Strength.firm)
@@ -60,17 +58,8 @@ struct RemindersFilterSheetTests {
         ))
     }
 
-    @Test func searchIsNotPartOfWhatTheSheetHoldsSoClearingLeavesIt() {
-        var filter = RemindersSheetFilter()
-        filter.toggle(Strength.firm)
-
-        filter = RemindersSheetFilter()
-
-        #expect(filter.narrowing(search: "pill") == RemindersFilter(search: "pill"))
-    }
-
     @Test func aDeletedTagDropsOutOfTheFilterAndTheBadge() {
-        var filter = RemindersSheetFilter()
+        var filter = RemindersFilterChoices()
         filter.tags.toggle(home.id)
         filter.tags.toggle(money.id)
 
@@ -84,8 +73,8 @@ struct RemindersFilterSheetTests {
 
     private func sheet(
         _ day: MyDayScreenTests.Day,
-        draft: RemindersSheetFilter,
-        applied: RemindersSheetFilter = RemindersSheetFilter(),
+        draft: RemindersFilterChoices,
+        applied: RemindersFilterChoices = RemindersFilterChoices(),
         search: String = ""
     ) -> RemindersFilterSheet {
         RemindersFilterSheet(engine: day.model.engine, draft: draft, applied: applied, search: search)
@@ -93,7 +82,7 @@ struct RemindersFilterSheetTests {
 
     @Test func aDraftMatchingWhatsAppliedHasNoChanges() async throws {
         let day = try await fixture.dayAtOnePM()
-        var applied = RemindersSheetFilter()
+        var applied = RemindersFilterChoices()
         applied.toggle(Strength.firm)
 
         #expect(!sheet(day, draft: applied, applied: applied).hasChanges)
@@ -101,7 +90,7 @@ struct RemindersFilterSheetTests {
 
     @Test func aChangedDraftHasChangesUntilItsChangedBack() async throws {
         let day = try await fixture.dayAtOnePM()
-        var draft = RemindersSheetFilter()
+        var draft = RemindersFilterChoices()
 
         draft.toggle(RemindersFilter.Status.done)
         #expect(sheet(day, draft: draft).hasChanges)
@@ -112,7 +101,7 @@ struct RemindersFilterSheetTests {
 
     @Test func tagsCheckedInAnotherOrderAreNoChange() async throws {
         let day = try await fixture.dayAtOnePM()
-        var applied = RemindersSheetFilter()
+        var applied = RemindersFilterChoices()
         applied.tags.toggle(day.home.id)
         applied.tags.toggle(day.work.id)
         var draft = applied
@@ -125,7 +114,7 @@ struct RemindersFilterSheetTests {
 
     @Test func aTagDeletedWhileChosenIsNoChange() async throws {
         let day = try await fixture.dayAtOnePM()
-        var applied = RemindersSheetFilter()
+        var applied = RemindersFilterChoices()
         applied.tags.toggle(day.home.id)
         applied.tags.toggle(UUID())
         let draft = applied.keeping(tagsIn: [day.home.id])
@@ -133,24 +122,44 @@ struct RemindersFilterSheetTests {
         #expect(!sheet(day, draft: draft, applied: applied).hasChanges)
     }
 
-    @Test func resetClearsTheDraftNotWhatsApplied() async throws {
+    /// Reset gives the draft an empty value, in the view; Apply passes the draft on. The screenshot
+    /// walk taps both. What this seam holds is what the sheet says about the result.
+    @Test func anEmptyDraftHasNothingToResetAndDiffersFromWhatsApplied() async throws {
         let day = try await fixture.dayAtOnePM()
-        var applied = RemindersSheetFilter()
+        var applied = RemindersFilterChoices()
         applied.toggle(Strength.firm)
-        var draft = applied
-        #expect(sheet(day, draft: draft, applied: applied).canReset)
+        #expect(sheet(day, draft: applied, applied: applied).canReset)
 
-        draft = RemindersSheetFilter()
+        let afterReset = sheet(day, draft: RemindersFilterChoices(), applied: applied)
 
-        let afterReset = sheet(day, draft: draft, applied: applied)
         #expect(!afterReset.canReset)
         #expect(afterReset.hasChanges)
-        #expect(applied.sectionsInUse == 1)
+    }
+
+    @Test func aLeftoverMatchAnyIsSomethingToReset() async throws {
+        let day = try await fixture.dayAtOnePM()
+        var draft = RemindersFilterChoices()
+        draft.tags.match = .any
+
+        #expect(sheet(day, draft: draft).canReset)
+    }
+
+    @Test func aMatchChoiceLeftOnOneTagIsNoChange() async throws {
+        let day = try await fixture.dayAtOnePM()
+        var applied = RemindersFilterChoices()
+        applied.tags.toggle(day.home.id)
+        var draft = applied
+
+        draft.tags.toggle(day.work.id)
+        draft.tags.match = .any
+        draft.tags.toggle(day.work.id)
+
+        #expect(!sheet(day, draft: draft, applied: applied).hasChanges)
     }
 
     @Test func theFooterCountsWhatApplyWouldShowWithTheSearchAsItIs() async throws {
         let day = try await fixture.dayAtOnePM()
-        var draft = RemindersSheetFilter()
+        var draft = RemindersFilterChoices()
         #expect(String(localized: sheet(day, draft: draft).result) == "Apply shows 10 reminders.")
 
         draft.toggle(RemindersFilter.Status.nudging)
@@ -161,17 +170,17 @@ struct RemindersFilterSheetTests {
 
     @Test func theSheetChecksTheDraftsTags() async throws {
         let day = try await fixture.dayAtOnePM()
-        var draft = RemindersSheetFilter()
+        var draft = RemindersFilterChoices()
         draft.tags.toggle(day.home.id)
 
-        let rows = sheet(day, draft: draft).tags.rows
+        let rows = sheet(day, draft: draft).tags.tags
 
         #expect(rows.filter(\.isChecked).map(\.text) == ["#home"])
     }
 
     @Test func aNewReminderShowsOnlyIfItMatchesTheSheetsFilters() async throws {
         let day = try await fixture.dayAtOnePM()
-        var filter = RemindersSheetFilter()
+        var filter = RemindersFilterChoices()
         filter.toggle(Strength.relentless)
         let narrowing = filter.narrowing(search: "")
         let before = RemindersScreen(engine: day.model.engine, filter: narrowing).rows.count

@@ -15,7 +15,7 @@ struct MyDayFilterSheetView: View {
         let sheet = MyDayFilterSheet(engine: engine, filter: filter)
         NavigationStack {
             List {
-                TagChoiceSections(choice: $filter.tags, rows: sheet.choice) {
+                TagChoiceSections(choice: $filter.tags, sheet: sheet.choice) {
                     Text(sheet.result)
                         .padding(.bottom, listHeight.extra)
                 }

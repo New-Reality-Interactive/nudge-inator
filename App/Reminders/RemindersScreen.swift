@@ -25,8 +25,8 @@ struct RemindersScreen {
         var time: String
         /// "Today", "Tomorrow", "Yesterday" or a short date, under the time.
         var day: String
-        /// The reminder's tags that the engine holds, as "#home".
-        var tags: [String]
+        /// The reminder's tags that the engine holds, as "#home". The ones the filter chose are bold.
+        var tags: [MyDayScreen.TagLabel]
 
         var id: Reminder.ID { reminder.id }
         var title: String { reminder.title }
@@ -44,9 +44,10 @@ struct RemindersScreen {
         LocalizedStringResource("\(shown) reminders out of \(total)", comment: "Reminders tab: the header row's count, in every case, even with nothing narrowing the list. 1: the reminders shown. 2: every reminder.")
     }
 
-    /// `keptOrder` is the rows' order when the list's inputs (the sort, and the filter) last changed. Sorted by Due Date, Done or going Missed changes a row's due time, so
-    /// the rows keep that order rather than move under the person (spec #104, Decision 35). A
-    /// reminder it doesn't hold, added since, goes where the sort puts it.
+    /// `keptOrder` is the rows' order when the list's inputs (the sort and the filter) last changed.
+    /// Sorted by Due Date, Done or going Missed changes a row's due time, so the rows keep that order
+    /// rather than move under the person (spec #104, Decision 35). A reminder it doesn't hold, added
+    /// since, goes where the sort puts it.
     init(
         engine: Engine,
         sort: RemindersSort = .createdOldestFirst,
@@ -62,7 +63,9 @@ struct RemindersScreen {
                 status: item.status,
                 time: engine.timeOfDay(of: item.dueTime),
                 day: engine.dayLabel(of: item.dueTime),
-                tags: engine.tagLabels(for: item.reminder.tagIDs)
+                tags: item.reminder.tagIDs.compactMap { tagID in
+                    engine.tag(withID: tagID).map { MyDayScreen.TagLabel(text: $0.label, isChosen: filter.tags.chosen.contains(tagID)) }
+                }
             )
         }
         emptyState = engine.reminders.isEmpty ? .noReminders : (rows.isEmpty ? .noMatch : nil)

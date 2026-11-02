@@ -63,6 +63,14 @@ public enum TagFilter: Equatable, Sendable {
     /// Items whose reminder has no tags.
     case noTags
 
+    /// The tags chosen, which a row shows in bold.
+    public var chosen: Set<Tag.ID> {
+        switch self {
+        case .matchAll(let chosen), .matchAny(let chosen): chosen
+        case .off, .noTags: []
+        }
+    }
+
     /// Whether a reminder with `tagIDs`, the ones of its tags that still exist, passes.
     func includes(_ tagIDs: Set<Tag.ID>) -> Bool {
         switch self {

@@ -36,15 +36,15 @@ struct RemindersScreenTests {
         }
 
         let alex = try row(day.alex)
-        #expect((alex.time, alex.day, alex.tags) == ("12:30\u{202F}PM", "Today", []))
+        #expect((alex.time, alex.day, alex.tags.map(\.text)) == ("12:30\u{202F}PM", "Today", []))
         // Done this morning, so tomorrow's is next.
         let dog = try row(day.dog)
-        #expect((dog.time, dog.day, dog.tags) == ("7:00\u{202F}AM", "Tomorrow", ["#home"]))
+        #expect((dog.time, dog.day, dog.tags.map(\.text)) == ("7:00\u{202F}AM", "Tomorrow", ["#home"]))
         // Given up, so its latest occurrence's.
         let standUp = try row(day.standUp)
-        #expect((standUp.time, standUp.day, standUp.tags) == ("9:30\u{202F}AM", "Today", ["#work"]))
+        #expect((standUp.time, standUp.day, standUp.tags.map(\.text)) == ("9:30\u{202F}AM", "Today", ["#work"]))
         let stretch = try row(day.stretch)
-        #expect(stretch.tags == ["#health", "#work"])
+        #expect(stretch.tags.map(\.text) == ["#health", "#work"])
     }
 
     /// The trailing swipe's Done, and the row's Done VoiceOver action. Every row offers Delete.
@@ -272,6 +272,15 @@ struct RemindersScreenTests {
 
         let shown = RemindersScreen(engine: day.model.engine, filter: RemindersFilter(search: "alex"))
         #expect(shown.rows.map(\.title) == ["Reply to Alex", "Call Alex back"])
+    }
+
+    @Test func theFiltersTagsAreBoldOnARow() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        let screen = RemindersScreen(engine: day.model.engine, filter: RemindersFilter(tags: .matchAny([day.health.id])))
+
+        let stretch = try #require(screen.rows.first { $0.id == day.stretch.id })
+        #expect(stretch.tags.map(\.isChosen) == [true, false])
     }
 
     /// Whole strings for each case, never built from pieces (CODING_STANDARDS.md). The mock's

@@ -549,6 +549,28 @@ final class ShotsUITests: XCTestCase {
         pause(0.5)
     }
 
+    /// A drag from the sheet's bar down most of the screen: `swipeDown()` on the bar is too short to
+    /// close it.
+    private func swipeRemindersFilterDown() {
+        let bar = app.navigationBars["Filter Reminders"]
+        let from = bar.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 0, dy: 600)), withVelocity: .fast, thenHoldForDuration: 0)
+    }
+
+    /// The system draws the discard question as a popover with Discard Changes alone: a tap outside
+    /// it is Keep Editing. At the largest text it can fill the screen, so the tap goes to the
+    /// popover's own dismiss region.
+    private func keepEditing() {
+        let outside = app.otherElements["PopoverDismissRegion"].firstMatch
+        if outside.exists {
+            outside.tap()
+        } else {
+            app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)).tap()
+        }
+        pause(0.8)
+        XCTAssertFalse(app.buttons["Discard Changes"].exists, "The discard question stayed up")
+    }
+
     /// Chooses a row of the open sheet, which scrolls to it.
     private func chooseInSheet(_ label: String) {
         tapText(label, inSheet: true)
@@ -566,7 +588,7 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-filter", pages: 3, stopsAtEnd: true)
 
         // A clean draft just closes, and a swipe that closes it leaves the button working.
-        app.navigationBars["Filter Reminders"].swipeDown(velocity: .fast)
+        swipeRemindersFilterDown()
         pause(1)
         XCTAssertFalse(app.navigationBars["Filter Reminders"].exists, "A swipe down on a clean draft didn't close the sheet")
         openRemindersFilter()
@@ -577,14 +599,12 @@ final class ShotsUITests: XCTestCase {
         barTap { app.navigationBars["Filter Reminders"].buttons.element(boundBy: 0).tap() }
         XCTAssert(app.buttons["Discard Changes"].waitForExistence(timeout: 3), "Cancel didn't ask first:\n\(app.debugDescription)")
         shot("reminders-filter-discard")
-        app.buttons["Keep Editing"].firstMatch.tap()
-        pause(0.8)
+        keepEditing()
 
-        app.navigationBars["Filter Reminders"].swipeDown(velocity: .fast)
+        swipeRemindersFilterDown()
         XCTAssert(app.buttons["Discard Changes"].waitForExistence(timeout: 3), "A swipe down didn't ask first:\n\(app.debugDescription)")
         shot("reminders-filter-discard-swipe")
-        app.buttons["Keep Editing"].firstMatch.tap()
-        pause(0.8)
+        keepEditing()
 
         // Firm off again, so the Nudging rows show.
         chooseInSheet("Firm")

@@ -25,6 +25,8 @@ struct TagChoice: Equatable {
     var tagFilter: TagFilter {
         if noTags { return .noTags }
         guard !tagIDs.isEmpty else { return .off }
+        // With one tag All and Any mean the same, whichever was chosen when there were two.
+        guard tagIDs.count > 1 else { return .matchAll(Set(tagIDs)) }
         switch match {
         case .all: return .matchAll(Set(tagIDs))
         case .any: return .matchAny(Set(tagIDs))
@@ -68,7 +70,7 @@ struct TagChoice: Equatable {
 
 /// What a filter sheet's tag sections show, read from the engine at one moment.
 struct TagChoiceRows {
-    var rows: [Row]
+    var tags: [Row]
     var isNoTagsChecked: Bool
     /// The Match control is always shown, so checking a tag doesn't move the rows, and can be
     /// chosen once two or more tags are checked.
@@ -86,7 +88,7 @@ struct TagChoiceRows {
 
     init(engine: Engine, choice: TagChoice) {
         let chosen = Set(choice.tagIDs)
-        rows = engine.tagSummaries().map { Row(tag: $0.tag, isChecked: chosen.contains($0.tag.id)) }
+        tags = engine.tagSummaries().map { Row(tag: $0.tag, isChecked: chosen.contains($0.tag.id)) }
         isNoTagsChecked = choice.noTags
         canChooseMatch = choice.tagIDs.count > 1
         footer = canChooseMatch

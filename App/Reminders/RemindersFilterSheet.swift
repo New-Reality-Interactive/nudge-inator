@@ -14,13 +14,12 @@ struct RemindersFilterSheet {
     /// Whether Reset has anything to clear.
     let canReset: Bool
 
-    init(engine: Engine, draft: RemindersSheetFilter, applied: RemindersSheetFilter, search: String) {
+    init(engine: Engine, draft: RemindersFilterChoices, applied: RemindersFilterChoices, search: String) {
         let existing = Set(engine.tags.map(\.id))
         let draft = draft.keeping(tagsIn: existing)
-        let narrowing = draft.narrowing(search: "")
         tags = TagChoiceRows(engine: engine, choice: draft.tags)
-        hasChanges = narrowing != applied.keeping(tagsIn: existing).narrowing(search: "")
-        canReset = narrowing.hasSheetFilters
+        hasChanges = draft.narrowing(search: "") != applied.keeping(tagsIn: existing).narrowing(search: "")
+        canReset = draft != RemindersFilterChoices()
         let shown = engine.remindersList(filteredBy: draft.narrowing(search: search)).items.count
         result = LocalizedStringResource("Apply shows \(shown) reminders.", comment: "Reminders' filter sheet: above Reset. The placeholder is how many reminders the list would show with these filters and the search as it is.")
     }

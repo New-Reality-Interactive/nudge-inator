@@ -339,9 +339,9 @@ extension Strength {
 
     var title: LocalizedStringResource {
         switch self {
-        case .gentle: LocalizedStringResource("Gentle", comment: "Strength name: the reminder nudges gently.")
-        case .firm: LocalizedStringResource("Firm", comment: "Strength name.")
-        case .relentless: LocalizedStringResource("Relentless", comment: "Strength name: the reminder nudges hardest.")
+        case .gentle: LocalizedStringResource("Gentle", comment: "Strength name, in the form and the Reminders filter sheet: the reminder nudges gently.")
+        case .firm: LocalizedStringResource("Firm", comment: "Strength name, in the form and the Reminders filter sheet.")
+        case .relentless: LocalizedStringResource("Relentless", comment: "Strength name, in the form and the Reminders filter sheet: the reminder nudges hardest.")
         }
     }
 }

@@ -774,7 +774,7 @@
       "comment" : "Now: section header for reminders due soon."
     },
     "Coming up" : {
-      "comment" : "Status label: the reminder isn't due yet."
+      "comment" : "Status label, and a Status row in the Reminders filter sheet: the reminder isn't due yet."
     },
     "Completed" : {
       "comment" : "A tag's screen: header of the reminders with nothing more to come."
@@ -840,7 +840,7 @@
       "comment" : "Asked when cancelling a sheet with changes: the reminder form or the Reminders filter."
     },
     "Done" : {
-      "comment" : "My Day's filter sheet: closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label: an occurrence closed as Done.\nTags: leaves Edit mode.\nThe Custom repeat page's confirm button (a checkmark): its choices become the Repeat page's choice.\nThe Repeat page's confirm button (a checkmark): its choice becomes the reminder's repeat.\nThe tag sheet's confirm button (a checkmark)."
+      "comment" : "My Day's filter sheet: closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.\nTags: leaves Edit mode.\nThe Custom repeat page's confirm button (a checkmark): its choices become the Repeat page's choice.\nThe Repeat page's confirm button (a checkmark): its choice becomes the reminder's repeat.\nThe tag sheet's confirm button (a checkmark)."
     },
     "Done after %lld nudges" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence closed as Done. The placeholder is how many nudges it sent.",
@@ -1106,7 +1106,7 @@
       "comment" : "VoiceOver label of the group of tokens for the tags My Day is filtered by."
     },
     "Firm" : {
-      "comment" : "Strength name."
+      "comment" : "Strength name, in the form and the Reminders filter sheet."
     },
     "For a reminder with Break Through Focus on, High nudges are Time Sensitive, so they get through a Focus." : {
       "comment" : "Settings: footer under the Nudges rows, when Time Sensitive is on."
@@ -1121,7 +1121,7 @@
       "comment" : "Settings: header of the first section, with the About row."
     },
     "Gentle" : {
-      "comment" : "Strength name: the reminder nudges gently."
+      "comment" : "Strength name, in the form and the Reminders filter sheet: the reminder nudges gently."
     },
     "Gives up after %lld nudges or %@, whichever comes first." : {
       "comment" : "Under the reminder form's strength. 1: the give-up limit's nudge count. 2: its span, such as \"24 hours\".",
@@ -1183,7 +1183,7 @@
       "comment" : "A filter sheet: label of the choice between All Tags and Any Tag."
     },
     "Missed" : {
-      "comment" : "My Day: the caption of the count of occurrences missed today.\nStatus label: an occurrence closed without Done, by its give-up limit or a take-over."
+      "comment" : "My Day: the caption of the count of occurrences missed today.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed without Done, by its give-up limit or a take-over."
     },
     "Missed: gave up after the limit" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that reached its give-up limit (20 nudges or 24 hours)."
@@ -1386,7 +1386,7 @@
       "comment" : "Body of the notification that Settings' Send a Test Nudge sends."
     },
     "Nudging" : {
-      "comment" : "My Day: the caption of the count of occurrences nudging now.\nNow: section header for the reminders nudging you now.\nStatus label: an occurrence that has come due and isn't Done yet."
+      "comment" : "My Day: the caption of the count of occurrences nudging now.\nNow: section header for the reminders nudging you now.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence that has come due and isn't Done yet."
     },
     "Nudging Now" : {
       "comment" : "Reminder details: section header above the card of a reminder that is nudging."
@@ -1504,7 +1504,7 @@
       "comment" : "Reminder details: stops the reminder's nudging until it is resumed."
     },
     "Paused" : {
-      "comment" : "A tag's screen: header of the paused reminders.\nReminder details, Schedule: the reminder is paused, so nothing is next.\nStatus label: the reminder is paused."
+      "comment" : "A tag's screen: header of the paused reminders.\nReminder details, Schedule: the reminder is paused, so nothing is next.\nStatus label, and a Status row in the Reminders filter sheet: the reminder is paused."
     },
     "Paused: this one will be skipped" : {
       "comment" : "My Day: under the title of an occurrence due later today whose reminder is paused."
@@ -1516,7 +1516,7 @@
       "comment" : "About page: row that opens the app's privacy policy on the website, in the web browser."
     },
     "Relentless" : {
-      "comment" : "Strength name: the reminder nudges hardest."
+      "comment" : "Strength name, in the form and the Reminders filter sheet: the reminder nudges hardest."
     },
     "Relentless always rings, so it always breaks through a Focus." : {
       "comment" : "Under Break Through Focus when the strength is Relentless, which shows the switch on and dimmed."
@@ -1623,7 +1623,7 @@
       "comment" : "Reminders' filter sheet: under the list of strengths."
     },
     "Skipped" : {
-      "comment" : "Status label: an occurrence closed because its reminder was paused."
+      "comment" : "Status label, and a Status row in the Reminders filter sheet: an occurrence closed because its reminder was paused."
     },
     "Skipped: the reminder was paused" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that closed because its reminder was paused."

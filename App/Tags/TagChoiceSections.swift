@@ -5,7 +5,7 @@ import SwiftUI
 /// the tags, and No Tags, on My Day and on Reminders.
 struct TagChoiceSections<NoTagsFooter: View>: View {
     @Binding var choice: TagChoice
-    let rows: TagChoiceRows
+    let sheet: TagChoiceRows
     @ViewBuilder var noTagsFooter: NoTagsFooter
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -16,16 +16,16 @@ struct TagChoiceSections<NoTagsFooter: View>: View {
             matchPicker
         }
         Section {
-            if rows.rows.isEmpty {
+            if sheet.tags.isEmpty {
                 EmptyRow(text: Text("No tags yet. Add them when you edit a reminder.", comment: "A filter sheet: the Tags list when no tag exists."))
             }
-            ForEach(rows.rows) { row in
+            ForEach(sheet.tags) { row in
                 CheckmarkRow(title: Text(verbatim: row.text), isChecked: row.isChecked) { choice.toggle(row.id) }
             }
         } header: {
             Text("Tags", comment: "A filter sheet: header of the list of tags.")
         } footer: {
-            Text(rows.footer)
+            Text(sheet.footer)
         }
         Section {
             noTagsRow
@@ -43,7 +43,7 @@ struct TagChoiceSections<NoTagsFooter: View>: View {
     /// isn't read as dimmed; the reason stands in for it. Representing it with the disabled menu
     /// (`accessibilityRepresentation`) hid it from VoiceOver altogether.
     @ViewBuilder private var matchPicker: some View {
-        let canChoose = rows.canChooseMatch
+        let canChoose = sheet.canChooseMatch
         let label = Text("Match", comment: "A filter sheet: label of the choice between All Tags and Any Tag.")
         let reason = Text("Needs two or more checked tags.", comment: "A filter sheet: VoiceOver's reason the Match choice is disabled.")
         let picker = Picker(selection: $choice.match) {
@@ -75,7 +75,7 @@ struct TagChoiceSections<NoTagsFooter: View>: View {
     }
 
     private var noTagsRow: some View {
-        let isChecked = rows.isNoTagsChecked
+        let isChecked = sheet.isNoTagsChecked
         return Button {
             choice.toggleNoTags()
         } label: {
@@ -96,52 +96,5 @@ struct TagChoiceSections<NoTagsFooter: View>: View {
             }
         }
         .accessibilityAddTraits(isChecked ? .isSelected : [])
-    }
-}
-
-/// Keeps a filter sheet's list from getting shorter while it is open (ticket 23). A tap that
-/// shortens the text under the tags, such as No Tags dropping the Match explanation, would otherwise
-/// make a list scrolled to its end scroll back, moving every row under the finger. Blank space at
-/// the end makes up the difference. A new width, from turning the phone, or a new text size starts
-/// again.
-struct NeverShorter {
-    private var width: CGFloat = 0
-    private var tallest: CGFloat = 0
-    private(set) var extra: CGFloat = 0
-
-    /// `height` is the list's content height, `extra` included.
-    mutating func update(width: CGFloat, height: CGFloat) {
-        let natural = height - extra
-        if width != self.width {
-            self.width = width
-            tallest = natural
-        }
-        tallest = max(tallest, natural)
-        extra = tallest - natural
-    }
-}
-
-extension View {
-    /// Measures the list this modifies. Its last section adds `height.extra` as padding at its end.
-    func neverShorter(_ height: Binding<NeverShorter>) -> some View {
-        modifier(NeverShorterMeasure(height: height))
-    }
-}
-
-private struct NeverShorterMeasure: ViewModifier {
-    @Binding var height: NeverShorter
-
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
-    func body(content: Content) -> some View {
-        content
-            .onScrollGeometryChange(for: CGSize.self) { geometry in
-                CGSize(width: geometry.containerSize.width, height: geometry.contentSize.height)
-            } action: { _, size in
-                height.update(width: size.width, height: size.height)
-            }
-            .onChange(of: dynamicTypeSize) {
-                height = NeverShorter()
-            }
     }
 }

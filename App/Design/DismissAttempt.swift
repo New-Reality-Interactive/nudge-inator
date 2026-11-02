@@ -17,6 +17,7 @@ private struct DismissAttemptObserver: UIViewControllerRepresentable {
 
     func updateUIViewController(_ controller: Controller, context: Context) {
         controller.relay.action = action
+        controller.installRelay()
     }
 
     @MainActor
@@ -25,6 +26,11 @@ private struct DismissAttemptObserver: UIViewControllerRepresentable {
 
         override func viewDidAppear(_ animated: Bool) {
             super.viewDidAppear(animated)
+            installRelay()
+        }
+
+        /// Again on each update: the docs don't say SwiftUI sets its delegate only once.
+        func installRelay() {
             guard let presentation = presentationController, presentation.delegate !== relay else { return }
             relay.original = presentation.delegate
             presentation.delegate = relay
@@ -35,7 +41,9 @@ private struct DismissAttemptObserver: UIViewControllerRepresentable {
     /// needs its calls: a swipe that does dismiss has to set the sheet's binding back.
     @MainActor
     final class Relay: NSObject, UIAdaptivePresentationControllerDelegate {
-        weak var original: UIAdaptivePresentationControllerDelegate?
+        /// Unsafe for the two NSObject overrides below, which can't be main-actor isolated. UIKit
+        /// calls a presentation's delegate on the main thread only.
+        nonisolated(unsafe) weak var original: UIAdaptivePresentationControllerDelegate?
         var action: () -> Void = {}
 
         func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
