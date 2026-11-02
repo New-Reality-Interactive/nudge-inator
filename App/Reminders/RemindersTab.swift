@@ -155,12 +155,11 @@ struct RemindersTab: View {
         keptOrder = list.map { KeptOrder(sort: sort, filter: filter, ids: $0.items.map(\.reminder.id)) }
     }
 
-    /// Says the new count, as the mockup does. Low priority, so it follows what VoiceOver reads as
-    /// the sheet or menu closes rather than cutting it off (WWDC23, "Build accessible apps with
-    /// SwiftUI and UIKit").
+    /// Says the new count, as the mockup does. High priority, which nothing interrupts once it has
+    /// started: at low, on the iPhone, the focus landing as the sheet closed cut it off (#113).
     private func announceCount(of list: RemindersList) {
         var count = AttributedString(String(localized: RemindersScreen.countText(shown: list.items.count, of: list.total)))
-        count.accessibilitySpeechAnnouncementPriority = .low
+        count.accessibilitySpeechAnnouncementPriority = .high
         AccessibilityNotification.Announcement(count).post()
     }
 
