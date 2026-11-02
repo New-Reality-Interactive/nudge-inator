@@ -47,7 +47,11 @@ struct RemindersFilterSheetView: View {
                         apply(draft)
                         dismiss()
                     } label: {
-                        Text("Apply", comment: "Reminders' filter sheet: applies the choices and closes the sheet.")
+                        Label {
+                            Text("Apply", comment: "Reminders' filter sheet's confirm button (a checkmark): applies the choices and closes the sheet.")
+                        } icon: {
+                            Image(systemName: "checkmark")
+                        }
                     }
                 }
             }

@@ -421,7 +421,7 @@ except in the tab and navigation bars. Verify names against the mockup.
   (`line.3.horizontal.decrease`) opens the sheet, Clear All Filters (`xmark`) removes every sheet
   filter and leaves the search. With none on, a tap opens the sheet. No long press, as on My Day.
 - **Filter sheet ("Filter Reminders"):** Cancel (`xmark`, the form's cancel button) leading,
-  Apply (accent capsule) trailing, and Reset, a bordered button, at the bottom under the footer.
+  Apply (the filled confirm button, `checkmark`) trailing, and Reset, a bordered button, at the bottom under the footer.
   Cancel, tapping above or swiping down discards the draft, asking first (Discard Changes, Keep
   Editing) once it differs from what's applied.
   Match and Tags with No Tags as on My Day, then Status, Strength and Due Date. Status and

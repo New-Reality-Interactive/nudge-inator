@@ -36,7 +36,11 @@ struct MyDayFilterSheetView: View {
                     Button(role: .confirm) {
                         dismiss()
                     } label: {
-                        Text("Done", comment: "My Day's filter sheet: closes the sheet.")
+                        Label {
+                            Text("Done", comment: "My Day's filter sheet's confirm button (a checkmark): closes the sheet.")
+                        } icon: {
+                            Image(systemName: "checkmark")
+                        }
                     }
                 }
             }
