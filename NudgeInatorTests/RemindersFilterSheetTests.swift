@@ -191,4 +191,132 @@ struct RemindersFilterSheetTests {
         day.model.add(Reminder(title: "Hard one", dueTime: NewYork.local(2026, 10, 30), strength: .relentless))
         #expect(RemindersScreen(engine: day.model.engine, filter: narrowing).rows.last?.title == "Hard one")
     }
+
+    // MARK: Due Date
+
+    private let oct20 = CalendarDay(year: 2026, month: 10, day: 20)
+    private let oct22 = CalendarDay(year: 2026, month: 10, day: 22)
+
+    @Test func eitherEndOfTheRangeCountsAsOneSection() {
+        var filter = RemindersFilterChoices()
+
+        filter.setDueFrom(oct20)
+        #expect(filter.sectionsInUse == 1)
+
+        filter.setDueTo(oct22)
+        #expect(filter.sectionsInUse == 1)
+
+        filter.setDueFrom(nil)
+        #expect(filter.sectionsInUse == 1)
+
+        filter.setDueTo(nil)
+        #expect(filter.sectionsInUse == 0)
+    }
+
+    @Test func theBadgeRunsToFourWithTheRange() {
+        var filter = RemindersFilterChoices()
+        filter.tags.toggleNoTags()
+        filter.toggle(RemindersFilter.Status.done)
+        filter.toggle(Strength.firm)
+
+        filter.setDueTo(oct22)
+
+        #expect(filter.sectionsInUse == 4)
+    }
+
+    @Test func aFirstDayAfterTheLastCantBeChosen() {
+        var filter = RemindersFilterChoices()
+        filter.setDueTo(oct20)
+
+        filter.setDueFrom(oct22)
+
+        #expect(filter.dueFrom == oct20)
+        #expect(filter.dueTo == oct20)
+    }
+
+    @Test func aLastDayBeforeTheFirstCantBeChosen() {
+        var filter = RemindersFilterChoices()
+        filter.setDueFrom(oct22)
+
+        filter.setDueTo(oct20)
+
+        #expect(filter.dueFrom == oct22)
+        #expect(filter.dueTo == oct22)
+    }
+
+    @Test func theListIsNarrowedByTheRange() {
+        var filter = RemindersFilterChoices()
+        filter.setDueFrom(oct20)
+        filter.setDueTo(oct22)
+
+        #expect(filter.narrowing(search: "") == RemindersFilter(dueFrom: oct20, dueTo: oct22))
+    }
+
+    @Test func aRangeInTheDraftIsAChangeUntilItsChangedBack() async throws {
+        let day = try await fixture.dayAtOnePM()
+        var draft = RemindersFilterChoices()
+
+        draft.setDueFrom(oct20)
+        #expect(sheet(day, draft: draft).hasChanges)
+        #expect(sheet(day, draft: draft).canReset)
+
+        draft.setDueFrom(nil)
+        #expect(!sheet(day, draft: draft).hasChanges)
+        #expect(!sheet(day, draft: draft).canReset)
+    }
+
+    /// Reset gives the draft an empty value. Until Apply, that's a change from what's applied, so
+    /// closing without Apply asks first and keeps the range.
+    @Test func anEmptyDraftOverAnAppliedRangeHasNothingToResetAndIsAChange() async throws {
+        let day = try await fixture.dayAtOnePM()
+        var applied = RemindersFilterChoices()
+        applied.setDueTo(oct22)
+        #expect(sheet(day, draft: applied, applied: applied).canReset)
+        #expect(!sheet(day, draft: applied, applied: applied).hasChanges)
+
+        let afterReset = sheet(day, draft: RemindersFilterChoices(), applied: applied)
+
+        #expect(!afterReset.canReset)
+        #expect(afterReset.hasChanges)
+    }
+
+    @Test func theFooterCountsTheRangeInTheDraft() async throws {
+        let day = try await fixture.dayAtOnePM()
+        day.model.add(Reminder(title: "Far off", dueTime: NewYork.local(2027, 3, 1), strength: .gentle))
+        var draft = RemindersFilterChoices()
+
+        draft.setDueFrom(CalendarDay(year: 2027, month: 3, day: 1))
+
+        #expect(String(localized: sheet(day, draft: draft).result) == "Apply shows 1 reminder.")
+    }
+
+    @Test func aNewReminderShowsOnlyIfItsInTheRange() async throws {
+        let day = try await fixture.dayAtOnePM()
+        var filter = RemindersFilterChoices()
+        filter.setDueFrom(CalendarDay(year: 2027, month: 3, day: 1))
+        filter.setDueTo(CalendarDay(year: 2027, month: 3, day: 2))
+        let narrowing = filter.narrowing(search: "")
+        #expect(RemindersScreen(engine: day.model.engine, filter: narrowing).rows.isEmpty)
+
+        day.model.add(Reminder(title: "Too late", dueTime: NewYork.local(2027, 3, 3), strength: .gentle))
+        #expect(RemindersScreen(engine: day.model.engine, filter: narrowing).rows.isEmpty)
+
+        day.model.add(Reminder(title: "In range", dueTime: NewYork.local(2027, 3, 2), strength: .gentle))
+        #expect(RemindersScreen(engine: day.model.engine, filter: narrowing).rows.map(\.title) == ["In range"])
+        #expect(String(localized: RemindersScreen(engine: day.model.engine, filter: narrowing).countText) == "1 reminder out of 12")
+    }
+
+    @Test func aRangeThatLeavesNothingNamesTheFiltersAndOffersToClearThem() async throws {
+        let day = try await fixture.dayAtOnePM()
+        var filter = RemindersFilterChoices()
+        filter.setDueFrom(CalendarDay(year: 2027, month: 3, day: 1))
+        let narrowing = filter.narrowing(search: "")
+
+        let screen = RemindersScreen(engine: day.model.engine, filter: narrowing)
+
+        #expect(screen.emptyState == .noMatch)
+        #expect(String(localized: screen.countText) == "0 reminders out of 10")
+        #expect(narrowing.noMatchText.map { String(localized: $0) } == "No reminders with these filters.")
+        #expect(String(localized: narrowing.noMatchClearTitle) == "Clear Filters")
+    }
 }

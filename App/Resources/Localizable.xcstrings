@@ -684,6 +684,9 @@
     "Below is how each strength nudges a new reminder at your Default Pace, %@, with Break Through Focus on." : {
       "comment" : "How It Nudges page: under the points at the top, before the three strengths' schedules. The placeholder is the Default Pace, such as \"Consistent · 10 min\" or \"Escalating\"."
     },
+    "Both days are included. A reminder with nothing more coming is found by its last due date." : {
+      "comment" : "Reminders' filter sheet: under the first and last day a reminder may be due."
+    },
     "Both nudges are notifications." : {
       "comment" : "How It Nudges footer, when a reminder sends two nudges, as a long Consistent wait can, and neither rings as an alarm."
     },
@@ -898,7 +901,7 @@
       "comment" : "Nudge card: under the title of a reminder with no tags. The placeholder is its due time, such as \"9:00 AM\"."
     },
     "Due Date" : {
-      "comment" : "Reminders tab's Sort menu: the header of the section that sorts by the due time each row shows."
+      "comment" : "Reminders tab's Sort menu: the header of the section that sorts by the due time each row shows.\nReminders' filter sheet: header of the first and last day a reminder may be due."
     },
     "Due Date, Earliest First" : {
       "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Earliest First."
@@ -1116,6 +1119,12 @@
     },
     "Frequency" : {
       "comment" : "The Custom repeat page's choice of Daily, Weekly, Monthly or Yearly."
+    },
+    "From" : {
+      "comment" : "Reminders' filter sheet: the switch for the first day a reminder may be due."
+    },
+    "From date" : {
+      "comment" : "VoiceOver label of the date picker for the first day a reminder may be due, in Reminders' filter sheet."
     },
     "General" : {
       "comment" : "Settings: header of the first section, with the About row."
@@ -1711,6 +1720,12 @@
     },
     "Title" : {
       "comment" : "The reminder form's title field, which must be filled in."
+    },
+    "To" : {
+      "comment" : "Reminders' filter sheet: the switch for the last day a reminder may be due."
+    },
+    "To date" : {
+      "comment" : "VoiceOver label of the date picker for the last day a reminder may be due, in Reminders' filter sheet."
     },
     "To get every nudge during a Focus, allow %@ in that Focus. Nudges vibrate when your iPhone's settings allow it." : {
       "comment" : "Settings: footer under the Nudges rows. The placeholder is the app's name."

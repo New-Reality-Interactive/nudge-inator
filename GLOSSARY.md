@@ -114,6 +114,10 @@ _Avoid_: Today (alone), due now
 The tab that lists every reminder once, in any status, by creation date, with search and filters.
 _Avoid_: All Reminders, list, library
 
+**Due Date filter**:
+The part of the Reminders tab's filter sheet that narrows the list to reminders due from one day to another, both days included. Either day may be left off. A reminder is tested by the due time its row shows.
+_Avoid_: Date range (on screen), start and end (a reminder's Start is its first due time)
+
 **Icon badge**:
 The number on the app's home-screen icon: how many reminders have an occurrence that is Nudging. It is the same count as the Now badge. It is not a Nudge.
 

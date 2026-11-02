@@ -46,6 +46,10 @@ public struct RemindersFilter: Equatable, Sendable {
     public var statuses: Set<Status>
     /// The strengths a reminder may have to be shown: it matches any chosen.
     public var strengths: Set<Strength>
+    /// The first day a reminder may be due to be shown, that day included. `nil` has no first day.
+    public var dueFrom: CalendarDay?
+    /// The last day a reminder may be due to be shown, that day included. `nil` has no last day.
+    public var dueTo: CalendarDay?
     /// The phrase a reminder's title or notes must contain, without leading or trailing whitespace,
     /// so a space typed after a word doesn't change the filter. Empty narrows nothing.
     public var search: String {
@@ -62,20 +66,34 @@ public struct RemindersFilter: Equatable, Sendable {
         case skipped
     }
 
-    public init(tags: TagFilter = .off, statuses: Set<Status> = [], strengths: Set<Strength> = [], search: String = "") {
+    public init(
+        tags: TagFilter = .off,
+        statuses: Set<Status> = [],
+        strengths: Set<Strength> = [],
+        dueFrom: CalendarDay? = nil,
+        dueTo: CalendarDay? = nil,
+        search: String = ""
+    ) {
         self.tags = tags
         self.statuses = statuses
         self.strengths = strengths
+        self.dueFrom = dueFrom
+        self.dueTo = dueTo
         self.search = Self.trimmed(search)
     }
 
     /// Whether the filter sheet is narrowing the list. Search isn't part of it.
     public var hasSheetFilters: Bool {
-        tags != .off || !statuses.isEmpty || !strengths.isEmpty
+        tags != .off || !statuses.isEmpty || !strengths.isEmpty || dueFrom != nil || dueTo != nil
     }
 
-    func matches(_ item: RemindersList.Item, tagIDs: Set<Tag.ID>) -> Bool {
-        matches(item.status) && matchesStrength(item.reminder) && tags.includes(tagIDs) && matchesSearch(item.reminder)
+    func matches(_ item: RemindersList.Item, tagIDs: Set<Tag.ID>, dueDay: CalendarDay) -> Bool {
+        matches(item.status) && matchesStrength(item.reminder) && tags.includes(tagIDs)
+            && matchesDueDate(dueDay) && matchesSearch(item.reminder)
+    }
+
+    private func matchesDueDate(_ dueDay: CalendarDay) -> Bool {
+        (dueFrom.map { $0 <= dueDay } ?? true) && (dueTo.map { dueDay <= $0 } ?? true)
     }
 
     private func matches(_ status: ReminderStatus) -> Bool {
@@ -119,7 +137,8 @@ public struct RemindersList: Equatable, Sendable {
         public var reminder: Reminder
         public var status: ReminderStatus
         /// The open occurrence's due time while Nudging, else the next due time (a paused
-        /// reminder's is the one it would be Skipped at), else the latest occurrence's.
+        /// reminder's is the one it would be Skipped at), else the latest occurrence's. The Due Date
+        /// filter tests this one.
         public var dueTime: Date
     }
 }
@@ -143,7 +162,7 @@ extension Engine {
         // The store may hand back a deleted tag's ID; it is no tag.
         let existingTagIDs = Set(tags.map(\.id))
         let items = reminders.map(listItem(of:)).filter {
-            filter.matches($0, tagIDs: existingTagIDs.intersection($0.reminder.tagIDs))
+            filter.matches($0, tagIDs: existingTagIDs.intersection($0.reminder.tagIDs), dueDay: calendarDay(of: $0.dueTime))
         }
         let key: (RemindersList.Item) -> Date = switch sort.field {
         case .created: \.reminder.createdAt
