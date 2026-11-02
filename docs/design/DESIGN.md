@@ -395,18 +395,18 @@ except in the tab and navigation bars. Verify names against the mockup.
   doesn't scroll back and move the rows.
 
 ### Reminders tab
-- **Search:** the system's search field (`searchable`), always shown under the navigation bar while
-  there are reminders (the no-reminders empty state has none), with the prompt "Search titles and
-  notes". The system draws its `magnifyingglass`, its clear button,
-  and Cancel while it's focused or has text.
+- **Search:** the system's search (`searchable`) as a `magnifyingglass` button in the bar while there
+  are reminders (the no-reminders empty state has none). No field shows at rest. A tap opens the field
+  in place of the button row, with the prompt "Search titles and notes", and the large title stays
+  where it is. The system draws its clear button and the `xmark` that closes search and clears it.
 - **Header row:** the first row of the list, above the rows' group, not in a cell. On its own line,
   in every size and orientation: the count in `{typography.subhead}` `{colors.secondary-label}`: the
   reminders shown out of every reminder, in every case, so a filtered list never reads as all of
   them ("3 reminders out of 14", "14 reminders out of 14"). One string with both numbers, one
   VoiceOver element.
-- **Bar:** Filter, Sort, New, in that order; with no reminders, only New. The bar stays during a
-  search (`searchPresentationToolbarBehavior(.avoidHidingContent)`), so the Filter button's badge
-  still says the sheet's filters are on.
+- **Bar:** Filter, Sort and Search in one group, then New apart; with no reminders, only New. iOS 26
+  pins the system's Search to the end: Filter and Sort, then New, then Search. During a search the
+  field replaces the row, so Filter, its badge, Sort and New come back when search closes.
 - **Sort button:** `arrow.up.arrow.down` in the bar, monochrome like New. It opens the Sort menu: a
   section headed Created (Oldest First, Newest First) and one headed Due Date (Earliest First, Latest
   First), one choice checked across both, each choice a `Toggle` in a `Section` of a SwiftUI `Menu`,
