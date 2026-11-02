@@ -195,6 +195,8 @@ private struct RemindersListView: View {
     @Environment(\.dismissSearch) private var dismissSearch
     @Environment(\.isSearching) private var isSearching
     @AccessibilityFocusState private var countFocused: Bool
+    /// Set by the clear button during a search, for when that search has ended.
+    @State private var scrollsToHeader = false
     @Namespace private var headerID
 
     var body: some View {
@@ -218,8 +220,15 @@ private struct RemindersListView: View {
                     RemindersNoMatchView(filter: filter) {
                         clearFilters()
                         // Where the keyboard or large text meant scrolling to the button, the rows
-                        // come back with the count and chips off screen otherwise.
-                        proxy.scrollTo(headerID, anchor: .top)
+                        // come back with the count and chips off screen otherwise. `.bottom`, not
+                        // `.top`, which puts the header under the bar: the scroll view runs behind
+                        // it. The header comes first, so this stops at the list's own top. During a
+                        // search it waits for the bar, which comes back over the header otherwise.
+                        if isSearching {
+                            scrollsToHeader = true
+                        } else {
+                            proxy.scrollTo(headerID, anchor: .bottom)
+                        }
                         // Ends the search too, if it's still active, so Cancel and the keyboard go with its text.
                         dismissSearch()
                         countFocused = true
@@ -237,7 +246,14 @@ private struct RemindersListView: View {
         }
         // Cancel moves VoiceOver to the bar's New button, which cut the count's announcement off (seen
         // on the iPhone in #112), so it goes to the count, as Clear Search does.
-        .onChange(of: isSearching) { if !isSearching { countFocused = true } }
+        .onChange(of: isSearching) {
+            guard !isSearching else { return }
+            countFocused = true
+            if scrollsToHeader {
+                scrollsToHeader = false
+                proxy.scrollTo(headerID, anchor: .bottom)
+            }
+        }
         // By the rows, not `withAnimation` around Done and Delete: a row can also leave on the
         // minute, when the clock alone takes it out of the filter.
         .animation(reduceMotion ? nil : .default, value: screen.rows.map(\.id))

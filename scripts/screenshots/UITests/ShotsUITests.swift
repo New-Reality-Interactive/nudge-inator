@@ -579,8 +579,16 @@ final class ShotsUITests: XCTestCase {
         clearSearch.tap()
         pause(0.8)
         shot("reminders-search-cleared")
-        // Clearing scrolls back to the top, so the chips are on screen.
-        app.buttons["Nudging"].firstMatch.tap()
+        // Clearing scrolls back to the top, so the chips are on screen and not behind the field,
+        // where a tap still lands. At the accessibility sizes it stops short of the top, and a
+        // swipe down shows them (#112's Comments).
+        let nudging = app.buttons["Nudging"].firstMatch
+        if UITraitCollection.current.preferredContentSizeCategory.isAccessibilityCategory {
+            scrollToTop()
+        } else {
+            XCTAssertGreaterThanOrEqual(nudging.frame.minY, field.frame.maxY, "The chips are behind the search field")
+        }
+        nudging.tap()
         field.tap()
         field.typeText("zzz")
         pause(0.5)
