@@ -229,18 +229,78 @@ struct RemindersScreenTests {
         #expect(RemindersScreen(engine: day.model.engine, filter: nudging, keptOrder: kept).rows.isEmpty)
     }
 
-    /// Spec #104, Decision 20: until the chip next changes, which takes the known IDs again.
-    @Test func aNewReminderShowsEvenIfTheChipWouldHideItUntilTheChipNextChanges() async throws {
+    /// Spec #104, Decision 20: a reminder shows only if it passes what's narrowing the list, even
+    /// one just made on this tab.
+    @Test func aNewReminderTheChipWouldHideDoesntShow() async throws {
         let day = try await fixture.dayAtOnePM()
-        let known = Set(day.model.engine.reminders.map(\.id))
-        let passport = Reminder(title: "Renew the passport", dueTime: NewYork.local(2026, 10, 30), strength: .gentle)
 
-        day.model.add(passport)
+        day.model.add(Reminder(title: "Renew the passport", dueTime: NewYork.local(2026, 10, 30), strength: .gentle))
 
-        let shown = RemindersScreen(engine: day.model.engine, filter: filter(.nudging), knownIDs: known)
-        #expect(shown.rows.map(\.title) == ["Reply to Alex", "Renew the passport"])
-        #expect(String(localized: shown.countText) == "2 reminders out of 11")
-        let changed = RemindersScreen(engine: day.model.engine, filter: filter(.nudging), knownIDs: Set(day.model.engine.reminders.map(\.id)))
-        #expect(changed.rows.map(\.title) == ["Reply to Alex"])
+        let shown = RemindersScreen(engine: day.model.engine, filter: filter(.nudging))
+        #expect(shown.rows.map(\.title) == ["Reply to Alex"])
+        #expect(String(localized: shown.countText) == "1 reminder out of 11")
+    }
+
+    @Test func theCountEqualsTheRowsShownUnderASearch() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        let screen = RemindersScreen(engine: day.model.engine, filter: RemindersFilter(search: "alex"))
+
+        #expect(screen.rows.map(\.title) == ["Reply to Alex"])
+        #expect(String(localized: screen.countText) == "1 reminder out of 10")
+        #expect(screen.emptyState == nil)
+    }
+
+    @Test func aSearchThatFindsNothingLeavesTheNoMatchEmptyState() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        let screen = RemindersScreen(engine: day.model.engine, filter: RemindersFilter(search: "zebra"))
+
+        #expect(screen.rows.isEmpty)
+        #expect(String(localized: screen.countText) == "0 reminders out of 10")
+        #expect(screen.emptyState == .noMatch)
+    }
+
+    @Test func aNewReminderTheSearchWouldHideDoesntShow() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        day.model.add(Reminder(title: "Renew the passport", dueTime: NewYork.local(2026, 10, 30), strength: .gentle))
+
+        let shown = RemindersScreen(engine: day.model.engine, filter: RemindersFilter(search: "alex"))
+        #expect(shown.rows.map(\.title) == ["Reply to Alex"])
+        #expect(String(localized: shown.countText) == "1 reminder out of 11")
+    }
+
+    @Test func aNewReminderThatMatchesTheSearchShows() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        day.model.add(Reminder(title: "Call Alex back", dueTime: NewYork.local(2026, 10, 30), strength: .gentle))
+
+        let shown = RemindersScreen(engine: day.model.engine, filter: RemindersFilter(search: "alex"))
+        #expect(shown.rows.map(\.title) == ["Reply to Alex", "Call Alex back"])
+    }
+
+    /// Whole strings for each case, never built from pieces (CODING_STANDARDS.md). The mockup's
+    /// `noMatch()` draws the same three.
+    @Test func theNoMatchWordingFollowsTheSearchAndTheChip() {
+        let chip = filter(.nudging)
+        let search = RemindersFilter(search: "zebra")
+        let both = RemindersFilter(statuses: [.missed], search: "zebra")
+
+        #expect(String(localized: chip.noMatchTitle) == "No Matches")
+        #expect(chip.noMatchText.map { String(localized: $0) } == "No Nudging reminders.")
+        #expect(String(localized: chip.noMatchClearTitle) == "Clear Filters")
+
+        #expect(String(localized: search.noMatchTitle) == "No Results for “zebra”")
+        #expect(search.noMatchText.map { String(localized: $0) } == "Check the spelling or try a new search.")
+        #expect(String(localized: search.noMatchClearTitle) == "Clear Search")
+
+        #expect(String(localized: both.noMatchTitle) == "No Results for “zebra”")
+        #expect(both.noMatchText.map { String(localized: $0) } == "No Missed reminders match this search.")
+        #expect(String(localized: both.noMatchClearTitle) == "Clear Search and Filters")
+    }
+
+    @Test func theNoMatchTitleQuotesTheSearchTrimmed() {
+        #expect(String(localized: RemindersFilter(search: "  zebra ").noMatchTitle) == "No Results for “zebra”")
     }
 }

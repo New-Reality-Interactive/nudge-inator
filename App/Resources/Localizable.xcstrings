@@ -642,6 +642,9 @@
     "Check one or more tags. Match needs two or more." : {
       "comment" : "My Day's filter sheet: under the tags when fewer than two are checked. It says why the Match choice above them is dimmed."
     },
+    "Check the spelling or try a new search." : {
+      "comment" : "Reminders tab: under the title when a search alone finds nothing."
+    },
     "Choose Time" : {
       "comment" : "Opens the Edit Reminder form to choose a new time, so the reminder can resume."
     },
@@ -688,6 +691,12 @@
     },
     "Clear Filters" : {
       "comment" : "Reminders tab: the no-match empty state's button that turns off what's narrowing the list."
+    },
+    "Clear Search" : {
+      "comment" : "Reminders tab: the no-match empty state's button when only a search is narrowing the list."
+    },
+    "Clear Search and Filters" : {
+      "comment" : "Reminders tab: the no-match empty state's button when a search and filters are narrowing the list."
     },
     "Coming Up" : {
       "comment" : "Now: section header for reminders due soon."
@@ -1154,14 +1163,23 @@
     "No Matches" : {
       "comment" : "Reminders tab: title when reminders exist but what's narrowing the list leaves none."
     },
+    "No Missed reminders match this search." : {
+      "comment" : "Reminders tab: under the title when a search finds nothing under the Missed chip."
+    },
     "No Missed reminders." : {
       "comment" : "Reminders tab: under the title when the Missed chip leaves nothing."
+    },
+    "No Nudging reminders match this search." : {
+      "comment" : "Reminders tab: under the title when a search finds nothing under the Nudging chip."
     },
     "No Nudging reminders." : {
       "comment" : "Reminders tab: under the title when the Nudging chip leaves nothing."
     },
     "No Reminders" : {
       "comment" : "A tag's screen when no reminder has the tag.\nReminders tab: title when there are no reminders at all."
+    },
+    "No Results for “%@”" : {
+      "comment" : "Reminders tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces."
     },
     "No Tags" : {
       "comment" : "My Day's filter sheet: the row that shows only reminders without tags.\nMy Day: the filter token that shows only reminders without tags.\nTags: title when there are no tags yet."
@@ -1472,6 +1490,9 @@
     },
     "Schedule" : {
       "comment" : "Reminder details: section header for when and how the reminder nudges."
+    },
+    "Search titles and notes" : {
+      "comment" : "Reminders tab: the search field's prompt."
     },
     "Send a Test Nudge" : {
       "comment" : "Settings: row that sends a notification in a few seconds, to see how a nudge looks."
