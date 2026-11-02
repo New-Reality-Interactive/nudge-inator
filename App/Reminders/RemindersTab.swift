@@ -271,7 +271,7 @@ private struct RemindersListView: View {
                         } else {
                             proxy.scrollTo(headerID, anchor: .bottom)
                         }
-                        // Ends the search too, if it's still active, so Cancel and the keyboard go with its text.
+                        // Ends the search too, if it's still active, so Close and the keyboard go with its text.
                         dismissSearch()
                         countFocused = true
                     }
@@ -286,8 +286,8 @@ private struct RemindersListView: View {
                     .id(headerID)
             }
         }
-        // Cancel moves VoiceOver to the bar's New button, which cut the count's announcement off (seen
-        // on the iPhone in #112), so it goes to the count, as Clear Search does.
+        // Ending a search moves VoiceOver to the bar's New button, which cut the count's announcement off
+        // (seen on the iPhone in #112), so it goes to the count, as Clear Search does.
         .onChange(of: isSearching) {
             guard !isSearching else { return }
             countFocused = true
