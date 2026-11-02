@@ -12,8 +12,9 @@
 # Env: SIMULATORS (as scripts/test.sh), SHOTS_OUT (default docs/screenshots/<today>, git-ignored),
 # SHOTS_VARIANTS (default "portrait landscape largest-text"; "largest-text-landscape" on request),
 # SHOTS_TESTS (ShotsUITests methods separated by spaces, such as "testSettings testForm"; default
-# every one). Each variant's folder is emptied first, so a run with SHOTS_TESTS wants a SHOTS_OUT of
-# its own.
+# every one). Each variant's folder is emptied first, unless SHOTS_TESTS names the tests: then the
+# images from other tests stay, and the run lists the ones it wrote, since those kept may be older
+# than the code.
 # Writes <SHOTS_OUT>/<simulator>/<variant>/<screen>.png. Each simulator's progress lines start with
 # "[<simulator>]", since they are interleaved.
 set -uo pipefail
@@ -66,7 +67,7 @@ trap 'exit 143' TERM
 
 # One simulator's run: its variants, one after the other. Reads variants, only, out, logs and build.
 shoot() {
-  local name="$1" udid="$2" failed_file="$3" variant size orientation dir log
+  local name="$1" udid="$2" failed_file="$3" variant size orientation dir log started
   for variant in "${variants[@]}"; do
     case "$name/$variant" in *"iOS 26.5"/*landscape) echo "[$name] skip: $variant"; continue ;; esac
     echo "[$name] ==> $variant"
@@ -75,14 +76,21 @@ shoot() {
     case "$variant" in largest-text*) size=accessibility-extra-extra-extra-large ;; esac
     xcrun simctl ui "$udid" content_size "$size"
     dir="$out/$name/$variant"
-    rm -rf "$dir" && mkdir -p "$dir"
+    [ -n "${SHOTS_TESTS:-}" ] || rm -rf "$dir"
+    mkdir -p "$dir"
     log="$logs/screenshots-$name-$variant.log"
+    started="$log.started"
+    touch "$started"
     TEST_RUNNER_SHOTS_DIR="$dir" TEST_RUNNER_SHOTS_ORIENTATION="$orientation" \
       xcodebuild test-without-building -project "$build/NudgeShots.xcodeproj" -scheme NudgeShots \
       -destination "platform=iOS Simulator,id=$udid" -derivedDataPath "$build/derived" ${only[@]+"${only[@]}"} \
       > "$log" 2>&1 < /dev/null \
       || { echo "[$name] FAIL: $variant, see $log" >&2; echo "$name, $variant" >> "$failed_file"; }
     echo "[$name] $(ls "$dir" | wc -l | tr -d ' ') screenshots in $dir"
+    if [ -n "${SHOTS_TESTS:-}" ]; then
+      echo "[$name] wrote: $(find "$dir" -name '*.png' -newer "$started" -exec basename {} .png \; | sort | tr '\n' ' ')"
+    fi
+    rm -f "$started"
   done
 }
 

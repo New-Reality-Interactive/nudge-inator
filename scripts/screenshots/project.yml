@@ -31,6 +31,8 @@ targets:
       - path: ../../App
         # The app's own entry point, plist and entitlements; InfoPlist.xcstrings so the build can't add keys to it.
         excludes: [NudgeInatorApp.swift, AppModel/AppDelegate.swift, Info.plist, NudgeInator.entitlements, Resources/InfoPlist.xcstrings]
+      # The device seed, which the app's sources call in Debug, as in the app's project.yml (#134).
+      - path: ../../Packages/NudgeEngine/Sources/NudgeDeviceSeed
       - path: Harness
       # Fakes.swift without its `@testable import`, written by scripts/screenshots.sh.
       - path: ../../.build/screenshots/Generated
