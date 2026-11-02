@@ -33,7 +33,12 @@ targets:
   NudgeInator:
     type: application
     platform: iOS
-    sources: [App]
+    sources:
+      - App
+      # The device seed (#134) is compiled into the app from its package's folder, not linked as a
+      # package: Xcode links a package's objects whole, so a Release build would hold them. Every
+      # file there is wrapped in `#if DEBUG`, which scripts/check-release-has-no-seed.sh checks.
+      - Packages/NudgeDeviceSeed/Sources/NudgeDeviceSeed
     dependencies:
       - package: NudgeEngine
       - package: NudgeShared

@@ -62,6 +62,9 @@ case "$mode" in
       -configuration Release -destination 'generic/platform=iOS' -archivePath "$archive" \
       -allowProvisioningUpdates || fail "archive"
 
+    step "No device-seed code in the archive (#134)"
+    scripts/check-release-has-no-seed.sh "$archive/Products/Applications/NudgeInator.app" || fail "the archive holds seed code"
+
     step "Versions"
     app="$archive/Products/Applications/NudgeInator.app"
     widget="$(echo "$app"/PlugIns/*.appex)"
