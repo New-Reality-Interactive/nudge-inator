@@ -160,19 +160,6 @@ components:
     text: '{colors.accent}'
     rounded: '{rounded.full}'
     minHeight: '{spacing.row-min}'
-  filter-chip:
-    background: '{colors.tertiary-fill}'
-    text: '{colors.accent}'
-    selected-background: '{colors.accent}'
-    selected-text: '{colors.on-accent}'
-    rounded: '{rounded.full}'
-    minHeight: '{spacing.row-min}'
-    typography: '{typography.subhead}'
-  sort-button:
-    background: '{colors.tertiary-fill}'
-    glyph: '{colors.accent}'
-    rounded: '{rounded.full}'
-    size: '{spacing.row-min}'
   permission-banner:
     background: '{colors.cell}'
     border-notifications-off: '{colors.negative}'
@@ -232,8 +219,7 @@ by name wherever iOS provides one. Custom colors are asset-catalog color sets wi
 Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
 
 - **Accent (Lagoon, `{colors.accent}`)** is `AccentColor`. It means **you can tap this**: buttons,
-  links, menus, checkmarks, the selected tab, tag and filter tokens, filter chips (their text, or
-  their fill while on), the Sort button, the chosen count's ring, the filled confirm button in each
+  links, menus, checkmarks, the selected tab, tag and filter tokens, the chosen count's ring, the filled confirm button in each
   sheet and on the Repeat and Custom repeat pages, and **Done** on nudge cards.
   - **Never** a status, decoration or background wash.
   - **The alarm** sits on a dark Lock Screen, so its tint pins `{colors.accent-dark}`. This is the
@@ -328,7 +314,7 @@ Depth comes from the system's layers, never custom shadows.
 Corners are concentric and native. Nothing uses a shape the system wouldn't draw.
 - `{rounded.control}` (10): buttons, inset lists.
 - `{rounded.card}` (12): nudge cards and permission banners.
-- `{rounded.full}`: bar buttons, filter tokens, filter chips, the Sort button, the strength badge,
+- `{rounded.full}`: bar buttons, filter tokens, the strength badge,
   the nudge meter, small buttons.
 - The search field's shape is set by the system. The 2026-10-03 doc gave the search bar
   `{rounded.control}`; the mockup draws iOS 26's capsule, a simulator check.
@@ -371,9 +357,7 @@ except in the tab and navigation bars. Verify names against the mockup.
   `button-bordered` **Done** on My Day. Chevron `chevron.right` in `{colors.tertiary-label}`.
 - **On the Reminders tab:** the due time (time over its day, as on Now's Coming Up), the title,
   the tags under it, and the status label trailing. No notes and no strength badge. Rows are
-  separated as in every grouped list. Under the Due Today chip a row shows today's occurrence, as
-  My Day does: its time ("6:30 AM Today") and its status (Done once it's done), and sorting by Due
-  Date uses that time. With several today, the open one, else the last.
+  separated as in every grouped list.
 
 ### Status label
 - **Token:** `status-label`. `{typography.subhead}` semibold. Done green with `checkmark.circle.fill`;
@@ -415,32 +399,27 @@ except in the tab and navigation bars. Verify names against the mockup.
   there are reminders (the no-reminders empty state has none), with the prompt "Search titles and
   notes". The system draws its `magnifyingglass`, its clear button,
   and Cancel while it's focused or has text.
-- **Header row:** the first row of the list, above the rows' group, not in a cell. First line, in
-  every size and orientation: the count in `{typography.subhead}` `{colors.secondary-label}`: the
+- **Header row:** the first row of the list, above the rows' group, not in a cell. On its own line,
+  in every size and orientation: the count in `{typography.subhead}` `{colors.secondary-label}`: the
   reminders shown out of every reminder, in every case, so a filtered list never reads as all of
   them ("3 reminders out of 14", "14 reminders out of 14"). One string with both numbers, one
-  VoiceOver element. Under it: the chips Nudging, Due Today and Missed at the leading edge,
-  `{spacing.2}` apart, and the Sort button at the trailing edge of their first line. The chips wrap
-  when they must. At the accessibility sizes the Sort button takes its own line under them, still at
-  the trailing edge, so a chip's word never breaks and nothing truncates or overlaps.
-- **Filter chip:** `filter-chip`, a 44 pt capsule in `{typography.subhead}` semibold. Off: accent text
-  on `{colors.tertiary-fill}`. On: `{colors.accent}` fill, `{colors.on-accent}` text and a leading
-  `checkmark`, so on and off don't differ by color alone; VoiceOver reads it as a button with the
-  selected trait. One chip is on at a time.
-- **Sort button:** `sort-button`, a 44 pt round button on `{colors.tertiary-fill}` with
-  `arrow.up.arrow.down` in the accent color. It opens the Sort menu: a section headed Created (Oldest
-  First, Newest First) and one headed Due Date (Earliest First, Latest First), one choice checked
-  across both, each choice a `Toggle` in a `Section` of a SwiftUI `Menu`, since the system drops the
-  header of a section with a `Picker`. One tap applies a choice and closes the menu. Its label is
-  "Sort" and its value the choice ("Created, Oldest First"), and VoiceOver reads each header, then
-  its choices. Sorted by Due Date, a row keeps its place while search, chip, filters and sort stay
-  as they are, so Done doesn't move it; changing any of them, or leaving the tab, sorts again.
-- **Filter button:** `line.3.horizontal.decrease` in the bar, beside New. Its badge counts how
-  many of the filter sheet's sections are in use (Tags, Status, Strength, Due Date). A Status a lit
-  chip already shows doesn't count, nor do search and Due Today. While the count is above 0 the
-  button takes the accent color. While any sheet filter is on, a lit chip's Status included, a tap
-  shows a menu: Filter (`line.3.horizontal.decrease`) opens the sheet, Clear All Filters (`xmark`)
-  removes every sheet filter. With none on, a tap opens the sheet. No long press, as on My Day.
+  VoiceOver element.
+- **Bar:** Filter, Sort, New, in that order; with no reminders, only New. The bar stays during a
+  search (`searchPresentationToolbarBehavior(.avoidHidingContent)`), so the Filter button's badge
+  still says the sheet's filters are on.
+- **Sort button:** `arrow.up.arrow.down` in the bar, monochrome like New. It opens the Sort menu: a
+  section headed Created (Oldest First, Newest First) and one headed Due Date (Earliest First, Latest
+  First), one choice checked across both, each choice a `Toggle` in a `Section` of a SwiftUI `Menu`,
+  since the system drops the header of a section with a `Picker`. One tap applies a choice and closes
+  the menu. Its label is "Sort" and its value the choice ("Created, Oldest First"), and VoiceOver
+  reads each header, then its choices. Sorted by Due Date, a row keeps its place while search,
+  filters and sort stay as they are, so Done doesn't move it; changing any of them, or leaving the
+  tab, sorts again.
+- **Filter button:** `line.3.horizontal.decrease` in the bar. Its badge counts how many of the filter
+  sheet's sections are in use (Tags, Status, Strength, Due Date). Search doesn't count. While the
+  count is above 0 the button takes the accent color and a tap shows a menu: Filter
+  (`line.3.horizontal.decrease`) opens the sheet, Clear All Filters (`xmark`) removes every sheet
+  filter and leaves the search. With none on, a tap opens the sheet. No long press, as on My Day.
 - **Filter sheet ("Filter Reminders"):** Cancel (`xmark`, the form's cancel button) leading,
   Apply (accent capsule) trailing, and Reset, a bordered button, at the bottom under the footer.
   Cancel, tapping above or swiping down discards the draft, asking first (Discard Changes, Keep

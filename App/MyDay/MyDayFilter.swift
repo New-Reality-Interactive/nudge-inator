@@ -2,49 +2,32 @@ import NudgeEngine
 
 /// What My Day is filtered by: the tags the person checked, as the mockup's `dayFilter`.
 struct MyDayFilter: Equatable {
-    /// The checked tags, in the order they were checked.
-    private(set) var tagIDs: [Tag.ID] = []
-    var match: Match = .all
+    typealias Match = TagChoice.Match
+
+    /// What the filter sheet chose.
+    var tags = TagChoice()
     /// The count the list is narrowed to, if the person tapped one.
     private(set) var count: MyDayCount?
-    /// Only reminders without tags. It excludes the checked tags, as the mockup's `none` does.
-    private(set) var noTags = false
 
-    /// Whether a reminder needs every checked tag or any one of them.
-    enum Match: Equatable {
-        case all
-        case any
+    var tagIDs: [Tag.ID] { tags.tagIDs }
+    var noTags: Bool { tags.noTags }
+    var tagFilter: TagFilter { tags.tagFilter }
+    var hasTags: Bool { tags.isOn }
 
-        /// The tags as a list in the engine's locale: "#home and #money", or "#home or #money".
-        func list(of labels: [String]) -> String {
-            labels.formatted(.list(type: self == .all ? .and : .or))
-        }
+    /// What the Filter button's badge counts: the checked tags, or 1 for No Tags.
+    var checkedCount: Int { tags.checkedCount }
+
+    var match: Match {
+        get { tags.match }
+        set { tags.match = newValue }
     }
 
-    /// The engine's filter for the checked tags. With none checked, nothing is filtered.
-    var tagFilter: TagFilter {
-        if noTags { return .noTags }
-        guard !tagIDs.isEmpty else { return .off }
-        switch match {
-        case .all: return .matchAll(Set(tagIDs))
-        case .any: return .matchAny(Set(tagIDs))
-        }
-    }
-
-    /// Checks the tag, or unchecks it if it is checked.
     mutating func toggle(_ tagID: Tag.ID) {
-        noTags = false
-        if let index = tagIDs.firstIndex(of: tagID) {
-            tagIDs.remove(at: index)
-        } else {
-            tagIDs.append(tagID)
-        }
+        tags.toggle(tagID)
     }
 
-    /// Shows only reminders without tags, or turns that off. Turning it on unchecks the tags.
     mutating func toggleNoTags() {
-        noTags.toggle()
-        if noTags { tagIDs = [] }
+        tags.toggleNoTags()
     }
 
     /// Narrows the list to the count, or shows everything again if it is already chosen.
@@ -52,24 +35,16 @@ struct MyDayFilter: Equatable {
         self.count = self.count == count ? nil : count
     }
 
-    var hasTags: Bool { noTags || !tagIDs.isEmpty }
-
-    /// What the Filter button's badge counts: the checked tags, or 1 for No Tags.
-    var checkedCount: Int { noTags ? 1 : tagIDs.count }
-
     /// Clears the tags and No Tags and goes back to Match All. The chosen count stays: it is
     /// chosen on the screen, not in the sheet.
     mutating func clearTags() {
-        tagIDs = []
-        noTags = false
-        match = .all
+        tags.clear()
     }
 
-    /// The filter without tags that no longer exist. A tag that was deleted while chosen would
-    /// otherwise stay in Match All, which no reminder could meet.
+    /// The filter without tags that no longer exist.
     func keeping(tagsIn existing: Set<Tag.ID>) -> MyDayFilter {
         var kept = self
-        kept.tagIDs.removeAll { !existing.contains($0) }
+        kept.tags = tags.keeping(tagsIn: existing)
         return kept
     }
 }

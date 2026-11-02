@@ -477,7 +477,7 @@ final class ShotsUITests: XCTestCase {
     }
 
     /// The mockup's `reminders-sort-menu`, `reminders-newest` and `reminders-due-date` (#115): the
-    /// header row's Sort menu open at Created, Oldest First, then Newest First chosen, then Due
+    /// bar's Sort menu open at Created, Oldest First, then Newest First chosen, then Due
     /// Date, Latest First chosen, with the menu open again to show it checked.
     func testRemindersSort() {
         launch(.app)
@@ -527,28 +527,90 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-after-done")
     }
 
-    /// The mockup's `reminders-chip-nudging` and `reminders-chip-missed`, and the no-match empty
-    /// state (#111): each chip on, then every Nudging row marked Done from its swipe under the
-    /// chip, which leaves the chip on with no rows, then Clear Filters.
-    func testRemindersChips() {
+    /// The Reminders Filter button, and with filters on its menu, which also has an item named
+    /// Filter: the button is the topmost.
+    private var remindersFilterButtons: XCUIElementQuery {
+        app.buttons.matching(NSPredicate(format: "label == %@", "Filter"))
+    }
+
+    /// Opens the Reminders filter sheet: with filters on, through the menu's Filter.
+    private func openRemindersFilter() {
+        barTap {
+            remindersFilterButtons.firstMatch.tap()
+            if app.buttons["Clear All Filters"].waitForExistence(timeout: 2) {
+                remindersFilterButtons.allElementsBoundByIndex.max { $0.frame.minY < $1.frame.minY }?.tap()
+            }
+            XCTAssert(app.navigationBars["Filter Reminders"].waitForExistence(timeout: 3), "No Filter Reminders sheet")
+        }
+    }
+
+    private func applyRemindersFilter() {
+        barTap { app.navigationBars["Filter Reminders"].buttons["Apply"].tap() }
+        pause(0.5)
+    }
+
+    /// Chooses a row of the open sheet, which scrolls to it.
+    private func chooseInSheet(_ label: String) {
+        tapText(label, inSheet: true)
+    }
+
+    /// The mockup's `reminders-filter`, `reminders-filter-badge`, `reminders-filter-menu`,
+    /// `reminders-status-nudging` and `reminders-no-match-filters` (#113): the sheet, the prompt
+    /// from Cancel and from a swipe down with a changed draft, none with a clean one, Apply, the
+    /// badge and menu, Reset, every Nudging row marked Done under the Status, and Clear Filters.
+    func testRemindersFilter() {
         launch(.app)
         tab("Reminders")
-        let nudging = app.buttons["Nudging"].firstMatch
-        let missed = app.buttons["Missed"].firstMatch
-        missed.tap()
+        shot("reminders-bar")
+        openRemindersFilter()
+        shot("reminders-filter", pages: 3, stopsAtEnd: true)
+
+        // A clean draft just closes, and a swipe that closes it leaves the button working.
+        app.navigationBars["Filter Reminders"].swipeDown(velocity: .fast)
+        pause(1)
+        XCTAssertFalse(app.navigationBars["Filter Reminders"].exists, "A swipe down on a clean draft didn't close the sheet")
+        openRemindersFilter()
+
+        chooseInSheet("Nudging")
+        chooseInSheet("Firm")
+        shot("reminders-filter-chosen")
+        barTap { app.navigationBars["Filter Reminders"].buttons.element(boundBy: 0).tap() }
+        XCTAssert(app.buttons["Discard Changes"].waitForExistence(timeout: 3), "Cancel didn't ask first:\n\(app.debugDescription)")
+        shot("reminders-filter-discard")
+        app.buttons["Keep Editing"].firstMatch.tap()
+        pause(0.8)
+
+        app.navigationBars["Filter Reminders"].swipeDown(velocity: .fast)
+        XCTAssert(app.buttons["Discard Changes"].waitForExistence(timeout: 3), "A swipe down didn't ask first:\n\(app.debugDescription)")
+        shot("reminders-filter-discard-swipe")
+        app.buttons["Keep Editing"].firstMatch.tap()
+        pause(0.8)
+
+        // Firm off again, so the Nudging rows show.
+        chooseInSheet("Firm")
+        applyRemindersFilter()
+        shot("reminders-status-nudging")
+        barTap { remindersFilterButtons.firstMatch.tap() }
+        XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
+        shot("reminders-filter-menu")
+        app.buttons["Clear All Filters"].firstMatch.tap()
         pause(0.5)
-        shot("reminders-chip-missed")
-        scrollToTop()
-        nudging.tap()
-        pause(0.5)
-        shot("reminders-chip-nudging")
-        scrollToTop()
+        shot("reminders-filter-cleared")
+
+        openRemindersFilter()
+        chooseInSheet("Nudging")
+        chooseInSheet("Firm")
+        chooseInSheet("Relentless")
+        scrollTo("Reset")?.tap()
+        shot("reminders-filter-reset")
+        chooseInSheet("Nudging")
+        applyRemindersFilter()
         for title in ["Take the bins out", "Reply to Alex about the lease"] {
             swipe(title)
             app.buttons["Done"].firstMatch.tap()
             pause(0.8)
         }
-        shot("reminders-no-match-chip")
+        shot("reminders-no-match-filters")
         // At the largest text, under the search field, the button starts below the screen.
         guard let clear = scrollTo("Clear Filters") else {
             XCTFail("No Clear Filters:\n\(app.debugDescription)")
@@ -556,11 +618,12 @@ final class ShotsUITests: XCTestCase {
         }
         clear.tap()
         pause(0.5)
-        shot("reminders-chips-cleared")
+        shot("reminders-filters-cleared")
     }
 
     /// The mockup's `reminders-search` (#112): the field empty under the title, with text, then a
-    /// search that finds nothing, alone and under a chip, each cleared from the empty state's button.
+    /// search that finds nothing, alone and under a filter, each cleared from the empty state's
+    /// button. The bar stays during a search, so Filter and Sort can still be reached (#113).
     func testRemindersSearch() {
         launch(.app)
         tab("Reminders")
@@ -570,6 +633,8 @@ final class ShotsUITests: XCTestCase {
         field.tap()
         field.typeText("pill")
         pause(0.5)
+        XCTAssert(remindersFilterButtons.firstMatch.isHittable, "The bar's Filter button left during a search:\n\(app.debugDescription)")
+        XCTAssert(app.buttons["Sort"].firstMatch.isHittable, "The bar's Sort button left during a search:\n\(app.debugDescription)")
         shot("reminders-search-text")
         field.typeText("zzz")
         pause(0.5)
@@ -579,25 +644,27 @@ final class ShotsUITests: XCTestCase {
         clearSearch.tap()
         pause(0.8)
         shot("reminders-search-cleared")
-        // Clearing scrolls back to the top, so the chips are on screen and not behind the field,
-        // where a tap still lands. At the accessibility sizes it stops short of the top, and a
-        // swipe down shows them (#112's Comments).
-        let nudging = app.buttons["Nudging"].firstMatch
+        // Clearing scrolls back to the top, so the count is on screen and not behind the field. At
+        // the accessibility sizes it stops short of the top, and a swipe down shows it (#112's
+        // Comments).
+        let count = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "out of")).firstMatch
         if UITraitCollection.current.preferredContentSizeCategory.isAccessibilityCategory {
             scrollToTop()
         } else {
-            XCTAssertGreaterThanOrEqual(nudging.frame.minY, field.frame.maxY, "The chips are behind the search field")
+            XCTAssertGreaterThanOrEqual(count.frame.minY, field.frame.maxY, "The count is behind the search field")
         }
-        nudging.tap()
+        openRemindersFilter()
+        chooseInSheet("Nudging")
+        applyRemindersFilter()
         field.tap()
         field.typeText("zzz")
         pause(0.5)
-        shot("reminders-no-match-search-chip")
+        shot("reminders-no-match-search-status")
         let clearBoth = app.buttons["Clear Search and Filters"].firstMatch
         XCTAssert(clearBoth.exists, "No Clear Search and Filters:\n\(app.debugDescription)")
         clearBoth.tap()
         pause(0.8)
-        shot("reminders-search-chip-cleared")
+        shot("reminders-search-status-cleared")
     }
 
     func testSettings() {

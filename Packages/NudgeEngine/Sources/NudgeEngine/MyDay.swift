@@ -53,8 +53,7 @@ extension MyDay.Item {
     }
 }
 
-/// My Day's tag filter, as the mockup's `inDayFilter` applies it. It covers today only: filtering
-/// every reminder by several tags is out of scope.
+/// The tag filter of My Day and the Reminders tab, as the mockup's `inDayFilter` applies it.
 public enum TagFilter: Equatable, Sendable {
     case off
     /// Items whose reminder has every one of the tags. With none chosen, every item.
