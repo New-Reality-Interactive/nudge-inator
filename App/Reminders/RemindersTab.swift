@@ -87,6 +87,8 @@ struct RemindersTab: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         RemindersSortButton(sort: sort.transaction(Self.noAnimation))
                     }
+                    // Filter and Sort share a glass group, and New stands apart (Brian, #113).
+                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
                 }
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
             }

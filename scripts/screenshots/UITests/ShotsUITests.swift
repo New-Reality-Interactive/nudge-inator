@@ -437,8 +437,9 @@ final class ShotsUITests: XCTestCase {
         launch(.app)
         tab("Reminders")
         shot("reminders", pages: 20, stopsAtEnd: true)
-        scrollToTop()
-        // Not a row near the end: at the largest text its middle can stop behind the search field.
+        // A new launch rather than scrolling back: at the largest text four drags don't reach the top.
+        launch(.app)
+        tab("Reminders")
         tapText("Pay rent")
         shot("reminders-details")
         launch(.noReminders)
@@ -611,7 +612,9 @@ final class ShotsUITests: XCTestCase {
         chooseInSheet("Firm")
         applyRemindersFilter()
         shot("reminders-status-nudging")
-        barTap { remindersFilterButtons.firstMatch.tap() }
+        // Not `barTap`: turning the phone back closes the menu, and landscape only runs on iOS 27,
+        // where bar buttons take taps.
+        remindersFilterButtons.firstMatch.tap()
         XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
         shot("reminders-filter-menu")
         app.buttons["Clear All Filters"].firstMatch.tap()
@@ -630,7 +633,9 @@ final class ShotsUITests: XCTestCase {
         chooseInSheet("#home")
         applyRemindersFilter()
         shot("reminders-filter-tag")
-        barTap { remindersFilterButtons.firstMatch.tap() }
+        // Not `barTap`: turning the phone back closes the menu, and landscape only runs on iOS 27,
+        // where bar buttons take taps.
+        remindersFilterButtons.firstMatch.tap()
         XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
         app.buttons["Clear All Filters"].firstMatch.tap()
         pause(0.5)
@@ -702,6 +707,19 @@ final class ShotsUITests: XCTestCase {
         clearBoth.tap()
         pause(0.8)
         shot("reminders-search-status-cleared")
+        // Cancel ends the search in one tap on both iOS versions: the Search button's X took three
+        // on iOS 27.0, which is why that design went (#113).
+        field.tap()
+        field.typeText("pill")
+        pause(0.5)
+        let cancel = app.buttons.matching(NSPredicate(format: "label ==[c] %@ OR label ==[c] %@", "cancel", "close")).firstMatch
+        XCTAssert(cancel.exists, "No Cancel:\n\(app.debugDescription)")
+        cancel.tap()
+        pause(1)
+        shot("reminders-search-closed")
+        XCTAssertFalse(app.keyboards.firstMatch.exists, "One tap on Cancel left the keyboard up")
+        XCTAssertFalse(cancel.exists, "One tap on Cancel left the search open")
+        XCTAssert(remindersFilterButtons.firstMatch.isHittable, "Cancel left the bar without its Filter button:\n\(app.debugDescription)")
     }
 
     func testSettings() {

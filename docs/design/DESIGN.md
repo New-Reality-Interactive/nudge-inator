@@ -397,8 +397,8 @@ except in the tab and navigation bars. Verify names against the mockup.
 ### Reminders tab
 - **Search:** the system's search field (`searchable`), always shown under the navigation bar while
   there are reminders (the no-reminders empty state has none), with the prompt "Search titles and
-  notes". The system draws its `magnifyingglass`, its clear button,
-  and Cancel while it's focused or has text. Known difference, accepted (Brian, #113): on iOS 27.0
+  notes". The system draws its `magnifyingglass`, its clear button, and Cancel while it's focused
+  or has text. Known difference, accepted (Brian, #113): on iOS 27.0
   the tab's first visit after a launch draws the title in its small inline form, with the list a
   little higher; a later visit draws the large title. The system does it to any field always under
   the title (an 11-line app too), and `toolbarTitleDisplayMode(.large)`, `defaultScrollAnchor(.top)`
@@ -410,7 +410,8 @@ except in the tab and navigation bars. Verify names against the mockup.
   reminders shown out of every reminder, in every case, so a filtered list never reads as all of
   them ("3 reminders out of 14", "14 reminders out of 14"). One string with both numbers, one
   VoiceOver element.
-- **Bar:** Filter, Sort, New, in that order; with no reminders, only New. The bar stays during a
+- **Bar:** Filter, Sort, New, in that order; Filter and Sort share one glass group and New stands
+  apart, split by a fixed `ToolbarSpacer`. With no reminders, only New. The bar stays during a
   search (`searchPresentationToolbarBehavior(.avoidHidingContent)`), so the Filter button's badge
   still says the sheet's filters are on.
 - **Sort button:** `arrow.up.arrow.down` in the bar, monochrome like New. It opens the Sort menu: a
