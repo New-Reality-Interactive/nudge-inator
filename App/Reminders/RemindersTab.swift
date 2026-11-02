@@ -88,12 +88,6 @@ struct RemindersTab: View {
                         RemindersSortButton(sort: sort.transaction(Self.noAnimation))
                     }
                 }
-                // Search last in the group, then New on its own. iOS 26 pins this item to the end,
-                // after New (Brian's call, #113).
-                if hasReminders {
-                    DefaultToolbarItem(kind: .search, placement: .topBarTrailing)
-                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
-                }
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
             }
             // Closing the sheet moves VoiceOver to the bar's New button, which cut an announcement of
@@ -199,10 +193,9 @@ struct RemindersTab: View {
     }
 }
 
-/// Search as a button in the bar, while there's anything to search: the no-reminders empty state has
-/// none, as the mockup draws it. Its field replaces the button row and the large title stays where it
-/// is. Not a field always under the title: on iOS 27 that collapses the title on the tab's first
-/// visit, as an 11-line app with only a `TabView`, a `List` and `searchable` does (#113).
+/// The search field under the title, while there's anything to search: the no-reminders empty state
+/// has none, as the mockup draws it. The bar stays during a search, so its Filter button and badge
+/// still say the sheet's filters are on (Brian's call, #113).
 private struct RemindersSearchField: ViewModifier {
     let isShown: Bool
     @Binding var text: String
@@ -212,10 +205,9 @@ private struct RemindersSearchField: ViewModifier {
             content
                 .searchable(
                     text: $text,
-                    placement: .toolbar,
+                    placement: .navigationBarDrawer(displayMode: .always),
                     prompt: Text("Search titles and notes", comment: "Reminders tab: the search field's prompt.")
                 )
-                .searchToolbarBehavior(.minimize)
                 .searchPresentationToolbarBehavior(.avoidHidingContent)
         } else {
             content
@@ -271,7 +263,7 @@ private struct RemindersListView: View {
                         } else {
                             proxy.scrollTo(headerID, anchor: .bottom)
                         }
-                        // Ends the search too, if it's still active, so Close and the keyboard go with its text.
+                        // Ends the search too, if it's still active, so Cancel and the keyboard go with its text.
                         dismissSearch()
                         countFocused = true
                     }
@@ -286,8 +278,8 @@ private struct RemindersListView: View {
                     .id(headerID)
             }
         }
-        // Ending a search moves VoiceOver to the bar's New button, which cut the count's announcement off
-        // (seen on the iPhone in #112), so it goes to the count, as Clear Search does.
+        // Cancel moves VoiceOver to the bar's New button, which cut the count's announcement off (seen
+        // on the iPhone in #112), so it goes to the count, as Clear Search does.
         .onChange(of: isSearching) {
             guard !isSearching else { return }
             countFocused = true

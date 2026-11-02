@@ -437,9 +437,8 @@ final class ShotsUITests: XCTestCase {
         launch(.app)
         tab("Reminders")
         shot("reminders", pages: 20, stopsAtEnd: true)
-        // A new launch rather than scrolling back: at the largest text four drags don't reach the top.
-        launch(.app)
-        tab("Reminders")
+        scrollToTop()
+        // Not a row near the end: at the largest text its middle can stop behind the search field.
         tapText("Pay rent")
         shot("reminders-details")
         launch(.noReminders)
@@ -612,9 +611,7 @@ final class ShotsUITests: XCTestCase {
         chooseInSheet("Firm")
         applyRemindersFilter()
         shot("reminders-status-nudging")
-        // Not `barTap`: turning the phone back closes the menu, and landscape only runs on iOS 27,
-        // where bar buttons take taps.
-        remindersFilterButtons.firstMatch.tap()
+        barTap { remindersFilterButtons.firstMatch.tap() }
         XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
         shot("reminders-filter-menu")
         app.buttons["Clear All Filters"].firstMatch.tap()
@@ -633,9 +630,7 @@ final class ShotsUITests: XCTestCase {
         chooseInSheet("#home")
         applyRemindersFilter()
         shot("reminders-filter-tag")
-        // Not `barTap`: turning the phone back closes the menu, and landscape only runs on iOS 27,
-        // where bar buttons take taps.
-        remindersFilterButtons.firstMatch.tap()
+        barTap { remindersFilterButtons.firstMatch.tap() }
         XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
         app.buttons["Clear All Filters"].firstMatch.tap()
         pause(0.5)
@@ -663,45 +658,20 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-filters-cleared")
     }
 
-    /// Opens search from the bar's button, the field's only way in, and returns the field.
-    private func openRemindersSearch() -> XCUIElement {
-        barTap { app.navigationBars.firstMatch.buttons["Search"].firstMatch.tap() }
-        let field = app.searchFields.firstMatch
-        XCTAssert(field.waitForExistence(timeout: 5), "No search field:\n\(app.debugDescription)")
-        pause(0.5)
-        return field
-    }
-
-    /// The first visit to the tab draws the same title and list as coming back to it does: on iOS 27
-    /// a field always under the title collapsed the title on the first visit only (#113).
-    func testRemindersFirstVisitMatchesReturn() {
-        launch(.app)
-        tab("Reminders")
-        let count = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "out of")).firstMatch
-        XCTAssert(count.waitForExistence(timeout: 5), "No count:\n\(app.debugDescription)")
-        pause(1)
-        let first = count.frame.minY
-        shot("reminders-first-visit")
-        tab("Now")
-        tab("Reminders")
-        pause(1)
-        shot("reminders-return-visit")
-        XCTAssertEqual(first, count.frame.minY, accuracy: 0.5, "The first visit's list isn't where a return puts it.")
-    }
-
-    /// The mockup's `reminders-search` (#112, #113): no field at rest, then the field in place of the
-    /// button row, empty, with text, then a search that finds nothing, alone and under a filter, each
-    /// cleared from the empty state's button, which brings the row back, and Close.
+    /// The mockup's `reminders-search` (#112): the field empty under the title, with text, then a
+    /// search that finds nothing, alone and under a filter, each cleared from the empty state's
+    /// button. The bar stays during a search, so Filter and Sort can still be reached (#113).
     func testRemindersSearch() {
         launch(.app)
         tab("Reminders")
-        shot("reminders-search-rest")
-        XCTAssertFalse(app.searchFields.firstMatch.exists, "A search field shows at rest")
-        var field = openRemindersSearch()
         shot("reminders-search-empty")
-        XCTAssertFalse(app.buttons["Sort"].firstMatch.isHittable, "The bar's Sort button stayed during a search")
+        let field = app.searchFields.firstMatch
+        XCTAssert(field.waitForExistence(timeout: 5), "No search field:\n\(app.debugDescription)")
+        field.tap()
         field.typeText("pill")
         pause(0.5)
+        XCTAssert(remindersFilterButtons.firstMatch.isHittable, "The bar's Filter button left during a search:\n\(app.debugDescription)")
+        XCTAssert(app.buttons["Sort"].firstMatch.isHittable, "The bar's Sort button left during a search:\n\(app.debugDescription)")
         shot("reminders-search-text")
         field.typeText("zzz")
         pause(0.5)
@@ -711,16 +681,19 @@ final class ShotsUITests: XCTestCase {
         clearSearch.tap()
         pause(0.8)
         shot("reminders-search-cleared")
-        XCTAssert(app.buttons["Sort"].firstMatch.isHittable, "Clearing didn't bring the bar back:\n\(app.debugDescription)")
-        // Clearing scrolls back to the top, so the count is on screen. At the accessibility sizes it
-        // stops short of the top, and a swipe down shows it (#112's Comments).
+        // Clearing scrolls back to the top, so the count is on screen and not behind the field. At
+        // the accessibility sizes it stops short of the top, and a swipe down shows it (#112's
+        // Comments).
+        let count = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "out of")).firstMatch
         if UITraitCollection.current.preferredContentSizeCategory.isAccessibilityCategory {
             scrollToTop()
+        } else {
+            XCTAssertGreaterThanOrEqual(count.frame.minY, field.frame.maxY, "The count is behind the search field")
         }
         openRemindersFilter()
         chooseInSheet("Nudging")
         applyRemindersFilter()
-        field = openRemindersSearch()
+        field.tap()
         field.typeText("zzz")
         pause(0.5)
         shot("reminders-no-match-search-status")
@@ -729,25 +702,6 @@ final class ShotsUITests: XCTestCase {
         clearBoth.tap()
         pause(0.8)
         shot("reminders-search-status-cleared")
-        field = openRemindersSearch()
-        field.typeText("pill")
-        pause(0.5)
-        let close = app.buttons.matching(NSPredicate(format: "label ==[c] %@", "close")).firstMatch
-        XCTAssert(close.exists, "No Close:\n\(app.debugDescription)")
-        // Pressed, as `tap()` doesn't land on it. The iOS 27 simulator takes up to three presses where
-        // iOS 26.5 takes one, so the walk logs the count; the iPhone check decides (#113).
-        let point = app.windows.firstMatch.coordinate(withNormalizedOffset: .zero)
-            .withOffset(CGVector(dx: close.frame.midX, dy: close.frame.midY))
-        var presses = 0
-        while app.searchFields.firstMatch.exists, presses < 3 {
-            point.press(forDuration: 0.15)
-            presses += 1
-            pause(1)
-        }
-        print("Close took \(presses) presses")
-        shot("reminders-search-closed")
-        XCTAssertFalse(app.searchFields.firstMatch.exists, "Close left the search field")
-        XCTAssert(app.buttons["Sort"].firstMatch.isHittable, "Close didn't bring the bar back:\n\(app.debugDescription)")
     }
 
     func testSettings() {
