@@ -26,6 +26,10 @@ struct RemindersTab: View {
     /// What's applied from the filter sheet.
     @State private var choices = RemindersFilterChoices()
     @State private var isFiltering = false
+    /// Apply was tapped, so the count takes VoiceOver when the sheet has closed.
+    @State private var wasApplied = false
+    /// Each one puts VoiceOver on the count.
+    @State private var countFocusRequests = 0
     /// What's in the search field, spaces included. `filter` holds it trimmed, so a space typed after
     /// a word doesn't change the list's inputs.
     @State private var searchText = ""
@@ -49,6 +53,7 @@ struct RemindersTab: View {
                         RemindersListView(
                             screen: screen,
                             filter: filter,
+                            countFocusRequests: countFocusRequests,
                             clearFilters: {
                                 // Focus goes to the count, which reads the result itself.
                                 searchText = ""
@@ -73,7 +78,10 @@ struct RemindersTab: View {
                             sectionsInUse: appliedChoices.sectionsInUse,
                             showsBadge: !dynamicTypeSize.isAccessibilitySize,
                             open: { isFiltering = true },
-                            clear: { apply(RemindersFilterChoices()) }
+                            clear: {
+                                apply(RemindersFilterChoices())
+                                countFocusRequests += 1
+                            }
                         )
                     }
                     ToolbarItem(placement: .topBarTrailing) {
@@ -82,9 +90,17 @@ struct RemindersTab: View {
                 }
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
             }
-            .sheet(isPresented: $isFiltering) {
+            // Closing the sheet moves VoiceOver to the bar's New button, which cut an announcement of
+            // the count off (seen on the iPhone), so it goes to the count, as Clear Filters does.
+            .sheet(isPresented: $isFiltering, onDismiss: {
+                if wasApplied { countFocusRequests += 1 }
+                wasApplied = false
+            }) {
                 if let engine {
-                    RemindersFilterSheetView(engine: engine, applied: appliedChoices, search: searchText, apply: apply)
+                    RemindersFilterSheetView(engine: engine, applied: appliedChoices, search: searchText) {
+                        apply($0)
+                        wasApplied = true
+                    }
                 }
             }
         }
@@ -117,13 +133,9 @@ struct RemindersTab: View {
         appliedChoices.narrowing(search: searchText)
     }
 
-    /// Apply and Clear All Filters: the list redraws at once and VoiceOver hears the new count.
-    /// The search stays as it is.
+    /// Apply and Clear All Filters: the list redraws at once. The search stays as it is.
     private func apply(_ new: RemindersFilterChoices) {
         withTransaction(Self.noAnimation) { choices = new }
-        if let list = engine?.remindersList(sortedBy: sort.wrappedValue, filteredBy: keepingExistingTags(new).narrowing(search: searchText)) {
-            announceCount(of: list)
-        }
     }
 
     /// A filter or a Sort choice redraws the list at once, as the mockup does. Only a row a state
@@ -153,14 +165,6 @@ struct RemindersTab: View {
         let sort = sort.wrappedValue
         let list = engine?.remindersList(sortedBy: sort, filteredBy: filter)
         keptOrder = list.map { KeptOrder(sort: sort, filter: filter, ids: $0.items.map(\.reminder.id)) }
-    }
-
-    /// Says the new count, as the mockup does. High priority, which nothing interrupts once it has
-    /// started: at low, on the iPhone, the focus landing as the sheet closed cut it off (#113).
-    private func announceCount(of list: RemindersList) {
-        var count = AttributedString(String(localized: RemindersScreen.countText(shown: list.items.count, of: list.total)))
-        count.accessibilitySpeechAnnouncementPriority = .high
-        AccessibilityNotification.Announcement(count).post()
     }
 
     /// An order kept for one sort and filter. Until `onChange` keeps one for a new one, the first
@@ -214,6 +218,8 @@ private struct RemindersSearchField: ViewModifier {
 private struct RemindersListView: View {
     let screen: RemindersScreen
     let filter: RemindersFilter
+    /// Each new value puts VoiceOver on the count, which reads the result itself.
+    let countFocusRequests: Int
     let clearFilters: () -> Void
     let openDetails: (Reminder.ID) -> Void
     let markDone: (Reminder.ID) -> Void
@@ -282,6 +288,7 @@ private struct RemindersListView: View {
                 proxy.scrollTo(headerID, anchor: .bottom)
             }
         }
+        .onChange(of: countFocusRequests) { countFocused = true }
         // By the rows, not `withAnimation` around Done and Delete: a row can also leave on the
         // minute, when the clock alone takes it out of the filter.
         .animation(reduceMotion ? nil : .default, value: screen.rows.map(\.id))
