@@ -47,9 +47,17 @@ non_foundation_imports() {
 }
 
 step "NudgeEngine imports no Apple framework (Foundation only)"
-if non_foundation_imports Packages/NudgeEngine/Sources | grep .; then
+if non_foundation_imports Packages/NudgeEngine/Sources/NudgeEngine | grep .; then
   echo "FAIL: NudgeEngine sources may only import Foundation" >&2
   failed+=("engine-imports")
+fi
+
+# The device seed (#134), a second target of the engine's package, is pure Swift too: Foundation and
+# the engine. Its tests run in the engine's xcodebuild test below.
+step "NudgeDeviceSeed imports only Foundation and NudgeEngine"
+if non_foundation_imports Packages/NudgeEngine/Sources/NudgeDeviceSeed | grep -v ' import NudgeEngine' | grep .; then
+  echo "FAIL: NudgeDeviceSeed sources may only import Foundation and NudgeEngine" >&2
+  failed+=("seed-imports")
 fi
 
 # AlarmKit's authorization read is a synchronous call that froze the iPhone for 69 s on the main
@@ -181,6 +189,13 @@ if [ ${#udids[@]} -gt 0 ]; then
     echo "FAIL: the build added Info.plist keys to App/Resources/InfoPlist.xcstrings: give each a comment and commit it" >&2
     failed+=("infoplist-strings")
   fi
+fi
+
+# The device seed is Debug-only (#134). Builds Release for the simulator, which needs the SDK but
+# no simulator to be booted; skipped with the simulator steps, as CI runs them.
+if [ ${#udids[@]} -gt 0 ]; then
+  step "A Release build holds no device-seed code"
+  scripts/check-release-has-no-seed.sh || failed+=("release-has-seed")
 fi
 
 echo

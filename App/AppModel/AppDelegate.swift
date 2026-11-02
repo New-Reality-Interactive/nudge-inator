@@ -31,6 +31,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             let refresher = model.badgeRefresher
             AppDependencyManager.shared.add(dependency: refresher)
             Task { await model.launch() }
+            #if DEBUG
+            DeviceSeedLaunch.runIfAsked(on: model)
+            #endif
         }
         return true
     }

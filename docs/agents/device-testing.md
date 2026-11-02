@@ -47,9 +47,32 @@ For checks the person drives by hand (VoiceOver, landscape, tapping through scre
 1. Before installing, note whether the app is there: `xcrun devicectl device info apps --device <id> --bundle-id com.newrealityinteractive.nudgeinator` (an empty "Apps installed:" means it isn't).
 2. Build: `xcodebuild -project NudgeInator.xcodeproj -scheme NudgeInator -destination 'id=<id>' -derivedDataPath .build/derived-device -allowProvisioningUpdates -quiet build` (`.build` is git-ignored; the first build takes a few minutes).
 3. Install and launch: `xcrun devicectl device install app --device <id> .build/derived-device/Build/Products/Debug-iphoneos/NudgeInator.app`, then `xcrun devicectl device process launch --terminate-existing --device <id> com.newrealityinteractive.nudgeinator`. After a code fix, repeat 2 and 3; the install keeps the app's data, so the person doesn't re-enter their test data.
-4. The person seeds their own test data by hand; there is no seeding route.
+4. Load the check's test data with a seed (below) rather than asking the person to type it in. Data they make by hand still needs step 6.
 5. Tell the person their starting settings before you ask them to change any (for example text size: Settings > Accessibility > Display & Text Size > Larger Text, noting the notch and whether Larger Accessibility Sizes is on), and have them restore it at the end.
 6. Clean up: reminders with Break Through Focus on schedule AlarmKit alarms, and uninstalling doesn't remove those. Ask the person to delete every reminder they made (Done may not cancel the alarm) before you uninstall. If the app wasn't installed at the start, uninstall it with `xcrun devicectl device uninstall app --device <id> com.newrealityinteractive.nudgeinator`, then check with step 1.
+
+### Seeding test data
+
+A Debug build loads a named set of reminders, tags and settings when it is launched with `NUDGE_SEED`, and removes them when launched with `NUDGE_SEED=clean` (#134). A launch without the variable does nothing, and Release builds contain no seed code: every seed file is wrapped in `#if DEBUG`, and `scripts/check-release-has-no-seed.sh` checks a Release build in `scripts/test.sh` and the archive in `scripts/archive-and-upload.sh`. The seed is for manual checks; automated tests never trigger it, and the test host has no model for it to act on.
+
+```
+xcrun devicectl device process launch --terminate-existing --device <id> \
+  -e '{"NUDGE_SEED":"search"}' com.newrealityinteractive.nudgeinator      # load the "search" set
+xcrun devicectl device process launch --terminate-existing --device <id> \
+  -e '{"NUDGE_SEED":"clean"}' com.newrealityinteractive.nudgeinator       # remove what was loaded
+```
+
+- Install the Debug build first (steps 2 and 3). Add `--console` to the launch to see the app's output; the seed logs `loaded(...)` or `cleaned` under the `DeviceSeed` category.
+- The data goes through the model's own add and delete, so it is stored and scheduled like data made by hand, and it survives a force-quit. Loading a set again replaces its reminders, so one copy is left.
+- Removal reads a record the load kept in the app's `UserDefaults`, and acts only on what is in it: the reminders by their fixed IDs, and the tags the seed created. A tag the person already had under a set's tag name is used but never recorded, so removal leaves it, and so it does a tag a reminder of theirs now uses. Their own reminders are never touched, whatever their titles.
+- A set can change settings (the Reminders tab's sort, the Default Pace). The first load records each one's earlier value, and removal puts it back. The record holds nothing between the launches but this; **Delete All Data** in Settings does not clear it, so a `clean` after it finds the reminders already gone and only restores the settings.
+- A set's reminders have Break Through Focus off and none is Relentless, so no set schedules an AlarmKit alarm, which uninstalling would leave behind. A test guards that.
+- Removal cancels the reminders' notifications and alarms through the same plan a delete makes. After the `clean` launch, check the phone is as it was: the Reminders tab holds only the person's own, and the sort is the one they had.
+- The seed does not undo data the person added to a set's reminders by hand, or changes they made while it was loaded; the `clean` removes the set's reminders whatever state they are in.
+
+Add a set: copy `Packages/NudgeEngine/Sources/NudgeDeviceSeed/SearchSet.swift` to a new file, change its name, tags, settings and reminders (give each reminder a new fixed UUID; due times and creation dates are seconds from the load), and add it to `SeedSet.all` in `SeedSet.swift`. The tests check every listed set: unique name and IDs, no alarm, tags declared, and a clean load and removal. A new setting needs a case in `SeedSetting` and in `ModelSeedTarget` (`App/DeviceSeed/DeviceSeedLaunch.swift`). The target's tests run with the engine's: `cd Packages/NudgeEngine && xcodebuild test -scheme NudgeEngine -destination 'platform=macOS'`, or `scripts/test.sh`.
+
+The sets: `search` (#112's Reminders search check): seven reminders over two tags with titles and notes that differ in case, diacritics and word order ("Take Pills", "Café meeting with Sam", "Buy milk today", "Milk: buy"), one already due so it is nudging, and the Reminders tab's sort set to due date, earliest first.
 
 Lessons from ticket 29:
 
