@@ -625,13 +625,27 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-filter-reset")
         applyRemindersFilter()
 
+        // A chosen tag is bold on its rows.
+        openRemindersFilter()
+        chooseInSheet("#home")
+        applyRemindersFilter()
+        shot("reminders-filter-tag")
+        barTap { remindersFilterButtons.firstMatch.tap() }
+        XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
+        app.buttons["Clear All Filters"].firstMatch.tap()
+        pause(0.5)
+
         openRemindersFilter()
         chooseInSheet("Nudging")
         applyRemindersFilter()
-        for title in ["Take the bins out", "Reply to Alex about the lease"] {
-            swipe(title)
+        // Which rows are Nudging depends on the time of day the walk runs.
+        let nudging = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", ", Nudging,"))
+        var marked = 0
+        while let label = nudging.allElementsBoundByIndex.first?.label, marked < 6 {
+            swipe(label.components(separatedBy: ", Nudging,")[0])
             app.buttons["Done"].firstMatch.tap()
             pause(0.8)
+            marked += 1
         }
         shot("reminders-no-match-filters")
         // At the largest text, under the search field, the button starts below the screen.
