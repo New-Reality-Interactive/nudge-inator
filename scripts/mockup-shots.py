@@ -72,6 +72,7 @@ SCREENS = {
   "reminders-due-date": ("state.tab='rems';state.rems.sort.by='due';nav()", 2),
   "reminders-status-nudging": ("state.tab='rems';state.rems.filter.status=['NUDGING'];nav()", 1),
   "reminders-status-missed": ("state.tab='rems';state.rems.filter.status=['MISSED'];nav()", 1),
+  "reminders-search-open": ("state.tab='rems';state.rems.searchOpen=true;nav()", 1),
   "reminders-search": ("state.tab='rems';state.rems.q='pill';nav()", 1),
   "reminders-filter-badge": ("state.tab='rems';state.rems.filter.strength=['firm'];state.rems.filter.tags.ids=['home'];nav()", 1),
   "reminders-filter-menu": ("state.tab='rems';state.rems.filter.strength=['firm'];nav();showRemFilterMenu(document.querySelector('[data-remfilter]'))", 1),
