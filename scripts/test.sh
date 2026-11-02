@@ -47,14 +47,15 @@ non_foundation_imports() {
 }
 
 step "NudgeEngine imports no Apple framework (Foundation only)"
-if non_foundation_imports Packages/NudgeEngine/Sources | grep .; then
+if non_foundation_imports Packages/NudgeEngine/Sources/NudgeEngine | grep .; then
   echo "FAIL: NudgeEngine sources may only import Foundation" >&2
   failed+=("engine-imports")
 fi
 
-# The device seed (#134) is pure Swift too: Foundation and the engine, so its tests run on the Mac.
+# The device seed (#134), a second target of the engine's package, is pure Swift too: Foundation and
+# the engine. Its tests run in the engine's xcodebuild test below.
 step "NudgeDeviceSeed imports only Foundation and NudgeEngine"
-if non_foundation_imports Packages/NudgeDeviceSeed/Sources | grep -v ' import NudgeEngine' | grep .; then
+if non_foundation_imports Packages/NudgeEngine/Sources/NudgeDeviceSeed | grep -v ' import NudgeEngine' | grep .; then
   echo "FAIL: NudgeDeviceSeed sources may only import Foundation and NudgeEngine" >&2
   failed+=("seed-imports")
 fi
@@ -91,10 +92,6 @@ fi
 step "xcodebuild test (NudgeEngine, macOS)"
 (cd Packages/NudgeEngine && xcodebuild_logged "$logs/engine-macos.log" test -scheme NudgeEngine \
   -destination 'platform=macOS' -derivedDataPath .build/xcode) || failed+=("package-tests")
-
-step "xcodebuild test (NudgeDeviceSeed, macOS)"
-(cd Packages/NudgeDeviceSeed && xcodebuild_logged "$logs/seed-macos.log" test -scheme NudgeDeviceSeed \
-  -destination 'platform=macOS' -derivedDataPath .build/xcode) || failed+=("seed-package-tests")
 
 scratch="$(mktemp -d)"
 trap 'rm -rf "$scratch"' EXIT

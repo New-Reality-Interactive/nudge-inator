@@ -36,9 +36,8 @@ scripts/test.sh
 ## Project layout
 
 - `project.yml`: the project definition. The project uses **XcodeGen**, so `NudgeInator.xcodeproj` is generated and git-ignored. Run `xcodegen generate` (`scripts/test.sh` does it for you) after editing `project.yml` or adding files.
-- `Packages/NudgeEngine`: the pure-Swift nudge engine and its tests.
+- `Packages/NudgeEngine`: the pure-Swift nudge engine and its tests. Its `NudgeDeviceSeed` target holds named sets of test data a Debug build loads for manual device checks (`docs/agents/device-testing.md`, Seeding test data); Release builds contain none of it.
 - `Packages/NudgeShared`: code compiled into both the app and the widget extension (AlarmKit metadata and the Open intent, later).
-- `Packages/NudgeDeviceSeed`: named sets of test data a Debug build loads for manual device checks (`docs/agents/device-testing.md`, Seeding test data). Pure Swift; Release builds contain none of it.
 - `App/`: the SwiftUI app. `NudgeWidgets/`: the empty widget extension. `NudgeInatorTests/`: app-level tests.
 - App Group: `group.com.newrealityinteractive.nudgeinator`, shared by the app and the extension.
 

@@ -5,7 +5,7 @@ import Testing
 @testable import NudgeInator
 
 /// The app side of the device seed. The load and removal decisions are tested in the
-/// NudgeDeviceSeed package; this is the setting text and the record's storage.
+/// NudgeEngine package's NudgeDeviceSeed tests; this is the setting text and the record's storage.
 final class DeviceSeedTests {
     let suiteName = "DeviceSeedTests.\(UUID().uuidString)"
 

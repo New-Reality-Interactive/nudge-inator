@@ -53,7 +53,7 @@ The project builds with **Xcode 27.x and the iOS 27 SDK** on an Apple silicon Ma
 
 - `Packages/NudgeEngine` is pure Swift: no Apple framework imports, `Foundation` at most. `scripts/test.sh` enforces this. Anything that touches Apple frameworks (AlarmKit, store, adapters) lives in the app target, behind a type the engine can use without importing the framework.
 - `Packages/NudgeShared` holds only code that both the app and the widget extension compile (AlarmKit `AlarmMetadata`, the Open intent).
-- `Packages/NudgeDeviceSeed` is pure Swift (`Foundation` and `NudgeEngine`), compiled into the app in Debug builds only (every file is wrapped in `#if DEBUG`): sets of test data a launch loads for manual device checks (`docs/agents/device-testing.md`). Release builds contain none of it; `scripts/check-release-has-no-seed.sh` checks.
+- `Packages/NudgeEngine`'s `NudgeDeviceSeed` target is pure Swift too (`Foundation` and `NudgeEngine`). It is no product: the app compiles its folder in Debug builds only (every file is wrapped in `#if DEBUG`): sets of test data a launch loads for manual device checks (`docs/agents/device-testing.md`). Release builds contain none of it; `scripts/check-release-has-no-seed.sh` checks.
 
 ### AlarmKit
 
