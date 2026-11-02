@@ -3,8 +3,8 @@ import SwiftUI
 
 /// The filter sheet, the mockup's `remFilterSheet`: Tags as on My Day, then Status and Strength,
 /// choosing a draft of what's applied. Apply applies it and closes; Reset clears the draft, which
-/// changes nothing until Apply. Cancel, or swiping the sheet down, discards the draft, asking first
-/// once it differs from what's applied.
+/// changes nothing until Apply. Cancel discards the draft, asking first once it differs from what's
+/// applied; a swipe down closes the sheet until then, and after that only springs back.
 struct RemindersFilterSheetView: View {
     let engine: Engine
     let applied: RemindersFilterChoices
@@ -14,7 +14,6 @@ struct RemindersFilterSheetView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var draft: RemindersFilterChoices
-    @State private var isConfirmingDiscard = false
     @State private var listHeight = NeverShorter()
 
     init(engine: Engine, applied: RemindersFilterChoices, search: String, apply: @escaping (RemindersFilterChoices) -> Void) {
@@ -41,7 +40,7 @@ struct RemindersFilterSheetView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    DiscardingCancelButton(hasChanges: sheet.hasChanges, isConfirming: $isConfirmingDiscard)
+                    DiscardingCancelButton(hasChanges: sheet.hasChanges)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(role: .confirm) {
@@ -53,8 +52,8 @@ struct RemindersFilterSheetView: View {
                 }
             }
         }
+        // A swipe down mustn't lose the draft; Cancel asks first instead, as the reminder form's does.
         .interactiveDismissDisabled(sheet.hasChanges)
-        .onDismissAttempt { isConfirmingDiscard = true }
     }
 
     private var statusSection: some View {

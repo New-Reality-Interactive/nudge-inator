@@ -9,7 +9,6 @@ struct ReminderFormSheet: View {
     @Bindable var form: ReminderForm
     @Environment(AppModel.self) private var model: AppModel?
     @Environment(\.dismiss) private var dismiss
-    @State private var isConfirmingDiscard = false
     /// The pages pushed over the form. The stack removes a page when Back or a swipe pops it, so
     /// the Repeat page's Back is when `.repeat` leaves the path (ticket 22).
     @State private var pages: [ReminderFormPage] = []
@@ -55,7 +54,7 @@ struct ReminderFormSheet: View {
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            DiscardingCancelButton(hasChanges: form.hasChanges, isConfirming: $isConfirmingDiscard)
+            DiscardingCancelButton(hasChanges: form.hasChanges)
         }
         ToolbarItem(placement: .confirmationAction) {
             Button(role: .confirm) {

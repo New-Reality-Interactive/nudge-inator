@@ -438,7 +438,8 @@ final class ShotsUITests: XCTestCase {
         tab("Reminders")
         shot("reminders", pages: 20, stopsAtEnd: true)
         scrollToTop()
-        tapText("Book the car service")
+        // Not a row near the end: at the largest text its middle can stop behind the search field.
+        tapText("Pay rent")
         shot("reminders-details")
         launch(.noReminders)
         tab("Reminders")
@@ -577,9 +578,9 @@ final class ShotsUITests: XCTestCase {
     }
 
     /// The mockup's `reminders-filter`, `reminders-filter-badge`, `reminders-filter-menu`,
-    /// `reminders-status-nudging` and `reminders-no-match-filters` (#113): the sheet, the prompt
-    /// from Cancel and from a swipe down with a changed draft, none with a clean one, Apply, the
-    /// badge and menu, Reset, every Nudging row marked Done under the Status, and Clear Filters.
+    /// `reminders-status-nudging` and `reminders-no-match-filters` (#113): the sheet, a swipe down
+    /// closing a clean draft and holding a changed one, the prompt from Cancel, Apply, the badge and
+    /// menu, Reset, every Nudging row marked Done under the Status, and Clear Filters.
     func testRemindersFilter() {
         launch(.app)
         tab("Reminders")
@@ -601,10 +602,10 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-filter-discard")
         keepEditing()
 
+        // A changed draft holds the sheet: the swipe springs back, as the reminder form's does.
         swipeRemindersFilterDown()
-        XCTAssert(app.buttons["Discard Changes"].waitForExistence(timeout: 3), "A swipe down didn't ask first:\n\(app.debugDescription)")
-        shot("reminders-filter-discard-swipe")
-        keepEditing()
+        pause(1)
+        XCTAssert(app.navigationBars["Filter Reminders"].exists, "A swipe down lost a changed draft")
 
         // Firm off again, so the Nudging rows show.
         chooseInSheet("Firm")
@@ -617,12 +618,14 @@ final class ShotsUITests: XCTestCase {
         pause(0.5)
         shot("reminders-filter-cleared")
 
+        // Reset clears the draft. Applying the empty draft changes nothing.
         openRemindersFilter()
-        chooseInSheet("Nudging")
         chooseInSheet("Firm")
-        chooseInSheet("Relentless")
         scrollTo("Reset")?.tap()
         shot("reminders-filter-reset")
+        applyRemindersFilter()
+
+        openRemindersFilter()
         chooseInSheet("Nudging")
         applyRemindersFilter()
         for title in ["Take the bins out", "Reply to Alex about the lease"] {
