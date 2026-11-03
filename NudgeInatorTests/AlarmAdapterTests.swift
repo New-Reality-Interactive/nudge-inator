@@ -241,6 +241,25 @@ struct AlarmAdapterTests {
         #expect(manager.scheduled.isEmpty)
     }
 
+    /// Delete All Data: every ring, whoever's, and nothing yet to ring, which the plan cancels.
+    @Test func stoppingEveryRingLeavesOnlyTheAlarmsYetToRing() async throws {
+        let adapter = adapter()
+        let bins = UUID(uuidString: "0A1B2C3D-4E5F-4061-8273-8495A6B7C8D9")!
+        let ringing = nudge(4, at: NewYork.local(2026, 10, 16, 9, 10))
+        let otherRinging = nudge(4, at: NewYork.local(2026, 10, 16, 9, 12), of: bins)
+        let next = nudge(5, at: NewYork.local(2026, 10, 16, 9, 15))
+        adapter.apply(SchedulePlan(items: [ringing, otherRinging, next]))
+        await adapter.waitUntilApplied()
+        manager.ring(AlarmAdapter.alarmID(for: ringing))
+        manager.ring(AlarmAdapter.alarmID(for: otherRinging))
+
+        adapter.stopEveryRing()
+        await adapter.waitUntilApplied()
+
+        #expect(Set(manager.stoppedIDs) == Set([ringing, otherRinging].map(AlarmAdapter.alarmID(for:))))
+        #expect(manager.scheduled.map(\.id) == [AlarmAdapter.alarmID(for: next)])
+    }
+
     /// The reminder is gone, so nothing would come back for the rest: one refusal stops only itself.
     @Test func aStopThatFailsStillStopsTheRemindersOtherRings() async throws {
         let adapter = adapter()

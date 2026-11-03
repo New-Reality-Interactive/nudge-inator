@@ -133,7 +133,7 @@ struct DeleteReminderTests {
         #expect(engine.dueTimesAnAlarmMayBeRinging(for: pills.id) == [NewYork.local(2026, 10, 15), NewYork.local(2026, 10, 16)])
     }
 
-    /// Done leaves a ringing alarm to Stop or Open, so the Delete after it still has to stop it.
+    /// Done silences its ring, but AlarmKit can turn that down, and the Delete after it tries again.
     @Test func aDoneOccurrenceMayStillBeRinging() {
         let bins = Reminder(title: "Put the bins out", dueTime: NewYork.local(2026, 10, 15, 9, 15), strength: .relentless)
         clock.now = NewYork.local(2026, 10, 15, 9, 40)

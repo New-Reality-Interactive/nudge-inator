@@ -422,19 +422,79 @@ struct AppModelTests {
         #expect(state(of: callAlarm) == .alerting)
     }
 
-    /// Done leaves the ring to Stop or Open (spec #104, decision 52). A Delete after it still has
-    /// the ring to stop, though the plan no longer holds that occurrence.
-    @Test func doneLeavesTheRingAndADeleteAfterItStopsIt() async throws {
-        let (model, callAlarm, _, _) = try await modelWithTwoRingingAlarms()
+    /// Done in the app: its occurrence has nothing left to ring about (spec #104, decision 52).
+    @Test func doneStopsTheRingOfItsOccurrenceAndLeavesAnothersRinging() async throws {
+        let (model, callAlarm, waterAlarm, _) = try await modelWithTwoRingingAlarms()
 
         model.markDone(call.id)
         await model.waitUntilApplied()
+
+        #expect(manager.stoppedIDs == [callAlarm])
+        #expect(state(of: waterAlarm) == .alerting)
+        #expect(model.engine.latestOccurrence(for: call.id)?.state == .done)
+    }
+
+    /// Done from a notification goes the same way, once its nudge is the open occurrence's own.
+    @Test func doneFromANudgeStopsTheRingOfItsOccurrence() async throws {
+        let (model, callAlarm, waterAlarm, _) = try await modelWithTwoRingingAlarms()
+
+        await model.markDone(DeliveredNudge(reminderID: call.id, dueTime: call.dueTime, fireTime: NewYork.local(2026, 10, 15, 9, 10)))
+
+        #expect(manager.stoppedIDs == [callAlarm])
+        #expect(state(of: waterAlarm) == .alerting)
+    }
+
+    /// A banner left from before the occurrence: the engine ignores its Done, so nothing is closed
+    /// and the ring goes on.
+    @Test func aDoneTheEngineIgnoresStopsNothing() async throws {
+        let (model, callAlarm, _, _) = try await modelWithTwoRingingAlarms()
+
+        await model.markDone(DeliveredNudge(reminderID: call.id, dueTime: call.dueTime, fireTime: NewYork.local(2026, 10, 15, 8)))
+
         #expect(manager.stoppedIDs.isEmpty)
         #expect(state(of: callAlarm) == .alerting)
+        #expect(model.engine.openOccurrence(for: call.id) != nil)
+    }
 
-        model.delete(call.id)
+    /// Done names one occurrence: yesterday's alarm, still ringing, is not today's to stop.
+    @Test func doneLeavesTheRingOfAnEarlierOccurrence() async throws {
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+        var daily = call
+        daily.repeatRule = .everyDay
+        model.add(daily)
         await model.waitUntilApplied()
+        let yesterdays = try #require(manager.scheduled.first { $0.fireDate == NewYork.local(2026, 10, 15, 9, 32, 30) }).id
+        manager.ring(yesterdays)
+        clock.now = NewYork.local(2026, 10, 16, 8, 45)
+
+        model.markDone(daily.id)
+        await model.waitUntilApplied()
+
+        #expect(model.engine.occurrence(of: daily.id, dueAt: NewYork.local(2026, 10, 16, 8, 40))?.state == .done)
+        #expect(manager.stoppedIDs.isEmpty)
+        #expect(state(of: yesterdays) == .alerting)
+    }
+
+    /// Pausing asks the reminder to stop nudging, and that includes the nudge ringing now.
+    @Test func pauseStopsTheRemindersRingAndLeavesAnothersRinging() async throws {
+        let (model, callAlarm, waterAlarm, _) = try await modelWithTwoRingingAlarms()
+
+        model.pause(call.id)
+        await model.waitUntilApplied()
+
         #expect(manager.stoppedIDs == [callAlarm])
+        #expect(state(of: waterAlarm) == .alerting)
+        #expect(model.engine.isPaused(call.id))
+    }
+
+    /// No reminder is left for Stop or Open to act on, so no ring goes on.
+    @Test func deleteAllDataStopsEveryRing() async throws {
+        let (model, callAlarm, waterAlarm, _) = try await modelWithTwoRingingAlarms()
+
+        try await model.deleteAllData()
+
+        #expect(Set(manager.stoppedIDs) == [callAlarm, waterAlarm])
+        #expect(manager.scheduled.isEmpty)
     }
 
     /// Before the store is read a Delete is dropped, so the reminder stays and so does its ring.
@@ -505,12 +565,15 @@ struct AppModelTests {
         await model.waitUntilApplied()
         let pending = Set(center.pending.map(\.identifier))
         let alarms = Set(manager.scheduled.map(\.id))
+        let ringing = try #require(manager.scheduled.first).id
+        manager.ring(ringing)
 
         await #expect(throws: (any Error).self) { try await model.deleteAllData() }
 
         #expect(model.engine.reminders == [call])
         #expect(Set(center.pending.map(\.identifier)) == pending)
         #expect(Set(manager.scheduled.map(\.id)) == alarms)
+        #expect(manager.stoppedIDs.isEmpty)
         #expect(center.removedAllDeliveredCount == 0)
     }
 

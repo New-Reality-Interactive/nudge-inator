@@ -597,10 +597,10 @@ public struct Engine {
     }
 
     /// The due times of the reminder's occurrences that an alarm may still be ringing for, oldest
-    /// first, for a Delete to silence it (#124). Open or closed: Done leaves a ring to Stop or Open,
-    /// and the next occurrence can take over during one. The latest however old, since nothing says
-    /// how long a ring lasts. A due time an Edit means never happened may be among them, and matches
-    /// no alarm.
+    /// first, for a Delete or a Pause to silence it (#124). Open or closed: a ring can outlast its
+    /// occurrence's closing, and the next occurrence can take over during one. The latest however
+    /// old, since nothing says how long a ring lasts. A due time an Edit means never happened may be
+    /// among them, and matches no alarm.
     public func dueTimesAnAlarmMayBeRinging(for reminderID: Reminder.ID) -> [Date] {
         guard let reminder = reminder(reminderID) else { return [] }
         return Set(latestAndListedDueTimes(of: reminder)).sorted()
