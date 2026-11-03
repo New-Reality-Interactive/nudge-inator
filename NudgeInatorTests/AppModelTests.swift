@@ -375,6 +375,81 @@ struct AppModelTests {
         #expect(try store.load() == StoredData(reminders: [], tags: [], histories: [:]))
     }
 
+    /// A model holding `call` and `water`, each with one alarm ringing at 9:58. Water is added
+    /// first and alone, so its soonest alarm is known to be its own.
+    func modelWithTwoRingingAlarms(store: ReminderStore? = nil) async throws -> (model: AppModel, callAlarm: Alarm.ID, waterAlarm: Alarm.ID, water: Reminder) {
+        let model = await launchedModel(store: try store ?? ReminderStore(location: .inMemory))
+        let water = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 15, 9, 5), strength: .firm)
+        model.add(water)
+        await model.waitUntilApplied()
+        let waterAlarm = try #require(manager.scheduled.first).id
+        model.add(call)
+        await model.waitUntilApplied()
+        let callAlarm = try #require(manager.scheduled.first { $0.fireDate == NewYork.local(2026, 10, 15, 9, 32, 30) }).id
+        clock.now = NewYork.local(2026, 10, 15, 9, 58)
+        manager.ring(callAlarm)
+        manager.ring(waterAlarm)
+        return (model, callAlarm, waterAlarm, water)
+    }
+
+    func state(of id: Alarm.ID) -> Alarm.State? {
+        manager.scheduled.first { $0.id == id }?.state
+    }
+
+    /// #124: the row goes and so does the ring, while another reminder's ring goes on.
+    @Test func deleteStopsTheRemindersRingingAlarmAndLeavesAnothersRinging() async throws {
+        let (model, callAlarm, waterAlarm, water) = try await modelWithTwoRingingAlarms()
+
+        model.delete(call.id)
+        await model.waitUntilApplied()
+
+        #expect(manager.stoppedIDs == [callAlarm])
+        #expect(state(of: callAlarm) == nil)
+        #expect(state(of: waterAlarm) == .alerting)
+        #expect(model.engine.reminders.map(\.id) == [water.id])
+    }
+
+    /// Only Delete silences a ring: an Edit of another reminder re-plans and silences nothing.
+    @Test func anEditOfAnotherReminderLeavesARingAlone() async throws {
+        let (model, callAlarm, _, water) = try await modelWithTwoRingingAlarms()
+        var edited = water
+        edited.title = "Water the ferns"
+
+        try model.edit(edited)
+        await model.waitUntilApplied()
+
+        #expect(manager.stoppedIDs.isEmpty)
+        #expect(state(of: callAlarm) == .alerting)
+    }
+
+    /// Done leaves the ring to Stop or Open (spec #104, decision 52). A Delete after it still has
+    /// the ring to stop, though the plan no longer holds that occurrence.
+    @Test func doneLeavesTheRingAndADeleteAfterItStopsIt() async throws {
+        let (model, callAlarm, _, _) = try await modelWithTwoRingingAlarms()
+
+        model.markDone(call.id)
+        await model.waitUntilApplied()
+        #expect(manager.stoppedIDs.isEmpty)
+        #expect(state(of: callAlarm) == .alerting)
+
+        model.delete(call.id)
+        await model.waitUntilApplied()
+        #expect(manager.stoppedIDs == [callAlarm])
+    }
+
+    /// Before the store is read a Delete is dropped, so the reminder stays and so does its ring.
+    @Test func deleteBeforeTheStoreIsReadStopsNothing() async throws {
+        let store = try ReminderStore(location: .inMemory)
+        let (_, callAlarm, _, _) = try await modelWithTwoRingingAlarms(store: store)
+        let unlaunched = model(store: store).model
+
+        unlaunched.delete(call.id)
+        await unlaunched.waitUntilApplied()
+
+        #expect(manager.stoppedIDs.isEmpty)
+        #expect(state(of: callAlarm) == .alerting)
+    }
+
     /// Ticket 30. A Firm reminder (3 requests, 17 alarms), a Done one with history, a tag and a
     /// test nudge: afterwards the store, the engine, the center and the alarm manager are all empty.
     @Test func deleteAllDataEmptiesTheStoreTheEngineAndBothAdapters() async throws {

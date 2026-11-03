@@ -370,9 +370,14 @@ final class AppModel {
         perform({ $0.deleteTag(tagID) }, storeChange: { try $0.deleteTag(tagID) })
     }
 
-    /// The reminder and its whole history go, from the engine and the store (ticket 12).
+    /// The reminder and its whole history go, from the engine and the store (ticket 12), and its
+    /// alarm stops if it is ringing (#124). The due times are read first: Delete forgets them.
     func delete(_ reminderID: Reminder.ID) {
-        perform({ $0.delete(reminderID) }, storeChange: { try $0.delete(reminderID) })
+        perform({ engine in
+            let dueTimes = engine.dueTimesAnAlarmMayBeRinging(for: reminderID)
+            engine.delete(reminderID)
+            alarms.stopRinging(of: reminderID, dueAt: dueTimes)
+        }, storeChange: { try $0.delete(reminderID) })
     }
 
     /// Settings' Default Pace (ticket 09), what a new reminder starts with. Read from the record

@@ -245,10 +245,13 @@ final class FakeAlarmManager: AlarmManaging {
     private(set) var stoppedIDs: [Alarm.ID] = []
     /// When set, every `stop(id:)` throws it and nothing is stopped.
     var stopError: (any Error)?
+    /// The alarms `stop(id:)` turns down, the others stopping as usual.
+    var refusedStopIDs: Set<Alarm.ID> = []
 
     /// Apple: "If the alarm is a one-shot … then the system deletes the alarm." Every nudge is.
     func stop(id: Alarm.ID) throws {
         if let stopError { throw stopError }
+        if refusedStopIDs.contains(id) { throw AlarmManager.AlarmError.maximumLimitReached }
         stoppedIDs.append(id)
         scheduled.removeAll { $0.id == id }
     }

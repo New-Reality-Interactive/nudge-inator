@@ -123,6 +123,64 @@ struct DeleteReminderTests {
         #expect(engine.latestOccurrence(for: pills.id)?.state == .nudging(nudgeNumber: 2))
     }
 
+    /// Delete stops a ringing alarm (#124), and an alarm's ID names its occurrence, so the app reads
+    /// these before Delete forgets them. Yesterday's is here though today's took over: its last
+    /// nudge can still be ringing.
+    @Test func anOccurrenceTheNextTookOverMayStillBeRinging() {
+        clock.now = NewYork.local(2026, 10, 16, 9, 1)
+        let engine = engine(for: [pills])
+
+        #expect(engine.dueTimesAnAlarmMayBeRinging(for: pills.id) == [NewYork.local(2026, 10, 15), NewYork.local(2026, 10, 16)])
+    }
+
+    /// Done leaves a ringing alarm to Stop or Open, so the Delete after it still has to stop it.
+    @Test func aDoneOccurrenceMayStillBeRinging() {
+        let bins = Reminder(title: "Put the bins out", dueTime: NewYork.local(2026, 10, 15, 9, 15), strength: .relentless)
+        clock.now = NewYork.local(2026, 10, 15, 9, 40)
+        var engine = engine(for: [bins])
+        engine.markDone(bins.id)
+
+        #expect(engine.dueTimesAnAlarmMayBeRinging(for: bins.id) == [NewYork.local(2026, 10, 15, 9, 15)])
+    }
+
+    /// Once Done, the due time can be edited, and the alarm still ringing names the old one.
+    @Test func aDueTimeAnEditMovedAwayFromMayStillBeRinging() throws {
+        let bins = Reminder(title: "Put the bins out", dueTime: NewYork.local(2026, 10, 15, 9, 15), strength: .relentless)
+        clock.now = NewYork.local(2026, 10, 15, 9, 40)
+        var engine = engine(for: [bins])
+        engine.markDone(bins.id)
+        var edited = bins
+        edited.dueTime = NewYork.local(2026, 10, 17)
+
+        try engine.edit(edited)
+
+        #expect(engine.dueTimesAnAlarmMayBeRinging(for: bins.id) == [NewYork.local(2026, 10, 15, 9, 15)])
+    }
+
+    /// Nothing says how long an alarm rings if no one stops it, so the latest occurrence counts
+    /// however long ago it was due.
+    @Test func theLatestOccurrenceMayBeRingingHoweverLongAgoItWasDue() {
+        let bins = Reminder(title: "Put the bins out", dueTime: NewYork.local(2026, 10, 10), strength: .relentless)
+        clock.now = NewYork.local(2026, 10, 15, 9, 40)
+        let engine = engine(for: [bins])
+
+        #expect(engine.dueTimesAnAlarmMayBeRinging(for: bins.id) == [NewYork.local(2026, 10, 10)])
+    }
+
+    @Test func aReminderNotYetDueHasNothingThatMayBeRinging() {
+        clock.now = NewYork.local(2026, 10, 15, 8)
+        let engine = engine(for: [pills])
+
+        #expect(engine.dueTimesAnAlarmMayBeRinging(for: pills.id).isEmpty)
+    }
+
+    @Test func aReminderTheEngineDoesNotHoldHasNothingThatMayBeRinging() {
+        clock.now = NewYork.local(2026, 10, 15, 9, 40)
+        let engine = engine(for: [pills])
+
+        #expect(engine.dueTimesAnAlarmMayBeRinging(for: UUID()).isEmpty)
+    }
+
     /// An Edit while Nudging keeps the old title on nudges already delivered. That record goes with
     /// Delete, so a reminder added back under the same ID carries only its own title, passed
     /// nudges included.

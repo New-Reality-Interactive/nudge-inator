@@ -183,6 +183,99 @@ struct AlarmAdapterTests {
         #expect(Set(manager.scheduled.map(\.id)) == Set([ringing, next, other].map(AlarmAdapter.alarmID(for:))))
     }
 
+    /// A Delete silences the deleted reminder's ring, since Stop and Open have nothing left to act
+    /// on (#124), whichever of its occurrences rang. Another reminder's ring and the alarms yet to
+    /// ring aren't this call's: the plan cancels the deleted reminder's.
+    @Test func stoppingARemindersRingStopsOnlyItsRingingAlarms() async throws {
+        let adapter = adapter()
+        let bins = UUID(uuidString: "0A1B2C3D-4E5F-4061-8273-8495A6B7C8D9")!
+        let ringing = nudge(4, at: NewYork.local(2026, 10, 16, 9, 10))
+        let earlierRinging = nudge(20, at: NewYork.local(2026, 10, 16, 9, 8), dueAt: NewYork.local(2026, 10, 15))
+        let next = nudge(5, at: NewYork.local(2026, 10, 16, 9, 15))
+        let otherRinging = nudge(4, at: NewYork.local(2026, 10, 16, 9, 12), of: bins)
+        adapter.apply(SchedulePlan(items: [ringing, earlierRinging, next, otherRinging]))
+        await adapter.waitUntilApplied()
+        for alarm in [ringing, earlierRinging, otherRinging] {
+            manager.ring(AlarmAdapter.alarmID(for: alarm))
+        }
+
+        adapter.stopRinging(of: Self.pills, dueAt: [NewYork.local(2026, 10, 15), NewYork.local(2026, 10, 16)])
+        await adapter.waitUntilApplied()
+
+        #expect(Set(manager.stoppedIDs) == Set([ringing, earlierRinging].map(AlarmAdapter.alarmID(for:))))
+        #expect(manager.cancelledIDs.isEmpty)
+        #expect(Set(manager.scheduled.map(\.id)) == Set([next, otherRinging].map(AlarmAdapter.alarmID(for:))))
+    }
+
+    /// A due time that isn't the ringing alarm's says nothing about it: the same reminder's other
+    /// occurrence keeps ringing.
+    @Test func stoppingARemindersRingLeavesAnOccurrenceItWasNotGiven() async throws {
+        let adapter = adapter()
+        let ringing = nudge(4, at: NewYork.local(2026, 10, 16, 9, 10))
+        adapter.apply(SchedulePlan(items: [ringing]))
+        await adapter.waitUntilApplied()
+        manager.ring(AlarmAdapter.alarmID(for: ringing))
+
+        adapter.stopRinging(of: Self.pills, dueAt: [NewYork.local(2026, 10, 15)])
+        await adapter.waitUntilApplied()
+
+        #expect(manager.stoppedIDs.isEmpty)
+    }
+
+    /// The stop comes after the plans handed over before it, so the deleting plan has run: it
+    /// cancelled the alarm that read `scheduled`, and left the one ringing to this call.
+    @Test func stoppingARemindersRingWaitsForThePlansBeforeIt() async throws {
+        let adapter = adapter()
+        let ringing = nudge(4, at: NewYork.local(2026, 10, 16, 9, 10))
+        let next = nudge(5, at: NewYork.local(2026, 10, 16, 9, 15))
+        adapter.apply(SchedulePlan(items: [ringing, next]))
+        await adapter.waitUntilApplied()
+        manager.ring(AlarmAdapter.alarmID(for: ringing))
+
+        adapter.apply(SchedulePlan(items: []))
+        adapter.stopRinging(of: Self.pills, dueAt: [NewYork.local(2026, 10, 16)])
+        await adapter.waitUntilApplied()
+
+        #expect(manager.cancelledIDs == [AlarmAdapter.alarmID(for: next)])
+        #expect(manager.stoppedIDs == [AlarmAdapter.alarmID(for: ringing)])
+        #expect(manager.scheduled.isEmpty)
+    }
+
+    /// The reminder is gone, so nothing would come back for the rest: one refusal stops only itself.
+    @Test func aStopThatFailsStillStopsTheRemindersOtherRings() async throws {
+        let adapter = adapter()
+        let refused = nudge(4, at: NewYork.local(2026, 10, 16, 9, 8))
+        let ringing = nudge(5, at: NewYork.local(2026, 10, 16, 9, 10))
+        adapter.apply(SchedulePlan(items: [refused, ringing]))
+        await adapter.waitUntilApplied()
+        manager.ring(AlarmAdapter.alarmID(for: refused))
+        manager.ring(AlarmAdapter.alarmID(for: ringing))
+        manager.refusedStopIDs = [AlarmAdapter.alarmID(for: refused)]
+
+        adapter.stopRinging(of: Self.pills, dueAt: [NewYork.local(2026, 10, 16)])
+        await adapter.waitUntilApplied()
+
+        #expect(manager.stoppedIDs == [AlarmAdapter.alarmID(for: ringing)])
+    }
+
+    /// A stop AlarmKit turns down is logged and the next plan still runs, as with a failed cancel.
+    @Test func aStopThatFailsDoesNotHoldUpTheNextPlan() async throws {
+        let adapter = adapter()
+        let ringing = nudge(4, at: NewYork.local(2026, 10, 16, 9, 10))
+        let next = nudge(5, at: NewYork.local(2026, 10, 16, 9, 15))
+        adapter.apply(SchedulePlan(items: [ringing]))
+        await adapter.waitUntilApplied()
+        manager.ring(AlarmAdapter.alarmID(for: ringing))
+        manager.stopError = AlarmManager.AlarmError.maximumLimitReached
+
+        adapter.stopRinging(of: Self.pills, dueAt: [NewYork.local(2026, 10, 16)])
+        adapter.apply(SchedulePlan(items: [ringing, next]))
+        await adapter.waitUntilApplied()
+
+        #expect(manager.stoppedIDs.isEmpty)
+        #expect(manager.scheduled.map(\.id).contains(AlarmAdapter.alarmID(for: next)))
+    }
+
     /// Ticket 13: the plan still holds an open ladder's passed nudges, which were delivered.
     @Test(arguments: [
         NewYork.local(2026, 10, 16, 8, 50),

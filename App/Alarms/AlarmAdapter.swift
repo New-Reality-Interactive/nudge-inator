@@ -203,6 +203,31 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
         await cancelling.value
     }
 
+    /// Silences the alarms ringing for the reminder's occurrences due at `dueTimes`, for a Delete
+    /// (#124): Stop and Open would have nothing left to act on. A re-plan never does this, so it is
+    /// Delete's own call. An alarm's ID names its occurrence but not its reminder alone, so the due
+    /// times come from the caller. After the plans handed over so far, so one that began ringing
+    /// while the deleting plan ran is stopped too. Every nudge is a one-shot, so `stop` removes it.
+    func stopRinging(of reminderID: Reminder.ID, dueAt dueTimes: [Date]) {
+        let previous = applying
+        applying = Task {
+            await previous?.value
+            let occurrences = Set(dueTimes.map { Self.occurrenceBytes(of: reminderID, dueAt: $0) })
+            do {
+                for alarm in try manager.alarms() where alarm.state == .alerting && occurrences.contains(Self.occurrenceBytes(in: alarm.id)) {
+                    // Each one: the reminder is gone, so nothing would come back for the rest.
+                    do {
+                        try manager.stop(id: alarm.id)
+                    } catch {
+                        Self.logger.error("A deleted reminder's ringing alarm wouldn't stop: \(error, privacy: .public)")
+                    }
+                }
+            } catch {
+                Self.logger.error("A deleted reminder's alarms couldn't be read: \(error, privacy: .public)")
+            }
+        }
+    }
+
     /// Silences a ringing alarm. The Open button doesn't (ticket 02 B), so the Open intent calls
     /// this. A nudge is a one-shot, which AlarmKit then deletes.
     func stop(_ alarmID: Alarm.ID) throws {
