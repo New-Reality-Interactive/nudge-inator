@@ -5,7 +5,8 @@ import NudgeEngine
 /// Stands in for the app's model: holds reminders, tags and the two settings in memory.
 @MainActor
 final class FakeTarget: SeedTarget {
-    var now = Date(timeIntervalSinceReferenceDate: 800_000_000)
+    /// On a whole minute, so a seeded due time counts from it exactly.
+    var now = Date(timeIntervalSinceReferenceDate: 800_000_040)
     private(set) var reminders: [Reminder] = []
     private(set) var tags: [Tag] = []
     private(set) var settings: [SeedSetting: String] = [
