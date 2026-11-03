@@ -354,7 +354,7 @@ except in the tab and navigation bars. Verify names against the mockup.
 ### Reminder row
 - Inset grouped row. Time and title in `{typography.body}`; tag and detail line in
   `{typography.subhead}` (chosen tags bold), wrapping. Trailing: the status label, or a small
-  `button-bordered` **Done** on My Day. Chevron `chevron.right` in `{colors.tertiary-label}`.
+  `button-bordered` **Done** on My Day. Chevron `chevron.forward` in `{colors.tertiary-label}`.
 - **On the Reminders tab:** the due time (time over its day, as on Now's Coming Up), the title,
   the tags under it, and the status label trailing. No notes and no strength badge. Rows are
   separated as in every grouped list.

@@ -86,7 +86,7 @@ struct MyDayRowView: View {
 
     /// DESIGN.md's Reminder row chevron, in the tertiary label color. Decorative.
     private var chevron: some View {
-        Image(systemName: "chevron.right")
+        Image(systemName: "chevron.forward")
             .font(.footnote.weight(.semibold))
             .foregroundStyle(Color(uiColor: .tertiaryLabel))
             .accessibilityHidden(true)

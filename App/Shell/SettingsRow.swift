@@ -23,7 +23,7 @@ struct SettingsRow: View {
 
         var symbol: String {
             switch self {
-            case .chevron: "chevron.right"
+            case .chevron: "chevron.forward"
             case .link: "arrow.up.forward"
             }
         }
