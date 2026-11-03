@@ -578,6 +578,60 @@ final class ShotsUITests: XCTestCase {
         tapText(label, inSheet: true)
     }
 
+    /// A tap at a switch's center doesn't flip it (#114), so this one goes near its end. Nor does that
+    /// tap flip it in landscape (iOS 27.0 simulator), so the phone is turned to portrait for it and back,
+    /// which moves the list, so this scrolls to the row again.
+    private func flipSwitch(_ label: String) {
+        barTap {
+            XCTAssertNotNil(scrollTo(label), "No \(label):\n\(app.debugDescription)")
+            // By type: the row's title shares the label, and comes first on iOS 26.5.
+            let row = app.switches[label].firstMatch
+            let before = row.value as? String
+            row.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+            pause(0.8)
+            XCTAssertNotEqual(row.value as? String, before, "\(label) didn't flip")
+        }
+        XCTAssertNotNil(scrollTo(label), "No \(label):\n\(app.debugDescription)")
+    }
+
+    /// Opens a Due Date picker's calendar. By type, since its switch and title share its label (#114).
+    private func openDatePicker(_ label: String) {
+        guard let picker = app.datePickers.matching(identifier: label).allElementsBoundByIndex.first(where: { $0.isHittable }) else {
+            XCTFail("No \(label) picker:\n\(app.debugDescription)")
+            return
+        }
+        picker.tap()
+        pause(0.8)
+    }
+
+    /// The filter sheet's Due Date section (#114): with no end, one end and both, a picker's calendar
+    /// bounded by the other end, then Apply's badge and Clear All Filters taking it off.
+    func testRemindersDueDate() {
+        launch(.app)
+        tab("Reminders")
+        openRemindersFilter()
+        XCTAssertNotNil(scrollTo("To"), "No Due Date section:\n\(app.debugDescription)")
+        shot("reminders-due-date-none")
+
+        flipSwitch("From")
+        shot("reminders-due-date-one-end")
+        flipSwitch("To")
+        shot("reminders-due-date-both")
+        openDatePicker("From")
+        shot("reminders-due-date-picker")
+        keepEditing()
+
+        applyRemindersFilter()
+        shot("reminders-due-date-badge")
+        // Not `barTap`: turning the phone back closes the menu, and landscape only runs on iOS 27,
+        // where bar buttons take taps.
+        remindersFilterButtons.firstMatch.tap()
+        XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
+        app.buttons["Clear All Filters"].firstMatch.tap()
+        pause(0.5)
+        shot("reminders-due-date-cleared")
+    }
+
     /// The mockup's `reminders-filter`, `reminders-filter-badge`, `reminders-filter-menu`,
     /// `reminders-status-nudging` and `reminders-no-match-filters` (#113): the sheet, a swipe down
     /// closing a clean draft and holding a changed one, the prompt from Cancel, Apply, the badge and
