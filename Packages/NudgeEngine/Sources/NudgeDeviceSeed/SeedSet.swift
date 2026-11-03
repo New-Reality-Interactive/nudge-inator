@@ -19,7 +19,8 @@ public struct SeedReminder: Sendable {
     public var notes: String
     /// Names from the set's `tags`.
     public var tagNames: [String]
-    /// Seconds from the load to the due time; negative is already due.
+    /// Seconds from the load to the due time, rounded down to the whole minute, since nothing on
+    /// screen shows seconds; negative is already due.
     public var dueIn: TimeInterval
     /// Seconds before the load it was created, so the Reminders tab has dates to sort by.
     public var createdAgo: TimeInterval
@@ -52,13 +53,17 @@ public struct SeedReminder: Sendable {
         UUID(uuid: (0x5E, 0xED, 0x00, 0x01, 0x00, 0x00, 0x40, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, number))
     }
 
+    private static func wholeMinute(of date: Date) -> Date {
+        Date(timeIntervalSinceReferenceDate: (date.timeIntervalSinceReferenceDate / 60).rounded(.down) * 60)
+    }
+
     func reminder(tagIDs: [Tag.ID], now: Date) -> Reminder {
         Reminder(
             id: id,
             title: title,
             notes: notes,
             tagIDs: tagIDs,
-            dueTime: now.addingTimeInterval(dueIn),
+            dueTime: Self.wholeMinute(of: now.addingTimeInterval(dueIn)),
             repeatRule: repeatRule,
             strength: strength,
             breakThroughFocus: false,

@@ -77,6 +77,19 @@ final class DoneBeforeFirstUnlockTests {
         )
     }
 
+    /// A Done queued with the store shut stops the ring of its occurrence too (spec #104, decision
+    /// 52). The ID alone names the occurrence, so no store is needed.
+    @Test func aQueuedDoneStopsTheRingOfItsOccurrence() async throws {
+        let (model, notifications, first) = try await restartedBeforeTheFirstUnlock(with: [call])
+        let ringing = try #require(manager.scheduled.first { $0.fireDate == NewYork.local(2026, 10, 15, 9, 10) }).id
+        manager.ring(ringing)
+
+        await chooseDone(on: notifications)
+
+        #expect(manager.stoppedIDs == [ringing])
+        withExtendedLifetime((model, first)) {}
+    }
+
     @Test func aDoneWhileTheStoreIsShutIsQueuedWithItsOccurrenceAndWhenItWasChosen() async throws {
         let (model, notifications, first) = try await restartedBeforeTheFirstUnlock(with: [call])
 

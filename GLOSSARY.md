@@ -44,7 +44,7 @@ The state of a Nudging reminder's due time, repeat, strength, pace and Break thr
 _Avoid_: Frozen, read-only
 
 **Done**:
-The explicit act that closes an occurrence. Stopping an alarm does not mean Done; it only silences that nudge.
+The explicit act that closes an occurrence. It also silences that occurrence's ringing alarm. Stopping an alarm does not mean Done; it only silences that nudge.
 _Avoid_: Complete, dismiss, stop
 
 **Stop**:
@@ -93,7 +93,7 @@ The number of nudges or span of time after which an open occurrence stops nudgin
 How an occurrence closes when it hits its give-up limit, or when the next occurrence takes over while it is still nudging.
 
 **Paused**:
-The state of a reminder that has stopped nudging without being lost. Pause closes its Nudging occurrence as Skipped, and anything due while it is paused is Skipped too. Resume brings it back at its next future due time.
+The state of a reminder that has stopped nudging without being lost. Pause closes its Nudging occurrence as Skipped and silences its ringing alarm, and anything due while it is paused is Skipped too. Resume brings it back at its next future due time.
 _Avoid_: Disabled, suspended
 
 **Skipped**:

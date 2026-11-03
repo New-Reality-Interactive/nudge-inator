@@ -32,6 +32,22 @@ struct DeviceSeedTests {
         #expect(call.createdAt == target.now - 86400)
     }
 
+    /// Nothing on screen shows seconds, so a due time with some rings off the minute it shows. Down,
+    /// not up, as the screen reads it. The creation date isn't a time anything fires at.
+    @Test(arguments: [
+        (dueIn: 180.0, due: 60_180.0),
+        (dueIn: -600.0, due: 59_400.0),
+    ])
+    func aDueTimeRoundsDownToTheWholeMinute(dueIn: TimeInterval, due: TimeInterval) {
+        let now = Date(timeIntervalSinceReferenceDate: 60_037.5)
+        let seed = SeedReminder(id: SeedReminder.fixedID(99), title: "Whole minute", dueIn: dueIn, createdAgo: 30)
+
+        let reminder = seed.reminder(tagIDs: [], now: now)
+
+        #expect(reminder.dueTime == Date(timeIntervalSinceReferenceDate: due))
+        #expect(reminder.createdAt == Date(timeIntervalSinceReferenceDate: 60_007.5))
+    }
+
     @Test func aSetsRemindersKeepTheirIDs() {
         _ = run("sample")
 

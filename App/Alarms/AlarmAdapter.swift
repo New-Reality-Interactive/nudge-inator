@@ -120,8 +120,8 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
             let plannedIDs = Set(planned.map(Self.alarmID(for:)))
             // One report per plan: a refusal would otherwise come once for each alarm.
             var firstError: (any Error)?
-            // Only alarms yet to ring: a re-plan must never silence one that is ringing. Stop and
-            // Open end a ring, and a one-shot deletes itself once stopped.
+            // Only alarms yet to ring: a re-plan must never silence one that is ringing. Stop, Open
+            // and `stopRinging` end a ring, and a one-shot deletes itself once stopped.
             for alarm in alarms where alarm.state == .scheduled && !plannedIDs.contains(alarm.id) {
                 do {
                     try manager.cancel(id: alarm.id)
@@ -184,8 +184,8 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
 
     /// Cancels the alarms yet to ring of the reminder's occurrence due at `dueTime`, for a Done
     /// chosen while the store can't be read (ticket 32): an alarm's ID names its occurrence, so no
-    /// plan is needed. As in a re-plan, an alarm that is ringing is left to the person's Stop or
-    /// Open. After the plans handed over so far.
+    /// plan is needed. As in a re-plan, an alarm that is ringing is left alone: that is
+    /// `stopRinging`'s. After the plans handed over so far.
     func cancelNudges(of reminderID: Reminder.ID, dueAt dueTime: Date) async {
         let previous = applying
         let cancelling = Task {
@@ -201,6 +201,42 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
         }
         applying = cancelling
         await cancelling.value
+    }
+
+    /// Silences the alarms ringing for the reminder's occurrences due at `dueTimes`, once the person
+    /// has dealt with them: a Delete, a Pause or a Done (spec #104, decision 52). A re-plan never
+    /// does this, so it is those acts' own call. An alarm's ID names its occurrence but not its
+    /// reminder alone, so the due times come from the caller.
+    func stopRinging(of reminderID: Reminder.ID, dueAt dueTimes: [Date]) {
+        let occurrences = Set(dueTimes.map { Self.occurrenceBytes(of: reminderID, dueAt: $0) })
+        stopRinging { occurrences.contains(Self.occurrenceBytes(in: $0)) }
+    }
+
+    /// Silences every ringing alarm of the app's, for Delete All Data: no reminder is left for Stop
+    /// or Open to act on.
+    func stopEveryRing() {
+        stopRinging { _ in true }
+    }
+
+    /// After the plans handed over so far, so one that began ringing while the plan ran is stopped
+    /// too. Every nudge is a one-shot, so `stop` removes it.
+    private func stopRinging(where matches: @escaping (Alarm.ID) -> Bool) {
+        let previous = applying
+        applying = Task {
+            await previous?.value
+            do {
+                for alarm in try manager.alarms() where alarm.state == .alerting && matches(alarm.id) {
+                    // Each one: nothing would come back for the rest.
+                    do {
+                        try manager.stop(id: alarm.id)
+                    } catch {
+                        Self.logger.error("A ringing alarm wouldn't stop: \(error, privacy: .public)")
+                    }
+                }
+            } catch {
+                Self.logger.error("The ringing alarms couldn't be read: \(error, privacy: .public)")
+            }
+        }
     }
 
     /// Silences a ringing alarm. The Open button doesn't (ticket 02 B), so the Open intent calls

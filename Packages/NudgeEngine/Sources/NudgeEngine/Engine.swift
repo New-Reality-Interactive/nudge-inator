@@ -310,7 +310,7 @@ public struct Engine {
         if LockedField.allCases.contains(where: { $0.movesNudgeTimes && $0.isChanged(from: current, to: edited) }) {
             let now = clock.now
             let latest = latestOccurrence(for: current.id)?.dueTime
-            for dueTime in [latest].compactMap(\.self) + dueTimes(of: current, in: earliestListedDueTime...now) {
+            for dueTime in latestAndListedDueTimes(of: current) {
                 if let closing = reading(of: current.id, dueAt: dueTime)?.closing {
                     historyByReminder[edited.id, default: History()].saved.closedOccurrences[dueTime] = closing
                 }
@@ -588,6 +588,22 @@ public struct Engine {
     /// closes within the give-up span of its due time, so one due earlier closed before then.
     var earliestListedDueTime: Date {
         clock.now - 24 * 60 * 60 - giveUpLimit.span
+    }
+
+    /// The latest occurrence's due time, however old, then each the Now tab's Last 24 Hours can
+    /// list, which may repeat it. What an Edit fixes, so what it moves due times away from.
+    private func latestAndListedDueTimes(of reminder: Reminder) -> [Date] {
+        [latestOccurrence(for: reminder.id)?.dueTime].compactMap(\.self) + dueTimes(of: reminder, in: earliestListedDueTime...clock.now)
+    }
+
+    /// The due times of the reminder's occurrences that an alarm may still be ringing for, oldest
+    /// first, for a Delete or a Pause to silence it (#124). Open or closed: a ring can outlast its
+    /// occurrence's closing, and the next occurrence can take over during one. The latest however
+    /// old, since nothing says how long a ring lasts. A due time an Edit means never happened may be
+    /// among them, and matches no alarm.
+    public func dueTimesAnAlarmMayBeRinging(for reminderID: Reminder.ID) -> [Date] {
+        guard let reminder = reminder(reminderID) else { return [] }
+        return Set(latestAndListedDueTimes(of: reminder)).sorted()
     }
 
     private func isBeforeScheduleChange(_ dueTime: Date, of reminderID: Reminder.ID) -> Bool {

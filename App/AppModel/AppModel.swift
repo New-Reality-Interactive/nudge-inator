@@ -338,15 +338,31 @@ final class AppModel {
     }
 
     func markDone(_ reminderID: Reminder.ID) {
-        perform { $0.markDone(reminderID) }
+        performDone(of: reminderID) { $0.markDone(reminderID) }
+    }
+
+    /// A Done on the engine, and the ring of the occurrence it closed silenced (spec #104, decision
+    /// 52): that occurrence's only, and none if the engine ignored the Done.
+    private func performDone(of reminderID: Reminder.ID, _ done: (inout Engine) -> Void) {
+        perform { engine in
+            let open = engine.openOccurrence(for: reminderID)
+            done(&engine)
+            if let open, engine.occurrence(of: reminderID, dueAt: open.dueTime)?.state == .done {
+                alarms.stopRinging(of: reminderID, dueAt: [open.dueTime])
+            }
+        }
     }
 
     func edit(_ edited: Reminder) throws(EditError) {
         try perform { engine throws(EditError) in try engine.edit(edited) }
     }
 
+    /// Pausing asks the reminder to stop nudging, so its ring stops too (spec #104, decision 52).
     func pause(_ reminderID: Reminder.ID) {
-        perform { $0.pause(reminderID) }
+        perform { engine in
+            engine.pause(reminderID)
+            alarms.stopRinging(of: reminderID, dueAt: engine.dueTimesAnAlarmMayBeRinging(for: reminderID))
+        }
     }
 
     func resume(_ reminderID: Reminder.ID) throws(ResumeError) {
@@ -370,9 +386,14 @@ final class AppModel {
         perform({ $0.deleteTag(tagID) }, storeChange: { try $0.deleteTag(tagID) })
     }
 
-    /// The reminder and its whole history go, from the engine and the store (ticket 12).
+    /// The reminder and its whole history go, from the engine and the store (ticket 12), and its
+    /// alarm stops if it is ringing (#124). The due times are read first: Delete forgets them.
     func delete(_ reminderID: Reminder.ID) {
-        perform({ $0.delete(reminderID) }, storeChange: { try $0.delete(reminderID) })
+        perform({ engine in
+            let dueTimes = engine.dueTimesAnAlarmMayBeRinging(for: reminderID)
+            engine.delete(reminderID)
+            alarms.stopRinging(of: reminderID, dueAt: dueTimes)
+        }, storeChange: { try $0.delete(reminderID) })
     }
 
     /// Settings' Default Pace (ticket 09), what a new reminder starts with. Read from the record
@@ -411,8 +432,8 @@ final class AppModel {
     /// nudges already in Notification Center. Not through `perform`: the store goes first and a
     /// store that turns the delete down stops it, so the reminders and their nudges stay as they
     /// were. A disk failure is likelier than a failed cancel, and a nudge left pending for deleted
-    /// data is cancelled by the next App opened, which plans from nothing. An alarm that is ringing
-    /// is left to ring, as a re-plan leaves it. Before the store has been read there is nothing to
+    /// data is cancelled by the next App opened, which plans from nothing. Every ring stops, with no
+    /// reminder left for Stop or Open to act on. Before the store has been read there is nothing to
     /// delete.
     func deleteAllData() async throws {
         guard case .ready = launchState, let store else { return }
@@ -425,6 +446,7 @@ final class AppModel {
         var empty = makeEngine(permissions: permissions)
         empty.update(reminders: [])
         engine = empty
+        alarms.stopEveryRing()
         await waitUntilApplied()
         await notifications.cancelAll()
     }
@@ -508,7 +530,7 @@ extension AppModel: NotificationAdapterEvents, AlarmAdapterEvents {
             return
         }
         let open = engine.openOccurrence(for: nudge.reminderID)
-        perform { $0.markDone(nudge.reminderID, nudgeFiredAt: nudge.fireTime) }
+        performDone(of: nudge.reminderID) { $0.markDone(nudge.reminderID, nudgeFiredAt: nudge.fireTime) }
         // A Done the engine ignores applies no plan, yet the icon may be stale from occurrences
         // that came due or Missed while the app was suspended. The app is awake, so it sets the
         // live count.
@@ -530,6 +552,8 @@ extension AppModel: NotificationAdapterEvents, AlarmAdapterEvents {
         }
         await notifications.cancelNudges(of: nudge.reminderID, dueAt: nudge.dueTime)
         await alarms.cancelNudges(of: nudge.reminderID, dueAt: nudge.dueTime)
+        alarms.stopRinging(of: nudge.reminderID, dueAt: [nudge.dueTime])
+        await alarms.waitUntilApplied()
     }
 
     /// The plan the engine hands back reaches both adapters, with that nudge as a notification.
