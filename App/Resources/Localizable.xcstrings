@@ -1121,10 +1121,7 @@
       "comment" : "The Custom repeat page's choice of Daily, Weekly, Monthly or Yearly."
     },
     "From" : {
-      "comment" : "Reminders' filter sheet: the switch for the first day a reminder may be due."
-    },
-    "From date" : {
-      "comment" : "VoiceOver label of the date picker for the first day a reminder may be due, in Reminders' filter sheet."
+      "comment" : "Reminders' filter sheet: the switch and date picker for the first day a reminder may be due."
     },
     "General" : {
       "comment" : "Settings: header of the first section, with the About row."
@@ -1722,10 +1719,7 @@
       "comment" : "The reminder form's title field, which must be filled in."
     },
     "To" : {
-      "comment" : "Reminders' filter sheet: the switch for the last day a reminder may be due."
-    },
-    "To date" : {
-      "comment" : "VoiceOver label of the date picker for the last day a reminder may be due, in Reminders' filter sheet."
+      "comment" : "Reminders' filter sheet: the switch and date picker for the last day a reminder may be due."
     },
     "To get every nudge during a Focus, allow %@ in that Focus. Nudges vibrate when your iPhone's settings allow it." : {
       "comment" : "Settings: footer under the Nudges rows. The placeholder is the app's name."

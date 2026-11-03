@@ -578,16 +578,30 @@ final class ShotsUITests: XCTestCase {
         tapText(label, inSheet: true)
     }
 
-    /// A tap at a switch's center doesn't flip it (#114), so this one goes near its end.
+    /// A tap at a switch's center doesn't flip it (#114), so this one goes near its end. Nor does that
+    /// tap flip it in landscape (iOS 27.0 simulator), so the phone is turned to portrait for it and back,
+    /// which moves the list, so this scrolls to the row again.
     private func flipSwitch(_ label: String) {
-        guard let row = scrollTo(label) else {
-            XCTFail("No \(label):\n\(app.debugDescription)")
+        barTap {
+            XCTAssertNotNil(scrollTo(label), "No \(label):\n\(app.debugDescription)")
+            // By type: the row's title shares the label, and comes first on iOS 26.5.
+            let row = app.switches[label].firstMatch
+            let before = row.value as? String
+            row.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+            pause(0.8)
+            XCTAssertNotEqual(row.value as? String, before, "\(label) didn't flip")
+        }
+        XCTAssertNotNil(scrollTo(label), "No \(label):\n\(app.debugDescription)")
+    }
+
+    /// Opens a Due Date picker's calendar. By type, since its switch and title share its label (#114).
+    private func openDatePicker(_ label: String) {
+        guard let picker = app.datePickers.matching(identifier: label).allElementsBoundByIndex.first(where: { $0.isHittable }) else {
+            XCTFail("No \(label) picker:\n\(app.debugDescription)")
             return
         }
-        let before = row.value as? String
-        row.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+        picker.tap()
         pause(0.8)
-        XCTAssertNotEqual(app.switches[label].firstMatch.value as? String, before, "\(label) didn't flip")
     }
 
     /// The filter sheet's Due Date section (#114): with no end, one end and both, a picker's calendar
@@ -603,7 +617,7 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-due-date-one-end")
         flipSwitch("To")
         shot("reminders-due-date-both")
-        chooseInSheet("From date")
+        openDatePicker("From")
         shot("reminders-due-date-picker")
         keepEditing()
 

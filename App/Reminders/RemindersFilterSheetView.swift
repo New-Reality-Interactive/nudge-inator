@@ -88,15 +88,13 @@ struct RemindersFilterSheetView: View {
     private var dueDateSection: some View {
         Section {
             DueDateRow(
-                title: Text("From", comment: "Reminders' filter sheet: the switch for the first day a reminder may be due."),
-                pickerTitle: Text("From date", comment: "VoiceOver label of the date picker for the first day a reminder may be due, in Reminders' filter sheet."),
+                title: Text("From", comment: "Reminders' filter sheet: the switch and date picker for the first day a reminder may be due."),
                 engine: engine,
                 day: Binding { draft.dueFrom } set: { draft.setDueFrom($0) },
                 range: .distantPast...(draft.dueTo.map(engine.startOfDay) ?? .distantFuture)
             )
             DueDateRow(
-                title: Text("To", comment: "Reminders' filter sheet: the switch for the last day a reminder may be due."),
-                pickerTitle: Text("To date", comment: "VoiceOver label of the date picker for the last day a reminder may be due, in Reminders' filter sheet."),
+                title: Text("To", comment: "Reminders' filter sheet: the switch and date picker for the last day a reminder may be due."),
                 engine: engine,
                 day: Binding { draft.dueTo } set: { draft.setDueTo($0) },
                 range: (draft.dueFrom.map(engine.startOfDay) ?? .distantPast)...(.distantFuture)
@@ -135,7 +133,6 @@ struct RemindersFilterSheetView: View {
 /// row is too narrow for both. A switch turned on starts at today.
 private struct DueDateRow: View {
     let title: Text
-    let pickerTitle: Text
     let engine: Engine
     @Binding var day: CalendarDay?
     let range: ClosedRange<Date>
@@ -154,8 +151,11 @@ private struct DueDateRow: View {
                 title.accessibilityHidden(true)
                 Spacer()
                 picker
-                toggle.labelsHidden()
+                // VoiceOver reads the switch first, whatever the row's order: focus stays on it when
+                // it turns on, so the picker it brings is the next swipe rather than the one behind.
+                toggle.labelsHidden().accessibilitySortPriority(1)
             }
+            .accessibilityElement(children: .contain)
         }
     }
 
@@ -170,7 +170,7 @@ private struct DueDateRow: View {
                 in: range,
                 displayedComponents: .date
             ) {
-                pickerTitle
+                title
             }
             .labelsHidden()
         }
@@ -186,8 +186,8 @@ private struct DueDateRow: View {
     @Previewable @State var on: CalendarDay? = CalendarDay(year: 2026, month: 10, day: 20)
     @Previewable @State var off: CalendarDay?
     List {
-        DueDateRow(title: Text(verbatim: "On"), pickerTitle: Text(verbatim: "On date"), engine: .myDayPreview(), day: $on, range: .distantPast ... .distantFuture)
-        DueDateRow(title: Text(verbatim: "Off"), pickerTitle: Text(verbatim: "Off date"), engine: .myDayPreview(), day: $off, range: .distantPast ... .distantFuture)
+        DueDateRow(title: Text(verbatim: "On"), engine: .myDayPreview(), day: $on, range: .distantPast ... .distantFuture)
+        DueDateRow(title: Text(verbatim: "Off"), engine: .myDayPreview(), day: $off, range: .distantPast ... .distantFuture)
     }
 }
 #endif
