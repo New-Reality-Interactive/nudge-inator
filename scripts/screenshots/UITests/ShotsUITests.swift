@@ -447,7 +447,8 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-empty")
     }
 
-    /// Opens a Reminders row's trailing swipe, scrolling to the row first.
+    /// Opens a row's trailing swipe, scrolling to the row first. On Now and My Day, which have no
+    /// Delete to look for, it swipes all three times; a swipe on an open row leaves it open.
     private func swipe(_ title: String) {
         scrollToTop()
         guard let row = scrollTo(title) else {
@@ -466,6 +467,15 @@ final class ShotsUITests: XCTestCase {
         while tabBar.exists, row.frame.midY > tabBar.frame.minY, tries < 4 {
             scroll(down: true)
             tries += 1
+        }
+        // In landscape a row can sit under the search field, which takes the swipe. A short drag,
+        // since a whole scroll there could take the row off the screen.
+        let search = app.searchFields.firstMatch
+        if search.exists, row.frame.minY < search.frame.maxY {
+            let from = app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            let distance = search.frame.maxY - row.frame.minY + 8
+            from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 0, dy: distance)), withVelocity: .slow, thenHoldForDuration: 0.2)
+            pause(0.5)
         }
         // With another row's actions still open, the first swipe only closes them.
         func opened() -> Bool {
@@ -509,6 +519,9 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-swipe-nudging")
         swipe("Water the plants")
         shot("reminders-swipe-other")
+        // A new launch rather than scrolling back: at the largest text four drags don't reach the top.
+        launch(.app)
+        tab("Reminders")
         swipe("Pay rent")
         app.buttons["Delete"].firstMatch.tap()
         shot("reminders-delete")
@@ -527,6 +540,49 @@ final class ShotsUITests: XCTestCase {
         swipe("Take the bins out")
         app.buttons["Done"].firstMatch.tap()
         shot("reminders-after-done")
+    }
+
+    /// The swipe tile is one 50 pt circle on every screen, on a tall row and a short one, with
+    /// Done alone and beside Delete (#126). The system sets its shape, so no unit test can see it.
+    func testSwipeTileShape() {
+        launch(.app)
+        swipe("Take the bins out")
+        assertRoundTile("Done", on: "Now")
+        tab("My Day")
+        swipe("Take the bins out")
+        assertRoundTile("Done", on: "My Day")
+        tab("Reminders")
+        swipe("Take the bins out")
+        assertRoundTile("Done", on: "Reminders, tags")
+        assertRoundTile("Delete", on: "Reminders, tags")
+        shot("reminders-tile-tags")
+        // Two lines of title, so a tall row.
+        swipe("Reply to Alex about the lease")
+        assertRoundTile("Done", on: "Reminders, tall row")
+        assertRoundTile("Delete", on: "Reminders, tall row")
+        // A new launch rather than scrolling back: at the largest text four drags don't reach the top.
+        launch(.app)
+        tab("Reminders")
+        swipe("Send the weekly status update")
+        assertRoundTile("Delete", on: "Reminders, two-line title")
+        // No tags: the list's shortest row.
+        launch(.app)
+        tab("Reminders")
+        swipe("Call Grandma")
+        assertRoundTile("Delete", on: "Reminders, no tags")
+        shot("reminders-tile-no-tags")
+    }
+
+    /// Checks the open tile named `label` is a 50 pt circle. It is the rightmost button with that
+    /// name, since Now and My Day have a Done button too. `place` names the row for the failure.
+    private func assertRoundTile(_ label: String, on place: String, line: UInt = #line) {
+        let tiles = app.buttons.matching(NSPredicate(format: "label == %@", label)).allElementsBoundByIndex
+        guard let tile = tiles.filter({ $0.isHittable }).max(by: { $0.frame.maxX < $1.frame.maxX }) else {
+            XCTFail("No \(label) tile on \(place)", line: line)
+            return
+        }
+        XCTAssertEqual(tile.frame.width, 50, accuracy: 0.5, "\(label) on \(place): \(tile.frame)", line: line)
+        XCTAssertEqual(tile.frame.height, 50, accuracy: 0.5, "\(label) on \(place): \(tile.frame)", line: line)
     }
 
     /// The Reminders Filter button, and with filters on its menu, which also has an item named

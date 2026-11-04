@@ -40,6 +40,7 @@ struct MyDayRowView: View {
                 }
             }
         }
+        .frame(minHeight: Design.Size.swipeRowContentHeight)
         // Without this the separator starts where the row's first text does, and under a Done
         // row that was the status label's edge, so only the right of it was drawn.
         .alignmentGuide(.listRowSeparatorLeading) { $0[.leading] }

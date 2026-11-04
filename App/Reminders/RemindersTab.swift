@@ -339,7 +339,7 @@ private struct RemindersRowView: View {
     @State private var isConfirmingDelete = false
 
     var body: some View {
-        ReminderRowLayout(openDetails: openDetails) {
+        ReminderRowLayout(openDetails: openDetails, minHeight: Design.Size.swipeRowContentHeight) {
             TimeColumn(time: row.time, day: row.day)
         } main: {
             Text(verbatim: row.title)

@@ -48,6 +48,8 @@ struct ClosedRowView: View {
 /// accessibility sizes they stack and wrap. VoiceOver reads the row as one element.
 struct ReminderRowLayout<Leading: View, Main: View, Trailing: View>: View {
     let openDetails: () -> Void
+    /// Inside the button, so the height it adds opens the details too.
+    var minHeight: CGFloat? = nil
     @ViewBuilder let leading: () -> Leading
     @ViewBuilder let main: () -> Main
     @ViewBuilder let trailing: () -> Trailing
@@ -79,6 +81,7 @@ struct ReminderRowLayout<Leading: View, Main: View, Trailing: View>: View {
                 }
             }
         }
+        .frame(minHeight: minHeight)
         .opensDetails(openDetails)
         .accessibilityElement(children: .combine)
     }
