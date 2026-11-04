@@ -57,6 +57,10 @@ enum Design {
         static let nowMarkerLineOpacity: Double = 0.6
         /// The permission banner's border.
         static let bannerBorder: CGFloat = 2
+        /// The least height of a swiped list row's content. With the list's row padding that makes
+        /// a row of 78 pt, the shortest the system draws a swipe tile round on (#126); not
+        /// documented, measured on iOS 26.5 and 27.0.
+        static let swipeRowContentHeight: CGFloat = 48
         /// A wide nudge card's side column, at the default text size (the mockup's 13rem).
         static let sideColumn: CGFloat = 208
         /// A Now row's time column, at the default text size: wide enough for "12:30 PM".

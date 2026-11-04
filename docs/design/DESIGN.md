@@ -478,6 +478,11 @@ except in the tab and navigation bars. Verify names against the mockup.
   word "Delete". Done is offered only while Nudging, at the edge; a row that isn't Nudging shows
   Delete alone. Delete asks first. Nothing is on the leading edge, there's no full swipe (ADR 0001),
   and each tile always shows its glyph and its word. There is no Snooze.
+- **Shape:** a tile is the same 50 pt circle on every screen. The system draws it from the row's
+  height: a circle on a row of at least 78 pt, a wider oval on a shorter one. Apple doesn't document
+  this; it was measured on iOS 26.5 and 27.0 (#126). So a list row with a swipe has content at
+  least 48 pt tall (`Design.Size.swipeRowContentHeight`), which makes 78 pt with the list's padding.
+  This is why Reminders rows are taller than the 44 pt `{spacing.row-min}`.
 - **Where each swipe appears:** a Nudging row offers Done as a trailing swipe on every screen it
   appears on (Now, My Day and Reminders), and Done means the same on each. Delete's swipe is on
   the Reminders tab only, where reminders are managed; Now and My Day are for acting on the day,
