@@ -39,34 +39,47 @@ struct TagsScreen {
 /// The no-match empty state's wording, which names what's narrowing the list: the search, the
 /// filter or both. Each case is a whole string, as the mockup's `tagNoMatch()` draws them.
 extension TagListFilter {
+    /// What's narrowing the list, which the wording names. With neither, the list can't be empty
+    /// while tags exist, so the search's wording stands in.
+    private enum Narrowing {
+        case search, filter, both
+    }
+
+    private var narrowing: Narrowing {
+        switch (hasNoReminders, search.isEmpty) {
+        case (true, false): .both
+        case (true, true): .filter
+        case (false, _): .search
+        }
+    }
+
     var noMatchTitle: LocalizedStringResource {
-        if search.isEmpty {
-            LocalizedStringResource("No Matches", comment: "Tags tab: title when tags exist but the filter leaves none.")
-        } else {
-            LocalizedStringResource("No Results for “\(search)”", comment: "Tags tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces.")
+        switch narrowing {
+        case .filter: LocalizedStringResource("No Matches", comment: "Tags tab: title when tags exist but the filter leaves none.")
+        case .search, .both: LocalizedStringResource("No Results for “\(search)”", comment: "Tags tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces.")
         }
     }
 
     /// The line under the title.
     var noMatchText: LocalizedStringResource {
-        switch (hasNoReminders, search.isEmpty) {
-        case (true, false): LocalizedStringResource("No tags with this filter match this search.", comment: "Tags tab: under the title when a search finds nothing under the filter sheet's filter.")
-        case (true, true): LocalizedStringResource("No tags with this filter.", comment: "Tags tab: under the title when the filter sheet's filter leaves nothing.")
-        case (false, _): LocalizedStringResource("Check the spelling or try a new search.", comment: "Tags tab: under the title when a search finds nothing.")
+        switch narrowing {
+        case .both: LocalizedStringResource("No tags with this filter match this search.", comment: "Tags tab: under the title when a search finds nothing under the filter sheet's filter.")
+        case .filter: LocalizedStringResource("No tags with this filter.", comment: "Tags tab: under the title when the filter sheet's filter leaves nothing.")
+        case .search: LocalizedStringResource("Check the spelling or try a new search.", comment: "Tags tab: under the title when a search finds nothing.")
         }
     }
 
     /// The label of the button that turns off the search and the filter.
     var noMatchClearTitle: LocalizedStringResource {
-        switch (hasNoReminders, search.isEmpty) {
-        case (true, false): LocalizedStringResource("Clear Search and Filter", comment: "Tags tab: the no-match empty state's button when a search and the filter are narrowing the list.")
-        case (true, true): LocalizedStringResource("Clear Filter", comment: "Tags tab: the no-match empty state's button when the filter is narrowing the list.")
-        case (false, _): LocalizedStringResource("Clear Search", comment: "Tags tab: the no-match empty state's button when a search is narrowing the list.")
+        switch narrowing {
+        case .both: LocalizedStringResource("Clear Search and Filter", comment: "Tags tab: the no-match empty state's button when a search and the filter are narrowing the list.")
+        case .filter: LocalizedStringResource("Clear Filter", comment: "Tags tab: the no-match empty state's button when the filter is narrowing the list.")
+        case .search: LocalizedStringResource("Clear Search", comment: "Tags tab: the no-match empty state's button when a search is narrowing the list.")
         }
     }
 
     var noMatchSystemImage: String {
-        search.isEmpty ? "line.3.horizontal.decrease" : "magnifyingglass"
+        narrowing == .filter ? "line.3.horizontal.decrease" : "magnifyingglass"
     }
 }
 

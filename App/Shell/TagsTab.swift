@@ -35,6 +35,7 @@ struct TagsTab: View {
     var body: some View {
         NavigationStack(path: $path) {
             TabScreen(state: state) {
+                // The date isn't read: the minute's redraw reads the engine again.
                 TimelineView(.everyMinute) { _ in
                     let screen = engine.map { TagsScreen(engine: $0, sort: sort.wrappedValue, filter: filter) }
                     if let screen, screen.emptyState != .noTags {
@@ -42,10 +43,7 @@ struct TagsTab: View {
                             screen: screen,
                             filter: filter,
                             countFocusRequests: countFocusRequests,
-                            clearAll: {
-                                searchText = ""
-                                choices = TagsFilterChoices()
-                            },
+                            clearAll: clearSearchAndFilter,
                             rename: { sheet = .rename($0) },
                             delete: { model?.deleteTag($0.tag.id) }
                         )
@@ -68,10 +66,7 @@ struct TagsTab: View {
             // The field and the Filter button go with the last tag, and an old search or filter
             // mustn't hide the next tag made.
             .onChange(of: hasTags) {
-                if !hasTags {
-                    searchText = ""
-                    choices = TagsFilterChoices()
-                }
+                if !hasTags { clearSearchAndFilter() }
             }
             .navigationTitle(Text(AppTab.tags.title))
             .navigationDestination(for: OpenedTag.self) { TagRemindersView(tagID: $0.id, previewEngine: previewEngine) }
@@ -136,6 +131,11 @@ struct TagsTab: View {
 
     private var hasTags: Bool {
         engine?.tags.isEmpty == false
+    }
+
+    private func clearSearchAndFilter() {
+        searchText = ""
+        choices = TagsFilterChoices()
     }
 
     /// What narrows the list: the sheet's filter and the search, together.

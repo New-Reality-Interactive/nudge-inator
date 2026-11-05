@@ -21,11 +21,8 @@ struct TagsFilterChoices: FilterSheetChoices {
 /// show, and whether the draft differs from what's applied. A value, so the tests read it with no
 /// view.
 struct TagsFilterSheet: FilterSheetSummary {
-    /// How many tags Apply would show, with the search as it is.
     let result: LocalizedStringResource
-    /// Whether Cancel, tapping above or swiping down asks before discarding the draft.
     let hasChanges: Bool
-    /// Whether Reset has anything to clear.
     let canReset: Bool
 
     init(engine: Engine, draft: TagsFilterChoices, applied: TagsFilterChoices, search: String) {

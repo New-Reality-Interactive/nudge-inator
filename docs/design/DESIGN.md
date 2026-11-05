@@ -335,7 +335,7 @@ except in the tab and navigation bars. Verify names against the mockup.
 
 | Use | Symbols |
 |---|---|
-| Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `magnifyingglass` and `xmark.circle.fill` (Search, drawn by the system), `tag.filter` (custom, in the asset catalog: the Tags tab's `tag` with a three-line filter badge at the lower right: Filter by Tags, the button and its menu item), `tag.xmark` (custom, in the asset catalog: the same `tag` with a × badge at the lower right: Clear All Tags, in the Filter button's menu), `line.3.horizontal.decrease` (the Reminders tab's Filter button and its Filter menu item; `xmark` is its Clear All Filters) |
+| Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `magnifyingglass` and `xmark.circle.fill` (Search, drawn by the system), `tag.filter` (custom, in the asset catalog: the Tags tab's `tag` with a three-line filter badge at the lower right: Filter by Tags, the button and its menu item), `tag.xmark` (custom, in the asset catalog: the same `tag` with a × badge at the lower right: Clear All Tags, in the Filter button's menu), `line.3.horizontal.decrease` (the Filter button of the Reminders and Tags tabs and its Filter menu item, and the no-match state's image when only the sheet's filters narrow the list; `xmark` is its Clear All Filters) |
 | Sort | `arrow.up.arrow.down` (the Reminders and Tags tabs' Sort buttons, which open the Sort menu) |
 | Swipe | `pencil` (the Tags tab's Edit tile) |
 | Tabs | `bell` (Now), `calendar` (My Day), `list.bullet.clipboard` (Reminders), `tag` (Tags), `gearshape` (Settings) |
