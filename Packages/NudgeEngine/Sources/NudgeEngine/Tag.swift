@@ -80,7 +80,7 @@ extension Engine {
         return tag
     }
 
-    /// Renames a tag from the Tags tab's Edit mode. Reminders refer to it by ID, so every reminder
+    /// Renames a tag from the Tags tab's Edit action. Reminders refer to it by ID, so every reminder
     /// with it gets the new name. It may change its own casing; another tag's name is turned down.
     /// Rename of a tag the engine doesn't hold is ignored.
     public mutating func renameTag(_ tagID: Tag.ID, to name: String) throws(TagNameError) {

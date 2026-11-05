@@ -1,8 +1,8 @@
 import NudgeEngine
 import SwiftUI
 
-/// Tags: your tags with their counts, + to add one, and Edit to rename or delete them. A tag opens
-/// its reminders. Editing and the sheet live here, so they survive a redraw of the list.
+/// Tags: your tags with their counts, + to add one, and a swipe to edit or delete one. A tag opens
+/// its reminders. The sheet lives here, so it survives a redraw of the list.
 struct TagsTab: View {
     let state: ScreenState
     /// A tag's screen, and the reminders pushed from it.
@@ -11,7 +11,7 @@ struct TagsTab: View {
     var previewEngine: Engine?
 
     @Environment(AppModel.self) private var model: AppModel?
-    @State private var isEditing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var sheet: TagSheetKind?
 
     var body: some View {
@@ -20,29 +20,23 @@ struct TagsTab: View {
                 if let engine, !engine.tags.isEmpty {
                     TagsList(
                         screen: TagsScreen(engine: engine),
-                        isEditing: isEditing,
                         rename: { sheet = .rename($0) },
                         delete: { model?.deleteTag($0.tag.id) }
                     )
                 } else {
-                    emptyState
+                    // Scrolls only when it must: at the largest text the help text ran off the screen.
+                    ViewThatFits(in: .vertical) {
+                        emptyState
+                        ScrollView { emptyState }
+                    }
                 }
             }
+            // Here as well as on the list's rows: the last tag's delete swaps the list for the empty state.
+            .animation(reduceMotion ? nil : .default, value: engine?.tags.isEmpty)
             .navigationTitle(Text(AppTab.tags.title))
             .navigationDestination(for: OpenedTag.self) { TagRemindersView(tagID: $0.id, previewEngine: previewEngine) }
             .reminderDetailsDestination()
             .toolbar {
-                if state == .ready, let engine, !engine.tags.isEmpty {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button {
-                            isEditing.toggle()
-                        } label: {
-                            isEditing
-                                ? Text("Done", comment: "Tags: leaves Edit mode.")
-                                : Text("Edit", comment: "Tags: enters Edit mode, where a tag can be renamed or deleted.")
-                        }
-                    }
-                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         sheet = .new
@@ -61,10 +55,6 @@ struct TagsTab: View {
                     TagSheet(kind: kind, engine: engine)
                 }
             }
-            // Edit mode ends when the last tag is deleted, with no Edit button left to end it.
-            .onChange(of: engine?.tags.isEmpty ?? true) { _, isEmpty in
-                if isEmpty { isEditing = false }
-            }
         }
     }
 
@@ -80,7 +70,7 @@ struct TagsTab: View {
                 Image(systemName: "tag")
             }
         } description: {
-            Text("Tap + to add a tag, or add tags to a reminder when you create or edit it.", comment: "Tags: how to add a tag when there are none.")
+            Text("Tags are labels, like #home or #errands, that you add to reminders so you can find them together. Tap + to make one, or add one when you create or edit a reminder.", comment: "Tags: under the title when there are no tags yet: what a tag is and how to make one.")
         }
     }
 }

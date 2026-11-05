@@ -423,12 +423,76 @@ final class ShotsUITests: XCTestCase {
         tapText("#home")
         shot("tag-home", pages: 2)
         back()
-        barTap { tapButton(containing: "Edit") }
-        shot("tags-edit")
-        barTap { tapButton(containing: "Done") }
         openSheet("New Tag", title: "New Tag")
         dismissKeyboardTip()
         shot("tag-new")
+    }
+
+    /// The mockup's `tags-swipe`, `tags-delete` and the no-tags empty state (#139): Edit and Delete
+    /// on the trailing swipe, nothing on the leading one, the rename sheet, the Delete question
+    /// cancelled and then confirmed, and Back returning to the list where it was.
+    func testTagsSwipe() {
+        launch(.app)
+        tab("Tags")
+        swipe("#home")
+        assertRoundTile("Edit", on: "Tags")
+        assertRoundTile("Delete", on: "Tags")
+        shot("tags-swipe")
+        app.buttons["Edit"].firstMatch.tap()
+        XCTAssert(app.navigationBars["Rename Tag"].waitForExistence(timeout: 3), "No Rename Tag sheet")
+        dismissKeyboardTip()
+        shot("tags-rename")
+
+        // A new launch rather than closing the sheet: it holds the keyboard, and the bar's taps need the turn.
+        launch(.app)
+        tab("Tags")
+        guard let home = scrollTo("#home") else {
+            XCTFail("No #home:\n\(app.debugDescription)")
+            return
+        }
+        home.swipeRight()
+        pause(0.8)
+        XCTAssertFalse(app.buttons["Edit"].exists, "A leading swipe showed Edit")
+        XCTAssertFalse(app.buttons["Delete"].exists, "A leading swipe showed Delete")
+
+        // A new launch: on the simulator a right swipe opens a list row, on every screen (#139's Comments).
+        launch(.app)
+        tab("Tags")
+        swipe("#home")
+        app.buttons["Delete"].firstMatch.tap()
+        let question = app.alerts.firstMatch
+        XCTAssert(question.waitForExistence(timeout: 3), "No Delete question")
+        shot("tags-delete")
+        question.buttons["Cancel"].tap()
+        pause(0.8)
+        XCTAssertNotNil(scrollTo("#home", scrolls: 0), "Cancel changed the list")
+
+        swipe("#home")
+        app.buttons["Delete"].firstMatch.tap()
+        XCTAssert(question.waitForExistence(timeout: 3), "No Delete question")
+        question.buttons["Delete"].tap()
+        pause(1)
+        XCTAssertNil(scrollTo("#home", scrolls: 0), "#home is still in the list")
+        shot("tags-after-delete")
+
+        launch(.app)
+        tab("Tags")
+        scroll(down: true)
+        pause(0.8)
+        guard let row = scrollTo("#morning") else {
+            XCTFail("No #morning:\n\(app.debugDescription)")
+            return
+        }
+        let frameBeforeOpening = row.frame
+        row.tap()
+        pause(0.8)
+        back()
+        pause(0.8)
+        XCTAssertEqual(scrollTo("#morning", scrolls: 0)?.frame, frameBeforeOpening, "Back moved the list")
+
+        launch(.noReminders)
+        tab("Tags")
+        shot("tags-empty", pages: 2)
     }
 
     /// The mockup's `reminders` and `reminders-empty`: every reminder in creation-date order, a
