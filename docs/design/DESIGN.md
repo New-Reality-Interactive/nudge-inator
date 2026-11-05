@@ -530,6 +530,11 @@ The Reminders tab's tools, in its layout, so they're learned once.
   actions. A new screen that adds swipes follows this section. **The exception is a tag:** its Edit
   and Delete are reachable by the swipe and by VoiceOver actions only, since the Tags tab has no Edit
   mode (spec #104, Decision 50).
+- **VoiceOver after a delete:** iOS decides where it lands, and the app doesn't move it. After a tag's
+  Delete it landed on a nearby row, the heading, New Tag or a row further away, and after the last tag
+  on the bar's title, an empty-looking box one swipe from the visible title. Moving focus from code
+  was tried on the iPhone: iOS moves it first as the alert closes, so VoiceOver starts reading
+  something else and then jumps, which Brian found worse (#139's Comments).
 
 ### Alarm
 - **Token:** `alarm-tint`. iOS draws everything except the title, the secondary **Open** button and

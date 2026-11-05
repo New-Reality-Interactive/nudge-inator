@@ -32,7 +32,7 @@ Starting a ticket, opening its PR, or told its PR merged: `docs/agents/ticket-wo
 
 ## Apple platform questions
 
-For any iOS design, implementation or testing question, or any Xcode question, look it up with the `apple-rag-mcp` tools before answering or deciding: `search` first, then `fetch` for a full page. Don't answer from memory.
+For any iOS design, implementation or testing question, or any Xcode question, look it up with the `apple-rag-mcp` tools before answering or deciding: `search` first, then `fetch` for a full page, or for a page you have the URL of, since `fetch` reads pages `search` doesn't surface. Don't answer from memory.
 
 - Say what the docs confirm and what they don't. If they're silent, mark it as a device check instead of guessing.
 - If `apple-rag-mcp` has nothing on a page (for example a support.apple.com guide), say so before falling back to another source.
