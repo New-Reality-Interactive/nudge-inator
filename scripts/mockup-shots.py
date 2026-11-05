@@ -86,6 +86,26 @@ SCREENS = {
   "reminders-no-match-status": ("state.tab='rems';state.rems.filter.status=['NUDGING'];state.rems.q='plants';nav()", 1),
   "reminders-no-match-filters": ("state.tab='rems';state.rems.filter.strength=['relentless'];state.rems.filter.tags.none=true;nav()", 1),
   "reminders-new": ("state.tab='rems';nav();openEditor()", 1),
+  # The Tags tab's tools (reminders-tab #138). Only a mockup with them draws these.
+  "tags-footer": ("state.tab='tags';nav();setTimeout(()=>{main.scrollTop=main.scrollHeight},150)", 1),
+  "tags-sort-menu": ("state.tab='tags';nav();showTagSortMenu(document.querySelector('[data-tagsort]'))", 1),
+  "tags-sort-z-a": ("state.tab='tags';state.tagList.sort={by:'name',dir:'desc'};nav()", 1),
+  "tags-sort-most": ("state.tab='tags';state.tagList.sort={by:'count',dir:'desc'};nav()", 1),
+  "tags-sort-fewest": ("state.tab='tags';state.tagList.sort={by:'count',dir:'asc'};nav()", 1),
+  "tags-search": ("state.tab='tags';state.tagList.q='home';nav()", 1),
+  "tags-filter-badge": ("state.tab='tags';state.tagList.filter.noReminders=true;nav()", 1),
+  "tags-filter-menu": ("state.tab='tags';state.tagList.filter.noReminders=true;nav();showTagFilterMenu(document.querySelector('[data-tagfilter]'))", 1),
+  "tags-filter": ("state.tab='tags';nav();openTagFilter()", 1),
+  "tags-filter-changed": ("state.tab='tags';nav();openTagFilter();state.sheet.draft.noReminders=true;render()", 1),
+  "tags-filter-discard": ("state.tab='tags';nav();openTagFilter();state.sheet.draft.noReminders=true;render();pressed=document.querySelector('[data-sheet-cancel]');cancelSheet()", 1),
+  "tags-swipe": ("state.tab='tags';nav();setTimeout(()=>revealTagSwipe('appointments'),10)", 1),
+  "tags-delete": ("state.tab='tags';nav();confirmDeleteTag(tagById('home'))", 1),
+  "tags-delete-unused": ("state.tab='tags';nav();confirmDeleteTag(tagById('yoga'))", 1),
+  "tags-rename": ("state.tab='tags';nav();openTagSheet('home')", 1),
+  "tags-empty": ("for(const r of reminders)r.tagIds=[];tags=[];state.tab='tags';nav()", 1),
+  "tags-no-match-search": ("state.tab='tags';state.tagList.q='zebra';nav()", 1),
+  "tags-no-match-filter": ("for(const t of tags)if(!tagStats(t.id).count)remById('r14').tagIds.push(t.id);state.tab='tags';state.tagList.filter.noReminders=true;nav()", 1),
+  "tags-no-match-both": ("state.tab='tags';state.tagList.q='zebra';state.tagList.filter.noReminders=true;nav()", 1),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}
