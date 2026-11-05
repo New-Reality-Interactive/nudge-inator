@@ -55,7 +55,7 @@ struct RemindersTab: View {
                             filter: filter,
                             countFocusRequests: countFocusRequests,
                             clearFilters: {
-                                // Focus goes to the count, which reads the result itself.
+                                // Asks VoiceOver to go to the count; iOS picks where it lands (SearchResultsContainer).
                                 searchText = ""
                                 choices = RemindersFilterChoices()
                             },

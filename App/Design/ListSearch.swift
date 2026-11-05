@@ -20,9 +20,11 @@ struct ListSearchField: ViewModifier {
 }
 
 /// A searchable list whose no-match state has a clear button, and what that button and the search's
-/// Cancel do once the list's narrowing has been cleared. Each gives VoiceOver the count, and a clear
-/// button also ends the search and makes a new list. `list` gets the closure a clear button calls
-/// after clearing. Inside the `searchable` view, which is where `isSearching` is set.
+/// Cancel do once the list's narrowing has been cleared. Each asks VoiceOver to go to the count, and
+/// a clear button also ends the search and makes a new list. Cancel's request lands. A clear button's
+/// doesn't: iOS puts VoiceOver on the bar's first button, on the iPhone in #141, and Brian accepted
+/// that. `list` gets the closure a clear button calls after clearing. Inside the `searchable` view,
+/// which is where `isSearching` is set.
 struct SearchResultsContainer<ListContent: View>: View {
     /// Goes to the count, which reads the result itself.
     let countFocus: AccessibilityFocusState<Bool>.Binding
