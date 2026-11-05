@@ -29,8 +29,8 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
    `mattpocock-skills:diagnosing-bugs` when something fails and a first look doesn't explain it.
 6. Test with `scripts/test.sh`.
 7. Review as `review.md` says, starting once step 6 passes. A change on screen: start
-   `scripts/screenshots.sh` for its visual criteria, on both simulators, in portrait and at the
-   largest text, in the background at the same time (`device-testing.md`, Simulator screenshots),
+   `scripts/screenshots.sh` for its visual criteria, on iOS 27.0, at the largest text and then in
+   portrait, in the background at the same time (`device-testing.md`, Simulator screenshots),
    except the full walk, which that section puts once before the PR. Make the fixes from the review
    and from the screenshots after both finish, rerun `scripts/test.sh` (not when every fix changes
    only comments, `review.md`), then commit.
@@ -38,6 +38,8 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
 ## The developer's check
 
 8. Before any PR:
+   - A change on screen: the final screenshot pass (`device-testing.md`, Simulator screenshots),
+     first, so the phone gets the final code.
    - Device checks, from the criteria or AGENTS.md's offer of an iPhone run: walk them through
      one at a time (`device-testing.md`).
    - A criterion the developer judges, such as approving a mockup: show it and ask.
@@ -51,8 +53,7 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
 
 ## PR
 
-9. A change on screen takes its last screenshot run now, in landscape, and a change that calls for
-   the full screenshot walk (`device-testing.md`, Simulator screenshots) runs it now. Rerun `scripts/test.sh` if anything changed since its last run, push, then run
+9. A change that calls for the full screenshot walk (`device-testing.md`, Simulator screenshots) runs it now. Rerun `scripts/test.sh` if anything changed since its last run, push, then run
    `mattpocock-skills:pr` and open the PR to `main` with `gh pr create`, titled
    `#<n> (<feature>): <short summary>`, with `Closes #<n>` as the body's last line before the
    attribution, so the merge closes the ticket. A hook refuses a body without the `pr` skill's sections. Give the developer the
