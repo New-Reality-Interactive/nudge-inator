@@ -488,7 +488,10 @@ final class ShotsUITests: XCTestCase {
         pause(0.8)
         back()
         pause(0.8)
-        XCTAssertEqual(scrollTo("#morning", scrolls: 0)?.frame, frameBeforeOpening, "Back moved the list")
+        // Not in landscape: `back()` turns the phone for its tap, and turning moves the list.
+        if !XCUIDevice.shared.orientation.isLandscape {
+            XCTAssertEqual(scrollTo("#morning", scrolls: 0)?.frame, frameBeforeOpening, "Back moved the list")
+        }
 
         launch(.noReminders)
         tab("Tags")
