@@ -265,7 +265,7 @@ private struct RemindersListView: View {
             } header: {
                 // Above the rows' group, not in a cell, as the mockup draws it. It stays above the
                 // no-match empty state.
-                RemindersHeaderRow(count: screen.countText, countFocus: $countFocused)
+                CountHeaderRow(count: screen.countText, countFocus: $countFocused)
                     .textCase(nil)
             }
         }

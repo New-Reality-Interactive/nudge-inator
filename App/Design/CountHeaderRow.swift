@@ -1,11 +1,11 @@
 import SwiftUI
 
-/// The Reminders list's header row (DESIGN.md, Reminders tab): the count on its own line, in every
+/// The header row of the Reminders and Tags lists (DESIGN.md): the count on its own line, in every
 /// size and orientation.
-struct RemindersHeaderRow: View {
+struct CountHeaderRow: View {
     let count: LocalizedStringResource
-    /// Lets the screen put VoiceOver on the count, which reads the new result when the control that
-    /// changed it (Clear Filters) has left the screen. Previews have no screen to do that.
+    /// Lets the Reminders tab put VoiceOver on the count, which reads the new result when the control
+    /// that changed it (Clear Filters) has left the screen. Tags leaves focus to iOS (#139's Comments).
     var countFocus: AccessibilityFocusState<Bool>.Binding?
 
     var body: some View {
@@ -33,7 +33,7 @@ struct RemindersHeaderRow: View {
         Section {
             Text(verbatim: "Row")
         } header: {
-            RemindersHeaderRow(count: RemindersScreen.countText(shown: 12, of: 14))
+            CountHeaderRow(count: RemindersScreen.countText(shown: 12, of: 14))
                 .textCase(nil)
         }
     }
@@ -44,7 +44,7 @@ struct RemindersHeaderRow: View {
         Section {
             Text(verbatim: "Row")
         } header: {
-            RemindersHeaderRow(count: RemindersScreen.countText(shown: 1, of: 14))
+            CountHeaderRow(count: RemindersScreen.countText(shown: 1, of: 14))
                 .textCase(nil)
         }
     }

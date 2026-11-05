@@ -25,6 +25,7 @@ final class HowItNudgesPageTests {
             alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: clock),
             defaultPaceRecord: DefaultPaceRecord(defaults: try #require(UserDefaults(suiteName: suiteName))),
             remindersSortRecord: .temporary,
+            tagsSortRecord: .temporary,
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )

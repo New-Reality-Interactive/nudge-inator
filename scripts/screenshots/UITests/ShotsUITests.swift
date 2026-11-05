@@ -428,6 +428,37 @@ final class ShotsUITests: XCTestCase {
         shot("tag-new")
     }
 
+    /// The mockup's `tags-sort-menu`, `tags-sort-z-a`, `tags-sort-most` and `tags-sort-fewest` (#140):
+    /// the bar's Sort menu open at Name, A to Z, then each other choice, with the menu open again
+    /// at the last to show it checked.
+    func testTagsSort() {
+        launch(.app)
+        tab("Tags")
+        assertTagHeaderAndTopRows("#appointments", "#health")
+        let sort = app.buttons["Sort"].firstMatch
+        sort.tap()
+        shot("tags-sort-menu")
+        app.buttons["Z to A"].firstMatch.tap()
+        pause(0.5)
+        assertTagHeaderAndTopRows("#work", "#travel")
+        shot("tags-sort-z-a")
+        sort.tap()
+        pause(0.5)
+        app.buttons["Most First"].firstMatch.tap()
+        pause(0.5)
+        assertTagHeaderAndTopRows("#home", "#health")
+        shot("tags-sort-most")
+        sort.tap()
+        pause(0.5)
+        app.buttons["Fewest First"].firstMatch.tap()
+        pause(0.5)
+        // A tie on the count: both have 1 reminder, by name, A to Z.
+        assertTagHeaderAndTopRows("#appointments", "#travel")
+        shot("tags-sort-fewest")
+        sort.tap()
+        shot("tags-sort-menu-fewest")
+    }
+
     /// The mockup's `tags-swipe`, `tags-delete` and the no-tags empty state (#139): Edit and Delete
     /// on the trailing swipe, nothing on the leading one, the rename sheet, the Delete question
     /// cancelled and then confirmed, and Back returning to the list where it was.
@@ -642,6 +673,20 @@ final class ShotsUITests: XCTestCase {
 
     /// Checks the open tile named `label` is a 50 pt circle. It is the rightmost button with that
     /// name, since Now and My Day have a Done button too. `place` names the row for the failure.
+    /// The header row reads every tag, on the screen and above the rows, and `first` is above `second`.
+    private func assertTagHeaderAndTopRows(_ first: String, _ second: String, line: UInt = #line) {
+        let count = app.staticTexts["7 tags out of 7"].firstMatch
+        XCTAssert(count.waitForExistence(timeout: 3), "No header row:\n\(app.debugDescription)", line: line)
+        func row(_ label: String) -> XCUIElement {
+            app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "\(label), ")).firstMatch
+        }
+        let (top, next) = (row(first), row(second))
+        XCTAssert(top.exists && next.exists, "No \(first) or \(second):\n\(app.debugDescription)", line: line)
+        XCTAssertLessThanOrEqual(count.frame.maxX, app.windows.firstMatch.frame.maxX, "The header row runs off the screen", line: line)
+        XCTAssertLessThanOrEqual(count.frame.maxY, top.frame.minY, "The header row overlaps \(first)", line: line)
+        XCTAssertLessThan(top.frame.minY, next.frame.minY, "\(first) isn't above \(second)", line: line)
+    }
+
     private func assertRoundTile(_ label: String, on place: String, line: UInt = #line) {
         let tiles = app.buttons.matching(NSPredicate(format: "label == %@", label)).allElementsBoundByIndex
         guard let tile = tiles.filter({ $0.isHittable }).max(by: { $0.frame.maxX < $1.frame.maxX }) else {
