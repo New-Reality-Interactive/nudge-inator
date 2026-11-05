@@ -70,6 +70,21 @@ if grep -rn --include='*.swift' 'AlarmManager\.shared\.authorizationState' App N
   failed+=("alarm-authorization-read")
 fi
 
+# sync-strings.sh only marks a removed string with plural variants as stale, and its check passes, so
+# one stays in the catalog unless someone sees it (#139).
+step "String Catalogs hold no stale strings"
+if grep -l '"extractionState" : "stale"' App/Resources/*.xcstrings Packages/NudgeEngine/Sources/NudgeEngine/*.xcstrings; then
+  echo "FAIL: delete the stale entries from these catalogs" >&2
+  failed+=("stale-strings")
+fi
+
+# chevron.right points the wrong way in right-to-left languages (#121).
+step "Chevrons use chevron.forward"
+if grep -rn --include='*.swift' 'chevron\.right' App NudgeWidgets Packages; then
+  echo "FAIL: use chevron.forward" >&2
+  failed+=("chevron-right")
+fi
+
 # App/Resources/PrivacyInfo.xcprivacy gives UserDefaults the reason CA92.1: the app reading its own
 # standard defaults. A suite would be a different reason (1C8F.1 for the App Group's), and the widget
 # has no manifest, so a UserDefaults there would be an undeclared required reason API. Shipped

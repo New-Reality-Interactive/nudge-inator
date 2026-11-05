@@ -39,6 +39,8 @@ The recipe for a story's visual criteria (AGENTS.md, Testing), and for checking 
 
 What the harness can't do: the times are now plus or minus the mockup's gaps, so they differ from the mockup's fixed 8:20 AM, and the system's own UI (notifications, the alarm, permission prompts) isn't in it.
 
+A sideways drag on a list row with no action on that edge can act as a tap and open the row. In UI tests every right swipe did, at any speed, on Tags, Reminders and Settings on the iOS 27.0 simulator; on the iPhone (iOS 27.0.1) some did, on Tags and Reminders (#139). Apple's docs are silent. So a UI test that swipes right expects the row may have opened.
+
 Two simulator quirks it works around (iOS 26.5 simulator, Xcode 27.1, before landscape was skipped there): in landscape, a tap on a navigation bar button never lands and `swipeUp()` doesn't scroll, though rows and tabs take taps. So bar buttons are tapped after turning the phone to portrait and back, and scrolling is a coordinate drag. The simulator's first keyboard also shows a tip over the sheet, which the walk dismisses. That can't be undone: the tip doesn't come back on that simulator, for any app.
 
 ## Manual device checks: build, install, clean up
@@ -98,7 +100,7 @@ The TestFlight install replaces the Xcode copy on the phone: note what was insta
 
 ## Device-check walkthrough
 
-When closing an acceptance criterion needs device checks that need the person, walk them through one check at a time, so none is missed. For each check:
+When closing an acceptance criterion needs device checks that need the person, walk them through one check at a time, so none is missed. Inside a check, send one numbered item at a time and wait for its answer before the next. Each item holds what to do and what to report from it, together, since a list of steps above a list of questions got a step skipped (#139). Describe a gesture by where the finger starts and which way it moves: "right swipe" was read both ways in #139. For each check:
 
 1. Say what it checks, what they'll do and when (prompts to answer, what to tap), and the longest it can take.
 2. Confirm the `-only-testing` filter matches that one test without touching the phone. Swift Testing's identifier ends in `()`. A run that matches no test still launches the app, and a prompt it shows vanishes when the run ends.
