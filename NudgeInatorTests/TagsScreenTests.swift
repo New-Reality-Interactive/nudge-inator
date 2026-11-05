@@ -20,10 +20,10 @@ struct TagsScreenTests {
         #expect(screen.rows.map(\.nudgingCount) == [0, 0, 0])
     }
 
-    @Test func withNoTagsTheScreenIsEmpty() async throws {
+    @Test func withNoTagsTheEmptyStateIsNoTags() async throws {
         let model = try await fixture.launchedModel()
 
-        #expect(TagsScreen(engine: model.engine).isEmpty)
+        #expect(TagsScreen(engine: model.engine).emptyState == .noTags)
     }
 
     @Test func aNudgingReminderCountsUnderEachOfItsTags() async throws {
@@ -80,6 +80,46 @@ extension TagsScreenTests {
 
         day.model.deleteTag(day.home.id)
         #expect(english(TagsScreen(engine: day.model.engine).countText) == "3 tags out of 3")
+    }
+}
+
+/// The search (#141): the count follows it, and when nothing matches the screen says so.
+extension TagsScreenTests {
+    @Test func theRowsAndTheCountFollowTheSearch() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        let screen = TagsScreen(engine: day.model.engine, filter: TagListFilter(search: "#ho"))
+
+        #expect(screen.rows.map(\.tag.name) == ["home"])
+        #expect(english(screen.countText) == "1 tag out of 3")
+        #expect(screen.emptyState == nil)
+    }
+
+    @Test func aSearchThatMatchesNothingIsNotNoTags() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        let screen = TagsScreen(engine: day.model.engine, filter: TagListFilter(search: "zebra"))
+
+        #expect(screen.emptyState == .noMatch)
+        #expect(english(screen.countText) == "0 tags out of 3")
+    }
+
+    /// With no tags there's no search field, but text left over from before the last tag went must
+    /// still read as no tags.
+    @Test func withNoTagsASearchIsStillNoTags() async throws {
+        let model = try await fixture.launchedModel()
+
+        let screen = TagsScreen(engine: model.engine, filter: TagListFilter(search: "zebra"))
+
+        #expect(screen.emptyState == .noTags)
+    }
+
+    @Test func theNoMatchWordsNameTheSearchAsTypedAndOfferToClearIt() {
+        let filter = TagListFilter(search: "  #zebra ")
+
+        #expect(english(filter.noMatchTitle) == "No Results for “#zebra”")
+        #expect(english(filter.noMatchText) == "Check the spelling or try a new search.")
+        #expect(english(filter.noMatchClearTitle) == "Clear Search")
     }
 }
 

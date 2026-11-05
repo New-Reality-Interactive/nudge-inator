@@ -1,31 +1,70 @@
 import NudgeEngine
 import SwiftUI
 
-/// The Tags list: a row per tag, which opens the tag. A trailing swipe offers Edit and Delete.
+/// The Tags list: a row per tag, which opens the tag. A trailing swipe offers Edit and Delete. When
+/// nothing matches, the count stays above the no-match state, and the footer goes.
 struct TagsList: View {
     let screen: TagsScreen
+    let filter: TagListFilter
+    let clearSearch: () -> Void
     let rename: (Tag) -> Void
     /// Called once the person confirms.
     let delete: (TagSummary) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AccessibilityFocusState private var countFocused: Bool
 
     var body: some View {
-        List {
-            Section {
-                ForEach(screen.rows, id: \.tag.id) { summary in
-                    TagRow(summary: summary, rename: { rename(summary.tag) }, delete: { delete(summary) })
+        SearchResultsContainer(countFocus: $countFocused) { didClear in
+            List {
+                Section {
+                    ForEach(screen.rows, id: \.tag.id) { summary in
+                        TagRow(summary: summary, rename: { rename(summary.tag) }, delete: { delete(summary) })
+                    }
+                    if screen.emptyState == .noMatch {
+                        TagsNoMatchView(filter: filter) {
+                            clearSearch()
+                            didClear()
+                        }
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                    }
+                } header: {
+                    CountHeaderRow(count: screen.countText, countFocus: $countFocused)
+                        .textCase(nil)
+                } footer: {
+                    if screen.emptyState == nil {
+                        Text("Tags are labels you add to reminders. Choose one to see every reminder that has it.", comment: "Tags: under the list.")
+                    }
                 }
-            } header: {
-                CountHeaderRow(count: screen.countText)
-                    .textCase(nil)
-            } footer: {
-                Text("Tags are labels you add to reminders. Choose one to see every reminder that has it.", comment: "Tags: under the list.")
             }
         }
         // A row a delete takes out animates, and a Sort choice slides the rows to their new places
         // (Brian, on the iPhone, #140).
         .animation(reduceMotion ? nil : .default, value: screen.rows.map(\.tag.id))
+    }
+}
+
+/// Says nothing matches, never that there are no tags, and names what's narrowing the list.
+private struct TagsNoMatchView: View {
+    let filter: TagListFilter
+    let clear: () -> Void
+
+    var body: some View {
+        ContentUnavailableView {
+            Label {
+                Text(filter.noMatchTitle)
+            } icon: {
+                Image(systemName: filter.noMatchSystemImage)
+            }
+        } description: {
+            Text(filter.noMatchText)
+        } actions: {
+            Button(action: clear) {
+                Text(filter.noMatchClearTitle)
+            }
+            .buttonStyle(.bordered)
+        }
     }
 }
 
@@ -122,3 +161,12 @@ private struct TagRowContent: View {
         return text
     }
 }
+
+#if DEBUG
+#Preview("No match") {
+    List {
+        TagsNoMatchView(filter: TagListFilter(search: "zebra")) {}
+            .listRowBackground(Color.clear)
+    }
+}
+#endif
