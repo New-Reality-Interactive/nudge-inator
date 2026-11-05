@@ -428,6 +428,39 @@
         }
       }
     },
+    "%lld tags out of %lld" : {
+      "comment" : "Tags tab: the header row's count, in every case, even with nothing narrowing the list. 1: the tags shown. 2: every tag.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@tags@ out of %2$lld"
+          },
+          "substitutions" : {
+            "tags" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg tag"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg tags"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "**Alarms are off.** Urgent nudges, and so every Relentless nudge, now come as Time Sensitive notifications, which silent mode can mute." : {
       "comment" : "Permission banner, when alarms are off and Time Sensitive is on. Keep the first sentence bold."
     },
@@ -510,6 +543,9 @@
     },
     "A new schedule applies from the next time it's due. A new strength, pace or Break Through Focus setting applies from the next nudge." : {
       "comment" : "Top of the Edit Reminder form when the reminder isn't nudging: when changes apply."
+    },
+    "A to Z" : {
+      "comment" : "Tags tab's Sort menu, sorted by Name: alphabetical order."
     },
     "About" : {
       "comment" : "Settings: row that opens the page with the privacy policy, support and the app's version and build number.\nTitle of the page in Settings with the privacy policy, support and the app's version."
@@ -1038,6 +1074,9 @@
     "Every nudge rings as an alarm." : {
       "comment" : "Under the reminder form's strength, when every nudge rings, as Relentless's do."
     },
+    "Fewest First" : {
+      "comment" : "Tags tab's Sort menu, sorted by Reminders: the tag fewest reminders have at the top."
+    },
     "Filter" : {
       "comment" : "Reminders tab: the item in the Filter button's menu that opens the filter sheet.\nVoiceOver label of the Reminders tab's Filter button."
     },
@@ -1145,8 +1184,20 @@
     "Monthly" : {
       "comment" : "The Custom repeat page's frequency."
     },
+    "Most First" : {
+      "comment" : "Tags tab's Sort menu, sorted by Reminders: the tag most reminders have at the top."
+    },
     "My Day" : {
       "comment" : "Tab bar: the tab with today's reminders in time order"
+    },
+    "Name" : {
+      "comment" : "Tags tab's Sort menu: the header of the section that sorts by the tag's name."
+    },
+    "Name, A to Z" : {
+      "comment" : "VoiceOver value of the Tags tab's Sort button: sorted by Name, A to Z."
+    },
+    "Name, Z to A" : {
+      "comment" : "VoiceOver value of the Tags tab's Sort button: sorted by Name, Z to A."
     },
     "Needs two or more checked tags." : {
       "comment" : "A filter sheet: VoiceOver's reason the Match choice is disabled."
@@ -1476,10 +1527,16 @@
       "comment" : "Reminder details: title when the reminder isn't there."
     },
     "Reminders" : {
-      "comment" : "Tab bar: the tab listing every reminder in any state"
+      "comment" : "Tab bar: the tab listing every reminder in any state\nTags tab's Sort menu: the header of the section that sorts by how many reminders have each tag."
     },
     "Reminders keep coming back until you tap Done: at a steady pace, or more often and more insistently." : {
       "comment" : "Onboarding and How It Nudges: under \"Nudges until you're done\"."
+    },
+    "Reminders, Fewest First" : {
+      "comment" : "VoiceOver value of the Tags tab's Sort button: sorted by Reminders, Fewest First."
+    },
+    "Reminders, Most First" : {
+      "comment" : "VoiceOver value of the Tags tab's Sort button: sorted by Reminders, Most First."
     },
     "Remove %@ from the filter" : {
       "comment" : "VoiceOver label of a tag's filter token on My Day. The placeholder is the tag, such as \"#home\"."
@@ -1574,7 +1631,7 @@
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that closed because its reminder was paused."
     },
     "Sort" : {
-      "comment" : "VoiceOver label of the Reminders tab's Sort button, which opens the Sort menu."
+      "comment" : "VoiceOver label of the Reminders tab's Sort button, which opens the Sort menu.\nVoiceOver label of the Tags tab's Sort button, which opens the Sort menu."
     },
     "Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them." : {
       "comment" : "Reminder details: under Schedule while the reminder is nudging, why five fields can't be edited."
@@ -1715,13 +1772,16 @@
       "comment" : "Settings: header of the section with Delete All Data."
     },
     "Your Tags" : {
-      "comment" : "Tags: header of the list of tags.\nThe Tags page's section header above every tag."
+      "comment" : "The Tags page's section header above every tag."
     },
     "Your reminders are still on this iPhone, and nudges already scheduled will still come. Unlock your iPhone, then open %@ again." : {
       "comment" : "Explains the unreadable store: nothing is lost, and reopening the app tries again. The placeholder is the app's name."
     },
     "Your reminders stay on this iPhone. There's no account and no server, and nothing syncs to other devices." : {
       "comment" : "Settings: the privacy note under Your Data."
+    },
+    "Z to A" : {
+      "comment" : "Tags tab's Sort menu, sorted by Name: reverse alphabetical order."
     },
     "every %@" : {
       "comment" : "How It Nudges row: the wait between each of a run of nudges. The placeholder is a duration, such as \"5 min\"."

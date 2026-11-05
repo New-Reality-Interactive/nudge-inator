@@ -39,6 +39,50 @@ struct TagsScreenTests {
     }
 }
 
+/// The header row and the Sort menu's order (#140).
+extension TagsScreenTests {
+    private func english(_ resource: LocalizedStringResource) -> String {
+        var resource = resource
+        resource.locale = Locale(identifier: "en")
+        return String(localized: resource)
+    }
+
+    @Test func theRowsFollowTheSort() async throws {
+        let day = try await fixture.dayAtOnePM()
+        try day.model.createTag(named: "unused")
+
+        let mostFirst = TagsScreen(engine: day.model.engine, sort: TagSort(field: .reminderCount, order: .descending))
+        let zToA = TagsScreen(engine: day.model.engine, sort: TagSort(field: .name, order: .descending))
+
+        #expect(mostFirst.rows.map(\.tag.name) == ["health", "home", "work", "unused"])
+        #expect(zToA.rows.map(\.tag.name) == ["work", "unused", "home", "health"])
+    }
+
+    @Test func theHeaderCountsEveryRowOutOfEveryTag() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        let screen = TagsScreen(engine: day.model.engine)
+
+        #expect(screen.shownCount == screen.rows.count)
+        #expect(screen.total == 3)
+        #expect(english(screen.countText) == "3 tags out of 3")
+    }
+
+    @Test func theHeaderSaysTagInTheSingular() {
+        #expect(english(TagsScreen.countText(shown: 1, of: 8)) == "1 tag out of 8")
+    }
+
+    @Test func addingOrDeletingATagUpdatesTheCount() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        try day.model.createTag(named: "unused")
+        #expect(english(TagsScreen(engine: day.model.engine).countText) == "4 tags out of 4")
+
+        day.model.deleteTag(day.home.id)
+        #expect(english(TagsScreen(engine: day.model.engine).countText) == "3 tags out of 3")
+    }
+}
+
 extension TagsScreenTests {
     @Test func theDeleteQuestionSaysHowManyRemindersUseTheTag() async throws {
         let day = try await fixture.dayAtOnePM()

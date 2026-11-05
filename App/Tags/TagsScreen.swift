@@ -1,16 +1,29 @@
 import Foundation
 import NudgeEngine
 
-/// What the Tags tab shows, read from the engine at one moment: each tag with its counts. A
-/// value, so the tests and previews read it with no view.
+/// What the Tags tab shows, read from the engine at one moment: each tag with its counts, in the
+/// Sort menu's order, and the header row's count. A value, so the tests and previews read it with
+/// no view.
 struct TagsScreen {
-    /// By name ignoring case, as the engine sorts them.
-    let rows: [TagSummary]
+    private let list: TagList
+
+    var rows: [TagSummary] { list.rows }
+    /// The rows shown: the count's first number.
+    var shownCount: Int { list.visibleCount }
+    /// Every tag the engine holds: the count's "out of" number.
+    var total: Int { list.total }
 
     var isEmpty: Bool { rows.isEmpty }
 
-    init(engine: Engine) {
-        rows = engine.tagSummaries()
+    /// The header row's count, "3 tags out of 8", read as one VoiceOver element.
+    var countText: LocalizedStringResource { Self.countText(shown: shownCount, of: total) }
+
+    static func countText(shown: Int, of total: Int) -> LocalizedStringResource {
+        LocalizedStringResource("\(shown) tags out of \(total)", comment: "Tags tab: the header row's count, in every case, even with nothing narrowing the list. 1: the tags shown. 2: every tag.")
+    }
+
+    init(engine: Engine, sort: TagSort = .nameAToZ) {
+        list = engine.tagList(sortedBy: sort)
     }
 }
 

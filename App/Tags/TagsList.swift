@@ -17,11 +17,14 @@ struct TagsList: View {
                     TagRow(summary: summary, rename: { rename(summary.tag) }, delete: { delete(summary) })
                 }
             } header: {
-                Text("Your Tags", comment: "Tags: header of the list of tags.")
+                CountHeaderRow(count: screen.countText)
+                    .textCase(nil)
             } footer: {
                 Text("Tags are labels you add to reminders. Choose one to see every reminder that has it.", comment: "Tags: under the list.")
             }
         }
+        // A row a delete takes out animates, and a Sort choice slides the rows to their new places
+        // (Brian, on the iPhone, #140).
         .animation(reduceMotion ? nil : .default, value: screen.rows.map(\.tag.id))
     }
 }

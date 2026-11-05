@@ -30,6 +30,7 @@ final class RemindersSortTests {
             alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: clock),
             defaultPaceRecord: .temporary,
             remindersSortRecord: try record(),
+            tagsSortRecord: .temporary,
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )

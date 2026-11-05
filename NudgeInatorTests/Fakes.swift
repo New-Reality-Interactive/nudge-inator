@@ -343,6 +343,12 @@ extension RemindersSortRecord {
     static var temporary: RemindersSortRecord { RemindersSortRecord(defaults: UserDefaults(suiteName: "NudgeInatorTests.RemindersSort")!) }
 }
 
+extension TagsSortRecord {
+    /// A record in a suite of the tests' own, as `DefaultPaceRecord.temporary`. `TagsSortTests` uses
+    /// suites of its own.
+    static var temporary: TagsSortRecord { TagsSortRecord(defaults: UserDefaults(suiteName: "NudgeInatorTests.TagsSort")!) }
+}
+
 extension Collection {
     /// The one element, or `nil` if there are none or several.
     var only: Element? { count == 1 ? first : nil }

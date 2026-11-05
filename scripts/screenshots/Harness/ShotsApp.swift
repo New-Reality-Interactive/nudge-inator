@@ -118,6 +118,7 @@ enum ShotsSeed {
             onboardingRecord: onboarding,
             defaultPaceRecord: DefaultPaceRecord(defaults: defaults),
             remindersSortRecord: RemindersSortRecord(defaults: defaults),
+            tagsSortRecord: TagsSortRecord(defaults: defaults),
             doneQueue: .temporary
         )
         return model

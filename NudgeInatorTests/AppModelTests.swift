@@ -33,6 +33,7 @@ struct AppModelTests {
             alarms: AlarmAdapter(manager: manager, clock: clock),
             defaultPaceRecord: .temporary,
             remindersSortRecord: .temporary,
+            tagsSortRecord: .temporary,
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )
@@ -160,6 +161,7 @@ struct AppModelTests {
             alarms: AlarmAdapter(manager: manager, clock: clock),
             defaultPaceRecord: .temporary,
             remindersSortRecord: .temporary,
+            tagsSortRecord: .temporary,
             doneQueue: queue,
             timeZone: NewYork.timeZone
         )

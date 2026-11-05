@@ -59,6 +59,7 @@ final class AppModel {
     private let onboardingRecord: OnboardingRecord
     private let defaultPaceRecord: DefaultPaceRecord
     private let remindersSortRecord: RemindersSortRecord
+    private let tagsSortRecord: TagsSortRecord
     /// Where a Done waits while the store can't be read (ticket 32).
     private let doneQueue: DoneQueue
 
@@ -71,6 +72,7 @@ final class AppModel {
         onboardingRecord: OnboardingRecord = .standard,
         defaultPaceRecord: DefaultPaceRecord = .standard,
         remindersSortRecord: RemindersSortRecord = .standard,
+        tagsSortRecord: TagsSortRecord = .standard,
         doneQueue: DoneQueue,
         timeZone: TimeZone = .autoupdatingCurrent,
         giveUpLimit: GiveUpLimit = .shipped
@@ -84,6 +86,7 @@ final class AppModel {
         self.onboardingRecord = onboardingRecord
         self.defaultPaceRecord = defaultPaceRecord
         self.remindersSortRecord = remindersSortRecord
+        self.tagsSortRecord = tagsSortRecord
         self.doneQueue = doneQueue
         onboarding = onboardingRecord.isFinished ? nil : .welcome
         scheduler = CombinedSchedulerAdapter(adapters: [notifications, alarms])
@@ -421,14 +424,26 @@ final class AppModel {
         }
     }
 
+    /// The Tags tab's Sort menu choice (#140), apart from the Reminders tab's. Read from the record
+    /// each time, as `remindersSort` is.
+    var tagsSort: TagSort {
+        get {
+            access(keyPath: \.tagsSort)
+            return tagsSortRecord.sort
+        }
+        set {
+            withMutation(keyPath: \.tagsSort) { tagsSortRecord.sort = newValue }
+        }
+    }
+
     /// Settings' Send a Test Nudge (ticket 30): one ordinary notification a few seconds away. It is
     /// no reminder's, so the engine and the store know nothing of it.
     func sendTestNudge() async {
         await notifications.sendTestNudge()
     }
 
-    /// Settings' Delete All Data (ticket 30): the store, the Default Pace and the Reminders tab's
-    /// sort, then the engine, then everything the adapters hold, including the test nudge and the
+    /// Settings' Delete All Data (ticket 30): the store, the Default Pace and the Reminders and Tags
+    /// tabs' sorts, then the engine, then everything the adapters hold, including the test nudge and the
     /// nudges already in Notification Center. Not through `perform`: the store goes first and a
     /// store that turns the delete down stops it, so the reminders and their nudges stay as they
     /// were. A disk failure is likelier than a failed cancel, and a nudge left pending for deleted
@@ -441,6 +456,7 @@ final class AppModel {
         saveError = nil
         withMutation(keyPath: \.defaultPace) { defaultPaceRecord.clear() }
         withMutation(keyPath: \.remindersSort) { remindersSortRecord.clear() }
+        withMutation(keyPath: \.tagsSort) { tagsSortRecord.clear() }
         // A new engine, not emptied lists: the old one keeps a key for every history it held, and
         // its alarm-limit records. Its empty plan still reaches the adapters.
         var empty = makeEngine(permissions: permissions)
