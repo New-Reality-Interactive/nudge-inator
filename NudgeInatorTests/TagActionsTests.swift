@@ -33,6 +33,17 @@ struct TagActionsTests {
         #expect(model.engine.tag(withID: work.id)?.name == "work")
     }
 
+    @Test func renamingATagKeepsItOnItsReminders() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        try day.model.renameTag(day.home.id, to: "house")
+
+        #expect(day.model.engine.tag(withID: day.home.id)?.name == "house")
+        let kept = day.model.engine.reminders.filter { [day.dog.id, day.plants.id, day.bins.id].contains($0.id) }
+        #expect(kept.count == 3)
+        #expect(kept.allSatisfy { $0.tagIDs.contains(day.home.id) })
+    }
+
     @Test func deletingATagUsedByThreeRemindersKeepsThemWithoutIt() async throws {
         let day = try await fixture.dayAtOnePM()
         let used = day.model.engine.tagSummaries().first { $0.tag.id == day.home.id }

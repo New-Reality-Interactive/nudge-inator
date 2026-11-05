@@ -4,7 +4,7 @@ import Testing
 @testable import NudgeInator
 
 /// The Tags tab through `TagsScreen`, what it draws, read from the real app model on ticket 16's
-/// fixture. Layout, Edit mode, VoiceOver and Dynamic Type are screenshot and device checks.
+/// fixture. Layout, the swipe, VoiceOver and Dynamic Type are screenshot and device checks.
 @MainActor
 struct TagsScreenTests {
     let fixture = MyDayScreenTests()
@@ -51,6 +51,25 @@ extension TagsScreenTests {
 
         #expect(home.reminderCount == 3)
         #expect(message.contains("3 reminders use this tag"))
+    }
+
+    @Test func theDeleteQuestionSaysSoWhenNoRemindersUseTheTag() async throws {
+        let day = try await fixture.dayAtOnePM()
+        try day.model.createTag(named: "unused")
+        let unused = try #require(TagsScreen(engine: day.model.engine).rows.first { $0.tag.name == "unused" })
+
+        var resource = unused.deleteMessage
+        resource.locale = Locale(identifier: "en")
+
+        #expect(String(localized: resource) == "No reminders use this tag.")
+    }
+
+    @Test func aDeletedTagsRowLeavesTheListAndItsNeighborsStay() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        day.model.deleteTag(day.home.id)
+
+        #expect(TagsScreen(engine: day.model.engine).rows.map(\.tag.name) == ["health", "work"])
     }
 
     /// The catalog varies these by the first number only (a substitution), so the other two

@@ -28,12 +28,31 @@ struct SwipeDeleteTile: View {
     }
 }
 
+/// DESIGN.md's `swipe-edit`: a trailing swipe action on a blue tile, with a white `pencil` and its
+/// word.
+struct SwipeEditTile: View {
+    let label: Text
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label { label } icon: { Image(systemName: "pencil") }
+        }
+        .tint(Color.tileBlue)
+    }
+}
+
 #if DEBUG
 #Preview("Swipe tiles") {
     List {
         Text(verbatim: "Swipe left")
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                 SwipeDoneTile(label: Text(verbatim: "Done"), action: {})
+                SwipeDeleteTile(label: Text(verbatim: "Delete"), action: {})
+            }
+        Text(verbatim: "Swipe a tag")
+            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                SwipeEditTile(label: Text(verbatim: "Edit"), action: {})
                 SwipeDeleteTile(label: Text(verbatim: "Delete"), action: {})
             }
     }

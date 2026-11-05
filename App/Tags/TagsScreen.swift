@@ -7,14 +7,10 @@ struct TagsScreen {
     /// By name ignoring case, as the engine sorts them.
     let rows: [TagSummary]
 
-    /// Reminders with no tags, which My Day's filter can show.
-    let untaggedCount: Int
-
     var isEmpty: Bool { rows.isEmpty }
 
     init(engine: Engine) {
         rows = engine.tagSummaries()
-        untaggedCount = engine.reminders.count { $0.tagIDs.isEmpty }
     }
 }
 
@@ -34,10 +30,5 @@ extension TagSummary {
             return LocalizedStringResource("No reminders use this tag.", comment: "Tags: the message of the question that asks before deleting a tag that no reminder has.")
         }
         return LocalizedStringResource("\(reminderCount) reminders use this tag. It's removed from them, and they aren't deleted.", comment: "Tags: the message of the question that asks before deleting a tag. The placeholder is how many reminders have the tag.")
-    }
-
-    /// Just the reminder count, under the name in Edit mode.
-    var reminderCountText: LocalizedStringResource {
-        LocalizedStringResource("\(reminderCount) reminders", comment: "Tags, Edit mode: under a tag's name. The placeholder is how many reminders have the tag.")
     }
 }
