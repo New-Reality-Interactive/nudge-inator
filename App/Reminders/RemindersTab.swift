@@ -231,17 +231,12 @@ private struct RemindersListView: View {
     @Environment(\.dismissSearch) private var dismissSearch
     @Environment(\.isSearching) private var isSearching
     @AccessibilityFocusState private var countFocused: Bool
-    /// Set by the clear button during a search, for when that search has ended.
-    @State private var scrollsToHeader = false
-    @Namespace private var headerID
+    /// Each clear button's tap makes a new list, which starts at its top.
+    @State private var listIdentity = 0
+    /// A clear button was tapped during a search, so the new list waits for that search to end.
+    @State private var isClearing = false
 
     var body: some View {
-        ScrollViewReader { proxy in
-            list(proxy)
-        }
-    }
-
-    private func list(_ proxy: ScrollViewProxy) -> some View {
         List {
             Section {
                 ForEach(screen.rows) { row in
@@ -256,15 +251,10 @@ private struct RemindersListView: View {
                     RemindersNoMatchView(filter: filter) {
                         clearFilters()
                         // Where the keyboard or large text meant scrolling to the button, the rows
-                        // come back with the count off screen otherwise. `.bottom`, not
-                        // `.top`, which puts the header under the bar: the scroll view runs behind
-                        // it. The header comes first, so this stops at the list's own top. During a
-                        // search it waits for the title, which comes back over the header otherwise.
-                        if isSearching {
-                            scrollsToHeader = true
-                        } else {
-                            proxy.scrollTo(headerID, anchor: .bottom)
-                        }
+                        // come back with the count off screen otherwise. A new list rather than
+                        // `scrollTo`: at the accessibility sizes, no anchor reached the top (#135).
+                        // During a search it waits for the search to end, and the title's return.
+                        if isSearching { isClearing = true } else { makeNewList() }
                         // Ends the search too, if it's still active, so Cancel and the keyboard go with its text.
                         dismissSearch()
                         countFocused = true
@@ -277,23 +267,33 @@ private struct RemindersListView: View {
                 // no-match empty state.
                 RemindersHeaderRow(count: screen.countText, countFocus: $countFocused)
                     .textCase(nil)
-                    .id(headerID)
             }
         }
+        .id(listIdentity)
+        .transition(.identity)
         // Cancel moves VoiceOver to the bar's New button, which cut the count's announcement off (seen
         // on the iPhone in #112), so it goes to the count, as Clear Search does.
         .onChange(of: isSearching) {
             guard !isSearching else { return }
-            countFocused = true
-            if scrollsToHeader {
-                scrollsToHeader = false
-                proxy.scrollTo(headerID, anchor: .bottom)
+            if isClearing {
+                isClearing = false
+                makeNewList()
             }
+            countFocused = true
         }
         .onChange(of: countFocusRequests) { countFocused = true }
         // By the rows, not `withAnimation` around Done and Delete: a row can also leave on the
         // minute, when the clock alone takes it out of the filter.
         .animation(reduceMotion ? nil : .default, value: screen.rows.map(\.id))
+    }
+
+    /// With no animation or transition, so the rows are simply there, as a filter redraws them.
+    /// Animated, UI tests waited out "animations complete" timeouts on iOS 26.5 too. On iOS 27.0 some
+    /// runs still do, with the app idle and nothing wrong on the iPhone (#135's Comments).
+    private func makeNewList() {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) { listIdentity += 1 }
     }
 }
 

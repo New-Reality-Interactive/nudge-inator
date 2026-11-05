@@ -769,8 +769,9 @@ final class ShotsUITests: XCTestCase {
             return
         }
         clear.tap()
-        pause(0.5)
+        pause(0.8)
         shot("reminders-filters-cleared")
+        assertListAtTop(below: app.searchFields.firstMatch, after: "Clear Filters")
     }
 
     /// The mockup's `reminders-search` (#112): the field empty under the title, with text, then a
@@ -796,15 +797,7 @@ final class ShotsUITests: XCTestCase {
         clearSearch.tap()
         pause(0.8)
         shot("reminders-search-cleared")
-        // Clearing scrolls back to the top, so the count is on screen and not behind the field. At
-        // the accessibility sizes it stops short of the top, and a swipe down shows it (#112's
-        // Comments).
-        let count = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "out of")).firstMatch
-        if UITraitCollection.current.preferredContentSizeCategory.isAccessibilityCategory {
-            scrollToTop()
-        } else {
-            XCTAssertGreaterThanOrEqual(count.frame.minY, field.frame.maxY, "The count is behind the search field")
-        }
+        assertListAtTop(below: field, after: "Clear Search")
         openRemindersFilter()
         chooseInSheet("Nudging")
         applyRemindersFilter()
@@ -817,6 +810,7 @@ final class ShotsUITests: XCTestCase {
         clearBoth.tap()
         pause(0.8)
         shot("reminders-search-status-cleared")
+        assertListAtTop(below: field, after: "Clear Search and Filters")
         // Cancel ends the search in one tap on both iOS versions: the Search button's X took three
         // on iOS 27.0, which is why that design went (#113).
         field.tap()
@@ -830,6 +824,18 @@ final class ShotsUITests: XCTestCase {
         XCTAssertFalse(app.keyboards.firstMatch.exists, "One tap on Cancel left the keyboard up")
         XCTAssertFalse(cancel.exists, "One tap on Cancel left the search open")
         XCTAssert(remindersFilterButtons.firstMatch.isHittable, "Cancel left the bar without its Filter button:\n\(app.debugDescription)")
+    }
+
+    /// Clearing returns the list to its top, so the count is on screen and not behind the field. It
+    /// compares positions because a tap on the count would still land behind the field (#112).
+    private func assertListAtTop(below field: XCUIElement, after button: String, line: UInt = #line) {
+        let count = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "out of")).firstMatch
+        XCTAssert(count.exists, "No count after \(button):\n\(app.debugDescription)", line: line)
+        XCTAssertGreaterThanOrEqual(count.frame.minY, field.frame.maxY, "After \(button), the count is behind the search field", line: line)
+        // The bar ends 10 to 15 pt below the field, so this catches a list that stopped short with
+        // the count just clear of the field, as it did at the largest text (#135).
+        let bar = app.navigationBars.firstMatch
+        XCTAssertGreaterThanOrEqual(count.frame.minY, bar.frame.maxY, "After \(button), the list stopped short of its top", line: line)
     }
 
     func testSettings() {
