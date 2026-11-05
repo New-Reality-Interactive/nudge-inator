@@ -433,9 +433,10 @@ except in the tab and navigation bars. Verify names against the mockup.
   filter and leaves the search. With none on, a tap opens the sheet. No long press, as on My Day.
 - **Filter sheet ("Filter Reminders"):** Cancel (`xmark`, the form's cancel button) leading,
   Apply (the filled confirm button, `checkmark`) trailing, and Reset, a bordered button, at the bottom under the footer.
-  With the draft unchanged, Cancel, tapping above or swiping down closes it. Once it differs from
-  what's applied, a swipe or a tap above springs back and Cancel asks first (Discard Changes; a tap
-  outside keeps editing), as the reminder form does.
+  With the draft unchanged, Cancel or swiping down closes it. Once it differs from what's applied,
+  a swipe springs back and Cancel asks first (Discard Changes; a tap outside keeps editing), as the
+  reminder form does. A tap above the sheet does nothing either way: iOS draws a sheet's dimming
+  view as noninteractive (spec #104, Decision 57).
   Match and Tags with No Tags as on My Day, then Status, Strength and Due Date. Status and
   Strength are checkmark lists. Due Date has From and To, each a switch with a date pill beside it
   while on. The footer counts what Apply would show.

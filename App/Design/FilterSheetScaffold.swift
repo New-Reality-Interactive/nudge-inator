@@ -9,7 +9,7 @@ protocol FilterSheetChoices: Equatable {
 protocol FilterSheetSummary {
     /// How many rows Apply would show, with the search as it is: above Reset.
     var result: LocalizedStringResource { get }
-    /// Whether Cancel, tapping above or swiping down asks before discarding the draft.
+    /// Whether Cancel asks, and a swipe down springs back, before discarding the draft.
     var hasChanges: Bool { get }
     /// Whether Reset has anything to clear.
     var canReset: Bool { get }
@@ -18,8 +18,9 @@ protocol FilterSheetSummary {
 /// The filter sheet of Reminders and Tags, around each tab's own sections: a draft of what's
 /// applied. Apply applies it and closes; Reset, at the bottom, clears the draft, which changes
 /// nothing until Apply. Cancel discards the draft, asking first once it differs from what's
-/// applied; a swipe down or a tap above closes the sheet until then, and after that only springs
-/// back (spec #104, Decisions 31 and 38).
+/// applied; a swipe down closes the sheet until then, and after that only springs back. A tap
+/// above the sheet does nothing: iOS draws the dimming view as noninteractive (spec #104,
+/// Decisions 31, 38 and 57).
 struct FilterSheetScaffold<Choices: FilterSheetChoices, Summary: FilterSheetSummary, Sections: View>: View {
     let title: Text
     /// What `summary` says for each draft.
