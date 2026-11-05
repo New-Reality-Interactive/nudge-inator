@@ -54,9 +54,9 @@ The Human Interface Guidelines behind it, read through `apple-rag-mcp`:
 - **Lists and tables:** the grouped style uses headers and footers to separate groups, so the text
   belongs in the footer and the header row stays first.
 
-## Choices to check in review
+## Decided at sign-off (Brian, 2026-11-04)
 
-- **The tile order and color aren't in the spec:** Edit at the edge with Delete beside it, as Done and
+- **The tile order and color, which the spec left open:** Edit at the edge with Delete beside it, as Done and
   Delete sit on Reminders. Edit is `tile-blue` with `pencil`.
 - **Wording the spec leaves open:** the prompt "Search tags"; the sheet's footer "Shows only tags that
   no reminder uses."; and the nothing-matches lines "No tags with this filter." and "No tags with this
