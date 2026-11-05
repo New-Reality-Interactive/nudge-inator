@@ -6,7 +6,10 @@ import SwiftUI
 struct TagsList: View {
     let screen: TagsScreen
     let filter: TagListFilter
-    let clearSearch: () -> Void
+    /// Each new value puts VoiceOver on the count, which reads the result itself.
+    let countFocusRequests: Int
+    /// The no-match state's button: clears the search and the filter.
+    let clearAll: () -> Void
     let rename: (Tag) -> Void
     /// Called once the person confirms.
     let delete: (TagSummary) -> Void
@@ -23,7 +26,7 @@ struct TagsList: View {
                     }
                     if screen.emptyState == .noMatch {
                         TagsNoMatchView(filter: filter) {
-                            clearSearch()
+                            clearAll()
                             didClear()
                         }
                             .listRowBackground(Color.clear)
@@ -39,8 +42,9 @@ struct TagsList: View {
                 }
             }
         }
-        // A row a delete takes out animates, and a Sort choice slides the rows to their new places
-        // (Brian, on the iPhone, #140).
+        .onChange(of: countFocusRequests) { countFocused = true }
+        // A row a delete or the minute's read takes out animates, and a Sort choice slides the rows
+        // to their new places (Brian, on the iPhone, #140).
         .animation(reduceMotion ? nil : .default, value: screen.rows.map(\.tag.id))
     }
 }
@@ -166,6 +170,20 @@ private struct TagRowContent: View {
 #Preview("No match") {
     List {
         TagsNoMatchView(filter: TagListFilter(search: "zebra")) {}
+            .listRowBackground(Color.clear)
+    }
+}
+
+#Preview("No match, filter") {
+    List {
+        TagsNoMatchView(filter: TagListFilter(hasNoReminders: true)) {}
+            .listRowBackground(Color.clear)
+    }
+}
+
+#Preview("No match, search and filter") {
+    List {
+        TagsNoMatchView(filter: TagListFilter(search: "zebra", hasNoReminders: true)) {}
             .listRowBackground(Color.clear)
     }
 }

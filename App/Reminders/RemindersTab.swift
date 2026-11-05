@@ -78,7 +78,7 @@ struct RemindersTab: View {
             .toolbar {
                 if hasReminders {
                     ToolbarItem(placement: .topBarTrailing) {
-                        RemindersFilterButton(
+                        FilterButton(
                             sectionsInUse: appliedChoices.sectionsInUse,
                             showsBadge: !dynamicTypeSize.isAccessibilitySize,
                             open: { isFiltering = true },

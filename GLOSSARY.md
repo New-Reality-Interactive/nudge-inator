@@ -118,6 +118,10 @@ _Avoid_: All Reminders, list, library
 The part of the Reminders tab's filter sheet that narrows the list to reminders due from one day to another, both days included. Either day may be left off. A reminder is tested by the due time its row shows.
 _Avoid_: Date range (on screen), start and end (a reminder's Start is its first due time)
 
+**Has no reminders**:
+The Tags tab filter sheet's one condition: only tags that no reminder uses, whatever that reminder's status. It is about the tag itself, not the state of its reminders.
+_Avoid_: Unused tags (on screen), empty tags
+
 **Icon badge**:
 The number on the app's home-screen icon: how many reminders have an occurrence that is Nudging. It is the same count as the Now badge. It is not a Nudge.
 

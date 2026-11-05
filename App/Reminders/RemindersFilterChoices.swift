@@ -3,7 +3,7 @@ import NudgeEngine
 
 /// What the Reminders filter sheet has chosen, applied or as a draft. Search isn't part of it, so
 /// Apply, Reset and Clear All Filters leave the search as it is. The tags are My Day's.
-struct RemindersFilterChoices: Equatable {
+struct RemindersFilterChoices: FilterSheetChoices {
     var tags = TagChoice()
     private(set) var statuses: Set<RemindersFilter.Status> = []
     private(set) var strengths: Set<Strength> = []

@@ -183,3 +183,43 @@ extension TagsScreenTests {
         #expect(text(rows.first { $0.tag.name == "work" }!).hasPrefix("3 reminders · 3 today"))
     }
 }
+
+/// The filter (#142): Has no reminders narrows with the search, and the no-match state names both.
+extension TagsScreenTests {
+    @Test func theFilterLeavesOnlyUnusedTagsAndTheCountFollows() async throws {
+        let day = try await fixture.dayAtOnePM()
+        try day.model.createTag(named: "unused")
+
+        let screen = TagsScreen(engine: day.model.engine, filter: TagListFilter(hasNoReminders: true))
+
+        #expect(screen.rows.map(\.tag.name) == ["unused"])
+        #expect(english(screen.countText) == "1 tag out of 4")
+    }
+
+    @Test func aFilterThatMatchesNothingIsNotNoTags() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        let screen = TagsScreen(engine: day.model.engine, filter: TagListFilter(hasNoReminders: true))
+
+        #expect(screen.emptyState == .noMatch)
+        #expect(english(screen.countText) == "0 tags out of 3")
+    }
+
+    @Test func theNoMatchWordsNameTheFilter() {
+        let filter = TagListFilter(hasNoReminders: true)
+
+        #expect(english(filter.noMatchTitle) == "No Matches")
+        #expect(english(filter.noMatchText) == "No tags with this filter.")
+        #expect(english(filter.noMatchClearTitle) == "Clear Filter")
+        #expect(filter.noMatchSystemImage == "line.3.horizontal.decrease")
+    }
+
+    @Test func theNoMatchWordsNameTheSearchAndTheFilter() {
+        let filter = TagListFilter(search: "zebra", hasNoReminders: true)
+
+        #expect(english(filter.noMatchTitle) == "No Results for “zebra”")
+        #expect(english(filter.noMatchText) == "No tags with this filter match this search.")
+        #expect(english(filter.noMatchClearTitle) == "Clear Search and Filter")
+        #expect(filter.noMatchSystemImage == "magnifyingglass")
+    }
+}

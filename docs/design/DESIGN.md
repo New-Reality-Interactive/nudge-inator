@@ -335,7 +335,7 @@ except in the tab and navigation bars. Verify names against the mockup.
 
 | Use | Symbols |
 |---|---|
-| Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `magnifyingglass` and `xmark.circle.fill` (Search, drawn by the system), `tag.filter` (custom, in the asset catalog: the Tags tab's `tag` with a three-line filter badge at the lower right: Filter by Tags, the button and its menu item), `tag.xmark` (custom, in the asset catalog: the same `tag` with a × badge at the lower right: Clear All Tags, in the Filter button's menu), `line.3.horizontal.decrease` (the Reminders tab's Filter button and its Filter menu item; `xmark` is its Clear All Filters) |
+| Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `magnifyingglass` and `xmark.circle.fill` (Search, drawn by the system), `tag.filter` (custom, in the asset catalog: the Tags tab's `tag` with a three-line filter badge at the lower right: Filter by Tags, the button and its menu item), `tag.xmark` (custom, in the asset catalog: the same `tag` with a × badge at the lower right: Clear All Tags, in the Filter button's menu), `line.3.horizontal.decrease` (the Filter button of the Reminders and Tags tabs and its Filter menu item, and the no-match state's image when only the sheet's filters narrow the list; `xmark` is its Clear All Filters) |
 | Sort | `arrow.up.arrow.down` (the Reminders and Tags tabs' Sort buttons, which open the Sort menu) |
 | Swipe | `pencil` (the Tags tab's Edit tile) |
 | Tabs | `bell` (Now), `calendar` (My Day), `list.bullet.clipboard` (Reminders), `tag` (Tags), `gearshape` (Settings) |
@@ -433,9 +433,10 @@ except in the tab and navigation bars. Verify names against the mockup.
   filter and leaves the search. With none on, a tap opens the sheet. No long press, as on My Day.
 - **Filter sheet ("Filter Reminders"):** Cancel (`xmark`, the form's cancel button) leading,
   Apply (the filled confirm button, `checkmark`) trailing, and Reset, a bordered button, at the bottom under the footer.
-  With the draft unchanged, Cancel, tapping above or swiping down closes it. Once it differs from
-  what's applied, a swipe or a tap above springs back and Cancel asks first (Discard Changes; a tap
-  outside keeps editing), as the reminder form does.
+  With the draft unchanged, Cancel or swiping down closes it. Once it differs from what's applied,
+  a swipe springs back and Cancel asks first (Discard Changes; a tap outside keeps editing), as the
+  reminder form does. A tap above the sheet does nothing either way: iOS draws a sheet's dimming
+  view as noninteractive (spec #104, Decision 57).
   Match and Tags with No Tags as on My Day, then Status, Strength and Due Date. Status and
   Strength are checkmark lists. Due Date has From and To, each a switch with a date pill beside it
   while on. The footer counts what Apply would show.
