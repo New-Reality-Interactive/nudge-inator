@@ -17,6 +17,25 @@ struct MyDayFilterTests {
         #expect(filter.tagFilter == .matchAll([home.id]))
     }
 
+    /// When the Filter button goes, the tags go with it, so a filter nobody can see doesn't narrow
+    /// the list when reminders or tags come back. The chosen count is the counts' own control.
+    @Test func whenTheFilterButtonHidesTheTagsClearButTheChosenCountStays() {
+        var filter = MyDayFilter()
+        filter.toggle(home.id)
+        filter.tap(.missed)
+
+        filter.update(offersFilter: true)
+        #expect(filter.tagFilter == .matchAll([home.id]))
+
+        filter.update(offersFilter: false)
+        #expect(filter.tagFilter == .off)
+        #expect(filter.count == .missed)
+
+        filter.toggleNoTags()
+        filter.update(offersFilter: false)
+        #expect(filter.tagFilter == .off)
+    }
+
     @Test func checkingACheckedTagUnchecksItAndNoTagsLeftMeansNoFilter() {
         var filter = MyDayFilter()
         filter.toggle(home.id)

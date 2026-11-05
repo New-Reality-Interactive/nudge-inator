@@ -66,6 +66,7 @@ struct BadgeBarShot: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         MyDayFilterButton(chosen: chosen, showsBadge: !dynamicTypeSize.isAccessibilitySize, open: {}, clear: {})
                     }
+                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
                     ToolbarItem(placement: .primaryAction) { NewReminderButton() }
                 }
         }

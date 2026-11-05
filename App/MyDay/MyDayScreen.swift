@@ -12,6 +12,11 @@ struct MyDayScreen {
     let filterSummary: LocalizedStringResource?
     /// What the list says when it has no rows, by the chosen count.
     let emptyMessage: LocalizedStringResource
+    /// Whether the Filter button shows: a reminder is due today and a tag exists. With no tags the
+    /// sheet would offer only No Tags, which matches every row. Read from the whole day, not the
+    /// rows the filter leaves, so a filter that empties the list keeps the button that clears it
+    /// (Decision 56).
+    let offersFilter: Bool
     private let nowTime: String
     private let now: Date
 
@@ -135,6 +140,7 @@ struct MyDayScreen {
         nowTime = now.formatted(date: .omitted, time: .shortened)
         counts = MyDayCount.allCases.map { Count(kind: $0, number: 0, isChosen: filter.count == $0) }
         items = []
+        offersFilter = false
         filterTokens = []
         filterSummary = nil
         emptyMessage = Self.emptyMessage(forCount: filter.count)
@@ -168,6 +174,8 @@ struct MyDayScreen {
         emptyMessage = Self.emptyMessage(forCount: filter.count)
         nowTime = engine.timeOfDay(of: now)
         let myDay = engine.myDay(tagFilter: filter.tagFilter)
+        let wholeDay = engine.myDay()
+        offersFilter = !engine.tags.isEmpty && !wholeDay.items.isEmpty
         counts = MyDayCount.allCases.map { Count(kind: $0, number: myDay.count(of: $0), isChosen: filter.count == $0) }
         let reminders = Dictionary(engine.reminders.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let shown = filter.count.map(myDay.items(countedIn:)) ?? myDay.items

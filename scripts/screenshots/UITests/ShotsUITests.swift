@@ -219,6 +219,26 @@ final class ShotsUITests: XCTestCase {
         shot("myday-filtered")
     }
 
+    /// My Day's bar (#161): the Filter button is a glass circle of its own with New apart from it,
+    /// and with no tags and no reminder today there is no Filter button.
+    func testMyDayFilterButtonStandsApartAndHides() {
+        launch(.app)
+        tab("My Day")
+        let filter = myDayFilterButtons.firstMatch
+        let new = app.buttons["New Reminder"].firstMatch
+        XCTAssert(filter.waitForExistence(timeout: 3), "No Filter button on a day with reminders and tags")
+        // A button in the same glass group would sit a few points from New; apart, the bar's spacer
+        // is between them.
+        let gap = new.frame.minX - filter.frame.maxX
+        print("BAR gap between Filter and New: \(gap) pt")
+        XCTAssertGreaterThan(gap, 12, "The Filter button shares New's glass group")
+        shot("myday-bar-filter-apart")
+        launch(.noReminders)
+        tab("My Day")
+        XCTAssertFalse(myDayFilterButtons.firstMatch.exists, "A Filter button with no tags and no reminder today")
+        shot("myday-no-filter")
+    }
+
     /// The Filter button's badge as tags come off the filter: the badge follows the count when a
     /// token is removed from My Day, not only when the filter sheet closes (found on the iPhone,
     /// ticket 19).

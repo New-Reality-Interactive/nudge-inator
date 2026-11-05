@@ -270,6 +270,50 @@ struct MyDayScreenTests {
         #expect(plain(screen.emptyMessage) == expected)
     }
 
+    /// The Filter button shows only when there is something to filter: a reminder today and a tag
+    /// to filter it by (Decision 56). It is read from the whole day, not the rows the filter
+    /// leaves, so a filter that empties the list never hides the button that clears it.
+    @Test func theFilterButtonShowsOnlyWithAReminderTodayAndATag() async throws {
+        let day = try await dayAtOnePM()
+        func offers() -> Bool { MyDayScreen(engine: day.model.engine, filter: MyDayFilter(), now: clock.now).offersFilter }
+        #expect(offers())
+
+        for tag in [day.home, day.health, day.work] { day.model.deleteTag(tag.id) }
+        await day.model.waitUntilApplied()
+        #expect(!offers())
+
+        let empty = try await launchedModel()
+        #expect(!MyDayScreen(engine: empty.engine, filter: MyDayFilter(), now: clock.now).offersFilter)
+        _ = try #require(try empty.createTag(named: "home"))
+        #expect(!MyDayScreen(engine: empty.engine, filter: MyDayFilter(), now: clock.now).offersFilter)
+    }
+
+    @Test func aTagButNoReminderTodayHasNoFilterButtonUntilOneIsDue() async throws {
+        let model = try await launchedModel()
+        let home = try #require(try model.createTag(named: "home"))
+        model.add(Reminder(title: "Dentist", tagIDs: [home.id], dueTime: NewYork.local(2026, 10, 17, 9), strength: .gentle))
+        await model.waitUntilApplied()
+        func offers() -> Bool { MyDayScreen(engine: model.engine, filter: MyDayFilter(), now: clock.now).offersFilter }
+        #expect(!offers())
+
+        model.add(Reminder(title: "Stretch", dueTime: NewYork.local(2026, 10, 16, 15), strength: .gentle))
+        await model.waitUntilApplied()
+        #expect(offers())
+    }
+
+    @Test func aFilterThatLeavesNoRowsKeepsTheFilterButton() async throws {
+        let day = try await dayAtOnePM()
+        var filter = MyDayFilter()
+        filter.toggle(day.home.id)
+        filter.toggle(day.work.id)
+        filter.tap(.nudging)
+
+        let screen = MyDayScreen(engine: day.model.engine, filter: filter, now: clock.now)
+
+        #expect(screen.items.isEmpty)
+        #expect(screen.offersFilter)
+    }
+
     /// The mockup's filter tokens, one per chosen tag or "No Tags", and the line under them that
     /// says how they combine without naming them (ticket 20): "the selected tag" for one, from two
     /// on all or any by the Match setting, and "no tags" for No Tags.

@@ -41,6 +41,13 @@ struct MyDayFilter: Equatable {
         tags.clear()
     }
 
+    /// Called when the Filter button shows or goes. With the button gone the tags clear, so a filter
+    /// nobody can see doesn't narrow the list when reminders or tags come back. The chosen count is
+    /// the counts' own control and stays.
+    mutating func update(offersFilter: Bool) {
+        if !offersFilter { clearTags() }
+    }
+
     /// The filter without tags that no longer exist.
     func keeping(tagsIn existing: Set<Tag.ID>) -> MyDayFilter {
         var kept = self

@@ -387,7 +387,12 @@ except in the tab and navigation bars. Verify names against the mockup.
   sheet. If it doesn't fit beside the third row's only token, it takes a row of its own, so three
   tags still show. Under them a summary line says how the tags combine without naming them: "Due
   today with the selected tag" for one, "…all selected tags" or "…any selected tags" from two on,
-  "Due today with no tags" for No Tags. **Filter button:** `tag.filter` in the bar. While any tag (or No Tags) is chosen a tap
+  "Due today with no tags" for No Tags. **Filter button:** `tag.filter` in the bar, a glass circle of its own with New
+  Reminder apart from it (a fixed toolbar spacer, as on Reminders and Tags). It shows only while a
+  reminder is due today and at least one tag exists: with no tags the sheet would offer only No
+  Tags, which matches every row. When it goes, the tag filter clears (the chosen count stays), so a
+  filter nobody can see doesn't narrow the list when reminders or tags come back (spec #104,
+  Decision 56). While any tag (or No Tags) is chosen a tap
   shows a menu: Filter by Tags (`tag.filter`) opens the filter sheet, Clear All Tags (`tag.xmark`)
   removes every tag at once. With none chosen a tap opens the sheet. No long press: at the
   accessibility sizes the bar uses it for the Large Content Viewer.
