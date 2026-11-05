@@ -510,6 +510,80 @@ final class ShotsUITests: XCTestCase {
         assertListAtTop(below: field, after: "Cancel")
     }
 
+    /// The mockup's `tags-filter-*` and `tags-no-match-*` (#142): the Filter button without and with
+    /// its badge and its menu, the sheet, a clean draft closing and a changed one asking first, the
+    /// no-match state under the filter alone and with a search, and Reset. Every tag of the walk's
+    /// data has reminders, so the walk makes #spare for the filter to find.
+    func testTagsFilter() {
+        launch(.app)
+        tab("Tags")
+        shot("tags-filter-bar")
+        openFilter(titled: "Filter Tags")
+        shot("tags-filter-sheet")
+        swipeFilterDown(titled: "Filter Tags")
+        pause(1)
+        XCTAssertFalse(app.navigationBars["Filter Tags"].exists, "A swipe down on a clean draft didn't close the sheet")
+
+        openFilter(titled: "Filter Tags")
+        chooseInSheet("Has no reminders")
+        shot("tags-filter-chosen")
+        barTap { app.navigationBars["Filter Tags"].buttons.element(boundBy: 0).tap() }
+        XCTAssert(app.buttons["Discard Changes"].waitForExistence(timeout: 3), "Cancel didn't ask first:\n\(app.debugDescription)")
+        shot("tags-filter-discard")
+        keepEditing()
+        swipeFilterDown(titled: "Filter Tags")
+        pause(1)
+        XCTAssert(app.navigationBars["Filter Tags"].exists, "A swipe down lost a changed draft")
+
+        // Every tag has reminders: the filter alone leaves nothing.
+        applyFilter(titled: "Filter Tags")
+        assertTagCount(startsWith: "0 tags out of 7")
+        XCTAssertFalse(app.staticTexts["No Tags"].exists, "No Tags showed while tags exist")
+        XCTAssert(app.staticTexts["No tags with this filter."].exists, "The no-match state doesn't name the filter:\n\(app.debugDescription)")
+        shot("tags-no-match-filter")
+        remindersFilterButtons.firstMatch.tap()
+        XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
+        shot("tags-filter-menu")
+        app.buttons["Clear All Filters"].firstMatch.tap()
+        pause(0.5)
+        assertTagCount(startsWith: "7 tags out of 7")
+
+        openSheet("New Tag", title: "New Tag")
+        dismissKeyboardTip()
+        app.typeText("spare")
+        barTap { app.navigationBars["New Tag"].buttons["Done"].tap() }
+        pause(0.8)
+        openFilter(titled: "Filter Tags")
+        chooseInSheet("Has no reminders")
+        applyFilter(titled: "Filter Tags")
+        assertTagCount(startsWith: "1 tag out of 8")
+        shot("tags-filter-on")
+
+        // A search under the filter that finds nothing names both, and clears both.
+        let field = app.searchFields.firstMatch
+        field.tap()
+        field.typeText("zzz")
+        pause(0.5)
+        XCTAssert(app.staticTexts["No tags with this filter match this search."].exists, "The no-match state doesn't name the search and the filter:\n\(app.debugDescription)")
+        shot("tags-no-match-both")
+        guard let clear = scrollTo("Clear Search and Filter") else {
+            XCTFail("No Clear Search and Filter:\n\(app.debugDescription)")
+            return
+        }
+        clear.tap()
+        pause(0.8)
+        assertTagCount(startsWith: "8 tags out of 8")
+        shot("tags-filter-cleared")
+
+        // Reset clears the draft, and nothing changes until Apply.
+        openFilter(titled: "Filter Tags")
+        chooseInSheet("Has no reminders")
+        scrollTo("Reset")?.tap()
+        shot("tags-filter-reset")
+        applyFilter(titled: "Filter Tags")
+        assertTagCount(startsWith: "8 tags out of 8")
+    }
+
     private func assertTagCount(startsWith text: String, line: UInt = #line) {
         let count = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", text)).firstMatch
         XCTAssert(count.exists, "No count starting \(text):\n\(app.debugDescription)", line: line)
@@ -755,30 +829,44 @@ final class ShotsUITests: XCTestCase {
 
     /// The Reminders Filter button, and with filters on its menu, which also has an item named
     /// Filter: the button is the topmost.
+    /// The Filter button of Reminders and Tags, and with a filter on its menu's Filter item.
     private var remindersFilterButtons: XCUIElementQuery {
         app.buttons.matching(NSPredicate(format: "label == %@", "Filter"))
     }
 
     /// Opens the Reminders filter sheet: with filters on, through the menu's Filter.
     private func openRemindersFilter() {
+        openFilter(titled: "Filter Reminders")
+    }
+
+    /// Opens the tab's filter sheet: with a filter on, through the menu's Filter.
+    private func openFilter(titled title: String) {
         barTap {
             remindersFilterButtons.firstMatch.tap()
             if app.buttons["Clear All Filters"].waitForExistence(timeout: 2) {
                 remindersFilterButtons.allElementsBoundByIndex.max { $0.frame.minY < $1.frame.minY }?.tap()
             }
-            XCTAssert(app.navigationBars["Filter Reminders"].waitForExistence(timeout: 3), "No Filter Reminders sheet")
+            XCTAssert(app.navigationBars[title].waitForExistence(timeout: 3), "No \(title) sheet")
         }
     }
 
     private func applyRemindersFilter() {
-        barTap { app.navigationBars["Filter Reminders"].buttons["Apply"].tap() }
+        applyFilter(titled: "Filter Reminders")
+    }
+
+    private func applyFilter(titled title: String) {
+        barTap { app.navigationBars[title].buttons["Apply"].tap() }
         pause(0.5)
+    }
+
+    private func swipeRemindersFilterDown() {
+        swipeFilterDown(titled: "Filter Reminders")
     }
 
     /// A drag from the sheet's bar down most of the screen: `swipeDown()` on the bar is too short to
     /// close it.
-    private func swipeRemindersFilterDown() {
-        let bar = app.navigationBars["Filter Reminders"]
+    private func swipeFilterDown(titled title: String) {
+        let bar = app.navigationBars[title]
         let from = bar.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 0, dy: 600)), withVelocity: .fast, thenHoldForDuration: 0)
     }

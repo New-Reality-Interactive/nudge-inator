@@ -37,12 +37,22 @@ public struct TagListFilter: Equatable, Sendable {
         didSet { search = Self.trimmed(search) }
     }
 
-    public init(search: String = "") {
+    /// The filter sheet's one condition, about the tag itself: only tags no reminder uses (spec
+    /// #104, Decision 53).
+    public var hasNoReminders: Bool
+
+    public init(search: String = "", hasNoReminders: Bool = false) {
         self.search = Self.trimmed(search)
+        self.hasNoReminders = hasNoReminders
+    }
+
+    /// A tag matches when it passes the search and the condition.
+    func matches(_ summary: TagSummary) -> Bool {
+        (!hasNoReminders || summary.reminderCount == 0) && matchesSearch(summary.tag)
     }
 
     /// Ignores case and diacritics. Names are stored without the `#`, so "#home" finds "home".
-    func matches(_ tag: Tag) -> Bool {
+    private func matchesSearch(_ tag: Tag) -> Bool {
         var phrase = search
         if phrase.hasPrefix("#") { phrase.removeFirst() }
         phrase = Self.trimmed(phrase)
@@ -72,7 +82,7 @@ extension Engine {
         sortedBy sort: TagSort = .nameAToZ,
         filteredBy filter: TagListFilter = TagListFilter()
     ) -> TagList {
-        let byName = tagSummaries().filter { filter.matches($0.tag) }
+        let byName = tagSummaries().filter(filter.matches)
         let rows: [TagSummary] = switch sort.field {
         case .name:
             sort.order == .ascending ? byName : byName.reversed()

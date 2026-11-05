@@ -205,7 +205,7 @@
       }
     },
     "%lld filters on" : {
-      "comment" : "VoiceOver value of the Reminders tab's Filter button while the sheet's filters are on. The placeholder is how many of its sections are in use.",
+      "comment" : "VoiceOver value of the Filter button on Reminders and Tags while the sheet's filters are on. The placeholder is how many of its sections are in use.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -656,7 +656,7 @@
       "comment" : "A filter sheet: the Match choice that needs at least one checked tag."
     },
     "Apply" : {
-      "comment" : "Reminders' filter sheet's confirm button (a checkmark): applies the choices and closes the sheet."
+      "comment" : "A filter sheet's confirm button (a checkmark), on Reminders and Tags: applies the choices and closes the sheet."
     },
     "Apply shows %lld reminders." : {
       "comment" : "Reminders' filter sheet: above Reset. The placeholder is how many reminders the list would show with these filters and the search as it is.",
@@ -682,6 +682,39 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Apply shows %lld tags." : {
+      "comment" : "Tags' filter sheet: above Reset. The placeholder is how many tags the list would show with this filter and the search as it is.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apply shows %#@n@."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg tag"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg tags"
                     }
                   }
                 }
@@ -746,16 +779,22 @@
       "comment" : "My Day's filter sheet: removes every tag from the filter."
     },
     "Clear All Filters" : {
-      "comment" : "Reminders tab: the item in the Filter button's menu that removes every sheet filter, and leaves the search."
+      "comment" : "Reminders and Tags: the item in the Filter button's menu that removes every sheet filter, and leaves the search."
     },
     "Clear All Tags" : {
       "comment" : "My Day: the item in the Filter button's menu that removes every tag from the filter."
+    },
+    "Clear Filter" : {
+      "comment" : "Tags tab: the no-match empty state's button when the filter is narrowing the list."
     },
     "Clear Filters" : {
       "comment" : "Reminders tab: the no-match empty state's button that turns off what's narrowing the list."
     },
     "Clear Search" : {
       "comment" : "Reminders tab: the no-match empty state's button when only a search is narrowing the list.\nTags tab: the no-match empty state's button when a search is narrowing the list."
+    },
+    "Clear Search and Filter" : {
+      "comment" : "Tags tab: the no-match empty state's button when a search and the filter are narrowing the list."
     },
     "Clear Search and Filters" : {
       "comment" : "Reminders tab: the no-match empty state's button when a search and filters are narrowing the list."
@@ -1078,13 +1117,16 @@
       "comment" : "Tags tab's Sort menu, sorted by Reminders: the tag fewest reminders have at the top."
     },
     "Filter" : {
-      "comment" : "Reminders tab: the item in the Filter button's menu that opens the filter sheet.\nVoiceOver label of the Reminders tab's Filter button."
+      "comment" : "Reminders and Tags: the item in the Filter button's menu that opens the filter sheet.\nVoiceOver label of the Filter button on Reminders and Tags."
     },
     "Filter My Day" : {
       "comment" : "Title of My Day's tag filter sheet."
     },
     "Filter Reminders" : {
       "comment" : "Title of the Reminders tab's filter sheet."
+    },
+    "Filter Tags" : {
+      "comment" : "Title of the Tags tab's filter sheet."
     },
     "Filter by Tags" : {
       "comment" : "My Day: the item in the Filter button's menu that opens the filter.\nVoiceOver label of My Day's filter button."
@@ -1135,6 +1177,9 @@
           }
         }
       }
+    },
+    "Has no reminders" : {
+      "comment" : "Tags' filter sheet: the condition that shows only the tags no reminder uses."
     },
     "High nudges are Time Sensitive and Urgent nudges ring as alarms, so a Focus can't hold them." : {
       "comment" : "Under Break Through Focus when it's on and the strength is Firm."
@@ -1241,7 +1286,7 @@
       }
     },
     "No Matches" : {
-      "comment" : "Reminders tab: title when reminders exist but what's narrowing the list leaves none."
+      "comment" : "Reminders tab: title when reminders exist but what's narrowing the list leaves none.\nTags tab: title when tags exist but the filter leaves none."
     },
     "No Reminders" : {
       "comment" : "A tag's screen when no reminder has the tag.\nReminders tab: title when there are no reminders at all."
@@ -1266,6 +1311,12 @@
     },
     "No reminders with these filters." : {
       "comment" : "Reminders tab: under the title when the filter sheet's filters leave nothing."
+    },
+    "No tags with this filter match this search." : {
+      "comment" : "Tags tab: under the title when a search finds nothing under the filter sheet's filter."
+    },
+    "No tags with this filter." : {
+      "comment" : "Tags tab: under the title when the filter sheet's filter leaves nothing."
     },
     "No tags yet. Add one above." : {
       "comment" : "The Tags page's list when there are no tags."
@@ -1554,7 +1605,7 @@
       "comment" : "Reminder details, Schedule: how often the reminder comes due."
     },
     "Reset" : {
-      "comment" : "Reminders' filter sheet: clears the choices. Nothing changes until Apply."
+      "comment" : "A filter sheet, on Reminders and Tags: clears the choices. Nothing changes until Apply."
     },
     "Resume Reminder" : {
       "comment" : "Reminder details: brings a paused reminder back at its next time."
@@ -1620,6 +1671,9 @@
     },
     "Showing only Nudging" : {
       "comment" : "My Day: under the counts while Nudging is chosen."
+    },
+    "Shows only tags that no reminder uses." : {
+      "comment" : "Tags' filter sheet: under the Has no reminders condition."
     },
     "Shows reminders with any checked status." : {
       "comment" : "Reminders' filter sheet: under the list of statuses."

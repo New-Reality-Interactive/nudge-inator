@@ -1,12 +1,13 @@
 import SwiftUI
 
-/// The Filter button on Reminders, in the bar: as My Day's, an icon that turns accent-colored while
-/// the sheet's filters are on, with the system's badge showing how many of its sections are in use.
+/// The Filter button in the bar of Reminders and Tags: as My Day's, an icon that turns
+/// accent-colored while the sheet's filters are on, with the system's badge showing how many of its
+/// sections are in use (on Tags, 1 at most).
 ///
 /// While any is on a tap shows a menu, Filter and Clear All Filters; with none, it opens the sheet.
 /// At the accessibility text sizes there is no badge, as on My Day (`MyDayFilterButton` says why),
 /// and the VoiceOver value carries the count.
-struct RemindersFilterButton: View {
+struct FilterButton: View {
     /// How many of the sheet's sections are in use.
     let sectionsInUse: Int
     /// Whether the badge shows. The caller says, since inside a toolbar the Dynamic Type size is the
@@ -25,7 +26,7 @@ struct RemindersFilterButton: View {
             // As on My Day: the toolbar kept showing an old badge, so each count is its own button.
             .id(badgeCount)
             .tint(sectionsInUse > 0 ? Color.accentColor : nil)
-            .accessibilityLabel(Text("Filter", comment: "VoiceOver label of the Reminders tab's Filter button."))
+            .accessibilityLabel(Text("Filter", comment: "VoiceOver label of the Filter button on Reminders and Tags."))
             // The value, not the label: VoiceOver read a count in the label twice (My Day, ticket 19).
             .accessibilityValue(value)
     }
@@ -35,14 +36,14 @@ struct RemindersFilterButton: View {
             Menu {
                 Button(action: open) {
                     Label {
-                        Text("Filter", comment: "Reminders tab: the item in the Filter button's menu that opens the filter sheet.")
+                        Text("Filter", comment: "Reminders and Tags: the item in the Filter button's menu that opens the filter sheet.")
                     } icon: {
                         Image(systemName: Self.symbol)
                     }
                 }
                 Button(action: clear) {
                     Label {
-                        Text("Clear All Filters", comment: "Reminders tab: the item in the Filter button's menu that removes every sheet filter, and leaves the search.")
+                        Text("Clear All Filters", comment: "Reminders and Tags: the item in the Filter button's menu that removes every sheet filter, and leaves the search.")
                     } icon: {
                         Image(systemName: "xmark")
                     }
@@ -59,7 +60,7 @@ struct RemindersFilterButton: View {
 
     private var value: Text {
         if sectionsInUse > 0 {
-            Text("\(sectionsInUse) filters on", comment: "VoiceOver value of the Reminders tab's Filter button while the sheet's filters are on. The placeholder is how many of its sections are in use.")
+            Text("\(sectionsInUse) filters on", comment: "VoiceOver value of the Filter button on Reminders and Tags while the sheet's filters are on. The placeholder is how many of its sections are in use.")
         } else {
             Text(verbatim: "")
         }
@@ -68,7 +69,7 @@ struct RemindersFilterButton: View {
 
 #Preview("Filter button") {
     VStack(spacing: Design.Spacing.s3) {
-        RemindersFilterButton(sectionsInUse: 0, open: {}, clear: {})
-        RemindersFilterButton(sectionsInUse: 2, open: {}, clear: {})
+        FilterButton(sectionsInUse: 0, open: {}, clear: {})
+        FilterButton(sectionsInUse: 2, open: {}, clear: {})
     }
 }
