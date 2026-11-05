@@ -64,7 +64,7 @@ colors:
   tile-orange: '#C55300'
   tile-gray: '#6C6C70'
   tile-blue: '#1E6EF4'
-  # Swipe action tiles: Done green, Delete red (tile-red above).
+  # Swipe action tiles: Done green, Delete red and Edit blue (tile-red and tile-blue above).
   tile-green: '#008932'
 typography:
   # Platform text styles only. Sizes are at the default (Large) size and scale with Dynamic Type.
@@ -175,6 +175,8 @@ components:
     background: '{colors.tile-green}'
   swipe-delete:
     background: '{colors.tile-red}'
+  swipe-edit:
+    background: '{colors.tile-blue}'
   alarm-tint:
     stop-open-tint: '{colors.accent-dark}'
 ---
@@ -232,13 +234,14 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
   uses it.
 - **Neutral (gray)** marks **Normal urgency**, tags, strength badges and counts of 0.
 - **Badge (`{colors.badge}`)** is the Now tab's nudging count, My Day's Filter button's count of
-  tags chosen, and the Reminders Filter button's count of filter sheet sections in use, all as the
+  tags chosen, the Reminders Filter button's count of filter sheet sections in use, and the Tags
+  Filter button's 1 while its filter is on, all as the
   system draws them (red; SwiftUI can't recolor a Filter button's, and the app doesn't bridge to
   UIKit for it). A count of 0 shows no badge, so it is never red. At the accessibility text sizes
-  neither Filter button has a badge: on iOS 27 the system draws it at the text size, so it covers
+  no Filter button has a badge: on iOS 27 the system draws it at the text size, so it covers
   the icon. My Day's chosen-tag tokens and each button's VoiceOver label carry the count there.
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
-  actions are `{colors.tile-green}` (Done) and `{colors.tile-red}` (Delete). Settings rows: red (Notifications, Badges, Delete All Data), orange
+  actions are `{colors.tile-green}` (Done), `{colors.tile-red}` (Delete) and `{colors.tile-blue}` (Edit). Settings rows: red (Notifications, Badges, Delete All Data), orange
   (Alarms), gray (About, Open iOS Settings, Default Pace, How It Nudges, and About's Privacy Policy
   and Support), blue (Send a Test Nudge). Tiles are icons for rows, not
   statuses, so "one color, one meaning" does not apply to them.
@@ -333,7 +336,8 @@ except in the tab and navigation bars. Verify names against the mockup.
 | Use | Symbols |
 |---|---|
 | Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `magnifyingglass` and `xmark.circle.fill` (Search, drawn by the system), `tag.filter` (custom, in the asset catalog: the Tags tab's `tag` with a three-line filter badge at the lower right: Filter by Tags, the button and its menu item), `tag.xmark` (custom, in the asset catalog: the same `tag` with a × badge at the lower right: Clear All Tags, in the Filter button's menu), `line.3.horizontal.decrease` (the Reminders tab's Filter button and its Filter menu item; `xmark` is its Clear All Filters) |
-| Sort | `arrow.up.arrow.down` (the Reminders tab's Sort button, which opens the Sort menu) |
+| Sort | `arrow.up.arrow.down` (the Reminders and Tags tabs' Sort buttons, which open the Sort menu) |
+| Swipe | `pencil` (the Tags tab's Edit tile) |
 | Tabs | `bell` (Now), `calendar` (My Day), `list.bullet.clipboard` (Reminders), `tag` (Tags), `gearshape` (Settings) |
 | Urgency | `arrow.up` (High), `alarm` (Urgent) |
 | Status | `checkmark.circle.fill` (Done), `bell.slash`, `clock`, `exclamationmark.triangle`, `lock` (a field locked while nudging, always beside its reason as text) |
@@ -440,6 +444,35 @@ except in the tab and navigation bars. Verify names against the mockup.
   `magnifyingglass` or `line.3.horizontal.decrease`, a title, a line naming what's narrowing the
   list, and a bordered Clear button. The header row stays above it.
 
+### Tags tab
+The Reminders tab's tools, in its layout, so they're learned once.
+- **Search:** the system's search field, always shown under the large title while a tag exists, with the
+  prompt "Search tags". It finds the tag's name only and ignores a leading `#`. The Reminders tab's
+  known difference on iOS 27.0 applies.
+- **Header row:** as on Reminders, in place of a "Your Tags" header: "9 tags out of 9", "1 tag out of 9".
+- **Bar:** Filter and Sort share one glass group and New Tag stands apart, as on Reminders. There's no
+  Edit button and there are no quick filter chips. With no tags, only New Tag. The bar stays during
+  a search.
+- **Sort button:** as on Reminders. Its menu has a section headed Name (A to Z, Z to A) and one headed
+  Reminders (Most First, Fewest First). Ties on the count sort by name, A to Z, either way round.
+- **Filter button:** as on Reminders, with a badge of 1 or none. Its menu is Filter and Clear All Filters.
+- **Filter sheet ("Filter Tags"):** as on Reminders: Cancel, the confirm `checkmark` (VoiceOver name
+  Apply), Reset at the bottom and the Discard Changes prompt. One row, Has no reminders, with the
+  footer "Shows only tags that no reminder uses." and what Apply would show.
+- **Rows:** the tag tile, name and counts, with content at least 48 pt tall for the swipe (Swipe
+  actions). A tap opens the tag's reminders. A row that leaves, after a delete or when the filter
+  excludes it, fades as its height closes up, and the count follows.
+- **Help text:** static, not a dismissible tip, for a person new to tags. The list's footer, in
+  `{typography.footnote}` and wrapping at large text and in landscape: "Tags are labels you add to
+  reminders. Choose one to see every reminder that has it." The no-tags description: "Tags are labels, like #home or #errands, that you add
+  to reminders so you can find them together. Tap + to make one, or add one when you create or edit
+  a reminder."
+- **Empty states:** `ContentUnavailableView`. With no tags: `tag`, "No Tags", the help text and no
+  button, since + is in the bar. When search or the filter match nothing: `magnifyingglass` or
+  `line.3.horizontal.decrease`, a title, a line naming what's narrowing the list and a bordered
+  Clear button (Clear Search, Clear Filter, Clear Search and Filter), with no help text. The header
+  row stays above it.
+
 ### How It Nudges
 - **Token:** `how-it-nudges`. Inset grouped list, summary in the section footer, `{typography.footnote}`
   rows. Each row leads with a small urgency dot, then urgency word, time range and Via label.
@@ -473,24 +506,30 @@ except in the tab and navigation bars. Verify names against the mockup.
   listed under Colors.
 
 ### Swipe actions
-- **Token:** `swipe-done`, `swipe-delete`. Trailing swipe shows Done: green tile, white `checkmark`
-  and the word "Done". On the Reminders tab, Delete sits beside it: red tile, white `trash` and the
-  word "Delete". Done is offered only while Nudging, at the edge; a row that isn't Nudging shows
-  Delete alone. Delete asks first. Nothing is on the leading edge, there's no full swipe (ADR 0001),
-  and each tile always shows its glyph and its word. There is no Snooze.
-- **Shape:** a tile is the same 50 pt circle on every screen. The system draws it from the row's
+- **Token:** `swipe-done`, `swipe-delete`, `swipe-edit`. Trailing swipe shows Done: green tile, white
+  `checkmark` and the word "Done". On the Reminders tab, Delete sits beside it: red tile, white
+  `trash` and the word "Delete". Done is offered only while Nudging, at the edge; a row that isn't
+  Nudging shows Delete alone. On the Tags tab, Edit is at the edge with Delete beside it: blue tile,
+  white `pencil` and the word "Edit", which opens the rename sheet. Delete asks first. Nothing is on
+  the leading edge, there's no full swipe (ADR 0001), and each tile always shows its glyph and its
+  word. There is no Snooze.
+- **Shape:** a tile is the same 50 pt circle on every screen, holding the white glyph, with the word
+  under it in `{colors.secondary-label}` and the swiped row gray with rounded ends, all as the system
+  draws them. The system draws the tile from the row's
   height: a circle on a row of at least 78 pt, a wider oval on a shorter one. Apple doesn't document
   this; it was measured on iOS 26.5 and 27.0 (#126). So a list row with a swipe has content at
   least 48 pt tall (`Design.Size.swipeRowContentHeight`), which makes 78 pt with the list's padding.
   This is why Reminders rows are taller than the 44 pt `{spacing.row-min}`.
 - **Where each swipe appears:** a Nudging row offers Done as a trailing swipe on every screen it
   appears on (Now, My Day and Reminders), and Done means the same on each. Delete's swipe is on
-  the Reminders tab only, where reminders are managed; Now and My Day are for acting on the day,
-  so a destructive swipe never sits beside Done there. On those two screens a row that isn't
-  Nudging (Coming up, Last 24 Hours, closed) has no swipe.
+  the Reminders and Tags tabs, where reminders and tags are managed, and Edit's is on Tags. Now and
+  My Day are for acting on the day, so a destructive swipe never sits beside Done there. On those
+  two screens a row that isn't Nudging (Coming up, Last 24 Hours, closed) has no swipe.
 - **A swipe is a shortcut,** never the only way: Done is also the Done button on Now and My Day and
   on the details page, Delete is also on the details page, and VoiceOver gets both as the row's own
-  actions. A new screen that adds swipes follows this section.
+  actions. A new screen that adds swipes follows this section. **The exception is a tag:** its Edit
+  and Delete are reachable by the swipe and by VoiceOver actions only, since the Tags tab has no Edit
+  mode (spec #104, Decision 50).
 
 ### Alarm
 - **Token:** `alarm-tint`. iOS draws everything except the title, the secondary **Open** button and
