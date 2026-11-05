@@ -17,6 +17,9 @@ struct MyDayTab: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var filter = MyDayFilter()
     @State private var isFiltering = false
+    /// Whether the Filter button shows, from the screen read each minute, since the bar sits outside
+    /// that read.
+    @State private var offersFilter = false
 
     var body: some View {
         // In compact height (landscape) the date moves into the bar as the title's subtitle, as in
@@ -37,19 +40,28 @@ struct MyDayTab: View {
                         openDetails: { path.append(OpenedReminder(id: $0)) },
                         markDone: { model?.markDone($0) }
                     )
+                    .onChange(of: screen.offersFilter, initial: true) { _, offers in offersFilter = offers }
                 }
             }
+            // With the button gone (an empty day at midnight, the last tag deleted) the tag filter
+            // goes too.
+            .onChange(of: offersFilter) { filter.update(offersFilter: offersFilter) }
             .navigationTitle(Text(AppTab.myDay.title))
             .navigationSubtitle(compact ? todayText(.now) : Text(verbatim: ""))
             .reminderDetailsDestination()
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    MyDayFilterButton(
-                        chosen: checkedCount,
-                        showsBadge: !dynamicTypeSize.isAccessibilitySize,
-                        open: { isFiltering = true },
-                        clear: { filter.clearTags() }
-                    )
+                if offersFilter, state == .ready {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        MyDayFilterButton(
+                            chosen: checkedCount,
+                            showsBadge: !dynamicTypeSize.isAccessibilitySize,
+                            open: { isFiltering = true },
+                            clear: { filter.clearTags() }
+                        )
+                    }
+                    // The Filter button is a glass group of its own and New stands apart, as on
+                    // Reminders and Tags (Decision 56).
+                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
                 }
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
             }
