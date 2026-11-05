@@ -41,7 +41,7 @@ struct TagsTab: View {
             .toolbar {
                 if engine?.tags.isEmpty == false {
                     ToolbarItem(placement: .topBarTrailing) {
-                        TagsSortButton(sort: sort.transaction(Self.noAnimation))
+                        TagsSortButton(sort: sort)
                     }
                     // New Tag stands apart, as New does on Reminders (Decision 49).
                     ToolbarSpacer(.fixed, placement: .topBarTrailing)
@@ -79,13 +79,6 @@ struct TagsTab: View {
             $previewSort
         }
     }
-
-    /// A Sort choice redraws the list at once, as on Reminders. Only a row a delete takes out animates.
-    private static let noAnimation = {
-        var transaction = Transaction()
-        transaction.disablesAnimations = true
-        return transaction
-    }()
 
     private var emptyState: some View {
         ContentUnavailableView {

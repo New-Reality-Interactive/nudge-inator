@@ -23,8 +23,8 @@ struct TagsList: View {
                 Text("Tags are labels you add to reminders. Choose one to see every reminder that has it.", comment: "Tags: under the list.")
             }
         }
-        // A row a delete takes out animates. A Sort choice redraws at once: its binding's transaction
-        // disables this.
+        // A row a delete takes out animates, and a Sort choice slides the rows to their new places
+        // (Brian, on the iPhone, #140).
         .animation(reduceMotion ? nil : .default, value: screen.rows.map(\.tag.id))
     }
 }
