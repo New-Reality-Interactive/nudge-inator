@@ -24,7 +24,7 @@ jobs:
   checks:
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # The newest Xcode on the runner; the project builds with 27.x, which the image may not have yet.
       - name: Select the newest Xcode
         run: |
