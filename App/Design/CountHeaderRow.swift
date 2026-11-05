@@ -4,8 +4,8 @@ import SwiftUI
 /// size and orientation.
 struct CountHeaderRow: View {
     let count: LocalizedStringResource
-    /// Lets the Reminders tab put VoiceOver on the count, which reads the new result when the control
-    /// that changed it (Clear Filters) has left the screen. Tags leaves focus to iOS (#139's Comments).
+    /// Lets a tab put VoiceOver on the count, which reads the new result when the control that changed
+    /// it (Clear Filters) has left the screen. After a delete, Tags leaves focus to iOS (#139's Comments).
     var countFocus: AccessibilityFocusState<Bool>.Binding?
 
     var body: some View {

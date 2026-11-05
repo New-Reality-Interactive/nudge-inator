@@ -28,7 +28,33 @@ public struct TagSort: Equatable, Sendable {
     public static let nameAToZ = TagSort(field: .name, order: .ascending)
 }
 
-/// The Tags tab's list: the tags shown, in the Sort menu's order.
+/// What the Tags tab's list is narrowed by. Nothing chosen narrows nothing.
+public struct TagListFilter: Equatable, Sendable {
+    /// The phrase a tag's name must contain, as typed without leading or trailing whitespace, so a
+    /// space typed after a word doesn't change the filter, and the no-match state can name it. A
+    /// leading `#` stays here and isn't searched for. Empty narrows nothing.
+    public var search: String {
+        didSet { search = Self.trimmed(search) }
+    }
+
+    public init(search: String = "") {
+        self.search = Self.trimmed(search)
+    }
+
+    /// Ignores case and diacritics. Names are stored without the `#`, so "#home" finds "home".
+    func matches(_ tag: Tag) -> Bool {
+        var phrase = search
+        if phrase.hasPrefix("#") { phrase.removeFirst() }
+        phrase = Self.trimmed(phrase)
+        return phrase.isEmpty || tag.name.localizedStandardContains(phrase)
+    }
+
+    private static func trimmed(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
+/// The Tags tab's list: the tags `filter` matches, in the Sort menu's order.
 public struct TagList: Equatable, Sendable {
     public var rows: [TagSummary]
     /// Every tag the engine holds, the header row's "out of" number, however few are shown.
@@ -40,9 +66,13 @@ public struct TagList: Equatable, Sendable {
 
 extension Engine {
     /// The Tags tab's list as it stands now, in `sort`'s order. Tags with the same reminder count
-    /// sort by name, A to Z, under both orders (spec #104, Decision 43).
-    public func tagList(sortedBy sort: TagSort = .nameAToZ) -> TagList {
-        let byName = tagSummaries()
+    /// sort by name, A to Z, under both orders (spec #104, Decision 43). Only tags `filter` matches
+    /// are listed.
+    public func tagList(
+        sortedBy sort: TagSort = .nameAToZ,
+        filteredBy filter: TagListFilter = TagListFilter()
+    ) -> TagList {
+        let byName = tagSummaries().filter { filter.matches($0.tag) }
         let rows: [TagSummary] = switch sort.field {
         case .name:
             sort.order == .ascending ? byName : byName.reversed()

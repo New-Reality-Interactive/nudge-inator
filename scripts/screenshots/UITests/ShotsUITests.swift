@@ -459,6 +459,62 @@ final class ShotsUITests: XCTestCase {
         shot("tags-sort-menu-fewest")
     }
 
+    /// The mockup's `tags-search-*` and `tags-no-match-search` (#141): the field under the title, the
+    /// bar during a search, a leading `#`, the no-match state and its Clear Search, the search kept
+    /// going into a tag and back, and Cancel ending the search in one tap.
+    func testTagsSearch() {
+        launch(.app)
+        tab("Tags")
+        shot("tags-search-empty")
+        let field = app.searchFields.firstMatch
+        XCTAssert(field.waitForExistence(timeout: 5), "No search field:\n\(app.debugDescription)")
+        field.tap()
+        field.typeText("#ho")
+        pause(0.5)
+        XCTAssert(app.buttons["Sort"].firstMatch.isHittable, "The bar's Sort button left during a search:\n\(app.debugDescription)")
+        XCTAssert(app.buttons["New Tag"].firstMatch.isHittable, "The bar's New Tag button left during a search:\n\(app.debugDescription)")
+        assertTagCount(startsWith: "1 tag out of ")
+        shot("tags-search")
+        field.typeText("zzz")
+        pause(0.5)
+        assertTagCount(startsWith: "0 tags out of ")
+        XCTAssertFalse(app.staticTexts["No Tags"].exists, "No Tags showed while tags exist")
+        shot("tags-no-match-search")
+        let clearSearch = app.buttons["Clear Search"].firstMatch
+        XCTAssert(clearSearch.exists, "No Clear Search:\n\(app.debugDescription)")
+        clearSearch.tap()
+        pause(0.8)
+        shot("tags-search-cleared")
+        assertListAtTop(below: field, after: "Clear Search")
+        assertTagCount(startsWith: "7 tags out of 7")
+        XCTAssertFalse(app.keyboards.firstMatch.exists, "Clear Search left the keyboard up")
+        // Going into a tag and back keeps the search.
+        field.tap()
+        field.typeText("home")
+        pause(0.5)
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "#home")).firstMatch.tap()
+        pause(0.8)
+        back()
+        XCTAssertEqual(field.value as? String, "home", "Back from a tag lost the search")
+        assertTagCount(startsWith: "1 tag out of ")
+        shot("tags-search-back")
+        // Cancel ends the search in one tap and returns the list as it was.
+        let cancel = app.buttons.matching(NSPredicate(format: "label ==[c] %@ OR label ==[c] %@", "cancel", "close")).firstMatch
+        XCTAssert(cancel.exists, "No Cancel after Back from a tag:\n\(app.debugDescription)")
+        cancel.tap()
+        pause(1)
+        shot("tags-search-closed")
+        XCTAssertFalse(app.keyboards.firstMatch.exists, "One tap on Cancel left the keyboard up")
+        XCTAssertFalse(cancel.exists, "One tap on Cancel left the search open")
+        assertTagCount(startsWith: "7 tags out of 7")
+        assertListAtTop(below: field, after: "Cancel")
+    }
+
+    private func assertTagCount(startsWith text: String, line: UInt = #line) {
+        let count = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", text)).firstMatch
+        XCTAssert(count.exists, "No count starting \(text):\n\(app.debugDescription)", line: line)
+    }
+
     /// The mockup's `tags-swipe`, `tags-delete` and the no-tags empty state (#139): Edit and Delete
     /// on the trailing swipe, nothing on the leading one, the rename sheet, the Delete question
     /// cancelled and then confirmed, and Back returning to the list where it was.

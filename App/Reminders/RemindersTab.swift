@@ -55,7 +55,7 @@ struct RemindersTab: View {
                             filter: filter,
                             countFocusRequests: countFocusRequests,
                             clearFilters: {
-                                // Focus goes to the count, which reads the result itself.
+                                // Asks VoiceOver to go to the count; iOS picks where it lands (SearchResultsContainer).
                                 searchText = ""
                                 choices = RemindersFilterChoices()
                             },
@@ -68,7 +68,11 @@ struct RemindersTab: View {
                     }
                 }
             }
-            .modifier(RemindersSearchField(isShown: hasReminders, text: searchField))
+            .modifier(ListSearchField(
+                isShown: hasReminders,
+                text: searchField,
+                prompt: Text("Search titles and notes", comment: "Reminders tab: the search field's prompt.")
+            ))
             .navigationTitle(Text(AppTab.reminders.title))
             .reminderDetailsDestination()
             .toolbar {
@@ -195,28 +199,6 @@ struct RemindersTab: View {
     }
 }
 
-/// The search field under the title, while there's anything to search: the no-reminders empty state
-/// has none, as the mockup draws it. The bar stays during a search, so its Filter button and badge
-/// still say the sheet's filters are on (Brian's call, #113).
-private struct RemindersSearchField: ViewModifier {
-    let isShown: Bool
-    @Binding var text: String
-
-    func body(content: Content) -> some View {
-        if isShown {
-            content
-                .searchable(
-                    text: $text,
-                    placement: .navigationBarDrawer(displayMode: .always),
-                    prompt: Text("Search titles and notes", comment: "Reminders tab: the search field's prompt.")
-                )
-                .searchPresentationToolbarBehavior(.avoidHidingContent)
-        } else {
-            content
-        }
-    }
-}
-
 private struct RemindersListView: View {
     let screen: RemindersScreen
     let filter: RemindersFilter
@@ -228,72 +210,40 @@ private struct RemindersListView: View {
     let delete: (Reminder.ID) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.dismissSearch) private var dismissSearch
-    @Environment(\.isSearching) private var isSearching
     @AccessibilityFocusState private var countFocused: Bool
-    /// Each clear button's tap makes a new list, which starts at its top.
-    @State private var listIdentity = 0
-    /// A clear button was tapped during a search, so the new list waits for that search to end.
-    @State private var isClearing = false
 
     var body: some View {
-        List {
-            Section {
-                ForEach(screen.rows) { row in
-                    RemindersRowView(
-                        row: row,
-                        openDetails: { openDetails(row.id) },
-                        markDone: { markDone(row.id) },
-                        delete: { delete(row.id) }
-                    )
-                }
-                if screen.emptyState == .noMatch {
-                    RemindersNoMatchView(filter: filter) {
-                        clearFilters()
-                        // Where the keyboard or large text meant scrolling to the button, the rows
-                        // come back with the count off screen otherwise. A new list rather than
-                        // `scrollTo`: at the accessibility sizes, no anchor reached the top (#135).
-                        // During a search it waits for the search to end, and the title's return.
-                        if isSearching { isClearing = true } else { makeNewList() }
-                        // Ends the search too, if it's still active, so Cancel and the keyboard go with its text.
-                        dismissSearch()
-                        countFocused = true
+        SearchResultsContainer(countFocus: $countFocused) { didClear in
+            List {
+                Section {
+                    ForEach(screen.rows) { row in
+                        RemindersRowView(
+                            row: row,
+                            openDetails: { openDetails(row.id) },
+                            markDone: { markDone(row.id) },
+                            delete: { delete(row.id) }
+                        )
                     }
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
+                    if screen.emptyState == .noMatch {
+                        RemindersNoMatchView(filter: filter) {
+                            clearFilters()
+                            didClear()
+                        }
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                    }
+                } header: {
+                    // Above the rows' group, not in a cell, as the mockup draws it. It stays above the
+                    // no-match empty state.
+                    CountHeaderRow(count: screen.countText, countFocus: $countFocused)
+                        .textCase(nil)
                 }
-            } header: {
-                // Above the rows' group, not in a cell, as the mockup draws it. It stays above the
-                // no-match empty state.
-                CountHeaderRow(count: screen.countText, countFocus: $countFocused)
-                    .textCase(nil)
             }
-        }
-        .id(listIdentity)
-        .transition(.identity)
-        // Cancel moves VoiceOver to the bar's New button, which cut the count's announcement off (seen
-        // on the iPhone in #112), so it goes to the count, as Clear Search does.
-        .onChange(of: isSearching) {
-            guard !isSearching else { return }
-            if isClearing {
-                isClearing = false
-                makeNewList()
-            }
-            countFocused = true
         }
         .onChange(of: countFocusRequests) { countFocused = true }
         // By the rows, not `withAnimation` around Done and Delete: a row can also leave on the
         // minute, when the clock alone takes it out of the filter.
         .animation(reduceMotion ? nil : .default, value: screen.rows.map(\.id))
-    }
-
-    /// With no animation or transition, so the rows are simply there, as a filter redraws them.
-    /// Animated, UI tests waited out "animations complete" timeouts on iOS 26.5 too. On iOS 27.0 some
-    /// runs still do, with the app idle and nothing wrong on the iPhone (#135's Comments).
-    private func makeNewList() {
-        var transaction = Transaction()
-        transaction.disablesAnimations = true
-        withTransaction(transaction) { listIdentity += 1 }
     }
 }
 

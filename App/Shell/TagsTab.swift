@@ -1,8 +1,9 @@
 import NudgeEngine
 import SwiftUI
 
-/// Tags: your tags with their counts, in the Sort menu's order, + to add one, and a swipe to edit or
-/// delete one. A tag opens its reminders. The sheet lives here, so it survives a redraw of the list.
+/// Tags: your tags with their counts, in the Sort menu's order, a search by name, + to add one, and
+/// a swipe to edit or delete one. A tag opens its reminders. The sheet lives here, so it survives a
+/// redraw of the list. The search is screen state, so a launch resets it and Back from a tag keeps it.
 struct TagsTab: View {
     let state: ScreenState
     /// A tag's screen, and the reminders pushed from it.
@@ -15,13 +16,19 @@ struct TagsTab: View {
     @State private var sheet: TagSheetKind?
     /// The sort previews show, since they have no app model to keep it.
     @State private var previewSort = TagSort.nameAToZ
+    /// What's in the search field, spaces included. `filter` holds it trimmed, so a space typed after
+    /// a word doesn't change the list.
+    @State private var searchText = ""
 
     var body: some View {
         NavigationStack(path: $path) {
             TabScreen(state: state) {
-                if let engine, !engine.tags.isEmpty {
+                let screen = engine.map { TagsScreen(engine: $0, sort: sort.wrappedValue, filter: filter) }
+                if let screen, screen.emptyState != .noTags {
                     TagsList(
-                        screen: TagsScreen(engine: engine, sort: sort.wrappedValue),
+                        screen: screen,
+                        filter: filter,
+                        clearSearch: { searchText = "" },
                         rename: { sheet = .rename($0) },
                         delete: { model?.deleteTag($0.tag.id) }
                     )
@@ -34,12 +41,19 @@ struct TagsTab: View {
                 }
             }
             // Here as well as on the list's rows: the last tag's delete swaps the list for the empty state.
-            .animation(reduceMotion ? nil : .default, value: engine?.tags.isEmpty)
+            .animation(reduceMotion ? nil : .default, value: hasTags)
+            .modifier(ListSearchField(
+                isShown: hasTags,
+                text: $searchText,
+                prompt: Text("Search tags", comment: "Tags tab: the search field's prompt.")
+            ))
+            // The field goes with the last tag, and an old search mustn't hide the next tag made.
+            .onChange(of: hasTags) { if !hasTags { searchText = "" } }
             .navigationTitle(Text(AppTab.tags.title))
             .navigationDestination(for: OpenedTag.self) { TagRemindersView(tagID: $0.id, previewEngine: previewEngine) }
             .reminderDetailsDestination()
             .toolbar {
-                if engine?.tags.isEmpty == false {
+                if hasTags {
                     ToolbarItem(placement: .topBarTrailing) {
                         TagsSortButton(sort: sort)
                     }
@@ -69,6 +83,14 @@ struct TagsTab: View {
 
     private var engine: Engine? {
         model?.engine ?? previewEngine
+    }
+
+    private var hasTags: Bool {
+        engine?.tags.isEmpty == false
+    }
+
+    private var filter: TagListFilter {
+        TagListFilter(search: searchText)
     }
 
     /// The model's, which outlives a relaunch, or the previews' own.

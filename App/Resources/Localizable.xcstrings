@@ -728,7 +728,7 @@
       "comment" : "A filter sheet: under the tags when fewer than two are checked. It says why the Match choice above them is dimmed."
     },
     "Check the spelling or try a new search." : {
-      "comment" : "Reminders tab: under the title when a search alone finds nothing."
+      "comment" : "Reminders tab: under the title when a search alone finds nothing.\nTags tab: under the title when a search finds nothing."
     },
     "Choose Time" : {
       "comment" : "Opens the Edit Reminder form to choose a new time, so the reminder can resume."
@@ -755,7 +755,7 @@
       "comment" : "Reminders tab: the no-match empty state's button that turns off what's narrowing the list."
     },
     "Clear Search" : {
-      "comment" : "Reminders tab: the no-match empty state's button when only a search is narrowing the list."
+      "comment" : "Reminders tab: the no-match empty state's button when only a search is narrowing the list.\nTags tab: the no-match empty state's button when a search is narrowing the list."
     },
     "Clear Search and Filters" : {
       "comment" : "Reminders tab: the no-match empty state's button when a search and filters are narrowing the list."
@@ -1247,7 +1247,7 @@
       "comment" : "A tag's screen when no reminder has the tag.\nReminders tab: title when there are no reminders at all."
     },
     "No Results for “%@”" : {
-      "comment" : "Reminders tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces."
+      "comment" : "Reminders tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces.\nTags tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces."
     },
     "No Tags" : {
       "comment" : "A filter sheet: the row that shows only reminders without tags.\nMy Day: the filter token that shows only reminders without tags.\nTags: title when there are no tags yet."
@@ -1567,6 +1567,9 @@
     },
     "Schedule" : {
       "comment" : "Reminder details: section header for when and how the reminder nudges."
+    },
+    "Search tags" : {
+      "comment" : "Tags tab: the search field's prompt."
     },
     "Search titles and notes" : {
       "comment" : "Reminders tab: the search field's prompt."
