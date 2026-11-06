@@ -26,6 +26,7 @@ When a feature's last ticket is resolved and merged, it's released, in this orde
 
 1. **Release PR.** The agent opens one that:
    - adds the version mockup, `docs/mockups/<version>/` (such as `1.2.0`): copied from the latest version mockup, as the template's README says, drawing the app as built at that version with working mockup controls. It's checked against the app with the screenshot walk (`docs/agents/device-testing.md`, Simulator screenshots) for the screens the release changed (`SHOTS_TESTS`), on both simulators, in portrait and the largest text size, and in landscape on iOS 27.0; the whole walk is only for a mockup first lined up with the app;
+   - runs the right-to-left pass once, last, after every other change in it: the whole walk with `SHOTS_VARIANTS=rtl` on both simulators (`docs/agents/device-testing.md`, Simulator screenshots, says what to look for). The PR lists what it found. A finding is fixed before the release, or the developer agrees to leave it, and the agent drafts a ticket for them to file. A feature that has its own ticket for the pass, as 1.3.0 does (#122), records the run there, and the release PR links it;
    - deletes the change mockups the version mockup takes in;
    - sets `MARKETING_VERSION` in `project.yml`, and the version `BuiltBundleTests` pins;
    - adds the TestFlight build's What to Test note to `docs/release-notes/` and passes a trial archive (`docs/agents/device-testing.md`, Archive and upload).
