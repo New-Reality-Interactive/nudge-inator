@@ -54,11 +54,8 @@ struct RemindersTab: View {
                             screen: screen,
                             filter: filter,
                             countFocusRequests: countFocusRequests,
-                            clearFilters: {
-                                // Asks VoiceOver to go to the count; iOS picks where it lands (SearchResultsContainer).
-                                searchText = ""
-                                choices = RemindersFilterChoices()
-                            },
+                            // Asks VoiceOver to go to the count; iOS picks where it lands (SearchResultsContainer).
+                            clearFilters: clearSearchAndFilter,
                             openDetails: { path.append(OpenedReminder(id: $0)) },
                             markDone: { model?.markDone($0) },
                             delete: { model?.delete($0) }
@@ -73,6 +70,11 @@ struct RemindersTab: View {
                 text: searchField,
                 prompt: Text("Search titles and notes", comment: "Reminders tab: the search field's prompt.")
             ))
+            // The field and the Filter button go with the last reminder, and an old search or filter
+            // mustn't hide the next one made. The sort stays: it persists by design.
+            .onChange(of: hasReminders) {
+                if !hasReminders { clearSearchAndFilter() }
+            }
             .navigationTitle(Text(AppTab.reminders.title))
             .reminderDetailsDestination()
             .toolbar {
@@ -137,6 +139,11 @@ struct RemindersTab: View {
     /// What narrows the list: the sheet's filters and the search, together.
     private var filter: RemindersFilter {
         appliedChoices.narrowing(search: searchText)
+    }
+
+    private func clearSearchAndFilter() {
+        searchText = ""
+        choices = RemindersFilterChoices()
     }
 
     /// Apply and Clear All Filters: the list redraws at once. The search stays as it is.
