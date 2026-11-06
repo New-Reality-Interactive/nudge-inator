@@ -446,7 +446,8 @@ except in the tab and navigation bars. Verify names against the mockup.
   Strength are checkmark lists. Due Date has From and To, each a switch with a date pill beside it
   while on. The footer counts what Apply would show.
 - **Empty states:** `ContentUnavailableView`. With no reminders: `list.bullet.clipboard`, "No
-  Reminders Yet" and a bordered New Reminder button. When search or filters match nothing:
+  Reminders" and the line "Tap + to make one. Every reminder you make shows here, whatever its
+  state." There is no button: New is in the bar (spec #104, Decision 62). When search or filters match nothing:
   `magnifyingglass` or `line.3.horizontal.decrease`, a title, a line naming what's narrowing the
   list, and a bordered Clear button. The header row stays above it.
 
