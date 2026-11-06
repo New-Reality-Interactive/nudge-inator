@@ -187,6 +187,36 @@ struct RemindersScreenTests {
         #expect(screen.emptyState == .noReminders)
     }
 
+    /// With no reminders there's no search field or Filter button, but a search or filter left over
+    /// from before the last reminder went must still read as no reminders, not as no match.
+    @Test func withNoRemindersASearchAndAFilterAreStillNoReminders() async throws {
+        let model = try await fixture.launchedModel()
+
+        let screen = RemindersScreen(
+            engine: model.engine,
+            filter: RemindersFilter(statuses: [.nudging], search: "zebra")
+        )
+
+        #expect(screen.emptyState == .noReminders)
+    }
+
+    /// A leftover search and filter would hide the first reminder added after the last went, and the
+    /// empty one shows it. That the tab clears them when the last reminder goes is `RemindersTab`'s
+    /// `onChange`, which no unit test reaches: the screenshot walk `testRemindersAfterTheLastDelete`
+    /// checks it.
+    @Test func aLeftOverFilterHidesTheFirstReminderAddedAfterTheLastWentAndAnEmptyOneShowsIt() async throws {
+        let model = try await fixture.launchedModel()
+        let leftOver = RemindersFilter(statuses: [.missed], search: "zebra")
+
+        model.add(Reminder(title: "Renew the passport", dueTime: NewYork.local(2026, 10, 30), strength: .gentle))
+
+        let hidden = RemindersScreen(engine: model.engine, filter: leftOver)
+        #expect(hidden.emptyState == .noMatch)
+        let shown = RemindersScreen(engine: model.engine, filter: RemindersFilter())
+        #expect(shown.rows.map(\.title) == ["Renew the passport"])
+        #expect(shown.emptyState == nil)
+    }
+
     @Test func theCountEqualsTheRowsShownUnderAStatus() async throws {
         let day = try await fixture.dayAtOnePM()
 

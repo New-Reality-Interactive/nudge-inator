@@ -722,6 +722,47 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-empty")
     }
 
+    /// Adds a reminder through the New Reminder form.
+    private func addReminder(titled title: String) {
+        openSheet("New Reminder", title: "New Reminder")
+        dismissKeyboardTip()
+        let field = app.textFields.firstMatch
+        XCTAssert(field.waitForExistence(timeout: 3), "No title field")
+        field.tap()
+        field.typeText(title)
+        hideKeyboard()
+        let add = app.buttons["Add"].firstMatch
+        XCTAssert(add.waitForExistence(timeout: 3), "No Add button")
+        add.tap()
+        pause(1)
+    }
+
+    /// `reminders-after-last-delete` (#249): with a search typed, the last reminder is deleted and
+    /// the empty state shows. A reminder added afterwards shows, though it doesn't match the old
+    /// search.
+    func testRemindersAfterTheLastDelete() {
+        launch(.noReminders)
+        addReminder(titled: "Zebra")
+        tab("Reminders")
+        let field = app.searchFields.firstMatch
+        XCTAssert(field.waitForExistence(timeout: 3), "No search field")
+        field.tap()
+        field.typeText("Zebra")
+        hideKeyboard()
+        swipe("Zebra")
+        app.buttons["Delete"].firstMatch.tap()
+        let confirm = app.buttons["Delete Reminder"].firstMatch
+        XCTAssert(confirm.waitForExistence(timeout: 3), "No Delete Reminder button")
+        confirm.tap()
+        pause(1)
+        XCTAssert(app.staticTexts["No Reminders"].waitForExistence(timeout: 3), "No empty state after the last delete")
+        shot("reminders-after-last-delete")
+        addReminder(titled: "Apple")
+        tab("Reminders")
+        XCTAssertNotNil(scrollTo("Apple", scrolls: 2), "The old search hid the new reminder")
+        shot("reminders-after-last-delete-added")
+    }
+
     /// Opens a row's trailing swipe, scrolling to the row first. On Now and My Day, which have no
     /// Delete to look for, it swipes all three times; a swipe on an open row leaves it open.
     private func swipe(_ title: String) {
