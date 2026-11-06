@@ -34,9 +34,9 @@ struct RemindersListTests {
         #expect(titles == ["Migrated first", "Migrated second", "Migrated third", "Made yesterday", "Made this morning"])
     }
 
-    /// Newest First is not the reverse of Oldest First: reminders that tie still read in the
-    /// order they were added (#115's seams comment).
-    @Test func newestFirstPutsTheLatestCreatedFirstWithTiesInTheOrderTheyWereAdded() {
+    /// Newest First is Oldest First reversed, ties included: 1.2.0's reminders, which share one
+    /// migration instant, read last-added first (spec #104, Decision 54).
+    @Test func newestFirstPutsTheLatestCreatedFirstWithTiesLastAddedFirst() {
         let migrated = NewYork.local(2026, 10, 10)
         let engine = engine(holding: [
             reminder("Made yesterday", createdAt: NewYork.local(2026, 10, 15)),
@@ -48,7 +48,7 @@ struct RemindersListTests {
 
         let titles = engine.remindersList(sortedBy: RemindersSort(field: .created, order: .descending)).items.map(\.reminder.title)
 
-        #expect(titles == ["Made this morning", "Made yesterday", "Migrated first", "Migrated second", "Migrated third"])
+        #expect(titles == ["Made this morning", "Made yesterday", "Migrated third", "Migrated second", "Migrated first"])
     }
 
     /// One reminder in each status at 13:00, made one after another so the list is in this order.
@@ -131,8 +131,8 @@ struct RemindersListTests {
     }
 
     /// By the due time each row shows. Morning meds and Physio exercises are both due at 9:00
-    /// today, and keep the order they were added in either way round.
-    @Test func dueDateSortsByEachRowsDueTimeBothWaysWithTiesInTheOrderTheyWereAdded() {
+    /// today: Earliest First lists them in the order they were added, Latest First reverses it.
+    @Test func dueDateSortsByEachRowsDueTimeBothWaysWithLatestFirstReversingTies() {
         let day = oneOfEach()
         func titles(_ order: RemindersSort.Order) -> [String] {
             day.engine.remindersList(sortedBy: RemindersSort(field: .dueDate, order: order)).items.map(\.reminder.title)
@@ -142,7 +142,7 @@ struct RemindersListTests {
             "Book the car service", "Morning meds", "Physio exercises", "Reply to Alex", "Walk the dog", "Stretch break", "Dentist appointment",
         ])
         #expect(titles(.descending) == [
-            "Dentist appointment", "Stretch break", "Walk the dog", "Reply to Alex", "Morning meds", "Physio exercises", "Book the car service",
+            "Dentist appointment", "Stretch break", "Walk the dog", "Reply to Alex", "Physio exercises", "Morning meds", "Book the car service",
         ])
     }
 

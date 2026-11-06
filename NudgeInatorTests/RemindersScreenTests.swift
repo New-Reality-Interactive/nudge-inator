@@ -5,8 +5,8 @@ import Testing
 
 /// The Reminders tab through `RemindersScreen`, read from the real app model on ticket 16's
 /// fixture (13:00 on Friday 16 October). The fixture adds its reminders at one moment, so they tie
-/// on creation date and keep the order they were added in. Layout and VoiceOver are screenshot and
-/// device checks.
+/// on creation date and keep the order they were added in, or the reverse under Newest First.
+/// Layout and VoiceOver are screenshot and device checks.
 @MainActor
 struct RemindersScreenTests {
     let fixture = MyDayScreenTests()
@@ -117,8 +117,9 @@ struct RemindersScreenTests {
         let newest = RemindersScreen(engine: day.model.engine, sort: RemindersSort(field: .created, order: .descending))
         let earliest = RemindersScreen(engine: day.model.engine, sort: RemindersSort(field: .dueDate, order: .ascending))
 
-        // The fixture adds its reminders at one moment, so Newest First keeps the order added.
-        #expect(newest.rows.first?.title == "Take the bins out")
+        // The fixture adds its reminders at one moment, so Newest First lists them last-added first.
+        #expect(newest.rows.first?.title == "Dentist appointment")
+        #expect(newest.rows.last?.title == "Take the bins out")
         // Given up at 9:30 today, the earliest due time a row shows.
         #expect(earliest.rows.first?.title == "Team stand-up")
         #expect(earliest.rows.last?.title == "Dentist appointment")

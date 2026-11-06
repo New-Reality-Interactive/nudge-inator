@@ -73,6 +73,22 @@ struct StoreMigrationTests {
         #expect(loaded.reminders.map(\.createdAt) == Array(repeating: migrationInstant, count: 3))
     }
 
+    /// Every 1.2.0 reminder ties on the migration instant, so the Reminders tab reads them in
+    /// `position` order under Oldest First and exactly reversed under Newest First (spec #104,
+    /// Decision 54).
+    @Test func migratedRemindersListInPositionOrderOldestFirstAndReversedNewestFirst() throws {
+        try Version1Store.write(to: fileURL, reminders: [rent, pills, bins], tags: [], histories: [:])
+        var engine = Engine(clock: FakeClock(now: NewYork.local(2026, 10, 30, 13)), scheduler: FakeScheduler(), timeZone: NewYork.timeZone)
+        engine.update(reminders: try openAfterUpdate().load().reminders)
+
+        func titles(_ order: RemindersSort.Order) -> [String] {
+            engine.remindersList(sortedBy: RemindersSort(field: .created, order: order)).items.map(\.reminder.title)
+        }
+
+        #expect(titles(.ascending) == [rent.title, pills.title, bins.title])
+        #expect(titles(.descending) == [bins.title, pills.title, rent.title])
+    }
+
     @Test func theMigrationInstantIsSavedOnceAndALaterLaunchLeavesItAlone() throws {
         try Version1Store.write(to: fileURL, reminders: [pills, bins], tags: [], histories: [:])
         _ = try openAfterUpdate().load()
