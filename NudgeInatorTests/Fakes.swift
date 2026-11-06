@@ -75,11 +75,22 @@ final class FakeNotificationCenter: UserNotificationCenter {
         pending.removeAll()
     }
 
-    /// Delivered notifications can't be made in a test, so only the call is kept.
+    /// The identifiers of the notifications in Notification Center. A `UNNotification` can't be
+    /// made in a test, so a test sets these by hand, as a nudge that fired would leave them.
+    var delivered: [String] = []
     private(set) var removedAllDeliveredCount = 0
+
+    func deliveredNotificationIdentifiers() async -> [String] {
+        delivered
+    }
+
+    func removeDeliveredNotifications(withIdentifiers identifiers: [String]) {
+        delivered.removeAll { identifiers.contains($0) }
+    }
 
     func removeAllDeliveredNotifications() {
         removedAllDeliveredCount += 1
+        delivered.removeAll()
     }
 
     func setNotificationCategories(_ categories: Set<UNNotificationCategory>) {

@@ -171,6 +171,39 @@ struct NotificationAdapterTests {
         ])
     }
 
+    /// #156: a deleted reminder leaves nothing in Notification Center. Only its own: another
+    /// reminder's notifications, the test nudge and other apps' stay.
+    @Test func removingARemindersDeliveredNotificationsLeavesEveryOtherOne() async {
+        let adapter = adapter()
+        let bins = "nudge.0A1B2C3D-4E5F-4061-8273-8495A6B7C8D9.1792155600000.1792157400000"
+        center.delivered = [
+            Self.pillsAt0910,
+            Self.pillsAt0920,
+            "nudge.6F1C2A4E-0B7D-4E8A-9C3F-1D2E3F4A5B6C.1792242000000.1792242600000",
+            bins,
+            NotificationAdapter.testNudgeIdentifier,
+        ]
+
+        adapter.removeDeliveredNotifications(of: Self.pills)
+        await adapter.waitUntilApplied()
+
+        #expect(center.delivered == [bins, NotificationAdapter.testNudgeIdentifier])
+    }
+
+    /// A delivered nudge is gone from Notification Center, but the plan's pending request stays:
+    /// only a plan removes those.
+    @Test func removingDeliveredNotificationsLeavesPendingRequestsAlone() async {
+        let adapter = adapter()
+        adapter.apply(SchedulePlan(items: [nudge(1, at: NewYork.local(2026, 10, 16, 9, 10), .normal, .notification)]))
+        center.delivered = [Self.pillsAt0910]
+
+        adapter.removeDeliveredNotifications(of: Self.pills)
+        await adapter.waitUntilApplied()
+
+        #expect(center.delivered.isEmpty)
+        #expect(center.pending.map(\.identifier) == [Self.pillsAt0910])
+    }
+
     /// The Done action can launch the app in the background, and the response may come before the
     /// app model is listening (ticket 21). It waits rather than being lost.
     @Test func aDoneBeforeAnyoneListensIsReportedOnceSomeoneDoes() async {

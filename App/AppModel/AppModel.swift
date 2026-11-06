@@ -390,12 +390,14 @@ final class AppModel {
     }
 
     /// The reminder and its whole history go, from the engine and the store (ticket 12), and its
-    /// alarm stops if it is ringing (#124). The due times are read first: Delete forgets them.
+    /// alarm stops if it is ringing (#124), and its nudges already in Notification Center go (#156).
+    /// The due times are read first: Delete forgets them.
     func delete(_ reminderID: Reminder.ID) {
         perform({ engine in
             let dueTimes = engine.dueTimesAnAlarmMayBeRinging(for: reminderID)
             engine.delete(reminderID)
             alarms.stopRinging(of: reminderID, dueAt: dueTimes)
+            notifications.removeDeliveredNotifications(of: reminderID)
         }, storeChange: { try $0.delete(reminderID) })
     }
 
