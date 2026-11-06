@@ -200,9 +200,11 @@ struct RemindersScreenTests {
         #expect(screen.emptyState == .noReminders)
     }
 
-    /// The tab clears the search and the filter when the last reminder goes, so the first one added
-    /// after shows under the cleared (empty) filter whatever the old one was.
-    @Test func theFirstReminderAddedAfterTheLastWentShowsUnderAClearedFilter() async throws {
+    /// A leftover search and filter would hide the first reminder added after the last went, and the
+    /// empty one shows it. That the tab clears them when the last reminder goes is `RemindersTab`'s
+    /// `onChange`, which no unit test reaches: the screenshot walk `testRemindersAfterTheLastDelete`
+    /// checks it.
+    @Test func aLeftOverFilterHidesTheFirstReminderAddedAfterTheLastWentAndAnEmptyOneShowsIt() async throws {
         let model = try await fixture.launchedModel()
         let leftOver = RemindersFilter(statuses: [.missed], search: "zebra")
 

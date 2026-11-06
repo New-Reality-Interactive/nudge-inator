@@ -54,7 +54,6 @@ struct RemindersTab: View {
                             screen: screen,
                             filter: filter,
                             countFocusRequests: countFocusRequests,
-                            // Asks VoiceOver to go to the count; iOS picks where it lands (SearchResultsContainer).
                             clearFilters: clearSearchAndFilter,
                             openDetails: { path.append(OpenedReminder(id: $0)) },
                             markDone: { model?.markDone($0) },
@@ -234,6 +233,7 @@ private struct RemindersListView: View {
                     if screen.emptyState == .noMatch {
                         RemindersNoMatchView(filter: filter) {
                             clearFilters()
+                            // Asks VoiceOver to go to the count; iOS picks where it lands (SearchResultsContainer).
                             didClear()
                         }
                             .listRowBackground(Color.clear)
