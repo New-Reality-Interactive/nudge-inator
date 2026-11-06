@@ -201,8 +201,11 @@ extension Engine {
         } else {
             status = latest.map { .closed($0.state) } ?? .comingUp
         }
-        // A reminder with no occurrence and nothing coming (a repeat that ended before its Start)
-        // shows its Start.
+        // A reminder with no occurrence and nothing coming shows its Start (spec #104, Decision 60).
+        // A defensive fallback: a repeat that ended before its Start still has that Start coming,
+        // since a rule's first due time always counts. The one state found that reaches it is a
+        // one-off whose due time has passed, with `editAppliesAfter` read back from the store at or
+        // after that due time and no closing recorded for it.
         let dueTime = open?.dueTime ?? next ?? latest?.dueTime ?? reminder.dueTime
         return RemindersList.Item(reminder: reminder, status: status, dueTime: dueTime)
     }
