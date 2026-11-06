@@ -19,6 +19,10 @@ protocol UserNotificationCenter: AnyObject {
     /// Delete All Data (ticket 30): everything of the app's, pending or already shown.
     func removeAllPendingNotificationRequests()
     func removeAllDeliveredNotifications()
+    /// The identifiers of the app's notifications still in Notification Center (#156). Identifiers,
+    /// not `UNNotification`s, which a test can't make.
+    func deliveredNotificationIdentifiers() async -> [String]
+    func removeDeliveredNotifications(withIdentifiers identifiers: [String])
     func setNotificationCategories(_ categories: Set<UNNotificationCategory>)
     /// The center holds its delegate weakly, so the caller must keep it.
     func setDelegate(_ delegate: any UNUserNotificationCenterDelegate)
@@ -51,6 +55,14 @@ final class SystemNotificationCenter: UserNotificationCenter {
 
     func removeAllDeliveredNotifications() {
         center.removeAllDeliveredNotifications()
+    }
+
+    func deliveredNotificationIdentifiers() async -> [String] {
+        await center.deliveredNotifications().map(\.request.identifier)
+    }
+
+    func removeDeliveredNotifications(withIdentifiers identifiers: [String]) {
+        center.removeDeliveredNotifications(withIdentifiers: identifiers)
     }
 
     func setNotificationCategories(_ categories: Set<UNNotificationCategory>) {

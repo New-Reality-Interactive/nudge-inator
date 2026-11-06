@@ -377,6 +377,56 @@ struct AppModelTests {
         #expect(try store.load() == StoredData(reminders: [], tags: [], histories: [:]))
     }
 
+    /// A nudge's delivered notification, as the center would hold it after the nudge fired.
+    func deliveredIdentifier(of reminder: Reminder, nudgeAt fireTime: Date) -> String {
+        NotificationAdapter.identifier(for: SchedulePlan.Item(
+            reminderID: reminder.id, dueTime: reminder.dueTime, nudgeNumber: 1, nudgesInAll: 20, fireTime: fireTime,
+            urgency: .normal, title: reminder.title, deliveryKind: .notification, isPastAlarmLimit: false, predictedBadgeCount: 0
+        ))
+    }
+
+    /// #156: Delete takes the reminder's nudges out of Notification Center too, and leaves another
+    /// reminder's there.
+    @Test func deleteRemovesTheRemindersDeliveredNotificationsAndLeavesAnothers() async throws {
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+        let water = Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 15, 9, 5), strength: .firm)
+        model.add(water)
+        model.add(call)
+        let callDelivered = [deliveredIdentifier(of: call, nudgeAt: NewYork.local(2026, 10, 15, 8, 40)), deliveredIdentifier(of: call, nudgeAt: NewYork.local(2026, 10, 15, 9, 10))]
+        let waterDelivered = deliveredIdentifier(of: water, nudgeAt: NewYork.local(2026, 10, 15, 9, 5))
+        center.delivered = callDelivered + [waterDelivered, NotificationAdapter.testNudgeIdentifier]
+
+        model.delete(call.id)
+        await model.waitUntilApplied()
+
+        #expect(center.delivered == [waterDelivered, NotificationAdapter.testNudgeIdentifier])
+    }
+
+    /// Done keeps its behaviour: the banner stays until the person clears it.
+    @Test func doneLeavesTheRemindersDeliveredNotifications() async throws {
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+        model.add(call)
+        let delivered = deliveredIdentifier(of: call, nudgeAt: NewYork.local(2026, 10, 15, 8, 40))
+        center.delivered = [delivered]
+
+        model.markDone(call.id)
+        await model.waitUntilApplied()
+
+        #expect(center.delivered == [delivered])
+    }
+
+    /// Before the store is read there is nothing to delete, as for the rest of Delete.
+    @Test func deleteBeforeTheStoreIsReadRemovesNoDeliveredNotification() async throws {
+        let unlaunched = model(store: try ReminderStore(location: .inMemory)).model
+        let delivered = deliveredIdentifier(of: call, nudgeAt: NewYork.local(2026, 10, 15, 8, 40))
+        center.delivered = [delivered]
+
+        unlaunched.delete(call.id)
+        await unlaunched.waitUntilApplied()
+
+        #expect(center.delivered == [delivered])
+    }
+
     /// A model holding `call` and `water`, each with one alarm ringing at 9:58. Water is added
     /// first and alone, so its soonest alarm is known to be its own.
     func modelWithTwoRingingAlarms(store: ReminderStore? = nil) async throws -> (model: AppModel, callAlarm: Alarm.ID, waterAlarm: Alarm.ID, water: Reminder) {

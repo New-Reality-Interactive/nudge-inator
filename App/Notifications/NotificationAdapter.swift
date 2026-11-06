@@ -231,6 +231,21 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         await cancelling.value
     }
 
+    /// Delete (#156): takes the reminder's nudges already in Notification Center out, so none is
+    /// left for a reminder that no longer exists. Matched by identifier prefix, so another
+    /// reminder's notifications, the test nudge and other apps' stay. Not part of a plan, which
+    /// can't tell a deleted reminder from a finished occurrence: Done leaves its banners. Joins
+    /// the same chain as the plans, so `waitUntilApplied()` waits for it.
+    func removeDeliveredNotifications(of reminderID: Reminder.ID) {
+        let previous = applying
+        applying = Task {
+            await previous?.value
+            let prefix = Self.reminderPrefix(of: reminderID)
+            let identifiers = await center.deliveredNotificationIdentifiers().filter { $0.hasPrefix(prefix) }
+            center.removeDeliveredNotifications(withIdentifiers: identifiers)
+        }
+    }
+
     /// Removes the pending nudges of the reminder's occurrence due at `dueTime`, for a Done chosen
     /// while the store can't be read (ticket 32): the identifiers name the occurrence, so no plan
     /// is needed. The next occurrence's nudges stay. After the plans handed over so far.
@@ -329,7 +344,12 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
 
     /// What every identifier of the occurrence's nudges starts with.
     private static func occurrencePrefix(of reminderID: Reminder.ID, dueAt dueTime: Date) -> String {
-        "\(identifierPrefix)\(reminderID.uuidString).\(milliseconds(of: dueTime))."
+        "\(reminderPrefix(of: reminderID))\(milliseconds(of: dueTime))."
+    }
+
+    /// What every identifier of the reminder's nudges, of any occurrence, starts with.
+    private static func reminderPrefix(of reminderID: Reminder.ID) -> String {
+        "\(identifierPrefix)\(reminderID.uuidString)."
     }
 
     private static func milliseconds(of date: Date) -> Int64 {
