@@ -64,6 +64,73 @@ struct StoreMigrationTests {
         ))
     }
 
+    /// Every closing state 1.2.0 saved (Done, both Missed reasons, Skipped, and the Nudging state
+    /// the type allows, with its number), every repeat shape (none; a preset that moves to a
+    /// month's last day; a custom rule that skips; a custom rule with an interval and weekdays; an
+    /// UNTIL at a day; an UNTIL at an instant with a fraction of a second; a COUNT), both paces, a
+    /// closed and an open pause, and a closing fixed by an Edit (`editAppliesAfter`).
+    @Test func aVersion1StoreWithEveryClosingStateAndRepeatShapeOpensWithAllOfThemKept() throws {
+        let instant = NewYork.local(2026, 10, 15, 9)
+        let untilInstant = NewYork.local(2026, 12, 31, 23, 59).addingTimeInterval(59.5)
+        let monthly = Reminder(title: "Pay the card", dueTime: instant, repeatRule: .everyMonth, strength: .firm)
+        let skipping = Reminder(
+            title: "Month-end report",
+            dueTime: NewYork.local(2026, 10, 31, 9),
+            repeatRule: RepeatRule(frequency: .monthly, missingDay: .skip),
+            strength: .relentless,
+            pace: .escalating
+        )
+        let ending = Reminder(
+            title: "Water the plants",
+            dueTime: instant,
+            repeatRule: RepeatRule(frequency: .daily, end: .untilTime(untilInstant)),
+            strength: .gentle,
+            pace: .consistent(wait: 900),
+            breakThroughFocus: false
+        )
+        let alternating = Reminder(
+            title: "Bin day",
+            dueTime: instant,
+            repeatRule: RepeatRule(frequency: .weekly, interval: 2, weekdays: [RepeatRule.WeekdayNumber(.monday), RepeatRule.WeekdayNumber(.thursday)]),
+            strength: .gentle
+        )
+        let untilDay = Reminder(
+            title: "Physio exercises",
+            dueTime: instant,
+            repeatRule: RepeatRule(frequency: .daily, end: .untilDate(year: 2026, month: 12, day: 31)),
+            strength: .firm
+        )
+        let counted = Reminder(title: "Course lessons", dueTime: instant, repeatRule: RepeatRule(frequency: .weekly, end: .count(6)), strength: .firm)
+        let never = Reminder(title: "Renew the passport", dueTime: NewYork.local(2027, 1, 5, 9), strength: .gentle)
+        func closing(_ state: OccurrenceState, closedAtHour hour: Int) -> Closing {
+            Closing(state: state, closedAt: NewYork.local(2026, 10, 15, hour, 30), nudgesSent: hour)
+        }
+        let history = ReminderHistory(
+            closedOccurrences: [
+                NewYork.local(2026, 10, 10, 9): closing(.done, closedAtHour: 9),
+                NewYork.local(2026, 10, 11, 9): closing(.missed(reason: .giveUpLimit), closedAtHour: 10),
+                NewYork.local(2026, 10, 12, 9): closing(.missed(reason: .nextTookOver), closedAtHour: 11),
+                NewYork.local(2026, 10, 13, 9): closing(.skipped(reason: .paused), closedAtHour: 12),
+                NewYork.local(2026, 10, 14, 9): closing(.nudging(nudgeNumber: 4), closedAtHour: 13),
+            ],
+            editAppliesAfter: NewYork.local(2026, 10, 14, 9),
+            pauseSpans: [PauseSpan(start: NewYork.local(2026, 10, 12, 8), end: NewYork.local(2026, 10, 13, 8))],
+            replacedTitles: [Replaced(value: "Pay card", replacedAt: NewYork.local(2026, 10, 9, 7))]
+        )
+        let reminders = [monthly, skipping, ending, alternating, untilDay, counted, never]
+        // Paused and not resumed, the open span the history above doesn't hold.
+        let stillPaused = ReminderHistory(pauseSpans: [PauseSpan(start: NewYork.local(2026, 10, 14, 8))])
+        let histories = [monthly.id: history, ending.id: history, alternating.id: stillPaused]
+        try Version1Store.write(to: fileURL, reminders: reminders, tags: [home], histories: histories)
+
+        let loaded = try openAfterUpdate().load()
+
+        var stamped = reminders
+        for index in stamped.indices { stamped[index].createdAt = migrationInstant }
+        #expect(loaded == StoredData(reminders: stamped, tags: [home], histories: histories))
+        #expect(loaded.reminders.map(\.repeatRule) == reminders.map(\.repeatRule))
+    }
+
     @Test func everyMigratedReminderGetsTheMigrationInstantAndKeepsItsPosition() throws {
         try Version1Store.write(to: fileURL, reminders: [rent, pills, bins], tags: [], histories: [:])
 

@@ -337,4 +337,144 @@ struct RemindersScreenTests {
     @Test func theNoMatchTitleQuotesTheSearchTrimmed() {
         #expect(String(localized: RemindersFilter(search: "  zebra ").noMatchTitle) == "No Results for “zebra”")
     }
+
+    // MARK: - Live refresh: what the list shows as time passes, and after a change made elsewhere
+
+    // The tab re-reads the engine at the start of every minute (`TimelineView(.everyMinute)`) and
+    // the engine reads the clock, so a screen read at each moment stands for that minute's redraw.
+    // That the view re-reads is a screenshot and device check.
+
+    /// A new `Engine` over the fake clock, in New York.
+    func engine(holding reminders: [Reminder], giveUpLimit: GiveUpLimit = .shipped) -> Engine {
+        var engine = Engine(clock: fixture.clock, scheduler: FakeScheduler(), giveUpLimit: giveUpLimit, timeZone: NewYork.timeZone)
+        engine.update(reminders: reminders)
+        return engine
+    }
+
+    /// Spec #104, Live refresh: a Nudging reminder whose next occurrence takes over updates its row
+    /// within a minute. With the shipped limit a daily repeat gives up long before its next
+    /// occurrence, so the give-up limit is widened, as `RepeatTakeOverTests` does. The row after the
+    /// take-over is the new occurrence's: its due time is the day's, no longer yesterday's.
+    @Test func theRowAfterATakeOverShowsTheNewOccurrencesDueTime() {
+        let pills = Reminder(title: "Take the pills", dueTime: NewYork.local(2026, 10, 15), repeatRule: .everyDay, strength: .relentless)
+        let engine = engine(holding: [pills], giveUpLimit: GiveUpLimit(nudgeCount: 10_000, span: 72 * 60 * 60))
+
+        fixture.clock.now = NewYork.local(2026, 10, 16, 8, 59, 30)
+        let before = RemindersScreen(engine: engine).rows.first
+        fixture.clock.now = NewYork.local(2026, 10, 16, 9, 0, 30)
+        let after = RemindersScreen(engine: engine).rows.first
+
+        #expect((before?.status, before?.day) == (.nudging, "Yesterday"))
+        #expect((after?.status, after?.day) == (.nudging, "Today"))
+    }
+
+    /// Spec #104, Live refresh: within a minute of midnight the rows and the count follow. A paused
+    /// every-day-at-00:00 reminder's next due time is always the coming midnight, so it leaves
+    /// Saturday's range at 00:00 and enters Sunday's; a one-off due Saturday morning goes from
+    /// "Tomorrow" to "Today". Nothing in the engine changes at midnight: only the clock moves.
+    @Test func theRowsTheCountAndTheEmptyStateFollowTheClockOverMidnight() {
+        let walk = Reminder(title: "Midnight walk", dueTime: NewYork.local(2026, 10, 1, 0), repeatRule: .everyDay, strength: .gentle)
+        let call = Reminder(title: "Early call", dueTime: NewYork.local(2026, 10, 17, 8), strength: .gentle)
+        fixture.clock.now = NewYork.local(2026, 10, 16, 23)
+        var engine = engine(holding: [walk, call])
+        engine.pause(walk.id)
+        let saturday = RemindersFilter(dueFrom: CalendarDay(year: 2026, month: 10, day: 17), dueTo: CalendarDay(year: 2026, month: 10, day: 17))
+        let sunday = RemindersFilter(dueFrom: CalendarDay(year: 2026, month: 10, day: 18), dueTo: CalendarDay(year: 2026, month: 10, day: 18))
+
+        fixture.clock.now = NewYork.local(2026, 10, 16, 23, 59)
+        let saturdayBefore = RemindersScreen(engine: engine, filter: saturday)
+        let sundayBefore = RemindersScreen(engine: engine, filter: sunday)
+        fixture.clock.now = NewYork.local(2026, 10, 17, 0, 1)
+        let saturdayAfter = RemindersScreen(engine: engine, filter: saturday)
+        let sundayAfter = RemindersScreen(engine: engine, filter: sunday)
+
+        #expect(saturdayBefore.rows.map(\.title) == ["Midnight walk", "Early call"])
+        #expect(String(localized: saturdayBefore.countText) == "2 reminders out of 2")
+        #expect(saturdayBefore.rows.map(\.day) == ["Tomorrow", "Tomorrow"])
+        #expect(sundayBefore.rows.isEmpty)
+        #expect(sundayBefore.emptyState == .noMatch)
+
+        #expect(saturdayAfter.rows.map(\.title) == ["Early call"])
+        #expect(String(localized: saturdayAfter.countText) == "1 reminder out of 2")
+        #expect(saturdayAfter.rows.map(\.day) == ["Today"])
+        #expect(sundayAfter.rows.map(\.title) == ["Midnight walk"])
+        #expect(sundayAfter.emptyState == nil)
+    }
+
+    /// Spec #104, Decision 60: a reminder with no occurrence and nothing coming shows its Start and
+    /// Coming up. The engine reaches it only from the store: an Edit's `editAppliesAfter` with no
+    /// closing recorded (`RemindersListTests`).
+    @Test func aReminderWithNoOccurrenceAndNothingComingShowsComingUpAndItsStart() throws {
+        let start = NewYork.local(2026, 10, 14, 9)
+        let reminder = Reminder(title: "Book the car service", dueTime: start, strength: .gentle)
+        var engine = Engine(clock: fixture.clock, scheduler: FakeScheduler(), timeZone: NewYork.timeZone)
+        engine.update(histories: [reminder.id: ReminderHistory(editAppliesAfter: start)])
+        engine.update(reminders: [reminder])
+
+        let screen = RemindersScreen(engine: engine)
+
+        let row = try #require(screen.rows.first)
+        #expect(row.status == .comingUp)
+        #expect(row.time == "9:00\u{202F}AM")
+        #expect(row.day == "Wed, Oct 14")
+        #expect(row.offersDone == false)
+        #expect(screen.emptyState == nil)
+    }
+
+    // MARK: - A change made elsewhere shows when the person returns to the list
+
+    /// The tab holds no copy of the list: it reads the engine again, so a change made on another
+    /// screen (details, an alarm's Open, a notification's Done) shows on return. That the view
+    /// re-reads on return (`onChange(of: state)`, `TimelineView`) is a screenshot check.
+    @Test func aDoneFromAnAlarmsOpenShowsOnReturningToTheList() async throws {
+        let day = try await fixture.dayAtOnePM()
+        let before = RemindersScreen(engine: day.model.engine).rows
+
+        await day.model.open(alarmID: UUID(), reminderID: day.alex.id)
+        #expect(day.model.takeRoute() == .reminderDetails(day.alex.id))
+        day.model.markDone(day.alex.id)
+        await day.model.waitUntilApplied()
+
+        let after = RemindersScreen(engine: day.model.engine).rows
+        #expect(after.map(\.id) == before.map(\.id))
+        #expect(after.first { $0.id == day.alex.id }?.status == .closed(.done))
+        #expect(after.first { $0.id == day.alex.id }?.offersDone == false)
+    }
+
+    @Test func aDoneFromANotificationShowsOnReturningToTheList() async throws {
+        let day = try await fixture.dayAtOnePM()
+
+        await day.model.markDone(DeliveredNudge(reminderID: day.alex.id, dueTime: NewYork.local(2026, 10, 16, 12, 30), fireTime: NewYork.local(2026, 10, 16, 13)))
+
+        let alex = RemindersScreen(engine: day.model.engine).rows.first { $0.id == day.alex.id }
+        #expect(alex?.status == .closed(.done))
+    }
+
+    @Test func anEditShowsOnReturningToTheListWithTheRowWhereItWas() async throws {
+        let day = try await fixture.dayAtOnePM()
+        let before = RemindersScreen(engine: day.model.engine).rows.map(\.id)
+        var edited = day.bins
+        edited.title = "Take the recycling out"
+        edited.dueTime = NewYork.local(2026, 10, 16, 21)
+
+        try day.model.edit(edited)
+        await day.model.waitUntilApplied()
+
+        let after = RemindersScreen(engine: day.model.engine).rows
+        #expect(after.map(\.id) == before)
+        let bins = try #require(after.first { $0.id == day.bins.id })
+        #expect((bins.title, bins.time) == ("Take the recycling out", "9:00\u{202F}PM"))
+    }
+
+    @Test func aPauseShowsOnReturningToTheList() async throws {
+        let day = try await fixture.dayAtOnePM()
+        let before = RemindersScreen(engine: day.model.engine).rows.map(\.id)
+
+        day.model.pause(day.plants.id)
+        await day.model.waitUntilApplied()
+
+        let after = RemindersScreen(engine: day.model.engine).rows
+        #expect(after.map(\.id) == before)
+        #expect(after.first { $0.id == day.plants.id }?.status == .paused)
+    }
 }
