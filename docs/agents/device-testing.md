@@ -95,7 +95,7 @@ How a release's build reaches App Store Connect (`icon-badge` #99; 1.1.0 went th
 1. Check out the tag (`git switch --detach v<version>`) and run `scripts/test.sh` on both simulators there.
 2. `scripts/archive-and-upload.sh` regenerates the project, archives (Release, scheme `NudgeInator`, warnings as errors from `project.yml`) into `.build/release/`, checks that the app and the widget report `MARKETING_VERSION`, and stops. It refuses anything but a clean checkout of `v<MARKETING_VERSION>` that is pushed to origin.
 3. On the developer's go, `scripts/archive-and-upload.sh upload` uploads that archive with `scripts/export-options.plist`: App Store Connect method, automatic signing, symbols uploaded, version and build number managed, `testFlightInternalTestingOnly` off. App Store Connect checks the build as it takes it; there is no separate validation, since `xcodebuild`'s `validation` method also uploads (1.2.0, #99). It uses the Apple ID signed into Xcode; no API key or secret exists.
-4. The developer confirms in App Store Connect that the build processed, pastes What to Test (`docs/release-notes/`), and adds the build to the internal group.
+4. The developer confirms in App Store Connect that the build processed, pastes What to Test (the fenced block in `docs/release-notes/`, whose COMING SOON section the release PR drew from GitHub), and adds the build to the internal group.
 
 The release PR gets a trial archive first, so a build or signing failure shows before the tag exists: `ALLOW_DIRTY=1 scripts/archive-and-upload.sh` on its branch, after `MARKETING_VERSION` is set. A trial archive can't be uploaded. If the upload fails after the tag, the fix is a patch release (`1.x.1`); a pushed tag never moves.
 
