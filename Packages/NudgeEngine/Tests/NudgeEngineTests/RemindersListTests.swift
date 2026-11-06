@@ -181,4 +181,48 @@ struct RemindersListTests {
         #expect(dentist()?.status == .closed(.missed(reason: .giveUpLimit)))
         #expect(dentist()?.dueTime == NewYork.local(2026, 10, 17, 13, 15))
     }
+
+    /// The spec's example of a reminder with nothing coming, a repeat that ended before its Start,
+    /// still has its Start coming: the first due time always counts (RFC 5545), so the rule's end
+    /// doesn't take it away.
+    @Test func aRepeatThatEndedBeforeItsStartStillHasItsStartComing() throws {
+        let start = NewYork.local(2026, 10, 25, 9)
+        let ended = Reminder(
+            title: "Water the lawn",
+            dueTime: start,
+            repeatRule: RepeatRule(.daily, end: .untilDate(year: 2026, month: 10, day: 20)),
+            strength: .gentle
+        )
+        let engine = engine(holding: [ended])
+
+        let item = try #require(engine.remindersList().items.first)
+
+        #expect(engine.latestOccurrence(for: ended.id) == nil)
+        #expect(engine.nextDueTime(of: ended) == start)
+        #expect(item.status == .comingUp)
+        #expect(item.dueTime == start)
+    }
+
+    /// A reminder with no occurrence and nothing coming shows Coming up and its Start as its due
+    /// time, as the details page does (spec #104, Decision 60), and the Due Date filter finds it by
+    /// that Start. The one way the engine reaches it: an Edit that fixed the schedule up to a due
+    /// time (`editAppliesAfter`) with no closing recorded for it, read back from the store, on a
+    /// reminder with no later due time.
+    @Test func aReminderWithNoOccurrenceAndNothingComingShowsComingUpAndItsStart() throws {
+        let start = NewYork.local(2026, 10, 14, 9)
+        let reminder = Reminder(title: "Book the car service", dueTime: start, strength: .gentle)
+        var engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone)
+        engine.update(histories: [reminder.id: ReminderHistory(editAppliesAfter: start)])
+        engine.update(reminders: [reminder])
+        #expect(engine.latestOccurrence(for: reminder.id) == nil)
+        #expect(engine.nextDueTime(of: reminder) == nil)
+
+        let item = try #require(engine.remindersList().items.first)
+
+        #expect(item.status == .comingUp)
+        #expect(item.dueTime == start)
+        let startDay = CalendarDay(year: 2026, month: 10, day: 14)
+        let found = engine.remindersList(filteredBy: RemindersFilter(statuses: [.comingUp], dueFrom: startDay, dueTo: startDay))
+        #expect(found.items.map(\.reminder.id) == [reminder.id])
+    }
 }

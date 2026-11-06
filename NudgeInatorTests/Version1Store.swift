@@ -4,7 +4,9 @@ import SwiftData
 @testable import NudgeInator
 
 /// A store file as 1.2.0 saved it, written with schema version 1, for the tests that open it with
-/// version 2.
+/// version 2. It spells every value the way 1.2.0 did, on its own, never through the app's current
+/// mapping: a change there must not change what a 1.2.0 phone holds. It writes every closing state,
+/// repeat shape and field 1.2.0 could save.
 @MainActor
 enum Version1Store {
     /// Writes `reminders` in the order given, as 1.2.0 saved them, and closes the file.
@@ -19,13 +21,23 @@ enum Version1Store {
             record.tagIDs = reminder.tagIDs
             record.dueTime = reminder.dueTime
             record.repeatRule = reminder.repeatRule?.rrule
-            record.repeatMissingDay = reminder.repeatRule.map { _ in "skip" }
+            record.repeatMissingDay = reminder.repeatRule.map { rule in
+                switch rule.missingDay {
+                case .skip: "skip"
+                case .lastDayOfMonth: "lastDayOfMonth"
+                }
+            }
+            // RRULE text keeps UNTIL to the second, so 1.2.0 saved the exact instant beside it.
+            if case .untilTime(let time)? = reminder.repeatRule?.end { record.repeatUntilTime = time }
             record.strength = switch reminder.strength {
             case .gentle: "gentle"
             case .firm: "firm"
             case .relentless: "relentless"
             }
-            if case .consistent(let wait) = reminder.pace {
+            switch reminder.pace {
+            case .escalating:
+                record.paceKind = "escalating"
+            case .consistent(let wait):
                 record.paceKind = "consistent"
                 record.paceWait = wait
             }
@@ -33,12 +45,9 @@ enum Version1Store {
             context.insert(record)
             guard let history = histories[reminder.id] else { continue }
             for (dueTime, closing) in history.closedOccurrences {
-                let state = switch closing.state {
-                case .done: "done"
-                default: "missed.giveUpLimit"
-                }
+                let (state, nudgeNumber) = Self.spelling(of: closing.state)
                 record.closedOccurrences.append(StoreSchemaV1.ClosedOccurrenceRecord(
-                    dueTime: dueTime, state: state, nudgeNumber: nil, closedAt: closing.closedAt, nudgesSent: closing.nudgesSent
+                    dueTime: dueTime, state: state, nudgeNumber: nudgeNumber, closedAt: closing.closedAt, nudgesSent: closing.nudgesSent
                 ))
             }
             for (position, span) in history.pauseSpans.enumerated() {
@@ -53,5 +62,17 @@ enum Version1Store {
             context.insert(StoreSchemaV1.TagRecord(id: tag.id, position: position, name: tag.name))
         }
         try context.save()
+    }
+
+    /// A closing's state as 1.2.0 spelled it. A Nudging state, which a closing never has but the
+    /// engine's type allows, keeps its number beside it.
+    private static func spelling(of state: OccurrenceState) -> (state: String, nudgeNumber: Int?) {
+        switch state {
+        case .nudging(let nudgeNumber): ("nudging", nudgeNumber)
+        case .done: ("done", nil)
+        case .missed(.giveUpLimit): ("missed.giveUpLimit", nil)
+        case .missed(.nextTookOver): ("missed.nextTookOver", nil)
+        case .skipped(.paused): ("skipped.paused", nil)
+        }
     }
 }

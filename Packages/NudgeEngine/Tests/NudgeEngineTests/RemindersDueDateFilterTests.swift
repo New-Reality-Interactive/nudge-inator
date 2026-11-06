@@ -63,6 +63,41 @@ struct RemindersDueDateFilterTests {
         #expect(titles(engine, RemindersFilter(dueTo: CalendarDay(year: 2026, month: 10, day: 19))) == ["Late evening"])
     }
 
+    /// The engine's zone is injected, and its default follows the device's: `autoupdatingCurrent`
+    /// changes with Settings while the app runs, so the same reminders fall on other days after a
+    /// time-zone change (spec #104, Decision 61). A test can't change the device's zone, so two
+    /// engines in different zones stand for the phone before and after a flight.
+    @Test func theSameRemindersFallOnOtherDaysInAnotherTimeZone() throws {
+        let tokyo = try #require(TimeZone(identifier: "Asia/Tokyo"))
+        let reminders = [
+            Reminder(title: "Late evening in New York", dueTime: NewYork.local(2026, 10, 21, 22), strength: .gentle),
+            Reminder(title: "Morning in New York", dueTime: NewYork.local(2026, 10, 21, 8), strength: .gentle),
+        ]
+        let twentyFirst = RemindersFilter(dueFrom: CalendarDay(year: 2026, month: 10, day: 21), dueTo: CalendarDay(year: 2026, month: 10, day: 21))
+        let twentySecond = RemindersFilter(dueFrom: CalendarDay(year: 2026, month: 10, day: 22), dueTo: CalendarDay(year: 2026, month: 10, day: 22))
+        func engine(in timeZone: TimeZone) -> Engine {
+            var engine = Engine(clock: fixture.clock, scheduler: fixture.scheduler, timeZone: timeZone)
+            engine.update(reminders: reminders)
+            return engine
+        }
+
+        // Tokyo is 13 hours ahead of New York in October: 8:00 is 21:00 the same day, and 22:00 is
+        // 11:00 the next.
+        #expect(titles(engine(in: NewYork.timeZone), twentyFirst) == ["Late evening in New York", "Morning in New York"])
+        #expect(titles(engine(in: NewYork.timeZone), twentySecond) == [])
+        #expect(titles(engine(in: tokyo), twentyFirst) == ["Morning in New York"])
+        #expect(titles(engine(in: tokyo), twentySecond) == ["Late evening in New York"])
+    }
+
+    /// Without a zone passed, the engine's calendar is the device's autoupdating one, not the zone
+    /// the app launched in. `autoupdatingCurrent` compares equal only to itself, so a fixed
+    /// `TimeZone.current` copy would fail this.
+    @Test func theDefaultTimeZoneIsTheDevicesAutoupdatingOne() {
+        let engine = Engine(clock: fixture.clock, scheduler: fixture.scheduler)
+
+        #expect(engine.calendar.timeZone == TimeZone.autoupdatingCurrent)
+    }
+
     @Test func aNudgingReminderIsTestedByItsOpenOccurrencesDueTime() {
         // Every day at 12:30: today's is open, and tomorrow's is the next.
         let reply = Reminder(title: "Reply", dueTime: NewYork.local(2026, 10, 16, 12, 30), repeatRule: .everyDay, strength: .firm)
