@@ -4,7 +4,7 @@
 #   scripts/check-release-has-no-seed.sh                 builds Release for the simulator, then checks it
 #   scripts/check-release-has-no-seed.sh <path>.app      checks that app (the archive script's)
 # Looks for the seed's own names in the app's executables: its module, launch variable, record key,
-# types and a set's reminder title. Any one found fails.
+# types, the model's seed-only add and a set's reminder title. Any one found fails.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -36,7 +36,7 @@ for binary in "${binaries[@]}"; do
   # To a file first: with pipefail, `grep -q` ending the pipe early makes `strings` fail, and a
   # match would read as no match.
   strings -a "$binary" > "$text"
-  for name in NudgeDeviceSeed NUDGE_SEED DeviceSeedLaunch ModelSeedTarget deviceSeedRecord SeedRecordStore "Café meeting with Sam"; do
+  for name in NudgeDeviceSeed NUDGE_SEED DeviceSeedLaunch ModelSeedTarget addKeepingCreationDate deviceSeedRecord SeedRecordStore "Café meeting with Sam"; do
     if grep -q -- "$name" "$text"; then
       echo "FAIL: $name is in the Release build, in $binary" >&2
       found=1

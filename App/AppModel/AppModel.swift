@@ -340,6 +340,16 @@ final class AppModel {
         perform { $0.add(reminder) }
     }
 
+    #if DEBUG
+    /// The device seed's add (docs/agents/device-testing.md): the reminder joins the list as the
+    /// engine's add would put it, but keeps the creation date it carries instead of being stamped
+    /// with now, so the Created sort has dates to sort by. The engine keeps stamping a reminder
+    /// made by hand with now; this exists in Debug builds only.
+    func addKeepingCreationDate(_ reminder: Reminder) {
+        perform { $0.update(reminders: $0.reminders + [reminder]) }
+    }
+    #endif
+
     func markDone(_ reminderID: Reminder.ID) {
         performDone(of: reminderID) { $0.markDone(reminderID) }
     }

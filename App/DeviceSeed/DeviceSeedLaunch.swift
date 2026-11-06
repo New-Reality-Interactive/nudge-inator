@@ -35,7 +35,8 @@ enum DeviceSeedLaunch {
     private static let logger = Logger(subsystem: "com.newrealityinteractive.nudgeinator", category: "DeviceSeed")
 }
 
-/// The model, as the seed sees it. Everything goes through the model's own add and delete.
+/// The model, as the seed sees it. Everything goes through the model's own add and delete, except
+/// that an added reminder keeps its creation date (#248).
 @MainActor
 struct ModelSeedTarget: SeedTarget {
     let model: AppModel
@@ -45,7 +46,7 @@ struct ModelSeedTarget: SeedTarget {
     var tags: [Tag] { model.engine.tags }
 
     func add(_ reminder: Reminder) {
-        model.add(reminder)
+        model.addKeepingCreationDate(reminder)
     }
 
     func delete(_ reminderID: Reminder.ID) {
