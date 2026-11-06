@@ -3,6 +3,8 @@ import XCTest
 /// Walks every screen of the harness app and saves a screenshot of each to `SHOTS_DIR` (set by
 /// scripts/screenshots.sh as `TEST_RUNNER_SHOTS_DIR`), named `<screen>.png`. `SHOTS_ORIENTATION`
 /// is `portrait` or `landscape`; the text size is the simulator's, which the script sets.
+/// `SHOTS_DIRECTION` `rtl` launches the app under Xcode's Right-to-Left Pseudolanguage (#122), and
+/// the walk's swipes and taps that depend on a side follow it.
 @MainActor
 final class ShotsUITests: XCTestCase {
     /// The harness's `SHOT_SCENARIO`s (`ShotsApp.Scenario`, which can't be imported here).
@@ -13,20 +15,43 @@ final class ShotsUITests: XCTestCase {
     private var app: XCUIApplication!
     private let directory = URL(filePath: ProcessInfo.processInfo.environment["SHOTS_DIR"] ?? NSTemporaryDirectory())
 
+    private let isRightToLeft = ProcessInfo.processInfo.environment["SHOTS_DIRECTION"] == "rtl"
+
     override func setUp() async throws {
         continueAfterFailure = true
         let landscape = ProcessInfo.processInfo.environment["SHOTS_ORIENTATION"] == "landscape"
         XCUIDevice.shared.orientation = landscape ? .landscapeLeft : .portrait
     }
 
+    /// A new harness app, under the Right-to-Left Pseudolanguage when the variant asks for it. The
+    /// arguments are the ones Xcode's scheme option passes (Xcode 27's IDEFoundation); Apple's docs
+    /// name the option, not its arguments. A launch argument lasts only that launch.
+    private func makeApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        if isRightToLeft {
+            app.launchArguments += ["-AppleTextDirection", "YES", "-NSForceRightToLeftWritingDirection", "YES"]
+        }
+        return app
+    }
+
     private func launch(_ scenario: ShotScenario, dark: Bool = false) {
-        app = XCUIApplication()
+        app = makeApp()
         app.launchEnvironment["SHOT_SCENARIO"] = scenario.rawValue
         app.launchEnvironment["SHOT_DARK"] = dark ? "1" : "0"
         app.launch()
         // The seed and the first plan.
         _ = app.tabBars.firstMatch.waitForExistence(timeout: 10)
         pause(1.5)
+        assertDirection()
+    }
+
+    /// Now is the first tab, so it sits on the leading side: a run that lost `SHOTS_DIRECTION` fails
+    /// here instead of shooting the wrong direction. Onboarding has no tab bar.
+    private func assertDirection() {
+        let now = app.tabBars.buttons["Now"].firstMatch
+        guard now.exists else { return }
+        let onRight = now.frame.midX > app.windows.firstMatch.frame.midX
+        XCTAssertEqual(onRight, isRightToLeft, "The layout isn't \(isRightToLeft ? "right to left" : "left to right")")
     }
 
     /// Drags the window's middle by most of a screen: down shows what's below. Not `swipeUp()`,
@@ -229,7 +254,7 @@ final class ShotsUITests: XCTestCase {
         XCTAssert(filter.waitForExistence(timeout: 3), "No Filter button on a day with reminders and tags")
         // A button in the same glass group would sit a few points from New; apart, the bar's spacer
         // is between them.
-        let gap = new.frame.minX - filter.frame.maxX
+        let gap = isRightToLeft ? filter.frame.minX - new.frame.maxX : new.frame.minX - filter.frame.maxX
         print("BAR gap between Filter and New: \(gap) pt")
         XCTAssertGreaterThan(gap, 12, "The Filter button shares New's glass group")
         shot("myday-bar-filter-apart")
@@ -427,7 +452,7 @@ final class ShotsUITests: XCTestCase {
     /// The Filter button's badge at counts the seed can't reach: 12 (two digits) and 999 (the most).
     func testMyDayFilterBadge() {
         for count in [12, 999] {
-            app = XCUIApplication()
+            app = makeApp()
             app.launchEnvironment["SHOT_BADGE_COUNT"] = "\(count)"
             app.launch()
             _ = app.navigationBars.firstMatch.waitForExistence(timeout: 10)
@@ -633,7 +658,7 @@ final class ShotsUITests: XCTestCase {
             XCTFail("No #home:\n\(app.debugDescription)")
             return
         }
-        home.swipeRight()
+        swipeLeading(home)
         pause(0.8)
         XCTAssertFalse(app.buttons["Edit"].exists, "A leading swipe showed Edit")
         XCTAssertFalse(app.buttons["Delete"].exists, "A leading swipe showed Delete")
@@ -733,9 +758,19 @@ final class ShotsUITests: XCTestCase {
             return delete.exists && row.frame.minY...row.frame.maxY ~= delete.frame.midY
         }
         for _ in 0..<3 where !opened() {
-            row.swipeLeft()
+            swipeTrailing(row)
             pause(0.8)
         }
+    }
+
+    /// A swipe from the row's trailing edge toward its leading edge, which opens its trailing actions.
+    private func swipeTrailing(_ row: XCUIElement) {
+        isRightToLeft ? row.swipeRight() : row.swipeLeft()
+    }
+
+    /// A swipe toward the row's trailing edge, which would open leading actions.
+    private func swipeLeading(_ row: XCUIElement) {
+        isRightToLeft ? row.swipeLeft() : row.swipeRight()
     }
 
     /// The mockup's `reminders-sort-menu`, `reminders-newest` and `reminders-due-date` (#115): the
@@ -784,7 +819,7 @@ final class ShotsUITests: XCTestCase {
         } else if outside.exists {
             outside.tap()
         } else {
-            app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.1)).tap()
+            app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: isRightToLeft ? 0.8 : 0.2, dy: 0.1)).tap()
         }
         pause(0.5)
         swipe("Take the bins out")
@@ -823,8 +858,6 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-tile-no-tags")
     }
 
-    /// Checks the open tile named `label` is a 50 pt circle. It is the rightmost button with that
-    /// name, since Now and My Day have a Done button too. `place` names the row for the failure.
     /// The header row reads every tag, on the screen and above the rows, and `first` is above `second`.
     private func assertTagHeaderAndTopRows(_ first: String, _ second: String, line: UInt = #line) {
         let count = app.staticTexts["7 tags out of 7"].firstMatch
@@ -834,14 +867,19 @@ final class ShotsUITests: XCTestCase {
         }
         let (top, next) = (row(first), row(second))
         XCTAssert(top.exists && next.exists, "No \(first) or \(second):\n\(app.debugDescription)", line: line)
-        XCTAssertLessThanOrEqual(count.frame.maxX, app.windows.firstMatch.frame.maxX, "The header row runs off the screen", line: line)
+        XCTAssertLessThanOrEqual(count.frame.maxX, app.windows.firstMatch.frame.maxX, "The header row runs off the right edge", line: line)
+        XCTAssertGreaterThanOrEqual(count.frame.minX, app.windows.firstMatch.frame.minX, "The header row runs off the left edge", line: line)
         XCTAssertLessThanOrEqual(count.frame.maxY, top.frame.minY, "The header row overlaps \(first)", line: line)
         XCTAssertLessThan(top.frame.minY, next.frame.minY, "\(first) isn't above \(second)", line: line)
     }
 
+    /// Checks the open tile named `label` is a 50 pt circle. It is the button with that name nearest
+    /// the trailing edge, since Now and My Day have a Done button too. `place` names the row for the failure.
     private func assertRoundTile(_ label: String, on place: String, line: UInt = #line) {
         let tiles = app.buttons.matching(NSPredicate(format: "label == %@", label)).allElementsBoundByIndex
-        guard let tile = tiles.filter({ $0.isHittable }).max(by: { $0.frame.maxX < $1.frame.maxX }) else {
+        // Larger is nearer the trailing edge.
+        let towardTrailing = { (tile: XCUIElement) in self.isRightToLeft ? -tile.frame.minX : tile.frame.maxX }
+        guard let tile = tiles.filter({ $0.isHittable }).max(by: { towardTrailing($0) < towardTrailing($1) }) else {
             XCTFail("No \(label) tile on \(place)", line: line)
             return
         }
@@ -920,7 +958,7 @@ final class ShotsUITests: XCTestCase {
             // By type: the row's title shares the label, and comes first on iOS 26.5.
             let row = app.switches[label].firstMatch
             let before = row.value as? String
-            row.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap()
+            row.coordinate(withNormalizedOffset: CGVector(dx: isRightToLeft ? 0.15 : 0.85, dy: 0.5)).tap()
             pause(0.8)
             XCTAssertNotEqual(row.value as? String, before, "\(label) didn't flip")
         }

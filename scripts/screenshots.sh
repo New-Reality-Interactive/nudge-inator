@@ -10,7 +10,9 @@
 # scripts/screenshots/project.yml) are uninstalled, and a simulator it booted is shut down, even
 # after a failure or an interrupt (Ctrl-C stops every simulator's run first).
 # Env: SIMULATORS (as scripts/test.sh), SHOTS_OUT (default docs/screenshots/<today>, git-ignored),
-# SHOTS_VARIANTS (default "portrait landscape largest-text"; "largest-text-landscape" on request),
+# SHOTS_VARIANTS (default "portrait landscape largest-text"; "largest-text-landscape" on request;
+# any of them with an "rtl-" prefix runs under Xcode's Right-to-Left Pseudolanguage, and "rtl" alone
+# means "rtl-portrait rtl-landscape rtl-largest-text", the once-per-release pass, docs/agents/release.md),
 # SHOTS_TESTS (ShotsUITests methods separated by spaces, such as "testSettings testForm"; default
 # every one). Each variant's folder is emptied first, unless SHOTS_TESTS names the tests: then the
 # images from other tests stay, and the run lists the ones it wrote, since those kept may be older
@@ -24,7 +26,16 @@ cd "$(dirname "$0")/.."
 SIMULATORS="${SIMULATORS-iPhone 15 Pro - iOS 26.5;iPhone 15 - iOS 27.0}"
 IFS=';' read -r -a simulators <<< "$SIMULATORS"
 out="${SHOTS_OUT:-docs/screenshots/$(date +%F)}"
-read -r -a variants <<< "${SHOTS_VARIANTS:-portrait landscape largest-text}"
+defaults=(portrait landscape largest-text)
+read -r -a variants <<< "${SHOTS_VARIANTS:-${defaults[*]}}"
+expanded=()
+for variant in "${variants[@]}"; do
+  case "$variant" in
+    rtl) for base in "${defaults[@]}"; do expanded+=("rtl-$base"); done ;;
+    *) expanded+=("$variant") ;;
+  esac
+done
+variants=("${expanded[@]}")
 only=()
 for test in ${SHOTS_TESTS:-}; do only+=("-only-testing:NudgeShotsUITests/ShotsUITests/$test"); done
 out="$(mkdir -p "$out" && cd "$out" && pwd)"
@@ -67,13 +78,17 @@ trap 'exit 143' TERM
 
 # One simulator's run: its variants, one after the other. Reads variants, only, out, logs and build.
 shoot() {
-  local name="$1" udid="$2" failed_file="$3" variant size orientation dir log started
+  local name="$1" udid="$2" failed_file="$3" variant base size orientation direction dir log started
   for variant in "${variants[@]}"; do
     case "$name/$variant" in *"iOS 26.5"/*landscape) echo "[$name] skip: $variant"; continue ;; esac
     echo "[$name] ==> $variant"
+    # The rtl- prefix is a launch argument of the harness app's (ShotsUITests), so the simulator's
+    # settings stay as they are; the rest of the name sets them as for any variant.
+    base="${variant#rtl-}" direction=ltr
+    [ "$base" = "$variant" ] || direction=rtl
     size=large orientation=portrait
-    case "$variant" in *landscape) orientation=landscape ;; esac
-    case "$variant" in largest-text*) size=accessibility-extra-extra-extra-large ;; esac
+    case "$base" in *landscape) orientation=landscape ;; esac
+    case "$base" in largest-text*) size=accessibility-extra-extra-extra-large ;; esac
     xcrun simctl ui "$udid" content_size "$size"
     dir="$out/$name/$variant"
     [ -n "${SHOTS_TESTS:-}" ] || rm -rf "$dir"
@@ -81,7 +96,7 @@ shoot() {
     log="$logs/screenshots-$name-$variant.log"
     started="$log.started"
     touch "$started"
-    TEST_RUNNER_SHOTS_DIR="$dir" TEST_RUNNER_SHOTS_ORIENTATION="$orientation" \
+    TEST_RUNNER_SHOTS_DIR="$dir" TEST_RUNNER_SHOTS_ORIENTATION="$orientation" TEST_RUNNER_SHOTS_DIRECTION="$direction" \
       xcodebuild test-without-building -project "$build/NudgeShots.xcodeproj" -scheme NudgeShots \
       -destination "platform=iOS Simulator,id=$udid" -derivedDataPath "$build/derived" ${only[@]+"${only[@]}"} \
       > "$log" 2>&1 < /dev/null \
