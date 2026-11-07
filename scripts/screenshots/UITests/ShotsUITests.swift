@@ -1130,7 +1130,7 @@ final class ShotsUITests: XCTestCase {
     private func askToDiscard(sheet title: String, line: UInt = #line) {
         tapCancel(sheet: title)
         XCTAssert(app.buttons["Discard Changes"].waitForExistence(timeout: 3), "Cancel didn't ask first:\n\(app.debugDescription)", line: line)
-        XCTAssert(app.staticTexts["Discard Changes?"].exists, "The discard question's title isn't showing", line: line)
+        XCTAssert(app.staticTexts["Are you sure you want to discard these changes?"].exists, "The discard question's title isn't showing", line: line)
     }
 
     /// Taps the Cancel of a sheet with no changes, and checks it closed without asking.

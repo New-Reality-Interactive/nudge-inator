@@ -24,7 +24,7 @@ struct DiscardingCancelButton: View {
                 Image(systemName: "xmark")
             }
         }
-        .confirmationDialog(Text("Discard Changes?", comment: "Asked when cancelling a sheet with changes: the reminder form, or the Reminders or Tags filter."),
+        .confirmationDialog(Text("Are you sure you want to discard these changes?", comment: "Asked when cancelling a sheet with changes: the reminder form, or the Reminders or Tags filter."),
                             isPresented: $isConfirming, titleVisibility: .visible) {
             Button(role: .destructive) {
                 dismiss()

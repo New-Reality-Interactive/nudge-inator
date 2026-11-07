@@ -447,7 +447,7 @@ except in the tab and navigation bars. Verify names against the mockup.
   Apply (the filled confirm button, `checkmark`) trailing, and Reset, a bordered button, at the bottom under the footer.
   With the draft unchanged, Cancel or swiping down closes it. Once it differs from what's applied,
   a swipe springs back and Cancel asks first, as the reminder form does: the system's
-  confirmation dialog, "Discard Changes?", as Calendar asks (#278). From the ✕ iOS draws it as a
+  confirmation dialog, "Are you sure you want to discard these changes?", as Calendar asks (#278). From the ✕ iOS draws it as a
   popover with Discard Changes alone; a tap outside it keeps the changes. A tap above the sheet does nothing either way: iOS draws a sheet's dimming
   view as noninteractive (spec #104, Decision 57).
   Match and Tags with No Tags as on My Day, then Status, Strength and Due Date. Status and
