@@ -109,7 +109,19 @@ step "xcodebuild test (NudgeEngine, macOS)"
   -destination 'platform=macOS' -derivedDataPath .build/xcode) || failed+=("package-tests")
 
 scratch="$(mktemp -d)"
-trap 'rm -rf "$scratch"' EXIT
+
+# Leaves the Mac as the run found it: the simulators this run booted are shut down, pass or fail
+# (an exit trap), and one that was already booted stays booted. Same rule as scripts/screenshots.sh.
+shut_down_at_exit=() # UDIDs of simulators that were shut down when the run began
+cleanup() {
+  rm -rf "$scratch"
+  for udid in ${shut_down_at_exit[@]+"${shut_down_at_exit[@]}"}; do
+    xcrun simctl shutdown "$udid" 2>/dev/null || true
+  done
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 # Only the color sets: the catalog may hold other assets the script doesn't write.
 step "The color sets match DESIGN.md"
@@ -172,6 +184,8 @@ for name in ${simulators[@]+"${simulators[@]}"}; do
     failed+=("simulator-$name")
     continue
   fi
+  # Recorded before anything boots it (quiet_media_analysis, or xcodebuild itself).
+  xcrun simctl list devices | grep -q "$udid) (Booted)" || shut_down_at_exit+=("$udid")
   quiet_media_analysis "$name" "$udid"
   found+=("$name") udids+=("$udid")
 done
