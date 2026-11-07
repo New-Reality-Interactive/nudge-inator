@@ -4,8 +4,9 @@ import SwiftUI
 /// A sheet with changes also disables interactive dismissal, so a swipe can't lose them.
 ///
 /// The question is an alert, not a confirmation dialog: on iOS 26 a dialog from a button is a
-/// popover with Discard Changes alone, so VoiceOver offered no Keep Editing, and a double-tap meant
-/// to get out of it threw the changes away (#278, as #276 found for Delete Reminder).
+/// popover with Discard Changes alone, so VoiceOver offered no way to keep the changes, and a
+/// double-tap meant to get out of it threw them away (#278, as #276 found for Delete Reminder).
+/// The alert's way back is titled Cancel, as the HIG asks of a button that cancels an alert's action.
 struct DiscardingCancelButton: View {
     let hasChanges: Bool
 
@@ -27,7 +28,7 @@ struct DiscardingCancelButton: View {
                isPresented: $isConfirming) {
             Button(role: .cancel) {
             } label: {
-                Text("Keep Editing", comment: "Goes back to a sheet without discarding its changes.")
+                Text("Cancel", comment: "Closes the discard question and goes back to the sheet with its changes.")
             }
             Button(role: .destructive) {
                 dismiss()

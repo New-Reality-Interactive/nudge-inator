@@ -1102,12 +1102,12 @@ final class ShotsUITests: XCTestCase {
         from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 0, dy: 600)), withVelocity: .fast, thenHoldForDuration: 0)
     }
 
-    /// Taps Keep Editing in the discard question, an alert (#278), and checks it closed and left the
-    /// sheet open.
+    /// Taps Cancel in the discard question, an alert (#278), and checks it closed and left the sheet
+    /// open. The sheet's ✕ is also Cancel: `answerQuestion` taps the one inside the alert.
     private func keepEditing(sheet title: String, line: UInt = #line) {
-        answerQuestion("Keep Editing", line: line)
+        answerQuestion("Cancel", line: line)
         XCTAssertFalse(app.alerts.firstMatch.exists, "The discard question stayed up", line: line)
-        XCTAssert(app.navigationBars[title].exists, "Keep Editing closed the sheet", line: line)
+        XCTAssert(app.navigationBars[title].exists, "Cancel in the discard question closed the sheet", line: line)
     }
 
     /// Taps Discard Changes in the discard question (#278) and checks the sheet closed.
@@ -1440,7 +1440,7 @@ final class ShotsUITests: XCTestCase {
     }
 
     /// The form's Cancel (#278): with no changes it closes without asking; with a title typed it
-    /// asks, Keep Editing keeps the title, and Discard Changes closes the form and adds nothing.
+    /// asks, the question's Cancel keeps the title, and Discard Changes closes the form and adds nothing.
     func testFormDiscard() {
         launch(.app)
         openSheet("New Reminder", title: "New Reminder")
@@ -1457,7 +1457,7 @@ final class ShotsUITests: XCTestCase {
         askToDiscard(sheet: "New Reminder")
         shot("form-discard")
         keepEditing(sheet: "New Reminder")
-        XCTAssertEqual(app.textFields.firstMatch.value as? String, "Water the ferns", "Keep Editing lost the title")
+        XCTAssertEqual(app.textFields.firstMatch.value as? String, "Water the ferns", "Cancel in the discard question lost the title")
 
         askToDiscard(sheet: "New Reminder")
         discardChanges(sheet: "New Reminder")
