@@ -1,3 +1,4 @@
+import Foundation
 import NudgeEngine
 import SwiftUI
 
@@ -21,6 +22,10 @@ struct ShotsApp: App {
         case customLocking
         /// Everything allowed, and no reminder at all: the Reminders tab's first empty state.
         case noReminders
+        /// Everything allowed, plus the tag #spare, which no reminder has. A Darwin notification from
+        /// the UI test (`ShotsSeed.giveSpareAReminderNotification`) gives it one while the test
+        /// has a Tags row's Delete alert up (#277).
+        case spareTag
     }
 
     @State private var model: AppModel
@@ -106,7 +111,7 @@ enum ShotsSeed {
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .disabled)
         case .badgesNotSet:
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .notSupported)
-        case .app, .customLocking, .noReminders:
+        case .app, .customLocking, .noReminders, .spareTag:
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .enabled)
         }
         let store = try! ReminderStore(location: .inMemory)
@@ -131,6 +136,7 @@ enum ShotsSeed {
             isSeeded = true
             seedMockupData(into: model)
             if scenario == .customLocking { seedCustomLocking(into: model) }
+            if scenario == .spareTag { seedSpareTag(into: model) }
         }
         await model.appOpened()
     }
@@ -247,6 +253,33 @@ enum ShotsSeed {
             pauseSpans: [PauseSpan(start: on(daysAgo: 2, 18, 0), end: on(daysAgo: 1, 9, 0))]
         )
         return StoredData(reminders: [physio], tags: [health], histories: [physio.id: history])
+    }
+
+    /// The Darwin notification the UI test posts, which gives #spare a reminder. Darwin
+    /// notifications reach every process of a simulator, so it crosses from the UI-test runner to
+    /// the app. Not a timer: the test says when, once its alert is up. The UI-test target can't import
+    /// this file, so it posts the same name as a literal: change both together.
+    static let giveSpareAReminderNotification = "com.newreality.nudgeinator.shots.giveSpareAReminder"
+    private static var spareModel: AppModel?
+
+    /// Adds #spare, and listens for the notification that gives it a reminder.
+    static func seedSpareTag(into model: AppModel) {
+        _ = try! model.createTag(named: "spare")
+        spareModel = model
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(), nil,
+            { _, _, _, _, _ in
+                // Delivered on the main thread, which the model needs.
+                MainActor.assumeIsolated { ShotsSeed.giveSpareAReminder() }
+            },
+            giveSpareAReminderNotification as CFString, nil, .deliverImmediately
+        )
+    }
+
+    private static func giveSpareAReminder() {
+        guard let model = spareModel, let spare = model.engine.tags.first(where: { $0.name == "spare" }) else { return }
+        // Five days out, so it isn't due, and nothing nudges, during the test.
+        model.add(Reminder(title: "Use the spare", tagIDs: [spare.id], dueTime: .now.addingTimeInterval(5 * 24 * 3600), strength: .gentle))
     }
 
     /// Weekly on today and tomorrow, at the first whole minute at least 90 seconds away: time for

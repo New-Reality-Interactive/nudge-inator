@@ -1,3 +1,4 @@
+import notify
 import XCTest
 
 /// Walks every screen of the harness app and saves a screenshot of each to `SHOTS_DIR` (set by
@@ -9,7 +10,7 @@ import XCTest
 final class ShotsUITests: XCTestCase {
     /// The harness's `SHOT_SCENARIO`s (`ShotsApp.Scenario`, which can't be imported here).
     enum ShotScenario: String {
-        case app, onboarding, notificationsOff, alarmsOff, timeSensitiveOff, badgesOff, badgesNotSet, customLocking, noReminders
+        case app, onboarding, notificationsOff, alarmsOff, timeSensitiveOff, badgesOff, badgesNotSet, customLocking, noReminders, spareTag
     }
 
     private var app: XCUIApplication!
@@ -704,6 +705,52 @@ final class ShotsUITests: XCTestCase {
         launch(.noReminders)
         tab("Tags")
         shot("tags-empty", pages: 2)
+    }
+
+    /// #277: a Tags row's Delete alert is up, and the row leaves the list under it, as when Has no
+    /// reminders is on and its tag gets a reminder. Nothing on screen can remove a tag while the
+    /// alert covers it, so the harness does it when this test posts a Darwin notification
+    /// (`ShotsSeed.giveSpareAReminderNotification`). The alert goes with its row, deletes nothing, and
+    /// the list and its count are right.
+    func testTagsRowLeavesWithItsDeleteAlertUp() {
+        launch(.spareTag)
+        tab("Tags")
+        openFilter(titled: "Filter Tags")
+        chooseInSheet("Has no reminders")
+        applyFilter(titled: "Filter Tags")
+        assertTagCount(startsWith: "1 tag out of 8")
+        swipe("#spare")
+        app.buttons["Delete"].firstMatch.tap()
+        XCTAssert(app.alerts.firstMatch.waitForExistence(timeout: 3), "No Delete question")
+        XCTAssert(app.alerts.firstMatch.staticTexts["Delete #spare?"].exists, "The question isn't about #spare:\n\(app.debugDescription)")
+        shot("tags-delete-row-leaves-before")
+
+        // #spare gets a reminder, so the filter no longer shows it. The name is the harness's
+        // `ShotsSeed.giveSpareAReminderNotification`, which this target can't import.
+        notify_post("com.newreality.nudgeinator.shots.giveSpareAReminder")
+        let gone = NSPredicate(format: "count == 0")
+        let alertGone = XCTNSPredicateExpectation(predicate: gone, object: app.alerts)
+        XCTAssertEqual(XCTWaiter().wait(for: [alertGone], timeout: 5), .completed, "The Delete question stayed after its row left:\n\(app.debugDescription)")
+        pause(1)
+        XCTAssertEqual(app.state, .runningForeground, "The app isn't running after its row left")
+        XCTAssert(app.tabBars.firstMatch.exists, "No tab bar after the row left")
+        assertTagCount(startsWith: "0 tags out of 8")
+        XCTAssertNil(scrollTo("#spare", scrolls: 0), "#spare is still in the filtered list")
+        XCTAssert(app.staticTexts["No tags with this filter."].exists, "No no-match state:\n\(app.debugDescription)")
+        shot("tags-delete-row-leaves-after")
+
+        // Nothing was deleted: #spare and the seven others are all there.
+        filterButtons.firstMatch.tap()
+        XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
+        app.buttons["Clear All Filters"].firstMatch.tap()
+        pause(0.8)
+        assertTagCount(startsWith: "8 tags out of 8")
+        scrollToTop()
+        // In the list's A to Z order: the lookup only scrolls down.
+        for name in ["#appointments", "#health", "#home", "#money", "#morning", "#spare", "#travel", "#work"] {
+            XCTAssertNotNil(scrollTo(name), "\(name) is missing from the list")
+        }
+        XCTAssertEqual(app.alerts.count, 0, "A Delete question came back")
     }
 
     /// The mockup's `reminders` and `reminders-empty`: every reminder in creation-date order, a
