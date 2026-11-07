@@ -26,6 +26,10 @@ struct ShotsApp: App {
         /// the UI test (`ShotsSeed.giveSpareAReminderNotification`) gives it one while the test
         /// has a Tags row's Delete alert up (#277).
         case spareTag
+        /// Everything allowed. A Darwin notification from the UI test
+        /// (`ShotsSeed.markTheBinsDoneNotification`) marks "Take the bins out" Done while the test
+        /// has a Reminders row's Delete alert up (#280).
+        case rowLeaves
     }
 
     @State private var model: AppModel
@@ -111,7 +115,7 @@ enum ShotsSeed {
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .disabled)
         case .badgesNotSet:
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .notSupported)
-        case .app, .customLocking, .noReminders, .spareTag:
+        case .app, .customLocking, .noReminders, .spareTag, .rowLeaves:
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .enabled)
         }
         let store = try! ReminderStore(location: .inMemory)
@@ -137,6 +141,7 @@ enum ShotsSeed {
             seedMockupData(into: model)
             if scenario == .customLocking { seedCustomLocking(into: model) }
             if scenario == .spareTag { seedSpareTag(into: model) }
+            if scenario == .rowLeaves { listenToMarkTheBinsDone(in: model) }
         }
         await model.appOpened()
     }
@@ -280,6 +285,31 @@ enum ShotsSeed {
         guard let model = spareModel, let spare = model.engine.tags.first(where: { $0.name == "spare" }) else { return }
         // Five days out, so it isn't due, and nothing nudges, during the test.
         model.add(Reminder(title: "Use the spare", tagIDs: [spare.id], dueTime: .now.addingTimeInterval(5 * 24 * 3600), strength: .gentle))
+    }
+
+    /// The Darwin notification the UI test posts, which marks "Take the bins out" Done: a Nudging
+    /// row, so it leaves the list when the Nudging status is on. Not a timer: the test says when,
+    /// once its alert is up. The UI-test target can't import this file, so it posts the same name as a
+    /// literal: change both together.
+    static let markTheBinsDoneNotification = "com.newreality.nudgeinator.shots.markTheBinsDone"
+    private static var binsModel: AppModel?
+
+    /// Listens for the notification that marks the bins Done.
+    static func listenToMarkTheBinsDone(in model: AppModel) {
+        binsModel = model
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(), nil,
+            { _, _, _, _, _ in
+                // Delivered on the main thread, which the model needs.
+                MainActor.assumeIsolated { ShotsSeed.markTheBinsDone() }
+            },
+            markTheBinsDoneNotification as CFString, nil, .deliverImmediately
+        )
+    }
+
+    private static func markTheBinsDone() {
+        guard let model = binsModel, let bins = model.engine.reminders.first(where: { $0.title == "Take the bins out" }) else { return }
+        model.markDone(bins.id)
     }
 
     /// Weekly on today and tomorrow, at the first whole minute at least 90 seconds away: time for
