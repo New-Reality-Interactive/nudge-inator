@@ -3,10 +3,10 @@ import SwiftUI
 /// A sheet's Cancel (`xmark`): it closes the sheet, asking first while there are changes to lose.
 /// A sheet with changes also disables interactive dismissal, so a swipe can't lose them.
 ///
-/// The question is an alert, not a confirmation dialog: on iOS 26 a dialog from a button is a
-/// popover with Discard Changes alone, so VoiceOver offered no way to keep the changes, and a
-/// double-tap meant to get out of it threw them away (#278, as #276 found for Delete Reminder).
-/// The alert's way back is titled Cancel, as the HIG asks of a button that cancels an alert's action.
+/// The question is the system's confirmation dialog, with its title showing, as Calendar asks when
+/// a new event is cancelled (iOS 27, #278). From the button iOS draws it as a popover with Discard
+/// Changes alone: a tap outside it, or VoiceOver's "Dismiss popup", closes it and keeps the changes.
+/// Where iOS draws an action sheet instead, its Cancel does the same.
 struct DiscardingCancelButton: View {
     let hasChanges: Bool
 
@@ -24,16 +24,16 @@ struct DiscardingCancelButton: View {
                 Image(systemName: "xmark")
             }
         }
-        .alert(Text("Discard Changes?", comment: "Asked when cancelling a sheet with changes: the reminder form, or the Reminders or Tags filter."),
-               isPresented: $isConfirming) {
-            Button(role: .cancel) {
-            } label: {
-                Text("Cancel", comment: "Closes the discard question and goes back to the sheet with its changes.")
-            }
+        .confirmationDialog(Text("Discard Changes?", comment: "Asked when cancelling a sheet with changes: the reminder form, or the Reminders or Tags filter."),
+                            isPresented: $isConfirming, titleVisibility: .visible) {
             Button(role: .destructive) {
                 dismiss()
             } label: {
                 Text("Discard Changes", comment: "Throws away a sheet's changes and closes it.")
+            }
+            Button(role: .cancel) {
+            } label: {
+                Text("Cancel", comment: "Closes the discard question and goes back to the sheet with its changes.")
             }
         }
     }

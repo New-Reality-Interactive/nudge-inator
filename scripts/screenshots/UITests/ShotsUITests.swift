@@ -1102,31 +1102,42 @@ final class ShotsUITests: XCTestCase {
         from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 0, dy: 600)), withVelocity: .fast, thenHoldForDuration: 0)
     }
 
-    /// Taps Cancel in the discard question, an alert (#278), and checks it closed and left the sheet
-    /// open. The sheet's ✕ is also Cancel: `answerQuestion` taps the one inside the alert.
+    /// Closes the discard question without discarding (#278), and checks it closed and left the sheet
+    /// open. From the ✕ iOS draws it as a popover with Discard Changes alone, closed by a tap outside
+    /// it: the popover's own dismiss region, which is there even when the popover fills the screen at
+    /// the largest text. Where iOS draws an action sheet instead, its Cancel is the way out.
     private func keepEditing(sheet title: String, line: UInt = #line) {
-        answerQuestion("Cancel", line: line)
-        XCTAssertFalse(app.alerts.firstMatch.exists, "The discard question stayed up", line: line)
-        XCTAssert(app.navigationBars[title].exists, "Cancel in the discard question closed the sheet", line: line)
+        let outside = app.otherElements["PopoverDismissRegion"].firstMatch
+        if outside.exists {
+            outside.tap()
+        } else {
+            let cancel = app.sheets.buttons["Cancel"].firstMatch
+            XCTAssert(cancel.exists, "No way out of the discard question:\n\(app.debugDescription)", line: line)
+            cancel.tap()
+        }
+        pause(0.8)
+        XCTAssertFalse(app.buttons["Discard Changes"].exists, "The discard question stayed up", line: line)
+        XCTAssert(app.navigationBars[title].exists, "Leaving the discard question closed the sheet", line: line)
     }
 
     /// Taps Discard Changes in the discard question (#278) and checks the sheet closed.
     private func discardChanges(sheet title: String, line: UInt = #line) {
-        answerQuestion("Discard Changes", line: line)
+        app.buttons["Discard Changes"].firstMatch.tap()
         XCTAssert(app.navigationBars[title].waitForNonExistence(timeout: 3), "Discard Changes left the sheet open", line: line)
     }
 
-    /// Taps the Cancel of a sheet with changes and checks it asked first.
+    /// Taps the Cancel of a sheet with changes and checks it asked first, with its title showing.
     private func askToDiscard(sheet title: String, line: UInt = #line) {
         tapCancel(sheet: title)
-        XCTAssert(app.alerts.firstMatch.waitForExistence(timeout: 3), "Cancel didn't ask first:\n\(app.debugDescription)", line: line)
+        XCTAssert(app.buttons["Discard Changes"].waitForExistence(timeout: 3), "Cancel didn't ask first:\n\(app.debugDescription)", line: line)
+        XCTAssert(app.staticTexts["Discard Changes?"].exists, "The discard question's title isn't showing", line: line)
     }
 
     /// Taps the Cancel of a sheet with no changes, and checks it closed without asking.
     private func closeUnchangedSheet(titled title: String, line: UInt = #line) {
         tapCancel(sheet: title)
         pause(0.8)
-        XCTAssertFalse(app.alerts.firstMatch.exists, "Cancel asked with no changes", line: line)
+        XCTAssertFalse(app.buttons["Discard Changes"].exists, "Cancel asked with no changes", line: line)
         XCTAssertFalse(app.navigationBars[title].exists, "Cancel didn't close the unchanged sheet", line: line)
     }
 
@@ -1440,7 +1451,7 @@ final class ShotsUITests: XCTestCase {
     }
 
     /// The form's Cancel (#278): with no changes it closes without asking; with a title typed it
-    /// asks, the question's Cancel keeps the title, and Discard Changes closes the form and adds nothing.
+    /// asks, a tap outside the question keeps the title, and Discard Changes closes the form and adds nothing.
     func testFormDiscard() {
         launch(.app)
         openSheet("New Reminder", title: "New Reminder")
@@ -1457,7 +1468,7 @@ final class ShotsUITests: XCTestCase {
         askToDiscard(sheet: "New Reminder")
         shot("form-discard")
         keepEditing(sheet: "New Reminder")
-        XCTAssertEqual(app.textFields.firstMatch.value as? String, "Water the ferns", "Cancel in the discard question lost the title")
+        XCTAssertEqual(app.textFields.firstMatch.value as? String, "Water the ferns", "Leaving the discard question lost the title")
 
         askToDiscard(sheet: "New Reminder")
         discardChanges(sheet: "New Reminder")
