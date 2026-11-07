@@ -833,7 +833,7 @@
       "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Created, Oldest First."
     },
     "Custom" : {
-      "comment" : "The Repeat menu's last item: a custom repeat.\nThe reminder form's Repeat row when the repeat is a custom rule.\nThe reminder form's row below Repeat, shown when the repeat is custom: it opens the Custom repeat page.\nTitle of the Custom repeat page."
+      "comment" : "The Repeat menu's last item: a custom repeat.\nThe reminder form's Repeat row when the repeat is a custom rule.\nTitle of the Custom repeat page."
     },
     "Daily" : {
       "comment" : "The Custom repeat page's frequency."
@@ -1540,6 +1540,9 @@
     },
     "Open iOS Settings" : {
       "comment" : "Settings: row that opens the app's page in the iOS Settings app, where notifications, alarms and badges can be turned on."
+    },
+    "Opens the custom repeat." : {
+      "comment" : "VoiceOver hint on the reminder form's row that writes out a custom repeat: it opens the Custom repeat page."
     },
     "Opens the reminder's details." : {
       "comment" : "VoiceOver hint on a nudge card's title and on a Now row: tapping it opens the reminder's details."

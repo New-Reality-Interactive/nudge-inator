@@ -494,11 +494,15 @@ The Reminders tab's tools, in its layout, so they're learned once.
   pop-up menu, as in Apple's Reminders on iOS 27 (mockup `2026-11-07-repeat-menu`, #283): Never and the six
   presets in their order, a divider, then Custom, with a checkmark on the current choice. A choice is the
   form's repeat at once, held until the form's own Save like every other field; there is no Repeat page.
-- **Custom row:** choosing Custom adds a row below Repeat, labeled Custom, with the rule's summary and a
-  chevron. It opens the Custom repeat page. Choosing a preset again removes it.
+- **Custom row:** choosing Custom adds a row below Repeat with no "Custom" label, which Repeat already
+  says. It writes the repeat out ("Every Monday at 9:00 AM") with a chevron and opens the Custom repeat
+  page. Choosing a preset again removes it. While it shows, the footer under Starts is dropped, since the
+  row says the same; the footer stays for Never and the presets.
 - **Locked while nudging:** the Repeat row and the Custom row are plain text with the `lock`, without the
-  menu's or the link's affordance, beside the form's lock note, as the form's other locked rows are.
+  menu's or the link's affordance (no chevron), beside the form's lock note, as the form's other locked
+  rows are.
 - **VoiceOver:** the Repeat row reads its choice, and the menu reads each item with the current one selected.
+  The Custom row reads the repeat, with the hint "Opens the custom repeat."
 
 ### How It Nudges
 - **Token:** `how-it-nudges`. Inset grouped list, summary in the section footer, `{typography.footnote}`

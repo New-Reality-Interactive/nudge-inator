@@ -184,7 +184,10 @@ private struct ScheduleSection: View {
                 case .noTitle, .pastTime, nil:
                     EmptyView()
                 }
-                RepeatSummarySentence(summary: form.repeatSummary)
+                // The Custom row below Repeat already writes it out.
+                if !form.isCustomRepeat {
+                    RepeatSummarySentence(summary: form.repeatSummary)
+                }
             }
         }
     }
@@ -248,20 +251,25 @@ private struct RepeatMenuItem: View {
     }
 }
 
-/// Below Repeat once Custom is chosen: the rule's summary, which opens the Custom repeat page.
+/// Below Repeat once Custom is chosen: the repeat written out, with no "Custom" label (Repeat
+/// already says it). It opens the Custom repeat page. Locked while nudging, it is the same text with
+/// the `lock` and no chevron.
 private struct CustomRepeatRow: View {
     let form: ReminderForm
     let isLocked: Bool
 
     var body: some View {
-        let label = Text("Custom", comment: "The reminder form's row below Repeat, shown when the repeat is custom: it opens the Custom repeat page.")
-        let value = Text(form.repeatSummary)
+        let summary = Text(form.repeatSummary)
         if isLocked {
-            LockedValueRow(label: label, value: value)
+            LockableLabel(isLocked: true) { summary }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
+                .lockedWhileNudging(true)
         } else {
             NavigationLink(value: ReminderFormPage.custom) {
-                LabeledContent { value } label: { label }
+                summary
             }
+            .accessibilityHint(Text("Opens the custom repeat.", comment: "VoiceOver hint on the reminder form's row that writes out a custom repeat: it opens the Custom repeat page."))
         }
     }
 }

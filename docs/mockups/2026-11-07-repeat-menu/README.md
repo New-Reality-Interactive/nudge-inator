@@ -12,10 +12,14 @@ New Reminder form (the + button) reaches every state below.
 - **Repeat is a menu, not a page.** Tapping the Repeat row lists Never, Every Day, Every Weekday,
   Every Week, Every 2 Weeks, Every Month and Every Year, a divider, then Custom, with a checkmark on
   the current choice. A choice is the form's repeat at once. The Repeat page and its checkmark are gone.
-- **The Custom row.** Choosing Custom adds a Custom row below Repeat. It shows the rule's summary
-  with a chevron and opens the Custom repeat page. Choosing a preset again removes the row.
+- **The Custom row.** Choosing Custom adds a row below Repeat. It has no "Custom" label, since Repeat
+  already says it: it writes the repeat out ("Every Monday at 9:00 AM"), with a chevron, and opens the
+  Custom repeat page. It starts as the default custom repeat (weekly from Never, or the preset's
+  equivalent). Choosing a preset again removes the row.
+- **The footer under Starts** is gone while the Custom row shows, since the row says the same. It stays
+  for Never and the presets.
 - **The Custom page** still edits a copy: its checkmark makes the choices the repeat and goes back to
   the form; Back drops them. (#284 turns it into a sheet.)
 - **Cancel** asks "Are you sure you want to discard these changes?" when only the repeat changed.
 - **While nudging** the Repeat row and the Custom row are locked, each with the `lock`, beside the
-  lock note.
+  lock note. The Custom row is its text with the lock and no chevron.

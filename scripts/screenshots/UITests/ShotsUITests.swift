@@ -1541,10 +1541,9 @@ final class ShotsUITests: XCTestCase {
         pause(0.8)
     }
 
-    /// Taps the Custom row below Repeat, which shows the rule's summary.
+    /// Taps the Custom row below Repeat, which writes the repeat out ("Every Saturday at 4:00 PM").
     private func openCustomRow() {
-        // Not the Repeat menu's button, which is also "Custom": the row's label goes on with its summary.
-        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label != %@", "Custom", "Custom")).firstMatch
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Every", " at ")).firstMatch
         reveal(row)
         XCTAssert(row.waitForExistence(timeout: 3), "No Custom row:\n\(app.debugDescription)")
         row.tap()
