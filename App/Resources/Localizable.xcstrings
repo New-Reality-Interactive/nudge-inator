@@ -860,7 +860,7 @@
       "comment" : "Throws away a sheet's changes and closes it."
     },
     "Discard your changes?" : {
-      "comment" : "Asked when cancelling a sheet with changes: the reminder form or the Reminders filter."
+      "comment" : "Asked when cancelling a sheet with changes: the reminder form, or the Reminders or Tags filter."
     },
     "Done" : {
       "comment" : "My Day's filter sheet's confirm button (a checkmark): closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.\nThe Custom repeat page's confirm button (a checkmark): its choices become the Repeat page's choice.\nThe Repeat page's confirm button (a checkmark): its choice becomes the reminder's repeat.\nThe tag sheet's confirm button (a checkmark)."
