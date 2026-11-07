@@ -222,7 +222,7 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
 
 - **Accent (Lagoon, `{colors.accent}`)** is `AccentColor`. It means **you can tap this**: buttons,
   links, menus, checkmarks, the selected tab, tag and filter tokens, the chosen count's ring, the filled confirm button in each
-  sheet and on the Repeat and Custom repeat pages, and **Done** on nudge cards.
+  sheet and on the Custom repeat page, and **Done** on nudge cards.
   - **Never** a status, decoration or background wash.
   - **The alarm** sits on a dark Lock Screen, so its tint pins `{colors.accent-dark}`. This is the
     only place a component pins a variant.
@@ -253,7 +253,7 @@ Rules:
   and glyph always come with the color.
 - **Zero isn't a status.** A count of 0 uses `{colors.secondary-label}`, never red.
 - **Fill sparingly.** Only primary actions get an accent fill: the sheet's confirm button (and the
-  Repeat and Custom repeat pages', which take its place there), and the nudge card's Done. My Day's per-row Done buttons are bordered, so a long list isn't a column of
+  Custom repeat page's, which takes its place there), and the nudge card's Done. My Day's per-row Done buttons are bordered, so a long list isn't a column of
   teal.
 - **Status and secondary text never sit on `{colors.tertiary-fill}`, except as large text.** The
   chosen count's number (Title 2 bold) is large text; its caption uses `{colors.label}`.
@@ -488,6 +488,17 @@ The Reminders tab's tools, in its layout, so they're learned once.
   `line.3.horizontal.decrease`, a title, a line naming what's narrowing the list and a bordered
   Clear button (Clear Search, Clear Filter, Clear Search and Filter), with no help text. The header
   row stays above it.
+
+### Reminder form's Repeat
+- The Repeat row sits under Starts and shows the current choice. A tap opens a
+  pop-up menu, as in Apple's Reminders on iOS 27 (mockup `2026-11-07-repeat-menu`, #283): Never and the six
+  presets in their order, a divider, then Custom, with a checkmark on the current choice. A choice is the
+  form's repeat at once, held until the form's own Save like every other field; there is no Repeat page.
+- **Custom row:** choosing Custom adds a row below Repeat, labeled Custom, with the rule's summary and a
+  chevron. It opens the Custom repeat page. Choosing a preset again removes it.
+- **Locked while nudging:** the Repeat row and the Custom row are plain text with the `lock`, without the
+  menu's or the link's affordance, beside the form's lock note, as the form's other locked rows are.
+- **VoiceOver:** the Repeat row reads its choice, and the menu reads each item with the current one selected.
 
 ### How It Nudges
 - **Token:** `how-it-nudges`. Inset grouped list, summary in the section footer, `{typography.footnote}`

@@ -1487,28 +1487,68 @@ final class ShotsUITests: XCTestCase {
         shot("form-tags")
     }
 
+    /// The Repeat menu, then its Custom row and page (#283): choosing a preset or Custom is the
+    /// form's repeat at once, and the Custom row opens the Custom page.
     func testFormPages() {
         launch(.app)
         openSheet("New Reminder", title: "New Reminder")
         hideKeyboard()
-        tapText("Repeat", inSheet: true)
-        shot("form-repeat", pages: 2)
-        tapText("Custom", inSheet: true)
+        openRepeatMenu(showing: "Never")
+        shot("form-repeat-menu")
+        app.buttons["Every Week"].firstMatch.tap()
+        pause(0.8)
+        shot("form-repeat-preset")
+        openRepeatMenu(showing: "Every Week")
+        app.buttons["Custom"].firstMatch.tap()
+        pause(0.8)
+        shot("form-repeat-custom", pages: 2)
+        openCustomRow()
         shot("form-custom", pages: 3)
-        // The checkmark chooses the weekly repeat the page shows, unchanged, from Never (ticket 17).
+        // The checkmark makes the choices the repeat, unchanged, and goes back to the form (ticket 17).
         barTap { app.navigationBars["Custom"].buttons["Done"].tap() }
-        XCTAssert(app.navigationBars["Repeat"].waitForExistence(timeout: 3), "The checkmark didn't go back to Repeat")
-        shot("form-custom-chosen", pages: 2)
-        reportFormPageAccessibility("repeat-chosen")
-        // Only the Repeat page's checkmark makes the choice the repeat (ticket 22).
-        barTap { app.navigationBars["Repeat"].buttons["Done"].tap() }
         XCTAssert(app.navigationBars["New Reminder"].waitForExistence(timeout: 3), "The checkmark didn't go back to the form")
-        shot("form-repeat-chosen")
+        shot("form-custom-chosen")
+        reportFormPageAccessibility("repeat-chosen")
+        openRepeatMenu(showing: "Custom")
+        app.buttons["Every Day"].firstMatch.tap()
+        pause(0.8)
+        XCTAssertFalse(app.buttons["Custom"].firstMatch.exists, "A preset left the Custom row")
+    }
+
+    /// Scrolls the form until `element` is on screen and clear of the bar, down first, then up from
+    /// where that left it. Not past the top: swiping down there closes the sheet.
+    private func reveal(_ element: XCUIElement) {
+        let height = app.windows.firstMatch.frame.height
+        func clear() -> Bool { element.exists && element.isHittable && element.frame.minY >= 150 && element.frame.maxY <= height - 60 }
+        for _ in 0..<8 where !clear() { scroll(down: true) }
+        for _ in 0..<3 where !clear() { scroll(down: false) }
+    }
+
+    /// Taps the Repeat row's menu button, which shows `current`, the repeat's choice, and waits for
+    /// the menu.
+    private func openRepeatMenu(showing current: String, line: UInt = #line) {
+        let menu = app.buttons[current].firstMatch
+        reveal(menu)
+        XCTAssert(menu.waitForExistence(timeout: 3), "No Repeat menu showing \(current):\n\(app.debugDescription)", line: line)
+        menu.tap()
+        XCTAssert(app.buttons["Every Day"].firstMatch.waitForExistence(timeout: 3), "The Repeat menu didn't open", line: line)
+        pause(0.8)
+    }
+
+    /// Taps the Custom row below Repeat, which shows the rule's summary.
+    private func openCustomRow() {
+        // Not the Repeat menu's button, which is also "Custom": the row's label goes on with its summary.
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label != %@", "Custom", "Custom")).firstMatch
+        reveal(row)
+        XCTAssert(row.waitForExistence(timeout: 3), "No Custom row:\n\(app.debugDescription)")
+        row.tap()
+        XCTAssert(app.navigationBars["Custom"].waitForExistence(timeout: 3), "The Custom row didn't open the Custom page")
+        pause(0.8)
     }
 
     /// The Custom page of a reminder that starts nudging while it's open (ticket 16), light and
     /// dark, before and after the lock, and what VoiceOver gets for its controls once locked, in the
-    /// test log (`ACCESSIBILITY` lines), then the locked Repeat page. Each launch waits up to 210
+    /// test log (`ACCESSIBILITY` lines), then the locked form. Each launch waits up to 210
     /// seconds for the lock. It only scrolls down: at the top of the sheet a drag down would close it.
     func testCustomLocking() {
         for dark in [false, true] {
@@ -1517,9 +1557,8 @@ final class ShotsUITests: XCTestCase {
             tapText("Plan the week")
             openSheet("Edit", title: "Edit Reminder")
             hideKeyboard()
-            tapText("Repeat", inSheet: true)
             shot("\(name)-repeat-unlocked")
-            tapText("Custom", inSheet: true)
+            openCustomRow()
             shot("\(name)-unlocked")
             if !dark { reportFormPageAccessibility("custom-unlocked") }
             let note = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Nudging now.")).firstMatch
@@ -1529,9 +1568,9 @@ final class ShotsUITests: XCTestCase {
                 if !dark { reportFormPageAccessibility("custom-locked-\(page)") }
                 scroll(down: true)
             }
-            // Back to the Repeat page, locked too, with its checkmark (ticket 22).
+            // Back to the form, whose Repeat and Custom rows are locked too.
             barTap { app.navigationBars["Custom"].buttons.firstMatch.tap() }
-            XCTAssert(app.navigationBars["Repeat"].waitForExistence(timeout: 3), "Back didn't go to Repeat")
+            XCTAssert(app.navigationBars["Edit Reminder"].waitForExistence(timeout: 3), "Back didn't go to the form")
             shot("\(name)-repeat-locked", pages: 2)
             if !dark { reportFormPageAccessibility("repeat-locked") }
             app.terminate()

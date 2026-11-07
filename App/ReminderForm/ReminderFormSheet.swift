@@ -9,8 +9,7 @@ struct ReminderFormSheet: View {
     @Bindable var form: ReminderForm
     @Environment(AppModel.self) private var model: AppModel?
     @Environment(\.dismiss) private var dismiss
-    /// The pages pushed over the form. The stack removes a page when Back or a swipe pops it, so
-    /// the Repeat page's Back is when `.repeat` leaves the path (ticket 22).
+    /// The pages pushed over the form.
     @State private var pages: [ReminderFormPage] = []
 
     var body: some View {
@@ -33,18 +32,12 @@ struct ReminderFormSheet: View {
             .navigationDestination(for: ReminderFormPage.self) { page in
                 switch page {
                 case .tags: TagsPage(form: form)
-                case .repeat: RepeatPage(form: form)
                 case .custom: CustomRepeatPage(form: form)
                 }
             }
             .toolbar { toolbar }
         }
-        // Not the Repeat page's onDisappear: pushing Custom over it makes it disappear too. After
-        // its checkmark this drops nothing: the choice is already the repeat.
-        .onChange(of: pages) {
-            if !pages.contains(.repeat) { form.closeRepeatPage() }
-        }
-        // On the stack, not its root: the root is covered by the Repeat and Custom pages, which
+        // On the stack, not its root: the root is covered by the Tags and Custom pages, which
         // lock too when the reminder falls due while they're open.
         .task { await form.keepTheLockCurrent() }
         // A swipe down mustn't lose changes; Cancel asks first instead.
@@ -76,7 +69,6 @@ struct ReminderFormSheet: View {
 /// The pages the form pushes.
 enum ReminderFormPage: Hashable {
     case tags
-    case `repeat`
     case custom
 }
 
@@ -198,7 +190,9 @@ private struct ScheduleSection: View {
     }
 }
 
-/// The Repeat row: the preset's name or Custom. It opens the Repeat page unless it's locked.
+/// The Repeat row: a pop-up menu of Never, the presets, a divider and Custom, as in Apple's
+/// Reminders. A choice is the form's repeat at once (ticket 283). Locked while nudging, it is plain
+/// text, as the form's other locked rows are.
 private struct RepeatRow: View {
     let form: ReminderForm
     let isLocked: Bool
@@ -206,11 +200,66 @@ private struct RepeatRow: View {
     var body: some View {
         let value = form.repeatPreset.map { Text($0.title) }
             ?? Text("Custom", comment: "The reminder form's Repeat row when the repeat is a custom rule.")
-        let label = Text("Repeat", comment: "The reminder form's row that opens the Repeat page.")
+        let label = Text("Repeat", comment: "The reminder form's Repeat row, which opens a menu of repeats.")
         if isLocked {
             LockedValueRow(label: label, value: value)
         } else {
-            NavigationLink(value: ReminderFormPage.repeat) {
+            LabeledContent {
+                Menu {
+                    ForEach(RepeatPreset.allCases, id: \.self) { preset in
+                        RepeatMenuItem(title: Text(preset.title), isChecked: form.repeatPreset == preset) {
+                            form.repeatPreset = preset
+                        }
+                    }
+                    Divider()
+                    RepeatMenuItem(title: Text("Custom", comment: "The Repeat menu's last item: a custom repeat."),
+                                   isChecked: form.isCustomRepeat) {
+                        form.chooseCustomRepeat()
+                    }
+                } label: {
+                    value
+                }
+            } label: {
+                label
+            }
+        }
+        if form.isCustomRepeat {
+            CustomRepeatRow(form: form, isLocked: isLocked)
+        }
+    }
+}
+
+/// An item of the Repeat menu, checked when it is the current choice. VoiceOver reads it as
+/// selected, so the checkmark isn't the only signal.
+private struct RepeatMenuItem: View {
+    let title: Text
+    let isChecked: Bool
+    let choose: () -> Void
+
+    var body: some View {
+        Button(action: choose) {
+            if isChecked {
+                Label { title } icon: { Image(systemName: "checkmark") }
+            } else {
+                title
+            }
+        }
+        .accessibilityAddTraits(isChecked ? .isSelected : [])
+    }
+}
+
+/// Below Repeat once Custom is chosen: the rule's summary, which opens the Custom repeat page.
+private struct CustomRepeatRow: View {
+    let form: ReminderForm
+    let isLocked: Bool
+
+    var body: some View {
+        let label = Text("Custom", comment: "The reminder form's row below Repeat, shown when the repeat is custom: it opens the Custom repeat page.")
+        let value = Text(form.repeatSummary)
+        if isLocked {
+            LockedValueRow(label: label, value: value)
+        } else {
+            NavigationLink(value: ReminderFormPage.custom) {
                 LabeledContent { value } label: { label }
             }
         }
@@ -317,11 +366,11 @@ extension View {
 
 /// Why a Nudging reminder's schedule is locked (ticket 13).
 enum LockNote {
-    /// The form's top note, for the Repeat pages. A separate catalog string from the note because
+    /// The form's top note, for the Custom page. A separate catalog string from the note because
     /// it can't carry the bold.
     static let note = LocalizedStringResource(
         "Nudging now. Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge.",
-        comment: "Top of the Repeat and Custom pages when the reminder started nudging while they were open: the note at the top of the Edit Reminder form, without its bold."
+        comment: "Top of the Custom page when the reminder started nudging while they were open: the note at the top of the Edit Reminder form, without its bold."
     )
 
     /// The reason on each locked field, kept brief because VoiceOver reads it after every one
@@ -358,7 +407,7 @@ struct RepeatSummarySentence: View {
     let summary: String
 
     var body: some View {
-        Text("\(summary).", comment: "A repeat summary as a sentence, under the reminder form's Starts and under the Repeat page's Custom row. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".")
+        Text("\(summary).", comment: "A repeat summary as a sentence, under the reminder form's Starts. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".")
     }
 }
 

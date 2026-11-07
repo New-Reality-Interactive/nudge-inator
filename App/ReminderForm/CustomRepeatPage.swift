@@ -3,8 +3,8 @@ import SwiftUI
 
 /// The Custom repeat page (ticket 25), as the mockup's: the summary on top, then Frequency and
 /// its Every stepper, On (weekdays, or the monthly choices the start offers), Ends, and the Next
-/// Times it falls due. It edits a copy of the Repeat page's choices: its checkmark makes them that
-/// page's choice, even unchanged, and Back drops them (tickets 17 and 22). The person never sees
+/// Times it falls due. It edits a copy of the repeat's choices: its checkmark makes them the
+/// repeat, even unchanged, and Back drops them (ticket 17). The person never sees
 /// the rule (ADR 0003).
 struct CustomRepeatPage: View {
     @Bindable var form: ReminderForm
@@ -48,7 +48,7 @@ struct CustomRepeatPage: View {
         .navigationTitle(Text("Custom", comment: "Title of the Custom repeat page."))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar(isLocked: isLocked, canChoose: block == nil) }
-        // After the checkmark this drops nothing: it has already made the copy the Repeat page's.
+        // After the checkmark this drops nothing: it has already made the copy the repeat.
         .onDisappear { form.closeCustomPage() }
     }
 
@@ -62,7 +62,7 @@ struct CustomRepeatPage: View {
                 dismiss()
             } label: {
                 Label {
-                    Text("Done", comment: "The Custom repeat page's confirm button (a checkmark): its choices become the Repeat page's choice.")
+                    Text("Done", comment: "The Custom repeat page's confirm button (a checkmark): its choices become the reminder's repeat.")
                 } icon: {
                     Image(systemName: "checkmark")
                 }
@@ -140,7 +140,7 @@ private struct MonthlySection: View {
         let chosen = form.chosenMonthlyDay
         Section {
             ForEach(form.monthlyDays, id: \.day) { monthlyDay in
-                // The person's choice of one, read as "selected" as the Repeat page's presets are.
+                // The person's choice of one, read as "selected" as the Repeat menu's items are.
                 CheckmarkRow(title: Text(verbatim: monthlyDay.title), isChecked: monthlyDay.day == chosen) {
                     form.customPageChoices.monthlyDay = monthlyDay.day
                 }
@@ -319,3 +319,21 @@ extension RepeatRule.Frequency {
     }
 }
 #endif
+
+/// At the top of the Custom page when the reminder started nudging while it was open: the form's
+/// lock note, so the disabled rows say why.
+struct RepeatLockSection: View {
+    var body: some View {
+        Section {
+        } header: {
+            Label {
+                Text(LockNote.note)
+            } icon: {
+                LockGlyph()
+            }
+            .font(.footnote)
+            .foregroundStyle(Color(uiColor: .secondaryLabel))
+            .textCase(nil)
+        }
+    }
+}

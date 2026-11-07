@@ -36,7 +36,10 @@ SCREENS = {
   "form-new": ("openEditor()", 4),
   "form-tags": ("openEditor();state.sheet.page='tags';render()", 1),
   "form-repeat": ("openEditor();document.querySelector('[data-sheet-page=repeat]').click()", 2),
-  "form-custom": ("openEditor();document.querySelector('[data-sheet-page=repeat]').click();document.querySelector('[data-repeat=custom]').click()", 3),
+  "form-custom": ("openEditor();const o=document.querySelector('[data-sheet-page=repeat]');if(o){o.click();document.querySelector('[data-repeat=custom]').click()}else{CLICK.repeat('custom');CLICK.sheetPage('custom')}", 3),
+  # The Repeat menu (#283). Only a mockup with it draws these; its form has no Repeat page, so form-repeat is for older mockups.
+  "form-repeat-menu": ("openEditor();CLICK.repeatMenu()", 1),
+  "form-repeat-custom": ("openEditor();CLICK.repeat('custom')", 2),
   "onboarding": ("state.sheet={kind:'onboard'};render()", 1),
   "banner-notifications-off": ("perm.notifications=false;render()", 4),
   "settings-notifications-off": ("perm.notifications=false;state.tab='settings';nav()", 2),
