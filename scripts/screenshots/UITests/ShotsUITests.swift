@@ -722,6 +722,31 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-empty")
     }
 
+    /// `details-delete` (#276): the details page's Delete Reminder asks in an alert with Cancel.
+    /// Cancel keeps the reminder on its page; Delete Reminder deletes it and leaves the page.
+    func testDetailsDelete() {
+        launch(.app)
+        tab("Reminders")
+        tapText("Pay rent")
+        tapText("Delete Reminder")
+        XCTAssert(app.alerts.firstMatch.waitForExistence(timeout: 3), "No Delete question")
+        shot("details-delete")
+        answerDeleteQuestion("Cancel")
+        XCTAssertNotNil(scrollTo("Delete Reminder", scrolls: 0), "Cancel left the details page")
+        tapText("Delete Reminder")
+        answerDeleteQuestion("Delete Reminder")
+        XCTAssertNil(scrollTo("Pay rent", scrolls: 0), "Pay rent is still in the list")
+        shot("details-after-delete")
+    }
+
+    /// Waits for the Delete question, an alert with Cancel (#276), and taps `button` in it.
+    private func answerDeleteQuestion(_ button: String) {
+        let question = app.alerts.firstMatch
+        XCTAssert(question.waitForExistence(timeout: 3), "No Delete question")
+        question.buttons[button].tap()
+        pause(0.8)
+    }
+
     /// Adds a reminder through the New Reminder form.
     private func addReminder(titled title: String) {
         openSheet("New Reminder", title: "New Reminder")
@@ -751,10 +776,7 @@ final class ShotsUITests: XCTestCase {
         hideKeyboard()
         swipe("Zebra")
         app.buttons["Delete"].firstMatch.tap()
-        let confirm = app.buttons["Delete Reminder"].firstMatch
-        XCTAssert(confirm.waitForExistence(timeout: 3), "No Delete Reminder button")
-        confirm.tap()
-        pause(1)
+        answerDeleteQuestion("Delete Reminder")
         XCTAssert(app.staticTexts["No Reminders"].waitForExistence(timeout: 3), "No empty state after the last delete")
         shot("reminders-after-last-delete")
         addReminder(titled: "Apple")
@@ -850,19 +872,10 @@ final class ShotsUITests: XCTestCase {
         tab("Reminders")
         swipe("Pay rent")
         app.buttons["Delete"].firstMatch.tap()
+        XCTAssert(app.alerts.firstMatch.waitForExistence(timeout: 3), "No Delete question")
         shot("reminders-delete")
-        // Drawn as a popover with no Cancel, so a tap outside it is the cancel. At the largest
-        // text it fills the screen, so the tap goes to the popover's own dismiss region.
-        let cancel = app.buttons["Cancel"].firstMatch
-        let outside = app.otherElements["PopoverDismissRegion"].firstMatch
-        if cancel.exists {
-            cancel.tap()
-        } else if outside.exists {
-            outside.tap()
-        } else {
-            app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: isRightToLeft ? 0.8 : 0.2, dy: 0.1)).tap()
-        }
-        pause(0.5)
+        answerDeleteQuestion("Cancel")
+        XCTAssertNotNil(scrollTo("Pay rent", scrolls: 0), "Cancel deleted the reminder")
         swipe("Take the bins out")
         app.buttons["Done"].firstMatch.tap()
         shot("reminders-after-done")
