@@ -330,6 +330,14 @@ Each item gives, only where they apply: **Token** (frontmatter `components` key,
 Container · Type · Color · Glyphs · Notes. System controls not listed (`Toggle`, `Picker`, `Stepper`,
 text fields, confirmation dialogs, alerts) are used as the system draws them.
 
+A question that confirms an action the person just tapped (discarding changes, deleting) is the
+system's confirmation dialog with its title showing, as Apple's own apps ask (Calendar, seen on an
+iPhone 15 with iOS 27.0.1). The delete questions are still alerts until #286 moves them.
+From a button iOS draws it as a popover with no Cancel button. Every question has a way to close
+it that changes nothing: a Cancel button, or, for a popover, the system's own dismissal (a tap
+outside it, or VoiceOver's "Dismiss popup"). An alert that only informs has OK (developer,
+2026-11-07, #278). Button titles have no ending punctuation; a question's title ends in "?".
+
 **Iconography.** SF Symbols in one weight matched to the adjacent text; they scale with Dynamic Type
 except in the tab and navigation bars. Verify names against the mockup.
 
@@ -439,8 +447,9 @@ except in the tab and navigation bars. Verify names against the mockup.
 - **Filter sheet ("Filter Reminders"):** Cancel (`xmark`, the form's cancel button) leading,
   Apply (the filled confirm button, `checkmark`) trailing, and Reset, a bordered button, at the bottom under the footer.
   With the draft unchanged, Cancel or swiping down closes it. Once it differs from what's applied,
-  a swipe springs back and Cancel asks first (Discard Changes; a tap outside keeps editing), as the
-  reminder form does. A tap above the sheet does nothing either way: iOS draws a sheet's dimming
+  a swipe springs back and Cancel asks first, as the reminder form does: the system's
+  confirmation dialog, "Are you sure you want to discard these changes?", as Calendar asks (#278). From the ✕ iOS draws it as a
+  popover with Discard Changes alone; a tap outside it keeps the changes. A tap above the sheet does nothing either way: iOS draws a sheet's dimming
   view as noninteractive (spec #104, Decision 57).
   Match and Tags with No Tags as on My Day, then Status, Strength and Due Date. Status and
   Strength are checkmark lists. Due Date has From and To, each a switch with a date pill beside it

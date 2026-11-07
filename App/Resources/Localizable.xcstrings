@@ -724,6 +724,9 @@
         }
       }
     },
+    "Are you sure you want to discard these changes?" : {
+      "comment" : "Asked when cancelling a sheet with changes: the reminder form, or the Reminders or Tags filter."
+    },
     "Badges" : {
       "comment" : "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging."
     },
@@ -752,7 +755,7 @@
       "comment" : "Title shown when the app can't read its stored reminders, for example before the first unlock after a restart."
     },
     "Cancel" : {
-      "comment" : "A sheet's cancel button (an xmark): the reminder form's and the Reminders filter's.\nCloses the alert without choosing a new time.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nSettings: keeps your data instead of deleting it.\nThe tag sheet's cancel button (an xmark)."
+      "comment" : "A sheet's cancel button (an xmark): the reminder form's and the Reminders and Tags filters'.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nSettings: keeps your data instead of deleting it.\nThe tag sheet's cancel button (an xmark)."
     },
     "Change these in iOS Settings." : {
       "comment" : "Settings: last line of the footer under the Nudges rows."
@@ -858,9 +861,6 @@
     },
     "Discard Changes" : {
       "comment" : "Throws away a sheet's changes and closes it."
-    },
-    "Discard your changes?" : {
-      "comment" : "Asked when cancelling a sheet with changes: the reminder form or the Reminders filter."
     },
     "Done" : {
       "comment" : "My Day's filter sheet's confirm button (a checkmark): closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.\nThe Custom repeat page's confirm button (a checkmark): its choices become the Repeat page's choice.\nThe Repeat page's confirm button (a checkmark): its choice becomes the reminder's repeat.\nThe tag sheet's confirm button (a checkmark)."
@@ -1192,9 +1192,6 @@
     },
     "It may have been deleted." : {
       "comment" : "Reminder details: under \"Reminder Not Found\"."
-    },
-    "Keep Editing" : {
-      "comment" : "Goes back to a sheet without discarding its changes."
     },
     "Last 24 Hours" : {
       "comment" : "Now: section header for occurrences closed in the last 24 hours."
