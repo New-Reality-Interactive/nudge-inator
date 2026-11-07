@@ -24,7 +24,7 @@ struct DiscardingCancelButton: View {
                 Image(systemName: "xmark")
             }
         }
-        .alert(Text("Discard your changes?", comment: "Asked when cancelling a sheet with changes: the reminder form, or the Reminders or Tags filter."),
+        .alert(Text("Discard Changes?", comment: "Asked when cancelling a sheet with changes: the reminder form, or the Reminders or Tags filter."),
                isPresented: $isConfirming) {
             Button(role: .cancel) {
             } label: {

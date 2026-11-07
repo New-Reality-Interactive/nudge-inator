@@ -330,6 +330,10 @@ Each item gives, only where they apply: **Token** (frontmatter `components` key,
 Container · Type · Color · Glyphs · Notes. System controls not listed (`Toggle`, `Picker`, `Stepper`,
 text fields, confirmation dialogs, alerts) are used as the system draws them.
 
+Every alert, confirmation dialog or action sheet that asks something has a Cancel button that
+closes it and changes nothing; an alert that only informs has OK (developer, 2026-11-07, #278).
+Button titles have no ending punctuation; a question's title ends in "?".
+
 **Iconography.** SF Symbols in one weight matched to the adjacent text; they scale with Dynamic Type
 except in the tab and navigation bars. Verify names against the mockup.
 
@@ -439,8 +443,8 @@ except in the tab and navigation bars. Verify names against the mockup.
 - **Filter sheet ("Filter Reminders"):** Cancel (`xmark`, the form's cancel button) leading,
   Apply (the filled confirm button, `checkmark`) trailing, and Reset, a bordered button, at the bottom under the footer.
   With the draft unchanged, Cancel or swiping down closes it. Once it differs from what's applied,
-  a swipe springs back and Cancel asks first, as the reminder form does: an alert, "Discard your
-  changes?", with Discard Changes and Cancel (#278). A tap above the sheet does nothing either way: iOS draws a sheet's dimming
+  a swipe springs back and Cancel asks first, as the reminder form does: an alert, "Discard
+  Changes?", with Discard Changes and Cancel (#278). A tap above the sheet does nothing either way: iOS draws a sheet's dimming
   view as noninteractive (spec #104, Decision 57).
   Match and Tags with No Tags as on My Day, then Status, Strength and Due Date. Status and
   Strength are checkmark lists. Due Date has From and To, each a switch with a date pill beside it
