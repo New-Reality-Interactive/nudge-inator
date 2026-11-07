@@ -573,16 +573,16 @@ final class ShotsUITests: XCTestCase {
         openFilter(titled: "Filter Tags")
         chooseInSheet("Has no reminders")
         shot("tags-filter-changed")
-        askToDiscard(sheet: "Filter Tags")
+        askToDiscard(titled: "Filter Tags")
         shot("tags-filter-discard")
-        keepEditing(sheet: "Filter Tags")
+        keepEditing(titled: "Filter Tags")
         swipeFilterDown(titled: "Filter Tags")
         pause(1)
         XCTAssert(app.navigationBars["Filter Tags"].exists, "A swipe down lost a changed draft")
 
         // Discard Changes drops the draft: the tags are all still listed.
-        askToDiscard(sheet: "Filter Tags")
-        discardChanges(sheet: "Filter Tags")
+        askToDiscard(titled: "Filter Tags")
+        discardChanges(titled: "Filter Tags")
         assertTagCount(startsWith: "7 tags out of 7")
         openFilter(titled: "Filter Tags")
         chooseInSheet("Has no reminders")
@@ -849,16 +849,16 @@ final class ShotsUITests: XCTestCase {
         tapText("Delete Reminder")
         XCTAssert(app.alerts.firstMatch.waitForExistence(timeout: 3), "No Delete question")
         shot("details-delete")
-        answerQuestion("Cancel")
+        answerAlert("Cancel")
         XCTAssertNotNil(scrollTo("Delete Reminder", scrolls: 0), "Cancel left the details page")
         tapText("Delete Reminder")
-        answerQuestion("Delete Reminder")
+        answerAlert("Delete Reminder")
         XCTAssertNil(scrollTo("Pay rent", scrolls: 0), "Pay rent is still in the list")
         shot("details-after-delete")
     }
 
-    /// Waits for a question, an alert, and taps `button` in it.
-    private func answerQuestion(_ button: String, line: UInt = #line) {
+    /// Waits for an alert (the delete questions) and taps `button` in it.
+    private func answerAlert(_ button: String, line: UInt = #line) {
         let question = app.alerts.firstMatch
         XCTAssert(question.waitForExistence(timeout: 3), "No question:\n\(app.debugDescription)", line: line)
         question.buttons[button].tap()
@@ -894,7 +894,7 @@ final class ShotsUITests: XCTestCase {
         hideKeyboard()
         swipe("Zebra")
         app.buttons["Delete"].firstMatch.tap()
-        answerQuestion("Delete Reminder")
+        answerAlert("Delete Reminder")
         XCTAssert(app.staticTexts["No Reminders"].waitForExistence(timeout: 3), "No empty state after the last delete")
         shot("reminders-after-last-delete")
         addReminder(titled: "Apple")
@@ -992,7 +992,7 @@ final class ShotsUITests: XCTestCase {
         app.buttons["Delete"].firstMatch.tap()
         XCTAssert(app.alerts.firstMatch.waitForExistence(timeout: 3), "No Delete question")
         shot("reminders-delete")
-        answerQuestion("Cancel")
+        answerAlert("Cancel")
         XCTAssertNotNil(scrollTo("Pay rent", scrolls: 0), "Cancel deleted the reminder")
         swipe("Take the bins out")
         app.buttons["Done"].firstMatch.tap()
@@ -1106,43 +1106,48 @@ final class ShotsUITests: XCTestCase {
     /// open. From the ✕ iOS draws it as a popover with Discard Changes alone, closed by a tap outside
     /// it: the popover's own dismiss region, which is there even when the popover fills the screen at
     /// the largest text. Where iOS draws an action sheet instead, its Cancel is the way out.
-    private func keepEditing(sheet title: String, line: UInt = #line) {
-        let outside = app.otherElements["PopoverDismissRegion"].firstMatch
-        if outside.exists {
-            outside.tap()
-        } else {
+    private func keepEditing(titled title: String, line: UInt = #line) {
+        if !tapOutsidePopover(waiting: 1) {
             let cancel = app.sheets.buttons["Cancel"].firstMatch
             XCTAssert(cancel.exists, "No way out of the discard question:\n\(app.debugDescription)", line: line)
             cancel.tap()
         }
-        pause(0.8)
-        XCTAssertFalse(app.buttons["Discard Changes"].exists, "The discard question stayed up", line: line)
+        XCTAssert(app.buttons["Discard Changes"].waitForNonExistence(timeout: 3), "The discard question stayed up", line: line)
         XCTAssert(app.navigationBars[title].exists, "Leaving the discard question closed the sheet", line: line)
     }
 
+    /// Taps an open popover's own dismiss region, a tap outside it, if one shows within `waiting`
+    /// seconds; returns whether it did.
+    private func tapOutsidePopover(waiting: TimeInterval = 0) -> Bool {
+        let outside = app.otherElements["PopoverDismissRegion"].firstMatch
+        guard waiting > 0 ? outside.waitForExistence(timeout: waiting) : outside.exists else { return false }
+        outside.tap()
+        return true
+    }
+
     /// Taps Discard Changes in the discard question (#278) and checks the sheet closed.
-    private func discardChanges(sheet title: String, line: UInt = #line) {
+    private func discardChanges(titled title: String, line: UInt = #line) {
         app.buttons["Discard Changes"].firstMatch.tap()
         XCTAssert(app.navigationBars[title].waitForNonExistence(timeout: 3), "Discard Changes left the sheet open", line: line)
     }
 
     /// Taps the Cancel of a sheet with changes and checks it asked first, with its title showing.
-    private func askToDiscard(sheet title: String, line: UInt = #line) {
-        tapCancel(sheet: title)
+    private func askToDiscard(titled title: String, line: UInt = #line) {
+        tapCancel(titled: title)
         XCTAssert(app.buttons["Discard Changes"].waitForExistence(timeout: 3), "Cancel didn't ask first:\n\(app.debugDescription)", line: line)
         XCTAssert(app.staticTexts["Are you sure you want to discard these changes?"].exists, "The discard question's title isn't showing", line: line)
     }
 
     /// Taps the Cancel of a sheet with no changes, and checks it closed without asking.
     private func closeUnchangedSheet(titled title: String, line: UInt = #line) {
-        tapCancel(sheet: title)
+        tapCancel(titled: title)
         pause(0.8)
         XCTAssertFalse(app.buttons["Discard Changes"].exists, "Cancel asked with no changes", line: line)
         XCTAssertFalse(app.navigationBars[title].exists, "Cancel didn't close the unchanged sheet", line: line)
     }
 
     /// A sheet's Cancel, the `xmark`, first in its bar.
-    private func tapCancel(sheet title: String) {
+    private func tapCancel(titled title: String) {
         barTap { app.navigationBars[title].buttons.element(boundBy: 0).tap() }
     }
 
@@ -1151,12 +1156,9 @@ final class ShotsUITests: XCTestCase {
     /// and landscape), the tap goes to the middle of the sheet's bar, between Cancel and Apply,
     /// which the calendar never covers: a tap low in the window landed on Reset in landscape and
     /// cleared the draft, and in portrait the calendar covers the Due Date header.
-    private func closeDatePicker() {
-        let outside = app.otherElements["PopoverDismissRegion"].firstMatch
-        if outside.exists {
-            outside.tap()
-        } else {
-            app.navigationBars["Filter Reminders"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    private func closeDatePicker(titled title: String) {
+        if !tapOutsidePopover() {
+            app.navigationBars[title].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         }
         pause(0.8)
     }
@@ -1207,7 +1209,7 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-due-date-both")
         openDatePicker("From")
         shot("reminders-due-date-picker")
-        closeDatePicker()
+        closeDatePicker(titled: "Filter Reminders")
 
         applyRemindersFilter()
         shot("reminders-due-date-badge")
@@ -1240,9 +1242,9 @@ final class ShotsUITests: XCTestCase {
         chooseInSheet("Nudging")
         chooseInSheet("Firm")
         shot("reminders-filter-chosen")
-        askToDiscard(sheet: "Filter Reminders")
+        askToDiscard(titled: "Filter Reminders")
         shot("reminders-filter-discard")
-        keepEditing(sheet: "Filter Reminders")
+        keepEditing(titled: "Filter Reminders")
 
         // A changed draft holds the sheet: the swipe springs back, as the reminder form's does.
         swipeRemindersFilterDown()
@@ -1251,8 +1253,8 @@ final class ShotsUITests: XCTestCase {
 
         // Discard Changes drops the draft: the sheet opens again unchanged, so Cancel closes it
         // without asking.
-        askToDiscard(sheet: "Filter Reminders")
-        discardChanges(sheet: "Filter Reminders")
+        askToDiscard(titled: "Filter Reminders")
+        discardChanges(titled: "Filter Reminders")
         openRemindersFilter()
         closeUnchangedSheet(titled: "Filter Reminders")
         openRemindersFilter()
@@ -1465,13 +1467,13 @@ final class ShotsUITests: XCTestCase {
         field.tap()
         field.typeText("Water the ferns")
         hideKeyboard()
-        askToDiscard(sheet: "New Reminder")
+        askToDiscard(titled: "New Reminder")
         shot("form-discard")
-        keepEditing(sheet: "New Reminder")
+        keepEditing(titled: "New Reminder")
         XCTAssertEqual(app.textFields.firstMatch.value as? String, "Water the ferns", "Leaving the discard question lost the title")
 
-        askToDiscard(sheet: "New Reminder")
-        discardChanges(sheet: "New Reminder")
+        askToDiscard(titled: "New Reminder")
+        discardChanges(titled: "New Reminder")
         tab("Reminders")
         XCTAssertNil(scrollTo("Water the ferns", scrolls: 0), "Discard Changes added the reminder")
     }
