@@ -10,7 +10,7 @@ import XCTest
 final class ShotsUITests: XCTestCase {
     /// The harness's `SHOT_SCENARIO`s (`ShotsApp.Scenario`, which can't be imported here).
     enum ShotScenario: String {
-        case app, onboarding, notificationsOff, alarmsOff, timeSensitiveOff, badgesOff, badgesNotSet, customLocking, noReminders, spareTag
+        case app, onboarding, notificationsOff, alarmsOff, timeSensitiveOff, badgesOff, badgesNotSet, customLocking, noReminders, spareTag, rowLeaves
     }
 
     private var app: XCUIApplication!
@@ -751,6 +751,71 @@ final class ShotsUITests: XCTestCase {
             XCTAssertNotNil(scrollTo(name), "\(name) is missing from the list")
         }
         XCTAssertEqual(app.alerts.count, 0, "A Delete question came back")
+    }
+
+    /// #280: a Reminders row's Delete alert is up, and the row leaves the list under it, as when the
+    /// Nudging status is on and its reminder is marked Done. Nothing on screen can change a reminder
+    /// while the alert covers it, so the harness marks "Take the bins out" Done when this test posts a
+    /// Darwin notification (`ShotsSeed.markTheBinsDoneNotification`). The alert goes with its row,
+    /// deletes nothing, and the list and its count are right.
+    func testRemindersRowLeavesWithItsDeleteAlertUp() {
+        launch(.rowLeaves)
+        tab("Reminders")
+        openRemindersFilter()
+        chooseInSheet("Nudging")
+        applyRemindersFilter()
+        // The count is read, not written in, so the test doesn't hold the seed's number of Nudging rows.
+        let total = 14
+        guard let before = shownReminderCount() else { return }
+        XCTAssertEqual(before.total, total, "The walk's data isn't \(total) reminders")
+        swipe("Take the bins out")
+        app.buttons["Delete"].firstMatch.tap()
+        XCTAssert(app.alerts.firstMatch.waitForExistence(timeout: 3), "No Delete question")
+        XCTAssert(app.alerts.firstMatch.staticTexts["Delete “Take the bins out”?"].exists, "The question isn't about the bins:\n\(app.debugDescription)")
+        shot("reminders-delete-row-leaves-before")
+
+        // The bins are marked Done, so the Nudging status no longer shows them. The name is the
+        // harness's `ShotsSeed.markTheBinsDoneNotification`, which this target can't import.
+        notify_post("com.newreality.nudgeinator.shots.markTheBinsDone")
+        let alertGone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "count == 0"), object: app.alerts)
+        XCTAssertEqual(XCTWaiter().wait(for: [alertGone], timeout: 5), .completed, "The Delete question stayed after its row left:\n\(app.debugDescription)")
+        pause(1)
+        XCTAssertEqual(app.state, .runningForeground, "The app isn't running after its row left")
+        XCTAssert(app.tabBars.firstMatch.exists, "No tab bar after the row left")
+        let after = shownReminderCount()
+        XCTAssertEqual(after?.shown, before.shown - 1, "The count didn't drop by the one row that left")
+        XCTAssertEqual(after?.total, total, "A reminder was deleted")
+        XCTAssertNil(scrollTo("Take the bins out", scrolls: 0), "The bins are still in the Nudging list")
+        shot("reminders-delete-row-leaves-after")
+
+        // Nothing was deleted: with the filter cleared all 14 are listed, the bins among them.
+        filterButtons.firstMatch.tap()
+        XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
+        app.buttons["Clear All Filters"].firstMatch.tap()
+        pause(0.8)
+        let cleared = shownReminderCount()
+        XCTAssertEqual(cleared?.shown, total, "Not every reminder is listed")
+        XCTAssertEqual(cleared?.total, total, "A reminder was deleted")
+        scrollToTop()
+        XCTAssertNotNil(scrollTo("Take the bins out"), "The bins were deleted")
+        XCTAssertEqual(app.alerts.count, 0, "A Delete question came back")
+    }
+
+    /// The header row's count, "3 reminders out of 14": the reminders shown and every reminder.
+    /// Scrolls to the top, where the header is. Fails the test and returns nil when there is none.
+    private func shownReminderCount(line: UInt = #line) -> (shown: Int, total: Int)? {
+        scrollToTop()
+        let count = app.staticTexts.matching(NSPredicate(format: "label MATCHES %@", #"\d+ reminders? out of \d+"#)).firstMatch
+        guard count.waitForExistence(timeout: 3) else {
+            XCTFail("No reminder count:\n\(app.debugDescription)", line: line)
+            return nil
+        }
+        let numbers = count.label.split(separator: " ").compactMap { Int($0) }
+        guard numbers.count == 2 else {
+            XCTFail("Can't read the count \(count.label)", line: line)
+            return nil
+        }
+        return (numbers[0], numbers[1])
     }
 
     /// The mockup's `reminders` and `reminders-empty`: every reminder in creation-date order, a
