@@ -1515,8 +1515,10 @@ final class ShotsUITests: XCTestCase {
     /// Scrolls the form until `element` is on screen and clear of the bar, down first, then up from
     /// where that left it. Not past the top: swiping down there closes the sheet.
     private func reveal(_ element: XCUIElement) {
-        let height = app.windows.firstMatch.frame.height
-        func clear() -> Bool { element.exists && element.isHittable && element.frame.minY >= 150 && element.frame.maxY <= height - 60 }
+        let window = app.windows.firstMatch.frame
+        // The bar is shorter in landscape.
+        let top: CGFloat = window.width > window.height ? 90 : 150
+        func clear() -> Bool { element.exists && element.isHittable && element.frame.minY >= top && element.frame.maxY <= window.height - 40 }
         for _ in 0..<8 where !clear() { scroll(down: true) }
         for _ in 0..<10 where !clear() { scroll(down: false) }
     }
