@@ -18,7 +18,7 @@ struct CustomRepeatPage: View {
         // Read once: each read works out the choices' rule and due times.
         let block = form.customPageBlock
         Form {
-            if isLocked { RepeatLockSection() }
+            if isLocked { CustomRepeatLockSection() }
             let choices = $form.customPageChoices
             Section {
             } header: {
@@ -322,7 +322,7 @@ extension RepeatRule.Frequency {
 
 /// At the top of the Custom page when the reminder started nudging while it was open: the form's
 /// lock note, so the disabled rows say why.
-struct RepeatLockSection: View {
+struct CustomRepeatLockSection: View {
     var body: some View {
         Section {
         } header: {

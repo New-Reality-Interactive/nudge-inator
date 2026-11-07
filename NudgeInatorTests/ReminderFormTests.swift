@@ -668,7 +668,7 @@ struct ReminderFormTests {
         #expect(form.repeatRule?.rrule == "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO")
     }
 
-    /// Ticket 283: a menu choice is the form's repeat at once; there is no page to confirm.
+    /// #283: a menu choice is the form's repeat at once; there is no page to confirm.
     @Test func aPresetChosenInTheMenuIsTheRepeatAtOnce() async throws {
         let model = try await launchedModel()
         let form = newForm(on: model)

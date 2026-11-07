@@ -191,7 +191,7 @@ private struct ScheduleSection: View {
 }
 
 /// The Repeat row: a pop-up menu of Never, the presets, a divider and Custom, as in Apple's
-/// Reminders. A choice is the form's repeat at once (ticket 283). Locked while nudging, it is plain
+/// Reminders. A choice is the form's repeat at once (#283). Locked while nudging, it is plain
 /// text, as the form's other locked rows are.
 private struct RepeatRow: View {
     let form: ReminderForm

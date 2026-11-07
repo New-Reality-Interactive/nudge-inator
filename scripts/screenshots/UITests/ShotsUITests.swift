@@ -1495,12 +1495,10 @@ final class ShotsUITests: XCTestCase {
         hideKeyboard()
         openRepeatMenu(showing: "Never")
         shot("form-repeat-menu")
-        app.buttons["Every Week"].firstMatch.tap()
-        pause(0.8)
+        tapMenuItem("Every Week")
         shot("form-repeat-preset")
         openRepeatMenu(showing: "Every Week")
-        app.buttons["Custom"].firstMatch.tap()
-        pause(0.8)
+        tapMenuItem("Custom")
         shot("form-repeat-custom", pages: 2)
         openCustomRow()
         shot("form-custom", pages: 3)
@@ -1510,8 +1508,7 @@ final class ShotsUITests: XCTestCase {
         shot("form-custom-chosen")
         reportFormPageAccessibility("repeat-chosen")
         openRepeatMenu(showing: "Custom")
-        app.buttons["Every Day"].firstMatch.tap()
-        pause(0.8)
+        tapMenuItem("Every Day")
         XCTAssertFalse(app.buttons["Custom"].firstMatch.exists, "A preset left the Custom row")
     }
 
@@ -1521,7 +1518,7 @@ final class ShotsUITests: XCTestCase {
         let height = app.windows.firstMatch.frame.height
         func clear() -> Bool { element.exists && element.isHittable && element.frame.minY >= 150 && element.frame.maxY <= height - 60 }
         for _ in 0..<8 where !clear() { scroll(down: true) }
-        for _ in 0..<3 where !clear() { scroll(down: false) }
+        for _ in 0..<10 where !clear() { scroll(down: false) }
     }
 
     /// Taps the Repeat row's menu button, which shows `current`, the repeat's choice, and waits for
@@ -1532,6 +1529,15 @@ final class ShotsUITests: XCTestCase {
         XCTAssert(menu.waitForExistence(timeout: 3), "No Repeat menu showing \(current):\n\(app.debugDescription)", line: line)
         menu.tap()
         XCTAssert(app.buttons["Every Day"].firstMatch.waitForExistence(timeout: 3), "The Repeat menu didn't open", line: line)
+        pause(0.8)
+    }
+
+    /// Taps an item of the open Repeat menu, scrolling the menu first: at the largest text it doesn't fit.
+    private func tapMenuItem(_ title: String, line: UInt = #line) {
+        let item = app.buttons[title].firstMatch
+        for _ in 0..<8 where !item.isHittable { app.swipeUp() }
+        XCTAssert(item.isHittable, "No \(title) in the Repeat menu:\n\(app.debugDescription)", line: line)
+        item.tap()
         pause(0.8)
     }
 
