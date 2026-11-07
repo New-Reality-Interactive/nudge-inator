@@ -210,8 +210,7 @@ private struct DetailsList: View {
     }
 }
 
-/// Delete Reminder, which asks first. The dialog hangs on the button, since iOS 26 draws it as a
-/// popover pointing at the view it is attached to.
+/// Delete Reminder, which asks first.
 private struct DeleteButton: View {
     let title: String
     let confirm: () -> Void
