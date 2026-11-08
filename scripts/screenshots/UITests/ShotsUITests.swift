@@ -1253,8 +1253,8 @@ final class ShotsUITests: XCTestCase {
 
         applyRemindersFilter()
         shot("reminders-due-date-badge")
-        // Not `barTap`: turning the phone back closes the menu, and landscape only runs on iOS 27,
-        // where bar buttons take taps.
+        // Not `barTap`: turning the phone back closes the menu. Bar buttons took taps in landscape on
+        // iOS 27.0; iOS 26.5, which runs landscape again (#300), hasn't been checked for this.
         filterButtons.firstMatch.tap()
         XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
         app.buttons["Clear All Filters"].firstMatch.tap()
@@ -1301,8 +1301,8 @@ final class ShotsUITests: XCTestCase {
         chooseInSheet("Nudging")
         applyRemindersFilter()
         shot("reminders-status-nudging")
-        // Not `barTap`: turning the phone back closes the menu, and landscape only runs on iOS 27,
-        // where bar buttons take taps.
+        // Not `barTap`: turning the phone back closes the menu. Bar buttons took taps in landscape on
+        // iOS 27.0; iOS 26.5, which runs landscape again (#300), hasn't been checked for this.
         filterButtons.firstMatch.tap()
         XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
         shot("reminders-filter-menu")
@@ -1322,8 +1322,8 @@ final class ShotsUITests: XCTestCase {
         chooseInSheet("#home")
         applyRemindersFilter()
         shot("reminders-filter-tag")
-        // Not `barTap`: turning the phone back closes the menu, and landscape only runs on iOS 27,
-        // where bar buttons take taps.
+        // Not `barTap`: turning the phone back closes the menu. Bar buttons took taps in landscape on
+        // iOS 27.0; iOS 26.5, which runs landscape again (#300), hasn't been checked for this.
         filterButtons.firstMatch.tap()
         XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
         app.buttons["Clear All Filters"].firstMatch.tap()

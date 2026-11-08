@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Takes a screenshot of every screen of the app on each simulator in the test matrix, in portrait,
-# landscape and the largest text size, for checking the app against the mockup. The iOS 26.5
-# simulator skips the landscape variants: it doesn't turn for the UI test, so they came out portrait. Builds a throwaway
+# landscape and the largest text size, for checking the app against the mockup. Builds a throwaway
 # harness (scripts/screenshots/) into .build/screenshots: the app's sources with a stand-in @main
 # over the test fakes, seeded with the mockup's reminders, and a UI test that walks the screens.
 # The harness is built once, then the simulators are shot at the same time, each one's variants one
@@ -80,7 +79,6 @@ trap 'exit 143' TERM
 shoot() {
   local name="$1" udid="$2" failed_file="$3" variant base size orientation direction dir log started
   for variant in "${variants[@]}"; do
-    case "$name/$variant" in *"iOS 26.5"/*landscape) echo "[$name] skip: $variant"; continue ;; esac
     echo "[$name] ==> $variant"
     # The rtl- prefix is a launch argument of the harness app's (ShotsUITests), so the simulator's
     # settings stay as they are; the rest of the name sets them as for any variant.
