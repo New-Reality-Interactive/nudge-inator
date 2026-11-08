@@ -650,8 +650,9 @@ final class ShotsUITests: XCTestCase {
         openRenameSheet(for: "#home")
         app.typeText("x")
         assertTagSheetAsksBeforeDiscarding(titled: "Rename Tag", shot: "tag-rename-discard")
-        scrollToTop()
-        XCTAssertNotNil(scrollTo("#home"), "Discard Changes renamed the tag")
+        // Where the sheet left it: scrolling steps past a row this tall at the largest text.
+        let home = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "#home, ")).firstMatch
+        XCTAssert(home.waitForExistence(timeout: 3), "Discard Changes renamed the tag:\n\(app.debugDescription)")
 
         openSheet("New Tag", title: "New Tag")
         closeUnchangedSheet(titled: "New Tag")
