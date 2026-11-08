@@ -113,7 +113,15 @@ scratch="$(mktemp -d)"
 # Leaves the Mac as the run found it: the simulators this run booted are shut down, pass or fail
 # (an exit trap), and one that was already booted stays booted. Same rule as scripts/screenshots.sh.
 shut_down_at_exit=() # UDIDs of simulators that were shut down when the run began
+test_pids=()         # the side-by-side test runs, still going if the script is interrupted
 cleanup() {
+  # Stop an interrupted run's xcodebuilds (each a child of its subshell) before shutting down the
+  # simulators under them and removing the files they write to.
+  for pid in ${test_pids[@]+"${test_pids[@]}"}; do
+    pkill -TERM -P "$pid" 2>/dev/null || true
+    kill -TERM "$pid" 2>/dev/null || true
+  done
+  [ ${#test_pids[@]} -eq 0 ] || wait 2>/dev/null
   rm -rf "$scratch"
   for udid in ${shut_down_at_exit[@]+"${shut_down_at_exit[@]}"}; do
     xcrun simctl shutdown "$udid" 2>/dev/null || true
@@ -198,19 +206,18 @@ if [ ${#udids[@]} -gt 0 ]; then
   if xcodebuild_logged "$logs/app-build.log" build-for-testing -project NudgeInator.xcodeproj \
     -scheme NudgeInator -destination "platform=iOS Simulator,id=${udids[0]}" -derivedDataPath .build/derived; then
     # The simulators test side by side from that one build. A background job can't add to `failed`,
-    # so each writes its printed results to its own file in $scratch; they are shown one simulator
-    # at a time, in order, once all have finished, so the results don't interleave.
-    pids=()
+    # so each writes its printed results to its own file in $scratch. They are shown one simulator
+    # at a time, in order, as each finishes, so the results don't interleave (and show nothing live).
     for i in "${!udids[@]}"; do
       (xcodebuild_logged "$logs/app-${found[$i]}.log" test-without-building -project NudgeInator.xcodeproj \
         -scheme NudgeInator -destination "platform=iOS Simulator,id=${udids[$i]}" \
-        -derivedDataPath .build/derived > "$scratch/results-$i" 2>&1) &
-      pids+=($!)
+        -derivedDataPath .build/derived > "$scratch/results-${found[$i]}" 2>&1) &
+      test_pids+=($!)
     done
     for i in "${!udids[@]}"; do
-      wait "${pids[$i]}" || failed+=("app-tests-${found[$i]}")
+      wait "${test_pids[$i]}" || failed+=("app-tests-${found[$i]}")
       step "xcodebuild test-without-building on ${found[$i]}"
-      cat "$scratch/results-$i"
+      cat "$scratch/results-${found[$i]}"
     done
   else
     failed+=("app-build")
