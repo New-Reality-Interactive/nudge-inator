@@ -24,11 +24,11 @@ struct ShotsApp: App {
         case noReminders
         /// Everything allowed, plus the tag #spare, which no reminder has. A Darwin notification from
         /// the UI test (`ShotsSeed.giveSpareAReminderNotification`) gives it one while the test
-        /// has a Tags row's Delete alert up (#277).
+        /// has a Tags row's Delete question up (#277).
         case spareTag
         /// Everything allowed. A Darwin notification from the UI test
         /// (`ShotsSeed.markTheBinsDoneNotification`) marks "Take the bins out" Done while the test
-        /// has a Reminders row's Delete alert up (#280).
+        /// has a Reminders row's Delete question up (#280).
         case rowLeaves
     }
 
@@ -262,7 +262,7 @@ enum ShotsSeed {
 
     /// The Darwin notification the UI test posts, which gives #spare a reminder. Darwin
     /// notifications reach every process of a simulator, so it crosses from the UI-test runner to
-    /// the app. Not a timer: the test says when, once its alert is up. The UI-test target can't import
+    /// the app. Not a timer: the test says when, once its question is up. The UI-test target can't import
     /// this file, so it posts the same name as a literal: change both together.
     static let giveSpareAReminderNotification = "com.newreality.nudgeinator.shots.giveSpareAReminder"
     private static var spareModel: AppModel?
@@ -289,7 +289,7 @@ enum ShotsSeed {
 
     /// The Darwin notification the UI test posts, which marks "Take the bins out" Done: a Nudging
     /// row, so it leaves the list when the Nudging status is on. Not a timer: the test says when,
-    /// once its alert is up. The UI-test target can't import this file, so it posts the same name as a
+    /// once its question is up. The UI-test target can't import this file, so it posts the same name as a
     /// literal: change both together.
     static let markTheBinsDoneNotification = "com.newreality.nudgeinator.shots.markTheBinsDone"
     private static var binsModel: AppModel?
