@@ -650,9 +650,16 @@ final class ShotsUITests: XCTestCase {
         openRenameSheet(for: "#home")
         app.typeText("x")
         assertTagSheetAsksBeforeDiscarding(titled: "Rename Tag", shot: "tag-rename-discard")
-        // Where the sheet left it: scrolling steps past a row this tall at the largest text.
+        // By existence, not hittability: at the largest text scrolling can step past the middle of a
+        // row this tall, and the rotation for the bar's taps moves the list.
         let home = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "#home, ")).firstMatch
-        XCTAssert(home.waitForExistence(timeout: 3), "Discard Changes renamed the tag:\n\(app.debugDescription)")
+        scrollToTop()
+        var scrolls = 0
+        while !home.exists, scrolls < 8 {
+            scroll(down: true)
+            scrolls += 1
+        }
+        XCTAssert(home.exists, "Discard Changes renamed the tag:\n\(app.debugDescription)")
 
         openSheet("New Tag", title: "New Tag")
         closeUnchangedSheet(titled: "New Tag")
