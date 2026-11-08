@@ -70,6 +70,10 @@ if grep -rn --include='*.swift' 'AlarmManager\.shared\.authorizationState' App N
   failed+=("alarm-authorization-read")
 fi
 
+# Which simulator or clone runs which screenshot variants (#301). No simulator needed.
+step "The screenshot plan assigns variants to simulators and clones"
+scripts/tests/screenshots-plan-test.sh || failed+=("screenshots-plan")
+
 # sync-strings.sh only marks a removed string with plural variants as stale, and its check passes, so
 # one stays in the catalog unless someone sees it (#139).
 step "String Catalogs hold no stale strings"

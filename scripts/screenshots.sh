@@ -9,6 +9,8 @@
 # scripts/screenshots/project.yml) are uninstalled, and a simulator it booted is shut down, even
 # after a failure or an interrupt (Ctrl-C stops every simulator's run first).
 # Env: SIMULATORS (as scripts/test.sh), SHOTS_OUT (default docs/screenshots/<today>, git-ignored),
+# SHOTS_PLAN (a list of variants for each simulator, run at the same time, on clones of a simulator
+# named more than once: scripts/screenshots-plan.sh and docs/agents/device-testing.md),
 # SHOTS_VARIANTS (default "portrait landscape largest-text"; "largest-text-landscape" on request;
 # any of them with an "rtl-" prefix runs under Xcode's Right-to-Left Pseudolanguage, and "rtl" alone
 # means "rtl-portrait rtl-landscape rtl-largest-text", the once-per-release pass, docs/agents/release.md),
@@ -16,25 +18,30 @@
 # every one). Each variant's folder is emptied first, unless SHOTS_TESTS names the tests: then the
 # images from other tests stay, and the run lists the ones it wrote, since those kept may be older
 # than the code.
-# Writes <SHOTS_OUT>/<simulator>/<variant>/<screen>.png. Each simulator's progress lines start with
-# "[<simulator>]", since they are interleaved.
+# Writes <SHOTS_OUT>/<simulator>/<variant>/<screen>.png, a clone's under the simulator it clones.
+# Each simulator's progress lines start with "[<simulator>]" (a clone's with its own name), since
+# they are interleaved.
 set -uo pipefail
 set -m # each simulator's run gets its own process group, so an interrupt can stop all of it
 cd "$(dirname "$0")/.."
 
 SIMULATORS="${SIMULATORS-iPhone 15 Pro - iOS 26.5;iPhone 15 - iOS 27.0}"
-IFS=';' read -r -a simulators <<< "$SIMULATORS"
+source scripts/screenshots-plan.sh
 out="${SHOTS_OUT:-docs/screenshots/$(date +%F)}"
 defaults=(portrait landscape largest-text)
-read -r -a variants <<< "${SHOTS_VARIANTS:-${defaults[*]}}"
-expanded=()
-for variant in "${variants[@]}"; do
-  case "$variant" in
-    rtl) for base in "${defaults[@]}"; do expanded+=("rtl-$base"); done ;;
-    *) expanded+=("$variant") ;;
-  esac
-done
-variants=("${expanded[@]}")
+
+# Prints the variants in $1 (separated by spaces), with "rtl" expanded to its three.
+expand_variants() {
+  local variant base
+  for variant in $1; do
+    case "$variant" in
+      rtl) for base in "${defaults[@]}"; do echo "rtl-$base"; done ;;
+      *) echo "$variant" ;;
+    esac
+  done
+}
+
+lanes="$(shots_lanes "$SIMULATORS" "${SHOTS_VARIANTS:-${defaults[*]}}" "${SHOTS_PLAN:-}")" || exit 1
 only=()
 for test in ${SHOTS_TESTS:-}; do only+=("-only-testing:NudgeShotsUITests/ShotsUITests/$test"); done
 out="$(mkdir -p "$out" && cd "$out" && pwd)"
@@ -54,7 +61,8 @@ simulator_udid() {
       match(line, /[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}/); print substr(line, RSTART, RLENGTH); exit }'
 }
 
-restore=()
+restore=()          # per simulator: UDID|text size|appearance, put back at the end
+shut_down_at_exit=() # UDIDs of the simulators that were shut down when the run began
 pids=()
 failures="$(mktemp -d)" # one file per simulator, a line per failed variant
 cleanup() {
@@ -62,12 +70,14 @@ cleanup() {
   for pid in ${pids[@]+"${pids[@]}"}; do kill -TERM -- "-$pid" 2>/dev/null; done
   wait 2>/dev/null
   for entry in ${restore[@]+"${restore[@]}"}; do
-    IFS='|' read -r udid size appearance was_booted <<< "$entry"
+    IFS='|' read -r udid size appearance <<< "$entry"
     xcrun simctl ui "$udid" content_size "$size" 2>/dev/null
     xcrun simctl ui "$udid" appearance "$appearance" 2>/dev/null
     xcrun simctl uninstall "$udid" com.newrealityinteractive.nudgeinator.shots 2>/dev/null
     xcrun simctl uninstall "$udid" com.newrealityinteractive.nudgeinator.shots.uitests.xctrunner 2>/dev/null
-    $was_booted || xcrun simctl shutdown "$udid" 2>/dev/null
+  done
+  for udid in ${shut_down_at_exit[@]+"${shut_down_at_exit[@]}"}; do
+    xcrun simctl shutdown "$udid" 2>/dev/null
   done
   rm -rf "$failures"
 }
@@ -75,10 +85,13 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-# One simulator's run: its variants, one after the other. Reads variants, only, out, logs and build.
+# One simulator's run: its variants, one after the other. $1 is its name (a clone's has " clone <n>"
+# on the end), $2 the matrix simulator whose folder the images go in, $5 its variants separated by
+# spaces. Reads only, out, logs and build.
 shoot() {
-  local name="$1" udid="$2" failed_file="$3" variant base size orientation direction dir log started
-  for variant in "${variants[@]}"; do
+  local name="$1" folder="$2" udid="$3" failed_file="$4" lane_variants="$5"
+  local variant base size orientation direction dir log started
+  for variant in $lane_variants; do
     echo "[$name] ==> $variant"
     # The rtl- prefix is a launch argument of the harness app's (ShotsUITests), so the simulator's
     # settings stay as they are; the rest of the name sets them as for any variant.
@@ -88,7 +101,7 @@ shoot() {
     case "$base" in *landscape) orientation=landscape ;; esac
     case "$base" in largest-text*) size=accessibility-extra-extra-extra-large ;; esac
     xcrun simctl ui "$udid" content_size "$size"
-    dir="$out/$name/$variant"
+    dir="$out/$folder/$variant"
     [ -n "${SHOTS_TESTS:-}" ] || rm -rf "$dir"
     mkdir -p "$dir"
     log="$logs/screenshots-$name-$variant.log"
@@ -107,39 +120,84 @@ shoot() {
   done
 }
 
+# Succeeds if the simulator $1 (a UDID) is booted.
+is_booted() {
+  local devices
+  devices="$(xcrun simctl list devices)" # not piped into grep -q, which can end xcrun early (pipefail)
+  [[ "$devices" == *"$1) (Booted)"* ]]
+}
+
+# Same as scripts/test.sh: the iOS 26.5 simulator's mediaanalysisd runs away after every boot. A
+# clone is booted for the first time here, and scripts/test.sh may never have switched it off in
+# the simulator it was cloned from.
+quiet_media_analysis() {
+  [ "${KEEP_MEDIA_ANALYSIS:-0}" = 1 ] && return 0
+  xcrun simctl spawn "$1" launchctl disable system/com.apple.mediaanalysisd > /dev/null 2>&1 || true
+  xcrun simctl spawn "$1" launchctl bootout system/com.apple.mediaanalysisd > /dev/null 2>&1 || true
+}
+
 failed=()
-names=() udids=()
-built=false
-for name in ${simulators[@]+"${simulators[@]}"}; do
+# One entry per lane, by the same index: its simulator's name, the matrix simulator it is or clones,
+# its UDID, its variants, and whether it was booted before this run.
+names=() folders=() udids=() laneVariants=() wasBooted=()
+
+# First every simulator is found, and a missing clone is made. Nothing is booted yet: a simulator
+# must be shut down to be cloned, and one that was already booted is shut down for it (it is booted
+# again below, and stays so, as scripts/test.sh leaves it).
+while IFS='|' read -r matrix slot list; do
+  [ -n "$matrix" ] || continue
+  name="$(shots_lane_label "$matrix" "$slot")"
   udid="$(simulator_udid "$name")"
+  if [ -z "$udid" ] && [ "$slot" -gt 0 ]; then
+    source_udid="$(simulator_udid "$matrix")"
+    if [ -n "$source_udid" ]; then
+      if is_booted "$source_udid"; then xcrun simctl shutdown "$source_udid"; fi
+      echo "==> Making the clone \"$name\""
+      udid="$(xcrun simctl clone "$source_udid" "$name")"
+      if [ -z "$udid" ]; then
+        echo "FAIL: could not clone \"$matrix\" as \"$name\"" >&2
+        failed+=("$name")
+        continue
+      fi
+    fi
+  fi
   if [ -z "$udid" ]; then
-    echo "FAIL: no simulator named \"$name\" (see scripts/test.sh)" >&2
+    echo "FAIL: no simulator named \"$matrix\" (see scripts/test.sh)" >&2
     failed+=("$name")
     continue
   fi
-  was_booted=false
-  xcrun simctl list devices | grep -q "$udid) (Booted)" && was_booted=true
-  xcrun simctl boot "$udid" 2>/dev/null || true # already booted is fine
-  xcrun simctl bootstatus "$udid" -b > /dev/null 2>&1 || true
-  restore+=("$udid|$(xcrun simctl ui "$udid" content_size)|$(xcrun simctl ui "$udid" appearance)|$was_booted")
-  xcrun simctl ui "$udid" appearance light
-  names+=("$name") udids+=("$udid")
-
-  if ! $built; then
-    echo "==> Building the harness"
-    # In the background, so an interrupt stops it at once instead of after the build.
-    xcodebuild build-for-testing -project "$build/NudgeShots.xcodeproj" -scheme NudgeShots \
-      -destination "platform=iOS Simulator,id=$udid" -derivedDataPath "$build/derived" \
-      > "$logs/screenshots-build.log" 2>&1 < /dev/null &
-    pids+=($!)
-    wait "${pids[0]}" || { echo "FAIL: see $logs/screenshots-build.log" >&2; exit 1; }
-    pids=()
-    built=true
-  fi
+  names+=("$name") folders+=("$matrix") udids+=("$udid")
+  laneVariants+=("$(expand_variants "$list" | tr '\n' ' ')")
+  # A simulator shut down for its clone was booted before this run: its slot 0 lane came first.
+  if is_booted "$udid"; then wasBooted+=(true); else wasBooted+=(false); fi
+done <<< "$lanes"
+# Registered before booting, so an interrupt while they boot still shuts them down.
+for i in ${!udids[@]}; do
+  ${wasBooted[$i]} || shut_down_at_exit+=("${udids[$i]}")
+done
+for i in ${!udids[@]}; do
+  xcrun simctl boot "${udids[$i]}" 2>/dev/null || true # already booted is fine
+done
+for i in ${!udids[@]}; do
+  xcrun simctl bootstatus "${udids[$i]}" -b > /dev/null 2>&1 || true
+  restore+=("${udids[$i]}|$(xcrun simctl ui "${udids[$i]}" content_size)|$(xcrun simctl ui "${udids[$i]}" appearance)")
+  xcrun simctl ui "${udids[$i]}" appearance light
+  [ "${folders[$i]}" = "${names[$i]}" ] || quiet_media_analysis "${udids[$i]}"
 done
 
+if [ ${#udids[@]} -gt 0 ]; then
+  echo "==> Building the harness"
+  # In the background, so an interrupt stops it at once instead of after the build.
+  xcodebuild build-for-testing -project "$build/NudgeShots.xcodeproj" -scheme NudgeShots \
+    -destination "platform=iOS Simulator,id=${udids[0]}" -derivedDataPath "$build/derived" \
+    > "$logs/screenshots-build.log" 2>&1 < /dev/null &
+  pids+=($!)
+  wait "${pids[0]}" || { echo "FAIL: see $logs/screenshots-build.log" >&2; exit 1; }
+  pids=()
+fi
+
 for i in ${!names[@]}; do
-  shoot "${names[$i]}" "${udids[$i]}" "$failures/$i" &
+  shoot "${names[$i]}" "${folders[$i]}" "${udids[$i]}" "$failures/$i" "${laneVariants[$i]}" &
   pids+=($!)
 done
 for i in ${!pids[@]}; do
