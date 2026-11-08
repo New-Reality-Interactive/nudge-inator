@@ -693,9 +693,9 @@ final class ShotsUITests: XCTestCase {
         discardChanges(titled: title, line: line)
     }
 
-    /// Whether a list row with this title is there, scrolling down to it. By existence, not
-    /// hittability, whose label carries the row's other text: at the largest text a scroll can step
-    /// past the middle of a tall row, and a row's middle can be under the bar.
+    /// Whether a list row with this title is there, scrolling down to it. The label also carries the
+    /// row's other text. By existence, not hittability: at the largest text a scroll can step past
+    /// the middle of a tall row, and a row's middle can be under the bar.
     private func rowExists(_ title: String) -> Bool {
         let row = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
         var scrolls = 0
@@ -960,7 +960,9 @@ final class ShotsUITests: XCTestCase {
     private func closeDeleteQuestion(titled title: String, line: UInt = #line) {
         let question = deleteQuestionElement(titled: title, line: line)
         if app.popovers.firstMatch.exists {
-            XCTAssert(tapOutsidePopover(waiting: 1, at: CGVector(dx: 0.9, dy: 0.9)), "The popover has no dismiss region:\n\(app.debugDescription)", line: line)
+            // The window's far corner: at the largest text in portrait the popover fills the screen,
+            // and a tap further in lands on its Delete button (#285).
+            XCTAssert(tapOutsidePopover(waiting: 1, at: CGVector(dx: 0.97, dy: 0.97)), "The popover has no dismiss region:\n\(app.debugDescription)", line: line)
         } else {
             let cancel = question.buttons["Cancel"]
             XCTAssert(cancel.exists, "No way out of \(title):\n\(app.debugDescription)", line: line)
