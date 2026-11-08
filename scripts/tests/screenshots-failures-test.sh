@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Tests how a screenshot run finds and acts on a failed test (#302): scripts/screenshots-watch.sh
-# against lines from real runs, then scripts/screenshots.sh over stand-ins for xcrun, xcodebuild and
-# xcodegen. Needs no simulator, so CI runs it too (scripts/test.sh).
+# Tests how a screenshot run finds and acts on a failed test (#302), and the records it adds (#303):
+# scripts/screenshots-watch.sh against lines from real runs, then scripts/screenshots.sh over
+# stand-ins for xcrun, xcodebuild and xcodegen. Needs no simulator, so CI runs it too
+# (scripts/test.sh). The records go in a temporary folder, never the real metrics folder.
 set -uo pipefail
 cd "$(dirname "$0")/../.."
 source scripts/screenshots-watch.sh
@@ -57,6 +58,8 @@ expect "bytes that are not valid text don't stop the watcher" "testSettings" "$(
 
 # ---- scripts/screenshots.sh over stand-ins ----
 
+mkdir -p "$work/blocked" && touch "$work/blocked/file" # a folder that can't be made
+
 a=AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA
 b=BBBBBBBB-BBBB-BBBB-BBBB-BBBBBBBBBBBB
 stub="$work/stub"
@@ -93,11 +96,17 @@ EOF
 chmod +x "$stub/bin/"*
 
 # Clears the stand-ins' records and scenario files.
-reset_stub() { rm -f "$stub"/simctl.log "$stub"/ran "$stub"/[ab]-* "$stub"/finished-*; }
+reset_stub() { rm -rf "$stub"/simctl.log "$stub"/ran "$stub"/[ab]-* "$stub"/finished-* "$work/metrics"; }
+
+# The records the last run added, as "<simulator>|<variant>|<result>|<failed test>", in order.
+recorded() {
+  sed -n 's/.*"simulator":"\([^"]*\)","variant":"\([^"]*\)".*"result":"\([a-z]*\)","failed":\(.*\)}$/\1|\2|\3|\4/p' \
+    "$work/metrics/runs.jsonl" 2> /dev/null | sort
+}
 
 # Runs the real script over the stand-ins, with any VAR=value arguments. Sets $status.
 run_shots() {
-  env PATH="$stub/bin:$PATH" STUB_DIR="$stub" SIMULATORS="Stub A;Stub B" SHOTS_OUT="$work/out" \
+  env PATH="$stub/bin:$PATH" STUB_DIR="$stub" NUDGE_METRICS_DIR="$work/metrics" NUDGE_METRICS_TICKET=303 SIMULATORS="Stub A;Stub B" SHOTS_OUT="$work/out" \
     SHOTS_VARIANTS="portrait landscape" "$@" scripts/screenshots.sh > "$work/output" 2>&1
   status=$?
 }
@@ -130,6 +139,11 @@ expect "the failing test's own run stops" "no" "$([ -e "$stub/finished-a" ] && e
 expect "the other simulator's run stops" "no" "$([ -e "$stub/finished-b" ] && echo yes || echo no)"
 expect "the failing simulator's next variant never starts" "0" "$(grep -c 'a-landscape' "$stub/ran")"
 expect_cleanup "after a stop"
+expect "a stop records the failed test as failed and the run it stopped as stopped" \
+  'Stub A|portrait|fail|"testBad"
+Stub B|portrait|stopped|null' "$(recorded)"
+expect "every record's duration is a number of seconds" "3" "$(grep -c '"duration":[0-9]' "$work/metrics/runs.jsonl")"
+expect "the harness build is recorded too" "1" "$(grep -c '"step":"screenshots-build".*"result":"pass"' "$work/metrics/runs.jsonl")"
 
 reset_stub
 echo 'sleep 1; exit 65' > "$stub/a-portrait"
@@ -140,6 +154,9 @@ expect "it says so, with the simulator and variant" "  the run itself (no test n
   "$(grep '^  ' "$work/output")"
 expect "it stops the other simulator's run too" "no" "$([ -e "$stub/finished-b" ] && echo yes || echo no)"
 expect_cleanup "after a run that named no test"
+expect "a run that named no test is recorded as failed" \
+  'Stub A|portrait|fail|"the run itself (no test named)"
+Stub B|portrait|stopped|null' "$(recorded)"
 
 reset_stub
 for lane in a b; do
@@ -163,11 +180,27 @@ a-portrait
 b-landscape
 b-portrait" "$(sort "$stub/ran")"
 expect_cleanup "after keep-going"
+expect "keep-going records every variant, passed or failed" \
+  'Stub A|landscape|pass|null
+Stub A|portrait|fail|"testBad"
+Stub B|landscape|fail|"testWorse"
+Stub B|portrait|pass|null' "$(recorded)"
 
 reset_stub
 run_shots
 expect "a run with no failures succeeds" "0" "$status"
 expect "and reports none" "0" "$(grep -c 'FAIL' "$work/output")"
+expect "a clean run records every variant as passed" \
+  'Stub A|landscape|pass|null
+Stub A|portrait|pass|null
+Stub B|landscape|pass|null
+Stub B|portrait|pass|null' "$(recorded)"
+expect "a record names the ticket (four variant runs and the build)" "5" "$(grep -c '"ticket":303,' "$work/metrics/runs.jsonl")"
+
+reset_stub
+run_shots NUDGE_METRICS_DIR="$work/blocked/file/inside"
+expect "a run whose metrics can't be written still succeeds" "0" "$status"
+expect "and warns" "1" "$(grep -c '^warning: could not write the metrics' "$work/output")"
 expect_cleanup "after a clean run"
 
 [ "$failures" -eq 0 ] || { echo "FAIL: $failures check(s)" >&2; exit 1; }

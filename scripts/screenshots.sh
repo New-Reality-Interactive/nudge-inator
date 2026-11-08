@@ -19,6 +19,8 @@
 # images from other tests stay, and the run lists the ones it wrote, since those kept may be older
 # than the code. SHOTS_KEEP_GOING=1 runs every test and lists every failure at the end; without it,
 # the first failed test on any simulator stops every simulator's run (#302).
+# Each variant's run adds a record to the test metrics (scripts/metrics.sh, #303): pass, fail, or
+# stopped for a run that was cut short because another failed or the script was interrupted.
 # Writes <SHOTS_OUT>/<simulator>/<variant>/<screen>.png, a clone's under the simulator it clones.
 # Each simulator's progress lines start with "[<simulator>]" (a clone's with its own name), since
 # they are interleaved.
@@ -29,6 +31,7 @@ cd "$(dirname "$0")/.."
 SIMULATORS="${SIMULATORS-iPhone 15 Pro - iOS 26.5;iPhone 15 - iOS 27.0}"
 source scripts/screenshots-plan.sh
 source scripts/screenshots-watch.sh
+source scripts/metrics.sh
 out="${SHOTS_OUT:-docs/screenshots/$(date +%F)}"
 defaults=(portrait landscape largest-text)
 
@@ -67,6 +70,7 @@ restore=()          # per simulator: UDID|text size|appearance, put back at the 
 shut_down_at_exit=() # UDIDs of the simulators that were shut down when the run began
 pids=()
 failures="$(mktemp -d)" # one file per simulator and variant, a line per failure
+metrics_scratch="$(mktemp -d)" # one file per variant run: where it began and ended (record_metrics)
 cleanup() {
   trap '' USR1 # a lane that fails now must not cut this short
   # Stop the simulators' runs (and the xcodebuild under each) before undoing what they changed.
@@ -82,11 +86,38 @@ cleanup() {
   for udid in ${shut_down_at_exit[@]+"${shut_down_at_exit[@]}"}; do
     xcrun simctl shutdown "$udid" 2>/dev/null
   done
-  rm -rf "$failures"
+  # After the simulators are put back, so a slow write can't hold that up. Here, not in each lane: a
+  # lane that was just stopped can't record itself.
+  record_metrics
+  rm -rf "$failures" "$metrics_scratch"
 }
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
+
+# Adds a record for every variant run that began, from the files shoot() left in $metrics_scratch
+# (name|variant|log|failure file|began|ended, the last empty for a run that didn't finish): fail if
+# it named a failed test, else pass if it finished, else stopped. Never fails, and this runs in the
+# exit trap, so a file cut short by a kill is skipped rather than allowed to stop the clean-up.
+record_metrics() {
+  local file name variant log failed_file began ended result failed line now
+  now="$(date +%s)"
+  for file in "$metrics_scratch"/*; do
+    [ -f "$file" ] || continue
+    IFS='|' read -r name variant log failed_file began ended < "$file"
+    [[ "$began" =~ ^[0-9]+$ ]] || continue
+    result=pass failed=""
+    if [ -s "$failed_file" ]; then
+      result=fail
+      while IFS= read -r line; do
+        failed="${failed:+$failed; }${line%" on $name, $variant"}"
+      done < "$failed_file"
+    elif [ -z "$ended" ]; then
+      result=stopped
+    fi
+    metrics_record screenshots "$name" "$variant" "$(metrics_count_tests "$log")" "$(( ${ended:-$now} - began ))" "$result" "$failed"
+  done
+}
 
 # Notes that $1 failed on the simulator $2 in the variant $3 (log $4), in the file $5, and, unless the
 # run keeps going, asks the main script to stop every simulator's run.
@@ -101,7 +132,7 @@ record_failure() {
 # its failure files' paths, $5 its variants separated by spaces. Reads only, out, logs and build.
 shoot() {
   local name="$1" folder="$2" udid="$3" failed_prefix="$4" lane_variants="$5"
-  local variant base size orientation direction dir log started failed_file test
+  local variant base size orientation direction dir log started failed_file metrics_file began test
   for variant in $lane_variants; do
     echo "[$name] ==> $variant"
     # The rtl- prefix is a launch argument of the harness app's (ShotsUITests), so the simulator's
@@ -118,6 +149,9 @@ shoot() {
     log="$logs/screenshots-$name-$variant.log"
     started="$log.started"
     failed_file="$failed_prefix-$variant"
+    metrics_file="$metrics_scratch/${failed_prefix##*/}-$variant"
+    began="$(date +%s)"
+    echo "$name|$variant|$log|$failed_file|$began|" > "$metrics_file"
     touch "$started"
     TEST_RUNNER_SHOTS_DIR="$dir" TEST_RUNNER_SHOTS_ORIENTATION="$orientation" TEST_RUNNER_SHOTS_DIRECTION="$direction" \
       xcodebuild test-without-building -project "$build/NudgeShots.xcodeproj" -scheme NudgeShots \
@@ -132,6 +166,7 @@ shoot() {
       echo "[$name] wrote: $(find "$dir" -name '*.png' -newer "$started" -exec basename {} .png \; | sort | tr '\n' ' ')"
     fi
     rm -f "$started"
+    echo "$name|$variant|$log|$failed_file|$began|$(date +%s)" > "$metrics_file"
   done
 }
 
@@ -203,11 +238,17 @@ done
 if [ ${#udids[@]} -gt 0 ]; then
   echo "==> Building the harness"
   # In the background, so an interrupt stops it at once instead of after the build.
+  build_began="$(date +%s)"
   xcodebuild build-for-testing -project "$build/NudgeShots.xcodeproj" -scheme NudgeShots \
     -destination "platform=iOS Simulator,id=${udids[0]}" -derivedDataPath "$build/derived" \
     > "$logs/screenshots-build.log" 2>&1 < /dev/null &
   pids+=($!)
-  wait "${pids[0]}" || { echo "FAIL: see $logs/screenshots-build.log" >&2; exit 1; }
+  if ! wait "${pids[0]}"; then
+    metrics_record screenshots-build "${names[0]}" "" "" "$(( $(date +%s) - build_began ))" fail ""
+    echo "FAIL: see $logs/screenshots-build.log" >&2
+    exit 1
+  fi
+  metrics_record screenshots-build "${names[0]}" "" "" "$(( $(date +%s) - build_began ))" pass ""
   pids=()
 fi
 

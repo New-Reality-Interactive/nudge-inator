@@ -4,8 +4,12 @@
 # of the app scheme).
 # Env: SIMULATORS (simulator names separated by ";", default the iOS 26.5 and 27.0 ones below).
 # SIMULATORS= (set but empty) runs only the steps that need no simulator, as CI does.
+# Each run adds records to the test metrics: the engine's tests, the app build, each simulator's app
+# tests and the run as a whole (scripts/metrics.sh, #303).
 set -uo pipefail
 cd "$(dirname "$0")/.."
+source scripts/metrics.sh
+run_began="$(date +%s)"
 
 SIMULATORS="${SIMULATORS-iPhone 15 Pro - iOS 26.5;iPhone 15 - iOS 27.0}"
 IFS=';' read -r -a simulators <<< "$SIMULATORS"
@@ -31,6 +35,16 @@ xcodebuild_logged() {
   return $status
 }
 
+# Records the xcodebuild step $1 on the simulator $2 (macOS for none), whose output is in the log $3.
+# It began at the time $4 and ended at the time $5 (seconds since the epoch) with the status $6,
+# which this returns.
+record_step() {
+  local result=pass
+  [ "$6" -eq 0 ] || result=fail
+  metrics_record "$1" "$2" "" "$(metrics_count_tests "$3")" "$(( $5 - $4 ))" "$result" "$(metrics_failed_tests "$3")"
+  return "$6"
+}
+
 # Prints every import of a module other than Foundation in the .swift files under $1. Matches the
 # whole import grammar (attributes such as @preconcurrency, Swift 6 access levels such as
 # `public import`, and kinds such as `import struct X.Y`), so none of those forms slips past.
@@ -45,6 +59,32 @@ non_foundation_imports() {
     }, shift);
   ' "$1"
 }
+
+scratch="$(mktemp -d)"
+
+# Leaves the Mac as the run found it: the simulators this run booted are shut down, pass or fail
+# (an exit trap), and one that was already booted stays booted. Same rule as scripts/screenshots.sh.
+shut_down_at_exit=() # UDIDs of simulators that were shut down when the run began
+test_pids=()         # the side-by-side test runs, still going if the script is interrupted
+cleanup() {
+  # Stop an interrupted run's xcodebuilds (each a child of its subshell) before shutting down the
+  # simulators under them and removing the files they write to.
+  for pid in ${test_pids[@]+"${test_pids[@]}"}; do
+    pkill -TERM -P "$pid" 2>/dev/null || true
+    kill -TERM "$pid" 2>/dev/null || true
+  done
+  [ ${#test_pids[@]} -eq 0 ] || wait 2>/dev/null
+  rm -rf "$scratch"
+  for udid in ${shut_down_at_exit[@]+"${shut_down_at_exit[@]}"}; do
+    xcrun simctl shutdown "$udid" 2>/dev/null || true
+  done
+  # The run as a whole, which is stopped if the script never reached its end. Last, so a slow write
+  # can't hold up the simulators' shutdown.
+  metrics_record test.sh "" "" "" "$(( $(date +%s) - run_began ))" "${run_result:-stopped}" "${failed[*]-}"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 step "NudgeEngine imports no Apple framework (Foundation only)"
 if non_foundation_imports Packages/NudgeEngine/Sources/NudgeEngine | grep .; then
@@ -73,6 +113,10 @@ fi
 # Which simulator or clone runs which screenshot variants (#301). No simulator needed.
 step "The screenshot plan assigns variants to simulators and clones"
 scripts/tests/screenshots-plan-test.sh || failed+=("screenshots-plan")
+
+# No simulator needed: the folder is a temporary one (#303).
+step "Test metrics are recorded without failing a run"
+scripts/tests/metrics-test.sh || failed+=("metrics")
 
 # No simulator needed: stand-ins for xcrun, xcodebuild and xcodegen (#302).
 step "A screenshot run stops at its first failed test"
@@ -113,31 +157,11 @@ fi
 # xcodebuild, not `swift test`: SwiftPM's command line copies the engine's String Catalog without
 # compiling it, so every string would fall back to its key and plural variants would never apply.
 step "xcodebuild test (NudgeEngine, macOS)"
+began="$(date +%s)"
 (cd Packages/NudgeEngine && xcodebuild_logged "$logs/engine-macos.log" test -scheme NudgeEngine \
-  -destination 'platform=macOS' -derivedDataPath .build/xcode) || failed+=("package-tests")
-
-scratch="$(mktemp -d)"
-
-# Leaves the Mac as the run found it: the simulators this run booted are shut down, pass or fail
-# (an exit trap), and one that was already booted stays booted. Same rule as scripts/screenshots.sh.
-shut_down_at_exit=() # UDIDs of simulators that were shut down when the run began
-test_pids=()         # the side-by-side test runs, still going if the script is interrupted
-cleanup() {
-  # Stop an interrupted run's xcodebuilds (each a child of its subshell) before shutting down the
-  # simulators under them and removing the files they write to.
-  for pid in ${test_pids[@]+"${test_pids[@]}"}; do
-    pkill -TERM -P "$pid" 2>/dev/null || true
-    kill -TERM "$pid" 2>/dev/null || true
-  done
-  [ ${#test_pids[@]} -eq 0 ] || wait 2>/dev/null
-  rm -rf "$scratch"
-  for udid in ${shut_down_at_exit[@]+"${shut_down_at_exit[@]}"}; do
-    xcrun simctl shutdown "$udid" 2>/dev/null || true
-  done
-}
-trap cleanup EXIT
-trap 'exit 130' INT
-trap 'exit 143' TERM
+  -destination 'platform=macOS' -derivedDataPath .build/xcode)
+status=$?
+record_step engine-tests macOS "$logs/engine-macos.log" "$began" "$(date +%s)" "$status" || failed+=("package-tests")
 
 # Only the color sets: the catalog may hold other assets the script doesn't write.
 step "The color sets match DESIGN.md"
@@ -211,19 +235,31 @@ done
 # xcode-build-server reads for VS Code's code completion (README).
 if [ ${#udids[@]} -gt 0 ]; then
   step "xcodebuild build-for-testing (app + widget extension)"
-  if xcodebuild_logged "$logs/app-build.log" build-for-testing -project NudgeInator.xcodeproj \
-    -scheme NudgeInator -destination "platform=iOS Simulator,id=${udids[0]}" -derivedDataPath .build/derived; then
+  began="$(date +%s)"
+  xcodebuild_logged "$logs/app-build.log" build-for-testing -project NudgeInator.xcodeproj \
+    -scheme NudgeInator -destination "platform=iOS Simulator,id=${udids[0]}" -derivedDataPath .build/derived
+  status=$?
+  if record_step app-build "${found[0]}" "$logs/app-build.log" "$began" "$(date +%s)" "$status"; then
     # The simulators test side by side from that one build. A background job can't add to `failed`,
-    # so each writes its printed results to its own file in $scratch. They are shown one simulator
-    # at a time, in order, as each finishes, so the results don't interleave (and show nothing live).
+    # so each writes its printed results, and when it began and ended, to its own files in $scratch.
+    # They are shown one simulator at a time, in order, as each finishes, so the results don't
+    # interleave (and show nothing live).
     for i in "${!udids[@]}"; do
-      (xcodebuild_logged "$logs/app-${found[$i]}.log" test-without-building -project NudgeInator.xcodeproj \
-        -scheme NudgeInator -destination "platform=iOS Simulator,id=${udids[$i]}" \
-        -derivedDataPath .build/derived > "$scratch/results-${found[$i]}" 2>&1) &
+      (began="$(date +%s)"
+        xcodebuild_logged "$logs/app-${found[$i]}.log" test-without-building -project NudgeInator.xcodeproj \
+          -scheme NudgeInator -destination "platform=iOS Simulator,id=${udids[$i]}" \
+          -derivedDataPath .build/derived > "$scratch/results-${found[$i]}" 2>&1
+        status=$?
+        echo "$began $(date +%s) $status" > "$scratch/timing-${found[$i]}"
+        exit $status) &
       test_pids+=($!)
     done
     for i in "${!udids[@]}"; do
       wait "${test_pids[$i]}" || failed+=("app-tests-${found[$i]}")
+      # Each job's own timing, since they end at different times.
+      if read -r began ended status < "$scratch/timing-${found[$i]}" 2> /dev/null; then
+        record_step app-tests "${found[$i]}" "$logs/app-${found[$i]}.log" "$began" "$ended" "$status"
+      fi
       step "xcodebuild test-without-building on ${found[$i]}"
       cat "$scratch/results-${found[$i]}"
     done
@@ -252,8 +288,10 @@ fi
 
 echo
 if [ ${#failed[@]} -eq 0 ]; then
+  run_result=pass
   echo "PASS: all steps succeeded"
 else
+  run_result=fail
   echo "FAIL: ${failed[*]}" >&2
   exit 1
 fi
