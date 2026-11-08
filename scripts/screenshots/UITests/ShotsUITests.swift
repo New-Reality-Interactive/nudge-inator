@@ -56,7 +56,7 @@ final class ShotsUITests: XCTestCase {
     }
 
     /// Drags the window's middle by most of a screen: down shows what's below. Not `swipeUp()`,
-    /// which didn't scroll in landscape (iOS 26.5 simulator).
+    /// which didn't scroll in landscape (iOS 26.5 simulator, seen before #300; not rechecked).
     private func scroll(down: Bool) {
         let window = app.windows.firstMatch
         let low = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.78))
@@ -157,7 +157,7 @@ final class ShotsUITests: XCTestCase {
     }
 
     /// Runs a tap on a navigation bar button. In landscape such a tap never landed (iOS 26.5
-    /// simulator) though rows and tabs did, so the phone is turned to portrait for it and back.
+    /// simulator, seen before #300; not rechecked) though rows and tabs did, so the phone is turned to portrait for it and back.
     private func barTap(_ tap: () -> Void) {
         let landscape = XCUIDevice.shared.orientation.isLandscape
         if landscape {
@@ -1253,8 +1253,8 @@ final class ShotsUITests: XCTestCase {
 
         applyRemindersFilter()
         shot("reminders-due-date-badge")
-        // Not `barTap`: turning the phone back closes the menu, and landscape only runs on iOS 27,
-        // where bar buttons take taps.
+        // Not `barTap`: turning the phone back closes the menu. Bar buttons took taps in landscape on
+        // iOS 27.0; iOS 26.5, which runs landscape again (#300), hasn't been checked for this.
         filterButtons.firstMatch.tap()
         XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
         app.buttons["Clear All Filters"].firstMatch.tap()
@@ -1301,8 +1301,8 @@ final class ShotsUITests: XCTestCase {
         chooseInSheet("Nudging")
         applyRemindersFilter()
         shot("reminders-status-nudging")
-        // Not `barTap`: turning the phone back closes the menu, and landscape only runs on iOS 27,
-        // where bar buttons take taps.
+        // Not `barTap`: turning the phone back closes the menu. Bar buttons took taps in landscape on
+        // iOS 27.0; iOS 26.5, which runs landscape again (#300), hasn't been checked for this.
         filterButtons.firstMatch.tap()
         XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
         shot("reminders-filter-menu")
@@ -1322,8 +1322,8 @@ final class ShotsUITests: XCTestCase {
         chooseInSheet("#home")
         applyRemindersFilter()
         shot("reminders-filter-tag")
-        // Not `barTap`: turning the phone back closes the menu, and landscape only runs on iOS 27,
-        // where bar buttons take taps.
+        // Not `barTap`: turning the phone back closes the menu. Bar buttons took taps in landscape on
+        // iOS 27.0; iOS 26.5, which runs landscape again (#300), hasn't been checked for this.
         filterButtons.firstMatch.tap()
         XCTAssert(app.buttons["Clear All Filters"].waitForExistence(timeout: 3), "No Filter menu")
         app.buttons["Clear All Filters"].firstMatch.tap()
