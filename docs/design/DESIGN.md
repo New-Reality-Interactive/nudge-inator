@@ -333,7 +333,8 @@ text fields, confirmation dialogs, alerts) are used as the system draws them.
 A question that confirms an action the person just tapped (discarding changes, deleting) is the
 system's confirmation dialog with its title showing, as Apple's own apps ask (Calendar, seen on an
 iPhone 15 with iOS 27.0.1). That includes the delete questions (#286): Delete Reminder, asked in
-the same words from the details page and a Reminders row, and a tag's Delete. iOS draws it as a
+the same words from the details page and a Reminders row, and a tag's (its button reads Delete Tag,
+as Delete Reminder does). iOS draws it as a
 popover with the destructive button alone and no Cancel button (from the details page's button,
 and, on the iOS 27.0 simulator, from a swipe tile too, which has no button to point at); where it
 draws an action sheet instead, the dialog's cancel-role Cancel shows. Every question has a way to

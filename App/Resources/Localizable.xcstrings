@@ -839,7 +839,7 @@
       "comment" : "Settings: row that opens the page setting the pace every new reminder starts with. Under it, that pace, such as \"Consistent · 10 min\".\nTitle of the page in Settings that sets the pace every new reminder starts with."
     },
     "Delete" : {
-      "comment" : "Reminders tab: a row's swipe action and VoiceOver action that asks before deleting the reminder.\nSettings: confirms deleting every reminder, tag and all history.\nTags: a row's swipe action and VoiceOver action that asks before deleting the tag.\nTags: confirms deleting the tag. The reminders that have it are kept."
+      "comment" : "Reminders tab: a row's swipe action and VoiceOver action that asks before deleting the reminder.\nSettings: confirms deleting every reminder, tag and all history.\nTags: a row's swipe action and VoiceOver action that asks before deleting the tag."
     },
     "Delete %@?" : {
       "comment" : "Tags: title of the question that asks before deleting a tag. The placeholder is the tag, such as \"#home\"."
@@ -852,6 +852,9 @@
     },
     "Delete Reminder" : {
       "comment" : "Confirms deleting the reminder.\nReminder details: opens the question that asks before deleting the reminder."
+    },
+    "Delete Tag" : {
+      "comment" : "Tags: confirms deleting the tag, as Delete Reminder does for a reminder. The reminders that have it are kept."
     },
     "Delete “%@”?" : {
       "comment" : "Asked before deleting a reminder, from its details or a Reminders tab row. The placeholder is its title."

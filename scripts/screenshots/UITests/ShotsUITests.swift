@@ -682,7 +682,7 @@ final class ShotsUITests: XCTestCase {
 
         swipe("#home")
         app.buttons["Delete"].firstMatch.tap()
-        confirmDelete("Delete", titled: "Delete #home?")
+        confirmDelete("Delete Tag", titled: "Delete #home?")
         XCTAssertNil(scrollTo("#home", scrolls: 0), "#home is still in the list")
         shot("tags-after-delete")
 

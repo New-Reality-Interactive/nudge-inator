@@ -110,7 +110,7 @@ private struct TagRow: View {
             titleVisibility: .visible
         ) {
             Button(role: .destructive, action: delete) {
-                Text("Delete", comment: "Tags: confirms deleting the tag. The reminders that have it are kept.")
+                Text("Delete Tag", comment: "Tags: confirms deleting the tag, as Delete Reminder does for a reminder. The reminders that have it are kept.")
             }
             Button(role: .cancel) {
             } label: {
