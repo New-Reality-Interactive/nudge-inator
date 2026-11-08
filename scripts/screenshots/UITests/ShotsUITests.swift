@@ -1512,6 +1512,43 @@ final class ShotsUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Custom"].firstMatch.exists, "A preset left the Custom row")
     }
 
+    /// End Repeat under Repeat (#287): its menu, then After with its stepper and On Date with its
+    /// End Date row, for a preset and under the Custom row.
+    func testEndRepeat() {
+        launch(.app)
+        openSheet("New Reminder", title: "New Reminder")
+        hideKeyboard()
+        XCTAssertFalse(app.staticTexts["End Repeat"].exists, "End Repeat shows with Never")
+        openRepeatMenu(showing: "Never")
+        tapMenuItem("Every Week")
+        openEndRepeatMenu(showing: "Never")
+        shot("form-end-menu")
+        tapMenuItem("After")
+        shot("form-end-after", pages: 2)
+        reportFormPageAccessibility("end-after")
+        openEndRepeatMenu(showing: "After")
+        tapMenuItem("On Date")
+        shot("form-end-date", pages: 2)
+        reportFormPageAccessibility("end-date")
+        openRepeatMenu(showing: "Every Week")
+        tapMenuItem("Custom")
+        shot("form-end-custom", pages: 2)
+        openCustomRow()
+        shot("form-end-custom-page", pages: 3)
+    }
+
+    /// Taps End Repeat's menu button, which shows `current`, and waits for the menu.
+    private func openEndRepeatMenu(showing current: String, line: UInt = #line) {
+        let label = app.staticTexts["End Repeat"].firstMatch
+        reveal(label)
+        XCTAssert(label.waitForExistence(timeout: 3), "No End Repeat row:\n\(app.debugDescription)", line: line)
+        let menu = app.buttons.matching(NSPredicate(format: "label == %@", current)).allElementsBoundByIndex
+            .first { abs($0.frame.midY - label.frame.midY) < 30 } ?? app.buttons[current].firstMatch
+        menu.tap()
+        XCTAssert(app.buttons["On Date"].firstMatch.waitForExistence(timeout: 3), "The End Repeat menu didn't open", line: line)
+        pause(0.8)
+    }
+
     /// Scrolls the form until `element` is on screen and clear of the bar, down first, then up from
     /// where that left it. Not past the top: swiping down there closes the sheet.
     private func reveal(_ element: XCUIElement) {
@@ -1584,12 +1621,12 @@ final class ShotsUITests: XCTestCase {
         }
     }
 
-    /// The lines of the accessibility tree on screen that name the Repeat and Custom pages'
+    /// The lines of the accessibility tree on screen that name the form's repeat rows, the Custom page's
     /// headings, choices, steppers and checkmarks: each one's type, label, value and whether it's
     /// disabled, under `screen`, such as "custom-locked-2". XCUITest doesn't expose the hint, so
     /// that stays a device check.
     private func reportFormPageAccessibility(_ screen: String) {
-        let names = ["Frequency", "Daily", "Weekly", "Monthly", "Yearly", "Every", "'On", "Ends", "Never", "After", "On Date", "End Date", "ncrement", "ecrement", "Done"]
+        let names = ["Frequency", "Daily", "Weekly", "Monthly", "Yearly", "Every", "'On", "End Repeat", "Never", "After", "On Date", "End Date", "ncrement", "ecrement", "Done"]
         for line in app.debugDescription.split(separator: "\n") where names.contains(where: { line.contains($0) }) {
             print("ACCESSIBILITY \(screen): \(line.trimmingCharacters(in: .whitespaces))")
         }

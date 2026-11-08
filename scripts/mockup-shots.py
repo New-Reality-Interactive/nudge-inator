@@ -40,6 +40,12 @@ SCREENS = {
   # The Repeat menu (#283). Only a mockup with it draws these; its form has no Repeat page, so form-repeat is for older mockups.
   "form-repeat-menu": ("openEditor();CLICK.repeatMenu()", 1),
   "form-repeat-custom": ("openEditor();CLICK.repeat('custom')", 2),
+  # End Repeat (#287). Only a mockup with it draws these.
+  "form-end-menu": ("openEditor();CLICK.repeat('weekly');CLICK.endMenu()", 1),
+  "form-end-after": ("openEditor();CLICK.repeat('weekly');CLICK.end('count')", 2),
+  "form-end-date": ("openEditor();CLICK.repeat('weekly');CLICK.end('until')", 2),
+  "form-end-custom": ("openEditor();CLICK.repeat('custom');CLICK.end('count')", 2),
+  "form-end-too-early": ("openEditor();CLICK.repeat('weekly');CLICK.end('until');state.sheet.draft.end.until='2026-09-01';render()", 2),
   "onboarding": ("state.sheet={kind:'onboard'};render()", 1),
   "banner-notifications-off": ("perm.notifications=false;render()", 4),
   "settings-notifications-off": ("perm.notifications=false;state.tab='settings';nav()", 2),

@@ -557,10 +557,10 @@
       "comment" : "Under the reminder form's title when it is empty, so Save is disabled."
     },
     "After" : {
-      "comment" : "The Custom repeat page's Ends choice: it ends after a number of times."
+      "comment" : "The reminder form's End Repeat choice: the repeat ends after a number of times."
     },
     "After %lld times" : {
-      "comment" : "The Custom repeat page's stepper: how many times it falls due before it ends.",
+      "comment" : "The reminder form's stepper under End Repeat: how many times the reminder falls due before it ends.",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -772,9 +772,6 @@
     "Choose a New Time" : {
       "comment" : "Alert title: Resume was turned down because the reminder has no time left."
     },
-    "Choose an end date after the start." : {
-      "comment" : "Under the Custom repeat page's end date when it is before the start, so Save is disabled."
-    },
     "Choose one or more days." : {
       "comment" : "Under the Custom repeat page's weekdays."
     },
@@ -963,10 +960,10 @@
       "comment" : "Title of the form that edits a reminder."
     },
     "End Date" : {
-      "comment" : "The Custom repeat page's last day the repeat can fall due."
+      "comment" : "The reminder form's row under End Repeat: the last day the repeat can fall due."
     },
-    "Ends" : {
-      "comment" : "The Custom repeat page's choice of when the repeat ends."
+    "End Repeat" : {
+      "comment" : "The reminder form's row under Repeat, which opens a menu of when the repeat ends."
     },
     "Enter a name for the tag." : {
       "comment" : "Tag sheet: shown when what was typed leaves no name, such as only a #."
@@ -1242,7 +1239,7 @@
       "comment" : "A filter sheet: VoiceOver's reason the Match choice is disabled."
     },
     "Never" : {
-      "comment" : "Repeat preset, in the form's Repeat menu: the reminder doesn't repeat.\nThe Custom repeat page's Ends choice: it repeats for ever."
+      "comment" : "Repeat preset, in the form's Repeat menu: the reminder doesn't repeat.\nThe reminder form's End Repeat choice: the repeat never ends."
     },
     "Never rings as an alarm." : {
       "comment" : "Under the reminder form's strength, when none of its nudges rings."
@@ -1503,7 +1500,7 @@
       "comment" : "Under the Custom repeat page's frequency when it's yearly. The placeholder is the start's day and month, such as \"28 October\"."
     },
     "On Date" : {
-      "comment" : "The Custom repeat page's Ends choice: it ends on a date."
+      "comment" : "The reminder form's End Repeat choice: the repeat ends on a date."
     },
     "On · Time Sensitive off" : {
       "comment" : "Settings: status of the Notifications row when notifications are allowed but Time Sensitive is turned off."
@@ -1733,10 +1730,10 @@
       "comment" : "Nudge card: after the occurrence's last nudge. The placeholder is when it gives up or the next occurrence takes over, such as \"11:17 AM\"."
     },
     "The repeat ends before it starts. Change its end date." : {
-      "comment" : "Under the reminder form's start when a custom repeat's end date is before the start, so Save is disabled."
+      "comment" : "Under the reminder form's start when End Repeat's end date is before the start, so Save is disabled."
     },
     "The repeat has already ended. Change when it ends." : {
-      "comment" : "Under the reminder form's start when a custom repeat has no times left, so Save is disabled."
+      "comment" : "Under the reminder form's start when the repeat has no times left, so Save is disabled."
     },
     "Then it ends." : {
       "comment" : "Under the Custom repeat page's Next Times when fewer than three are left."
