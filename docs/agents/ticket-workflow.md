@@ -44,6 +44,7 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
      `scripts/test.sh` (not when every fix changes only comments, `review.md`), then commit. A fix
      that changes something on screen sends the developer back to only the checklist lines it
      changed, not the whole list.
+   - Record each finding and the phone time as "Recording findings" (below) says.
    - A change that alters nothing on screen (logic alone) has no phone check and no simulator
      runs; it goes from the review's fixes to step 8 as before.
 
@@ -74,6 +75,21 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
    criterion is ticked; while one is open, the issue stays open. Say which criterion is open and
    why, and resolve it with the developer: meet it, or agree a change to it (reworded, or moved
    to a named ticket) and record that agreement in Comments.
+
+## Recording findings
+
+A ticket that changes something on screen records every finding in its Comments (#305), as it comes, so the readout below has the data. One comment per check (the phone check, each simulator run, the review, a TestFlight report), one line per finding:
+
+- **Found by:** the phone, the first simulator run (iOS 26.5 Landscape at Largest Text), the side-by-side runs, the review, or TestFlight.
+- **Kind:** an app bug, a harness fault, a mockup mismatch, or a flake.
+- **Where:** the iOS version and orientation it showed on (the simulator's, or the phone's).
+- A run that found nothing says so in one line, so a ticket with no findings still shows its checks.
+
+**Phone time** comes from timestamps, with no stopwatch: post a comment as soon as the build is installed and the seed loaded ("Phone check: installed, checklist sent"), and post the developer's report as a comment as soon as it arrives, one line per finding as above. The phone time is the gap between the two comments' timestamps (`gh issue view <n> --comments --json comments`). A report that comes in pieces is recorded when its last piece arrives. The simulator runs' own times are in `runs.jsonl` (`device-testing.md`, Test metrics); a run the first failure cut short is `stopped`, not `fail`.
+
+**The readout.** After the fifth ticket that changes something on screen and merges under this order (#304's, counting from the ticket after it), give the developer a one-page readout in chat: per ticket, the phone time, the simulator time, and the findings by finder and kind; then a recommendation on what to **keep, change or drop**, including what the third and fourth simultaneous simulators cost (the runs' durations at three and four lanes against one and two, from `runs.jsonl`). Collection continues after the readout.
+
+**An earlier readout.** An app bug that reaches TestFlight on iOS 26 prompts the readout sooner: it means the order let an iOS 26 bug through. Give the readout at once, before the next ticket, with the ticket whose order missed it and which check would have caught it.
 
 ## PR
 
