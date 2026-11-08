@@ -43,8 +43,8 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
    - Device checks, from the criteria or AGENTS.md's offer of an iPhone run: walk them through
      one at a time (`device-testing.md`).
    - A criterion the developer judges, such as approving a mockup: show it and ask.
-   - Neither: go straight to step 9, with the evidence in the PR body. The developer's approval
-     of the PR is the check.
+   - Neither: go straight to step 9, with the evidence in the PR body. The developer's go in
+     step 9 is the check.
 
    A failed check goes back to step 4. A ticket is `resolved` only when every acceptance
    criterion is ticked; while one is open, the issue stays open. Say which criterion is open and
@@ -53,11 +53,14 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
 
 ## PR
 
-9. A change that calls for the full screenshot walk (`device-testing.md`, Simulator screenshots) runs it now. Rerun `scripts/test.sh` if anything changed since its last run, push, then run
+9. A change that calls for the full screenshot walk (`device-testing.md`, Simulator screenshots) runs it now. Rerun `scripts/test.sh` if anything changed since its last run. Then
+   give the developer a summary of the PR and ask whether to create it. `/implement` is not that go; any
+   answer that affirms continuing is, and it covers the merge too. After it: push, run
    `mattpocock-skills:pr` and open the PR to `main` with `gh pr create`, titled
    `#<n> (<feature>): <short summary>`, with `Closes #<n>` as the body's last line before the
-   attribution, so the merge closes the ticket. A hook refuses a body without the `pr` skill's sections. Give the developer the
-   link and stop.
+   attribution, so the merge closes the ticket. A hook refuses a body without the `pr` skill's sections. Wait for its CI
+   checks on the pushed commit; if one fails, find out why, fix it, push and wait again. On green,
+   merge it without asking, then go on to step 10.
 
 ## When the PR is merged
 
