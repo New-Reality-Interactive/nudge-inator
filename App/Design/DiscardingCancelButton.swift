@@ -19,12 +19,12 @@ struct DiscardingCancelButton: View {
             if hasChanges { isConfirming = true } else { dismiss() }
         } label: {
             Label {
-                Text("Cancel", comment: "A sheet's cancel button (an xmark): the reminder form's and the Reminders and Tags filters'.")
+                Text("Cancel", comment: "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, and the Reminders and Tags filters'.")
             } icon: {
                 Image(systemName: "xmark")
             }
         }
-        .confirmationDialog(Text("Are you sure you want to discard these changes?", comment: "Asked when cancelling a sheet with changes: the reminder form, or the Reminders or Tags filter."),
+        .confirmationDialog(Text("Are you sure you want to discard these changes?", comment: "Asked when cancelling a sheet with changes: the reminder form, the tag sheet, or the Reminders or Tags filter."),
                             isPresented: $isConfirming, titleVisibility: .visible) {
             Button(role: .destructive) {
                 dismiss()

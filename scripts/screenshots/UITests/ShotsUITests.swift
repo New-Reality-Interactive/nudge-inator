@@ -59,15 +59,26 @@ final class ShotsUITests: XCTestCase {
     /// which didn't scroll in landscape (iOS 26.5 simulator, seen before #300; not rechecked).
     private func scroll(down: Bool) {
         let window = app.windows.firstMatch
-        let low = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.78))
-        let high = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.22))
+        // A scroll up from under the search field moves nothing, so it starts below the field.
+        let (lowY, highY) = !down && searchCoversScrollStart
+            ? (0.95, (app.searchFields.firstMatch.frame.maxY + 16) / window.frame.height)
+            : (0.78, 0.22)
+        let low = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: lowY))
+        let high = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: highY))
         let (from, to) = down ? (low, high) : (high, low)
         from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
     }
 
-    /// Four scrolls up.
+    /// Whether the search field covers where a scroll up normally starts: at the largest text in
+    /// landscape, where the bar and the field fill the top half of the window (#285).
+    private var searchCoversScrollStart: Bool {
+        let search = app.searchFields.firstMatch
+        return search.exists && search.frame.maxY > app.windows.firstMatch.frame.height * 0.22
+    }
+
+    /// Four scrolls up, or ten of the shorter ones a search field in the way leaves room for.
     private func scrollToTop() {
-        for _ in 0..<4 { scroll(down: false) }
+        for _ in 0..<(searchCoversScrollStart ? 10 : 4) { scroll(down: false) }
     }
 
     private func pause(_ seconds: TimeInterval) {
@@ -638,6 +649,69 @@ final class ShotsUITests: XCTestCase {
         assertTagCount(startsWith: "8 tags out of 8")
     }
 
+    /// The tag sheet's Cancel (#285), New Tag and rename: with the name as it opened it closes
+    /// without asking; with a change it asks, and Discard Changes adds and renames nothing.
+    func testTagSheetDiscard() {
+        launch(.app)
+        tab("Tags")
+        openRenameSheet(for: "#home")
+        dismissKeyboardTip()
+        closeUnchangedSheet(titled: "Rename Tag")
+
+        openRenameSheet(for: "#home")
+        app.typeText("x")
+        assertTagSheetAsksBeforeDiscarding(titled: "Rename Tag", shot: "tag-rename-discard")
+        // By existence, not hittability: at the largest text scrolling can step past the middle of a
+        // row this tall, and the rotation for the bar's taps moves the list.
+        scrollToTop()
+        XCTAssert(rowExists("#home"), "Discard Changes renamed the tag:\n\(app.debugDescription)")
+
+        openSheet("New Tag", title: "New Tag")
+        closeUnchangedSheet(titled: "New Tag")
+
+        openSheet("New Tag", title: "New Tag")
+        app.typeText("spare")
+        assertTagSheetAsksBeforeDiscarding(titled: "New Tag", shot: "tag-new-discard")
+        XCTAssertNil(scrollTo("#spare"), "Discard Changes added the tag")
+    }
+
+    /// With a changed name in the open tag sheet: a swipe down leaves it open, a tap outside the
+    /// question keeps the name, and Discard Changes closes it. The keyboard stays up: a return
+    /// here would save the name.
+    private func assertTagSheetAsksBeforeDiscarding(titled title: String, shot shotName: String, line: UInt = #line) {
+        let typed = app.textFields.firstMatch.value as? String
+        XCTAssertNotNil(typed, "The name field has no value", line: line)
+        swipeSheetDown(titled: title)
+        pause(0.8)
+        XCTAssert(app.navigationBars[title].exists, "A swipe down closed the sheet with a changed name", line: line)
+        askToDiscard(titled: title, line: line)
+        shot(shotName)
+        keepEditing(titled: title, line: line)
+        XCTAssertEqual(app.textFields.firstMatch.value as? String, typed, "Leaving the discard question lost the name", line: line)
+        askToDiscard(titled: title, line: line)
+        discardChanges(titled: title, line: line)
+    }
+
+    /// Whether a list row with this title is there, scrolling down to it. The label also carries the
+    /// row's other text. By existence, not hittability: at the largest text a scroll can step past
+    /// the middle of a tall row, and a row's middle can be under the bar.
+    private func rowExists(_ title: String) -> Bool {
+        let row = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
+        var scrolls = 0
+        while !row.exists, scrolls < 8 {
+            scroll(down: true)
+            scrolls += 1
+        }
+        return row.exists
+    }
+
+    /// Opens the rename sheet from a tag row's trailing swipe.
+    private func openRenameSheet(for tag: String) {
+        swipe(tag)
+        app.buttons["Edit"].firstMatch.tap()
+        XCTAssert(app.navigationBars["Rename Tag"].waitForExistence(timeout: 3), "No Rename Tag sheet")
+    }
+
     private func assertTagCount(startsWith text: String, line: UInt = #line) {
         let count = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", text)).firstMatch
         XCTAssert(count.exists, "No count starting \(text):\n\(app.debugDescription)", line: line)
@@ -885,7 +959,9 @@ final class ShotsUITests: XCTestCase {
     private func closeDeleteQuestion(titled title: String, line: UInt = #line) {
         let question = deleteQuestionElement(titled: title, line: line)
         if app.popovers.firstMatch.exists {
-            XCTAssert(tapOutsidePopover(waiting: 1, at: CGVector(dx: 0.9, dy: 0.9)), "The popover has no dismiss region:\n\(app.debugDescription)", line: line)
+            // The window's far corner: at the largest text in portrait the popover fills the screen,
+            // and a tap further in lands on its Delete button (#285).
+            XCTAssert(tapOutsidePopover(waiting: 1, at: CGVector(dx: 0.97, dy: 0.97)), "The popover has no dismiss region:\n\(app.debugDescription)", line: line)
         } else {
             let cancel = question.buttons["Cancel"]
             XCTAssert(cancel.exists, "No way out of \(title):\n\(app.debugDescription)", line: line)
@@ -945,10 +1021,13 @@ final class ShotsUITests: XCTestCase {
     /// Delete to look for, it swipes all three times; a swipe on an open row leaves it open.
     private func swipe(_ title: String) {
         scrollToTop()
-        guard let row = scrollTo(title) else {
+        guard let found = scrollTo(title) else {
             XCTFail("No \(title):\n\(app.debugDescription)")
             return
         }
+        // With a tall row's middle hidden the query finds its title, too small a target to swipe (#285).
+        let rowButton = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
+        let row = found.elementType != .button && rowButton.exists ? rowButton : found
         // At the largest text four scrolls up can leave the first row under the bar.
         var tries = 0
         while row.frame.minY < app.navigationBars.firstMatch.frame.maxY, tries < 8 {
@@ -962,12 +1041,17 @@ final class ShotsUITests: XCTestCase {
             scroll(down: true)
             tries += 1
         }
-        // In landscape a row can sit under the search field, which takes the swipe. A short drag,
-        // since a whole scroll there could take the row off the screen.
+        // In landscape a row's middle, where the swipe starts, can sit under the search field, which
+        // takes the swipe. A short drag, only clearing the middle: at the largest text in landscape a
+        // tall row dragged clear of the field whole ends up with its middle at the tab bar (#285).
+        // It starts below the field, since there the window's middle is on it and a drag that starts
+        // on it opens the search, and the clearance keeps it too long to count as a tap.
         let search = app.searchFields.firstMatch
-        if search.exists, row.frame.minY < search.frame.maxY {
-            let from = app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            let distance = search.frame.maxY - row.frame.minY + 8
+        let clearance: CGFloat = 40
+        if search.exists, row.frame.midY < search.frame.maxY + clearance {
+            let window = app.windows.firstMatch
+            let from = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: (search.frame.maxY + 16) / window.frame.height))
+            let distance = search.frame.maxY + clearance - row.frame.midY
             from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 0, dy: distance)), withVelocity: .slow, thenHoldForDuration: 0.2)
             pause(0.5)
         }
@@ -1031,7 +1115,7 @@ final class ShotsUITests: XCTestCase {
         deleteQuestion(titled: "Delete “Pay rent”?", saying: reminderDeleteMessage)
         shot("reminders-delete")
         closeDeleteQuestion(titled: "Delete “Pay rent”?")
-        XCTAssertNotNil(scrollTo("Pay rent", scrolls: 0), "Closing the question deleted the reminder")
+        XCTAssert(rowExists("Pay rent"), "Closing the question deleted the reminder:\n\(app.debugDescription)")
         swipe("Take the bins out")
         app.buttons["Done"].firstMatch.tap()
         shot("reminders-after-done")
@@ -1145,7 +1229,9 @@ final class ShotsUITests: XCTestCase {
     /// it: the popover's own dismiss region, which is there even when the popover fills the screen at
     /// the largest text. Where iOS draws an action sheet instead, its Cancel is the way out.
     private func keepEditing(titled title: String, line: UInt = #line) {
-        if !tapOutsidePopover(waiting: 1) {
+        // The top corner: at the largest text the popover covers the window's middle, and in
+        // landscape with the keyboard up the middle is the keyboard's edge (#285).
+        if !tapOutsidePopover(waiting: 1, at: CGVector(dx: 0.97, dy: 0.03)) {
             let cancel = app.sheets.buttons["Cancel"].firstMatch
             XCTAssert(cancel.exists, "No way out of the discard question:\n\(app.debugDescription)", line: line)
             cancel.tap()

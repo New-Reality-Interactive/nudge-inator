@@ -3,8 +3,8 @@ import NudgeEngine
 import Testing
 @testable import NudgeInator
 
-/// What the New Tag and Rename Tag sheet says about the name typed so far. The words and the
-/// disabled Done are screenshot and device checks.
+/// What the New Tag and Rename Tag sheet says about the name typed so far, and whether closing it
+/// would lose that name. The words and the disabled Done are screenshot and device checks.
 struct TagNameDraftTests {
     let engine = Engine.myDayPreview()
     var home: Tag { engine.tags.first { $0.name == "home" }! }
@@ -34,5 +34,21 @@ struct TagNameDraftTests {
     @Test func anEngineRefusalShowsAsTheSameProblemTheDraftWould() {
         #expect(TagNameDraft.Problem(.empty) == .empty)
         #expect(TagNameDraft.Problem(.taken(by: home)) == .taken(home))
+    }
+
+    @Test func aNewTagHasChangesOnceANameIsTyped() {
+        #expect(!TagSheetKind.new.hasChanges(text: ""))
+        #expect(TagSheetKind.new.hasChanges(text: "garden"))
+    }
+
+    @Test func onlySpacesAreNotAChangeAsOnTheReminderForm() {
+        #expect(!TagSheetKind.new.hasChanges(text: "   "))
+        #expect(!TagSheetKind.rename(work).hasChanges(text: "work "))
+    }
+
+    @Test func aRenameHasChangesOnlyWhenTheNameDiffersFromTheTagsCurrentOne() {
+        #expect(!TagSheetKind.rename(work).hasChanges(text: "work"))
+        #expect(TagSheetKind.rename(work).hasChanges(text: "office"))
+        #expect(TagSheetKind.rename(work).hasChanges(text: ""))
     }
 }

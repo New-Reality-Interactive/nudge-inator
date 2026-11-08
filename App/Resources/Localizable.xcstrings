@@ -725,7 +725,7 @@
       }
     },
     "Are you sure you want to discard these changes?" : {
-      "comment" : "Asked when cancelling a sheet with changes: the reminder form, or the Reminders or Tags filter."
+      "comment" : "Asked when cancelling a sheet with changes: the reminder form, the tag sheet, or the Reminders or Tags filter."
     },
     "Badges" : {
       "comment" : "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging."
@@ -755,7 +755,7 @@
       "comment" : "Title shown when the app can't read its stored reminders, for example before the first unlock after a restart."
     },
     "Cancel" : {
-      "comment" : "A sheet's cancel button (an xmark): the reminder form's and the Reminders and Tags filters'.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nSettings: keeps your data instead of deleting it.\nThe tag sheet's cancel button (an xmark)."
+      "comment" : "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, and the Reminders and Tags filters'.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nSettings: keeps your data instead of deleting it."
     },
     "Change these in iOS Settings." : {
       "comment" : "Settings: last line of the footer under the Nudges rows."
