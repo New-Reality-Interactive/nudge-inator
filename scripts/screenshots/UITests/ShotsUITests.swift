@@ -56,7 +56,7 @@ final class ShotsUITests: XCTestCase {
     }
 
     /// Drags the window's middle by most of a screen: down shows what's below. Not `swipeUp()`,
-    /// which didn't scroll in landscape (iOS 26.5 simulator).
+    /// which didn't scroll in landscape (iOS 26.5 simulator, seen before #300; not rechecked).
     private func scroll(down: Bool) {
         let window = app.windows.firstMatch
         let low = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.78))
@@ -157,7 +157,7 @@ final class ShotsUITests: XCTestCase {
     }
 
     /// Runs a tap on a navigation bar button. In landscape such a tap never landed (iOS 26.5
-    /// simulator) though rows and tabs did, so the phone is turned to portrait for it and back.
+    /// simulator, seen before #300; not rechecked) though rows and tabs did, so the phone is turned to portrait for it and back.
     private func barTap(_ tap: () -> Void) {
         let landscape = XCUIDevice.shared.orientation.isLandscape
         if landscape {
