@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A choice in a list, with a checkmark when it's chosen: a repeat on the Repeat page, a tag on
+/// A choice in a list, with a checkmark when it's chosen: a tag on
 /// the Tags page. VoiceOver reads it as selected, so the checkmark isn't the only signal.
 struct CheckmarkRow: View {
     let title: Text
@@ -15,8 +15,8 @@ struct CheckmarkRow: View {
     }
 }
 
-/// A choice's title with a checkmark when it's chosen: a `CheckmarkRow`'s, or the Repeat page's
-/// Custom link's. Whatever holds it marks it selected for VoiceOver.
+/// A choice's title with a checkmark when it's chosen: a `CheckmarkRow`'s. Whatever holds it marks it
+/// selected for VoiceOver.
 struct CheckmarkLabel: View {
     let title: Text
     let isChecked: Bool

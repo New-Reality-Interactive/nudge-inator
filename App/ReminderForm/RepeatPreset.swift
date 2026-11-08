@@ -1,7 +1,7 @@
 import Foundation
 import NudgeEngine
 
-/// The Repeat page's first section: Never and the six presets (GLOSSARY.md › Repeat), in the
+/// The Repeat menu's presets: Never and the six presets (GLOSSARY.md › Repeat), in the
 /// mockup's order. Each is one of the engine's rules (ticket 08); any other rule is Custom
 /// (ticket 25).
 enum RepeatPreset: CaseIterable, Hashable {
@@ -34,13 +34,13 @@ enum RepeatPreset: CaseIterable, Hashable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .never: LocalizedStringResource("Never", comment: "Repeat preset, on the Repeat page and the form's Repeat row: the reminder doesn't repeat.")
-        case .everyDay: LocalizedStringResource("Every Day", comment: "Repeat preset, on the Repeat page and the form's Repeat row.")
-        case .everyWeekday: LocalizedStringResource("Every Weekday", comment: "Repeat preset, on the Repeat page and the form's Repeat row: Monday to Friday.")
-        case .everyWeek: LocalizedStringResource("Every Week", comment: "Repeat preset, on the Repeat page and the form's Repeat row.")
-        case .everyTwoWeeks: LocalizedStringResource("Every 2 Weeks", comment: "Repeat preset, on the Repeat page and the form's Repeat row.")
-        case .everyMonth: LocalizedStringResource("Every Month", comment: "Repeat preset, on the Repeat page and the form's Repeat row.")
-        case .everyYear: LocalizedStringResource("Every Year", comment: "Repeat preset, on the Repeat page and the form's Repeat row.")
+        case .never: LocalizedStringResource("Never", comment: "Repeat preset, in the form's Repeat menu: the reminder doesn't repeat.")
+        case .everyDay: LocalizedStringResource("Every Day", comment: "Repeat preset, in the form's Repeat menu.")
+        case .everyWeekday: LocalizedStringResource("Every Weekday", comment: "Repeat preset, in the form's Repeat menu: Monday to Friday.")
+        case .everyWeek: LocalizedStringResource("Every Week", comment: "Repeat preset, in the form's Repeat menu.")
+        case .everyTwoWeeks: LocalizedStringResource("Every 2 Weeks", comment: "Repeat preset, in the form's Repeat menu.")
+        case .everyMonth: LocalizedStringResource("Every Month", comment: "Repeat preset, in the form's Repeat menu.")
+        case .everyYear: LocalizedStringResource("Every Year", comment: "Repeat preset, in the form's Repeat menu.")
         }
     }
 }

@@ -133,7 +133,7 @@
       }
     },
     "%@." : {
-      "comment" : "A repeat summary as a sentence, under the reminder form's Starts and under the Repeat page's Custom row. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".\nTop of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\"."
+      "comment" : "A repeat summary as a sentence, under the reminder form's Starts. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".\nTop of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\"."
     },
     "%lld chosen" : {
       "comment" : "VoiceOver value of My Day's filter button while tags are chosen. The placeholder is how many.",
@@ -833,7 +833,7 @@
       "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Created, Oldest First."
     },
     "Custom" : {
-      "comment" : "The Repeat page's row that opens the custom repeat page.\nThe reminder form's Repeat row when the repeat is a custom rule.\nTitle of the Custom repeat page."
+      "comment" : "The Repeat menu's last item: a custom repeat.\nThe reminder form's Repeat row when the repeat is a custom rule.\nTitle of the Custom repeat page."
     },
     "Daily" : {
       "comment" : "The Custom repeat page's frequency."
@@ -863,7 +863,7 @@
       "comment" : "Throws away a sheet's changes and closes it."
     },
     "Done" : {
-      "comment" : "My Day's filter sheet's confirm button (a checkmark): closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.\nThe Custom repeat page's confirm button (a checkmark): its choices become the Repeat page's choice.\nThe Repeat page's confirm button (a checkmark): its choice becomes the reminder's repeat.\nThe tag sheet's confirm button (a checkmark)."
+      "comment" : "My Day's filter sheet's confirm button (a checkmark): closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.\nThe Custom repeat page's confirm button (a checkmark): its choices become the reminder's repeat.\nThe tag sheet's confirm button (a checkmark)."
     },
     "Done after %lld nudges" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence closed as Done. The placeholder is how many nudges it sent.",
@@ -1084,28 +1084,25 @@
       }
     },
     "Every 2 Weeks" : {
-      "comment" : "Repeat preset, on the Repeat page and the form's Repeat row."
+      "comment" : "Repeat preset, in the form's Repeat menu."
     },
     "Every Day" : {
-      "comment" : "Repeat preset, on the Repeat page and the form's Repeat row."
+      "comment" : "Repeat preset, in the form's Repeat menu."
     },
     "Every Month" : {
-      "comment" : "Repeat preset, on the Repeat page and the form's Repeat row."
+      "comment" : "Repeat preset, in the form's Repeat menu."
     },
     "Every Relentless nudge is Urgent." : {
       "comment" : "Settings: footer under the Nudges rows, after the sentence on how Urgent nudges arrive."
     },
     "Every Week" : {
-      "comment" : "Repeat preset, on the Repeat page and the form's Repeat row."
+      "comment" : "Repeat preset, in the form's Repeat menu."
     },
     "Every Weekday" : {
-      "comment" : "Repeat preset, on the Repeat page and the form's Repeat row: Monday to Friday."
+      "comment" : "Repeat preset, in the form's Repeat menu: Monday to Friday."
     },
     "Every Year" : {
-      "comment" : "Repeat preset, on the Repeat page and the form's Repeat row."
-    },
-    "Every few days, chosen weekdays, the last day of the month, or a repeat that ends." : {
-      "comment" : "Under the Repeat page's Custom row: what a custom repeat can do."
+      "comment" : "Repeat preset, in the form's Repeat menu."
     },
     "Every nudge is an ordinary notification, which a Focus can hold. Nothing rings." : {
       "comment" : "Under Break Through Focus when it's off."
@@ -1245,7 +1242,7 @@
       "comment" : "A filter sheet: VoiceOver's reason the Match choice is disabled."
     },
     "Never" : {
-      "comment" : "Repeat preset, on the Repeat page and the form's Repeat row: the reminder doesn't repeat.\nThe Custom repeat page's Ends choice: it repeats for ever."
+      "comment" : "Repeat preset, in the form's Repeat menu: the reminder doesn't repeat.\nThe Custom repeat page's Ends choice: it repeats for ever."
     },
     "Never rings as an alarm." : {
       "comment" : "Under the reminder form's strength, when none of its nudges rings."
@@ -1442,7 +1439,7 @@
       "comment" : "Reminder details: section header above the card of a reminder that is nudging."
     },
     "Nudging now. Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge." : {
-      "comment" : "Top of the Repeat and Custom pages when the reminder started nudging while they were open: the note at the top of the Edit Reminder form, without its bold."
+      "comment" : "Top of the Custom page when the reminder started nudging while they were open: the note at the top of the Edit Reminder form, without its bold."
     },
     "Nudging · %lld nudges" : {
       "comment" : "My Day: under the title of a Nudging occurrence with no nudge left. The placeholder is how many it sent.",
@@ -1544,6 +1541,9 @@
     "Open iOS Settings" : {
       "comment" : "Settings: row that opens the app's page in the iOS Settings app, where notifications, alarms and badges can be turned on."
     },
+    "Opens the custom repeat." : {
+      "comment" : "VoiceOver hint on the reminder form's row that writes out a custom repeat: it opens the Custom repeat page."
+    },
     "Opens the reminder's details." : {
       "comment" : "VoiceOver hint on a nudge card's title and on a Now row: tapping it opens the reminder's details."
     },
@@ -1596,7 +1596,7 @@
       "comment" : "Title of the sheet that renames a tag."
     },
     "Repeat" : {
-      "comment" : "The reminder form's row that opens the Repeat page.\nTitle of the reminder form's Repeat page."
+      "comment" : "The reminder form's Repeat row, which opens a menu of repeats."
     },
     "Repeats" : {
       "comment" : "Reminder details, Schedule: how often the reminder comes due."
