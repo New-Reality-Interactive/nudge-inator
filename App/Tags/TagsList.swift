@@ -101,18 +101,20 @@ private struct TagRow: View {
                 SwipeDeleteTile(label: deleteLabel) { isConfirmingDelete = true }
             }
         }
-        // An alert, not a confirmation dialog: on iOS 26 a dialog from a button is a popover
-        // with no Cancel shown, and deleting is too easy to tap by mistake for that.
-        .alert(
+        // The system's confirmation dialog with its title showing, as Apple's own apps ask (#286).
+        // From a tile, iOS 27.0 (simulator) draws a popover with Delete alone: a tap outside it, or
+        // VoiceOver's "Dismiss popup", closes it with nothing deleted. As an action sheet, its Cancel does.
+        .confirmationDialog(
             Text("Delete \(summary.tag.label)?", comment: "Tags: title of the question that asks before deleting a tag. The placeholder is the tag, such as \"#home\"."),
-            isPresented: $isConfirmingDelete
+            isPresented: $isConfirmingDelete,
+            titleVisibility: .visible
         ) {
+            Button(role: .destructive, action: delete) {
+                Text("Delete", comment: "Tags: confirms deleting the tag. The reminders that have it are kept.")
+            }
             Button(role: .cancel) {
             } label: {
                 Text("Cancel", comment: "Keeps the tag instead of deleting it.")
-            }
-            Button(role: .destructive, action: delete) {
-                Text("Delete", comment: "Tags: confirms deleting the tag. The reminders that have it are kept.")
             }
         } message: {
             Text(summary.deleteMessage)

@@ -332,10 +332,13 @@ text fields, confirmation dialogs, alerts) are used as the system draws them.
 
 A question that confirms an action the person just tapped (discarding changes, deleting) is the
 system's confirmation dialog with its title showing, as Apple's own apps ask (Calendar, seen on an
-iPhone 15 with iOS 27.0.1). The delete questions are still alerts until #286 moves them.
-From a button iOS draws it as a popover with no Cancel button. Every question has a way to close
-it that changes nothing: a Cancel button, or, for a popover, the system's own dismissal (a tap
-outside it, or VoiceOver's "Dismiss popup"). An alert that only informs has OK (developer,
+iPhone 15 with iOS 27.0.1). That includes the delete questions (#286): Delete Reminder, asked in
+the same words from the details page and a Reminders row, and a tag's Delete. iOS draws it as a
+popover with the destructive button alone and no Cancel button (from the details page's button,
+and, on the iOS 27.0 simulator, from a swipe tile too, which has no button to point at); where it
+draws an action sheet instead, the dialog's cancel-role Cancel shows. Every question has a way to
+close it that changes nothing: a Cancel button, or, for a popover, the system's own dismissal (a
+tap outside it, or VoiceOver's "Dismiss popup"). An alert that only informs has OK (developer,
 2026-11-07, #278). Button titles have no ending punctuation; a question's title ends in "?".
 
 **Iconography.** SF Symbols in one weight matched to the adjacent text; they scale with Dynamic Type
@@ -583,7 +586,7 @@ The Reminders tab's tools, in its layout, so they're learned once.
 - **VoiceOver after a delete:** iOS decides where it lands, and the app doesn't move it. After a tag's
   Delete it landed on a nearby row, the heading, New Tag or a row further away, and after the last tag
   on the bar's title, an empty-looking box one swipe from the visible title. Moving focus from code
-  was tried on the iPhone: iOS moves it first as the alert closes, so VoiceOver starts reading
+  was tried on the iPhone: iOS moves it first as the question closes, so VoiceOver starts reading
   something else and then jumps, which Brian found worse (#139's Comments).
 
 ### Alarm

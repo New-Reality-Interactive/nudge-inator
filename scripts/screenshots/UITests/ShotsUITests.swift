@@ -675,18 +675,14 @@ final class ShotsUITests: XCTestCase {
         tab("Tags")
         swipe("#home")
         app.buttons["Delete"].firstMatch.tap()
-        let question = app.alerts.firstMatch
-        XCTAssert(question.waitForExistence(timeout: 3), "No Delete question")
+        deleteQuestion(titled: "Delete #home?", saying: "use this tag")
         shot("tags-delete")
-        question.buttons["Cancel"].tap()
-        pause(0.8)
-        XCTAssertNotNil(scrollTo("#home", scrolls: 0), "Cancel changed the list")
+        closeDeleteQuestion(titled: "Delete #home?")
+        XCTAssertNotNil(scrollTo("#home", scrolls: 0), "Closing the question changed the list")
 
         swipe("#home")
         app.buttons["Delete"].firstMatch.tap()
-        XCTAssert(question.waitForExistence(timeout: 3), "No Delete question")
-        question.buttons["Delete"].tap()
-        pause(1)
+        confirmDelete("Delete", titled: "Delete #home?")
         XCTAssertNil(scrollTo("#home", scrolls: 0), "#home is still in the list")
         shot("tags-after-delete")
 
@@ -713,12 +709,12 @@ final class ShotsUITests: XCTestCase {
         shot("tags-empty", pages: 2)
     }
 
-    /// #277: a Tags row's Delete alert is up, and the row leaves the list under it, as when Has no
+    /// #277: a Tags row's Delete question is up, and the row leaves the list under it, as when Has no
     /// reminders is on and its tag gets a reminder. Nothing on screen can remove a tag while the
-    /// alert covers it, so the harness does it when this test posts a Darwin notification
-    /// (`ShotsSeed.giveSpareAReminderNotification`). The alert goes with its row, deletes nothing, and
+    /// question covers it, so the harness does it when this test posts a Darwin notification
+    /// (`ShotsSeed.giveSpareAReminderNotification`). The question goes with its row, deletes nothing, and
     /// the list and its count are right.
-    func testTagsRowLeavesWithItsDeleteAlertUp() {
+    func testTagsRowLeavesWithItsDeleteQuestionUp() {
         launch(.spareTag)
         tab("Tags")
         openFilter(titled: "Filter Tags")
@@ -727,16 +723,13 @@ final class ShotsUITests: XCTestCase {
         assertTagCount(startsWith: "1 tag out of 8")
         swipe("#spare")
         app.buttons["Delete"].firstMatch.tap()
-        XCTAssert(app.alerts.firstMatch.waitForExistence(timeout: 3), "No Delete question")
-        XCTAssert(app.alerts.firstMatch.staticTexts["Delete #spare?"].exists, "The question isn't about #spare:\n\(app.debugDescription)")
+        let question = deleteQuestion(titled: "Delete #spare?", saying: "use this tag")
         shot("tags-delete-row-leaves-before")
 
         // #spare gets a reminder, so the filter no longer shows it. The name is the harness's
         // `ShotsSeed.giveSpareAReminderNotification`, which this target can't import.
         notify_post("com.newreality.nudgeinator.shots.giveSpareAReminder")
-        let gone = NSPredicate(format: "count == 0")
-        let alertGone = XCTNSPredicateExpectation(predicate: gone, object: app.alerts)
-        XCTAssertEqual(XCTWaiter().wait(for: [alertGone], timeout: 5), .completed, "The Delete question stayed after its row left:\n\(app.debugDescription)")
+        XCTAssert(question.waitForNonExistence(timeout: 5), "The Delete question stayed after its row left:\n\(app.debugDescription)")
         pause(1)
         XCTAssertEqual(app.state, .runningForeground, "The app isn't running after its row left")
         XCTAssert(app.tabBars.firstMatch.exists, "No tab bar after the row left")
@@ -756,15 +749,15 @@ final class ShotsUITests: XCTestCase {
         for name in ["#appointments", "#health", "#home", "#money", "#morning", "#spare", "#travel", "#work"] {
             XCTAssertNotNil(scrollTo(name), "\(name) is missing from the list")
         }
-        XCTAssertEqual(app.alerts.count, 0, "A Delete question came back")
+        XCTAssertEqual(deleteQuestions.count, 0, "A Delete question came back")
     }
 
-    /// #280: a Reminders row's Delete alert is up, and the row leaves the list under it, as when the
+    /// #280: a Reminders row's Delete question is up, and the row leaves the list under it, as when the
     /// Nudging status is on and its reminder is marked Done. Nothing on screen can change a reminder
-    /// while the alert covers it, so the harness marks "Take the bins out" Done when this test posts a
-    /// Darwin notification (`ShotsSeed.markTheBinsDoneNotification`). The alert goes with its row,
+    /// while the question covers it, so the harness marks "Take the bins out" Done when this test posts a
+    /// Darwin notification (`ShotsSeed.markTheBinsDoneNotification`). The question goes with its row,
     /// deletes nothing, and the list and its count are right.
-    func testRemindersRowLeavesWithItsDeleteAlertUp() {
+    func testRemindersRowLeavesWithItsDeleteQuestionUp() {
         launch(.rowLeaves)
         tab("Reminders")
         openRemindersFilter()
@@ -776,15 +769,13 @@ final class ShotsUITests: XCTestCase {
         XCTAssertEqual(before.total, total, "The walk's data isn't \(total) reminders")
         swipe("Take the bins out")
         app.buttons["Delete"].firstMatch.tap()
-        XCTAssert(app.alerts.firstMatch.waitForExistence(timeout: 3), "No Delete question")
-        XCTAssert(app.alerts.firstMatch.staticTexts["Delete “Take the bins out”?"].exists, "The question isn't about the bins:\n\(app.debugDescription)")
+        let question = deleteQuestion(titled: "Delete “Take the bins out”?", saying: reminderDeleteMessage)
         shot("reminders-delete-row-leaves-before")
 
         // The bins are marked Done, so the Nudging status no longer shows them. The name is the
         // harness's `ShotsSeed.markTheBinsDoneNotification`, which this target can't import.
         notify_post("com.newreality.nudgeinator.shots.markTheBinsDone")
-        let alertGone = XCTNSPredicateExpectation(predicate: NSPredicate(format: "count == 0"), object: app.alerts)
-        XCTAssertEqual(XCTWaiter().wait(for: [alertGone], timeout: 5), .completed, "The Delete question stayed after its row left:\n\(app.debugDescription)")
+        XCTAssert(question.waitForNonExistence(timeout: 5), "The Delete question stayed after its row left:\n\(app.debugDescription)")
         pause(1)
         XCTAssertEqual(app.state, .runningForeground, "The app isn't running after its row left")
         XCTAssert(app.tabBars.firstMatch.exists, "No tab bar after the row left")
@@ -804,7 +795,7 @@ final class ShotsUITests: XCTestCase {
         XCTAssertEqual(cleared?.total, total, "A reminder was deleted")
         scrollToTop()
         XCTAssertNotNil(scrollTo("Take the bins out"), "The bins were deleted")
-        XCTAssertEqual(app.alerts.count, 0, "A Delete question came back")
+        XCTAssertEqual(deleteQuestions.count, 0, "A Delete question came back")
     }
 
     /// The header row's count, "3 reminders out of 14": the reminders shown and every reminder.
@@ -840,29 +831,76 @@ final class ShotsUITests: XCTestCase {
         shot("reminders-empty")
     }
 
-    /// `details-delete` (#276): the details page's Delete Reminder asks in an alert with Cancel.
-    /// Cancel keeps the reminder on its page; Delete Reminder deletes it and leaves the page.
+    /// `details-delete` (#276, #286): the details page's Delete Reminder asks with the system's
+    /// confirmation dialog, its title showing. Closing it (a tap outside the popover, or Cancel on
+    /// an action sheet) keeps the reminder on its page; Delete Reminder deletes it and leaves the page.
     func testDetailsDelete() {
         launch(.app)
         tab("Reminders")
         tapText("Pay rent")
         tapText("Delete Reminder")
-        XCTAssert(app.alerts.firstMatch.waitForExistence(timeout: 3), "No Delete question")
+        deleteQuestion(titled: "Delete “Pay rent”?", saying: reminderDeleteMessage)
         shot("details-delete")
-        answerAlert("Cancel")
-        XCTAssertNotNil(scrollTo("Delete Reminder", scrolls: 0), "Cancel left the details page")
+        closeDeleteQuestion(titled: "Delete “Pay rent”?")
+        XCTAssertNotNil(scrollTo("Delete Reminder", scrolls: 0), "Closing the question left the details page")
         tapText("Delete Reminder")
-        answerAlert("Delete Reminder")
+        confirmDelete("Delete Reminder", titled: "Delete “Pay rent”?")
         XCTAssertNil(scrollTo("Pay rent", scrolls: 0), "Pay rent is still in the list")
         shot("details-after-delete")
     }
 
-    /// Waits for an alert (the delete questions) and taps `button` in it.
-    private func answerAlert(_ button: String, line: UInt = #line) {
-        let question = app.alerts.firstMatch
-        XCTAssert(question.waitForExistence(timeout: 3), "No question:\n\(app.debugDescription)", line: line)
-        question.buttons[button].tap()
+    /// The Delete Reminder question's message, the same wherever it's asked. A copy of the app's
+    /// string, which this target can't import: change both together.
+    private let reminderDeleteMessage = "This deletes its history too, and cancels any nudges and alarms."
+
+    /// The delete question titled `title` (#286), the system's confirmation dialog. XCUITest lists
+    /// it among `sheets`, as a popover and as an action sheet alike.
+    private func deleteQuestionElement(titled title: String, line: UInt = #line) -> XCUIElement {
+        let question = app.sheets[title]
+        XCTAssert(question.waitForExistence(timeout: 3), "No question \(title):\n\(app.debugDescription)", line: line)
+        return question
+    }
+
+    /// Any delete question at all: none of the delete questions' titles starts "Delete".
+    private var deleteQuestions: XCUIElementQuery {
+        app.sheets.matching(NSPredicate(format: "label BEGINSWITH %@", "Delete "))
+    }
+
+    /// Waits for the delete question titled `title` and checks its message contains `message`. The
+    /// form iOS chose is recorded in the test's activity log ("Delete question …: popover"), since a
+    /// swipe tile or VoiceOver action has no button for a popover to point at.
+    @discardableResult
+    private func deleteQuestion(titled title: String, saying message: String, line: UInt = #line) -> XCUIElement {
+        let question = deleteQuestionElement(titled: title, line: line)
+        let shown = question.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", message)).firstMatch
+        XCTAssert(shown.exists, "The question \(title) doesn't say \(message):\n\(app.debugDescription)", line: line)
+        let form = app.popovers.firstMatch.exists ? "popover" : "action sheet"
+        XCTContext.runActivity(named: "Delete question \(title): \(form)") { _ in }
+        return question
+    }
+
+    /// Closes the delete question titled `title` without deleting: a tap outside the popover, or the
+    /// action sheet's Cancel. A popover that is up must have its own dismiss region, so a missing
+    /// one fails here instead of falling through to Cancel. Checks it closed.
+    private func closeDeleteQuestion(titled title: String, line: UInt = #line) {
+        let question = deleteQuestionElement(titled: title, line: line)
+        if app.popovers.firstMatch.exists {
+            XCTAssert(tapOutsidePopover(waiting: 1), "The popover has no dismiss region:\n\(app.debugDescription)", line: line)
+        } else {
+            let cancel = question.buttons["Cancel"]
+            XCTAssert(cancel.exists, "No way out of \(title):\n\(app.debugDescription)", line: line)
+            cancel.tap()
+        }
+        XCTAssert(question.waitForNonExistence(timeout: 3), "The question \(title) stayed up", line: line)
         pause(0.8)
+    }
+
+    /// Chooses the delete question's destructive `button` and checks the question closed.
+    private func confirmDelete(_ button: String, titled title: String, line: UInt = #line) {
+        let question = deleteQuestionElement(titled: title, line: line)
+        question.buttons[button].tap()
+        XCTAssert(question.waitForNonExistence(timeout: 3), "The question \(title) stayed up", line: line)
+        pause(1)
     }
 
     /// Adds a reminder through the New Reminder form.
@@ -894,7 +932,7 @@ final class ShotsUITests: XCTestCase {
         hideKeyboard()
         swipe("Zebra")
         app.buttons["Delete"].firstMatch.tap()
-        answerAlert("Delete Reminder")
+        confirmDelete("Delete Reminder", titled: "Delete “Zebra”?")
         XCTAssert(app.staticTexts["No Reminders"].waitForExistence(timeout: 3), "No empty state after the last delete")
         shot("reminders-after-last-delete")
         addReminder(titled: "Apple")
@@ -990,10 +1028,10 @@ final class ShotsUITests: XCTestCase {
         tab("Reminders")
         swipe("Pay rent")
         app.buttons["Delete"].firstMatch.tap()
-        XCTAssert(app.alerts.firstMatch.waitForExistence(timeout: 3), "No Delete question")
+        deleteQuestion(titled: "Delete “Pay rent”?", saying: reminderDeleteMessage)
         shot("reminders-delete")
-        answerAlert("Cancel")
-        XCTAssertNotNil(scrollTo("Pay rent", scrolls: 0), "Cancel deleted the reminder")
+        closeDeleteQuestion(titled: "Delete “Pay rent”?")
+        XCTAssertNotNil(scrollTo("Pay rent", scrolls: 0), "Closing the question deleted the reminder")
         swipe("Take the bins out")
         app.buttons["Done"].firstMatch.tap()
         shot("reminders-after-done")
