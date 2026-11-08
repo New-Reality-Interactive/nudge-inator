@@ -885,13 +885,13 @@ final class ShotsUITests: XCTestCase {
     private func closeDeleteQuestion(titled title: String, line: UInt = #line) {
         let question = deleteQuestionElement(titled: title, line: line)
         if app.popovers.firstMatch.exists {
-            XCTAssert(tapOutsidePopover(waiting: 1), "The popover has no dismiss region:\n\(app.debugDescription)", line: line)
+            XCTAssert(tapOutsidePopover(waiting: 1, at: CGVector(dx: 0.9, dy: 0.9)), "The popover has no dismiss region:\n\(app.debugDescription)", line: line)
         } else {
             let cancel = question.buttons["Cancel"]
             XCTAssert(cancel.exists, "No way out of \(title):\n\(app.debugDescription)", line: line)
             cancel.tap()
         }
-        XCTAssert(question.waitForNonExistence(timeout: 3), "The question \(title) stayed up", line: line)
+        XCTAssert(question.waitForNonExistence(timeout: 3), "The question \(title) stayed up:\n\(app.debugDescription)", line: line)
         pause(0.8)
     }
 
@@ -1155,11 +1155,13 @@ final class ShotsUITests: XCTestCase {
     }
 
     /// Taps an open popover's own dismiss region, a tap outside it, if one shows within `waiting`
-    /// seconds; returns whether it did.
-    private func tapOutsidePopover(waiting: TimeInterval = 0) -> Bool {
+    /// seconds; returns whether it did. The tap goes to the region's middle unless `offset` says
+    /// otherwise: on the iOS 27.0 simulator in landscape the middle didn't close the details page's
+    /// delete popover (#286), where a corner did.
+    private func tapOutsidePopover(waiting: TimeInterval = 0, at offset: CGVector = CGVector(dx: 0.5, dy: 0.5)) -> Bool {
         let outside = app.otherElements["PopoverDismissRegion"].firstMatch
         guard waiting > 0 ? outside.waitForExistence(timeout: waiting) : outside.exists else { return false }
-        outside.tap()
+        outside.coordinate(withNormalizedOffset: offset).tap()
         return true
     }
 
