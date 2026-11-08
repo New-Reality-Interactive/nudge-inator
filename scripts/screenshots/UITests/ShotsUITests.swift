@@ -566,7 +566,7 @@ final class ShotsUITests: XCTestCase {
         shot("tags-filter-bar")
         openFilter(titled: "Filter Tags")
         shot("tags-filter")
-        swipeFilterDown(titled: "Filter Tags")
+        swipeSheetDown(titled: "Filter Tags")
         pause(1)
         XCTAssertFalse(app.navigationBars["Filter Tags"].exists, "A swipe down on a clean draft didn't close the sheet")
 
@@ -576,7 +576,7 @@ final class ShotsUITests: XCTestCase {
         askToDiscard(titled: "Filter Tags")
         shot("tags-filter-discard")
         keepEditing(titled: "Filter Tags")
-        swipeFilterDown(titled: "Filter Tags")
+        swipeSheetDown(titled: "Filter Tags")
         pause(1)
         XCTAssert(app.navigationBars["Filter Tags"].exists, "A swipe down lost a changed draft")
 
@@ -1091,12 +1091,12 @@ final class ShotsUITests: XCTestCase {
     }
 
     private func swipeRemindersFilterDown() {
-        swipeFilterDown(titled: "Filter Reminders")
+        swipeSheetDown(titled: "Filter Reminders")
     }
 
     /// A drag from the sheet's bar down most of the screen: `swipeDown()` on the bar is too short to
     /// close it.
-    private func swipeFilterDown(titled title: String) {
+    private func swipeSheetDown(titled title: String) {
         let bar = app.navigationBars[title]
         let from = bar.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 0, dy: 600)), withVelocity: .fast, thenHoldForDuration: 0)
@@ -1487,8 +1487,9 @@ final class ShotsUITests: XCTestCase {
         shot("form-tags")
     }
 
-    /// The Repeat menu, then its Custom row and page (#283): choosing a preset or Custom is the
-    /// form's repeat at once, and the Custom row opens the Custom page.
+    /// The Repeat menu, then its Custom row and sheet (#283, #284): choosing a preset or Custom is
+    /// the form's repeat at once, and the Custom row opens the Custom sheet, whose changes are the
+    /// form's as they're made, whether Apply or a swipe down closes it.
     func testFormPages() {
         launch(.app)
         openSheet("New Reminder", title: "New Reminder")
@@ -1501,12 +1502,31 @@ final class ShotsUITests: XCTestCase {
         tapMenuItem("Custom")
         shot("form-repeat-custom", pages: 2)
         openCustomRow()
+        reportFormPageAccessibility("custom-sheet")
+        let bar = app.navigationBars["Custom"]
+        XCTAssertEqual(bar.buttons.count, 1, "The Custom sheet has more than Apply:\n\(bar.debugDescription)")
+        XCTAssert(bar.buttons["Apply"].exists, "The Custom sheet has no Apply")
+        // Before the shots, which scroll the stepper away: scrolling back up at the top of the
+        // sheet would close it.
+        stepEvery()
         shot("form-custom", pages: 3)
-        // The checkmark makes the choices the repeat, unchanged, and goes back to the form (ticket 17).
-        barTap { app.navigationBars["Custom"].buttons["Done"].tap() }
-        XCTAssert(app.navigationBars["New Reminder"].waitForExistence(timeout: 3), "The checkmark didn't go back to the form")
+        // Apply closes the sheet, and the change is on the form's Custom row.
+        barTap { bar.buttons["Apply"].tap() }
+        XCTAssert(app.navigationBars["New Reminder"].waitForExistence(timeout: 3), "Apply didn't close the Custom sheet")
+        XCTAssert(customRow(containing: "Every 2 weeks").waitForExistence(timeout: 3), "Apply lost the change:\n\(app.debugDescription)")
         shot("form-custom-chosen")
         reportFormPageAccessibility("repeat-chosen")
+        // A swipe down closes it too, and keeps the change, with no question.
+        openCustomRow()
+        stepEvery()
+        swipeSheetDown(titled: "Custom")
+        XCTAssert(bar.waitForNonExistence(timeout: 3), "A swipe down didn't close the Custom sheet")
+        XCTAssertFalse(app.buttons["Discard Changes"].exists, "The Custom sheet asked a question")
+        XCTAssert(customRow(containing: "Every 3 weeks").waitForExistence(timeout: 3), "A swipe down lost the change:\n\(app.debugDescription)")
+        shot("form-custom-swiped")
+        // The form's Cancel still asks.
+        askToDiscard(titled: "New Reminder")
+        keepEditing(titled: "New Reminder")
         openRepeatMenu(showing: "Custom")
         tapMenuItem("Every Day")
         XCTAssertFalse(app.buttons["Custom"].firstMatch.exists, "A preset left the Custom row")
@@ -1582,12 +1602,27 @@ final class ShotsUITests: XCTestCase {
 
     /// Taps the Custom row below Repeat, which writes the repeat out ("Every Saturday at 4:00 PM").
     private func openCustomRow() {
-        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Every", " at ")).firstMatch
-        reveal(row)
+        let row = customRow(containing: " at ")
+        // At the largest text the row is taller than `reveal` can fit clear of the screen's edges,
+        // so scrolling for it lost it. A row already hittable is tapped where it is.
+        if !(row.exists && row.isHittable) { reveal(row) }
         XCTAssert(row.waitForExistence(timeout: 3), "No Custom row:\n\(app.debugDescription)")
         row.tap()
-        XCTAssert(app.navigationBars["Custom"].waitForExistence(timeout: 3), "The Custom row didn't open the Custom page")
+        XCTAssert(app.navigationBars["Custom"].waitForExistence(timeout: 3), "The Custom row didn't open the Custom sheet")
         pause(0.8)
+    }
+
+    /// The Custom row, which starts "Every", by a part of the repeat it writes out.
+    private func customRow(containing text: String) -> XCUIElement {
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Every", text)).firstMatch
+    }
+
+    /// Steps the Custom sheet's Every up by one.
+    private func stepEvery(line: UInt = #line) {
+        let increment = app.buttons["Increment"].firstMatch
+        XCTAssert(increment.waitForExistence(timeout: 3), "No Every stepper:\n\(app.debugDescription)", line: line)
+        increment.tap()
+        pause(0.5)
     }
 
     /// The Custom page of a reminder that starts nudging while it's open (ticket 16), light and
@@ -1606,15 +1641,17 @@ final class ShotsUITests: XCTestCase {
             shot("\(name)-unlocked")
             if !dark { reportFormPageAccessibility("custom-unlocked") }
             let note = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Nudging now.")).firstMatch
-            XCTAssert(note.waitForExistence(timeout: 210), "The Custom page didn't lock")
+            XCTAssert(note.waitForExistence(timeout: 210), "The Custom sheet didn't lock")
+            // Apply stays enabled, so the sheet can always close (#284).
+            XCTAssert(app.navigationBars["Custom"].buttons["Apply"].isEnabled, "Apply is disabled while locked")
             for page in 1...5 {
                 shot("\(name)-locked-\(page)")
                 if !dark { reportFormPageAccessibility("custom-locked-\(page)") }
                 scroll(down: true)
             }
-            // Back to the form, whose Repeat and Custom rows are locked too.
-            barTap { app.navigationBars["Custom"].buttons.firstMatch.tap() }
-            XCTAssert(app.navigationBars["Edit Reminder"].waitForExistence(timeout: 3), "Back didn't go to the form")
+            // Apply goes back to the form, whose Repeat and Custom rows are locked too.
+            barTap { app.navigationBars["Custom"].buttons["Apply"].tap() }
+            XCTAssert(app.navigationBars["Edit Reminder"].waitForExistence(timeout: 3), "Apply didn't go to the form")
             shot("\(name)-repeat-locked", pages: 2)
             if !dark { reportFormPageAccessibility("repeat-locked") }
             app.terminate()
@@ -1626,7 +1663,7 @@ final class ShotsUITests: XCTestCase {
     /// disabled, under `screen`, such as "custom-locked-2". XCUITest doesn't expose the hint, so
     /// that stays a device check.
     private func reportFormPageAccessibility(_ screen: String) {
-        let names = ["Frequency", "Daily", "Weekly", "Monthly", "Yearly", "Every", "'On", "End Repeat", "Never", "After", "On Date", "End Date", "ncrement", "ecrement", "Done"]
+        let names = ["Frequency", "Daily", "Weekly", "Monthly", "Yearly", "Every", "'On", "End Repeat", "Never", "After", "On Date", "End Date", "ncrement", "ecrement", "Apply"]
         for line in app.debugDescription.split(separator: "\n") where names.contains(where: { line.contains($0) }) {
             print("ACCESSIBILITY \(screen): \(line.trimmingCharacters(in: .whitespaces))")
         }

@@ -25,7 +25,7 @@ extension ReminderForm {
     static func previewCustom(from preset: RepeatPreset) -> ReminderForm {
         let form = preview()
         form.repeatPreset = preset
-        form.customRepeat = form.customPageChoices
+        form.chooseCustomRepeat()
         return form
     }
 

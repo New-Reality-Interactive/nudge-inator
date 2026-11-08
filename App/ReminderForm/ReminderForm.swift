@@ -28,9 +28,6 @@ final class ReminderForm: Identifiable {
     /// page has no control for some parts of a rule (BYMONTH, say), so the rule is kept as it
     /// came until a choice or the start changes (decision 5, ticket 25).
     private var setCustomRule: (rule: RepeatRule, choices: CustomRepeat, dueTime: Date)?
-    /// The Custom page's copy of the choices once a control on it changes them, or `nil` while it
-    /// shows the repeat's own. Only its checkmark makes them the repeat (ticket 17).
-    private var customPageDraft: CustomRepeat?
     var strength = Strength.firm
     /// The person's switch, as saved. Relentless ignores it but keeps it, so leaving Relentless
     /// gives it back; the form shows `breaksThroughFocus`.
@@ -140,10 +137,9 @@ final class ReminderForm: Identifiable {
     var isEditing: Bool { original != nil }
 
     /// Whether Cancel should ask before throwing the draft away (the mockup's `draftDirty`). The
-    /// Custom page's choices count before its checkmark, so a swipe down there doesn't drop them.
+    /// Custom sheet's changes are in the draft as they're made (#284), so they count too.
     var hasChanges: Bool {
-        let customPageChanged = customPageDraft.map { $0 != repeatChoices } ?? false
-        return draft(tagIDs: tagIDs) != opened || customPageChanged
+        draft(tagIDs: tagIDs) != opened
     }
 
     /// `nil` repeats Never. The repeat's pattern (a preset's rule, or a custom repeat's, built from
@@ -205,24 +201,14 @@ final class ReminderForm: Identifiable {
         customRepeat ?? currentEngine().customRepeat(from: presetRule, startingAt: dueTime)
     }
 
-    /// What the Custom page shows and edits: a copy of the repeat's choices. Only the page's
-    /// checkmark makes them the repeat, so looking at the page changes nothing, which matters
-    /// most on a reminder that is locked while nudging (device check, ticket 27), and Back drops
-    /// what was changed (ticket 17).
+    /// What the Custom sheet shows and edits: the repeat's choices. Each change is the form's
+    /// custom repeat as it's made, as in Apple's Reminders (#284), so closing the sheet, by Apply
+    /// or a swipe down, has nothing left to apply or drop. Reading stores nothing, so looking at
+    /// the sheet changes nothing, which matters most on a reminder that is locked while nudging
+    /// (device check, ticket 27).
     var customPageChoices: CustomRepeat {
-        get { customPageDraft ?? repeatChoices }
-        set { customPageDraft = newValue }
-    }
-
-    /// The Custom page's checkmark: the choices it shows become the repeat, even unchanged.
-    func chooseCustomPageChoices() {
-        customRepeat = customPageChoices
-        customPageDraft = nil
-    }
-
-    /// The Custom page's Back: what was changed on it is dropped, and the repeat stays as it was.
-    func closeCustomPage() {
-        customPageDraft = nil
+        get { repeatChoices }
+        set { customRepeat = newValue }
     }
 
     /// The Custom page's summary sentence, of the choices it shows, without the end: End Repeat is
@@ -351,11 +337,7 @@ final class ReminderForm: Identifiable {
         lockCheckedAt = now()
         // A lock that has arrived discards what was changed on the fields it locks, at once: their
         // controls are disabled now, and a value that can't be saved shouldn't stay on screen
-        // (the user's ruling, ticket 27). A title, notes or tags change is kept. The Custom
-        // page's copy is dropped too, which isn't in the draft until its checkmark (ticket 17).
-        if lockedFields.contains(.repeatRule) {
-            customPageDraft = nil
-        }
+        // (the user's ruling, ticket 27). A title, notes or tags change is kept.
         guard let original, lockedFields.contains(where: { $0.isChanged(from: original, to: draft(tagIDs: tagIDs)) }) else { return }
         restoreLockedFields(from: original)
     }
@@ -386,14 +368,6 @@ final class ReminderForm: Identifiable {
         guard let repeatRule else { return nil }
         if currentEngine().endsBeforeStart(repeatEnd, startingAt: dueTime) { return .endsBeforeStart }
         return block(of: repeatRule)
-    }
-
-    /// Why the Custom page's choices can't be chosen, shown on the page whatever else blocks a
-    /// save. It disables the page's checkmark, as `saveBlock` disables Save. An end before the
-    /// start is End Repeat's, on the form, so it doesn't block the page.
-    var customPageBlock: SaveBlock? {
-        guard !currentEngine().endsBeforeStart(repeatEnd, startingAt: dueTime) else { return nil }
-        return block(of: rule(for: customPageChoices))
     }
 
     /// A rule with no times left, unless it is the saved one with its saved start.
