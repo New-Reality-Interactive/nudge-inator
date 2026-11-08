@@ -2,10 +2,10 @@ import NudgeEngine
 import SwiftUI
 
 /// The Custom repeat page (ticket 25), as the mockup's: the summary on top, then Frequency and
-/// its Every stepper, On (weekdays, or the monthly choices the start offers), Ends, and the Next
-/// Times it falls due. It edits a copy of the repeat's choices: its checkmark makes them the
-/// repeat, even unchanged, and Back drops them (ticket 17). The person never sees
-/// the rule (ADR 0003).
+/// its Every stepper, On (weekdays, or the monthly choices the start offers), and the Next Times it
+/// falls due, ending where the form's End Repeat says (#287). It edits a copy of the repeat's
+/// choices: its checkmark makes them the repeat, even unchanged, and Back drops them (ticket 17).
+/// The person never sees the rule (ADR 0003).
 struct CustomRepeatPage: View {
     @Bindable var form: ReminderForm
     @Environment(\.dismiss) private var dismiss
@@ -35,7 +35,6 @@ struct CustomRepeatPage: View {
             case .monthly: MonthlySection(form: form, isLocked: isLocked)
             case .daily, .yearly: EmptyView()
             }
-            EndsSection(choices: choices, start: form.dueTime, endsBeforeStart: block == .endsBeforeStart, isLocked: isLocked)
             NextTimesSection(form: form, minute: minute)
         }
         // On the Form, not the section, so exactly one loop ticks however many rows it has.
@@ -171,53 +170,6 @@ private struct OnHeader: View {
     }
 }
 
-/// Never, after a number of times, or on a date no earlier than the start.
-private struct EndsSection: View {
-    @Binding var choices: CustomRepeat
-    let start: Date
-    let endsBeforeStart: Bool
-    let isLocked: Bool
-
-    private static let endings: [CustomRepeat.Ending] = [.never, .afterCount, .onDate]
-
-    var body: some View {
-        SegmentedChoiceSection(
-            label: Text("Ends", comment: "The Custom repeat page's choice of when the repeat ends."),
-            selection: $choices.ending,
-            selectedTitle: Text(choices.ending.title),
-            isLocked: isLocked
-        ) {
-            ForEach(Self.endings, id: \.self) { ending in
-                Text(ending.title).tag(ending)
-            }
-        } rows: {
-            switch choices.ending {
-            case .never:
-                EmptyView()
-            case .afterCount:
-                LockableStepper(value: $choices.count, range: CustomRepeat.counts, isLocked: isLocked,
-                                label: Text("After \(choices.count) times", comment: "The Custom repeat page's stepper: how many times it falls due before it ends."))
-            case .onDate:
-                // No earlier than the start. An end date already before it (the start moved
-                // later) stays in range, or the picker would show the start in its place while
-                // the rule kept the old date (device check, ticket 25); the reason below says why.
-                let startDay = Calendar.autoupdatingCurrent.startOfDay(for: start)
-                DatePicker(selection: $choices.endDate, in: min(startDay, choices.endDate)..., displayedComponents: .date) {
-                    LockableLabel(isLocked: isLocked) {
-                        Text("End Date", comment: "The Custom repeat page's last day the repeat can fall due.")
-                    }
-                }
-                .lockedWhileNudging(isLocked)
-            }
-        } footer: {
-            if endsBeforeStart {
-                Text("Choose an end date after the start.", comment: "Under the Custom repeat page's end date when it is before the start, so Save is disabled.")
-                    .foregroundStyle(Color.negative)
-            }
-        }
-    }
-}
-
 /// The next three times it falls due, and whether it ends before then.
 private struct NextTimesSection: View {
     let form: ReminderForm
@@ -258,16 +210,6 @@ private struct NextTimesSection: View {
         let style = Date.FormatStyle().weekday(.abbreviated).day().month(.abbreviated)
         // Formatted for the locale already.
         return Text(verbatim: date.formatted(form.showsYear(of: date) ? style.year() : style))
-    }
-}
-
-extension CustomRepeat.Ending {
-    var title: LocalizedStringResource {
-        switch self {
-        case .never: LocalizedStringResource("Never", comment: "The Custom repeat page's Ends choice: it repeats for ever.")
-        case .afterCount: LocalizedStringResource("After", comment: "The Custom repeat page's Ends choice: it ends after a number of times.")
-        case .onDate: LocalizedStringResource("On Date", comment: "The Custom repeat page's Ends choice: it ends on a date.")
-        }
     }
 }
 

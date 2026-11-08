@@ -165,6 +165,9 @@ private struct ScheduleSection: View {
             }
             .lockedWhileNudging(locked.contains(.dueTime))
             RepeatRow(form: form, isLocked: locked.contains(.repeatRule))
+            if form.showsEndRepeat {
+                EndRepeatRows(form: form, isLocked: locked.contains(.repeatRule))
+            }
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                 if form.saveBlock == .pastTime {
@@ -175,19 +178,17 @@ private struct ScheduleSection: View {
                 switch form.repeatBlock {
                 case .endsBeforeStart:
                     Text("The repeat ends before it starts. Change its end date.",
-                         comment: "Under the reminder form's start when a custom repeat's end date is before the start, so Save is disabled.")
+                         comment: "Under the reminder form's start when End Repeat's end date is before the start, so Save is disabled.")
                         .foregroundStyle(Color.negative)
                 case .noTimesLeft:
                     Text("The repeat has already ended. Change when it ends.",
-                         comment: "Under the reminder form's start when a custom repeat has no times left, so Save is disabled.")
+                         comment: "Under the reminder form's start when the repeat has no times left, so Save is disabled.")
                         .foregroundStyle(Color.negative)
                 case .noTitle, .pastTime, nil:
                     EmptyView()
                 }
-                // The Custom row below Repeat already writes it out.
-                if !form.isCustomRepeat {
-                    RepeatSummarySentence(summary: form.repeatSummary)
-                }
+                // Always, end included, even with the Custom row, which leaves the end out (#287).
+                RepeatSummarySentence(summary: form.repeatSummary)
             }
         }
     }
@@ -232,8 +233,69 @@ private struct RepeatRow: View {
     }
 }
 
-/// An item of the Repeat menu, checked when it is the current choice. VoiceOver reads it as
-/// selected, so the checkmark isn't the only signal.
+/// End Repeat, under Repeat and the Custom row, for every repeat but Never (#287): a pop-up menu of
+/// Never, After and On Date, as in Apple's Reminders (which has Never and On Date). After adds a
+/// stepper row; On Date adds End Date, whose date button opens a calendar no earlier than the start.
+/// A choice is the form's at once. Locked while nudging, each row is plain text with the lock.
+private struct EndRepeatRows: View {
+    @Bindable var form: ReminderForm
+    let isLocked: Bool
+
+    private static let endings: [RepeatEnd.Ending] = [.never, .afterCount, .onDate]
+
+    var body: some View {
+        let value = Text(form.repeatEnd.ending.title)
+        let label = Text("End Repeat", comment: "The reminder form's row under Repeat, which opens a menu of when the repeat ends.")
+        if isLocked {
+            LockedValueRow(label: label, value: value)
+        } else {
+            LabeledContent {
+                Menu {
+                    ForEach(Self.endings, id: \.self) { ending in
+                        RepeatMenuItem(title: Text(ending.title), isChecked: form.repeatEnd.ending == ending) {
+                            form.repeatEnd.ending = ending
+                        }
+                    }
+                } label: {
+                    value
+                }
+            } label: {
+                label
+            }
+        }
+        switch form.repeatEnd.ending {
+        case .never:
+            EmptyView()
+        case .afterCount:
+            LockableStepper(value: $form.repeatEnd.count, range: RepeatEnd.counts, isLocked: isLocked,
+                            label: Text("After \(form.repeatEnd.count) times", comment: "The reminder form's stepper under End Repeat: how many times the reminder falls due before it ends."))
+        case .onDate:
+            // No earlier than the start. An end date already before it (the start moved later)
+            // stays in range, or the picker would show the start in its place while the rule kept
+            // the old date (device check, ticket 25); the reason under Starts says why.
+            let startDay = Calendar.autoupdatingCurrent.startOfDay(for: form.dueTime)
+            DatePicker(selection: $form.repeatEnd.endDate, in: min(startDay, form.repeatEnd.endDate)..., displayedComponents: .date) {
+                LockableLabel(isLocked: isLocked) {
+                    Text("End Date", comment: "The reminder form's row under End Repeat: the last day the repeat can fall due.")
+                }
+            }
+            .lockedWhileNudging(isLocked)
+        }
+    }
+}
+
+extension RepeatEnd.Ending {
+    var title: LocalizedStringResource {
+        switch self {
+        case .never: LocalizedStringResource("Never", comment: "The reminder form's End Repeat choice: the repeat never ends.")
+        case .afterCount: LocalizedStringResource("After", comment: "The reminder form's End Repeat choice: the repeat ends after a number of times.")
+        case .onDate: LocalizedStringResource("On Date", comment: "The reminder form's End Repeat choice: the repeat ends on a date.")
+        }
+    }
+}
+
+/// An item of the Repeat or End Repeat menu, checked when it is the current choice. VoiceOver
+/// reads it as selected, so the checkmark isn't the only signal.
 private struct RepeatMenuItem: View {
     let title: Text
     let isChecked: Bool
@@ -251,15 +313,15 @@ private struct RepeatMenuItem: View {
     }
 }
 
-/// Below Repeat once Custom is chosen: the repeat written out, with no "Custom" label (Repeat
-/// already says it). It opens the Custom repeat page. Locked while nudging, it is the same text with
+/// Below Repeat once Custom is chosen: the repeat written out without its end, which End Repeat
+/// says (#287), and with no "Custom" label (Repeat already says it). It opens the Custom repeat page. Locked while nudging, it is the same text with
 /// the `lock` and no chevron.
 private struct CustomRepeatRow: View {
     let form: ReminderForm
     let isLocked: Bool
 
     var body: some View {
-        let summary = Text(form.repeatSummary)
+        let summary = Text(form.repeatPatternSummary)
         if isLocked {
             LockableLabel(isLocked: true) { summary }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -354,7 +416,7 @@ struct LockGlyph: View {
 
 extension View {
     /// The mockup's segmented control, which becomes a menu at accessibility sizes so the names
-    /// aren't cut short: Strength, Pace, and the Custom page's Frequency and Ends.
+    /// aren't cut short: Strength, Pace, and the Custom page's Frequency.
     @ViewBuilder
     func segmentedPickerStyle(isMenu: Bool) -> some View {
         if isMenu {
@@ -409,8 +471,7 @@ extension GiveUpLimit {
     }
 }
 
-/// A repeat summary as a sentence: the Starts footer, and the Custom row's footer when the repeat
-/// is custom.
+/// A repeat summary as a sentence: the footer under Starts, Repeat and End Repeat.
 struct RepeatSummarySentence: View {
     let summary: String
 

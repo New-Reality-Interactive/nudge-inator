@@ -14,8 +14,16 @@ final class ReminderForm: Identifiable {
     var dueTime: Date
     /// The Custom page's choices while the repeat is custom, or `nil` for Never or a preset.
     var customRepeat: CustomRepeat?
-    /// Never (`nil`) or a preset's rule, while the repeat isn't custom.
+    /// Never (`nil`) or a preset's rule, while the repeat isn't custom. With no end: End Repeat
+    /// holds it.
     private var presetRule: RepeatRule?
+    /// End Repeat: how the repeat ends, for a preset or a custom repeat alike (#287). Kept when the
+    /// repeat changes, and put back to Never only with the repeat.
+    var repeatEnd: RepeatEnd
+    /// A rule's end as it was set, with the End Repeat it was read into. End Repeat writes a date,
+    /// so a rule that ends at a time keeps it until End Repeat changes, as `setCustomRule` keeps a
+    /// rule's other parts.
+    private var setEnd: (end: RepeatRule.End?, repeatEnd: RepeatEnd)?
     /// A custom rule as it was set, with the choices it was read into and the start then. The
     /// page has no control for some parts of a rule (BYMONTH, say), so the rule is kept as it
     /// came until a choice or the start changes (decision 5, ticket 25).
@@ -59,10 +67,10 @@ final class ReminderForm: Identifiable {
         /// A start that has passed: a one-off would never nudge, and a repeat would open an
         /// occurrence at once and nudge (ticket 13). A saved start that is kept is fine.
         case pastTime
-        /// A custom repeat whose end date is before its start's day.
+        /// A repeat whose End Repeat date is before its start's day.
         case endsBeforeStart
-        /// A custom repeat that has already ended, so it would never fall due again. A saved
-        /// reminder that keeps its start and repeat is fine, so it can still be renamed.
+        /// A repeat that has already ended, so it would never fall due again. A saved reminder
+        /// that keeps its start and repeat is fine, so it can still be renamed.
         case noTimesLeft
     }
 
@@ -94,7 +102,9 @@ final class ReminderForm: Identifiable {
         tagRules = currentEngine()
         self.now = now
         original = nil
-        dueTime = Self.nextWholeHour(after: now())
+        let dueTime = Self.nextWholeHour(after: now())
+        self.dueTime = dueTime
+        repeatEnd = currentEngine().repeatEnd(of: nil, startingAt: dueTime)
         opened = draft(tagIDs: tagIDs)
     }
 
@@ -116,6 +126,9 @@ final class ReminderForm: Identifiable {
         notes = reminder.notes
         tagIDs = reminder.tagIDs
         dueTime = reminder.dueTime
+        // Every stored property is set before `repeatRule`'s setter runs; it then reads the
+        // reminder's end into End Repeat.
+        repeatEnd = engine.repeatEnd(of: nil, startingAt: reminder.dueTime)
         repeatRule = reminder.repeatRule
         strength = reminder.strength
         breakThroughFocus = reminder.breakThroughFocus
@@ -133,30 +146,57 @@ final class ReminderForm: Identifiable {
         return draft(tagIDs: tagIDs) != opened || customPageChanged
     }
 
-    /// `nil` repeats Never. A custom repeat's rule is built from its choices and the start, so a
-    /// monthly choice a new start doesn't offer falls back to the day of the month. Setting a
-    /// rule that isn't a preset's reads it into the Custom page's choices.
+    /// `nil` repeats Never. The repeat's pattern (a preset's rule, or a custom repeat's, built from
+    /// its choices and the start, so a monthly choice a new start doesn't offer falls back to the
+    /// day of the month) ending as End Repeat says. Setting a rule reads its end into End Repeat,
+    /// and the rest into a preset, or into the Custom page's choices when it isn't one, so a preset
+    /// with an end is still that preset (#287). Setting Never puts End Repeat back to Never.
     var repeatRule: RepeatRule? {
         get {
-            customRepeat.map(rule(for:)) ?? presetRule
+            (customRepeat.map(pattern(for:)) ?? presetRule).map(withEnd)
         }
         set {
-            if let preset = RepeatPreset(newValue) {
+            let engine = currentEngine()
+            var pattern = newValue
+            pattern?.end = nil
+            let end = engine.repeatEnd(of: newValue, startingAt: dueTime)
+            repeatEnd = end
+            setEnd = (newValue?.end, end)
+            if let preset = RepeatPreset(pattern) {
                 presetRule = preset.rule
                 customRepeat = nil
-            } else if let newValue {
-                let choices = currentEngine().customRepeat(from: newValue, startingAt: dueTime)
+            } else if let pattern {
+                let choices = engine.customRepeat(from: pattern, startingAt: dueTime)
                 customRepeat = choices
-                setCustomRule = (newValue, choices, dueTime)
+                setCustomRule = (pattern, choices, dueTime)
             }
         }
     }
 
-    /// A custom repeat's rule: the one that was set while its choices and start are as it was
-    /// read, or else the one built from the choices.
-    private func rule(for choices: CustomRepeat) -> RepeatRule {
+    /// Whether End Repeat shows: for every repeat but Never, as in Apple's Reminders.
+    var showsEndRepeat: Bool { customRepeat != nil || presetRule != nil }
+
+    /// The pattern ending as End Repeat says, or as the rule that was set did while End Repeat is
+    /// as it was read.
+    private func withEnd(_ pattern: RepeatRule) -> RepeatRule {
+        if let setEnd, setEnd.repeatEnd == repeatEnd {
+            var rule = pattern
+            rule.end = setEnd.end
+            return rule
+        }
+        return currentEngine().rule(pattern, ending: repeatEnd)
+    }
+
+    /// A custom repeat's pattern, with no end: the one that was set while its choices and start
+    /// are as it was read, or else the one built from the choices.
+    private func pattern(for choices: CustomRepeat) -> RepeatRule {
         if let setCustomRule, setCustomRule.choices == choices, setCustomRule.dueTime == dueTime { return setCustomRule.rule }
         return currentEngine().repeatRule(for: choices, startingAt: dueTime)
+    }
+
+    /// A custom repeat's rule, ending as End Repeat says.
+    private func rule(for choices: CustomRepeat) -> RepeatRule {
+        withEnd(pattern(for: choices))
     }
 
     /// The repeat's choices: the custom choices, or, while the repeat is a preset or Never, the
@@ -185,18 +225,19 @@ final class ReminderForm: Identifiable {
         customPageDraft = nil
     }
 
-    /// The Custom page's summary sentence, of the choices it shows.
+    /// The Custom page's summary sentence, of the choices it shows, without the end: End Repeat is
+    /// the form's (#287).
     var customPageSummary: String {
-        currentEngine().repeatSummary(of: draft(tagIDs: tagIDs, repeatRule: rule(for: customPageChoices)))
+        currentEngine().repeatSummary(of: draft(tagIDs: tagIDs, repeatRule: pattern(for: customPageChoices)))
     }
 
     /// The Custom page's Next Times: when the choices it shows fall due.
     var customPageUpcomingDueTimes: [Date] {
-        upcomingDueTimes(of: customPageChoices)
+        upcomingDueTimes(of: rule(for: customPageChoices))
     }
 
-    private func upcomingDueTimes(of choices: CustomRepeat) -> [Date] {
-        currentEngine().upcomingDueTimes(of: draft(tagIDs: tagIDs, repeatRule: rule(for: choices)), count: Self.nextTimesCount)
+    private func upcomingDueTimes(of rule: RepeatRule) -> [Date] {
+        currentEngine().upcomingDueTimes(of: draft(tagIDs: tagIDs, repeatRule: rule), count: Self.nextTimesCount)
     }
 
     /// The Custom page's monthly choices for the start, each with its title ("On the fourth
@@ -222,10 +263,15 @@ final class ReminderForm: Identifiable {
     }
 
     /// The Repeat row's preset, or `nil` when the rule is Custom. Setting a preset replaces a
-    /// custom rule.
+    /// custom rule and keeps End Repeat; Never puts it back to Never (#287).
     var repeatPreset: RepeatPreset? {
         get { customRepeat == nil ? RepeatPreset(presetRule) : nil }
-        set { if let newValue { repeatRule = newValue.rule } }
+        set {
+            guard let newValue else { return }
+            presetRule = newValue.rule
+            customRepeat = nil
+            if newValue == .never { repeatEnd.ending = .never }
+        }
     }
 
     /// Whether the repeat is Custom, which the Repeat menu checks and the Custom row shows.
@@ -239,10 +285,18 @@ final class ReminderForm: Identifiable {
         customRepeat = repeatChoices
     }
 
-    /// The engine's summary of the draft's repeat and time ("Every 3 days at 9:00 AM"), for the
-    /// Starts footer and the Custom row.
+    /// The engine's summary of the draft's repeat and time, end included ("Every 3 days at 9:00 AM,
+    /// 10 times"), for the footer under the section, whatever the repeat (#287).
     var repeatSummary: String {
         currentEngine().repeatSummary(of: draft(tagIDs: tagIDs))
+    }
+
+    /// The same without the end ("Every 3 days at 9:00 AM"), for the Custom row: End Repeat and the
+    /// footer say the end (#287).
+    var repeatPatternSummary: String {
+        var pattern = repeatRule
+        pattern?.end = nil
+        return currentEngine().repeatSummary(of: draft(tagIDs: tagIDs, repeatRule: pattern))
     }
 
     /// The draft's ladder with its strength, pace and switch, for the form's How It Nudges
@@ -327,21 +381,25 @@ final class ReminderForm: Identifiable {
         original.map { Calendar.autoupdatingCurrent.isDate($0.dueTime, equalTo: dueTime, toGranularity: .minute) } ?? false
     }
 
-    /// Why the custom repeat can't be saved.
+    /// Why the repeat, preset or custom, can't be saved. Never has no end, so nothing blocks it.
     var repeatBlock: SaveBlock? {
-        customRepeat.flatMap(block(of:))
+        guard let repeatRule else { return nil }
+        if currentEngine().endsBeforeStart(repeatEnd, startingAt: dueTime) { return .endsBeforeStart }
+        return block(of: repeatRule)
     }
 
     /// Why the Custom page's choices can't be chosen, shown on the page whatever else blocks a
-    /// save. It disables the page's checkmark, as `saveBlock` disables Save.
+    /// save. It disables the page's checkmark, as `saveBlock` disables Save. An end before the
+    /// start is End Repeat's, on the form, so it doesn't block the page.
     var customPageBlock: SaveBlock? {
-        block(of: customPageChoices)
+        guard !currentEngine().endsBeforeStart(repeatEnd, startingAt: dueTime) else { return nil }
+        return block(of: rule(for: customPageChoices))
     }
 
-    private func block(of choices: CustomRepeat) -> SaveBlock? {
-        if currentEngine().endsBeforeStart(choices, startingAt: dueTime) { return .endsBeforeStart }
-        let keepsItsSchedule = keepsItsStart && rule(for: choices) == original?.repeatRule
-        if !keepsItsSchedule, upcomingDueTimes(of: choices).isEmpty { return .noTimesLeft }
+    /// A rule with no times left, unless it is the saved one with its saved start.
+    private func block(of rule: RepeatRule) -> SaveBlock? {
+        let keepsItsSchedule = keepsItsStart && rule == original?.repeatRule
+        if !keepsItsSchedule, upcomingDueTimes(of: rule).isEmpty { return .noTimesLeft }
         return nil
     }
 

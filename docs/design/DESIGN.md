@@ -496,13 +496,24 @@ The Reminders tab's tools, in its layout, so they're learned once.
   form's repeat at once, held until the form's own Save like every other field; there is no Repeat page.
 - **Custom row:** choosing Custom adds a row below Repeat with no "Custom" label, which Repeat already
   says. It writes the repeat out ("Every Monday at 9:00 AM") with a chevron and opens the Custom repeat
-  page. Choosing a preset again removes it. While it shows, the footer under Starts is dropped, since the
-  row says the same; the footer stays for Never and the presets.
+  page. Choosing a preset again removes it. It writes the repeat without its end, which End Repeat says
+  (#287).
 - **Locked while nudging:** the Repeat row and the Custom row are plain text with the `lock`, without the
   menu's or the link's affordance (no chevron), beside the form's lock note, as the form's other locked
   rows are.
 - **VoiceOver:** the Repeat row reads its choice, and the menu reads each item with the current one selected.
   The Custom row reads the repeat, with the hint "Opens the custom repeat."
+- **End Repeat** (mockup `2026-11-07-end-repeat`, #287): under Repeat, and under the Custom row when there
+  is one, whenever Repeat isn't Never. A pop-up menu of Never, After and On Date, drawn as the Repeat
+  menu, with a checkmark on the current choice. After adds a stepper row, "After 10 times" (2 to 30); On
+  Date adds an End Date row with a date button that opens a calendar no earlier than the start. The choice
+  is the form's at once and is kept when the repeat changes; it goes back to Never only with Repeat. A
+  preset with an end still shows as that preset in the Repeat menu. The footer under the section always
+  says the whole repeat, end included ("Every Monday at 9:00 AM, 10 times."), for Never, the presets and
+  Custom, and while locked; the Custom row and the Custom page's summary leave the end out. An end date before the start
+  disables Save, with "The repeat ends before it starts. Change its end date." under Starts. The Custom
+  page has no Ends section. Locked while nudging, End Repeat and its rows are plain text with the `lock`.
+  VoiceOver reads End Repeat's choice, the stepper's count and End Date's date.
 
 ### How It Nudges
 - **Token:** `how-it-nudges`. Inset grouped list, summary in the section footer, `{typography.footnote}`

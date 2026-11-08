@@ -24,6 +24,10 @@ _Avoid_: DTSTART (the RRULE term, never on screen)
 How often a reminder comes due again: Never, one of six presets, or a custom rule in the RRULE format.
 _Avoid_: Recurrence (RRULE is the stored format, not a word for the screen)
 
+**End Repeat**:
+When a repeat stops: Never, After a number of times, or On a date. Its own row in the reminder form, under Repeat, for any repeat but Never. The repeat without its end is its pattern, which the Repeat menu names.
+_Avoid_: Ends (the old Custom page section), COUNT and UNTIL (the RRULE terms, never on screen)
+
 **Nudge**:
 One alert sent while an occurrence is open: an alarm or a notification.
 _Avoid_: Ping, alert

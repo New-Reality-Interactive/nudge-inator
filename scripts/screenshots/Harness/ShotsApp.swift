@@ -319,7 +319,8 @@ enum ShotsSeed {
         let dueTime = calendar.dateInterval(of: .minute, for: .now.addingTimeInterval(90))!.end
         let today = calendar.component(.weekday, from: dueTime)
         let weekdays = [today, today % 7 + 1].map { RepeatRule.WeekdayNumber(RepeatRule.Weekday(rawValue: $0)!) }
-        let rule = RepeatRule(frequency: .weekly, weekdays: Set(weekdays))!
+        // With an end, so the locked form shows End Repeat and its After row (#287).
+        let rule = RepeatRule(frequency: .weekly, weekdays: Set(weekdays), end: .count(8))!
         model.add(Reminder(title: "Plan the week", dueTime: dueTime, repeatRule: rule, strength: .gentle, breakThroughFocus: false))
     }
 }

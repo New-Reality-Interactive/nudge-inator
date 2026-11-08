@@ -77,21 +77,8 @@ struct CustomRepeatChoicesTests {
         #expect(rrule(of: choices, startingAt: NewYork.local(2026, 10, newDay)) == expected)
     }
 
-    /// The mockup's defaults: after 10 times, or three months after the start.
-    @Test(arguments: [
-        (CustomRepeat.Ending.never, "FREQ=WEEKLY;BYDAY=MO"),
-        (.afterCount, "FREQ=WEEKLY;BYDAY=MO;COUNT=10"),
-        (.onDate, "FREQ=WEEKLY;BYDAY=MO;UNTIL=20270119"),
-    ])
-    func theEndsChoiceEndsTheRule(ending: CustomRepeat.Ending, expected: String) {
-        var choices = engine.customRepeat(from: .everyWeek, startingAt: Self.monday)
-        choices.ending = ending
-
-        #expect(rrule(of: choices) == expected)
-    }
-
-    /// Every kind of rule the page builds, read back into its choices, builds the same rule, so
-    /// an Edit form that opens a custom repeat has nothing changed.
+    /// Every kind of rule the page builds, read back into its choices and its end, builds the same
+    /// rule, so an Edit form that opens a custom repeat has nothing changed.
     @Test(arguments: [
         ("FREQ=DAILY;INTERVAL=3", 19),
         ("FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE;COUNT=5", 19),
@@ -105,7 +92,10 @@ struct CustomRepeatChoicesTests {
         let rule = try RepeatRule(rrule: rrule)
         let start = NewYork.local(2026, 10, startDay)
 
-        #expect(engine.repeatRule(for: engine.customRepeat(from: rule, startingAt: start), startingAt: start) == rule)
+        let pattern = engine.repeatRule(for: engine.customRepeat(from: rule, startingAt: start), startingAt: start)
+
+        #expect(pattern.end == nil)
+        #expect(engine.rule(pattern, ending: engine.repeatEnd(of: rule, startingAt: start)) == rule)
     }
 
     /// The page's limits: 30 days, 12 weeks, 12 months and 10 years.
@@ -128,10 +118,6 @@ struct CustomRepeatChoicesTests {
         #expect(choices.interval == interval)
     }
 
-    @Test func theCountIsTwoToThirtyTimes() {
-        #expect(CustomRepeat.counts == 2...30)
-    }
-
     @Test func choosingAWeekdayAddsItAndChoosingItAgainTakesItOff() {
         var choices = engine.customRepeat(from: .everyWeek, startingAt: Self.monday)
         choices.toggle(.wednesday)
@@ -146,21 +132,6 @@ struct CustomRepeatChoicesTests {
         choices.toggle(.monday)
 
         #expect(rrule(of: choices) == "FREQ=WEEKLY;BYDAY=MO")
-    }
-
-    /// An end date is the whole day, so the start's own day is fine. Times are New York's.
-    @Test(arguments: [
-        (CustomRepeat.Ending.onDate, NewYork.local(2026, 10, 18, 23, 59), true),
-        (.onDate, NewYork.local(2026, 10, 19, 0, 0), false),
-        (.never, NewYork.local(2026, 10, 18), false),
-        (.afterCount, NewYork.local(2026, 10, 18), false),
-    ])
-    func anEndDateBeforeTheStartsDayEndsBeforeItStarts(ending: CustomRepeat.Ending, endDate: Date, endsBeforeStart: Bool) {
-        var choices = engine.customRepeat(from: .everyWeek, startingAt: Self.monday)
-        choices.ending = ending
-        choices.endDate = endDate
-
-        #expect(engine.endsBeforeStart(choices, startingAt: Self.monday) == endsBeforeStart)
     }
 
     /// In en_US. 28 October 2026 is the fourth and last Wednesday; 1 October is the first Thursday.
@@ -184,34 +155,28 @@ struct CustomRepeatChoicesTests {
         let engine = Engine(clock: clock, scheduler: FakeScheduler(), timeZone: NewYork.timeZone, locale: Locale(identifier: "en_US"))
         var choices = engine.customRepeat(from: .everyTwoWeeks, startingAt: Self.monday)
         choices.toggle(.wednesday)
-        choices.ending = .afterCount
-        choices.count = 5
+        let end = RepeatEnd(ending: .afterCount, count: 5, endDate: Self.monday)
         let reminder = Reminder(title: "Water the plants", dueTime: Self.monday,
-                                repeatRule: engine.repeatRule(for: choices, startingAt: Self.monday), strength: .gentle)
+                                repeatRule: engine.rule(engine.repeatRule(for: choices, startingAt: Self.monday), ending: end), strength: .gentle)
 
         #expect(engine.repeatSummary(of: reminder) == "Every 2 weeks on Monday and Wednesday at 9:00\u{202F}AM, 5 times")
     }
 
     /// The app never writes such a rule, but the parser accepts it. The page keeps what it can
-    /// show (decision 5, ticket 25) and drops BYMONTH, which it has no control for.
+    /// show (decision 5, ticket 25) and drops BYMONTH, which it has no control for, and the end,
+    /// which is End Repeat's.
     @Test func aRuleThePageCantShowReadsBackAsCloseAsItCan() throws {
         let rule = try RepeatRule(rrule: "FREQ=WEEKLY;INTERVAL=3;BYDAY=MO,FR;BYMONTH=6,7;COUNT=4")
 
-        #expect(rrule(of: engine.customRepeat(from: rule, startingAt: Self.monday)) == "FREQ=WEEKLY;INTERVAL=3;BYDAY=MO,FR;COUNT=4")
+        #expect(rrule(of: engine.customRepeat(from: rule, startingAt: Self.monday)) == "FREQ=WEEKLY;INTERVAL=3;BYDAY=MO,FR")
     }
 
-    /// The steppers can't show a value outside their limits, so a rule from elsewhere is read in
-    /// within them.
-    @Test(arguments: [
-        ("FREQ=DAILY;INTERVAL=40", 30, 10),
-        ("FREQ=WEEKLY;BYDAY=MO;COUNT=50", 1, 30),
-        ("FREQ=WEEKLY;BYDAY=MO;COUNT=1", 1, 2),
-    ])
-    func aRestoredRuleIsReadInWithinTheSteppersLimits(rrule: String, interval: Int, count: Int) throws {
-        let choices = engine.customRepeat(from: try RepeatRule(rrule: rrule), startingAt: Self.monday)
+    /// The Every stepper can't show a value outside its limits, so a rule from elsewhere is read
+    /// in within them.
+    @Test func aRestoredRuleIsReadInWithinTheEverySteppersLimits() throws {
+        let choices = engine.customRepeat(from: try RepeatRule(rrule: "FREQ=DAILY;INTERVAL=40"), startingAt: Self.monday)
 
-        #expect(choices.interval == interval)
-        #expect(choices.count == count)
+        #expect(choices.interval == 30)
     }
 
     /// In en_US. A day some months lack is skipped (ADR 0003), so the page says so.

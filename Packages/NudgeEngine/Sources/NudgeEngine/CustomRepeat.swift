@@ -1,9 +1,9 @@
 import Foundation
 
-/// The Custom repeat page's plain choices (ticket 25): how often, on which days, and when it
-/// ends. The person never sees the rule they make (ADR 0003). Whatever depends on a date (the
-/// day of the month, the nth weekday, the yearly date) comes from the start, so the engine builds
-/// the rule from these choices and a start.
+/// The Custom repeat page's plain choices (ticket 25): how often and on which days. How it ends
+/// is the form's End Repeat, a `RepeatEnd` (#287). The person never sees the rule they make
+/// (ADR 0003). Whatever depends on a date (the day of the month, the nth weekday, the yearly date)
+/// comes from the start, so the engine builds the rule from these choices and a start.
 public struct CustomRepeat: Equatable, Sendable {
     /// A new frequency brings the interval within its limits.
     public var frequency: RepeatRule.Frequency {
@@ -15,12 +15,6 @@ public struct CustomRepeat: Equatable, Sendable {
     public private(set) var weekdays: Set<RepeatRule.Weekday>
     /// A monthly repeat's day. A choice the start doesn't offer falls back to `.dayOfMonth`.
     public var monthlyDay: MonthlyDay
-    public var ending: Ending
-    /// How many times it falls due when it ends after a count, kept while another ending is chosen.
-    public var count: Int
-    /// The last day it can fall due when it ends on a date, any time that day. Kept while another
-    /// ending is chosen.
-    public var endDate: Date
 
     /// Chooses a weekday, or unchooses it unless it's the last one chosen.
     public mutating func toggle(_ weekday: RepeatRule.Weekday) {
@@ -40,16 +34,6 @@ public struct CustomRepeat: Equatable, Sendable {
         }
     }
 
-    /// The After stepper's limits.
-    public static let counts = 2...30
-
-    /// The Ends choice.
-    public enum Ending: Hashable, Sendable {
-        case never
-        case afterCount
-        case onDate
-    }
-
     /// Where a monthly repeat falls in each month, worked out from the start date.
     public enum MonthlyDay: Hashable, Sendable {
         /// The start's day of the month: "On the 28th".
@@ -65,31 +49,16 @@ public struct CustomRepeat: Equatable, Sendable {
 
 extension Engine {
     /// The Custom page's choices for a repeat: a custom rule's own, or a preset's (Never is `nil`)
-    /// as a custom repeat, so Custom starts from what was chosen.
+    /// as a custom repeat, so Custom starts from what was chosen. The rule's end isn't one of them:
+    /// `repeatEnd(of:startingAt:)` reads it.
     public func customRepeat(from rule: RepeatRule?, startingAt start: Date) -> CustomRepeat {
         let frequency = rule?.frequency ?? .weekly
-        var choices = CustomRepeat(
+        return CustomRepeat(
             frequency: frequency,
             interval: (rule?.interval ?? 1).clamped(to: CustomRepeat.intervals(for: frequency)),
             weekdays: frequency == .weekly ? rule?.weekdays.map { Set($0.map(\.weekday)) } ?? [startWeekday(of: start)] : [startWeekday(of: start)],
-            monthlyDay: frequency == .monthly ? rule.map(monthlyDay(of:)) ?? .dayOfMonth : .dayOfMonth,
-            ending: .never,
-            count: 10,
-            endDate: calendar.date(byAdding: .month, value: 3, to: start) ?? start
+            monthlyDay: frequency == .monthly ? rule.map(monthlyDay(of:)) ?? .dayOfMonth : .dayOfMonth
         )
-        switch rule?.end {
-        case nil: break
-        case .count(let count):
-            choices.ending = .afterCount
-            choices.count = count.clamped(to: CustomRepeat.counts)
-        case let .untilDate(year, month, day):
-            choices.ending = .onDate
-            choices.endDate = calendar.date(from: DateComponents(year: year, month: month, day: day)) ?? choices.endDate
-        case .untilTime(let time):
-            choices.ending = .onDate
-            choices.endDate = time
-        }
-        return choices
     }
 
     /// A monthly rule's choice, from the parts the page writes for each.
@@ -98,11 +67,11 @@ extension Engine {
         return rule.monthDays == [-1] ? .lastDay : .dayOfMonth
     }
 
-    /// The rule the choices make for this start.
+    /// The rule the choices make for this start, with no end: `rule(_:ending:)` adds one.
     public func repeatRule(for choices: CustomRepeat, startingAt start: Date) -> RepeatRule {
         let day = calendar.component(.day, from: start)
         let weekday = startWeekday(of: start)
-        var rule = switch choices.frequency {
+        return switch choices.frequency {
         case .daily:
             RepeatRule(.daily, checkedInterval: choices.interval)
         case .weekly:
@@ -118,21 +87,6 @@ extension Engine {
             // Its day and month written out, as the mockup's `customRule` writes them.
             RepeatRule(.yearly, checkedInterval: choices.interval, monthDays: [day], months: [calendar.component(.month, from: start)])
         }
-        switch choices.ending {
-        case .never: break
-        case .afterCount: rule.end = .count(choices.count)
-        case .onDate:
-            let end = choices.endDate
-            rule.end = .untilDate(year: calendar.component(.year, from: end), month: calendar.component(.month, from: end),
-                                  day: calendar.component(.day, from: end))
-        }
-        return rule
-    }
-
-    /// Whether the choices end on a day before the start's, the mockup's `untilTooEarly`. The
-    /// end date is a whole day, so ending on the start's own day is fine.
-    public func endsBeforeStart(_ choices: CustomRepeat, startingAt start: Date) -> Bool {
-        choices.ending == .onDate && calendar.startOfDay(for: choices.endDate) < calendar.startOfDay(for: start)
     }
 
     /// The ways a monthly repeat can fall, given the start, as the mockup's `monthlyOptions`: its
