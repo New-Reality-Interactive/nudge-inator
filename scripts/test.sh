@@ -197,12 +197,20 @@ if [ ${#udids[@]} -gt 0 ]; then
   step "xcodebuild build-for-testing (app + widget extension)"
   if xcodebuild_logged "$logs/app-build.log" build-for-testing -project NudgeInator.xcodeproj \
     -scheme NudgeInator -destination "platform=iOS Simulator,id=${udids[0]}" -derivedDataPath .build/derived; then
+    # The simulators test side by side from that one build. A background job can't add to `failed`,
+    # so each writes its printed results to its own file in $scratch; they are shown one simulator
+    # at a time, in order, once all have finished, so the results don't interleave.
+    pids=()
     for i in "${!udids[@]}"; do
-      name="${found[$i]}" udid="${udids[$i]}"
-      step "xcodebuild test-without-building on $name"
-      xcodebuild_logged "$logs/app-$name.log" test-without-building -project NudgeInator.xcodeproj \
-        -scheme NudgeInator -destination "platform=iOS Simulator,id=$udid" \
-        -derivedDataPath .build/derived || failed+=("app-tests-$name")
+      (xcodebuild_logged "$logs/app-${found[$i]}.log" test-without-building -project NudgeInator.xcodeproj \
+        -scheme NudgeInator -destination "platform=iOS Simulator,id=${udids[$i]}" \
+        -derivedDataPath .build/derived > "$scratch/results-$i" 2>&1) &
+      pids+=($!)
+    done
+    for i in "${!udids[@]}"; do
+      wait "${pids[$i]}" || failed+=("app-tests-${found[$i]}")
+      step "xcodebuild test-without-building on ${found[$i]}"
+      cat "$scratch/results-$i"
     done
   else
     failed+=("app-build")
