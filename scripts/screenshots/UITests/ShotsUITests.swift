@@ -652,14 +652,10 @@ final class ShotsUITests: XCTestCase {
         assertTagSheetAsksBeforeDiscarding(titled: "New Tag", shot: "tag-new-discard")
         XCTAssertNil(scrollTo("#spare"), "Discard Changes added the tag")
 
-        swipe("#home")
-        app.buttons["Edit"].firstMatch.tap()
-        XCTAssert(app.navigationBars["Rename Tag"].waitForExistence(timeout: 3), "No Rename Tag sheet")
+        openRenameSheet(for: "#home")
         closeUnchangedSheet(titled: "Rename Tag")
 
-        swipe("#home")
-        app.buttons["Edit"].firstMatch.tap()
-        XCTAssert(app.navigationBars["Rename Tag"].waitForExistence(timeout: 3), "No Rename Tag sheet")
+        openRenameSheet(for: "#home")
         app.typeText("x")
         assertTagSheetAsksBeforeDiscarding(titled: "Rename Tag", shot: "tag-rename-discard")
         scrollToTop()
@@ -669,17 +665,25 @@ final class ShotsUITests: XCTestCase {
     /// With a changed name in the open tag sheet: a swipe down leaves it open, a tap outside the
     /// question keeps the name, and Discard Changes closes it. The keyboard stays up: a return
     /// here would save the name.
-    private func assertTagSheetAsksBeforeDiscarding(titled title: String, shot name: String, line: UInt = #line) {
+    private func assertTagSheetAsksBeforeDiscarding(titled title: String, shot shotName: String, line: UInt = #line) {
         let typed = app.textFields.firstMatch.value as? String
+        XCTAssertNotNil(typed, "The name field has no value", line: line)
         swipeSheetDown(titled: title)
         pause(0.8)
         XCTAssert(app.navigationBars[title].exists, "A swipe down closed the sheet with a changed name", line: line)
         askToDiscard(titled: title, line: line)
-        shot(name)
+        shot(shotName)
         keepEditing(titled: title, line: line)
         XCTAssertEqual(app.textFields.firstMatch.value as? String, typed, "Leaving the discard question lost the name", line: line)
         askToDiscard(titled: title, line: line)
         discardChanges(titled: title, line: line)
+    }
+
+    /// Opens the rename sheet from a tag row's trailing swipe.
+    private func openRenameSheet(for tag: String) {
+        swipe(tag)
+        app.buttons["Edit"].firstMatch.tap()
+        XCTAssert(app.navigationBars["Rename Tag"].waitForExistence(timeout: 3), "No Rename Tag sheet")
     }
 
     private func assertTagCount(startsWith text: String, line: UInt = #line) {

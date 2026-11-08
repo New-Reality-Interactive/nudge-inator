@@ -14,10 +14,10 @@ enum TagSheetKind: Identifiable {
         }
     }
 
-    /// Whether the field's `text` would be lost by closing the sheet: anything other than what it
-    /// opened with.
+    /// Whether closing the sheet would lose the field's `text`: anything other than what it opened
+    /// with, leaving out spaces at either end, as the reminder form does with its title.
     func hasChanges(text: String) -> Bool {
-        text != initialName
+        text.trimmingCharacters(in: .whitespacesAndNewlines) != initialName
     }
 
     /// The tag being renamed, or `nil` for a new one.
@@ -81,6 +81,8 @@ struct TagSheet: View {
         TagNameDraft(text: text, renaming: kind.renamedTagID, in: engine)
     }
 
+    private var hasChanges: Bool { kind.hasChanges(text: text) }
+
     private var isCompactHeight: Bool { verticalSizeClass == .compact }
 
     private var shownProblem: TagNameDraft.Problem? {
@@ -129,7 +131,7 @@ struct TagSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    DiscardingCancelButton(hasChanges: kind.hasChanges(text: text))
+                    DiscardingCancelButton(hasChanges: hasChanges)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(role: .confirm, action: save) {
@@ -145,7 +147,7 @@ struct TagSheet: View {
         }
         .onAppear { isFocused = true }
         // A swipe down mustn't lose a typed name; Cancel asks first instead.
-        .interactiveDismissDisabled(kind.hasChanges(text: text))
+        .interactiveDismissDisabled(hasChanges)
     }
 
     private func problemText(_ problem: TagNameDraft.Problem) -> some View {
