@@ -643,16 +643,8 @@ final class ShotsUITests: XCTestCase {
     func testTagSheetDiscard() {
         launch(.app)
         tab("Tags")
-        openSheet("New Tag", title: "New Tag")
-        dismissKeyboardTip()
-        closeUnchangedSheet(titled: "New Tag")
-
-        openSheet("New Tag", title: "New Tag")
-        app.typeText("spare")
-        assertTagSheetAsksBeforeDiscarding(titled: "New Tag", shot: "tag-new-discard")
-        XCTAssertNil(scrollTo("#spare"), "Discard Changes added the tag")
-
         openRenameSheet(for: "#home")
+        dismissKeyboardTip()
         closeUnchangedSheet(titled: "Rename Tag")
 
         openRenameSheet(for: "#home")
@@ -660,6 +652,15 @@ final class ShotsUITests: XCTestCase {
         assertTagSheetAsksBeforeDiscarding(titled: "Rename Tag", shot: "tag-rename-discard")
         scrollToTop()
         XCTAssertNotNil(scrollTo("#home"), "Discard Changes renamed the tag")
+
+        openSheet("New Tag", title: "New Tag")
+        closeUnchangedSheet(titled: "New Tag")
+
+        openSheet("New Tag", title: "New Tag")
+        app.typeText("spare")
+        assertTagSheetAsksBeforeDiscarding(titled: "New Tag", shot: "tag-new-discard")
+        // Last: this scrolls to the end of the list, and at the largest text scrollToTop can't get back.
+        XCTAssertNil(scrollTo("#spare"), "Discard Changes added the tag")
     }
 
     /// With a changed name in the open tag sheet: a swipe down leaves it open, a tap outside the
