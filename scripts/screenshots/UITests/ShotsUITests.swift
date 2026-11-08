@@ -673,7 +673,8 @@ final class ShotsUITests: XCTestCase {
         XCTAssert(app.navigationBars[title].exists, "A swipe down closed the sheet with a changed name", line: line)
         askToDiscard(titled: title, line: line)
         shot(shotName)
-        keepEditing(titled: title, line: line)
+        // A corner: in landscape the middle of the screen is the keyboard's top edge.
+        keepEditing(titled: title, at: CGVector(dx: 0.97, dy: 0.03), line: line)
         XCTAssertEqual(app.textFields.firstMatch.value as? String, typed, "Leaving the discard question lost the name", line: line)
         askToDiscard(titled: title, line: line)
         discardChanges(titled: title, line: line)
@@ -1192,8 +1193,8 @@ final class ShotsUITests: XCTestCase {
     /// open. From the ✕ iOS draws it as a popover with Discard Changes alone, closed by a tap outside
     /// it: the popover's own dismiss region, which is there even when the popover fills the screen at
     /// the largest text. Where iOS draws an action sheet instead, its Cancel is the way out.
-    private func keepEditing(titled title: String, line: UInt = #line) {
-        if !tapOutsidePopover(waiting: 1) {
+    private func keepEditing(titled title: String, at offset: CGVector = CGVector(dx: 0.5, dy: 0.5), line: UInt = #line) {
+        if !tapOutsidePopover(waiting: 1, at: offset) {
             let cancel = app.sheets.buttons["Cancel"].firstMatch
             XCTAssert(cancel.exists, "No way out of the discard question:\n\(app.debugDescription)", line: line)
             cancel.tap()
