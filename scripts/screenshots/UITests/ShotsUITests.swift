@@ -663,14 +663,8 @@ final class ShotsUITests: XCTestCase {
         assertTagSheetAsksBeforeDiscarding(titled: "Rename Tag", shot: "tag-rename-discard")
         // By existence, not hittability: at the largest text scrolling can step past the middle of a
         // row this tall, and the rotation for the bar's taps moves the list.
-        let home = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "#home, ")).firstMatch
         scrollToTop()
-        var scrolls = 0
-        while !home.exists, scrolls < 8 {
-            scroll(down: true)
-            scrolls += 1
-        }
-        XCTAssert(home.exists, "Discard Changes renamed the tag:\n\(app.debugDescription)")
+        XCTAssert(rowExists("#home"), "Discard Changes renamed the tag:\n\(app.debugDescription)")
 
         openSheet("New Tag", title: "New Tag")
         closeUnchangedSheet(titled: "New Tag")
@@ -697,6 +691,19 @@ final class ShotsUITests: XCTestCase {
         XCTAssertEqual(app.textFields.firstMatch.value as? String, typed, "Leaving the discard question lost the name", line: line)
         askToDiscard(titled: title, line: line)
         discardChanges(titled: title, line: line)
+    }
+
+    /// Whether a list row with this title is there, scrolling down to it. By existence, not
+    /// hittability, whose label carries the row's other text: at the largest text a scroll can step
+    /// past the middle of a tall row, and a row's middle can be under the bar.
+    private func rowExists(_ title: String) -> Bool {
+        let row = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
+        var scrolls = 0
+        while !row.exists, scrolls < 8 {
+            scroll(down: true)
+            scrolls += 1
+        }
+        return row.exists
     }
 
     /// Opens the rename sheet from a tag row's trailing swipe.
@@ -1107,7 +1114,7 @@ final class ShotsUITests: XCTestCase {
         deleteQuestion(titled: "Delete “Pay rent”?", saying: reminderDeleteMessage)
         shot("reminders-delete")
         closeDeleteQuestion(titled: "Delete “Pay rent”?")
-        XCTAssertNotNil(scrollTo("Pay rent", scrolls: 0), "Closing the question deleted the reminder")
+        XCTAssert(rowExists("Pay rent"), "Closing the question deleted the reminder:\n\(app.debugDescription)")
         swipe("Take the bins out")
         app.buttons["Done"].firstMatch.tap()
         shot("reminders-after-done")
