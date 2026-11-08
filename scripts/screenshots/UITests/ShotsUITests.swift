@@ -59,15 +59,26 @@ final class ShotsUITests: XCTestCase {
     /// which didn't scroll in landscape (iOS 26.5 simulator, seen before #300; not rechecked).
     private func scroll(down: Bool) {
         let window = app.windows.firstMatch
-        let low = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.78))
-        let high = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.22))
+        // A scroll up from under the search field moves nothing, so it starts below the field.
+        let (lowY, highY) = !down && searchCoversScrollStart
+            ? (0.95, (app.searchFields.firstMatch.frame.maxY + 16) / window.frame.height)
+            : (0.78, 0.22)
+        let low = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: lowY))
+        let high = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: highY))
         let (from, to) = down ? (low, high) : (high, low)
         from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
     }
 
-    /// Four scrolls up.
+    /// Whether the search field covers where a scroll up normally starts: at the largest text in
+    /// landscape, where the bar and the field fill the top half of the window (#285).
+    private var searchCoversScrollStart: Bool {
+        let search = app.searchFields.firstMatch
+        return search.exists && search.frame.maxY > app.windows.firstMatch.frame.height * 0.22
+    }
+
+    /// Four scrolls up, or ten of the shorter ones a search field in the way leaves room for.
     private func scrollToTop() {
-        for _ in 0..<4 { scroll(down: false) }
+        for _ in 0..<(searchCoversScrollStart ? 10 : 4) { scroll(down: false) }
     }
 
     private func pause(_ seconds: TimeInterval) {
@@ -667,7 +678,6 @@ final class ShotsUITests: XCTestCase {
         openSheet("New Tag", title: "New Tag")
         app.typeText("spare")
         assertTagSheetAsksBeforeDiscarding(titled: "New Tag", shot: "tag-new-discard")
-        // Last: this scrolls to the end of the list, and at the largest text scrollToTop can't get back.
         XCTAssertNil(scrollTo("#spare"), "Discard Changes added the tag")
     }
 
