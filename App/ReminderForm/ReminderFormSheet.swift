@@ -11,13 +11,15 @@ struct ReminderFormSheet: View {
     @Environment(\.dismiss) private var dismiss
     /// The pages pushed over the form.
     @State private var pages: [ReminderFormPage] = []
+    /// Whether the Custom repeat sheet is open over the form (#284).
+    @State private var isShowingCustomRepeat = false
 
     var body: some View {
         NavigationStack(path: $pages) {
             Form {
                 if form.isEditing { EditNoteSection(isLocked: !form.lockedFields.isEmpty) }
                 WhatSection(form: form)
-                ScheduleSection(form: form)
+                ScheduleSection(form: form, isShowingCustomRepeat: $isShowingCustomRepeat)
                 StrengthSection(form: form)
                 PaceSection(form: form)
                 BreakThroughFocusSection(form: form)
@@ -32,13 +34,19 @@ struct ReminderFormSheet: View {
             .navigationDestination(for: ReminderFormPage.self) { page in
                 switch page {
                 case .tags: TagsPage(form: form)
-                case .custom: CustomRepeatPage(form: form)
                 }
             }
             .toolbar { toolbar }
+            // A sheet over the form, as Apple's Reminders shows Custom on iOS 27 (#284). Its
+            // changes are the form's as they're made, so a swipe down keeps them, as Apply does.
+            .sheet(isPresented: $isShowingCustomRepeat) {
+                NavigationStack {
+                    CustomRepeatPage(form: form)
+                }
+            }
         }
-        // On the stack, not its root: the root is covered by the Tags and Custom pages, which
-        // lock too when the reminder falls due while they're open.
+        // On the stack, not its root: the root is covered by the Tags page and the Custom sheet,
+        // which lock too when the reminder falls due while they're open.
         .task { await form.keepTheLockCurrent() }
         // A swipe down mustn't lose changes; Cancel asks first instead.
         .interactiveDismissDisabled(form.hasChanges)
@@ -66,10 +74,9 @@ struct ReminderFormSheet: View {
     }
 }
 
-/// The pages the form pushes.
+/// The pages the form pushes. Custom is a sheet over the form instead (#284).
 enum ReminderFormPage: Hashable {
     case tags
-    case custom
 }
 
 /// The note at the top of the Edit form: why the schedule is locked, or when changes apply.
@@ -154,6 +161,7 @@ private struct WhatSection: View {
 /// Starts and Repeat, locked while nudging.
 private struct ScheduleSection: View {
     @Bindable var form: ReminderForm
+    @Binding var isShowingCustomRepeat: Bool
 
     var body: some View {
         let locked = form.lockedFields
@@ -164,7 +172,7 @@ private struct ScheduleSection: View {
                 }
             }
             .lockedWhileNudging(locked.contains(.dueTime))
-            RepeatRow(form: form, isLocked: locked.contains(.repeatRule))
+            RepeatRow(form: form, isLocked: locked.contains(.repeatRule), isShowingCustomRepeat: $isShowingCustomRepeat)
             if form.showsEndRepeat {
                 EndRepeatRows(form: form, isLocked: locked.contains(.repeatRule))
             }
@@ -200,6 +208,7 @@ private struct ScheduleSection: View {
 private struct RepeatRow: View {
     let form: ReminderForm
     let isLocked: Bool
+    @Binding var isShowingCustomRepeat: Bool
 
     var body: some View {
         let value = form.repeatPreset.map { Text($0.title) }
@@ -228,7 +237,7 @@ private struct RepeatRow: View {
             }
         }
         if form.isCustomRepeat {
-            CustomRepeatRow(form: form, isLocked: isLocked)
+            CustomRepeatRow(form: form, isLocked: isLocked, isShowingCustomRepeat: $isShowingCustomRepeat)
         }
     }
 }
@@ -314,11 +323,13 @@ private struct RepeatMenuItem: View {
 }
 
 /// Below Repeat once Custom is chosen: the repeat written out without its end, which End Repeat
-/// says (#287), and with no "Custom" label (Repeat already says it). It opens the Custom repeat page. Locked while nudging, it is the same text with
-/// the `lock` and no chevron.
+/// says (#287), and with no "Custom" label (Repeat already says it). It opens the Custom repeat
+/// sheet (#284), with a chevron as the Settings rows draw it. Locked while nudging, it is the same
+/// text with the `lock` and no chevron.
 private struct CustomRepeatRow: View {
     let form: ReminderForm
     let isLocked: Bool
+    @Binding var isShowingCustomRepeat: Bool
 
     var body: some View {
         let summary = Text(form.repeatPatternSummary)
@@ -328,10 +339,20 @@ private struct CustomRepeatRow: View {
                 .accessibilityElement(children: .combine)
                 .lockedWhileNudging(true)
         } else {
-            NavigationLink(value: ReminderFormPage.custom) {
-                summary
+            Button {
+                isShowingCustomRepeat = true
+            } label: {
+                HStack {
+                    summary
+                        .foregroundStyle(Color(uiColor: .label))
+                    Spacer()
+                    Image(systemName: "chevron.forward")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Color(uiColor: .tertiaryLabel))
+                        .accessibilityHidden(true)
+                }
             }
-            .accessibilityHint(Text("Opens the custom repeat.", comment: "VoiceOver hint on the reminder form's row that writes out a custom repeat: it opens the Custom repeat page."))
+            .accessibilityHint(Text("Opens the custom repeat.", comment: "VoiceOver hint on the reminder form's row that writes out a custom repeat: it opens the Custom repeat sheet."))
         }
     }
 }

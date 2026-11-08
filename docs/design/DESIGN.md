@@ -222,7 +222,7 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
 
 - **Accent (Lagoon, `{colors.accent}`)** is `AccentColor`. It means **you can tap this**: buttons,
   links, menus, checkmarks, the selected tab, tag and filter tokens, the chosen count's ring, the filled confirm button in each
-  sheet and on the Custom repeat page, and **Done** on nudge cards.
+  sheet and the Custom repeat sheet's Apply, and **Done** on nudge cards.
   - **Never** a status, decoration or background wash.
   - **The alarm** sits on a dark Lock Screen, so its tint pins `{colors.accent-dark}`. This is the
     only place a component pins a variant.
@@ -253,7 +253,7 @@ Rules:
   and glyph always come with the color.
 - **Zero isn't a status.** A count of 0 uses `{colors.secondary-label}`, never red.
 - **Fill sparingly.** Only primary actions get an accent fill: the sheet's confirm button (and the
-  Custom repeat page's, which takes its place there), and the nudge card's Done. My Day's per-row Done buttons are bordered, so a long list isn't a column of
+  Custom repeat sheet's Apply), and the nudge card's Done. My Day's per-row Done buttons are bordered, so a long list isn't a column of
   teal.
 - **Status and secondary text never sit on `{colors.tertiary-fill}`, except as large text.** The
   chosen count's number (Title 2 bold) is large text; its caption uses `{colors.label}`.
@@ -496,7 +496,7 @@ The Reminders tab's tools, in its layout, so they're learned once.
   form's repeat at once, held until the form's own Save like every other field; there is no Repeat page.
 - **Custom row:** choosing Custom adds a row below Repeat with no "Custom" label, which Repeat already
   says. It writes the repeat out ("Every Monday at 9:00 AM") with a chevron and opens the Custom repeat
-  page. Choosing a preset again removes it. It writes the repeat without its end, which End Repeat says
+  sheet. Choosing a preset again removes it. It writes the repeat without its end, which End Repeat says
   (#287).
 - **Locked while nudging:** the Repeat row and the Custom row are plain text with the `lock`, without the
   menu's or the link's affordance (no chevron), beside the form's lock note, as the form's other locked
@@ -512,8 +512,16 @@ The Reminders tab's tools, in its layout, so they're learned once.
   says the whole repeat, end included ("Every Monday at 9:00 AM, 10 times."), for Never, the presets and
   Custom, and while locked; the Custom row and the Custom page's summary leave the end out. An end date before the start
   disables Save, with "The repeat ends before it starts. Change its end date." under Starts. The Custom
-  page has no Ends section. Locked while nudging, End Repeat and its rows are plain text with the `lock`.
+  sheet has no Ends section. Locked while nudging, End Repeat and its rows are plain text with the `lock`.
   VoiceOver reads End Repeat's choice, the stepper's count and End Date's date.
+- **Custom repeat sheet** (mockup `2026-11-07-custom-sheet`, #284): a sheet over the reminder form, as in
+  Apple's Reminders on iOS 27, titled "Custom": the summary sentence, Frequency with its Every stepper,
+  On, and Next Times. Each change is the form's repeat as it's made, held until the form's own Save.
+  **Apply** (✓, the accent-filled confirm button) is its only button: it closes the sheet and is never
+  disabled, so the sheet can always close. A swipe down closes it too and keeps the changes. Nothing on
+  it asks a question; the form's Cancel asks before discarding. Locked while nudging, its controls are
+  disabled with the `lock`, under the form's lock note, and Apply still closes it. This follows Apple's
+  app over the HIG's Sheets page, which pairs Done with Cancel and avoids a sheet over a sheet (#284).
 
 ### How It Nudges
 - **Token:** `how-it-nudges`. Inset grouped list, summary in the section footer, `{typography.footnote}`

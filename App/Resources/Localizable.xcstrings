@@ -656,7 +656,7 @@
       "comment" : "A filter sheet: the Match choice that needs at least one checked tag."
     },
     "Apply" : {
-      "comment" : "A filter sheet's confirm button (a checkmark), on Reminders and Tags: applies the choices and closes the sheet."
+      "comment" : "A filter sheet's confirm button (a checkmark), on Reminders and Tags: applies the choices and closes the sheet.\nThe Custom repeat sheet's only button (a checkmark): it closes the sheet. Its choices are already the reminder form's repeat."
     },
     "Apply shows %lld reminders." : {
       "comment" : "Reminders' filter sheet: above Reset. The placeholder is how many reminders the list would show with these filters and the search as it is.",
@@ -830,7 +830,7 @@
       "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Created, Oldest First."
     },
     "Custom" : {
-      "comment" : "The Repeat menu's last item: a custom repeat.\nThe reminder form's Repeat row when the repeat is a custom rule.\nTitle of the Custom repeat page."
+      "comment" : "The Repeat menu's last item: a custom repeat.\nThe reminder form's Repeat row when the repeat is a custom rule.\nTitle of the Custom repeat sheet."
     },
     "Daily" : {
       "comment" : "The Custom repeat page's frequency."
@@ -860,7 +860,7 @@
       "comment" : "Throws away a sheet's changes and closes it."
     },
     "Done" : {
-      "comment" : "My Day's filter sheet's confirm button (a checkmark): closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.\nThe Custom repeat page's confirm button (a checkmark): its choices become the reminder's repeat.\nThe tag sheet's confirm button (a checkmark)."
+      "comment" : "My Day's filter sheet's confirm button (a checkmark): closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
     },
     "Done after %lld nudges" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence closed as Done. The placeholder is how many nudges it sent.",
@@ -1539,7 +1539,7 @@
       "comment" : "Settings: row that opens the app's page in the iOS Settings app, where notifications, alarms and badges can be turned on."
     },
     "Opens the custom repeat." : {
-      "comment" : "VoiceOver hint on the reminder form's row that writes out a custom repeat: it opens the Custom repeat page."
+      "comment" : "VoiceOver hint on the reminder form's row that writes out a custom repeat: it opens the Custom repeat sheet."
     },
     "Opens the reminder's details." : {
       "comment" : "VoiceOver hint on a nudge card's title and on a Now row: tapping it opens the reminder's details."
