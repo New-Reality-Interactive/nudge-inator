@@ -17,7 +17,8 @@
 # SHOTS_TESTS (ShotsUITests methods separated by spaces, such as "testSettings testForm"; default
 # every one). Each variant's folder is emptied first, unless SHOTS_TESTS names the tests: then the
 # images from other tests stay, and the run lists the ones it wrote, since those kept may be older
-# than the code.
+# than the code. SHOTS_KEEP_GOING=1 runs every test and lists every failure at the end; without it,
+# the first failed test on any simulator stops every simulator's run (#302).
 # Writes <SHOTS_OUT>/<simulator>/<variant>/<screen>.png, a clone's under the simulator it clones.
 # Each simulator's progress lines start with "[<simulator>]" (a clone's with its own name), since
 # they are interleaved.
@@ -27,6 +28,7 @@ cd "$(dirname "$0")/.."
 
 SIMULATORS="${SIMULATORS-iPhone 15 Pro - iOS 26.5;iPhone 15 - iOS 27.0}"
 source scripts/screenshots-plan.sh
+source scripts/screenshots-watch.sh
 out="${SHOTS_OUT:-docs/screenshots/$(date +%F)}"
 defaults=(portrait landscape largest-text)
 
@@ -64,8 +66,9 @@ simulator_udid() {
 restore=()          # per simulator: UDID|text size|appearance, put back at the end
 shut_down_at_exit=() # UDIDs of the simulators that were shut down when the run began
 pids=()
-failures="$(mktemp -d)" # one file per simulator, a line per failed variant
+failures="$(mktemp -d)" # one file per simulator and variant, a line per failure
 cleanup() {
+  trap '' USR1 # a lane that fails now must not cut this short
   # Stop the simulators' runs (and the xcodebuild under each) before undoing what they changed.
   for pid in ${pids[@]+"${pids[@]}"}; do kill -TERM -- "-$pid" 2>/dev/null; done
   wait 2>/dev/null
@@ -85,12 +88,20 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
+# Notes that $1 failed on the simulator $2 in the variant $3 (log $4), in the file $5, and, unless the
+# run keeps going, asks the main script to stop every simulator's run.
+record_failure() {
+  echo "[$2] FAIL: $1 in $3, see $4" >&2
+  echo "$1 on $2, $3" >> "$5"
+  [ "${SHOTS_KEEP_GOING:-0}" = 1 ] || kill -USR1 $$ 2>/dev/null
+}
+
 # One simulator's run: its variants, one after the other. $1 is its name (a clone's has " clone <n>"
-# on the end), $2 the matrix simulator whose folder the images go in, $5 its variants separated by
-# spaces. Reads only, out, logs and build.
+# on the end), $2 the matrix simulator whose folder the images go in, $3 its UDID, $4 the start of
+# its failure files' paths, $5 its variants separated by spaces. Reads only, out, logs and build.
 shoot() {
-  local name="$1" folder="$2" udid="$3" failed_file="$4" lane_variants="$5"
-  local variant base size orientation direction dir log started
+  local name="$1" folder="$2" udid="$3" failed_prefix="$4" lane_variants="$5"
+  local variant base size orientation direction dir log started failed_file test
   for variant in $lane_variants; do
     echo "[$name] ==> $variant"
     # The rtl- prefix is a launch argument of the harness app's (ShotsUITests), so the simulator's
@@ -106,12 +117,16 @@ shoot() {
     mkdir -p "$dir"
     log="$logs/screenshots-$name-$variant.log"
     started="$log.started"
+    failed_file="$failed_prefix-$variant"
     touch "$started"
     TEST_RUNNER_SHOTS_DIR="$dir" TEST_RUNNER_SHOTS_ORIENTATION="$orientation" TEST_RUNNER_SHOTS_DIRECTION="$direction" \
       xcodebuild test-without-building -project "$build/NudgeShots.xcodeproj" -scheme NudgeShots \
       -destination "platform=iOS Simulator,id=$udid" -derivedDataPath "$build/derived" ${only[@]+"${only[@]}"} \
-      > "$log" 2>&1 < /dev/null \
-      || { echo "[$name] FAIL: $variant, see $log" >&2; echo "$name, $variant" >> "$failed_file"; }
+      2>&1 < /dev/null \
+      | shots_watch_output "$log" \
+      | while IFS= read -r test; do record_failure "$test" "$name" "$variant" "$log" "$failed_file"; done \
+      || [ -s "$failed_file" ] \
+      || record_failure "the run itself (no test named)" "$name" "$variant" "$log" "$failed_file"
     echo "[$name] $(ls "$dir" | wc -l | tr -d ' ') screenshots in $dir"
     if [ -n "${SHOTS_TESTS:-}" ]; then
       echo "[$name] wrote: $(find "$dir" -name '*.png' -newer "$started" -exec basename {} .png \; | sort | tr '\n' ' ')"
@@ -196,6 +211,24 @@ if [ ${#udids[@]} -gt 0 ]; then
   pids=()
 fi
 
+# Adds the lanes' failures to the list "failed", prints it and exits 1, or returns if it is empty.
+exit_if_anything_failed() {
+  local file line
+  for file in "$failures"/*; do
+    [ -f "$file" ] || continue # the pattern matched nothing
+    while IFS= read -r line; do failed+=("$line"); done < "$file"
+  done
+  [ ${#failed[@]} -gt 0 ] || return 0
+  echo "FAIL:" >&2
+  printf '  %s\n' "${failed[@]}" >&2
+  exit 1
+}
+
+# record_failure's signal, ignored from here on so that two failures at once report once. Reported
+# before anything is stopped, so a run this stops can't appear as a failure; exiting then stops the
+# rest and cleans up, as an interrupt does.
+trap 'trap "" USR1; echo "Stopping every simulator: a test failed (SHOTS_KEEP_GOING=1 runs on past failures)." >&2; exit_if_anything_failed' USR1
+
 for i in ${!names[@]}; do
   shoot "${names[$i]}" "${folders[$i]}" "${udids[$i]}" "$failures/$i" "${laneVariants[$i]}" &
   pids+=($!)
@@ -205,12 +238,5 @@ for i in ${!pids[@]}; do
 done
 pids=()
 
-for i in ${!names[@]}; do
-  [ -f "$failures/$i" ] && while read -r line; do failed+=("$line"); done < "$failures/$i"
-done
-if [ ${#failed[@]} -gt 0 ]; then
-  echo "FAIL:" >&2
-  printf '  %s\n' "${failed[@]}" >&2
-  exit 1
-fi
+exit_if_anything_failed
 echo "Screenshots: $out"

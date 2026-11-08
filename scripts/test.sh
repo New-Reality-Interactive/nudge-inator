@@ -74,6 +74,10 @@ fi
 step "The screenshot plan assigns variants to simulators and clones"
 scripts/tests/screenshots-plan-test.sh || failed+=("screenshots-plan")
 
+# No simulator needed: stand-ins for xcrun, xcodebuild and xcodegen (#302).
+step "A screenshot run stops at its first failed test"
+scripts/tests/screenshots-failures-test.sh || failed+=("screenshots-failures")
+
 # sync-strings.sh only marks a removed string with plural variants as stale, and its check passes, so
 # one stays in the catalog unless someone sees it (#139).
 step "String Catalogs hold no stale strings"
