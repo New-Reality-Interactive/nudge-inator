@@ -14,6 +14,12 @@ enum TagSheetKind: Identifiable {
         }
     }
 
+    /// Whether the field's `text` would be lost by closing the sheet: anything other than what it
+    /// opened with.
+    func hasChanges(text: String) -> Bool {
+        text != initialName
+    }
+
     /// The tag being renamed, or `nil` for a new one.
     var renamedTagID: Tag.ID? {
         if case .rename(let tag) = self { tag.id } else { nil }
@@ -123,15 +129,7 @@ struct TagSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .cancel) {
-                        dismiss()
-                    } label: {
-                        Label {
-                            Text("Cancel", comment: "The tag sheet's cancel button (an xmark).")
-                        } icon: {
-                            Image(systemName: "xmark")
-                        }
-                    }
+                    DiscardingCancelButton(hasChanges: kind.hasChanges(text: text))
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(role: .confirm, action: save) {
@@ -146,6 +144,8 @@ struct TagSheet: View {
             }
         }
         .onAppear { isFocused = true }
+        // A swipe down mustn't lose a typed name; Cancel asks first instead.
+        .interactiveDismissDisabled(kind.hasChanges(text: text))
     }
 
     private func problemText(_ problem: TagNameDraft.Problem) -> some View {

@@ -638,6 +638,50 @@ final class ShotsUITests: XCTestCase {
         assertTagCount(startsWith: "8 tags out of 8")
     }
 
+    /// The tag sheet's Cancel (#285), New Tag and rename: with the name as it opened it closes
+    /// without asking; with a change it asks, and Discard Changes adds and renames nothing.
+    func testTagSheetDiscard() {
+        launch(.app)
+        tab("Tags")
+        openSheet("New Tag", title: "New Tag")
+        dismissKeyboardTip()
+        closeUnchangedSheet(titled: "New Tag")
+
+        openSheet("New Tag", title: "New Tag")
+        app.typeText("spare")
+        assertTagSheetAsksBeforeDiscarding(titled: "New Tag", shot: "tag-new-discard")
+        XCTAssertNil(scrollTo("#spare"), "Discard Changes added the tag")
+
+        swipe("#home")
+        app.buttons["Edit"].firstMatch.tap()
+        XCTAssert(app.navigationBars["Rename Tag"].waitForExistence(timeout: 3), "No Rename Tag sheet")
+        closeUnchangedSheet(titled: "Rename Tag")
+
+        swipe("#home")
+        app.buttons["Edit"].firstMatch.tap()
+        XCTAssert(app.navigationBars["Rename Tag"].waitForExistence(timeout: 3), "No Rename Tag sheet")
+        app.typeText("x")
+        assertTagSheetAsksBeforeDiscarding(titled: "Rename Tag", shot: "tag-rename-discard")
+        scrollToTop()
+        XCTAssertNotNil(scrollTo("#home"), "Discard Changes renamed the tag")
+    }
+
+    /// With a changed name in the open tag sheet: a swipe down leaves it open, a tap outside the
+    /// question keeps the name, and Discard Changes closes it. The keyboard stays up: a return
+    /// here would save the name.
+    private func assertTagSheetAsksBeforeDiscarding(titled title: String, shot name: String, line: UInt = #line) {
+        let typed = app.textFields.firstMatch.value as? String
+        swipeSheetDown(titled: title)
+        pause(0.8)
+        XCTAssert(app.navigationBars[title].exists, "A swipe down closed the sheet with a changed name", line: line)
+        askToDiscard(titled: title, line: line)
+        shot(name)
+        keepEditing(titled: title, line: line)
+        XCTAssertEqual(app.textFields.firstMatch.value as? String, typed, "Leaving the discard question lost the name", line: line)
+        askToDiscard(titled: title, line: line)
+        discardChanges(titled: title, line: line)
+    }
+
     private func assertTagCount(startsWith text: String, line: UInt = #line) {
         let count = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", text)).firstMatch
         XCTAssert(count.exists, "No count starting \(text):\n\(app.debugDescription)", line: line)

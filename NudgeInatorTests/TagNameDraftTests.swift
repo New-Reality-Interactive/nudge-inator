@@ -35,4 +35,15 @@ struct TagNameDraftTests {
         #expect(TagNameDraft.Problem(.empty) == .empty)
         #expect(TagNameDraft.Problem(.taken(by: home)) == .taken(home))
     }
+
+    @Test func aNewTagHasChangesOnceANameIsTyped() {
+        #expect(!TagSheetKind.new.hasChanges(text: ""))
+        #expect(TagSheetKind.new.hasChanges(text: "garden"))
+    }
+
+    @Test func aRenameHasChangesOnlyWhenTheNameDiffersFromTheTagsCurrentOne() {
+        #expect(!TagSheetKind.rename(work).hasChanges(text: "work"))
+        #expect(TagSheetKind.rename(work).hasChanges(text: "office"))
+        #expect(TagSheetKind.rename(work).hasChanges(text: ""))
+    }
 }
