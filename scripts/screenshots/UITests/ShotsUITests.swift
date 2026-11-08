@@ -1012,12 +1012,14 @@ final class ShotsUITests: XCTestCase {
             scroll(down: true)
             tries += 1
         }
-        // In landscape a row can sit under the search field, which takes the swipe. A short drag,
-        // since a whole scroll there could take the row off the screen.
+        // In landscape a row's middle, where the swipe starts, can sit under the search field, which
+        // takes the swipe. A short drag, only clearing the middle: at the largest text in landscape a
+        // tall row dragged clear of the field whole ends up with its middle at the tab bar (#285).
         let search = app.searchFields.firstMatch
-        if search.exists, row.frame.minY < search.frame.maxY {
+        let clearance: CGFloat = 16
+        if search.exists, row.frame.midY < search.frame.maxY + clearance {
             let from = app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-            let distance = search.frame.maxY - row.frame.minY + 8
+            let distance = search.frame.maxY + clearance - row.frame.midY
             from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 0, dy: distance)), withVelocity: .slow, thenHoldForDuration: 0.2)
             pause(0.5)
         }
