@@ -62,7 +62,9 @@ Everything else the ticket needs is in the ticket, under **Before you start** (b
 ## When the PR is merged
 
 10. `git switch main && git pull`, check the merge commit is there, and delete the local branch
-    with `git branch -d`. If the ticket went sideways, suggest `/retro` before `/clear`.
+    with `git branch -d`. Shut down every simulator (`xcrun simctl shutdown all`), then check
+    `xcrun simctl list devices booted` lists none: no simulator stays running once a ticket's PR
+    has merged. If the ticket went sideways, suggest `/retro` before `/clear`.
 11. Find the next ticket: the lowest-numbered open sub-issue of the feature's spec with no open
     blocker. If none is left, the feature is ready to release: follow
     `release.md`, and tell the developer which steps are theirs.
