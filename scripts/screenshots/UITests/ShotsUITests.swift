@@ -996,10 +996,13 @@ final class ShotsUITests: XCTestCase {
     /// Delete to look for, it swipes all three times; a swipe on an open row leaves it open.
     private func swipe(_ title: String) {
         scrollToTop()
-        guard let row = scrollTo(title) else {
+        guard let found = scrollTo(title) else {
             XCTFail("No \(title):\n\(app.debugDescription)")
             return
         }
+        // With a tall row's middle hidden the query finds its title, too small a target to swipe (#285).
+        let rowButton = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
+        let row = found.elementType != .button && rowButton.exists ? rowButton : found
         // At the largest text four scrolls up can leave the first row under the bar.
         var tries = 0
         while row.frame.minY < app.navigationBars.firstMatch.frame.maxY, tries < 8 {
