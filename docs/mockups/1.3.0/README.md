@@ -17,10 +17,12 @@ Open [`index.html`](index.html) in a browser. It's a single file with no depende
   - **Filter** (`line.3.horizontal.decrease`): a sheet for Tags, Status, Strength and a due date range,
     with a badge, a menu and Cancel, Apply and Reset.
   - **Sort** menu: Created (Oldest First, Newest First) and Due Date (Earliest First, Latest First).
-  - **Swipe** a row: Done and Delete on a Nudging row, Delete on the others. Delete asks first.
-  - The bar holds Filter, Sort and New. The quick filter chips the first mockup drew were removed (#113).
+  - **Swipe** a row: Done and Delete tiles on a Nudging row, Delete on the others. The tiles are circles with their word under them, as on the Tags tab, and the row is 78 pt tall. Delete asks first.
+  - The bar holds Filter and Sort in one glass group, as on the Tags tab, and New apart from them. The quick filter chips the first mockup drew were removed (#113).
+- **The New Tag and Rename Tag sheets ask before discarding** (#285): ✕ closes at once with nothing changed, and asks "Are you sure you want to discard these changes?" once a name is typed (New Tag) or changed (Rename Tag). Every discard question, here and on the reminder form and the filter sheets, shows its title (#278).
 - **The Tags tab gets the same tools** (#138 to #142): a count header, search, Filter (Has no reminders),
   Sort (Name, Reminders), and a swipe to Edit or Delete a tag in place of Edit mode.
+- **My Day's Done swipe is the same circle tile** on a Nudging row (Now's cards keep their full-height green action).
 - **The reminder form's Repeat is a menu** (#283): the presets, a divider, then Custom. Choosing Custom adds
   a row that reads the repeat out and opens the Custom repeat page, now **a sheet** with Apply only (#284).
 - **End Repeat** is its own row under Repeat for every repeat: Never, After (a count) or On Date (#287).

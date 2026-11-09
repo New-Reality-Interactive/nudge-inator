@@ -956,6 +956,9 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .swipe[data-dir="trail"]:has(.tiles) .swipe-row { border-radius: 0 28px 28px 0; background: var(--tertiary-system-fill); }
 .tile.edit .disc { background: var(--tile-blue); }
 .tile.del .disc { background: var(--tile-red); }
+.tile.done .disc { background: var(--tile-green); }
+/* A row with swipe tiles is 78 pt tall, so the 50 pt circle and its word fit (DESIGN.md, Swipe actions). */
+.swipe:has(.tiles) .swipe-row .cell { min-height: 78px; }
 /* The help text in the no-tags empty state wraps to a readable measure. */
 .unavailable .tag-help { max-width: 22rem; margin-left: auto; margin-right: auto; }
 /* Motion only when the person hasn't asked for less (Reduce Motion). */
@@ -1750,7 +1753,9 @@ function urgencyWord(u) {
 }
 /* The status label: Done is green with checkmark.circle.fill. */
 const statusLabel = (st) => `<span class="state ${st}">${st === "ACKED" ? I("checkmark.circle.fill", 17) : ""}${STATUS_LABEL[st]}</span>`;
-function swipeable(inner, o) {
+function swipeable(inner, o, tile = false) {
+  // My Day's row: the Done tile is a circle with its word under it, as on the Tags and Reminders rows.
+  if (tile) return `<div class="swipe" data-swipe-width="70"><div class="swipe-acts tiles"><button type="button" class="swipe-act tile done" data-ack="${o.id}" tabindex="-1" aria-hidden="true"><span class="disc">${I("checkmark", 22)}</span><span>Done</span></button></div><div class="swipe-row">${inner}</div></div>`;
   const trail = `<button type="button" class="swipe-act trail" data-ack="${o.id}" tabindex="-1" aria-hidden="true">${I("checkmark", 22)}<span>Done</span></button>`;
   return `<div class="swipe">${trail}<div class="swipe-row">${inner}</div></div>`;
 }
@@ -1846,7 +1851,7 @@ function viewDay() {
       <span class="main"><button type="button" class="linkish t" data-open="${it.r.id}">${esc(it.r.title)}</button><span class="s">${tl ? `${tl} · ` : ""}${note(it)}</span></span>
       <span class="trail">${dayTrail(it)}${chev}</span>
     </div>`;
-    return `<li>${it.status === "NUDGING" ? swipeable(cell, it.occ) : cell}</li>`;
+    return `<li>${it.status === "NUDGING" ? swipeable(cell, it.occ, true) : cell}</li>`;
   }).join("") : emptyDay}</ul></div>`;
 }
 /* My Day's counts, which double as a status filter. */
@@ -2061,10 +2066,10 @@ function remListRow(r) {
     <span class="main"><span class="t">${esc(r.title)}</span>${tl ? `<span class="s">${tl}</span>` : ""}</span>
     <span class="trail">${statusLabel(st)}${chev}</span>
   </button>`;
-  const done = occ ? `<button type="button" class="swipe-act done" data-remack="${occ.id}" tabindex="-1" aria-hidden="true">${I("checkmark", 22)}<span>Done</span></button>` : "";
-  const del = `<button type="button" class="swipe-act del" data-delete="${r.id}" tabindex="-1" aria-hidden="true">${I("trash", 22)}<span>Delete</span></button>`;
+  const done = occ ? `<button type="button" class="swipe-act tile done" data-remack="${occ.id}" tabindex="-1" aria-hidden="true"><span class="disc">${I("checkmark", 22)}</span><span>Done</span></button>` : "";
+  const del = `<button type="button" class="swipe-act tile del" data-delete="${r.id}" tabindex="-1" aria-hidden="true"><span class="disc">${I("trash", 22)}</span><span>Delete</span></button>`;
   const actions = `${occ ? `<button type="button" class="sr-only" data-remack="${occ.id}">Done: ${esc(r.title)}</button>` : ""}<button type="button" class="sr-only" data-delete="${r.id}">Delete: ${esc(r.title)}</button>`;
-  return `<li data-rid="${r.id}"><div class="swipe" data-swipe-width="${occ ? 176 : 88}"><div class="swipe-acts">${del}${done}</div><div class="swipe-row">${cell}</div></div>${actions}</li>`;
+  return `<li data-rid="${r.id}"><div class="swipe" data-swipe-width="${occ ? 130 : 70}"><div class="swipe-acts tiles">${del}${done}</div><div class="swipe-row">${cell}</div></div>${actions}</li>`;
 }
 /* Search or filters match nothing. It never says there are no reminders, names what's narrowing
    the list, and offers to clear it. The app ships each sentence as one whole string. */
@@ -2081,7 +2086,7 @@ function viewRems() {
   }
   const rows = remRows();
   const list = rows.length ? `<div class="sec"><ul class="list remrow" aria-label="Reminders">${rows.map(remListRow).join("")}</ul></div>` : noMatch();
-  return `${navBar({ title: "Reminders", trailing: remFilterButton() + sortButton() + plusBtn })}${searchBar()}${remHeader(rows.length)}${list}`;
+  return `${navBar({ title: "Reminders", trailing: `<span class="bar-group">${remFilterButton()}${sortButton()}</span>${plusBtn}` })}${searchBar()}${remHeader(rows.length)}${list}`;
 }
 /* Done from a row's swipe: the same act as Done on Now. The row stays where it is with its new
    status label, unless an active status filter now leaves it out: then it animates out, the count
@@ -2883,9 +2888,10 @@ function closeSheet() {
 function cancelSheet() {
   const sh = state.sheet;
   const dirty = sh.kind === "editor" ? draftDirty() : sh.kind === "remfilter" ? JSON.stringify(sh.draft) !== JSON.stringify(state.rems.filter)
-    : sh.kind === "tagfilter" && sh.draft.noReminders !== state.tagList.filter.noReminders;
+    : sh.kind === "tagfilter" ? sh.draft.noReminders !== state.tagList.filter.noReminders
+    : sh.kind === "tag" && sh.draft.name !== (sh.id ? tagById(sh.id).name : "");
   if (dirty) {
-    ask({ style: "sheet", buttons: [{ label: "Discard Changes", role: "destructive", run: closeSheet }, { label: "Keep Editing", role: "cancel" }] });
+    ask({ style: "sheet", title: "Are you sure you want to discard these changes?", buttons: [{ label: "Discard Changes", role: "destructive", run: closeSheet }, { label: "Keep Editing", role: "cancel" }] });
   } else closeSheet();
 }
 
