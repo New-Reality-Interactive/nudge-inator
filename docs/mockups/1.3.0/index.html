@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Nudge-inator iOS mockup: Custom Sheet</title>
+<title>Nudge-inator iOS mockup: 1.3.0</title>
 <style>
 /* ============ Colors =============
    Follows Apple's HIG "Color" and "Dark Mode" pages (docs/apple/design). Every token is a dynamic color
@@ -893,6 +893,71 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 :root:not([data-ios="18"])[data-transparency="reduce"] .sheet .navrow::before { inset: 0; background: var(--system-grouped-background); -webkit-backdrop-filter: none; backdrop-filter: none; -webkit-mask-image: none; mask-image: none; }
 :root:not([data-ios="18"]) .sheet .navrow + .sheet-body { padding-top: 84px; }
 :root:not([data-ios="18"]) .device[data-orient="landscape"] .sheet .navrow + .sheet-body { padding-top: 72px; }
+/* ============ Reminders tab (#107) ============ */
+/* Five tabs: Now, My Day, Reminders, Tags, Settings. */
+.tabgroup { grid-template-columns: repeat(5, 1fr); }
+/* The search field sits under the navigation bar (searchable's navigationBarDrawer, always shown).
+   The system draws it: a capsule with magnifyingglass, the prompt, and a clear button once there's
+   text. Cancel shows beside it while there's text. */
+.remsearch:focus-within .scancel, .remsearch .scancel.on { display: inline-flex; }
+.remsearch { display: flex; align-items: center; gap: 8px; margin: 0 16px 12px; }
+.sfield { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 6px 0 12px; border-radius: 99px; background: var(--tertiary-system-fill); color: var(--secondary-label); }
+.sfield input { -webkit-appearance: none; appearance: none; font: var(--body); letter-spacing: var(--body-track); flex: 1; min-width: 0; border: 0; background: none; color: var(--label); padding: 8px 0; }
+.sfield input::placeholder { color: var(--placeholder-text); opacity: 1; }
+.sfield input::-webkit-search-cancel-button { display: none; }
+.sfield input:focus { outline: none; }
+.sfield:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
+.sfield .sclear { display: grid; place-items: center; min-width: 32px; min-height: 32px; border: 0; background: none; color: var(--secondary-label); cursor: pointer; padding: 0; }
+/* The header row: the count alone. The Sort button is a bar button. */
+.remhead { display: flex; flex-direction: column; gap: 8px; margin: 0 16px 12px; }
+.remcount { font: var(--subhead); letter-spacing: var(--subhead-track); margin: 0; color: var(--secondary-label); font-variant-numeric: tabular-nums; }
+/* A Reminders row: due time, title and tags, then the status label. */
+.remrow .cell .time small { white-space: nowrap; }
+/* Two trailing swipe actions: Done (Nudging rows only) at the edge and Delete beside it. */
+.swipe-acts { position: absolute; top: 0; bottom: 0; right: 0; display: flex; visibility: hidden; }
+.swipe[data-dir="trail"] .swipe-acts { visibility: visible; }
+.swipe-acts .swipe-act { position: static; width: 88px; align-items: center; padding: 0 6px; visibility: inherit; }
+.swipe-act.del { background: var(--tile-red); }
+.swipe-act.done { background: var(--tile-green); }
+/* A row leaving the list: it fades and its height closes up. */
+.list > li.leaving { overflow: hidden; opacity: 0; height: 0 !important; }
+.list > li.leaving::after { display: none; }
+/* A swipe row is opaque and above its list item, so its separator is drawn on the row itself and
+   slides with it. */
+.list > li:has(> .swipe)::after { display: none; }
+.list > li:not(:last-child) > .swipe > .swipe-row::after { content: ""; position: absolute; left: var(--inset, 16px); right: 0; bottom: 0; height: 1px; transform: scaleY(0.5); background: var(--separator); }
+.unavailable .btn { margin-top: 18px; }
+/* The Filter button's badge: none at the accessibility sizes (DESIGN.md). */
+:root[data-type^="ax"] [data-remfilter] .bar-badge { display: none; }
+/* The Filter button's menu: items in the label color, each with its symbol before the text (from
+   the template, ticket 20). */
+.asheet .mcheck { display: inline-flex; width: 18px; min-width: 1.1em; flex: none; }
+.asheet-btn.msect, .asheet .mhead.msect { border-top: 8px solid var(--tertiary-system-fill); }
+.asheet .mhead { margin: 0; padding: 10px 16px 2px; font: var(--footnote); letter-spacing: var(--footnote-track); color: var(--secondary-label); text-align: left; }
+.asheet.menu .asheet-btn { display: flex; align-items: center; justify-content: flex-start; gap: 12px; color: var(--label); text-align: left; }
+/* The filter sheet's date rows: the date pill, then the switch. */
+.remreset { display: flex; justify-content: center; margin: 16px 16px 24px; }
+.daterow { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 8px 16px; flex-wrap: wrap; }
+.daterow > label:first-child { flex: 1; min-width: 0; }
+.daterow .pill-input { font: var(--body); }
+/* ============ Tags tab tools (#138) ============ */
+/* The bar: Filter and Sort share one glass capsule, and New Tag stands apart (Decision 49). */
+.navrow > div:last-child:has(> .bar-group) { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+.bar-group { display: inline-flex; border-radius: 99px; background: var(--glass); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: var(--glass-shadow), inset 0 0 0 0.5px var(--glass-edge); }
+.bar-group .btn.bar.icon.glass { background: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+:root[data-type^="ax"] [data-tagfilter] .bar-badge { display: none; }
+/* A tag's row is at least 78 pt, so the system draws its tiles as circles (DESIGN.md, Swipe actions). */
+.tagrow .cell { min-height: 78px; }
+/* As the system draws it (the app on iOS 27.0, #126): a 50 pt circle holding the white glyph, the word
+   under it in secondary text, 10 pt apart, and the swiped row gray with rounded ends. */
+.swipe-acts.tiles { align-items: center; gap: 10px; padding: 0 10px; background: var(--secondary-system-grouped-background); }
+.swipe-acts.tiles .swipe-act.tile { flex-direction: column; justify-content: center; align-items: center; gap: 2px; width: 50px; padding: 0; background: none; color: var(--secondary-label); font: 12px/15px var(--font); letter-spacing: 0; white-space: nowrap; }
+.tile .disc { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; color: var(--on-tile); }
+.swipe[data-dir="trail"]:has(.tiles) .swipe-row { border-radius: 0 28px 28px 0; background: var(--tertiary-system-fill); }
+.tile.edit .disc { background: var(--tile-blue); }
+.tile.del .disc { background: var(--tile-red); }
+/* The help text in the no-tags empty state wraps to a readable measure. */
+.unavailable .tag-help { max-width: 22rem; margin-left: auto; margin-right: auto; }
 /* Motion only when the person hasn't asked for less (Reduce Motion). */
 @media (prefers-reduced-motion: no-preference) {
   .switch { transition: background 0.2s; }
@@ -900,6 +965,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
   .hud { transition: opacity 0.2s, transform 0.2s; }
   .inline-title, #main .navrow::before { transition: opacity 0.15s; }
   .swipe:not(.dragging) .swipe-row { transition: transform 0.25s; }
+  .list > li.leaving { transition: opacity 0.3s, height 0.3s 0.1s; }
 }
 /* On a phone, the app fills the screen and the controls follow it. */
 @media (max-width: 760px) {
@@ -985,6 +1051,33 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <select id="c-badge-color" autocomplete="off"><option value="">System (red)</option><option value="accent">Accent (teal)</option></select>
       <label for="c-badge-count">Badge number</label>
       <select id="c-badge-count" autocomplete="off"><option value="">The tags chosen</option><option value="1">1</option><option value="12">12</option><option value="999">999</option></select>
+    </fieldset>
+    <fieldset>
+      <legend>Reminders tab (#107)</legend>
+      <p class="why">Swipe a row left with the mouse, or use these. The sort direction is kept across launches, and Delete All Data sets it back to oldest first. Search and the filter sheet start empty at each launch.</p>
+      <button type="button" class="cbtn" id="c-rem-swipe-n">Show the swipe on a Nudging row</button>
+      <button type="button" class="cbtn" id="c-rem-swipe-o">Show the swipe on a Coming up row</button>
+      <button type="button" class="cbtn" id="c-rem-leave">Status of Nudging on, then show a row's swipe</button>
+      <p class="why">Tap Done: under a Status of Nudging the row animates out and the count drops. With no filter on, the row stays where it is with its new status label.</p>
+      <button type="button" class="cbtn" id="c-rem-none">No reminders at all</button>
+      <p class="why">Reset the mockup brings the reminders back.</p>
+    </fieldset>
+    <fieldset>
+      <legend>Tags tab tools (#138)</legend>
+      <p class="why">Swipe a tag left with the mouse, or use these. The bar's Filter, Sort and New Tag, the search field, the tiles and Cancel all work. The sort is kept across launches; search and the filter start empty at each launch.</p>
+      <button type="button" class="cbtn" id="c-tag-swipe">Show the swipe on #home</button>
+      <button type="button" class="cbtn" id="c-tag-delete">Show the Delete alert</button>
+      <button type="button" class="cbtn" id="c-tag-rename">Show the rename sheet</button>
+      <button type="button" class="cbtn" id="c-tag-search">Search for "home"</button>
+      <button type="button" class="cbtn" id="c-tag-filter">Has no reminders on (the badge)</button>
+      <button type="button" class="cbtn" id="c-tag-discard">Changed draft, then the prompt</button>
+      <button type="button" class="cbtn" id="c-tag-leave">Row animates out: #yoga gets its first reminder</button>
+      <p class="why">Under the filter the row animates out and the count drops. Delete from a tile does the same with no filter on.</p>
+      <button type="button" class="cbtn" id="c-tag-nomatch-s">Nothing matches: search</button>
+      <button type="button" class="cbtn" id="c-tag-nomatch-f">Nothing matches: filter</button>
+      <button type="button" class="cbtn" id="c-tag-nomatch-b">Nothing matches: both</button>
+      <button type="button" class="cbtn" id="c-tag-none">No tags at all</button>
+      <p class="why">Reset the mockup brings the tags back.</p>
     </fieldset>
     <fieldset>
       <legend>iPhone settings</legend>
@@ -1094,12 +1187,16 @@ function gearPath() {
   }
   return `<path d="${d}Z"/><circle cx="12" cy="12" r="3.1"/>`;
 }
+/* The calendar symbol's outline. */
+const CAL = `<rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.2V7.5a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v1.7z" fill="currentColor"/>${dot(8, 13)}${dot(12, 13)}${dot(16, 13)}${dot(8, 16.8)}${dot(12, 16.8)}`;
 const TAG = '<path d="M3.8 5.3v5.6a2 2 0 0 0 .6 1.4l7.9 7.9a2 2 0 0 0 2.8 0l4.8-4.8a2 2 0 0 0 0-2.8L12 4.7a2 2 0 0 0-1.4-.6H5a1.2 1.2 0 0 0-1.2 1.2z"/>';
 const SYMBOLS = {
   "app.badge": { d: '<path d="M14.2 4H7.5a3.5 3.5 0 0 0-3.5 3.5v9A3.5 3.5 0 0 0 7.5 20h9a3.5 3.5 0 0 0 3.5-3.5V9.8"/><circle cx="18.6" cy="5.4" r="2.6" fill="currentColor"/>' },
   "bell": { d: '<path d="M18 16.5V11a6 6 0 0 0-12 0v5.5L4.5 18.2h15z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/>', dy: -0.3 },
   "bell.slash": { d: '<path d="M18 16.5V11a6 6 0 0 0-12 0v5.5L4.5 18.2h15z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/><path d="M3.5 3.2 20.5 21"/>', dy: -0.3 },
-  "calendar": { d: `<rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.2V7.5a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v1.7z" fill="currentColor"/>${dot(8, 13)}${dot(12, 13)}${dot(16, 13)}${dot(8, 16.8)}${dot(12, 16.8)}`, scale: 0.96 },
+  "calendar": { d: CAL, scale: 0.96 },
+  /* arrow.up.arrow.down: the Reminders tab's Sort menu (#107). */
+  "arrow.up.arrow.down": { d: '<path d="M8 19.5V4.5M4.2 8.3 8 4.5l3.8 3.8M16 4.5v15M12.2 15.7l3.8 3.8 3.8-3.8"/>' },
   "square.stack": { d: '<rect x="3.5" y="9" width="17" height="11.5" rx="2.5"/><path d="M5.8 6.2h12.4M8.3 3.5h7.4"/>', scale: 0.96 },
   "gearshape": { d: gearPath(), scale: 0.98 },
   "plus": { d: '<path d="M12 4.5v15M4.5 12h15"/>' },
@@ -1116,9 +1213,14 @@ const SYMBOLS = {
   "pause": { d: '<path d="M9 5.5v13M15 5.5v13"/>', scale: 0.92 },
   "arrow.uturn.backward": { d: '<path d="M8.5 4.5 4 9l4.5 4.5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H10"/>', scale: 0.94 },
   "play": { d: '<path d="M8 5.2v13.6a.8.8 0 0 0 1.2.7l10.3-6.8a.8.8 0 0 0 0-1.4L9.2 4.5A.8.8 0 0 0 8 5.2z"/>', scale: 0.9 },
+  "pencil": { d: '<path d="M16.6 4.2a1.9 1.9 0 0 1 2.7 0l.5.5a1.9 1.9 0 0 1 0 2.7L8.6 18.6 4 20l1.4-4.6Z"/><path d="m14.8 6 3.2 3.2"/>' },
   "trash": { d: '<path d="M4 6.5h16"/><path d="M9 6.5V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v1.5"/><path d="m6 6.5 1 12.8A1.8 1.8 0 0 0 8.8 21h6.4a1.8 1.8 0 0 0 1.8-1.7L18 6.5"/><path d="M9.6 10.2v7.2M12 10.2v7.2M14.4 10.2v7.2"/>', scale: 0.96 },
   "magnifyingglass": { d: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/>', scale: 0.96 },
   "square.and.arrow.up": { d: '<path d="M12 3.2v11.5M8 7.2l4-4 4 4"/><path d="M8.8 10H6.5A1.5 1.5 0 0 0 5 11.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5h-2.3"/>', dy: -0.6 },
+  /* list.bullet.clipboard: the Reminders tab. */
+  "list.bullet.clipboard": { d: `<path d="M9 4.6H7.6A2.6 2.6 0 0 0 5 7.2v11.2A2.6 2.6 0 0 0 7.6 21h8.8a2.6 2.6 0 0 0 2.6-2.6V7.2a2.6 2.6 0 0 0-2.6-2.6H15"/><rect x="9" y="2.8" width="6" height="3.6" rx="1.2"/>${dot(8.9, 11, 1.1)}${dot(8.9, 14.4, 1.1)}${dot(8.9, 17.8, 1.1)}<path d="M11.6 11h4.2M11.6 14.4h4.2M11.6 17.8h4.2"/>` },
+  /* line.3.horizontal.decrease: the Reminders tab's Filter button and its menu item. */
+  "line.3.horizontal.decrease": { d: '<path d="M4 7h16M7 12h10M10 17h4"/>' },
   "list.bullet": { d: `${dot(5, 6.5)}${dot(5, 12)}${dot(5, 17.5)}<path d="M9.2 6.5H20M9.2 12H20M9.2 17.5H20"/>` },
   "exclamationmark.triangle": { d: `<path d="M10.3 4.6 2.9 17.4A2 2 0 0 0 4.6 20.4h14.8a2 2 0 0 0 1.7-3L13.7 4.6a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4.6"/>${dot(12, 17.1, 1.1)}`, dy: -0.4 },
   /* The real tag has its narrow, dotted end at the upper right. Both are drawn from one outline,
@@ -1310,21 +1412,24 @@ const ev = (type, at, data = {}) => ({ id: uid(), type, at, data });
    one word, shown as "#name", with no color, so it never competes with the status colors. */
 let tags, reminders, occurrences;
 function seed() {
-  tags = ["home", "health", "work", "money", "morning", "appointments", "travel"].map((name) => ({ id: name, name }));
+  tags = ["home", "health", "work", "money", "morning", "appointments", "travel", "volunteer", "yoga"].map((name) => ({ id: name, name }));
   reminders = [
-    { id: "r1", tagIds: ["home"], title: "Take the bins out", body: null, dtstart: "2026-01-05T07:30", rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "firm", pace: "consistent", wait: 30, status: "ACTIVE", nextOccurrenceAt: "2026-10-05T07:30" },
-    { id: "r7", tagIds: ["money", "home"], title: "Reply to Alex about the lease", body: "They need an answer before 10.", dtstart: "2026-09-28T08:10", rrule: null, strength: "relentless", pace: "escalating", status: "ACTIVE", nextOccurrenceAt: null },
-    { id: "r2", tagIds: ["health", "morning"], title: "Morning meds", body: "Blue pill + vitamin D", dtstart: "2026-03-01T06:30", rrule: "FREQ=DAILY", strength: "gentle", pace: "consistent", wait: 15, status: "ACTIVE", nextOccurrenceAt: "2026-09-29T06:30" },
-    { id: "r6", tagIds: ["health", "work"], title: "Stretch break", body: null, dtstart: "2026-09-01T10:00", rrule: "FREQ=DAILY", strength: "firm", pace: "escalating", status: "ACTIVE", nextOccurrenceAt: "2026-09-28T10:00" },
+    { id: "r1", createdAt: "2026-01-02T19:05", tagIds: ["home"], title: "Take the bins out", body: null, dtstart: "2026-01-05T07:30", rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "firm", pace: "consistent", wait: 30, status: "ACTIVE", nextOccurrenceAt: "2026-10-05T07:30" },
+    { id: "r7", createdAt: "2026-09-27T21:40", tagIds: ["money", "home"], title: "Reply to Alex about the lease", body: "They need an answer before 10.", dtstart: "2026-09-28T08:10", rrule: null, strength: "relentless", pace: "escalating", status: "ACTIVE", nextOccurrenceAt: null },
+    { id: "r2", createdAt: "2026-02-27T08:12", tagIds: ["health", "morning"], title: "Morning meds", body: "Blue pill + vitamin D", dtstart: "2026-03-01T06:30", rrule: "FREQ=DAILY", strength: "gentle", pace: "consistent", wait: 15, status: "ACTIVE", nextOccurrenceAt: "2026-09-29T06:30" },
+    { id: "r6", createdAt: "2026-08-31T12:30", tagIds: ["health", "work"], title: "Stretch break", body: null, dtstart: "2026-09-01T10:00", rrule: "FREQ=DAILY", strength: "firm", pace: "escalating", status: "ACTIVE", nextOccurrenceAt: "2026-09-28T10:00" },
     // A custom repeat: every 3 days isn't one of the presets.
-    { id: "r3", tagIds: ["home"], title: "Water the plants", body: null, dtstart: "2026-03-29T18:00", rrule: "FREQ=DAILY;INTERVAL=3", repeatCustom: true, strength: "gentle", pace: "escalating", breakThrough: false, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T18:00" },
-    { id: "r4", tagIds: ["money", "home"], title: "Pay rent", body: "Transfer to the landlord's account.", dtstart: "2026-01-01T09:00", rrule: "FREQ=MONTHLY;BYMONTHDAY=1", strength: "relentless", pace: "escalating", status: "ACTIVE", nextOccurrenceAt: "2026-10-01T09:00" },
-    { id: "r5", tagIds: ["health", "appointments"], title: "Dentist appointment", body: "Bring the insurance card.", dtstart: "2026-10-02T13:15", rrule: null, strength: "firm", pace: "consistent", wait: 10, status: "ACTIVE", nextOccurrenceAt: "2026-10-02T13:15" },
-    { id: "r8", tagIds: ["money", "travel"], title: "Renew passport", body: null, dtstart: "2026-09-10T09:00", rrule: null, strength: "firm", pace: "escalating", status: "COMPLETED", nextOccurrenceAt: null },
-    { id: "r9", tagIds: ["work", "morning"], title: "Team stand-up", body: "Join from the meeting link in the calendar invite.", dtstart: "2026-01-05T09:30", rrule: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", strength: "firm", pace: "consistent", wait: 5, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T09:30" },
-    { id: "r10", tagIds: ["work"], title: "Send the weekly status update", body: null, dtstart: "2026-01-05T16:30", rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "gentle", pace: "escalating", status: "ACTIVE", nextOccurrenceAt: "2026-09-28T16:30" },
-    { id: "r11", tagIds: ["home", "morning"], title: "Walk the dog", body: null, dtstart: "2026-02-01T07:00", rrule: "FREQ=DAILY", strength: "gentle", pace: "escalating", breakThrough: false, status: "ACTIVE", nextOccurrenceAt: "2026-09-29T07:00" },
-    { id: "r12", tagIds: [], title: "Call Grandma", body: null, dtstart: "2026-06-07T17:00", rrule: "FREQ=WEEKLY;BYDAY=SU", strength: "gentle", pace: "escalating", status: "PAUSED", nextOccurrenceAt: null },
+    { id: "r3", createdAt: "2026-03-28T10:02", tagIds: ["home"], title: "Water the plants", body: null, dtstart: "2026-03-29T18:00", rrule: "FREQ=DAILY;INTERVAL=3", repeatCustom: true, strength: "gentle", pace: "escalating", breakThrough: false, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T18:00" },
+    { id: "r4", createdAt: "2025-12-29T18:44", tagIds: ["money", "home"], title: "Pay rent", body: "Transfer to the landlord's account.", dtstart: "2026-01-01T09:00", rrule: "FREQ=MONTHLY;BYMONTHDAY=1", strength: "relentless", pace: "escalating", status: "ACTIVE", nextOccurrenceAt: "2026-10-01T09:00" },
+    { id: "r5", createdAt: "2026-09-14T11:20", tagIds: ["health", "appointments"], title: "Dentist appointment", body: "Bring the insurance card.", dtstart: "2026-10-02T13:15", rrule: null, strength: "firm", pace: "consistent", wait: 10, status: "ACTIVE", nextOccurrenceAt: "2026-10-02T13:15" },
+    { id: "r8", createdAt: "2026-08-20T09:15", tagIds: ["money", "travel"], title: "Renew passport", body: null, dtstart: "2026-09-10T09:00", rrule: null, strength: "firm", pace: "escalating", status: "COMPLETED", nextOccurrenceAt: null },
+    { id: "r9", createdAt: "2026-01-02T19:12", tagIds: ["work", "morning"], title: "Team stand-up", body: "Join from the meeting link in the calendar invite.", dtstart: "2026-01-05T09:30", rrule: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", strength: "firm", pace: "consistent", wait: 5, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T09:30" },
+    { id: "r10", createdAt: "2026-01-03T09:00", tagIds: ["work"], title: "Send the weekly status update", body: null, dtstart: "2026-01-05T16:30", rrule: "FREQ=WEEKLY;BYDAY=MO", strength: "gentle", pace: "escalating", status: "ACTIVE", nextOccurrenceAt: "2026-09-28T16:30" },
+    { id: "r11", createdAt: "2026-01-31T07:45", tagIds: ["home", "morning"], title: "Walk the dog", body: null, dtstart: "2026-02-01T07:00", rrule: "FREQ=DAILY", strength: "gentle", pace: "escalating", breakThrough: false, status: "ACTIVE", nextOccurrenceAt: "2026-09-29T07:00" },
+    { id: "r12", createdAt: "2026-06-06T16:30", tagIds: [], title: "Call Grandma", body: null, dtstart: "2026-06-07T17:00", rrule: "FREQ=WEEKLY;BYDAY=SU", strength: "gentle", pace: "escalating", status: "PAUSED", nextOccurrenceAt: null },
+    // Nothing more coming: a one-off that went Missed, and a repeat that ended on a Skipped one (#107).
+    { id: "r13", createdAt: "2026-09-15T13:00", tagIds: [], title: "Book the car service", body: "The garage closes at 5.", dtstart: "2026-09-24T12:00", rrule: null, strength: "gentle", pace: "escalating", status: "COMPLETED", nextOccurrenceAt: null },
+    { id: "r14", createdAt: "2026-09-11T17:20", tagIds: ["health"], title: "Physio exercises", body: "Shoulder routine, 3 sets.", dtstart: "2026-09-12T19:00", rrule: "FREQ=DAILY;UNTIL=20260926", strength: "firm", pace: "consistent", wait: 15, status: "COMPLETED", nextOccurrenceAt: null },
   ];
   occurrences = [
     { id: "o1", reminderId: "r1", scheduledFor: "2026-09-28T07:30", level: 1, attempts: 2, state: "NUDGING", nextNudgeAt: "2026-09-28T08:30", closedAt: null, closeReason: null,
@@ -1348,6 +1453,9 @@ function seed() {
     { id: "o11", reminderId: "r8", scheduledFor: "2026-09-10T09:00", level: 1, attempts: 2, state: "ACKED", closedAt: "2026-09-10T09:41" },
     { id: "o13", reminderId: "r12", scheduledFor: "2026-09-27T17:00", level: 0, attempts: 0, state: "SKIPPED", closedAt: "2026-09-27T17:00", closeReason: "paused",
       events: [ev("SCHEDULED", "2026-09-27T17:00"), ev("SKIPPED", "2026-09-27T17:00", { reason: "paused" })] },
+    { id: "o14", reminderId: "r13", scheduledFor: "2026-09-24T12:00", level: 4, attempts: 9, state: "MISSED", closedAt: "2026-09-25T12:00", closeReason: "cap" },
+    { id: "o15", reminderId: "r14", scheduledFor: "2026-09-25T19:00", level: 0, attempts: 1, state: "ACKED", closedAt: "2026-09-25T19:12" },
+    { id: "o16", reminderId: "r14", scheduledFor: "2026-09-26T19:00", level: 0, attempts: 0, state: "SKIPPED", closedAt: "2026-09-26T19:00", closeReason: "paused" },
   ];
 }
 seed();
@@ -1520,11 +1628,11 @@ const isOpen = (s) => s === "NUDGING" || s === "UPCOMING" || s === "DUE";
 const STATUS_LABEL = { ACKED: "Done", NUDGING: "Nudging", MISSED: "Missed", SKIPPED: "Skipped", PAUSED: "Paused", UPCOMING: "Coming up", DUE: "Coming up" }; // Due but not yet nudged (held for quiet hours) still reads "Coming up" and counts as Left.
 
 /* ================= App state and navigation ================= */
-const ROOTS = { now: "Now", day: "My Day", tags: "Tags", settings: "Settings" };
-/* dayFilter is My Day's tag filter, and dayStatus its status filter (a DAY_STATUS key, or null). tagEdit is the Tags tab's Edit mode. */
+const ROOTS = { now: "Now", day: "My Day", rems: "Reminders", tags: "Tags", settings: "Settings" };
+/* dayFilter is My Day's tag filter, and dayStatus its status filter (a DAY_STATUS key, or null). tagList is the Tags tab's tools. */
 /* My Day's filter: the chosen tags and All or Any, or `none` for reminders with no tags. */
 const newDayFilter = () => ({ ids: [], match: "all", none: false });
-const state = { tab: "now", stacks: { now: [], day: [], tags: [], settings: [] }, dayFilter: newDayFilter(), dayStatus: null, tagEdit: false, tabMin: false, sheet: null, system: null, alert: null, focus: "heading", keepScroll: false };
+const state = { tab: "now", stacks: { now: [], day: [], rems: [], tags: [], settings: [] }, rems: newRemsState(), dayFilter: newDayFilter(), dayStatus: null, tagList: newTagListState(), tabMin: false, sheet: null, system: null, alert: null, focus: "heading", keepScroll: false };
 const main = document.getElementById("main");
 
 function stackPush(entry) { state.stacks[state.tab].push(entry); }
@@ -1817,30 +1925,363 @@ function dayTrail(it) {
   return statusLabel(it.status);
 }
 
+/* ============ Reminders tab (#107) ============
+   Every reminder in any state, by creation date or due date. The header row holds the count; Search sits
+   under the bar; Filter, Sort and New are bar buttons. Search and the sheet's filters
+   are screen state that a launch resets. The sort direction is a setting kept
+   across launches, like the Default pace, and Delete All Data sets it back to oldest first.
+   Narrowing: search and every sheet section all apply together. */
+function newRemFilter() { return { tags: { ids: [], match: "all", none: false }, status: [], strength: [], from: null, to: null }; }
+/* q: the search text. filter: the sheet's applied filters. */
+function newRemsState() { return { q: "", filter: newRemFilter(), sort: { by: "created", dir: "asc" } }; }
+const REM_STATUSES = ["NUDGING", "UPCOMING", "PAUSED", "ACKED", "MISSED", "SKIPPED"];
+const STRENGTHS = ["gentle", "firm", "relentless"];
+/* The Sort menu: what the list sorts by, and each one's two orders, ascending first. */
+const SORT_BY = { created: ["Created", "Oldest First", "Newest First"], due: ["Due Date", "Earliest First", "Latest First"] };
+const sortValue = ({ by, dir }) => `${SORT_BY[by][0]}, ${SORT_BY[by][dir === "asc" ? 1 : 2]}`;
+const toggled = (list, v) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
+/* A reminder's status: the details page's hero status. Nudging while an occurrence is; Paused;
+   Coming up while a due time is ahead; otherwise how its latest occurrence closed. */
+function remStatus(r) {
+  if (openOccs().some((o) => o.reminderId === r.id)) return "NUDGING";
+  if (r.status === "PAUSED") return "PAUSED";
+  const latest = occsOf(r.id)[0];
+  return (r.status === "ACTIVE" && r.nextOccurrenceAt) || !latest ? "UPCOMING" : latest.state;
+}
+/* A row's due time: the open occurrence's while Nudging, else the next one (a Paused reminder's is
+   the one it would be Skipped at), else the latest occurrence's. The date range tests the same. */
+function remDue(r) {
+  const o = openOccs().find((x) => x.reminderId === r.id);
+  if (o) return L(o.scheduledFor);
+  if (r.status === "ACTIVE" && r.nextOccurrenceAt) return L(r.nextOccurrenceAt);
+  const n = r.status === "PAUSED" && nextOccurrence(r);
+  if (n) return n;
+  const latest = occsOf(r.id)[0];
+  return latest ? L(latest.scheduledFor) : L(r.dtstart);
+}
+/* Search ignores case and diacritics, so "cafe" finds "Café". */
+const fold = (s) => (s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+function remPasses(r, f, q) {
+  if (q && !fold(r.title).includes(q) && !fold(r.body).includes(q)) return false;
+  if (f.tags.none ? r.tagIds.length > 0 : f.tags.ids.length > 0 && !matchesTags(r, f.tags.ids, f.tags.match)) return false;
+  if (f.status.length && !f.status.includes(remStatus(r))) return false;
+  if (f.strength.length && !f.strength.includes(r.strength)) return false;
+  // Both ends are whole days, inclusive.
+  const d = (f.from || f.to) && dateField(remDue(r));
+  return !((f.from && d < f.from) || (f.to && d > f.to));
+}
+/* The rows shown, by creation date or by the due time each row shows, either way round. A new
+   reminder shows only if it matches, like any other (#112). Ties keep the order they were added in. */
+function remRows(f = state.rems.filter) {
+  const q = fold(state.rems.q.trim());
+  let rows = reminders.map((r, i) => ({ r, i }))
+    .filter(({ r }) => remPasses(r, f, q))
+    .map((x) => ({ ...x, k: state.rems.sort.by === "due" ? remDue(x.r) : L(x.r.createdAt) }))
+    .sort((a, b) => a.k - b.k || a.i - b.i).map(({ r }) => r);
+  if (state.rems.sort.dir === "desc") rows.reverse();
+  return f === state.rems.filter ? keepRemOrder(rows) : rows;
+}
+/* Sorted by Due Date, a row keeps its place while the search, filters and sort stay as they
+   are: Done, or going Missed, moves its due time but not the row. Changing any of them, or leaving
+   the tab, sorts again (Brian's call at sign-off). A row not seen before takes its sorted place. */
+let remOrder = null;
+function keepRemOrder(rows) {
+  if (state.rems.sort.by !== "due") { remOrder = null; return rows; }
+  const r = state.rems, sig = JSON.stringify([r.q, r.filter, r.sort]);
+  if (remOrder?.sig === sig) {
+    const byId = new Map(rows.map((x) => [x.id, x])), was = new Set(remOrder.ids);
+    const kept = remOrder.ids.filter((id) => byId.has(id));
+    let j = 0;
+    rows = rows.map((x) => (was.has(x.id) ? byId.get(kept[j++]) : x));
+  }
+  remOrder = { sig, ids: rows.map((x) => x.id) };
+  return rows;
+}
+/* The Filter button's badge: how many of the sheet's sections are in use (Tags, Status, Strength,
+   date range). Search never counts. */
+function remBadge(f = state.rems.filter) {
+  return [f.tags.none || f.tags.ids.length > 0, f.status.length > 0, f.strength.length > 0, !!(f.from || f.to)].filter(Boolean).length;
+}
+const sheetFilterOn = (f = state.rems.filter) => remBadge(f) > 0;
+/* What VoiceOver hears when the list narrows or widens: the count. */
+/* The header row's count: what's shown out of every reminder, in every case, so a filtered list
+   never reads as all of them. The app ships it as one string with both numbers. */
+const remCount = (n) => `${plural(n, "reminder")} out of ${reminders.length}`;
+const remCountNews = () => remCount(remRows().length);
+
+/* The Filter button: line.3.horizontal.decrease in a glass circle. While a filter the badge counts
+   is on, it's accent-colored and the system's badge shows the count. While any sheet filter is on,
+   a tap shows its menu; with none, a tap opens the sheet.
+   VoiceOver reads the label and the count once. */
+function remFilterButton() {
+  const n = remBadge(), icon = I("line.3.horizontal.decrease", 24, true), popup = sheetFilterOn() ? "menu" : "dialog";
+  if (!n) return `<button type="button" class="btn bar icon glass" data-remfilter aria-haspopup="${popup}" aria-label="Filter">${icon}</button>`;
+  return `<button type="button" class="btn bar icon glass filter-on" data-remfilter aria-haspopup="menu" aria-label="Filter, ${plural(n, "filter")} on">${icon}<span class="bar-badge" aria-hidden="true">${n}</span></button>`;
+}
+/* The Sort button: a bar button, monochrome like New, between Filter and New. Label "Sort", value
+   the choice ("Created, Oldest First"). It opens the Sort menu. */
+function sortButton() {
+  const v = sortValue(state.rems.sort);
+  return `<button type="button" class="btn bar icon glass" data-remsort aria-haspopup="menu" aria-label="Sort, ${v}" title="Sort: ${v}">${I("arrow.up.arrow.down", 24, true)}</button>`;
+}
+/* The Sort menu: one picker of four choices, in a section headed Created and one headed Due Date,
+   each choice naming its order, the chosen one checked. One tap applies a choice, which is
+   remembered; the menu closes as iOS's does. VoiceOver reads each choice whole ("Created, Oldest
+   First"). Brian's call, 2026-11-01: any change is one open and one tap. */
+function showSortMenu(btn) {
+  pressed = btn;
+  const s = state.rems.sort;
+  const set = (next) => () => { state.rems.sort = next; state.focus = "[data-remsort]"; announce(sortValue(state.rems.sort)); };
+  ask({ style: "sheet", menu: true, buttons: [
+    ...Object.entries(SORT_BY).flatMap(([by, [head, up, down]], n) => [
+      { header: head, section: n > 0 },
+      ...[["asc", up], ["desc", down]].map(([dir, label]) => ({ label, aria: `${head}, ${label}`, checked: s.by === by && s.dir === dir, run: set({ by, dir }) }))]),
+    { label: "Cancel", role: "cancel" }] });
+}
+/* The header row: the list's first row, above its rows. */
+function remHeader(n) {
+  return `<div class="remhead"><p class="remcount" id="rem-count">${remCount(n)}</p></div>`;
+}
+/* Search, under the navigation bar. It matches titles and notes, not tags. */
+function searchBar() {
+  const q = state.rems.q;
+  const clear = q ? `<button type="button" class="sclear" data-remqclear aria-label="Clear text">${I("xmark.circle.fill", 18)}</button>` : "";
+  const cancel = `<button type="button" class="btn plain scancel${q ? " on" : ""}" data-remqclear>Cancel</button>`;
+  return `<div class="remsearch" role="search"><label class="sfield">${I("magnifyingglass", 17)}<input type="search" id="rem-q" placeholder="Search titles and notes" aria-label="Search titles and notes" value="${esc(q)}" autocomplete="off">${clear}</label>${cancel}</div>`;
+}
+/* A row: due time, title and tags, then the status label. No notes. Swiping left shows Done (only
+   while Nudging) at the edge and Delete beside it, with no full swipe; nothing on the right. The
+   swipe is hidden from assistive technology; the app gives every row Delete, and Nudging rows
+   Done, as VoiceOver actions, which the visually hidden buttons stand in for here. */
+function remListRow(r) {
+  const d = remDue(r), st = remStatus(r), tl = tagLine(r, state.rems.filter.tags.ids);
+  const occ = st === "NUDGING" && openOccs().find((o) => o.reminderId === r.id);
+  const cell = `<button type="button" class="cell" data-open="${r.id}">
+    <span class="time">${hm(d)}<small>${dayLabel(d)}</small></span>
+    <span class="main"><span class="t">${esc(r.title)}</span>${tl ? `<span class="s">${tl}</span>` : ""}</span>
+    <span class="trail">${statusLabel(st)}${chev}</span>
+  </button>`;
+  const done = occ ? `<button type="button" class="swipe-act done" data-remack="${occ.id}" tabindex="-1" aria-hidden="true">${I("checkmark", 22)}<span>Done</span></button>` : "";
+  const del = `<button type="button" class="swipe-act del" data-delete="${r.id}" tabindex="-1" aria-hidden="true">${I("trash", 22)}<span>Delete</span></button>`;
+  const actions = `${occ ? `<button type="button" class="sr-only" data-remack="${occ.id}">Done: ${esc(r.title)}</button>` : ""}<button type="button" class="sr-only" data-delete="${r.id}">Delete: ${esc(r.title)}</button>`;
+  return `<li data-rid="${r.id}"><div class="swipe" data-swipe-width="${occ ? 176 : 88}"><div class="swipe-acts">${del}${done}</div><div class="swipe-row">${cell}</div></div>${actions}</li>`;
+}
+/* Search or filters match nothing. It never says there are no reminders, names what's narrowing
+   the list, and offers to clear it. The app ships each sentence as one whole string. */
+function noMatch() {
+  const q = state.rems.q.trim(), sheet = remBadge() > 0;
+  const text = q && sheet ? "No reminders with these filters match this search."
+    : q ? "Check the spelling or try a new search." : "No reminders with these filters.";
+  const label = q && sheet ? "Clear Search and Filters" : q ? "Clear Search" : "Clear Filters";
+  return `<div class="unavailable">${I(q ? "magnifyingglass" : "line.3.horizontal.decrease", 52)}<h2>${q ? `No Results for “${esc(q)}”` : "No Matches"}</h2><p>${text}</p><button type="button" class="btn bordered" data-remclearall>${label}</button></div>`;
+}
+function viewRems() {
+  if (!reminders.length) {
+    return `${navBar({ title: "Reminders", trailing: plusBtn })}<div class="unavailable">${I("list.bullet.clipboard", 52)}<h2>No Reminders Yet</h2><p>Every reminder you make shows here, whatever its state.</p><button type="button" class="btn bordered" data-new>${I("plus", 18)} New Reminder</button></div>`;
+  }
+  const rows = remRows();
+  const list = rows.length ? `<div class="sec"><ul class="list remrow" aria-label="Reminders">${rows.map(remListRow).join("")}</ul></div>` : noMatch();
+  return `${navBar({ title: "Reminders", trailing: remFilterButton() + sortButton() + plusBtn })}${searchBar()}${remHeader(rows.length)}${list}`;
+}
+/* Done from a row's swipe: the same act as Done on Now. The row stays where it is with its new
+   status label, unless an active status filter now leaves it out: then it animates out, the count
+   updates, and focus moves to a neighbor. */
+function remDone(occId, el) {
+  const li = el?.closest("li"), rid = occurrences.find((o) => o.id === occId)?.reminderId;
+  ack(occId, "swipe");
+  if (remRows().some((r) => r.id === rid) || !li) { refresh(`[data-rid="${rid}"] .cell`); return; }
+  const next = li.nextElementSibling || li.previousElementSibling;
+  const focus = next ? `[data-rid="${next.dataset.rid}"] .cell` : "#rem-count";
+  li.style.height = `${li.offsetHeight}px`;
+  void li.offsetHeight; // the transition starts from the row's height
+  li.classList.add("leaving");
+  setTimeout(() => refresh(focus), matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 420);
+}
+
+/* The filter sheet edits a draft of the applied filters. Apply applies it and closes; Reset clears
+   the draft, which changes nothing until Apply. Cancel, tapping above the sheet or swiping it down
+   discards the draft, asking first once it differs from what's applied (HIG Sheets). */
+function openRemFilter(ret = document.activeElement) {
+  state.sheet = { kind: "remfilter", draft: structuredClone(state.rems.filter), ret };
+  state.focus = "sheet"; render();
+}
+function applyRemFilter() {
+  const r = state.rems;
+  r.filter = state.sheet.draft;
+  closeSheet();
+  announce(remCountNews());
+}
+/* While any sheet filter is on, a tap on Filter shows My Day's menu: Filter opens the sheet,
+   Clear All Filters removes every sheet filter and leaves the search. */
+function showRemFilterMenu(btn) {
+  pressed = btn;
+  ask({ style: "sheet", menu: true, buttons: [
+    { label: "Filter", icon: "line.3.horizontal.decrease", run: () => openRemFilter(btn) },
+    { label: "Clear All Filters", icon: "xmark", run: () => { state.rems.filter = newRemFilter(); state.focus = "[data-remfilter]"; announce(remCountNews()); } },
+    { label: "Cancel", role: "cancel" }] });
+}
+function remFilterSheet() {
+  const d = state.sheet.draft, n = remRows(d).length;
+  const reset = `<button type="button" class="btn bordered" data-remreset ${JSON.stringify(d) === JSON.stringify(newRemFilter()) ? "disabled" : ""}>Reset</button>`;
+  const apply = `<button type="button" class="btn bar prominent" data-remapply>Apply</button>`;
+  const check = (attr, v, label, on, sub = "") => `<li><button type="button" class="cell" role="checkbox" aria-checked="${on}" ${attr}="${v}"><span class="main"><span class="t">${label}</span>${sub}</span>${on ? CHECK : ""}</button></li>`;
+  const tagRows = sortTags(tags).map((t) => check("data-remtag", t.id, `#${esc(t.name)}`, d.tags.ids.includes(t.id))).join("");
+  const statusRows = REM_STATUSES.map((s) => check("data-remstatus", s, STATUS_LABEL[s], d.status.includes(s))).join("");
+  const strengthRows = STRENGTHS.map((s) => check("data-remstrength", s, NAME[s], d.strength.includes(s))).join("");
+  // Each end: a switch, and while it's on a date picker that can't pass the other end.
+  const dateRow = (k, label) => {
+    const lim = k === "from" ? (d.to ? ` max="${d.to}"` : "") : d.from ? ` min="${d.from}"` : "";
+    const pill = d[k] ? `<label class="pill-input dtpill">${datePill(d[k])}<input type="date" id="rf-${k}" data-remdate="${k}" value="${d[k]}"${lim} aria-label="${label}"></label>` : "";
+    return `<li><div class="daterow"><label for="rf-${k}-on">${label}</label>${pill}<input type="checkbox" class="switch" role="switch" id="rf-${k}-on" data-remdateon="${k}" ${d[k] ? "checked" : ""}></div></li>`;
+  };
+  return `${sheetNav(cancelButton(), "Filter Reminders", apply)}
+  <div class="sheet-body" tabindex="-1">
+    ${matchControl(d.tags, "rem", d.tags.ids.length < 2 || d.tags.none)}
+    <h3 class="sec-h">Tags</h3>
+    <div class="sec"><ul class="list">${tagRows || `<li class="empty">No tags yet. Add them when you edit a reminder.</li>`}</ul>
+    <p class="sec-f">${d.tags.ids.length > 1 ? "All Tags shows reminders with every checked tag. Any Tag shows those with at least one." : "Check one or more tags. Match needs two or more."}</p></div>
+    <div class="sec"><ul class="list">${check("data-remnone", "1", "No Tags", d.tags.none, `<span class="s">Only reminders without tags</span>`)}</ul></div>
+    <h3 class="sec-h">Status</h3>
+    <div class="sec"><ul class="list">${statusRows}</ul><p class="sec-f">Shows reminders with any checked status.</p></div>
+    <h3 class="sec-h">Strength</h3>
+    <div class="sec"><ul class="list">${strengthRows}</ul><p class="sec-f">Shows reminders with any checked strength.</p></div>
+    <h3 class="sec-h">Due Date</h3>
+    <div class="sec"><ul class="list">${dateRow("from", "From")}${dateRow("to", "To")}</ul>
+    <p class="sec-f">Both days are included. A reminder with nothing more coming is found by its last due date.</p></div>
+    <p class="sec-f" style="margin:0 32px">Apply shows ${plural(n, "reminder")}.</p>
+    <div class="remreset">${reset}</div>
+  </div>`;
+}
+
 /* ============ Tags tab ============
-   The Tags tab is about tags: the list of your tags with their counts, + to add a tag, and Edit to
-   rename or delete them. Choosing a tag opens a screen with that tag's reminders. My Day has its own
-   tag filter, for today. */
+   The Tags tab is about tags: the list of your tags with their counts, the Reminders tab's Filter,
+   Sort and Search (#138), + to add a tag, and a swipe to edit or delete one. Choosing a tag opens a
+   screen with that tag's reminders. My Day has its own tag filter, for today. */
 function tagStats(id) {
   const today = todayItems().filter((it) => it.r.tagIds.includes(id));
   return { count: reminders.filter((r) => r.tagIds.includes(id)).length, today: today.length, nudge: today.filter((it) => it.status === "NUDGING").length };
 }
-const plusTagBtn = `<button type="button" class="btn bar icon glass" data-newtag aria-label="New Tag">${I("plus", 24, true)}</button>`;
-function tagRow(t) {
-  const c = tagStats(t.id);
-  return `<li><button type="button" class="cell" data-opentag="${t.id}">
-    <span class="ico round" style="background:var(--tile-gray)">${I("tag", 19)}</span>
-    <span class="main"><span class="t">#${esc(t.name)}</span><span class="s">${plural(c.count, "reminder")} · ${c.today} today${c.nudge ? ` · <span class="note-warn">${c.nudge} nudging</span>` : ""}</span></span>
-    <span class="trail">${chev}</span>
-  </button></li>`;
+/* q: the search text. filter: the sheet's applied filter. sort: kept across launches, like the
+   Reminders sort and apart from it; Delete All Data sets it back to Name, A to Z. */
+function newTagFilter() { return { noReminders: false }; }
+function newTagListState() { return { q: "", filter: newTagFilter(), sort: { by: "name", dir: "asc" } }; }
+/* The Sort menu: a section headed Name and one headed Reminders, in the order they're offered. */
+const TAG_SORT = { name: ["Name", [["asc", "A to Z"], ["desc", "Z to A"]]], count: ["Reminders", [["desc", "Most First"], ["asc", "Fewest First"]]] };
+const tagSortLabel = ({ by, dir }) => `${TAG_SORT[by][0]}, ${TAG_SORT[by][1].find(([d]) => d === dir)[1]}`;
+/* The name only, ignoring case, diacritics, spaces around the text and a leading #, so "home" and
+   "#home" both find #home. The sheet's one condition is about the tag itself (Decision 53). */
+const tagQuery = () => fold(state.tagList.q.trim()).replace(/^#/, "");
+function tagPasses(t, f, q) {
+  if (q && !fold(t.name).includes(q)) return false;
+  return !f.noReminders || tagStats(t.id).count === 0;
 }
-function tagEditRow(t) {
-  const n = tagStats(t.id).count;
-  return `<li><div class="cell">
+/* The rows shown. Ties on the reminder count sort by name, A to Z, in both directions. */
+function tagRows(f = state.tagList.filter) {
+  const q = tagQuery(), { by, dir } = state.tagList.sort, k = dir === "asc" ? 1 : -1;
+  const name = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+  return tags.filter((t) => tagPasses(t, f, q)).sort((a, b) => (by === "name" ? k * name(a, b) : k * (tagStats(a.id).count - tagStats(b.id).count) || name(a, b)));
+}
+const tagFilterOn = () => state.tagList.filter.noReminders;
+/* The header row's count: one string with both numbers, in every case. */
+const tagCount = (n, total = tags.length) => `${plural(n, "tag")} out of ${total}`;
+const tagCountNews = () => tagCount(tagRows().length);
+const plusTagBtn = `<button type="button" class="btn bar icon glass" data-newtag aria-label="New Tag">${I("plus", 24, true)}</button>`;
+/* The Filter button: as on Reminders, with a badge of 0 or 1. With the filter on a tap shows its
+   menu, and with it off a tap opens the sheet. */
+function tagFilterButton() {
+  const icon = I("line.3.horizontal.decrease", 24, true);
+  if (!tagFilterOn()) return `<button type="button" class="btn bar icon glass" data-tagfilter aria-haspopup="dialog" aria-label="Filter">${icon}</button>`;
+  return `<button type="button" class="btn bar icon glass filter-on" data-tagfilter aria-haspopup="menu" aria-label="Filter, 1 filter on">${icon}<span class="bar-badge" aria-hidden="true">1</span></button>`;
+}
+function tagSortButton() {
+  const v = tagSortLabel(state.tagList.sort);
+  return `<button type="button" class="btn bar icon glass" data-tagsort aria-haspopup="menu" aria-label="Sort, ${v}" title="Sort: ${v}">${I("arrow.up.arrow.down", 24, true)}</button>`;
+}
+function showTagSortMenu(btn) {
+  pressed = btn;
+  const s = state.tagList.sort;
+  const set = (next) => () => { state.tagList.sort = next; state.focus = "[data-tagsort]"; announce(tagSortLabel(next)); };
+  ask({ style: "sheet", menu: true, buttons: [
+    ...Object.entries(TAG_SORT).flatMap(([by, [head, orders]], n) => [
+      { header: head, section: n > 0 },
+      ...orders.map(([dir, label]) => ({ label, aria: `${head}, ${label}`, checked: s.by === by && s.dir === dir, run: set({ by, dir }) }))]),
+    { label: "Cancel", role: "cancel" }] });
+}
+function showTagFilterMenu(btn) {
+  pressed = btn;
+  ask({ style: "sheet", menu: true, buttons: [
+    { label: "Filter", icon: "line.3.horizontal.decrease", run: () => openTagFilter(btn) },
+    { label: "Clear All Filters", icon: "xmark", run: () => { state.tagList.filter = newTagFilter(); state.focus = "[data-tagfilter]"; announce(tagCountNews()); } },
+    { label: "Cancel", role: "cancel" }] });
+}
+/* The filter sheet: a draft of the applied filter, as on Reminders. Its bar is Cancel and the confirm
+   checkmark, whose VoiceOver name is Apply (#113, DESIGN.md). Reset changes nothing until Apply. */
+function openTagFilter(ret = document.activeElement) {
+  state.sheet = { kind: "tagfilter", draft: structuredClone(state.tagList.filter), ret };
+  state.focus = "sheet"; render();
+}
+function applyTagFilter() {
+  state.tagList.filter = state.sheet.draft;
+  closeSheet();
+  announce(tagCountNews());
+}
+function tagFilterSheet() {
+  const d = state.sheet.draft, n = tagRows(d).length;
+  const reset = `<button type="button" class="btn bordered" data-tagreset ${d.noReminders ? "" : "disabled"}>Reset</button>`;
+  return `${sheetNav(cancelButton(), "Filter Tags", confirmButton("data-tagapply", "Apply"))}
+  <div class="sheet-body" tabindex="-1">
+    <div class="sec"><ul class="list"><li><button type="button" class="cell" role="checkbox" aria-checked="${d.noReminders}" data-tagnoreminders="1"><span class="main"><span class="t">Has no reminders</span></span>${d.noReminders ? CHECK : ""}</button></li></ul>
+    <p class="sec-f">Shows only tags that no reminder uses.</p></div>
+    <p class="sec-f" style="margin:0 32px">Apply shows ${plural(n, "tag")}.</p>
+    <div class="remreset">${reset}</div>
+  </div>`;
+}
+/* Search, under the large title. The bar stays during a search, so Filter's badge stays on screen. */
+function tagSearchBar() {
+  const q = state.tagList.q;
+  const clear = q ? `<button type="button" class="sclear" data-tagqclear aria-label="Clear text">${I("xmark.circle.fill", 18)}</button>` : "";
+  const cancel = `<button type="button" class="btn plain scancel${q ? " on" : ""}" data-tagqclear>Cancel</button>`;
+  return `<div class="remsearch" role="search"><label class="sfield">${I("magnifyingglass", 17)}<input type="search" id="tag-q" placeholder="Search tags" aria-label="Search tags" value="${esc(q)}" autocomplete="off">${clear}</label>${cancel}</div>`;
+}
+/* A row opens the tag. Swiping left shows Edit at the edge and Delete beside it, with no full swipe
+   and nothing on the right. The swipe is hidden from assistive technology; the app gives every row
+   Edit and Delete as VoiceOver actions, which the visually hidden buttons stand in for here. These
+   two are the only ways to edit or delete a tag from the list (Decision 50). */
+function tagRow(t) {
+  const c = tagStats(t.id), name = `#${esc(t.name)}`;
+  const cell = `<button type="button" class="cell" data-opentag="${t.id}">
     <span class="ico round" style="background:var(--tile-gray)">${I("tag", 19)}</span>
-    <span class="main"><span class="t">#${esc(t.name)}</span><span class="s">${plural(n, "reminder")}</span></span>
-    <span class="trail" style="gap:12px"><button type="button" class="btn bordered small" data-renametag="${t.id}" aria-label="Rename #${esc(t.name)}">Rename</button><button type="button" class="btn icon" style="color:var(--negative)" data-deletetag="${t.id}" aria-label="Delete #${esc(t.name)}">${I("trash", 22)}</button></span>
-  </div></li>`;
+    <span class="main"><span class="t">${name}</span><span class="s">${plural(c.count, "reminder")} · ${c.today} today${c.nudge ? ` · <span class="note-warn">${c.nudge} nudging</span>` : ""}</span></span>
+    <span class="trail">${chev}</span>
+  </button>`;
+  const edit = `<button type="button" class="swipe-act tile edit" data-renametag="${t.id}" tabindex="-1" aria-hidden="true"><span class="disc">${I("pencil", 22)}</span><span>Edit</span></button>`;
+  const del = `<button type="button" class="swipe-act tile del" data-deletetag="${t.id}" tabindex="-1" aria-hidden="true"><span class="disc">${I("trash", 22)}</span><span>Delete</span></button>`;
+  const actions = `<button type="button" class="sr-only" data-renametag="${t.id}">Edit: ${name}</button><button type="button" class="sr-only" data-deletetag="${t.id}">Delete: ${name}</button>`;
+  return `<li data-tagid="${t.id}"><div class="swipe" data-swipe-width="130"><div class="swipe-acts tiles">${del}${edit}</div><div class="swipe-row">${cell}</div></div>${actions}</li>`;
+}
+/* Search or the filter match nothing. It never says there are no tags, names what's narrowing the
+   list, and offers to clear it. No help text here (Decision 48). */
+function tagNoMatch() {
+  const q = state.tagList.q.trim(), on = tagFilterOn();
+  const text = q && on ? "No tags with this filter match this search." : q ? "Check the spelling or try a new search." : "No tags with this filter.";
+  const label = q && on ? "Clear Search and Filter" : q ? "Clear Search" : "Clear Filter";
+  return `<div class="unavailable">${I(q ? "magnifyingglass" : "line.3.horizontal.decrease", 52)}<h2>${q ? `No Results for “${esc(q)}”` : "No Matches"}</h2><p>${text}</p><button type="button" class="btn bordered" data-tagclearall>${label}</button></div>`;
+}
+/* A row leaves: it fades, its height closes up and the count drops with it, and focus moves to a
+   neighbor. The change lands when the row has gone, since the views re-render whole. */
+function tagLeave(id, change, deletes = false) {
+  setTimeout(() => {
+    const li = main.querySelector(`[data-tagid="${id}"]`);
+    const next = li && (li.nextElementSibling || li.previousElementSibling);
+    const focus = next ? `[data-tagid="${next.dataset.tagid}"] .cell` : "#tag-count";
+    if (!li) { change(); refresh(focus); return; }
+    li.style.height = `${li.offsetHeight}px`;
+    void li.offsetHeight; // the transition starts from the row's height
+    li.classList.add("leaving");
+    const count = document.getElementById("tag-count");
+    if (count) count.textContent = tagCount(tagRows().length - 1, tags.length - (deletes ? 1 : 0));
+    setTimeout(() => { change(); refresh(focus); announce(tagCountNews()); }, matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 420);
+  }, 0);
 }
 /* The Tags tab and My Day each have a tag filter, so the Match control takes a scope: "" for the
    Tags tab, "day" for My Day. It names its input and ids. */
@@ -1879,17 +2320,15 @@ function filterPhrase(selected, match) {
   return `with ${names.slice(0, -1).join(", ")} ${match === "any" ? "or" : "and"} ${names.at(-1)}`;
 }
 function viewTags() {
-  const editBtn = tags.length ? `<button type="button" class="btn bar glass" data-tagedit>${state.tagEdit ? "Done" : "Edit"}</button>` : "";
-  // Edit (Done in Edit mode) sits at the leading edge, + at the trailing one.
-  const head = navBar({ title: "Tags", leading: editBtn, trailing: plusTagBtn });
-  if (!tags.length) return `${head}<div class="unavailable">${I("tag", 52)}<h2>No Tags</h2><p>Tap + to add a tag, or add tags to a reminder when you create or edit it.</p></div>`;
-  if (state.tagEdit) {
-    return `${head}<h2 class="sec-h">Your Tags</h2><div class="sec"><ul class="list icons">${sortTags(tags).map(tagEditRow).join("")}</ul>
-    <p class="sec-f">Deleting a tag removes it from its reminders. The reminders aren't deleted.</p></div>`;
+  if (!tags.length) {
+    return `${navBar({ title: "Tags", trailing: plusTagBtn })}<div class="unavailable">${I("tag", 52)}<h2>No Tags</h2><p class="tag-help">Tags are labels, like #home or #errands, that you add to reminders so you can find them together. Tap + to make one, or add one when you create or edit a reminder.</p></div>`;
   }
-  const untagged = reminders.filter((r) => !r.tagIds.length).length;
-  return `${head}<h2 class="sec-h">Your Tags</h2><div class="sec"><ul class="list icons">${sortTags(tags).map(tagRow).join("")}</ul>
-    <p class="sec-f">Choose a tag to see its reminders.${untagged ? ` ${plural(untagged, "reminder")} ${untagged === 1 ? "has" : "have"} no tags; My Day can show them.` : ""}</p></div>`;
+  const rows = tagRows();
+  // Help for a person new to tags (Decision 48).
+  const footer = `<p class="sec-f">Tags are labels you add to reminders. Choose one to see every reminder that has it.</p>`;
+  const list = rows.length ? `<div class="sec"><ul class="list icons tagrow" aria-label="Tags">${rows.map(tagRow).join("")}</ul>${footer}</div>` : tagNoMatch();
+  const bar = `<span class="bar-group">${tagFilterButton()}${tagSortButton()}</span>${plusTagBtn}`;
+  return `${navBar({ title: "Tags", trailing: bar })}${tagSearchBar()}<div class="remhead"><p class="remcount" id="tag-count">${tagCount(rows.length)}</p></div>${list}`;
 }
 /* One tag's reminders, pushed onto the Tags tab. + makes a new reminder that starts with this tag. */
 function viewTag(id) {
@@ -1939,9 +2378,7 @@ function viewRem(id) {
   const latest = occsOf(id)[0];
   const last = latest && latest.closedAt ? latest : null;
   // Nudging red; Paused and Coming up in the secondary label color; a finished one by how it closed.
-  const status = o ? `<span class="state NUDGING">Nudging</span>`
-    : r.status === "PAUSED" ? `<span class="state SKIPPED">Paused</span>`
-    : next || !latest ? `<span class="state SKIPPED">Coming up</span>` : statusLabel(latest.state);
+  const status = statusLabel(remStatus(r));
   const edit = `<button type="button" class="btn bar glass" data-edit="${r.id}" aria-label="Edit ${esc(r.title)}">Edit</button>`;
   const nextText = r.status === "PAUSED" ? "Paused" : next ? when(next) : "None";
   const tags = tagsOf(r).map((t) => `#${esc(t.name)}`).join(" ");
@@ -2418,7 +2855,7 @@ function updateReminder(r, fields) {
 }
 const lockedFields = (r) => ({ dtstart: r.dtstart, rrule: r.rrule, repeatCustom: !!r.repeatCustom, strength: r.strength, pace: r.pace, wait: r.wait, breakThrough: btOf(r) });
 function createReminder(fields) {
-  const r = { id: `r${Date.now()}`, ...fields, status: "ACTIVE" };
+  const r = { id: `r${Date.now()}`, createdAt: iso(NOW), ...fields, status: "ACTIVE" };
   const n = nextOccurrence(r);
   r.nextOccurrenceAt = n ? iso(n) : null;
   reminders.push(r);
@@ -2444,7 +2881,10 @@ function closeSheet() {
   render();
 }
 function cancelSheet() {
-  if (state.sheet.kind === "editor" && draftDirty()) {
+  const sh = state.sheet;
+  const dirty = sh.kind === "editor" ? draftDirty() : sh.kind === "remfilter" ? JSON.stringify(sh.draft) !== JSON.stringify(state.rems.filter)
+    : sh.kind === "tagfilter" && sh.draft.noReminders !== state.tagList.filter.noReminders;
+  if (dirty) {
     ask({ style: "sheet", buttons: [{ label: "Discard Changes", role: "destructive", run: closeSheet }, { label: "Keep Editing", role: "cancel" }] });
   } else closeSheet();
 }
@@ -2674,17 +3114,23 @@ function del(rid) {
     buttons: [{ label: "Delete Reminder", role: "destructive", run: () => deleteReminder(rid, r.title) }, { label: "Cancel", role: "cancel" }] });
 }
 function deleteTag(t) {
-  for (const r of reminders) r.tagIds = r.tagIds.filter((id) => id !== t.id);
-  tags = tags.filter((x) => x.id !== t.id);
-  for (const k of Object.keys(state.stacks)) state.stacks[k] = state.stacks[k].filter((e) => !(e.kind === "tag" && e.id === t.id));
-  state.dayFilter.ids = state.dayFilter.ids.filter((id) => id !== t.id);
-  if (!tags.length) state.tagEdit = false;
+  const change = () => {
+    for (const r of reminders) r.tagIds = r.tagIds.filter((id) => id !== t.id);
+    tags = tags.filter((x) => x.id !== t.id);
+    for (const k of Object.keys(state.stacks)) state.stacks[k] = state.stacks[k].filter((e) => !(e.kind === "tag" && e.id === t.id));
+    state.dayFilter.ids = state.dayFilter.ids.filter((id) => id !== t.id);
+    state.rems.filter.tags.ids = state.rems.filter.tags.ids.filter((id) => id !== t.id);
+    // With no tags left the tools go, so nothing is left narrowing the list.
+    if (!tags.length) Object.assign(state.tagList, { q: "", filter: newTagFilter() });
+  };
   hud(`Deleted #${t.name}`);
-  nav();
+  tagLeave(t.id, change, true);
 }
+/* Today's words (TagsScreen.swift). */
 function confirmDeleteTag(t) {
   const n = tagStats(t.id).count;
-  ask({ title: `Delete #${t.name}?`, message: n ? `It's removed from ${plural(n, "reminder")}. They aren't deleted.` : "No reminders have this tag.",
+  const message = !n ? "No reminders use this tag." : n === 1 ? "1 reminder uses this tag. It's removed from it, and it isn't deleted." : `${n} reminders use this tag. It's removed from them, and they aren't deleted.`;
+  ask({ title: `Delete #${t.name}?`, message,
     buttons: [{ label: "Cancel", role: "cancel" }, { label: "Delete", role: "destructive", run: () => deleteTag(t) }] });
 }
 function wipeAll() {
@@ -2692,8 +3138,11 @@ function wipeAll() {
   occurrences = [];
   tags = [];
   settings.defaultPace = { ...DEFAULT_PACE };
-  state.tagEdit = false;
+  // Both sorts are settings, so Delete All Data sets them back.
+  state.tagList = newTagListState();
   state.dayFilter = newDayFilter();
+  // The sort direction is a setting, so Delete All Data sets it back to oldest first.
+  state.rems = newRemsState();
   for (const k of Object.keys(state.stacks)) state.stacks[k] = [];
   hud("All data deleted");
   nav();
@@ -2724,8 +3173,13 @@ function anchorOf(el) {
   return { x: (r.left - sr.left) / k, y: (r.top - sr.top) / k, w: r.width / k, h: r.height / k };
 }
 function alertButton(b, i, base) {
+  // A menu section's header: secondary text over its items, read through each item's label.
+  if (b.header) return `<p class="mhead${b.section ? " msect" : ""}" aria-hidden="true">${esc(b.header)}</p>`;
   const role = { cancel: " cancelb", destructive: " destr" }[b.role] ?? "";
-  return `<button type="button" class="${base}${role}" data-alert-btn="${i}">${esc(b.label)}</button>`;
+  // A menu's picker items lead with a checkmark on the chosen one; a section starts a new group.
+  const pick = "checked" in b ? `<span class="mcheck">${b.checked ? I("checkmark", 18) : ""}</span>` : "";
+  const aria = "checked" in b ? ` role="menuitemradio" aria-checked="${b.checked}"` : "";
+  return `<button type="button" class="${base}${role}${b.section ? " msect" : ""}" data-alert-btn="${i}"${aria}${b.aria ? ` aria-label="${esc(b.aria)}"` : ""}>${pick}${b.icon ? I(b.icon, 20) : ""}<span>${esc(b.label)}</span></button>`;
 }
 /* iOS 26 (SwiftUI's confirmationDialog): the dialog grows out of the button that opened it, lined
    up with that button's nearer edge, below it in the top half of the screen and above it in the
@@ -2746,7 +3200,7 @@ function anchoredSheetUI(a) {
   const cancel = indexed.filter(([b]) => b.role === "cancel").map(([b, i]) => `<button type="button" class="sr-only" data-alert-btn="${i}">${esc(b.label)}</button>`).join("");
   const title = a.title ? `<h2 class="asheet-title" id="al-h">${esc(a.title)}</h2>` : "";
   const message = a.message ? `<p class="asheet-text">${esc(a.message)}</p>` : "";
-  return `<div class="overlay"><div class="scrim clear" data-alert-scrim></div><div class="asheet anchored" style="left:${Math.round(left)}px;width:${w}px;${pos}" role="alertdialog" aria-modal="true" ${a.title ? 'aria-labelledby="al-h"' : 'aria-label="Confirm"'}>
+  return `<div class="overlay"><div class="scrim clear" data-alert-scrim></div><div class="asheet anchored${a.menu ? " menu" : ""}" style="left:${Math.round(left)}px;width:${w}px;${pos}" role="${a.menu ? "menu" : "alertdialog"}" aria-modal="true" ${a.title ? 'aria-labelledby="al-h"' : 'aria-label="Confirm"'}>
       <div class="grp">${title}${message}${actions}</div>${cancel}
     </div></div>`;
 }
@@ -2808,7 +3262,7 @@ document.addEventListener("pointerdown", hideHud, true);
 document.addEventListener("keydown", hideHud, true);
 
 /* ================= Rendering ================= */
-const VIEWS = { now: viewNow, day: viewDay, tags: viewTags, settings: viewSettings };
+const VIEWS = { now: viewNow, day: viewDay, rems: viewRems, tags: viewTags, settings: viewSettings };
 function currentView(top) {
   if (!top) return VIEWS[state.tab]();
   if (top.kind === "hin") return viewHowItNudges();
@@ -2817,7 +3271,7 @@ function currentView(top) {
   if (top.kind === "tag") return viewTag(top.id);
   return viewRem(top.id);
 }
-const TABS = [["now", "bell"], ["day", "calendar"], ["tags", "tag"], ["settings", "gearshape"]];
+const TABS = [["now", "bell"], ["day", "calendar"], ["rems", "list.bullet.clipboard"], ["tags", "tag"], ["settings", "gearshape"]];
 /* Tab symbols are smaller in landscape, where they sit beside their titles. */
 const tabIcon = (k) => I(k, isLandscape() ? 22 : 26, true);
 function tabButton([k, ic], nudging) {
@@ -2834,11 +3288,15 @@ const EDITOR_PAGES = { custom: editorCustom, tags: editorTags, main: editorMain 
 function sheetContent(sh) {
   if (sh.kind === "editor") return EDITOR_PAGES[sh.page](sh);
   if (sh.kind === "dayfilter") return dayFilterSheet();
+  if (sh.kind === "remfilter") return remFilterSheet();
+  if (sh.kind === "tagfilter") return tagFilterSheet();
   return sh.kind === "tag" ? tagSheet(sh) : onboardSheet();
 }
 function sheetTitle(sh) {
   if (sh.kind === "editor") return sh.editId ? "Edit Reminder" : "New Reminder";
   if (sh.kind === "tag") return sh.id ? "Rename Tag" : "New Tag";
+  if (sh.kind === "remfilter") return "Filter Reminders";
+  if (sh.kind === "tagfilter") return "Filter Tags";
   return sh.kind === "dayfilter" ? "Filter My Day" : "Welcome";
 }
 /* The browser tab's title names whatever is on top. */
@@ -2874,7 +3332,7 @@ function render() {
   const sh = state.sheet;
   // The Custom page is a sheet of its own over the form, which stays drawn under it (#284).
   const sub = sh?.kind === "editor" && sh.page === "custom";
-  document.getElementById("sheet").innerHTML = sh ? `<div class="overlay"><div class="scrim"></div><div class="sheet${sh.kind === "onboard" ? " full" : ""}" role="dialog" aria-modal="true" aria-labelledby="sheet-title"${sub ? " inert" : ""}>${sub ? EDITOR_PAGES.main(sh) : sheetContent(sh)}</div></div>${sub ? `<div class="overlay sub"><div class="scrim"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sub-title">${editorCustom(sh)}</div></div>` : ""}` : "";
+  document.getElementById("sheet").innerHTML = sh ? `<div class="overlay"><div class="scrim"${sh.kind === "remfilter" || sh.kind === "tagfilter" ? " data-sheet-scrim" : ""}></div><div class="sheet${sh.kind === "onboard" ? " full" : ""}" role="dialog" aria-modal="true" aria-labelledby="sheet-title"${sub ? " inert" : ""}>${sub ? EDITOR_PAGES.main(sh) : sheetContent(sh)}</div></div>${sub ? `<div class="overlay sub"><div class="scrim"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sub-title">${editorCustom(sh)}</div></div>` : ""}` : "";
   document.getElementById("system").innerHTML = systemUI();
   document.getElementById("alert").innerHTML = alertUI();
   document.getElementById("statusbar").innerHTML = `<span>${clock(NOW)}</span><span class="sb-icons">${STATUS_ICONS}</span>`;
@@ -2913,6 +3371,8 @@ document.getElementById("tabbar").addEventListener("focusin", (e) => { if (e.tar
 /* Swiping a row: it follows the pointer sideways once the movement is clearly sideways, and a
    vertical movement is left to scrolling. */
 const SWIPE_OPEN = 88;
+/* How far a row opens: one action's width, or two on a Reminders row offering Done and Delete. */
+const openWidth = (row) => Number(row.parentElement.dataset.swipeWidth || SWIPE_OPEN);
 let swipe = null, swallowClick = false;
 const phoneScale = () => { const scr = document.getElementById("screen"); return scr.getBoundingClientRect().width / scr.offsetWidth; };
 function setSwipe(row, x) {
@@ -2924,6 +3384,8 @@ function closeSwipes(except) { main.querySelectorAll(".swipe-row[data-x]").forEa
 main.addEventListener("pointerdown", (e) => {
   const row = e.target.closest(".swipe-row");
   swallowClick = false;
+  // A press on a revealed action keeps its row open, so the tap lands on the action.
+  if (e.target.closest(".swipe-act")) return;
   closeSwipes(row);
   if (!row || e.button !== 0) return;
   swipe = { row, x0: e.clientX, y0: e.clientY, base: Number(row.dataset.x || 0), x: 0, id: e.pointerId, active: false };
@@ -2940,6 +3402,7 @@ main.addEventListener("pointermove", (e) => {
   }
   let x = swipe.base + dx;
   if (x > 0) x = 0;
+  x = Math.max(x, -openWidth(swipe.row) - 40);
   swipe.x = x;
   setSwipe(swipe.row, x);
 });
@@ -2950,7 +3413,7 @@ function endSwipe(e) {
   if (!active) return;
   swallowClick = true;
   row.parentElement.classList.remove("dragging");
-  setSwipe(row, Math.abs(x) > 40 ? Math.sign(x) * SWIPE_OPEN : 0);
+  setSwipe(row, Math.abs(x) > 40 ? -openWidth(row) : 0);
 }
 main.addEventListener("pointerup", endSwipe);
 main.addEventListener("pointercancel", endSwipe);
@@ -3048,6 +3511,7 @@ const CLICK = {
     // Tapping the shrunken tab bar's tab brings the bar back, as on iOS.
     if (state.tab === v && document.getElementById("tabbar").classList.contains("min")) { setTabMin(false); return; }
     if (state.tab === v) state.stacks[v] = []; // tapping the current tab pops to its root
+    else remOrder = null; // leaving a tab: Reminders sorts again when it's next shown
     state.tab = v;
     nav();
   },
@@ -3066,7 +3530,14 @@ const CLICK = {
   // A tag button on a reminder's details opens that tag's reminders on the Tags tab.
   opentag: (v) => push({ kind: "tag", id: v }),
   newtag: () => openTagSheet(),
-  tagedit: () => { state.tagEdit = !state.tagEdit; refresh("[data-tagedit]"); },
+  // The Tags tab's tools (#138).
+  tagfilter: (v, t) => (tagFilterOn() ? showTagFilterMenu(t) : openTagFilter(t)),
+  tagsort: (v, el) => showTagSortMenu(el),
+  tagqclear: () => { state.tagList.q = ""; refresh("#tag-q"); announce(tagCountNews()); },
+  tagclearall: () => { Object.assign(state.tagList, { q: "", filter: newTagFilter() }); refresh("#tag-q"); announce(tagCountNews()); },
+  tagnoreminders: () => { const d = state.sheet.draft; d.noReminders = !d.noReminders; refresh("[data-tagnoreminders]"); },
+  tagreset: () => { state.sheet.draft = newTagFilter(); refresh("sheet"); },
+  tagapply: () => applyTagFilter(),
   renametag: (v) => openTagSheet(v),
   deletetag: (v) => confirmDeleteTag(tagById(v)),
   tagpick: (v) => { const x = state.sheet.draft; x.tagIds = x.tagIds.includes(v) ? x.tagIds.filter((id) => id !== v) : [...x.tagIds, v]; refresh(`[data-tagpick="${v}"]`); },
@@ -3086,6 +3557,19 @@ const CLICK = {
   daynone: () => { const f = state.dayFilter; f.none = !f.none; if (f.none) f.ids = []; refresh("[data-daynone]"); announce(dayNews()); },
   removedayfilter: (v) => { const f = state.dayFilter; f.ids = f.ids.filter((id) => id !== v); refresh(main.querySelector(".token") ? ".token" : "[data-dayfilter]"); announce(dayNews()); },
   cleardayfilter: () => { state.dayFilter = newDayFilter(); refresh(state.sheet ? "sheet" : "[data-dayfilter]"); announce(dayNews()); },
+  // The Reminders tab (#107).
+  remfilter: (v, t) => (sheetFilterOn() ? showRemFilterMenu(t) : openRemFilter(t)),
+  remsort: (v, el) => showSortMenu(el),
+  // The field's clear button and Cancel both empty the search.
+  remqclear: () => { state.rems.q = ""; refresh("#rem-q"); announce(remCountNews()); },
+  remclearall: () => { Object.assign(state.rems, { q: "", filter: newRemFilter() }); refresh("#rem-q"); announce(remCountNews()); },
+  remack: (v, el) => remDone(v, el),
+  remtag: (v) => { const t = state.sheet.draft.tags; t.ids = toggled(t.ids, v); t.none = false; refresh(`[data-remtag="${v}"]`); },
+  remnone: () => { const t = state.sheet.draft.tags; t.none = !t.none; if (t.none) t.ids = []; refresh("[data-remnone]"); },
+  remstatus: (v) => { const d = state.sheet.draft; d.status = toggled(d.status, v); refresh(`[data-remstatus="${v}"]`); },
+  remstrength: (v) => { const d = state.sheet.draft; d.strength = toggled(d.strength, v); refresh(`[data-remstrength="${v}"]`); },
+  remreset: () => { state.sheet.draft = newRemFilter(); refresh("sheet"); },
+  remapply: () => applyRemFilter(),
   sheetSave: () => saveFromSheet(),
   sheetPage: (v) => {
     const sh = state.sheet;
@@ -3148,6 +3632,13 @@ let pressed = null;
 document.addEventListener("click", (e) => {
   // Tapping outside an iOS 26 action sheet cancels it.
   if (e.target.matches("[data-alert-scrim]") && state.alert) { answerAlert(state.alert.buttons.findIndex((b) => b.role === "cancel")); return; }
+  // Tapping above the Reminders filter sheet closes it without applying, as swiping it down does.
+  // A tap above a changed Tags filter springs back rather than asking (Decision 38); Cancel asks.
+  if (e.target.matches("[data-sheet-scrim]") && state.sheet?.kind === "tagfilter" && state.sheet.draft.noReminders !== state.tagList.filter.noReminders) {
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.querySelector("#sheet .sheet").animate([{ transform: "none" }, { transform: "translateY(14px)" }, { transform: "none" }], { duration: 280, easing: "ease-out" });
+    return;
+  }
+  if (e.target.matches("[data-sheet-scrim]") && state.sheet) { cancelSheet(); return; }
   const t = e.target.closest("button, [data-tab]");
   const key = t && Object.keys(t.dataset).find((k) => CLICK[k]);
   pressed = t;
@@ -3238,6 +3729,27 @@ document.addEventListener("input", (e) => {
     shapeTagField(t);
     state.sheet.newTag = t.value;
     document.querySelector("[data-addtag]").disabled = !cleanTag(t.value);
+  } else if (t.id === "tag-q") {
+    state.tagList.q = t.value;
+    refocusField("tag-q");
+  } else if (t.id === "rem-q") {
+    // Typing narrows the list as it goes; the field keeps its caret.
+    state.rems.q = t.value;
+    refocusField("rem-q");
+  } else if (t.name === "rem-match" && state.sheet) {
+    state.sheet.draft.tags.match = t.value;
+    refresh(t.tagName === "SELECT" ? `#${t.id}` : `[name="${t.name}"][value="${t.value}"]`);
+  } else if (t.dataset.remdateon && state.sheet) {
+    // Turning an end on starts it at today, or at the other end if today is past it.
+    const d = state.sheet.draft, k = t.dataset.remdateon, today = dateField(NOW);
+    if (!t.checked) d[k] = null;
+    else if (k === "from") d.from = d.to && d.to < today ? d.to : today;
+    else d.to = d.from && d.from > today ? d.from : today;
+    refresh(`#${t.id}`);
+  } else if (t.dataset.remdate && state.sheet && t.value) {
+    // A start after the end can't be chosen: each picker's min or max is the other end.
+    const d = state.sheet.draft, k = t.dataset.remdate;
+    d[k] = k === "from" && d.to && t.value > d.to ? d.to : k === "to" && d.from && t.value < d.from ? d.from : t.value;
   } else if (t.name === "day-match") {
     state.dayFilter.match = t.value;
     refresh(t.tagName === "SELECT" ? `#${t.id}` : `[name="${t.name}"][value="${t.value}"]`);
@@ -3253,6 +3765,8 @@ document.addEventListener("keydown", (e) => {
 const CHANGE = {
   "f-dt": () => { if (state.sheet) refresh("#f-dt"); },
   "c-until": () => { if (state.sheet) refresh("#c-until"); },
+  "rf-from": () => { if (state.sheet) refresh("#rf-from"); },
+  "rf-to": () => { if (state.sheet) refresh("#rf-to"); },
 };
 document.addEventListener("change", (e) => CHANGE[e.target.id]?.(e.target));
 document.addEventListener("keydown", (e) => {
@@ -3351,9 +3865,70 @@ document.getElementById("c-reset").addEventListener("click", () => {
   document.getElementById("c-perm-n").checked = true;
   document.getElementById("c-perm-a").checked = true;
   document.getElementById("c-perm-t").checked = true;
-  Object.assign(state, { tab: "now", stacks: { now: [], day: [], tags: [], settings: [] }, dayFilter: newDayFilter(), dayStatus: null, tagEdit: false, tabMin: false, sheet: null, system: null, alert: null });
+  Object.assign(state, { tab: "now", stacks: { now: [], day: [], rems: [], tags: [], settings: [] }, rems: newRemsState(), dayFilter: newDayFilter(), dayStatus: null, tagList: newTagListState(), tabMin: false, sheet: null, system: null, alert: null });
   nav();
   hud("Mockup reset");
+});
+
+/* The Reminders tab's controls (#107). */
+function showRemsTab() { Object.assign(state, { system: null, alert: null, sheet: null, tab: "rems" }); state.stacks.rems = []; nav(); }
+const firstRow = (st) => remRows().find((r) => remStatus(r) === st)?.id;
+function revealSwipe(rid) {
+  const row = rid && main.querySelector(`[data-rid="${rid}"] .swipe-row`);
+  if (!row) { hud("No such row on screen. Reset the mockup."); return; }
+  // Open at once, without the slide, so a screenshot taken straight after shows it.
+  row.style.transition = "none";
+  setSwipe(row, -openWidth(row));
+  void row.offsetWidth;
+  row.style.transition = "";
+}
+document.getElementById("c-rem-swipe-n").addEventListener("click", () => { showRemsTab(); revealSwipe(firstRow("NUDGING")); });
+document.getElementById("c-rem-swipe-o").addEventListener("click", () => { showRemsTab(); revealSwipe(firstRow("UPCOMING")); });
+document.getElementById("c-rem-leave").addEventListener("click", () => {
+  state.rems = { ...newRemsState(), sort: state.rems.sort };
+  state.rems.filter.status = ["NUDGING"];
+  showRemsTab(); revealSwipe(firstRow("NUDGING"));
+});
+document.getElementById("c-rem-none").addEventListener("click", () => { reminders = []; occurrences = []; showRemsTab(); });
+
+/* The Tags tab tools' controls (#138). */
+function showTagsTab(list = {}) {
+  Object.assign(state, { system: null, alert: null, sheet: null, tab: "tags" });
+  state.stacks.tags = [];
+  Object.assign(state.tagList, { q: "", filter: newTagFilter() }, list);
+  nav();
+}
+function revealTagSwipe(id) {
+  const row = main.querySelector(`[data-tagid="${id}"] .swipe-row`);
+  if (!row) { hud("No such row on screen. Reset the mockup."); return; }
+  row.style.transition = "none";
+  setSwipe(row, -openWidth(row));
+  void row.offsetWidth;
+  row.style.transition = "";
+}
+/* #yoga's first use, or every unused tag's: the tags are then all in use. */
+const giveFirstUse = (id) => remById("r14").tagIds.push(id);
+const withFilterOn = { filter: { noReminders: true } };
+document.getElementById("c-tag-swipe").addEventListener("click", () => { showTagsTab(); revealTagSwipe("home"); });
+document.getElementById("c-tag-delete").addEventListener("click", () => { showTagsTab(); confirmDeleteTag(tagById("home") ?? tags[0]); });
+document.getElementById("c-tag-rename").addEventListener("click", () => { showTagsTab(); openTagSheet((tagById("home") ?? tags[0]).id); });
+document.getElementById("c-tag-search").addEventListener("click", () => showTagsTab({ q: "home" }));
+document.getElementById("c-tag-filter").addEventListener("click", () => showTagsTab(withFilterOn));
+document.getElementById("c-tag-discard").addEventListener("click", () => { showTagsTab(); openTagFilter(); state.sheet.draft.noReminders = true; render(); pressed = document.querySelector("[data-sheet-cancel]"); cancelSheet(); });
+document.getElementById("c-tag-leave").addEventListener("click", () => {
+  showTagsTab(withFilterOn);
+  if (tagById("yoga")) setTimeout(() => tagLeave("yoga", () => giveFirstUse("yoga")), 400);
+});
+document.getElementById("c-tag-nomatch-s").addEventListener("click", () => showTagsTab({ q: "zebra" }));
+document.getElementById("c-tag-nomatch-f").addEventListener("click", () => {
+  for (const t of tags) if (!tagStats(t.id).count) giveFirstUse(t.id);
+  showTagsTab(withFilterOn);
+});
+document.getElementById("c-tag-nomatch-b").addEventListener("click", () => showTagsTab({ q: "zebra", ...withFilterOn }));
+document.getElementById("c-tag-none").addEventListener("click", () => {
+  for (const r of reminders) r.tagIds = [];
+  tags = [];
+  showTagsTab();
 });
 
 /* Increase Contrast and Reduce Transparency: start from the system setting and follow it,

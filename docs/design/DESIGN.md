@@ -495,7 +495,7 @@ The Reminders tab's tools, in its layout, so they're learned once.
 
 ### Reminder form's Repeat
 - The Repeat row sits under Starts and shows the current choice. A tap opens a
-  pop-up menu, as in Apple's Reminders on iOS 27 (mockup `2026-11-07-repeat-menu`, #283): Never and the six
+  pop-up menu, as in Apple's Reminders on iOS 27 (mockup `1.3.0`, #283): Never and the six
   presets in their order, a divider, then Custom, with a checkmark on the current choice. A choice is the
   form's repeat at once, held until the form's own Save like every other field; there is no Repeat page.
 - **Custom row:** choosing Custom adds a row below Repeat with no "Custom" label, which Repeat already
@@ -507,7 +507,7 @@ The Reminders tab's tools, in its layout, so they're learned once.
   rows are.
 - **VoiceOver:** the Repeat row reads its choice, and the menu reads each item with the current one selected.
   The Custom row reads the repeat, with the hint "Opens the custom repeat."
-- **End Repeat** (mockup `2026-11-07-end-repeat`, #287): under Repeat, and under the Custom row when there
+- **End Repeat** (mockup `1.3.0`, #287): under Repeat, and under the Custom row when there
   is one, whenever Repeat isn't Never. A pop-up menu of Never, After and On Date, drawn as the Repeat
   menu, with a checkmark on the current choice. After adds a stepper row, "After 10 times" (2 to 30); On
   Date adds an End Date row with a date button that opens a calendar no earlier than the start. The choice
@@ -518,7 +518,7 @@ The Reminders tab's tools, in its layout, so they're learned once.
   disables Save, with "The repeat ends before it starts. Change its end date." under Starts. The Custom
   sheet has no Ends section. Locked while nudging, End Repeat and its rows are plain text with the `lock`.
   VoiceOver reads End Repeat's choice, the stepper's count and End Date's date.
-- **Custom repeat sheet** (mockup `2026-11-07-custom-sheet`, #284): a sheet over the reminder form, as in
+- **Custom repeat sheet** (mockup `1.3.0`, #284): a sheet over the reminder form, as in
   Apple's Reminders on iOS 27, titled "Custom": the summary sentence, Frequency with its Every stepper,
   On, and Next Times. Each change is the form's repeat as it's made, held until the form's own Save.
   **Apply** (✓, the accent-filled confirm button) is its only button: it closes the sheet and is never
