@@ -957,6 +957,9 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .tile.edit .disc { background: var(--tile-blue); }
 .tile.del .disc { background: var(--tile-red); }
 .tile.done .disc { background: var(--tile-green); }
+/* A Now card sits on the page's gray, not in a list: its swipe has no panel of its own. */
+.swipe[data-dir="trail"]:has(.tiles) .swipe-row:has(> .nudgecard) { background: none; border-radius: 12px; }
+.swipe:has(> .swipe-row > .nudgecard) .swipe-acts.tiles { background: none; }
 /* A row with swipe tiles is 78 pt tall, so the 50 pt circle and its word fit (DESIGN.md, Swipe actions). */
 .swipe:has(.tiles) .swipe-row .cell { min-height: 78px; }
 /* The help text in the no-tags empty state wraps to a readable measure. */
@@ -1754,7 +1757,7 @@ function urgencyWord(u) {
 /* The status label: Done is green with checkmark.circle.fill. */
 const statusLabel = (st) => `<span class="state ${st}">${st === "ACKED" ? I("checkmark.circle.fill", 17) : ""}${STATUS_LABEL[st]}</span>`;
 function swipeable(inner, o, tile = false) {
-  // My Day's row: the Done tile is a circle with its word under it, as on the Tags and Reminders rows.
+  // The Done tile on a Now card and a My Day row is a circle with its word under it, as on the Tags and Reminders rows.
   if (tile) return `<div class="swipe" data-swipe-width="70"><div class="swipe-acts tiles"><button type="button" class="swipe-act tile done" data-ack="${o.id}" tabindex="-1" aria-hidden="true"><span class="disc">${I("checkmark", 22)}</span><span>Done</span></button></div><div class="swipe-row">${inner}</div></div>`;
   const trail = `<button type="button" class="swipe-act trail" data-ack="${o.id}" tabindex="-1" aria-hidden="true">${I("checkmark", 22)}<span>Done</span></button>`;
   return `<div class="swipe">${trail}<div class="swipe-row">${inner}</div></div>`;
@@ -1774,7 +1777,7 @@ function viewNow() {
   ${permBanner()}
   <section class="sec" aria-labelledby="h-nudge">
     <h2 class="sec-h big" id="h-nudge">Nudging</h2>
-    ${nudge.length ? nudge.map((o) => swipeable(nudgeCard(o), o)).join("") : `<div class="list"><p class="empty"><strong>All clear.</strong> Nothing needs you right now.</p></div>`}
+    ${nudge.length ? nudge.map((o) => swipeable(nudgeCard(o), o, true)).join("") : `<div class="list"><p class="empty"><strong>All clear.</strong> Nothing needs you right now.</p></div>`}
   </section>
   <section aria-labelledby="h-up">
     <h2 class="sec-h" id="h-up"><span>Coming Up</span><span>Next 7 days</span></h2>
