@@ -22,7 +22,7 @@ settings:
     # One version and build number for the app and the widget. The build number stays 1 here: the
     # export step (scripts/export-options.plist) or the Organizer, with "Manage version and build
     # number" on, raises it on upload (testflight-readiness 01, #99).
-    MARKETING_VERSION: "1.2.0"
+    MARKETING_VERSION: "1.3.0"
     CURRENT_PROJECT_VERSION: "1"
 packages:
   NudgeEngine:

@@ -17,8 +17,8 @@ struct BuiltBundleTests {
     @Test func theVersionIs1_2_0AndTheWidgetHasTheSame() throws {
         let widget = try #require(Self.widget)
 
-        #expect(Self.app.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String == "1.2.0")
-        #expect(widget.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String == "1.2.0")
+        #expect(Self.app.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String == "1.3.0")
+        #expect(widget.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String == "1.3.0")
     }
 
     /// The repo's number is a placeholder: the export step or the Organizer raises it for the app and
