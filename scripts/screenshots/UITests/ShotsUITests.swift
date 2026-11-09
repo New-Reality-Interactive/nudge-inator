@@ -35,10 +35,15 @@ final class ShotsUITests: XCTestCase {
         return app
     }
 
-    private func launch(_ scenario: ShotScenario, dark: Bool = false) {
+    /// `now` (`HH:mm`) sets the harness clock to that time today (`SHOT_NOW`, #297); without it, the
+    /// run's `SHOTS_NOW` does, and without that the clock is the real one.
+    private func launch(_ scenario: ShotScenario, dark: Bool = false, now: String? = nil) {
         app = makeApp()
         app.launchEnvironment["SHOT_SCENARIO"] = scenario.rawValue
         app.launchEnvironment["SHOT_DARK"] = dark ? "1" : "0"
+        if let now = now ?? ProcessInfo.processInfo.environment["SHOTS_NOW"], !now.isEmpty {
+            app.launchEnvironment["SHOT_NOW"] = now
+        }
         app.launch()
         // The seed and the first plan.
         _ = app.tabBars.firstMatch.waitForExistence(timeout: 10)
@@ -903,6 +908,72 @@ final class ShotsUITests: XCTestCase {
         launch(.noReminders)
         tab("Reminders")
         shot("reminders-empty")
+    }
+
+    /// What the mockup shows for each seeded reminder (its status, and the minutes from its 8:20 AM
+    /// when the row's day is checked too), at times of day on both sides of midnight and of the 1 AM
+    /// hour a daylight saving change repeats (#297). The seed places every time as an offset from
+    /// "now", so the statuses must not depend on the hour. Writes what the rows said to
+    /// `seed-statuses.txt`, so the statuses at each time are on record.
+    func testSeedHoldsAtAnyHour() {
+        let expected: [(title: String, status: String, minutes: Double?)] = [
+            ("Take the bins out", "Nudging", -50),
+            ("Reply to Alex about the lease", "Nudging", -10),
+            ("Morning meds", "Coming up", nil),
+            ("Stretch break", "Coming up", nil),
+            ("Water the plants", "Coming up", 580),
+            ("Pay rent", "Coming up", nil),
+            ("Dentist appointment", "Coming up", nil),
+            ("Renew passport", "Done", nil),
+            ("Team stand-up", "Coming up", nil),
+            ("Send the weekly status update", "Coming up", nil),
+            ("Walk the dog", "Coming up", nil),
+            ("Call Grandma", "Paused", nil),
+            ("Book the car service", "Missed", nil),
+            ("Physio exercises", "Skipped", nil)
+        ]
+        let calendar = Calendar.current
+        var report = ""
+        for time in ["00:30", "01:30", "08:20", "23:50"] {
+            launch(.app, now: time)
+            tab("Reminders")
+            let parts = time.split(separator: ":").compactMap { Int($0) }
+            var today = calendar.dateComponents([.year, .month, .day], from: .now)
+            (today.hour, today.minute) = (parts[0], parts[1])
+            let now = calendar.date(from: today)!
+            let labels = rowLabels(of: expected.map(\.title))
+            for (title, status, minutes) in expected {
+                guard let label = labels[title] else {
+                    XCTFail("No row for \(title) at \(time)")
+                    report += "\(time) | \(title) | no row\n"
+                    continue
+                }
+                report += "\(time) | \(label)\n"
+                let fields = label.components(separatedBy: ", ")
+                XCTAssertEqual(fields.dropFirst().first, status, "\(title) at \(time): \(label)")
+                guard let minutes else { continue }
+                let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: now), to: calendar.startOfDay(for: now.addingTimeInterval(minutes * 60))).day
+                let day = ["-1": "Yesterday", "0": "Today", "1": "Tomorrow"][days.map(String.init) ?? ""]
+                XCTAssertEqual(fields.dropFirst(2).first, day, "\(title)'s day at \(time): \(label)")
+            }
+        }
+        try? report.write(to: directory.appending(path: "seed-statuses.txt"), atomically: true, encoding: .utf8)
+    }
+
+    /// The label of each row in the Reminders list that starts with one of `titles`, scrolling down
+    /// from the top until each has been seen.
+    private func rowLabels(of titles: [String]) -> [String: String] {
+        var found: [String: String] = [:]
+        scrollToTop()
+        for _ in 0..<14 {
+            for title in titles where found[title] == nil {
+                let row = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
+                if row.exists { found[title] = row.label }
+            }
+            if found.count == titles.count { break }
+            scroll(down: true)
+        }
+        return found
     }
 
     /// `details-delete` (#276, #286): the details page's Delete Reminder asks with the system's

@@ -17,8 +17,10 @@
 # SHOTS_TESTS (ShotsUITests methods separated by spaces, such as "testSettings testForm"; default
 # every one). Each variant's folder is emptied first, unless SHOTS_TESTS names the tests: then the
 # images from other tests stay, and the run lists the ones it wrote, since those kept may be older
-# than the code. SHOTS_KEEP_GOING=1 runs every test and lists every failure at the end; without it,
-# the first failed test on any simulator stops every simulator's run (#302).
+# than the code. SHOTS_NOW=HH:mm (24-hour, such as 01:30) runs the walk as if it were that time of
+# day: the harness clock reads that time today from each launch on (#297).
+# SHOTS_KEEP_GOING=1 runs every test and lists every failure at the end; without it, the first
+# failed test on any simulator stops every simulator's run (#302).
 # Each variant's run adds a record to the test metrics (scripts/metrics.sh, #303): pass, fail, or
 # stopped for a run that was cut short because another failed or the script was interrupted.
 # Writes <SHOTS_OUT>/<simulator>/<variant>/<screen>.png, a clone's under the simulator it clones.
@@ -154,6 +156,7 @@ shoot() {
     echo "$name|$variant|$log|$failed_file|$began|" > "$metrics_file"
     touch "$started"
     TEST_RUNNER_SHOTS_DIR="$dir" TEST_RUNNER_SHOTS_ORIENTATION="$orientation" TEST_RUNNER_SHOTS_DIRECTION="$direction" \
+    TEST_RUNNER_SHOTS_NOW="${SHOTS_NOW:-}" \
       xcodebuild test-without-building -project "$build/NudgeShots.xcodeproj" -scheme NudgeShots \
       -destination "platform=iOS Simulator,id=$udid" -derivedDataPath "$build/derived" ${only[@]+"${only[@]}"} \
       2>&1 < /dev/null \

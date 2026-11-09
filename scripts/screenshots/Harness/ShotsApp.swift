@@ -82,10 +82,58 @@ struct BadgeBarShot: View {
     }
 }
 
-/// The real clock, except while seeding, when the seed sets the time of each Done and Pause.
+/// The real clock, except while seeding, when the seed sets the time of each Done and Pause, and
+/// under `SHOT_NOW` (`HH:mm`, 24-hour), when it reads as that time today from launch on and keeps
+/// running (#297). `SHOT_NOW` moves only the clock the engine and the screens read: the system's
+/// own UI and `Date.now` in the app's sources keep the real time.
 final class ShotsClock: EngineClock {
     var frozenNow: Date?
-    var now: Date { frozenNow ?? .now }
+    /// What `SHOT_NOW` adds to the real time: zero without it.
+    let offset: TimeInterval
+
+    init(environment: [String: String] = ProcessInfo.processInfo.environment) {
+        let calendar = Calendar.current
+        let parts = environment["SHOT_NOW"]?.split(separator: ":").compactMap { Int($0) }
+        // Built from the day's parts, and one second past the minute: the seed reads the clock
+        // within a fraction of a millisecond of this, and one read at HH:mm:00 minus a hair floored
+        // to the minute before, putting every seeded time a minute early.
+        var day = calendar.dateComponents([.year, .month, .day], from: .now)
+        day.hour = parts?.first
+        day.minute = parts?.last
+        day.second = 0
+        if let parts, parts.count == 2, let target = calendar.date(from: day) {
+            offset = target.timeIntervalSince(.now) + 1
+        } else {
+            precondition(environment["SHOT_NOW"] == nil, "SHOT_NOW is HH:mm, such as 01:30")
+            offset = 0
+        }
+    }
+
+    var now: Date { frozenNow ?? Date.now.addingTimeInterval(offset) }
+}
+
+/// What `TimelineView`'s content closure is given: the date it reads.
+struct ShotsTimelineContext {
+    var date: Date
+}
+
+/// Stands in for SwiftUI's `TimelineView` in the harness, so a screen's `context.date` reads the
+/// harness clock (`SHOT_NOW`) instead of the system's. The app's sources only use the
+/// `.everyMinute` schedule and `context.date`.
+struct TimelineView<Schedule: TimelineSchedule, Content: View>: View {
+    private let schedule: Schedule
+    private let content: @MainActor (ShotsTimelineContext) -> Content
+
+    init(_ schedule: Schedule, @ViewBuilder content: @escaping @MainActor (ShotsTimelineContext) -> Content) {
+        self.schedule = schedule
+        self.content = content
+    }
+
+    var body: some View {
+        SwiftUI.TimelineView(schedule) { _ in
+            content(ShotsTimelineContext(date: ShotsSeed.clock.now))
+        }
+    }
 }
 
 @MainActor
@@ -223,12 +271,24 @@ enum ShotsSeed {
     }
 
     /// Now, to the minute, read once: the mockup's 8:20 AM.
-    private static let seedNow = Calendar.current.dateInterval(of: .minute, for: .now)!.start
+    private static let seedNow = {
+        let seconds = Date.now.addingTimeInterval(clock.offset).timeIntervalSinceReferenceDate
+        return Date(timeIntervalSinceReferenceDate: (seconds / 60).rounded(.down) * 60)
+    }()
 
-    /// `minutes` and `days` from the mockup's 8:20 AM. Days are calendar days, so a daylight
-    /// saving change between then and now keeps the time of day.
+    /// `minutes` and `days` from the mockup's 8:20 AM. On another day the time is moved on the
+    /// wall clock: the day, then the minutes, in one step, so a daylight saving change between then
+    /// and now keeps the time of day. A repeat counts its days that way, so a due time placed by
+    /// absolute minutes from the day's same time can sit an hour off the rule's own (#297: a week
+    /// after a change, the 1 AM hour that repeats put the bins' due time an hour late, and they
+    /// showed as Coming up instead of Nudging).
     private static func at(_ minutes: Double, days: Double = 0) -> Date {
-        Calendar.current.date(byAdding: .day, value: Int(days), to: seedNow)!.addingTimeInterval(minutes * 60)
+        guard days != 0 else { return seedNow.addingTimeInterval(minutes * 60) }
+        let calendar = Calendar.current
+        var wall = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: seedNow)
+        wall.day! += Int(days)
+        wall.minute! += Int(minutes)
+        return calendar.date(from: wall)!
     }
 
     /// The time of day `hour`:`minute` on the day `daysAgo` before the mockup's.
@@ -284,7 +344,7 @@ enum ShotsSeed {
     private static func giveSpareAReminder() {
         guard let model = spareModel, let spare = model.engine.tags.first(where: { $0.name == "spare" }) else { return }
         // Five days out, so it isn't due, and nothing nudges, during the test.
-        model.add(Reminder(title: "Use the spare", tagIDs: [spare.id], dueTime: .now.addingTimeInterval(5 * 24 * 3600), strength: .gentle))
+        model.add(Reminder(title: "Use the spare", tagIDs: [spare.id], dueTime: clock.now.addingTimeInterval(5 * 24 * 3600), strength: .gentle))
     }
 
     /// The Darwin notification the UI test posts, which marks "Take the bins out" Done: a Nudging
@@ -316,7 +376,7 @@ enum ShotsSeed {
     /// the walk to open its Custom page before it falls due.
     static func seedCustomLocking(into model: AppModel) {
         let calendar = Calendar.current
-        let dueTime = calendar.dateInterval(of: .minute, for: .now.addingTimeInterval(90))!.end
+        let dueTime = calendar.dateInterval(of: .minute, for: clock.now.addingTimeInterval(90))!.end
         let today = calendar.component(.weekday, from: dueTime)
         let weekdays = [today, today % 7 + 1].map { RepeatRule.WeekdayNumber(RepeatRule.Weekday(rawValue: $0)!) }
         // With an end, so the locked form shows End Repeat and its After row (#287).
