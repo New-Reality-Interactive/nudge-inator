@@ -391,16 +391,22 @@ public struct Engine {
     /// silences a ringing alarm as it does for Pause, `dueTimesAnAlarmMayBeRinging`). A copy that
     /// waits to be accepted, or is paused, takes the change in place and stays so.
     ///
+    /// A revision whose number isn't higher than the copy's is ignored: it came late, out of order
+    /// or twice, and a newer one has already applied or is yet to.
+    ///
     /// Returns what changed, in the order of `ReceivedContentField.allCases`: empty for a revision
-    /// that changes nothing, and for a reminder that isn't a received copy, which is left alone.
+    /// that changes nothing, for one that is ignored, and for a reminder that isn't a received copy,
+    /// which is left alone.
     /// A one-off whose due time has come keeps it when the revision's is earlier: a copy accepted
     /// late has its due time set to the moment of acceptance, so the sender's original due time
     /// isn't a change, and applying it would make the copy a long-overdue Missed.
     @discardableResult
     public mutating func applySendersRevision(_ revised: Reminder) -> [ReceivedChange] {
         guard let current = reminder(revised.id),
-              case let .received(connectionID, sendersReminderID, _, state) = current.origin
+              case let .received(connectionID, sendersReminderID, heldRevision, state) = current.origin
         else { return [] }
+        // A revision that isn't newer than the copy's came late, out of order, or twice.
+        if case let .received(_, _, revision, _) = revised.origin, revision <= heldRevision { return [] }
         var incoming = revised
         if current.repeatRule == nil, incoming.repeatRule == nil,
            incoming.dueTime < current.dueTime, current.dueTime <= clock.now {

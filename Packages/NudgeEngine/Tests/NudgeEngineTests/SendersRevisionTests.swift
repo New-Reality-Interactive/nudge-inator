@@ -338,6 +338,41 @@ struct SendersRevisionTests {
         #expect(scheduler.appliedPlans.count == plansBefore)
     }
 
+    // MARK: Stale revisions
+
+    /// The copy holds revision 3. 4 is newer; 3 is the same revision again; 2 came late.
+    @Test(arguments: [3, 2])
+    func aRevisionThatIsNotNewerThanTheCopysIsIgnored(number: Int) {
+        clock.now = NewYork.local(2026, 10, 15, 9, 10)
+        let reminder = received()
+        var engine = engine(for: reminder)
+        let plansBefore = scheduler.appliedPlans.count
+        var stale = revision(of: reminder) { $0.strength = .gentle; $0.title = "Old news" }
+        stale.origin = .received(connectionID: connectionID, sendersReminderID: sendersReminderID, revision: number, state: .accepted)
+
+        let note = engine.applySendersRevision(stale)
+
+        #expect(note.isEmpty)
+        #expect(engine.reminders == [reminder])
+        #expect(engine.openOccurrence(for: reminder.id) != nil)
+        #expect(scheduler.appliedPlans.count == plansBefore)
+    }
+
+    @Test func aLateRevisionAfterANewerOneDoesNotUndoIt() {
+        clock.now = NewYork.local(2026, 10, 15, 9, 10)
+        let reminder = received()
+        var engine = engine(for: reminder)
+        var newer = revision(of: reminder) { $0.title = "Take the vitamins" }
+        newer.origin = .received(connectionID: connectionID, sendersReminderID: sendersReminderID, revision: 5, state: .accepted)
+        engine.applySendersRevision(newer)
+
+        let note = engine.applySendersRevision(revision(of: reminder) { $0.title = "Take the minerals" })
+
+        #expect(note.isEmpty)
+        #expect(engine.reminders.first?.title == "Take the vitamins")
+        #expect(engine.reminders.first?.origin == .received(connectionID: connectionID, sendersReminderID: sendersReminderID, revision: 5, state: .accepted))
+    }
+
     @Test func aRevisionOfAReminderTheEngineDoesNotHoldIsIgnored() {
         clock.now = NewYork.local(2026, 10, 15, 9, 10)
         var engine = engine(for: received())
