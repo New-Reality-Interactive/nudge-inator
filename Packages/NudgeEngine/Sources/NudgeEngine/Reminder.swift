@@ -23,6 +23,9 @@ public struct Reminder: Identifiable, Equatable, Sendable {
     /// The moment the reminder was added: `Engine.add(_:)` sets it from the engine's clock, and
     /// nothing changes it afterwards. `.distantPast` until then (GLOSSARY.md, Creation date).
     public var createdAt: Date
+    /// Whose reminder it is: the person's own, or a copy received from someone. Nothing but the
+    /// store and the sharing code sets it; the engine plans a received reminder as its own.
+    public var origin: ReminderOrigin
 
     public init(
         id: UUID = UUID(),
@@ -34,7 +37,8 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         strength: Strength,
         pace: Pace = .escalating,
         breakThroughFocus: Bool = true,
-        createdAt: Date = .distantPast
+        createdAt: Date = .distantPast,
+        origin: ReminderOrigin = .mine
     ) {
         self.id = id
         self.title = title
@@ -46,10 +50,16 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         self.pace = pace
         self.breakThroughFocus = breakThroughFocus
         self.createdAt = createdAt
+        self.origin = origin
     }
 }
 
 extension Reminder {
+    /// Whether it is a copy received from someone, not the person's own.
+    public var isReceived: Bool {
+        if case .received = origin { true } else { false }
+    }
+
     /// Whether its nudges break through Focus: its switch, or always for Relentless (ADR 0004).
     public var breaksThroughFocus: Bool {
         strength.breaksThroughFocus(switchedOn: breakThroughFocus)
@@ -81,5 +91,48 @@ extension Strength {
     /// (ADR 0004). The one place the rule lives: the plan, the nudge card and How It Nudges read it.
     public func breaksThroughFocus(switchedOn: Bool) -> Bool {
         self == .relentless || switchedOn
+    }
+}
+
+/// Whose a reminder is. A reminder saved before sharing existed has no origin and reads back as
+/// `mine`, so nothing about it changes (docs/agents/release.md, Backwards compatible).
+public enum ReminderOrigin: Equatable, Sendable {
+    /// The person made it, and it never leaves the iPhone.
+    case mine
+    /// The recipient's copy of a reminder someone sent them (GLOSSARY.md, Received reminder).
+    /// `connectionID` names the connection it came through and `sendersReminderID` the sender's own
+    /// reminder, so a later revision finds its copy. `revision` counts the sender's changes.
+    case received(connectionID: UUID, sendersReminderID: Reminder.ID, revision: Int, state: ReceivedState)
+
+    /// Whether a received reminder has started (Delivery mode). Held here for the sharing code;
+    /// the engine plans a `waiting` copy as it does an `accepted` one until Ask me first lands (#186).
+    public enum ReceivedState: Equatable, Sendable {
+        case accepted
+        /// Waiting for the recipient to accept it.
+        case waiting
+    }
+}
+
+/// A received reminder's field that only its sender can change: everything but its tags.
+public enum ReceivedContentField: Hashable, CaseIterable, Sendable {
+    case title
+    case notes
+    case dueTime
+    case repeatRule
+    case strength
+    case pace
+    case breakThroughFocus
+
+    /// Whether `edited` gives this field a different value from `current`.
+    func isChanged(from current: Reminder, to edited: Reminder) -> Bool {
+        switch self {
+        case .title: current.title != edited.title
+        case .notes: current.notes != edited.notes
+        case .dueTime: current.dueTime != edited.dueTime
+        case .repeatRule: current.repeatRule != edited.repeatRule
+        case .strength: current.strength != edited.strength
+        case .pace: current.pace != edited.pace
+        case .breakThroughFocus: current.breakThroughFocus != edited.breakThroughFocus
+        }
     }
 }
