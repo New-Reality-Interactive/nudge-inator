@@ -10,7 +10,7 @@ The matrix's simulators were created by hand on that Mac, which is why `scripts/
 
 ### Test iPhones
 
-An iPhone 15 on iOS 27.0.1 ("Brian's iPhone" in `xcrun devicectl list devices`). It is the only one, which is why the iOS 26 path behind `if #available` is covered only by the tests `scripts/test.sh` runs on the iOS 26.5 simulator. Since the developer retired the simulator screenshot runs (2026-11-09), nothing looks at that path on screen: a known gap, accepted. If a phone on iOS 26.x arrives, record it here and change that rule.
+An iPhone 15 on iOS 27.2.1 (updated from 27.0.1 on 2026-11-09; "Brian's iPhone" in `xcrun devicectl list devices`). It is the only one, which is why the iOS 26 path behind `if #available` is covered only by the tests `scripts/test.sh` runs on the iOS 26.5 simulator. Since the developer retired the simulator screenshot runs (2026-11-09), nothing looks at that path on screen: a known gap, accepted. If a phone on iOS 26.x arrives, record it here and change that rule.
 
 ### History: the Intel Mac
 
