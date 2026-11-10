@@ -52,6 +52,11 @@ public enum LockedField: Hashable, CaseIterable, Sendable {
 public enum EditError: Error, Equatable, Sendable {
     /// The Edit changed these fields, which are Locked while the reminder is Nudging.
     case locked(Set<LockedField>)
+    /// The reminder is received, so only its sender can change what it says and when it's due. The
+    /// Edit changed these fields; it is rejected whole, with any tag change in it. Checked before
+    /// the lock, which it covers. Not the sender's own path: their change reaches the copy through
+    /// a separate call that passes the lock (ADR 0005).
+    case receivedContent(Set<ReceivedContentField>)
 }
 
 /// The nudge engine: reminders and the clock in, occurrence state and a schedule plan out.
@@ -302,9 +307,14 @@ public struct Engine {
     /// field is rejected whole, naming the fields it changed, so nothing is half applied. An
     /// accepted Edit applies from the next occurrence: one that has already closed stays as it
     /// closed, even if a slower strength would still be nudging it. Edit of a reminder the engine
-    /// doesn't hold is ignored.
+    /// doesn't hold is ignored. On a received reminder only the tags can change; a content change
+    /// is rejected whole as `receivedContent`. An Edit never changes a reminder's origin.
     public mutating func edit(_ edited: Reminder) throws(EditError) {
         guard let current = reminder(edited.id) else { return }
+        if current.isReceived {
+            let changedContent = Set(ReceivedContentField.allCases.filter { $0.isChanged(from: current, to: edited) })
+            guard changedContent.isEmpty else { throw .receivedContent(changedContent) }
+        }
         let changed = lockedFields(of: edited.id).filter { $0.isChanged(from: current, to: edited) }
         guard changed.isEmpty else { throw .locked(changed) }
         if LockedField.allCases.contains(where: { $0.movesNudgeTimes && $0.isChanged(from: current, to: edited) }) {
@@ -325,9 +335,10 @@ public struct Engine {
         if edited.title != current.title {
             historyByReminder[edited.id, default: History()].saved.replacedTitles.append(Replaced(value: current.title, replacedAt: clock.now))
         }
-        // The creation date never changes, so the edit keeps the one the reminder has.
+        // The creation date and the origin never change here, so the edit keeps the ones the reminder has.
         var kept = edited
         kept.createdAt = current.createdAt
+        kept.origin = current.origin
         reminders = reminders.map { $0.id == kept.id ? kept : $0 }
         applyPlan()
     }
