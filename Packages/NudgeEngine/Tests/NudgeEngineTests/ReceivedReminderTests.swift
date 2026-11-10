@@ -3,8 +3,8 @@ import Testing
 @testable import NudgeEngine
 
 /// A reminder can be received from someone: the engine plans it exactly as the recipient's own, and
-/// the recipient can change only its tags (spec #127, Receiving). Whether a copy is waiting to be
-/// accepted is held but not acted on yet (#186).
+/// the recipient can change only its tags (spec #127, Receiving). A copy waiting to be accepted
+/// (Ask me first) plans nothing until the recipient accepts it.
 struct ReceivedReminderTests {
     let clock = FakeClock(now: .distantPast)
     let scheduler = FakeScheduler()
@@ -37,6 +37,18 @@ struct ReceivedReminderTests {
         var reminder = received(strength: strength, pace: pace, breakThroughFocus: breakThroughFocus)
         reminder.origin = .mine
         return reminder
+    }
+
+    /// A one-off due at 9:00 on 15 October 2026.
+    func receivedOneOff(state: ReminderOrigin.ReceivedState = .waiting) -> Reminder {
+        var reminder = received(state: state)
+        reminder.repeatRule = nil
+        return reminder
+    }
+
+    /// The state of each occurrence due at 9:00 on these days of October 2026.
+    func states(of reminder: Reminder, in engine: Engine, onDays days: [Int]) -> [OccurrenceState?] {
+        days.map { engine.occurrence(of: reminder.id, dueAt: NewYork.local(2026, 10, $0))?.state }
     }
 
     func engine(for reminders: Reminder...) -> Engine {
@@ -275,5 +287,232 @@ struct ReceivedReminderTests {
 
         #expect(engine.reminders.isEmpty)
         #expect(try #require(scheduler.lastPlan).items.isEmpty)
+    }
+
+    // MARK: Waiting to be accepted (Ask me first)
+
+    @Test func aWaitingReminderPlansNoNudgeAndHasNoOpenOccurrence() throws {
+        clock.now = NewYork.local(2026, 10, 15, 9, 10)
+        let reminder = received(state: .waiting)
+        let engine = engine(for: reminder)
+
+        #expect(try #require(scheduler.lastPlan).items.isEmpty)
+        #expect(scheduler.lastPlan?.currentBadgeCount == 0)
+        #expect(engine.openOccurrence(for: reminder.id) == nil)
+    }
+
+    @Test func anOccurrenceDueWhileWaitingReadsSkippedAsWhilePaused() {
+        clock.now = NewYork.local(2026, 10, 17, 9, 30)
+        let reminder = received(state: .waiting)
+        let engine = engine(for: reminder)
+
+        #expect(states(of: reminder, in: engine, onDays: [15, 16, 17]) == Array(repeating: .skipped(reason: .paused), count: 3))
+        #expect(engine.latestOccurrence(for: reminder.id)?.state == .skipped(reason: .paused))
+    }
+
+    /// Accepted at 9:30 on the 17th: that morning's 9:00 fell due while waiting, so it stays
+    /// Skipped, and the plan starts with nudge 1 at 9:00 on the 18th.
+    @Test func acceptingARepeatingReminderStartsItAtItsNextDueTime() throws {
+        clock.now = NewYork.local(2026, 10, 17, 9, 30)
+        let reminder = received(state: .waiting)
+        var engine = engine(for: reminder)
+
+        engine.accept(reminder.id)
+
+        #expect(engine.reminders[0].origin == received(state: .accepted).origin)
+        #expect(!engine.reminders[0].isWaiting)
+        #expect(engine.openOccurrence(for: reminder.id) == nil)
+        #expect(states(of: reminder, in: engine, onDays: [15, 16, 17]) == Array(repeating: .skipped(reason: .paused), count: 3))
+        let items = try #require(scheduler.lastPlan).items
+        #expect(items.first?.dueTime == NewYork.local(2026, 10, 18))
+        #expect(items.first?.fireTime == NewYork.local(2026, 10, 18))
+    }
+
+    @Test func aOneOffAcceptedAfterItsDueTimeStartsNudgingAtOnce() throws {
+        clock.now = NewYork.local(2026, 10, 15, 11)
+        let reminder = receivedOneOff()
+        var engine = engine(for: reminder)
+        #expect(engine.openOccurrence(for: reminder.id) == nil)
+
+        engine.accept(reminder.id)
+
+        #expect(engine.openOccurrence(for: reminder.id) == Occurrence(dueTime: NewYork.local(2026, 10, 15, 11), state: .nudging(nudgeNumber: 1)))
+        let items = try #require(scheduler.lastPlan).items
+        #expect(items.first?.fireTime == NewYork.local(2026, 10, 15, 11))
+        #expect(scheduler.lastPlan?.currentBadgeCount == 1)
+    }
+
+    @Test func aOneOffAcceptedBeforeItsDueTimeNudgesAtItsDueTime() throws {
+        clock.now = NewYork.local(2026, 10, 15, 8)
+        let reminder = receivedOneOff()
+        var engine = engine(for: reminder)
+
+        engine.accept(reminder.id)
+
+        #expect(engine.reminders.first?.dueTime == reminder.dueTime)
+        #expect(engine.openOccurrence(for: reminder.id) == nil)
+        #expect(try #require(scheduler.lastPlan).items.first?.fireTime == NewYork.local(2026, 10, 15, 9))
+    }
+
+    @Test func acceptingARepeatingReminderBeforeItsFirstDueTimeNudgesAtThatTime() throws {
+        clock.now = NewYork.local(2026, 10, 15, 8)
+        let reminder = received(state: .waiting)
+        var engine = engine(for: reminder)
+
+        engine.accept(reminder.id)
+
+        #expect(try #require(scheduler.lastPlan).items.first?.fireTime == NewYork.local(2026, 10, 15, 9))
+    }
+
+    @Test func aRepeatingReminderAcceptedAtItsDueTimeLeavesThatOccurrenceSkipped() throws {
+        clock.now = NewYork.local(2026, 10, 16, 9)
+        let reminder = received(state: .waiting)
+        var engine = engine(for: reminder)
+
+        engine.accept(reminder.id)
+
+        #expect(engine.openOccurrence(for: reminder.id) == nil)
+        #expect(try #require(scheduler.lastPlan).items.first?.dueTime == NewYork.local(2026, 10, 17))
+    }
+
+    @Test func aReminderAcceptedLaterCanBePausedAndResumedAsAnyOther() throws {
+        clock.now = NewYork.local(2026, 10, 17, 9, 30)
+        let reminder = received(state: .waiting)
+        var engine = engine(for: reminder)
+        engine.accept(reminder.id)
+
+        engine.pause(reminder.id)
+        #expect(engine.isPaused(reminder.id))
+        #expect(try #require(scheduler.lastPlan).items.isEmpty)
+
+        try engine.resume(reminder.id)
+        #expect(!engine.isPaused(reminder.id))
+        #expect(try #require(scheduler.lastPlan).items.first?.dueTime == NewYork.local(2026, 10, 18))
+    }
+
+    @Test func acceptingAnAcceptedOrPersonalReminderChangesNothing() {
+        clock.now = NewYork.local(2026, 10, 15, 9, 10)
+        let accepted = received(state: .accepted)
+        var personal = mine()
+        personal.title = "Call the plumber"
+        var engine = engine(for: accepted, personal)
+        let reminders = engine.reminders
+        let plans = scheduler.appliedPlans.count
+
+        engine.accept(accepted.id)
+        engine.accept(personal.id)
+        engine.accept(UUID())
+
+        #expect(engine.reminders == reminders)
+        #expect(scheduler.appliedPlans.count == plans)
+    }
+
+    @Test func removingAWaitingReminderDeletesItWithItsOccurrences() throws {
+        clock.now = NewYork.local(2026, 10, 17, 9, 30)
+        let reminder = received(state: .waiting)
+        var engine = engine(for: reminder)
+        #expect(engine.latestOccurrence(for: reminder.id) != nil)
+
+        engine.remove(reminder.id)
+
+        #expect(engine.reminders.isEmpty)
+        #expect(engine.latestOccurrence(for: reminder.id) == nil)
+        #expect(engine.histories[reminder.id] == nil)
+        #expect(try #require(scheduler.lastPlan).items.isEmpty)
+    }
+
+    @Test func removeLeavesAPersonalReminderAlone() {
+        clock.now = NewYork.local(2026, 10, 15, 9, 10)
+        let personal = mine()
+        var engine = engine(for: personal)
+
+        engine.remove(personal.id)
+
+        #expect(engine.reminders == [personal])
+        #expect(engine.openOccurrence(for: personal.id) != nil)
+    }
+
+    /// The sender's change reaches the copy through `update(reminders:)` (the revision path is
+    /// #187's): a change to a waiting copy's content applies in place and doesn't start it.
+    @Test func aChangeToAWaitingRemindersContentAppliesInPlaceWithoutStartingIt() throws {
+        clock.now = NewYork.local(2026, 10, 15, 9, 10)
+        let reminder = received(state: .waiting)
+        var engine = engine(for: reminder)
+
+        var changed = reminder
+        changed.title = "Take the vitamins"
+        changed.dueTime = NewYork.local(2026, 10, 15, 9, 5)
+        changed.strength = .relentless
+        engine.update(reminders: [changed])
+
+        #expect(engine.reminders == [changed])
+        #expect(engine.reminders[0].isWaiting)
+        #expect(engine.openOccurrence(for: reminder.id) == nil)
+        #expect(try #require(scheduler.lastPlan).items.isEmpty)
+    }
+
+    @Test func aWaitingCopyStillTakesTagsAndRejectsContentFromTheRecipient() throws {
+        clock.now = NewYork.local(2026, 10, 15, 8)
+        let reminder = received(state: .waiting)
+        var engine = engine(for: reminder)
+
+        var tagged = reminder
+        tagged.tagIDs = [tag]
+        try engine.edit(tagged)
+        #expect(engine.reminders[0].tagIDs == [tag])
+        #expect(engine.reminders[0].isWaiting)
+
+        var retitled = tagged
+        retitled.title = "Take the vitamins"
+        #expect(throws: EditError.receivedContent([.title])) { try engine.edit(retitled) }
+    }
+
+    @Test func doneDoesNothingToAWaitingReminderWithNothingOpen() {
+        clock.now = NewYork.local(2026, 10, 15, 9, 10)
+        let reminder = received(state: .waiting)
+        var engine = engine(for: reminder)
+
+        engine.markDone(reminder.id)
+
+        #expect(engine.latestOccurrence(for: reminder.id)?.state == .skipped(reason: .paused))
+        #expect(!engine.isPaused(reminder.id))
+    }
+
+    @Test func aOneOffAcceptedExactlyAtItsDueTimeNudgesAtOnce() {
+        clock.now = NewYork.local(2026, 10, 15, 9)
+        let reminder = receivedOneOff()
+        var engine = engine(for: reminder)
+
+        engine.accept(reminder.id)
+
+        #expect(engine.openOccurrence(for: reminder.id)?.dueTime == NewYork.local(2026, 10, 15, 9))
+    }
+
+    /// A repeat that has ended has no next due time: accepting it starts nothing, and what fell due
+    /// stays Skipped.
+    @Test func acceptingARepeatThatHasEndedPlansNothing() throws {
+        clock.now = NewYork.local(2026, 10, 20, 9, 30)
+        var reminder = received(state: .waiting)
+        reminder.repeatRule?.end = .count(3)
+        var engine = engine(for: reminder)
+
+        engine.accept(reminder.id)
+
+        #expect(engine.openOccurrence(for: reminder.id) == nil)
+        #expect(try #require(scheduler.lastPlan).items.isEmpty)
+        #expect(states(of: reminder, in: engine, onDays: [15, 16, 17]) == Array(repeating: .skipped(reason: .paused), count: 3))
+    }
+
+    @Test func pausingAWaitingReminderIsIgnoredSoAcceptStillStartsIt() throws {
+        clock.now = NewYork.local(2026, 10, 15, 8)
+        let reminder = received(state: .waiting)
+        var engine = engine(for: reminder)
+
+        engine.pause(reminder.id)
+        #expect(!engine.isPaused(reminder.id))
+
+        engine.accept(reminder.id)
+        #expect(!engine.isPaused(reminder.id))
+        #expect(try #require(scheduler.lastPlan).items.first?.fireTime == NewYork.local(2026, 10, 15, 9))
     }
 }

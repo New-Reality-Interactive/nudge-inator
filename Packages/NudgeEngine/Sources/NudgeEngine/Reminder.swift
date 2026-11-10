@@ -60,6 +60,12 @@ extension Reminder {
         if case .received = origin { true } else { false }
     }
 
+    /// Whether it is a received copy still waiting for the recipient to accept it (Ask me first).
+    /// It plans nothing, and what falls due meanwhile is Skipped, as while Paused.
+    public var isWaiting: Bool {
+        if case .received(_, _, _, .waiting) = origin { true } else { false }
+    }
+
     /// Whether its nudges break through Focus: its switch, or always for Relentless (ADR 0004).
     public var breaksThroughFocus: Bool {
         strength.breaksThroughFocus(switchedOn: breakThroughFocus)
@@ -104,8 +110,8 @@ public enum ReminderOrigin: Equatable, Sendable {
     /// reminder, so a later revision finds its copy. `revision` counts the sender's changes.
     case received(connectionID: UUID, sendersReminderID: Reminder.ID, revision: Int, state: ReceivedState)
 
-    /// Whether a received reminder has started (Delivery mode). Held here for the sharing code;
-    /// the engine plans a `waiting` copy as it does an `accepted` one until Ask me first lands (#186).
+    /// Whether a received reminder has started (Delivery mode). A `waiting` copy plans nothing
+    /// until `Engine.accept(_:)`.
     public enum ReceivedState: Equatable, Sendable {
         case accepted
         /// Waiting for the recipient to accept it.
