@@ -2,7 +2,7 @@
 # Runs every test: the NudgeEngine package, then the app tests on EACH simulator in the test
 # matrix (one per iOS version, named for it). Also builds the widget extension (it is a dependency
 # of the app scheme).
-# Env: SIMULATORS (simulator names separated by ";", default the iOS 26.5 and 27.0 ones below).
+# Env: SIMULATORS (simulator names separated by ";", default the iOS 26.5 and 27.2 ones below).
 # SIMULATORS= (set but empty) runs only the steps that need no simulator, as CI does.
 # Each run adds records to the test metrics: the engine's tests, the app build, each simulator's app
 # tests and the run as a whole (scripts/metrics.sh, #303).
@@ -11,7 +11,7 @@ cd "$(dirname "$0")/.."
 source scripts/metrics.sh
 run_began="$(date +%s)"
 
-SIMULATORS="${SIMULATORS-iPhone 15 Pro - iOS 26.5;iPhone 15 - iOS 27.0}"
+SIMULATORS="${SIMULATORS-iPhone 15 Pro - iOS 26.5;iPhone 15 - iOS 27.2}"
 IFS=';' read -r -a simulators <<< "$SIMULATORS"
 failed=()
 

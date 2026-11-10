@@ -6,7 +6,7 @@ cd "$(dirname "$0")/../.."
 source scripts/screenshots-plan.sh
 
 pro="iPhone 15 Pro - iOS 26.5"
-plain="iPhone 15 - iOS 27.0"
+plain="iPhone 15 - iOS 27.2"
 unused="a default no plan asks for" # the default variants, where a plan replaces them
 failures=0
 
