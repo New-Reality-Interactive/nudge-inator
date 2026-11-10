@@ -594,6 +594,64 @@ The Reminders tab's tools, in its layout, so they're learned once.
 - **Token:** `alarm-tint`. iOS draws everything except the title, the secondary **Open** button and
   the tint. Tint is `{colors.accent-dark}`. Behavior: spec › Alarm presentation and ADR 0001.
 
+### Shared reminders
+What the shared reminders mockup (`docs/mockups/2026-11-09-shared-reminders/`, #183) adds. It rewrites
+nothing above. Two items are exceptions to rules above, and name them: Disconnect's choice, and the
+sharing paused and offline banner.
+
+- **"From <name>" label:** on a received reminder, `person` then "From Maya" in `{typography.subhead}`
+  `{colors.secondary-label}`, under the title on Now's cards and every list row. It has no color of its
+  own: who sent a reminder isn't a status. Where the row has no strength badge (My Day, Reminders,
+  Last 24 Hours) the strength badge follows the label. Details add the strength in words, as How It
+  Nudges says it ("Relentless: rings an alarm until you mark it done").
+- **Mine | Sent:** the system's segmented `Picker` under the navigation bar and above the search field,
+  filling the content width. Two short words, so it stays segmented at the accessibility sizes.
+- **Segmented choices' capitalization:** the spec's words as written ("Start right away", "Ask me
+  first"), which are glossary terms. `All Tags | Any Tag` keeps its title style.
+- **Connection rows:** a round `{colors.tile-gray}` tile with `person`, the name in `{typography.body}`,
+  a detail line in `{typography.subhead}` `{colors.secondary-label}` ("Connected", "Invited · Waiting
+  for them to accept") and a chevron, under Connected and Invited headers. Settings' Connections row
+  is a `{colors.tile-gray}` tile with `person.2`, in a section headed Sharing.
+- **Sync states:** "Waiting to sync" with `clock`, in `{colors.secondary-label}`, on a Sent row's
+  trailing label and on a received reminder's "From" line. It's a state, so it's never accent, warning
+  or negative.
+- **Status labels Sent and received rows add:** Waiting, Canceled, Removed and Delivered, all in
+  `{colors.secondary-label}`, as Skipped and Paused are.
+- **Sent rows:** as Reminders tab rows, due time then title, with a detail line ("Delivered", "Not
+  sharing status", "Not sharing this one", "Waiting for them to accept", "Not delivered yet") and the
+  status label trailing. There's no swipe. Group headers name the person and, trailing, whether they
+  share status.
+- **Sent's tools:** the Reminders tab's search field, count header, Filter and Sort in the same places.
+  The filter sheet ("Filter Sent") has People, Status, Strength and Due Date, and Sort orders the
+  reminders inside each person's group. Sent has no tags, and no tools in its empty states. The count
+  is of reminders, so one sent to two people counts once.
+- **7-day history:** on a repeating Sent row, under its text: today and the 7 days before, eight cells,
+  oldest first, today on a `{colors.tertiary-fill}` cell, each with the day's initial and a glyph:
+  `checkmark.circle.fill` Done (positive), `xmark` Missed (negative), `bell` Nudging (negative), `minus`
+  Skipped, `pause` Paused and `clock` Coming up (secondary label, or `{colors.label}` on today's cell,
+  with its initial). The fill's rule is about text, and these are glyphs, so the status colors stay on
+  it. VoiceOver reads it as one element naming each day and
+  status, and details list the days in words. It's hidden with status sharing off, "Not sharing this
+  one", Waiting to sync and Waiting for them to accept.
+- **Waiting for You:** a section on Now between Nudging and Coming Up, each row with bordered small
+  Accept and Remove (destructive text) buttons. It doesn't count toward the Now badge.
+- **Notes on a received reminder:** a `{colors.cell}` card with `{rounded.control}` corners, `info.circle`
+  or `clock` in `{colors.secondary-label}`, a semibold line and a detail line. No color: a change or a
+  cancellation isn't "needs you now".
+- **Disconnect's choice is a sheet, an exception to confirmation dialogs (Components):** a dialog can
+  only list buttons, so it can't show Remove as the default. A checked list of the two options, then a
+  bordered Disconnect in destructive text, with the form's Cancel. When the other person ended the
+  connection the sheet has a prominent Continue and no Cancel, because the connection is already over
+  and the choice has to be made: the one question without a way to close it that changes nothing.
+- **Sharing paused and offline, an exception to Warning's meaning (Colors):** the `permission-banner`
+  with `{colors.warning}`, `icloud.slash` or `wifi.slash`, on Connections, Send To and Sent only. It
+  extends Warning from the alarms-off and Time Sensitive-off banners to these two, as the same kind of
+  "something can't reach you" message. Nothing else in the app changes.
+- **Sender-owned fields:** a received reminder's form shows the `lock` beside its reason ("Maya owns this
+  reminder"), as a locked row does, though these fields aren't Locked in the glossary's sense.
+- **Symbols added:** `person`, `person.2`, `person.badge.plus` (invites), `person.slash` (Disconnect),
+  `icloud.slash`, `wifi.slash`, `minus`. Also used here: `pause` and `info.circle`.
+
 ## Mapping to code
 
 - **Colors:** asset-catalog color sets named after the frontmatter keys without suffix (`Accent` is

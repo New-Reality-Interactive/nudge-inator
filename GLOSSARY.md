@@ -40,11 +40,11 @@ The status of a reminder that isn't Nudging or Paused and has a due time ahead. 
 _Avoid_: Upcoming, scheduled, pending
 
 **Status label**:
-The word, with its color, that says a reminder's or occurrence's status: Nudging, Coming up, Paused, Done, Missed or Skipped.
+The word, with its color, that says a reminder's or occurrence's status: Nudging, Coming up, Paused, Done, Missed or Skipped, and for a sent or received reminder also Waiting, Canceled or Removed.
 _Avoid_: Status badge (a badge is a count)
 
 **Locked**:
-The state of a Nudging reminder's due time, repeat, strength, pace and Break through Focus. They can't be edited until the occurrence closes. Title, notes and tags stay editable.
+The state of a Nudging reminder's due time, repeat, strength, pace and Break through Focus. They can't be edited until the occurrence closes. Title, notes and tags stay editable. A sender's change to a received reminder passes the lock (ADR 0005).
 _Avoid_: Frozen, read-only
 
 **Done**:
@@ -101,7 +101,7 @@ The state of a reminder that has stopped nudging without being lost. Pause close
 _Avoid_: Disabled, suspended
 
 **Skipped**:
-How an occurrence closes when its reminder is paused while it is Nudging, or when it falls due while the reminder is paused. It isn't counted as Missed.
+How an occurrence closes when its reminder is paused while it is Nudging, or when it falls due while the reminder is paused or waiting to be accepted, or when a sender's change reaches a copy that is Nudging. It isn't counted as Missed.
 _Avoid_: Cancelled
 
 **Tag**:
@@ -135,3 +135,45 @@ The number on the app's home-screen icon: how many reminders have an occurrence 
 
 **Now badge**:
 The number on the Now tab: how many reminders have an occurrence that is Nudging. The Icon badge shows the same count.
+
+**Connection**:
+Two people who have agreed to send each other reminders, set up by one accepted Invite. It works both ways, and either person can end it.
+_Avoid_: Friend, contact, share, follower
+
+**Invite**:
+A personal request to connect, sent to the Apple Account of one person. Until they accept it, the sender sees that person as Invited.
+_Avoid_: Share (for a connection), request
+
+**Sender**:
+The person who sent a reminder. The sender owns what it says and when it's due.
+
+**Recipient**:
+A person a reminder was sent to. Each recipient has their own copy, with its own occurrences and status.
+
+**Sent reminder**:
+A reminder as its sender sees it, listed under Sent by person. It nudges only its recipients and has no tags.
+_Avoid_: Shared reminder, outgoing reminder
+
+**Received reminder**:
+A recipient's copy of a reminder someone sent them, shown among their own as "From <name>". The recipient can mark it Done, pause it, remove it and tag it, and can't change what it says or when it's due.
+_Avoid_: Shared reminder, incoming reminder
+
+**Status sharing**:
+A recipient's choice, per connection, whether the sender sees how their reminders are going. "Don't share this one" turns it off for one received reminder.
+_Avoid_: Visibility, privacy setting
+
+**Delivery mode**:
+A recipient's choice, per connection, of how a received reminder starts: Start right away, or Ask me first, where it waits for them to accept it and sends no nudge until they do.
+_Avoid_: Approval, acceptance mode
+
+**Delivered**:
+That a sent reminder's copy has reached the recipient's iPhone. The sender sees it whatever the status sharing.
+_Avoid_: Received, sent
+
+**Waiting to sync**:
+What hasn't reached the other person yet because it hasn't gone through iCloud: a sent reminder, a change or a status.
+_Avoid_: Pending, offline
+
+**Canceled**:
+The state of a received reminder its sender deleted. It no longer nudges and stays, with a note, until the recipient removes it.
+_Avoid_: Deleted, Skipped (an occurrence's close)
