@@ -348,19 +348,7 @@ public struct Engine {
         let changed = lockedFields(of: edited.id).filter { $0.isChanged(from: current, to: edited) }
         guard changed.isEmpty else { throw .locked(changed) }
         if LockedField.allCases.contains(where: { $0.movesNudgeTimes && $0.isChanged(from: current, to: edited) }) {
-            let now = clock.now
-            let latest = latestOccurrence(for: current.id)?.dueTime
-            for dueTime in latestAndListedDueTimes(of: current) {
-                if let closing = reading(of: current.id, dueAt: dueTime)?.closing {
-                    historyByReminder[edited.id, default: History()].saved.closedOccurrences[dueTime] = closing
-                }
-            }
-            if let latest { historyByReminder[edited.id, default: History()].saved.editAppliesAfter = latest }
-            // The system's answer was about fire times the moved ladder no longer has. A new time
-            // landing on an old one would otherwise come marked with no report.
-            if let reported = historyByReminder[edited.id]?.reportedAlarmLimitFireTimes {
-                historyByReminder[edited.id]?.reportedAlarmLimitFireTimes = reported.filter { $0 <= now }
-            }
+            fixOccurrences(of: current, movingNudgeTimes: true)
         }
         if edited.title != current.title {
             historyByReminder[edited.id, default: History()].saved.replacedTitles.append(Replaced(value: current.title, replacedAt: clock.now))
@@ -371,6 +359,89 @@ public struct Engine {
         kept.origin = current.origin
         reminders = reminders.map { $0.id == kept.id ? kept : $0 }
         applyPlan()
+    }
+
+    /// Fixes how the occurrences that closed so far closed, before the reminder's fields change,
+    /// since the clock would now work them out from the new fields. With `movingNudgeTimes` the new
+    /// fields apply from the next occurrence: due times up to the latest never happened, and the
+    /// system's alarm-limit answers about the old ladder go.
+    private mutating func fixOccurrences(of current: Reminder, movingNudgeTimes: Bool) {
+        let latest = latestOccurrence(for: current.id)?.dueTime
+        for dueTime in latestAndListedDueTimes(of: current) {
+            if let closing = reading(of: current.id, dueAt: dueTime)?.closing {
+                historyByReminder[current.id, default: History()].saved.closedOccurrences[dueTime] = closing
+            }
+        }
+        guard movingNudgeTimes else { return }
+        if let latest { historyByReminder[current.id, default: History()].saved.editAppliesAfter = latest }
+        // The system's answer was about fire times the moved ladder no longer has. A new time
+        // landing on an old one would otherwise come marked with no report.
+        let now = clock.now
+        if let reported = historyByReminder[current.id]?.reportedAlarmLimitFireTimes {
+            historyByReminder[current.id]?.reportedAlarmLimitFireTimes = reported.filter { $0 <= now }
+        }
+    }
+
+    /// The sender's revision of a received reminder, passing the lock (ADR 0005). `revised` carries
+    /// the sender's new content under the copy's ID; the copy's tags, creation date and recipient's
+    /// state (accepted or waiting) stay, and the origin takes `revised`'s revision number. Title
+    /// and notes change at once. A change to the due time, repeat, strength, pace or Break through
+    /// Focus applies even while the copy is Nudging: its open occurrence closes as Skipped and the
+    /// plan re-applies from the new values, the same outcome as Pause, edit and Resume (so the app
+    /// silences a ringing alarm as it does for Pause, `dueTimesAnAlarmMayBeRinging`). A copy that
+    /// waits to be accepted, or is paused, takes the change in place and stays so.
+    ///
+    /// Returns what changed, in the order of `ReceivedContentField.allCases`: empty for a revision
+    /// that changes nothing, and for a reminder that isn't a received copy, which is left alone.
+    /// A one-off whose due time has come keeps it when the revision's is earlier: a copy accepted
+    /// late has its due time set to the moment of acceptance, so the sender's original due time
+    /// isn't a change, and applying it would make the copy a long-overdue Missed.
+    @discardableResult
+    public mutating func applySendersRevision(_ revised: Reminder) -> [ReceivedChange] {
+        guard let current = reminder(revised.id),
+              case let .received(connectionID, sendersReminderID, _, state) = current.origin
+        else { return [] }
+        var incoming = revised
+        if current.repeatRule == nil, incoming.repeatRule == nil,
+           incoming.dueTime < current.dueTime, current.dueTime <= clock.now {
+            incoming.dueTime = current.dueTime
+        }
+        let changes = ReceivedContentField.allCases.compactMap { ReceivedChange($0, from: current, to: incoming) }
+        var kept = current
+        kept.title = incoming.title
+        kept.notes = incoming.notes
+        kept.dueTime = incoming.dueTime
+        kept.repeatRule = incoming.repeatRule
+        kept.strength = incoming.strength
+        kept.pace = incoming.pace
+        kept.breakThroughFocus = incoming.breakThroughFocus
+        if case let .received(_, _, newRevision, _) = revised.origin {
+            kept.origin = .received(connectionID: connectionID, sendersReminderID: sendersReminderID, revision: newRevision, state: state)
+        }
+        guard !changes.isEmpty else {
+            reminders = reminders.map { $0.id == kept.id ? kept : $0 }
+            return []
+        }
+        let movesNudgeTimes = LockedField.allCases.contains { $0.movesNudgeTimes && $0.isChanged(from: current, to: kept) }
+        let closesOpenOccurrence = openOccurrence(for: current.id) != nil
+            && LockedField.allCases.contains { $0.isChanged(from: current, to: kept) }
+        if closesOpenOccurrence {
+            // Pause, so the open occurrence reads Skipped and is fixed so below, then lift the pause
+            // again: only that occurrence was paused, and a due time of now must nudge.
+            historyByReminder[current.id, default: History()].saved.pauseSpans.append(PauseSpan(start: clock.now))
+        }
+        if movesNudgeTimes || closesOpenOccurrence {
+            fixOccurrences(of: current, movingNudgeTimes: movesNudgeTimes)
+        }
+        if closesOpenOccurrence {
+            historyByReminder[current.id]?.saved.pauseSpans.removeLast()
+        }
+        if kept.title != current.title {
+            historyByReminder[kept.id, default: History()].saved.replacedTitles.append(Replaced(value: current.title, replacedAt: clock.now))
+        }
+        reminders = reminders.map { $0.id == kept.id ? kept : $0 }
+        applyPlan()
+        return changes
     }
 
     /// The fields an Edit can't change now: every `LockedField` while the reminder has a Nudging

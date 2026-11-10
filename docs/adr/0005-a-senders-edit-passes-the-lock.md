@@ -12,3 +12,7 @@ ADR 0002 locks these fields so that a person can't escape their own nudging by e
 ## Consequences
 
 - A Skipped occurrence on a received reminder can come from the sender, not only from the recipient's Pause.
+- Break through Focus counts with the rest: a sender's change to it also closes the open occurrence, as Pause, edit and Resume would. Title and notes alone close nothing.
+- A one-off that is Nudging or already closed has no due time after now to re-plan from, so after the sender changes its strength or pace it nudges no more until the sender gives it a new due time. That is Resume's `needsNewDueTime` case.
+- A late-accepted one-off has its due time set to the moment of acceptance (Ask me first). The sender's revision carries the original due time, which the engine doesn't count as a change when it is earlier than the copy's and the copy's has come, so the note stays quiet and the copy doesn't become a long-overdue Missed.
+- The change note's fields are the old and new values of each changed field, returned by the engine; the screens word them.
