@@ -8,9 +8,7 @@ import NudgeEngine
 /// The order is read from the rows `RemindersScreen` shows, so the screen is the only place that
 /// sorts. `RemindersScreen` applies the order it is given: a reminder added since goes where the
 /// sort puts it, and a deleted or filtered-out one drops out.
-struct RemindersKeptOrder: Equatable {
-    /// What the tab decides from: whether it is the chosen tab, what narrows and sorts the list,
-    /// and the screen state.
+struct RemindersKeptOrder {
     struct Inputs: Equatable, Sendable {
         let isChosen: Bool
         let sort: RemindersSort
@@ -20,7 +18,6 @@ struct RemindersKeptOrder: Equatable {
 
     /// What the tab saw happen.
     enum Change: Sendable {
-        /// The tab's view appeared.
         case appeared(Inputs)
         case changed(from: Inputs, to: Inputs)
 
@@ -43,7 +40,7 @@ struct RemindersKeptOrder: Equatable {
         }
     }
 
-    private struct Kept: Equatable {
+    private struct Kept {
         let sort: RemindersSort
         let filter: RemindersFilter
         let ids: [Reminder.ID]

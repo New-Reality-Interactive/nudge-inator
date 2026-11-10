@@ -43,6 +43,12 @@ struct RemindersKeptOrderTests {
     let fixture = MyDayScreenTests()
     let byCreation = RemindersSort.createdOldestFirst
     let byDueDate = RemindersSort(field: .dueDate, order: .ascending)
+    let noFilter = RemindersFilter()
+
+    /// What the tab reads the order from: the screen as it sorts now.
+    func read(_ day: MyDayScreenTests.Day) -> (RemindersSort, RemindersFilter) -> RemindersScreen? {
+        { sort, filter in RemindersScreen(engine: day.model.engine, sort: sort, filter: filter) }
+    }
 
     // MARK: The refresh rule
 
@@ -55,7 +61,7 @@ struct RemindersKeptOrderTests {
     // MARK: The kept order
 
     @Test func beforeAnyOrderIsKeptThereIsNoneToShow() {
-        #expect(RemindersKeptOrder().ids(for: byCreation, filter: RemindersFilter()) == nil)
+        #expect(RemindersKeptOrder().ids(for: byCreation, filter: noFilter) == nil)
     }
 
     @Test func theOrderKeptIsTheRowsTheScreenShows() async throws {
@@ -63,9 +69,7 @@ struct RemindersKeptOrderTests {
         let filter = RemindersFilter(statuses: [.nudging])
         var order = RemindersKeptOrder()
 
-        order.respond(to: .appeared(inputs(sort: byDueDate, filter: filter))) { sort, filter in
-            RemindersScreen(engine: day.model.engine, sort: sort, filter: filter)
-        }
+        order.respond(to: .appeared(inputs(sort: byDueDate, filter: filter)), reading: read(day))
 
         let shown = RemindersScreen(engine: day.model.engine, sort: byDueDate, filter: filter).rows.map(\.id)
         #expect(order.ids(for: byDueDate, filter: filter) == shown)
@@ -74,12 +78,10 @@ struct RemindersKeptOrderTests {
     @Test func aSortOrAFilterThatIsNotTheKeptOnesGetsNoOrder() async throws {
         let day = try await fixture.dayAtOnePM()
         var order = RemindersKeptOrder()
-        order.respond(to: .appeared(inputs(sort: byDueDate))) { sort, filter in
-            RemindersScreen(engine: day.model.engine, sort: sort, filter: filter)
-        }
+        order.respond(to: .appeared(inputs(sort: byDueDate)), reading: read(day))
 
-        #expect(order.ids(for: byDueDate, filter: RemindersFilter()) != nil)
-        #expect(order.ids(for: byCreation, filter: RemindersFilter()) == nil)
+        #expect(order.ids(for: byDueDate, filter: noFilter) != nil)
+        #expect(order.ids(for: byCreation, filter: noFilter) == nil)
         #expect(order.ids(for: byDueDate, filter: RemindersFilter(statuses: [.nudging])) == nil)
         #expect(order.ids(for: byDueDate, filter: RemindersFilter(search: "meds")) == nil)
     }
@@ -87,29 +89,23 @@ struct RemindersKeptOrderTests {
     @Test func aChangeThatDoesNotKeepTheOrderAgainLeavesTheKeptOneAlone() async throws {
         let day = try await fixture.dayAtOnePM()
         var order = RemindersKeptOrder()
-        order.respond(to: .appeared(inputs(sort: byDueDate))) { sort, filter in
-            RemindersScreen(engine: day.model.engine, sort: sort, filter: filter)
-        }
-        let kept = order.ids(for: byDueDate, filter: RemindersFilter())
+        order.respond(to: .appeared(inputs(sort: byDueDate)), reading: read(day))
+        let kept = order.ids(for: byDueDate, filter: noFilter)
         day.model.delete(day.dentist.id)
 
-        order.respond(to: .changed(from: inputs(sort: byDueDate), to: inputs(isChosen: false, sort: byDueDate))) { sort, filter in
-            RemindersScreen(engine: day.model.engine, sort: sort, filter: filter)
-        }
+        order.respond(to: .changed(from: inputs(sort: byDueDate), to: inputs(isChosen: false, sort: byDueDate)), reading: read(day))
 
-        #expect(order.ids(for: byDueDate, filter: RemindersFilter()) == kept)
+        #expect(order.ids(for: byDueDate, filter: noFilter) == kept)
     }
 
     @Test func withNoScreenToReadTheOrderIsLost() async throws {
         let day = try await fixture.dayAtOnePM()
         var order = RemindersKeptOrder()
-        order.respond(to: .appeared(inputs())) { sort, filter in
-            RemindersScreen(engine: day.model.engine, sort: sort, filter: filter)
-        }
+        order.respond(to: .appeared(inputs()), reading: read(day))
 
         order.respond(to: .appeared(inputs())) { _, _ in nil }
 
-        #expect(order.ids(for: byCreation, filter: RemindersFilter()) == nil)
+        #expect(order.ids(for: byCreation, filter: noFilter) == nil)
     }
 
     // MARK: Sequences
@@ -120,24 +116,21 @@ struct RemindersKeptOrderTests {
     @Test func aSortChangeThenDoneThenChoosingTheTabAgain() async throws {
         let day = try await fixture.dayAtOnePM()
         fixture.clock.now = NewYork.local(2026, 10, 17, 6, 31)
-        let read = { (sort: RemindersSort, filter: RemindersFilter) -> RemindersScreen? in
-            RemindersScreen(engine: day.model.engine, sort: sort, filter: filter)
-        }
         var order = RemindersKeptOrder()
-        order.respond(to: .appeared(inputs(sort: byCreation)), reading: read)
+        order.respond(to: .appeared(inputs(sort: byCreation)), reading: read(day))
 
-        order.respond(to: .changed(from: inputs(sort: byCreation), to: inputs(sort: byDueDate)), reading: read)
-        let kept = try #require(order.ids(for: byDueDate, filter: RemindersFilter()))
+        order.respond(to: .changed(from: inputs(sort: byCreation), to: inputs(sort: byDueDate)), reading: read(day))
+        let kept = try #require(order.ids(for: byDueDate, filter: noFilter))
         day.model.markDone(day.meds.id)
 
-        let afterDone = RemindersScreen(engine: day.model.engine, sort: byDueDate, keptOrder: order.ids(for: byDueDate, filter: RemindersFilter()))
+        let afterDone = RemindersScreen(engine: day.model.engine, sort: byDueDate, keptOrder: order.ids(for: byDueDate, filter: noFilter))
         #expect(afterDone.rows.map(\.id) == kept)
 
-        order.respond(to: .changed(from: inputs(sort: byDueDate), to: inputs(isChosen: false, sort: byDueDate)), reading: read)
-        #expect(order.ids(for: byDueDate, filter: RemindersFilter()) == kept)
+        order.respond(to: .changed(from: inputs(sort: byDueDate), to: inputs(isChosen: false, sort: byDueDate)), reading: read(day))
+        #expect(order.ids(for: byDueDate, filter: noFilter) == kept)
 
-        order.respond(to: .changed(from: inputs(isChosen: false, sort: byDueDate), to: inputs(sort: byDueDate)), reading: read)
-        let sortedAgain = try #require(order.ids(for: byDueDate, filter: RemindersFilter()))
+        order.respond(to: .changed(from: inputs(isChosen: false, sort: byDueDate), to: inputs(sort: byDueDate)), reading: read(day))
+        let sortedAgain = try #require(order.ids(for: byDueDate, filter: noFilter))
         #expect(sortedAgain != kept)
         #expect(sortedAgain.last == day.meds.id)
     }
@@ -146,23 +139,20 @@ struct RemindersKeptOrderTests {
     /// out, with the other rows where they were; choosing the tab again then holds both.
     @Test func addingAndDeletingWhileAnOrderIsKept() async throws {
         let day = try await fixture.dayAtOnePM()
-        let read = { (sort: RemindersSort, filter: RemindersFilter) -> RemindersScreen? in
-            RemindersScreen(engine: day.model.engine, sort: sort, filter: filter)
-        }
         var order = RemindersKeptOrder()
-        order.respond(to: .appeared(inputs(sort: byDueDate)), reading: read)
-        let kept = try #require(order.ids(for: byDueDate, filter: RemindersFilter()))
+        order.respond(to: .appeared(inputs(sort: byDueDate)), reading: read(day))
+        let kept = try #require(order.ids(for: byDueDate, filter: noFilter))
 
         day.model.delete(day.dentist.id)
         let passport = Reminder(title: "Renew the passport", dueTime: NewYork.local(2026, 10, 16, 9), strength: .gentle)
         day.model.add(passport)
 
-        let shown = RemindersScreen(engine: day.model.engine, sort: byDueDate, keptOrder: order.ids(for: byDueDate, filter: RemindersFilter()))
+        let shown = RemindersScreen(engine: day.model.engine, sort: byDueDate, keptOrder: order.ids(for: byDueDate, filter: noFilter))
         #expect(shown.rows.map(\.id) == [passport.id] + kept.filter { $0 != day.dentist.id })
         #expect(!shown.rows.map(\.id).contains(day.dentist.id))
 
-        order.respond(to: .changed(from: inputs(isChosen: false, sort: byDueDate), to: inputs(sort: byDueDate)), reading: read)
-        #expect(order.ids(for: byDueDate, filter: RemindersFilter()) == shown.rows.map(\.id))
+        order.respond(to: .changed(from: inputs(isChosen: false, sort: byDueDate), to: inputs(sort: byDueDate)), reading: read(day))
+        #expect(order.ids(for: byDueDate, filter: noFilter) == shown.rows.map(\.id))
     }
 
     /// Between the input changing and the handler keeping a new order, the first frame has the old
@@ -170,11 +160,8 @@ struct RemindersKeptOrderTests {
     @Test func theFirstFrameAfterASortOrFilterChangeSortsAfresh() async throws {
         let day = try await fixture.dayAtOnePM()
         fixture.clock.now = NewYork.local(2026, 10, 17, 6, 31)
-        let read = { (sort: RemindersSort, filter: RemindersFilter) -> RemindersScreen? in
-            RemindersScreen(engine: day.model.engine, sort: sort, filter: filter)
-        }
         var order = RemindersKeptOrder()
-        order.respond(to: .appeared(inputs(sort: byDueDate)), reading: read)
+        order.respond(to: .appeared(inputs(sort: byDueDate)), reading: read(day))
         day.model.markDone(day.meds.id)
 
         let firstFrame = RemindersScreen(engine: day.model.engine, sort: byDueDate, filter: RemindersFilter(statuses: [.nudging]), keptOrder: order.ids(for: byDueDate, filter: RemindersFilter(statuses: [.nudging])))
