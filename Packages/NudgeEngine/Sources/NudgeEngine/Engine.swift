@@ -270,9 +270,11 @@ public struct Engine {
 
     /// Stops the reminder nudging without losing it. Its open occurrence, if any, closes as Skipped,
     /// and so does anything that falls due until Resume (the mockup's PAUSE_NOTE). With nothing
-    /// open, Pause only marks the reminder paused. Pausing a paused reminder is ignored.
+    /// open, Pause only marks the reminder paused. Pausing a paused reminder is ignored, and so is
+    /// pausing a copy still waiting to be accepted: it is already held, and a pause then would
+    /// outlast Accept.
     public mutating func pause(_ reminderID: Reminder.ID) {
-        guard !isPaused(reminderID) else { return }
+        guard !isPaused(reminderID), reminder(reminderID)?.isWaiting != true else { return }
         historyByReminder[reminderID, default: History()].saved.pauseSpans.append(PauseSpan(start: clock.now))
         applyPlan()
     }
@@ -301,6 +303,34 @@ public struct Engine {
         guard reminder(reminderID) != nil else { return }
         reminders.removeAll { $0.id == reminderID }
         applyPlan()
+    }
+
+    /// Starts a received copy that is waiting to be accepted (Ask me first). A repeating one starts
+    /// at its next due time: what fell due while it waited stays Skipped, which is a pause from the
+    /// beginning of time to now. A one-off whose due time has passed starts nudging at once, so its
+    /// due time becomes now; one not yet due nudges at its due time. Accepting a reminder that
+    /// isn't a waiting copy is ignored.
+    public mutating func accept(_ reminderID: Reminder.ID) {
+        guard let index = reminders.firstIndex(where: { $0.id == reminderID }),
+              case let .received(connectionID, sendersReminderID, revision, .waiting) = reminders[index].origin
+        else { return }
+        let now = clock.now
+        reminders[index].origin = .received(connectionID: connectionID, sendersReminderID: sendersReminderID, revision: revision, state: .accepted)
+        if reminders[index].repeatRule != nil {
+            // First, so the spans stay in time order, which the occurrence lookup relies on.
+            historyByReminder[reminderID, default: History()].saved.pauseSpans.insert(PauseSpan(start: .distantPast, end: now), at: 0)
+        } else if reminders[index].dueTime < now {
+            reminders[index].dueTime = now
+        }
+        applyPlan()
+    }
+
+    /// The recipient's Remove of a received copy: it goes, with its occurrences and history, and
+    /// everything pending for it is canceled. A reminder of the person's own is ignored: that is
+    /// Delete.
+    public mutating func remove(_ reminderID: Reminder.ID) {
+        guard reminder(reminderID)?.isReceived == true else { return }
+        delete(reminderID)
     }
 
     /// Applies the person's changes to a reminder the engine holds. An Edit that changes a Locked
@@ -440,7 +470,7 @@ public struct Engine {
     /// stops where the occurrence after it falls due and takes over.
     private func plan() -> SchedulePlan {
         SchedulePlan(items: reminders.flatMap { reminder -> [SchedulePlan.Item] in
-            if isPaused(reminder.id) { return [] }
+            if isPaused(reminder.id) || reminder.isWaiting { return [] }
             var items: [SchedulePlan.Item] = []
             let next = reminder.nextDueTime(after: clock.now, calendar: calendar)
             if let open = openOccurrence(for: reminder.id) {
@@ -666,7 +696,9 @@ public struct Engine {
         // open in. If it hadn't closed by then, it's Skipped: the Nudging one that Pause closes, any
         // due while paused, and one an edit while paused moved to before the pause.
         // It closes when the pause starts, or at its due time if that came while paused.
-        if let pause = historyByReminder[reminder.id]?.saved.pauseSpans.first(where: { dueTime <= $0.end ?? .distantFuture }),
+        // A copy waiting to be accepted is paused from the beginning of time, until it's accepted.
+        let pauseSpans = (reminder.isWaiting ? [PauseSpan(start: .distantPast)] : []) + (historyByReminder[reminder.id]?.saved.pauseSpans ?? [])
+        if let pause = pauseSpans.first(where: { dueTime <= $0.end ?? .distantFuture }),
            min(giveUpTime, takeOverTime ?? giveUpTime) > pause.start {
             // Nothing was sent if it fell due while paused.
             let sent = dueTime > pause.start ? 0 : nudgeTimes.count { $0 <= pause.start }
