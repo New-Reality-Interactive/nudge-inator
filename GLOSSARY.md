@@ -118,6 +118,10 @@ _Avoid_: Today (alone), due now
 The tab that lists every reminder once, in any status, by creation date, with search and filters.
 _Avoid_: All Reminders, list, library
 
+**Kept order**:
+The order the Reminders tab's rows had when it last sorted them, which the rows keep so that Done or going Missed doesn't move a row sorted by Due Date. The tab sorts again when it is chosen, when the sort or filter changes, or when the store is read; opening a reminder's details and coming Back keeps it. A reminder added since goes where the sort puts it, and a deleted or filtered-out one drops out.
+_Avoid_: Frozen order, sticky sort, cached order
+
 **Due Date filter**:
 The part of the Reminders tab's filter sheet that narrows the list to reminders due from one day to another, both days included. Either day may be left off. A reminder is tested by the due time its row shows.
 _Avoid_: Date range (on screen), start and end (a reminder's Start is its first due time)
