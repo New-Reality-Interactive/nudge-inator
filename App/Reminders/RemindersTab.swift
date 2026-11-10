@@ -22,7 +22,7 @@ struct RemindersTab: View {
     var previewEngine: Engine?
 
     @Environment(AppModel.self) private var model: AppModel?
-    @State private var keptOrder: KeptOrder?
+    @State private var keptOrder = RemindersKeptOrder()
     /// What's applied from the filter sheet.
     @State private var choices = RemindersFilterChoices()
     @State private var isFiltering = false
@@ -46,7 +46,7 @@ struct RemindersTab: View {
                             engine: $0,
                             sort: sort.wrappedValue,
                             filter: filter,
-                            keptOrder: keptOrder?.ids(for: sort.wrappedValue, filter: filter)
+                            keptOrder: keptOrder.ids(for: sort.wrappedValue, filter: filter)
                         )
                     }
                     if let screen, screen.emptyState != .noReminders {
@@ -111,11 +111,8 @@ struct RemindersTab: View {
                 }
             }
         }
-        .onAppear { keepOrder() }
-        .onChange(of: isChosen) { if isChosen { keepOrder() } }
-        .onChange(of: sort.wrappedValue) { keepOrder() }
-        .onChange(of: filter) { keepOrder() }
-        .onChange(of: state) { keepOrder() }
+        .onAppear { keepOrder(for: .appeared(keptOrderInputs)) }
+        .onChange(of: keptOrderInputs) { old, new in keepOrder(for: .changed(from: old, to: new)) }
     }
 
     private var engine: Engine? {
@@ -172,22 +169,14 @@ struct RemindersTab: View {
         }
     }
 
-    /// The rows' order as the engine sorts them now, kept until the list's inputs next change.
-    private func keepOrder() {
-        let sort = sort.wrappedValue
-        let list = engine?.remindersList(sortedBy: sort, filteredBy: filter)
-        keptOrder = list.map { KeptOrder(sort: sort, filter: filter, ids: $0.items.map(\.reminder.id)) }
+    private var keptOrderInputs: RemindersKeptOrder.Inputs {
+        RemindersKeptOrder.Inputs(isChosen: isChosen, sort: sort.wrappedValue, filter: filter, state: state)
     }
 
-    /// An order kept for one sort and filter. Until `onChange` keeps one for a new one, the first
-    /// frame drawn with it sorts afresh rather than show the old order.
-    private struct KeptOrder {
-        let sort: RemindersSort
-        let filter: RemindersFilter
-        let ids: [Reminder.ID]
-
-        func ids(for sort: RemindersSort, filter: RemindersFilter) -> [Reminder.ID]? {
-            sort == self.sort && filter == self.filter ? ids : nil
+    /// Keeps the rows' order again when the change calls for it, from the rows the screen shows.
+    private func keepOrder(for change: RemindersKeptOrder.Change) {
+        keptOrder.respond(to: change) { sort, filter in
+            engine.map { RemindersScreen(engine: $0, sort: sort, filter: filter) }
         }
     }
 
