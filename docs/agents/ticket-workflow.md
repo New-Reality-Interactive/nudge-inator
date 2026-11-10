@@ -11,13 +11,13 @@ tool at its step.
 ## Start
 
 The developer runs `/clear` and types `/implement #<n>`, `<n>` being the ticket's issue number.
-Everything else the ticket needs is in the ticket, under **Before you start** (below).
+Everything else the ticket needs is in the ticket: its sections, and **Before you start** (both below).
 
 1. Check every issue blocking it is closed (`issue-tracker.md`, Blocked by). If one isn't, stop and say which.
    If the ticket can't be built backwards compatible (`release.md`, Features and versions), stop and say what breaks.
 2. Branch from an up-to-date `main`: `<feature>-<n>-<slug>`, such as `tags-83-filter-sheet`, `<feature>`
    being the slug in the milestone's description.
-3. Read the ticket, its Before you start, the Comments of the tickets it builds on, and the spec
+3. Read the ticket, all its sections (Context, Must keep, Developer stops) and its Before you start, the Comments of the tickets it builds on, and the spec
    sections it names (`review.md`, Session size).
 
 ## During `/implement`
@@ -98,9 +98,20 @@ A ticket that changes something on screen records every finding in its Comments 
 11. Find the next ticket: the lowest-numbered open sub-issue of the feature's spec with no open
     blocker. If none is left, the feature is ready to release: follow
     `release.md`, and tell the developer which steps are theirs.
-12. Add its **Before you start** to the issue body, and give the developer one line, then stop:
+12. Add its **Before you start** to the issue body, and any of the ticket sections (below) it lacks (an older ticket does), and give the developer one line, then stop:
 
     > Run `/clear`, `/model` → <model>, effort <level> (<why>), then `/implement #<n>`.
+
+### Ticket sections
+
+Every ticket body has the same sections, in this order. `to-tickets` writes them from the block the agent drafts; the `implement` skill doesn't parse them, it reads the body, so this file is what gives them meaning. A ticket that predates them gets the three new ones when it becomes the next ticket (step 12), not before.
+
+- `## Parent`, `## What to build`, `## Acceptance criteria`: the `to-tickets` template, with blockers as native edges.
+- `## Context`: where this belongs, in prose: the spec sections it implements, the ADRs and `GLOSSARY.md` terms that apply, the mockup it follows. No file paths or code snippets.
+- `## Must keep`: what the change must not break, such as data it carries forward (`release.md`, Backwards compatible) or behaviour other screens rely on.
+- `## Developer stops`: where the developer takes part: `phone check`, `device check`, `approval of X`, or `none`. A ticket that is the developer's own steps is `ready-for-human`.
+
+The `tdd` seams are not in the ticket: they depend on what earlier tickets leave behind, so step 4 records them in its Comments.
 
 ### Before you start
 
@@ -111,7 +122,6 @@ A section at the end of the issue body, written when the ticket before it merges
 
 - Builds on: #<n>: <what it left that this one needs, and which of its comments says so>.
 - Watch for: <anything earlier tickets found that this one could trip on>.
-- Developer stops: <phone check | device check | approval of X | none>.
 ```
 
 ## Choosing a model and effort
