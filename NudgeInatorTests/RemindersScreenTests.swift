@@ -164,6 +164,43 @@ struct RemindersScreenTests {
         #expect(sortedAgain.rows.last?.id == day.meds.id)
     }
 
+    /// Sort change, then Done, then the tab chosen again, as the tab keeps the order (ticket 325):
+    /// the order is kept under the new sort, Done leaves the row where it was, and keeping again
+    /// sorts afresh. The sort that was kept before the change is no longer what's shown.
+    @Test func aSortChangeKeepsTheNewOrderDoneLeavesItAndChoosingTheTabAgainSortsAgain() async throws {
+        let day = try await fixture.dayAtOnePM()
+        fixture.clock.now = NewYork.local(2026, 10, 17, 6, 31)
+        let byCreation = RemindersSort.createdOldestFirst
+        let byDueDate = RemindersSort(field: .dueDate, order: .ascending)
+        let keptByCreation = RemindersScreen(engine: day.model.engine, sort: byCreation).rows.map(\.id)
+        let keptByDueDate = RemindersScreen(engine: day.model.engine, sort: byDueDate).rows.map(\.id)
+        #expect(keptByCreation != keptByDueDate)
+
+        day.model.markDone(day.meds.id)
+
+        #expect(RemindersScreen(engine: day.model.engine, sort: byDueDate, keptOrder: keptByDueDate).rows.map(\.id) == keptByDueDate)
+        let chosenAgain = RemindersScreen(engine: day.model.engine, sort: byDueDate).rows.map(\.id)
+        #expect(chosenAgain != keptByDueDate)
+        #expect(chosenAgain.last == day.meds.id)
+    }
+
+    /// Done and a new reminder together, with the order kept: the row keeps its place and the new
+    /// one goes where the sort puts it, and a delete after that leaves the rest as they were.
+    @Test func addingAndDeletingWhileAnOrderIsKeptLeavesTheOtherRowsWhereTheyWere() async throws {
+        let day = try await fixture.dayAtOnePM()
+        fixture.clock.now = NewYork.local(2026, 10, 17, 6, 31)
+        let sort = RemindersSort(field: .dueDate, order: .ascending)
+        let kept = RemindersScreen(engine: day.model.engine, sort: sort).rows.map(\.id)
+
+        day.model.markDone(day.meds.id)
+        let passport = Reminder(title: "Renew the passport", dueTime: NewYork.local(2026, 10, 16, 9), strength: .gentle)
+        day.model.add(passport)
+        day.model.delete(day.dentist.id)
+
+        let rows = RemindersScreen(engine: day.model.engine, sort: sort, keptOrder: kept).rows.map(\.id)
+        #expect(rows == [passport.id] + kept.filter { $0 != day.dentist.id })
+    }
+
     /// A reminder added since the order was kept goes where the sort puts it; a deleted one leaves.
     @Test func aKeptOrderTakesANewReminderWhereTheSortPutsItAndDropsADeletedOne() async throws {
         let day = try await fixture.dayAtOnePM()
