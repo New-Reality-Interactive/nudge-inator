@@ -30,7 +30,7 @@ set -uo pipefail
 set -m # each simulator's run gets its own process group, so an interrupt can stop all of it
 cd "$(dirname "$0")/.."
 
-SIMULATORS="${SIMULATORS-iPhone 15 Pro - iOS 26.5;iPhone 15 - iOS 27.0}"
+SIMULATORS="${SIMULATORS-iPhone 15 Pro - iOS 26.5;iPhone 15 - iOS 27.2}"
 source scripts/screenshots-plan.sh
 source scripts/screenshots-watch.sh
 source scripts/metrics.sh

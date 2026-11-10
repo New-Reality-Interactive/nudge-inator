@@ -28,9 +28,9 @@ export NUDGE_METRICS_TICKET=303 NUDGE_METRICS_COMMIT=abc1234
 # Prints the records' fields after "time", which changes with every run.
 records() { sed 's/"time":"[^"]*",//' "$NUDGE_METRICS_DIR/runs.jsonl"; }
 
-metrics_record app-tests "iPhone 15 - iOS 27.0" "" 505 14 pass ""
+metrics_record app-tests "iPhone 15 - iOS 27.2" "" 505 14 pass ""
 expect "a record holds ticket, commit, step, simulator, variant, tests, duration, result and failed test" \
-  '{"ticket":303,"commit":"abc1234","step":"app-tests","simulator":"iPhone 15 - iOS 27.0","variant":null,"tests":505,"duration":14,"result":"pass","failed":null}' \
+  '{"ticket":303,"commit":"abc1234","step":"app-tests","simulator":"iPhone 15 - iOS 27.2","variant":null,"tests":505,"duration":14,"result":"pass","failed":null}' \
   "$(records)"
 expect "a record has a time" "1" "$(grep -c '"time":"[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}T[0-9:]*Z"' "$NUDGE_METRICS_DIR/runs.jsonl")"
 
