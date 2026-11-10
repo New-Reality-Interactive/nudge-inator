@@ -142,3 +142,43 @@ public enum ReceivedContentField: Hashable, CaseIterable, Sendable {
         }
     }
 }
+
+/// One field a sender's revision changed on a received reminder, with its old and new values: what
+/// the copy's change note says ("Due time changed from 8:00 AM to 9:00 AM"). The engine returns the
+/// values; the screens word them.
+public enum ReceivedChange: Equatable, Sendable {
+    case title(from: String, to: String)
+    case notes(from: String, to: String)
+    case dueTime(from: Date, to: Date)
+    case repeatRule(from: RepeatRule?, to: RepeatRule?)
+    case strength(from: Strength, to: Strength)
+    case pace(from: Pace, to: Pace)
+    case breakThroughFocus(from: Bool, to: Bool)
+
+    /// The field the change is to.
+    public var field: ReceivedContentField {
+        switch self {
+        case .title: .title
+        case .notes: .notes
+        case .dueTime: .dueTime
+        case .repeatRule: .repeatRule
+        case .strength: .strength
+        case .pace: .pace
+        case .breakThroughFocus: .breakThroughFocus
+        }
+    }
+
+    /// The change `field` makes going from `current` to `revised`, or `nil` if it has the same value in both.
+    init?(_ field: ReceivedContentField, from current: Reminder, to revised: Reminder) {
+        guard field.isChanged(from: current, to: revised) else { return nil }
+        switch field {
+        case .title: self = .title(from: current.title, to: revised.title)
+        case .notes: self = .notes(from: current.notes, to: revised.notes)
+        case .dueTime: self = .dueTime(from: current.dueTime, to: revised.dueTime)
+        case .repeatRule: self = .repeatRule(from: current.repeatRule, to: revised.repeatRule)
+        case .strength: self = .strength(from: current.strength, to: revised.strength)
+        case .pace: self = .pace(from: current.pace, to: revised.pace)
+        case .breakThroughFocus: self = .breakThroughFocus(from: current.breakThroughFocus, to: revised.breakThroughFocus)
+        }
+    }
+}

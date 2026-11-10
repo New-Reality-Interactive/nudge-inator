@@ -158,6 +158,14 @@ _Avoid_: Shared reminder, outgoing reminder
 A recipient's copy of a reminder someone sent them, shown among their own as "From <name>". The recipient can mark it Done, pause it, remove it and tag it, and can't change what it says or when it's due.
 _Avoid_: Shared reminder, incoming reminder
 
+**Sender's revision**:
+The sender's edit of a reminder they sent, as it reaches a recipient's copy. It replaces what the copy says and when it's due, even while the copy is Nudging, and comes with a change note.
+_Avoid_: Update, sync
+
+**Change note**:
+What a received reminder shows after a sender's revision: each field that changed, with its old and new value, such as "Due time changed from 8:00 AM to 9:00 AM".
+_Avoid_: Changelog, edit history
+
 **Status sharing**:
 A recipient's choice, per connection, whether the sender sees how their reminders are going. "Don't share this one" turns it off for one received reminder.
 _Avoid_: Visibility, privacy setting
