@@ -357,7 +357,7 @@ public struct Engine {
         var kept = edited
         kept.createdAt = current.createdAt
         kept.origin = current.origin
-        reminders = reminders.map { $0.id == kept.id ? kept : $0 }
+        replace(kept)
         applyPlan()
     }
 
@@ -419,7 +419,7 @@ public struct Engine {
             kept.origin = .received(connectionID: connectionID, sendersReminderID: sendersReminderID, revision: newRevision, state: state)
         }
         guard !changes.isEmpty else {
-            reminders = reminders.map { $0.id == kept.id ? kept : $0 }
+            replace(kept)
             return []
         }
         let movesNudgeTimes = LockedField.allCases.contains { $0.movesNudgeTimes && $0.isChanged(from: current, to: kept) }
@@ -428,6 +428,7 @@ public struct Engine {
         if closesOpenOccurrence {
             // Pause, so the open occurrence reads Skipped and is fixed so below, then lift the pause
             // again: only that occurrence was paused, and a due time of now must nudge.
+            // `fixOccurrences` adds no pause span, so the last one is still this one.
             historyByReminder[current.id, default: History()].saved.pauseSpans.append(PauseSpan(start: clock.now))
         }
         if movesNudgeTimes || closesOpenOccurrence {
@@ -439,7 +440,7 @@ public struct Engine {
         if kept.title != current.title {
             historyByReminder[kept.id, default: History()].saved.replacedTitles.append(Replaced(value: current.title, replacedAt: clock.now))
         }
-        reminders = reminders.map { $0.id == kept.id ? kept : $0 }
+        replace(kept)
         applyPlan()
         return changes
     }
@@ -448,6 +449,11 @@ public struct Engine {
     /// occurrence, none otherwise. The form and the details screen read the lock from here, not their own rule.
     public func lockedFields(of reminderID: Reminder.ID) -> Set<LockedField> {
         openOccurrence(for: reminderID) == nil ? [] : Set(LockedField.allCases)
+    }
+
+    /// Swaps in `reminder` for the held one with its ID.
+    private mutating func replace(_ reminder: Reminder) {
+        reminders = reminders.map { $0.id == reminder.id ? reminder : $0 }
     }
 
     func reminder(_ reminderID: Reminder.ID) -> Reminder? {

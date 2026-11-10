@@ -231,6 +231,20 @@ struct SendersRevisionTests {
         #expect(try #require(scheduler.lastPlan?.items.min { $0.fireTime < $1.fireTime }).fireTime == NewYork.local(2026, 10, 15, 11))
     }
 
+    /// Due at 9:00 and still waiting at 14:00, a one-off takes a new title; accepted then, it nudges at once.
+    @Test func aPastDueWaitingOneOffRevisedThenAcceptedNudgesAtOnce() {
+        clock.now = NewYork.local(2026, 10, 15, 14)
+        let reminder = receivedOneOff(state: .waiting)
+        var engine = engine(for: reminder)
+
+        engine.applySendersRevision(revision(of: reminder) { $0.title = "Call back" })
+        #expect(engine.openOccurrence(for: reminder.id) == nil)
+        engine.accept(reminder.id)
+
+        #expect(engine.reminders.first?.title == "Call back")
+        #expect(engine.openOccurrence(for: reminder.id)?.dueTime == NewYork.local(2026, 10, 15, 14))
+    }
+
     @Test func aWaitingRepeatingCopyStartsFromTheNewScheduleOnceAccepted() throws {
         clock.now = NewYork.local(2026, 10, 15, 9, 10)
         let reminder = received(state: .waiting)
