@@ -38,6 +38,7 @@ struct RootView: View {
         // does in portrait and landscape.
         .tabBarMinimizeBehavior(.onScrollDown)
         .inviteAcceptance(sharing: model?.sharing) { navigation.openConnection($0) }
+        .connectionEnded(model: model)
         .task { await tickEveryMinute() }
         // `initial`, so a route set before the shell appeared (Open launching the app) is followed.
         .onChange(of: model?.route, initial: true) {

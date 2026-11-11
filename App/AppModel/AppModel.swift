@@ -420,6 +420,29 @@ final class AppModel {
         }, storeChange: { try $0.delete(reminderID) })
     }
 
+    /// Disconnect, and the other person's Continue on Connection Ended (ticket 197): ends the
+    /// connection with `connectionID` and does the person's choice to what they received through
+    /// it. The sharing store goes first, so one that won't keep it changes nothing, reminders
+    /// included. What Remove deletes stops ringing and leaves Notification Center, as Delete does;
+    /// what Keep keeps is planned as before. Throws if the reminders or the sharing store can't be
+    /// read, or the sharing store won't keep it.
+    func disconnect(_ connectionID: UUID, choosing choice: DisconnectChoice) throws {
+        guard let sharing else { return }
+        guard case .ready = launchState, store != nil else { throw RemindersNotLoaded() }
+        let received = engine.reminders.filter { $0.receivedThrough == connectionID }.map(\.id)
+        try sharing.disconnect(connectionID, received: Set(received))
+        perform { engine in
+            let dueTimes = Dictionary(uniqueKeysWithValues: received.map { ($0, engine.dueTimesAnAlarmMayBeRinging(for: $0)) })
+            for reminderID in engine.disconnect(connectionID, choosing: choice) {
+                alarms.stopRinging(of: reminderID, dueAt: dueTimes[reminderID] ?? [])
+                notifications.removeDeliveredNotifications(of: reminderID)
+            }
+        }
+    }
+
+    /// The reminder store hasn't been read, so what was received can't be removed or kept yet.
+    struct RemindersNotLoaded: Error {}
+
     /// Settings' Default Pace (ticket 09), what a new reminder starts with. Read from the record
     /// each time, not kept from launch: before the first unlock `UserDefaults` reads as empty, so
     /// a launch then would see Consistent · 10 min whatever the person chose.

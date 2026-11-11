@@ -48,6 +48,15 @@ struct DeviceSeedTests {
         #expect(reminder.createdAt == Date(timeIntervalSinceReferenceDate: 60_007.5))
     }
 
+    /// Disconnect's check (ticket 197) needs reminders received from the stand-in's connection.
+    @Test func aSeedReminderKeepsTheOriginItIsGiven() {
+        let origin = ReminderOrigin.received(connectionID: SeedSet.standInConnectionID, sendersReminderID: UUID(), revision: 1, state: .waiting)
+        let seed = SeedReminder(id: SeedReminder.fixedID(98), title: "From Riley", dueIn: 60, origin: origin)
+
+        #expect(seed.reminder(tagIDs: [], now: .now).origin == origin)
+        #expect(SeedReminder(id: SeedReminder.fixedID(97), title: "Mine", dueIn: 60).reminder(tagIDs: [], now: .now).origin == .mine)
+    }
+
     @Test func aSetsRemindersKeepTheirIDs() {
         _ = run("sample")
 

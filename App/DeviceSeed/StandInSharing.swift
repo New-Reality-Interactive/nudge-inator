@@ -54,7 +54,8 @@ enum StandInSharing {
     private static func seeded(now: Date) -> SharingData {
         SharingData(connections: [
             // With an address, so a check can invite it under another name and see "Already Connected".
-            SharingConnection(id: UUID(), name: "Riley Park", state: .connected, address: "riley.park@icloud.com", connectedAt: now.addingTimeInterval(-44 * 24 * 60 * 60)),
+            // The connection `NUDGE_SEED=received`'s reminders came through (ticket 197).
+            SharingConnection(id: SeedSet.standInConnectionID, name: "Riley Park", state: .connected, address: "riley.park@icloud.com", connectedAt: now.addingTimeInterval(-44 * 24 * 60 * 60)),
             SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, address: "jordan.lee@icloud.com", invitedAt: now.addingTimeInterval(-20 * 60)),
             SharingConnection(id: UUID(), name: "Priya Shah", state: .invited, address: "+1 (555) 010-4477", invitedAt: now.addingTimeInterval(-3 * 24 * 60 * 60)),
         ])
@@ -66,7 +67,8 @@ enum StandInSharing {
 extension View {
     /// A Stand-in menu in the toolbar for the phone check (ticket 195), only under the stand-in:
     /// receiving an invite, one that's unavailable, with `invited`, that person accepting, and with
-    /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196).
+    /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196) or
+    /// disconnecting (ticket 197).
     func standInSharingControls(invited: SharingConnection? = nil, connected: SharingConnection? = nil) -> some View {
         toolbar {
             if let adapter = StandInSharing.current {
@@ -87,6 +89,7 @@ extension View {
                             } label: {
                                 Text(verbatim: "\(connected.name) Chooses \(theirs.deliveryMode == .askMeFirst ? "Start right away" : "Ask me first")")
                             }
+                            Button { adapter.theyDisconnect(connected.id) } label: { Text(verbatim: "\(connected.name) Disconnects") }
                         } else {
                             Button { adapter.receiveInvite(from: "Sam Rivera") } label: { Text(verbatim: "Receive an Invite from Sam Rivera") }
                             Button { adapter.receiveInvite(from: "Casey Nguyen", unavailable: true) } label: { Text(verbatim: "Receive an Unavailable Invite") }
@@ -174,6 +177,12 @@ final class StandInSharingAdapter: SharingAdapter {
     /// (ticket 196): their settings arrive, as through iCloud.
     func theyChoose(_ choices: ConnectionChoices, for connectionID: UUID) {
         Task { try? await events?.received(.settings(.init(choices), for: connectionID)) }
+    }
+
+    /// Stands in for the other person disconnecting the connection with `connectionID` (ticket
+    /// 197): their disconnect arrives, as through iCloud, and Connection Ended shows.
+    func theyDisconnect(_ connectionID: UUID) {
+        Task { try? await events?.received(.disconnect(connectionID)) }
     }
 
     private static func topViewController() -> UIViewController? {

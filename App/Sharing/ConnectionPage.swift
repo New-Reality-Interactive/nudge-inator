@@ -2,30 +2,62 @@ import NudgeEngine
 import SwiftUI
 
 /// A connected person's page (ticket 196): this person's Status sharing and Delivery mode for what
-/// they receive from them, both changeable at any time, then what the other person chose. The
-/// mockup's `viewConn`; its Disconnect is #197's.
+/// they receive from them, both changeable at any time, then what the other person chose, then
+/// Disconnect (ticket 197). The mockup's `viewConn`.
 ///
 /// It looks the connection up by ID, so what the other person chooses shows as it arrives. Once
-/// there's no connection with that ID, it says the connection ended, as the mockup does.
+/// there's no connection with that ID, it says the connection ended, as the mockup does, and once
+/// the connection has left the store (this person disconnected, or chose on Connection Ended) it
+/// goes back to Connections, which no longer lists them, as the mockup's `finishDisconnect` does.
 struct ConnectionPage: View {
     let sharing: SharingModel
     let connectionID: UUID
 
     @State private var saveFailed = false
+    /// The connection Disconnect's sheet is for while it shows. Kept here rather than read from
+    /// the store, since the sheet outlives the connection it ends.
+    @State private var disconnecting: SharingConnection?
+    /// Disconnect has ended the connection and its sheet is closing: the page goes back once it
+    /// has closed, not while it closes.
+    @State private var isClosingDisconnect = false
+    @Environment(AppModel.self) private var model: AppModel?
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        if let connection = sharing.connection(connectionID) {
-            page(connection)
-        } else {
-            ContentUnavailableView {
-                Label {
-                    Text("Connection Ended", comment: "A connection's page: shown in place of the page once the connection no longer exists.")
-                } icon: {
-                    Image(systemName: "info.circle")
+        Group {
+            if let connection = sharing.connection(connectionID) {
+                page(connection)
+            } else {
+                ContentUnavailableView {
+                    Label {
+                        Text("Connection Ended", comment: "A connection's page: shown in place of the page once the connection no longer exists.")
+                    } icon: {
+                        Image(systemName: "info.circle")
+                    }
                 }
             }
         }
+        // On the whole page, not the connected one alone, so the sheet's host outlives the
+        // connection it ends.
+        .sheet(item: $disconnecting) {
+            isClosingDisconnect = false
+            if !isInStore { dismiss() }
+        } content: { connection in
+            DisconnectSheet(name: connection.name, keptCount: model?.engine.keptOnDisconnect(from: connection.id) ?? 0, endedByThem: false) { choice in
+                try model?.disconnect(connection.id, choosing: choice)
+                isClosingDisconnect = true
+                disconnecting = nil
+            }
+        }
+        .onChange(of: isInStore) { _, inStore in
+            if !inStore, !isClosingDisconnect { dismiss() }
+        }
+    }
+
+    /// Whether the store still holds the connection, connected or ended by the other person.
+    private var isInStore: Bool {
+        sharing.data.connections.contains { $0.id == connectionID }
     }
 
     private func page(_ connection: SharingConnection) -> some View {
@@ -53,6 +85,17 @@ struct ConnectionPage: View {
                 Text("What \(name) Chose", comment: "A connection's page: header of the other person's choices for the reminders this person sends them. The argument is their name, such as \"Alex Morgan\".")
             } footer: {
                 Text("\(name) sets these, for the reminders you send them.", comment: "A connection's page: under the other person's choices. The argument is their name, such as \"Alex Morgan\".")
+            }
+            Section {
+                Button(role: .destructive) {
+                    disconnecting = connection
+                } label: {
+                    Label {
+                        Text("Disconnect", comment: "A connection's page: ends the connection, after asking what happens to the reminders received from the person.")
+                    } icon: {
+                        Image(systemName: "person.slash")
+                    }
+                }
             }
         }
         .navigationTitle(Text(verbatim: name))

@@ -26,6 +26,8 @@ public struct SeedReminder: Sendable {
     public var createdAgo: TimeInterval
     public var strength: Strength
     public var repeatRule: RepeatRule?
+    /// Mine, or a copy received through a connection (ticket 197's set).
+    public var origin: ReminderOrigin
 
     public init(
         id: UUID,
@@ -35,7 +37,8 @@ public struct SeedReminder: Sendable {
         dueIn: TimeInterval,
         createdAgo: TimeInterval = 0,
         strength: Strength = .gentle,
-        repeatRule: RepeatRule? = nil
+        repeatRule: RepeatRule? = nil,
+        origin: ReminderOrigin = .mine
     ) {
         self.id = id
         self.title = title
@@ -45,6 +48,7 @@ public struct SeedReminder: Sendable {
         self.createdAgo = createdAgo
         self.strength = strength
         self.repeatRule = repeatRule
+        self.origin = origin
     }
 
     /// A reminder ID that never changes, so the same set always has the same IDs. `number` is
@@ -67,7 +71,8 @@ public struct SeedReminder: Sendable {
             repeatRule: repeatRule,
             strength: strength,
             breakThroughFocus: false,
-            createdAt: now.addingTimeInterval(-createdAgo)
+            createdAt: now.addingTimeInterval(-createdAgo),
+            origin: origin
         )
     }
 }
@@ -98,6 +103,6 @@ public struct SeedSet: Sendable {
 
 extension SeedSet {
     /// Every set a launch can name.
-    public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .deliveredNudges, .keptOrder]
+    public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .deliveredNudges, .keptOrder, .received]
 }
 #endif

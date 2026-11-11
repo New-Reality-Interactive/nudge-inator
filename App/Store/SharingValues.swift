@@ -25,6 +25,9 @@ struct SharingConnection: Equatable, Identifiable {
         /// The invite is sent and not accepted yet.
         case invited
         case connected
+        /// The other person disconnected (ticket 197). It stays until this person has chosen what
+        /// happens to what they received from them, on the Connection Ended sheet.
+        case ended
     }
 }
 
@@ -103,14 +106,22 @@ struct SharingData: Equatable {
 
 extension SharingData {
     /// Applies what the other person's app sent to what this person keeps, as far as the store
-    /// holds it today: their settings for a connection, and a recipient's receipt and status for a
-    /// copy this person sent. Returns whether anything changed. A send, a revision, a cancel and a
-    /// disconnect are the recipient's side, which the tickets that build received reminders and
-    /// Disconnect (#198, #204, #205, #197) apply: they change nothing here yet.
+    /// holds it today: their settings for a connection, a recipient's receipt and status for a
+    /// copy this person sent, and their disconnect, which leaves the connection ended until this
+    /// person chooses what happens to what they received (ticket 197). Returns whether anything
+    /// changed. A send, a revision and a cancel are the recipient's side, which the tickets that
+    /// build received reminders (#198, #204, #205) apply: they change nothing here yet.
     ///
     /// The other person's settings set their choices, never the name: the name a person sees stays
     /// the one the sharing sheet or the invite gave (ticket 196).
     mutating func apply(incoming change: SharingChange) -> Bool {
+        // Ahead of the content: a disconnect carries none, nor does a cancel, so only its kind
+        // tells them apart.
+        if change.kind == .disconnect {
+            guard let index = connections.firstIndex(where: { $0.id == change.connectionID && $0.state == .connected }) else { return false }
+            connections[index].state = .ended
+            return true
+        }
         switch change.content {
         case .settings(let settings):
             guard let index = connections.firstIndex(where: { $0.id == change.connectionID }) else { return false }
@@ -127,6 +138,22 @@ extension SharingData {
         case .none, .reminder:
             return false
         }
+    }
+
+    /// Takes off the connection with `connectionID`, connected or ended by the other person, with
+    /// what this person sent through it: its sent copies, and a sent reminder left with no one to go
+    /// to. The received reminders' sync states in `receivedIDs` go too: Remove deletes those
+    /// reminders and Keep makes them personal, so none is received any more. Returns the connection
+    /// as it was, or `nil` when there's no such connection, or it's an invite (Cancel Invite's).
+    mutating func removeConnection(_ connectionID: UUID, received receivedIDs: Set<Reminder.ID>) -> SharingConnection? {
+        guard let removed = connections.first(where: { $0.id == connectionID && $0.state != .invited }) else { return nil }
+        connections.removeAll { $0.id == connectionID }
+        let sentThrough = Set(sentCopies.filter { $0.connectionID == connectionID }.map(\.reminderID))
+        sentCopies.removeAll { $0.connectionID == connectionID }
+        let stillSent = Set(sentCopies.map(\.reminderID))
+        sentReminders.removeAll { sentThrough.contains($0.reminder.id) && !stillSent.contains($0.reminder.id) }
+        receivedSyncStates.removeAll { receivedIDs.contains($0.reminderID) }
+        return removed
     }
 
     private func copyIndex(of change: SharingChange) -> Int? {
