@@ -10,16 +10,26 @@ final class ConnectionRecord: IdentifiedRecord {
     var name: String
     /// `SharingConnection.State` as the store spells it.
     var state: String
-    var sharesStatus: Bool
+    /// This person's own choices (`SharingConnection.mine`). A delivery mode is
+    /// `DeliveryMode` as the store spells it.
+    var mySharesStatus: Bool
+    var myDeliveryMode: String
+    /// The other person's choices (`SharingConnection.theirs`).
+    var theirSharesStatus: Bool
+    var theirDeliveryMode: String
     var address: String?
     var invitedAt: Date?
+    var connectedAt: Date?
 
     init(id: UUID, position: Int) {
         self.id = id
         self.position = position
         name = ""
         state = ""
-        sharesStatus = false
+        mySharesStatus = true
+        myDeliveryMode = ""
+        theirSharesStatus = true
+        theirDeliveryMode = ""
     }
 }
 

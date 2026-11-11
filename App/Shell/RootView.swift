@@ -31,13 +31,13 @@ struct RootView: View {
                 TagsTab(state: state, path: $navigation.tagPath)
             }
             Tab(AppTab.settings.title, systemImage: AppTab.settings.systemImage, value: .settings) {
-                SettingsTab(state: state)
+                SettingsTab(state: state, path: $navigation.settingsPath)
             }
         }
         // The mockup shrinks the tab bar while scrolling down (iOS 26). Ticket 23 records what it
         // does in portrait and landscape.
         .tabBarMinimizeBehavior(.onScrollDown)
-        .inviteAcceptance(sharing: model?.sharing)
+        .inviteAcceptance(sharing: model?.sharing) { navigation.openConnection($0) }
         .task { await tickEveryMinute() }
         // `initial`, so a route set before the shell appeared (Open launching the app) is followed.
         .onChange(of: model?.route, initial: true) {

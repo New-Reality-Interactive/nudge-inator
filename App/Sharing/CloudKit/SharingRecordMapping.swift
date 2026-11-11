@@ -62,7 +62,8 @@ struct SharingRecordMapping {
         case .settings(let settings):
             let record = record(RecordName(type: .connectionSettings, writer: side), existing: existing)
             record.encryptedValues[Field.name] = settings.name
-            record.encryptedValues[Field.sharesStatus] = settings.sharesStatus.recordValue
+            record.encryptedValues[Field.sharesStatus] = settings.choices.sharesStatus.recordValue
+            record.encryptedValues[Field.deliveryMode] = settings.choices.deliveryMode.storedValue
             writes.save.append(record)
         case .status(let status):
             guard let reminderID = change.reminderID else { break }
@@ -131,8 +132,12 @@ struct SharingRecordMapping {
     private func change(from record: CKRecord, named name: RecordName) throws -> SharingChange? {
         switch name.type {
         case .connectionSettings:
-            let settings = SharingChange.ConnectionSettings(name: try record.required(Field.name), sharesStatus: try record.flag(Field.sharesStatus))
-            return .settings(settings, for: connectionID)
+            let choices = ConnectionChoices(
+                sharesStatus: try record.flag(Field.sharesStatus),
+                deliveryMode: try DeliveryMode(storedValue: try record.required(Field.deliveryMode))
+            )
+            // The name is optional: the app model sends none (ticket 196).
+            return .settings(.init(name: record.encryptedValues[Field.name] as? String, choices), for: connectionID)
         case .sentReminder:
             let reminderID = try name.requiredReminderID()
             if (record.encryptedValues[Field.canceled] as? Int64) == true.recordValue {
@@ -304,6 +309,7 @@ private enum RecordType: String {
 private enum Field {
     static let name = "name"
     static let sharesStatus = "sharesStatus"
+    static let deliveryMode = "deliveryMode"
     static let title = "title"
     static let notes = "notes"
     static let dueTime = "dueTime"

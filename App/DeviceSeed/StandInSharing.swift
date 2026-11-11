@@ -54,9 +54,9 @@ enum StandInSharing {
     private static func seeded(now: Date) -> SharingData {
         SharingData(connections: [
             // With an address, so a check can invite it under another name and see "Already Connected".
-            SharingConnection(id: UUID(), name: "Riley Park", state: .connected, sharesStatus: true, address: "riley.park@icloud.com"),
-            SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, sharesStatus: true, address: "jordan.lee@icloud.com", invitedAt: now.addingTimeInterval(-20 * 60)),
-            SharingConnection(id: UUID(), name: "Priya Shah", state: .invited, sharesStatus: true, address: "+1 (555) 010-4477", invitedAt: now.addingTimeInterval(-3 * 24 * 60 * 60)),
+            SharingConnection(id: UUID(), name: "Riley Park", state: .connected, address: "riley.park@icloud.com", connectedAt: now.addingTimeInterval(-44 * 24 * 60 * 60)),
+            SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, address: "jordan.lee@icloud.com", invitedAt: now.addingTimeInterval(-20 * 60)),
+            SharingConnection(id: UUID(), name: "Priya Shah", state: .invited, address: "+1 (555) 010-4477", invitedAt: now.addingTimeInterval(-3 * 24 * 60 * 60)),
         ])
     }
 
@@ -65,14 +65,28 @@ enum StandInSharing {
 
 extension View {
     /// A Stand-in menu in the toolbar for the phone check (ticket 195), only under the stand-in:
-    /// receiving an invite, one that's unavailable, and with `invited`, that person accepting.
-    func standInSharingControls(invited: SharingConnection? = nil) -> some View {
+    /// receiving an invite, one that's unavailable, with `invited`, that person accepting, and with
+    /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196).
+    func standInSharingControls(invited: SharingConnection? = nil, connected: SharingConnection? = nil) -> some View {
         toolbar {
             if let adapter = StandInSharing.current {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         if let invited {
                             Button { adapter.acceptedByThem(invited.id) } label: { Text(verbatim: "\(invited.name) Accepts") }
+                        } else if let connected {
+                            let theirs = connected.theirs
+                            Button {
+                                adapter.theyChoose(ConnectionChoices(sharesStatus: !theirs.sharesStatus, deliveryMode: theirs.deliveryMode), for: connected.id)
+                            } label: {
+                                Text(verbatim: "\(connected.name) Turns Status Sharing \(theirs.sharesStatus ? "Off" : "On")")
+                            }
+                            Button {
+                                let other: DeliveryMode = theirs.deliveryMode == .askMeFirst ? .startRightAway : .askMeFirst
+                                adapter.theyChoose(ConnectionChoices(sharesStatus: theirs.sharesStatus, deliveryMode: other), for: connected.id)
+                            } label: {
+                                Text(verbatim: "\(connected.name) Chooses \(theirs.deliveryMode == .askMeFirst ? "Start right away" : "Ask me first")")
+                            }
                         } else {
                             Button { adapter.receiveInvite(from: "Sam Rivera") } label: { Text(verbatim: "Receive an Invite from Sam Rivera") }
                             Button { adapter.receiveInvite(from: "Casey Nguyen", unavailable: true) } label: { Text(verbatim: "Receive an Unavailable Invite") }
@@ -154,6 +168,12 @@ final class StandInSharingAdapter: SharingAdapter {
     /// Stands in for the invited person accepting the invite to the connection with `connectionID`.
     func acceptedByThem(_ connectionID: UUID) {
         Task { try? await events?.inviteAccepted(connectionID, by: SharingParticipant(id: "stand-in")) }
+    }
+
+    /// Stands in for the other person changing their choices for the connection with `connectionID`
+    /// (ticket 196): their settings arrive, as through iCloud.
+    func theyChoose(_ choices: ConnectionChoices, for connectionID: UUID) {
+        Task { try? await events?.received(.settings(.init(choices), for: connectionID)) }
     }
 
     private static func topViewController() -> UIViewController? {

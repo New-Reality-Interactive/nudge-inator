@@ -71,11 +71,11 @@ struct SharingAdapterTests {
     /// A sender and a recipient who share one connection, both launched, joined by the network.
     func connectedPhones(sentCopy: SentCopy? = nil) async throws -> (sender: Phone, recipient: Phone) {
         let sender = try Phone(seed: SharingData(
-            connections: [SharingConnection(id: connectionID, name: "Sam", state: .connected, sharesStatus: false)],
+            connections: [SharingConnection(id: connectionID, name: "Sam", state: .connected, theirs: ConnectionChoices(sharesStatus: false))],
             sentCopies: sentCopy.map { [$0] } ?? []
         ))
         let recipient = try Phone(seed: SharingData(
-            connections: [SharingConnection(id: connectionID, name: "Alex", state: .connected, sharesStatus: false)]
+            connections: [SharingConnection(id: connectionID, name: "Alex", state: .connected, theirs: ConnectionChoices(sharesStatus: false))]
         ))
         network.join(sender.adapter, recipient.adapter)
         await sender.launch()
@@ -87,8 +87,8 @@ struct SharingAdapterTests {
         SentCopy(connectionID: connectionID, reminderID: reminderID, createdAt: NewYork.local(2026, 10, 15, 8), receipt: receipt, statusRecord: nil, waitingToSync: false)
     }
 
-    func settings(_ name: String, sharesStatus: Bool) -> SharingChange {
-        .settings(SharingChange.ConnectionSettings(name: name, sharesStatus: sharesStatus), for: connectionID)
+    func settings(_ deliveryMode: DeliveryMode, sharesStatus: Bool = true) -> SharingChange {
+        .settings(SharingChange.ConnectionSettings(ConnectionChoices(sharesStatus: sharesStatus, deliveryMode: deliveryMode)), for: connectionID)
     }
 
     // MARK: A change made by one arrives at the other
@@ -96,25 +96,24 @@ struct SharingAdapterTests {
     @Test func aChangeOnePersonMakesArrivesAtTheOther() async throws {
         let (sender, recipient) = try await connectedPhones()
 
-        try recipient.sharing.submit(settings("Alex M", sharesStatus: true))
+        try recipient.sharing.submit(settings(.askMeFirst))
         await network.settle()
 
         let seen = try #require(sender.sharing.data.connections.first)
-        #expect(seen.name == "Alex M")
-        #expect(seen.sharesStatus)
+        #expect(seen.theirs == ConnectionChoices(sharesStatus: true, deliveryMode: .askMeFirst))
         // The change was the other way round, so the recipient's own connection is as it was.
-        #expect(recipient.sharing.data.connections.first?.name == "Alex")
+        #expect(recipient.sharing.data.connections.first?.theirs == ConnectionChoices(sharesStatus: false))
     }
 
     @Test func aChangeTheOtherAppKeptIsStillThereAfterARelaunch() async throws {
         let (sender, recipient) = try await connectedPhones()
-        try recipient.sharing.submit(settings("Alex M", sharesStatus: true))
+        try recipient.sharing.submit(settings(.askMeFirst))
         await network.settle()
 
         sender.relaunch()
         await sender.launch()
 
-        #expect(sender.sharing.data.connections.first?.name == "Alex M")
+        #expect(sender.sharing.data.connections.first?.theirs.deliveryMode == .askMeFirst)
     }
 
     @Test func theRecipientsReceiptAndStatusReachTheSendersCopy() async throws {
@@ -138,7 +137,7 @@ struct SharingAdapterTests {
         let (sender, recipient) = try await connectedPhones()
         let before = sender.sharing.data
 
-        try recipient.sharing.submit(.settings(.init(name: "Who", sharesStatus: true), for: UUID()))
+        try recipient.sharing.submit(.settings(.init(name: "Who", ConnectionChoices(sharesStatus: true)), for: UUID()))
         try recipient.sharing.submit(.receipt(.started, for: reminderID, from: connectionID))
         await network.settle()
 
@@ -150,7 +149,7 @@ struct SharingAdapterTests {
         let call = Reminder(title: "Call the bank", dueTime: NewYork.local(2026, 10, 15, 8, 40), strength: .firm, createdAt: NewYork.local(2026, 10, 15, 8))
 
         sender.model.add(call)
-        try sender.sharing.submit(settings("Sam M", sharesStatus: true))
+        try sender.sharing.submit(settings(.askMeFirst))
         await network.settle()
 
         #expect(sender.model.engine.reminders == [call])
@@ -164,17 +163,17 @@ struct SharingAdapterTests {
         let (sender, recipient) = try await connectedPhones()
         network.holdsDeliveries = true
 
-        try recipient.sharing.submit(settings("Alex M", sharesStatus: true))
+        try recipient.sharing.submit(settings(.askMeFirst))
         await network.settle()
 
-        #expect(sender.sharing.data.connections.first?.name == "Sam")
+        #expect(sender.sharing.data.connections.first?.theirs.deliveryMode == .startRightAway)
         #expect(network.inFlight.count == 1)
         // It went through iCloud, so the recipient's app no longer shows it as waiting to sync.
         #expect(recipient.sharing.data.outbox.isEmpty)
 
         network.deliverAll()
         await network.settle()
-        #expect(sender.sharing.data.connections.first?.name == "Alex M")
+        #expect(sender.sharing.data.connections.first?.theirs.deliveryMode == .askMeFirst)
         #expect(network.inFlight.isEmpty)
     }
 
@@ -183,56 +182,56 @@ struct SharingAdapterTests {
     @Test func changesReorderedInFlightArriveInTheNewOrder() async throws {
         let (sender, recipient) = try await connectedPhones()
         network.holdsDeliveries = true
-        try recipient.sharing.submit(settings("First", sharesStatus: false))
-        try recipient.sharing.submit(settings("Second", sharesStatus: false))
+        try recipient.sharing.submit(settings(.askMeFirst))
+        try recipient.sharing.submit(settings(.startRightAway))
         await network.settle()
 
         network.move(from: 1, to: 0)
         network.deliverAll()
         await network.settle()
 
-        // Delivered Second, then First.
-        #expect(sender.sharing.data.connections.first?.name == "First")
+        // Delivered the second, then the first.
+        #expect(sender.sharing.data.connections.first?.theirs.deliveryMode == .askMeFirst)
     }
 
     @Test func aChangeCanBeDeliveredAheadOfTheOnesBeforeIt() async throws {
         let (sender, recipient) = try await connectedPhones()
         network.holdsDeliveries = true
-        try recipient.sharing.submit(settings("First", sharesStatus: false))
-        try recipient.sharing.submit(settings("Second", sharesStatus: true))
+        try recipient.sharing.submit(settings(.askMeFirst, sharesStatus: false))
+        try recipient.sharing.submit(settings(.startRightAway))
         await network.settle()
 
         network.deliver(at: 1)
         await network.settle()
 
-        #expect(sender.sharing.data.connections.first?.name == "Second")
+        #expect(sender.sharing.data.connections.first?.theirs == ConnectionChoices(sharesStatus: true, deliveryMode: .startRightAway))
         #expect(network.inFlight.count == 1)
     }
 
     @Test func aDroppedChangeNeverArrives() async throws {
         let (sender, recipient) = try await connectedPhones()
         network.holdsDeliveries = true
-        try recipient.sharing.submit(settings("Alex M", sharesStatus: true))
+        try recipient.sharing.submit(settings(.askMeFirst))
         await network.settle()
 
         network.drop(at: 0)
         network.holdsDeliveries = false
         await network.settle()
 
-        #expect(sender.sharing.data.connections.first?.name == "Sam")
+        #expect(sender.sharing.data.connections.first?.theirs.deliveryMode == .startRightAway)
         #expect(network.inFlight.isEmpty)
     }
 
     @Test func anOfflinePersonsChangeWaitsInTheOutboxUntilTheyAreBackOnline() async throws {
         let (sender, recipient) = try await connectedPhones()
-        let change = settings("Alex M", sharesStatus: true)
+        let change = settings(.askMeFirst)
         recipient.adapter.isOnline = false
 
         try recipient.sharing.submit(change)
         await network.settle()
 
         #expect(recipient.sharing.data.outbox == [change.entry])
-        #expect(sender.sharing.data.connections.first?.name == "Sam")
+        #expect(sender.sharing.data.connections.first?.theirs.deliveryMode == .startRightAway)
 
         // Closing the app doesn't lose the entry: the next launch reads the outbox from the store. (The
         // change itself is the adapter's to keep, as CloudKit's sync engine keeps its pending changes
@@ -244,7 +243,7 @@ struct SharingAdapterTests {
         recipient.adapter.isOnline = true
         await network.settle()
         #expect(recipient.sharing.data.outbox.isEmpty)
-        #expect(sender.sharing.data.connections.first?.name == "Alex M")
+        #expect(sender.sharing.data.connections.first?.theirs.deliveryMode == .askMeFirst)
 
         recipient.relaunch()
         await recipient.launch()
@@ -255,14 +254,14 @@ struct SharingAdapterTests {
         let (sender, recipient) = try await connectedPhones()
         sender.adapter.isOnline = false
 
-        try recipient.sharing.submit(settings("Alex M", sharesStatus: true))
+        try recipient.sharing.submit(settings(.askMeFirst))
         await network.settle()
-        #expect(sender.sharing.data.connections.first?.name == "Sam")
+        #expect(sender.sharing.data.connections.first?.theirs.deliveryMode == .startRightAway)
         #expect(network.inFlight.count == 1)
 
         sender.adapter.isOnline = true
         await network.settle()
-        #expect(sender.sharing.data.connections.first?.name == "Alex M")
+        #expect(sender.sharing.data.connections.first?.theirs.deliveryMode == .askMeFirst)
     }
 
     // MARK: The adapter carries every kind of change
@@ -276,7 +275,7 @@ struct SharingAdapterTests {
             .cancel(sent.reminder.id, for: connectionID),
             .receipt(.waitingForAcceptance, for: sent.reminder.id, from: connectionID),
             .status(record, for: sent.reminder.id, from: connectionID),
-            settings("Sam", sharesStatus: true),
+            settings(.askMeFirst),
             .disconnect(connectionID),
         ]
         let first = FakeSharingAdapter()
@@ -383,7 +382,7 @@ struct SharingAdapterTests {
         }
         // A change that comes meanwhile isn't kept either, so it throws and the adapter holds it.
         await #expect(throws: Phone.StoreWouldNotOpen.self) {
-            try await phone.sharing.received(.settings(.init(name: "Sam M", sharesStatus: true), for: self.connectionID))
+            try await phone.sharing.received(.settings(.init(name: "Sam M", ConnectionChoices(sharesStatus: true)), for: self.connectionID))
         }
         await #expect(throws: Phone.StoreWouldNotOpen.self) {
             try await phone.sharing.sent(UUID())
@@ -406,8 +405,8 @@ struct SharingAdapterTests {
         let planned = recipient.center.pending.map(\.identifier)
         let stored = try ReminderStore(location: .file(recipient.reminderFile.url)).load()
 
-        try sender.sharing.submit(settings("Sam M", sharesStatus: true))
-        try recipient.sharing.submit(settings("Alex M", sharesStatus: true))
+        try sender.sharing.submit(settings(.askMeFirst))
+        try recipient.sharing.submit(settings(.askMeFirst))
         try recipient.sharing.submit(.disconnect(connectionID))
         await network.settle()
         await recipient.model.waitUntilApplied()

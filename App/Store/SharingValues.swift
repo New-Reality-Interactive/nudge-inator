@@ -7,19 +7,33 @@ struct SharingConnection: Equatable, Identifiable {
     /// The name the person sees them under.
     var name: String
     var state: State
-    /// Whether they share status with the person (GLOSSARY.md, Status sharing).
-    var sharesStatus: Bool
+    /// This person's own choices for what they receive from the other person, which the other
+    /// person's app shows as theirs.
+    var mine = ConnectionChoices()
+    /// The other person's choices for what they receive from this person, as they last arrived.
+    /// Their Status sharing is what the Sent read-out reads (`SentConnection.sharesStatus`).
+    var theirs = ConnectionChoices()
     /// The email address or phone number of the Apple Account this person's invite went to, as the
     /// sharing sheet named it, or `nil` when the other person did the inviting.
     var address: String? = nil
     /// When this person sent the invite, or `nil` when the other person did the inviting.
     var invitedAt: Date? = nil
+    /// When the connection was made on this iPhone, or `nil` while it is an invite.
+    var connectedAt: Date? = nil
 
     enum State: Equatable {
         /// The invite is sent and not accepted yet.
         case invited
         case connected
     }
+}
+
+/// One person's settings for a connection, set by the recipient for what they receive (spec #127,
+/// Per-connection settings): Status sharing, on by default, and Delivery mode, Start right away by
+/// default (GLOSSARY.md).
+struct ConnectionChoices: Equatable {
+    var sharesStatus = true
+    var deliveryMode = DeliveryMode.startRightAway
 }
 
 /// A reminder the person sent, as the sender keeps it. It has no tags and is no one's received
@@ -93,12 +107,14 @@ extension SharingData {
     /// copy this person sent. Returns whether anything changed. A send, a revision, a cancel and a
     /// disconnect are the recipient's side, which the tickets that build received reminders and
     /// Disconnect (#198, #204, #205, #197) apply: they change nothing here yet.
+    ///
+    /// The other person's settings set their choices, never the name: the name a person sees stays
+    /// the one the sharing sheet or the invite gave (ticket 196).
     mutating func apply(incoming change: SharingChange) -> Bool {
         switch change.content {
         case .settings(let settings):
             guard let index = connections.firstIndex(where: { $0.id == change.connectionID }) else { return false }
-            connections[index].name = settings.name
-            connections[index].sharesStatus = settings.sharesStatus
+            connections[index].theirs = settings.choices
             return true
         case .receipt(let receipt):
             guard let index = copyIndex(of: change) else { return false }

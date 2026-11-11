@@ -42,9 +42,11 @@ struct ConnectionsPage: View {
                     if !list.connected.isEmpty {
                         Section {
                             ForEach(list.connected, id: \.id) { connection in
-                                PersonRow(name: connection.name, lines: [
-                                    Text("Connected", comment: "Connections: under a connected person's name."),
-                                ])
+                                NavigationLink(value: SharingPage.connection(connection.id)) {
+                                    PersonRow(name: connection.name, lines: [
+                                        Text("Connected", comment: "Connections: under a connected person's name."),
+                                    ])
+                                }
                             }
                         } header: {
                             Text("Connected", comment: "Connections: header of the people connected.")
@@ -80,6 +82,21 @@ struct ConnectionsPage: View {
             lines.append(Text("Didn't open for them? Check the address.", comment: "Connections: under an invite 2 days old or more, which may have gone to an address that isn't their Apple Account."))
         }
         return lines
+    }
+}
+
+extension View {
+    /// Where Settings' sharing pages go (ticket 196): Connections, and a connected person's page.
+    /// Nothing without a sharing model, which has no links to them either.
+    func settingsPages(sharing: SharingModel?) -> some View {
+        navigationDestination(for: SharingPage.self) { page in
+            if let sharing {
+                switch page {
+                case .connections: ConnectionsPage(sharing: sharing)
+                case .connection(let id): ConnectionPage(sharing: sharing, connectionID: id)
+                }
+            }
+        }
     }
 }
 
@@ -126,7 +143,8 @@ private struct PersonRow: View {
 
 #if DEBUG
 #Preview("People") {
-    NavigationStack { ConnectionsPage(sharing: StandInSharing.previewModel()) }
+    let sharing = StandInSharing.previewModel()
+    NavigationStack { ConnectionsPage(sharing: sharing).settingsPages(sharing: sharing) }
 }
 
 #Preview("No one") {

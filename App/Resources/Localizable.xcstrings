@@ -29,6 +29,15 @@
     "%@ is Done. Its nudges have stopped." : {
       "comment" : "VoiceOver, after Done on a nudge card or a My Day row: what the Done button's place now says. The placeholder is the reminder's title."
     },
+    "%@ sees how the reminders they send you are going: Done, Paused, Missed or Removed, and the last 7 days of a repeating one." : {
+      "comment" : "A connection's page: under Status Sharing when it's on. The argument is the other person's name, such as \"Alex Morgan\"."
+    },
+    "%@ sees only that a reminder was Delivered." : {
+      "comment" : "A connection's page: under Status Sharing when it's off. The argument is the other person's name, such as \"Alex Morgan\"."
+    },
+    "%@ sets these, for the reminders you send them." : {
+      "comment" : "A connection's page: under the other person's choices. The argument is their name, such as \"Alex Morgan\"."
+    },
     "%@ · %@" : {
       "comment" : "A tag's screen: under a reminder's title. 1: its tags, such as \"#home #errands\", this screen's tag in bold. 2: its schedule, such as \"Every day at 8:00 AM\".\nMy Day: under the title of a tagged reminder. 1: its tags, such as \"#home #errands\", the ones the filter chose in bold. 2: the note, such as \"Nudging · 2 nudges · next 1:15 PM\".",
       "localizations" : {
@@ -733,6 +742,9 @@
     "Are you sure you want to discard these changes?" : {
       "comment" : "Asked when cancelling a sheet with changes: the reminder form, the tag sheet, or the Reminders or Tags filter."
     },
+    "Ask me first" : {
+      "comment" : "Delivery Mode: a reminder from this person waits to be accepted before it nudges."
+    },
     "Badges" : {
       "comment" : "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging."
     },
@@ -771,6 +783,9 @@
     },
     "Canceling stops the invite from working." : {
       "comment" : "An invited person's page: under Cancel Invite."
+    },
+    "Change These" : {
+      "comment" : "Accepting an invite: on the Connected sheet, opens the connection's page in Settings to change Status Sharing and Delivery Mode."
     },
     "Change these in iOS Settings." : {
       "comment" : "Settings: last line of the footer under the Nudges rows."
@@ -829,6 +844,12 @@
     "Connected" : {
       "comment" : "Accepting an invite: title of the sheet once connected.\nConnections: header of the people connected.\nConnections: under a connected person's name."
     },
+    "Connected since %@" : {
+      "comment" : "A connection's page: under the person's name. The argument is the day they connected, such as \"Sep 12\"."
+    },
+    "Connection Ended" : {
+      "comment" : "A connection's page: shown in place of the page once the connection no longer exists."
+    },
     "Connections" : {
       "comment" : "Connections: the page's title, and the Settings row that opens it."
     },
@@ -849,6 +870,9 @@
     },
     "Couldn't Delete Your Data" : {
       "comment" : "Settings: title of the message shown when deleting everything failed."
+    },
+    "Couldn't Save the Change" : {
+      "comment" : "A connection's page: title of the message shown when a change of Status Sharing or Delivery Mode couldn't be saved."
     },
     "Couldn't Send the Invite" : {
       "comment" : "Invite: title of the message shown when the invite couldn't be made."
@@ -891,6 +915,9 @@
     },
     "Delete “%@”?" : {
       "comment" : "Asked before deleting a reminder, from its details or a Reminders tab row. The placeholder is its title."
+    },
+    "Delivery Mode" : {
+      "comment" : "A connection's page: the choice of how a reminder from the person starts. Also the row on the Connected sheet and under \"What <name> Chose\"."
     },
     "Didn't open for them?" : {
       "comment" : "An invited person's page: heading of the help for an invite that went to the wrong Apple Account."
@@ -988,6 +1015,9 @@
     },
     "Each Gentle or Firm reminder has a Break Through Focus switch. Turn it off and a Focus can hold its nudges, and nothing rings. Relentless always breaks through." : {
       "comment" : "Onboarding and How It Nudges: under \"You choose what breaks through\"."
+    },
+    "Each reminder from %@ waits for you to accept it, and sends no nudge until you do. Applies to reminders sent from now on." : {
+      "comment" : "A connection's page: under Delivery Mode when it's Ask me first. The argument is the other person's name, such as \"Alex Morgan\"."
     },
     "Earliest First" : {
       "comment" : "Reminders tab's Sort menu, sorted by Due Date: the earliest due time at the top."
@@ -1560,16 +1590,16 @@
       }
     },
     "OK" : {
-      "comment" : "Accepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the message that the invite couldn't be made.\nSettings: dismisses the message that deleting failed."
+      "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the message that the invite couldn't be made.\nSettings: dismisses the message that deleting failed."
     },
     "Off" : {
-      "comment" : "Reminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off."
+      "comment" : "A connection's page and the Connected sheet: Status Sharing is off.\nReminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off."
     },
     "Oldest First" : {
       "comment" : "Reminders tab's Sort menu, sorted by Created: the reminder made first at the top."
     },
     "On" : {
-      "comment" : "Header of the Custom repeat page's days: the weekdays, or the day of the month.\nReminder details: Break Through Focus is on.\nSettings: status of the Alarms row when alarms are allowed.\nSettings: status of the Badges row when the app icon may show a badge.\nSettings: status of the Notifications row when notifications and Time Sensitive are allowed."
+      "comment" : "A connection's page and the Connected sheet: Status Sharing is on.\nHeader of the Custom repeat page's days: the weekdays, or the day of the month.\nReminder details: Break Through Focus is on.\nSettings: status of the Alarms row when alarms are allowed.\nSettings: status of the Badges row when the app icon may show a badge.\nSettings: status of the Notifications row when notifications and Time Sensitive are allowed."
     },
     "On %@, from the start date. Change it to pick another day." : {
       "comment" : "Under the Custom repeat page's frequency when it's yearly. The placeholder is the start's day and month, such as \"28 October\"."
@@ -1648,6 +1678,12 @@
     },
     "Reminders" : {
       "comment" : "Tab bar: the tab listing every reminder in any state\nTags tab's Sort menu: the header of the section that sorts by how many reminders have each tag."
+    },
+    "Reminders from %@" : {
+      "comment" : "A connection's page: header of this person's choices for what they receive. The argument is the other person's name, such as \"Alex Morgan\"."
+    },
+    "Reminders from %@ start nudging as soon as they arrive. Applies to reminders sent from now on." : {
+      "comment" : "A connection's page: under Delivery Mode when it's Start right away. The argument is the other person's name, such as \"Alex Morgan\"."
     },
     "Reminders keep coming back until you tap Done: at a steady pace, or more often and more insistently." : {
       "comment" : "Onboarding and How It Nudges: under \"Nudges until you're done\"."
@@ -1765,6 +1801,9 @@
     "Sort" : {
       "comment" : "VoiceOver label of the Reminders tab's Sort button, which opens the Sort menu.\nVoiceOver label of the Tags tab's Sort button, which opens the Sort menu."
     },
+    "Start right away" : {
+      "comment" : "Delivery Mode: a reminder from this person starts nudging as soon as it arrives."
+    },
     "Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them." : {
       "comment" : "Reminder details: under Schedule while the reminder is nudging, why five fields can't be edited."
     },
@@ -1773,6 +1812,9 @@
     },
     "Status" : {
       "comment" : "Reminders' filter sheet: header of the list of statuses."
+    },
+    "Status Sharing" : {
+      "comment" : "A connection's page: the switch for whether the person sees how the reminders they send are going. Also the row on the Connected sheet and under \"What <name> Chose\"."
     },
     "Stays on your iPhone" : {
       "comment" : "Onboarding and How It Nudges: the title of the point about privacy."
@@ -1821,6 +1863,9 @@
     },
     "Then it ends." : {
       "comment" : "Under the Custom repeat page's Next Times when fewer than three are left."
+    },
+    "These are your choices for reminders from %@. You can change them at any time in Settings › Connections." : {
+      "comment" : "Accepting an invite: under Status Sharing and Delivery Mode on the Connected sheet. The argument is the name of the person who sent the invite, such as \"Alex Morgan\"."
     },
     "These follow the start date. Change it to pick another day." : {
       "comment" : "Under the Custom repeat page's monthly days."
@@ -1891,6 +1936,9 @@
     "Welcome to %@" : {
       "comment" : "Onboarding: the title of the first-launch screen. The placeholder is the app's name."
     },
+    "What %@ Chose" : {
+      "comment" : "A connection's page: header of the other person's choices for the reminders this person sends them. The argument is their name, such as \"Alex Morgan\"."
+    },
     "When it really matters, your iPhone rings and vibrates like an alarm, even on silent and in a Focus. Stopping the alarm only quiets it: the next nudge still comes, and only Done ends the reminder." : {
       "comment" : "Onboarding and How It Nudges: under \"Urgent nudges ring as alarms\"."
     },
@@ -1920,6 +1968,9 @@
     },
     "Your Tags" : {
       "comment" : "The Tags page's section header above every tag."
+    },
+    "Your choices are as they were. Try again." : {
+      "comment" : "A connection's page: under Couldn't Save the Change."
     },
     "Your reminders are still on this iPhone, and nudges already scheduled will still come. Unlock your iPhone, then open %@ again." : {
       "comment" : "Explains the unreadable store: nothing is lost, and reopening the app tries again. The placeholder is the app's name."
