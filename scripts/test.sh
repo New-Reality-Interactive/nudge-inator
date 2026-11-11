@@ -150,6 +150,11 @@ if grep -rn --include='*.swift' 'chevron\.right' App NudgeWidgets Packages; then
   failed+=("chevron-right")
 fi
 
+# A list row with every inset zeroed lets its content touch the screen edges (#351).
+step "List row insets are never all zero without a reason"
+scripts/tests/list-row-insets-test.sh || failed+=("list-row-insets-test")
+scripts/check-list-row-insets.sh App NudgeWidgets Packages || failed+=("list-row-insets")
+
 # App/Resources/PrivacyInfo.xcprivacy gives UserDefaults the reason CA92.1: the app reading its own
 # standard defaults. A suite would be a different reason (1C8F.1 for the App Group's), and the widget
 # has no manifest, so a UserDefaults there would be an undeclared required reason API. Shipped
