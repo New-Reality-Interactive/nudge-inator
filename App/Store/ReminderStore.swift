@@ -20,6 +20,8 @@ enum StoreError: Error, Equatable {
         case paceWait
         case occurrenceState
         case closedOccurrenceDueTime
+        case receivedOrigin
+        case receivedState
     }
 
     /// A saved value the store can't map back to the engine's, such as RRULE text that no longer
@@ -56,7 +58,7 @@ struct ReminderStore {
         try backfillCreationDates(with: now)
     }
 
-    nonisolated private static let schema = Schema(versionedSchema: StoreSchemaV2.self)
+    nonisolated private static let schema = Schema(versionedSchema: StoreSchemaV3.self)
 
     /// Gives the reminders without a creation date one instant, so they sort by `position` and before
     /// every reminder made afterwards. The lightweight stage can only add the property with its
@@ -216,6 +218,46 @@ private extension ReminderRecord {
         (paceKind, paceWait) = reminder.pace.storedValue
         breakThroughFocus = reminder.breakThroughFocus
         createdAt = reminder.createdAt
+        setOrigin(reminder.origin)
+    }
+
+    /// Saves a received reminder's origin and clears every field for one of the person's own.
+    func setOrigin(_ origin: ReminderOrigin) {
+        switch origin {
+        case .mine:
+            receivedConnectionID = nil
+            receivedSendersReminderID = nil
+            receivedRevision = nil
+            receivedState = nil
+            receivedOriginalDueTime = nil
+        case let .received(connectionID, sendersReminderID, revision, state, originalDueTime):
+            receivedConnectionID = connectionID
+            receivedSendersReminderID = sendersReminderID
+            receivedRevision = revision
+            receivedState = state.storedValue
+            receivedOriginalDueTime = originalDueTime
+        }
+    }
+
+    /// The origin saved: mine when none is, received when it holds a whole one, and an error for
+    /// anything between, so a half-saved origin never reads as the person's own.
+    func origin() throws -> ReminderOrigin {
+        guard let receivedConnectionID else {
+            guard receivedSendersReminderID == nil, receivedRevision == nil, receivedState == nil, receivedOriginalDueTime == nil else {
+                throw StoreError.unreadable(field: .receivedOrigin, value: "no connection")
+            }
+            return .mine
+        }
+        guard let receivedSendersReminderID, let receivedRevision, let receivedState else {
+            throw StoreError.unreadable(field: .receivedOrigin, value: "incomplete")
+        }
+        return .received(
+            connectionID: receivedConnectionID,
+            sendersReminderID: receivedSendersReminderID,
+            revision: receivedRevision,
+            state: try ReminderOrigin.ReceivedState(storedValue: receivedState),
+            originalDueTime: receivedOriginalDueTime
+        )
     }
 
     func reminder() throws -> Reminder {
@@ -229,7 +271,8 @@ private extension ReminderRecord {
             strength: try Strength(storedValue: strength),
             pace: try Pace(storedKind: paceKind, wait: paceWait),
             breakThroughFocus: breakThroughFocus,
-            createdAt: createdAt
+            createdAt: createdAt,
+            origin: try origin()
         )
     }
 
@@ -305,6 +348,23 @@ private extension Pace {
             }
             self = .consistent(wait: wait)
         default: throw StoreError.unreadable(field: .paceKind, value: storedKind)
+        }
+    }
+}
+
+private extension ReminderOrigin.ReceivedState {
+    var storedValue: String {
+        switch self {
+        case .accepted: "accepted"
+        case .waiting: "waiting"
+        }
+    }
+
+    init(storedValue: String) throws {
+        switch storedValue {
+        case "accepted": self = .accepted
+        case "waiting": self = .waiting
+        default: throw StoreError.unreadable(field: .receivedState, value: storedValue)
         }
     }
 }

@@ -158,6 +158,10 @@ _Avoid_: Shared reminder, outgoing reminder
 A recipient's copy of a reminder someone sent them, shown among their own as "From <name>". The recipient can mark it Done, pause it, remove it and tag it, and can't change what it says or when it's due.
 _Avoid_: Shared reminder, incoming reminder
 
+**Original due time**:
+The sender's due time of a one-off that its recipient accepted after it had come (Ask me first). The copy's own due time is then the moment of acceptance, and its origin keeps the original, so a later sender's revision can tell the sender's own move from the original. A copy accepted in time, or a repeating one, has none.
+_Avoid_: Initial due time
+
 **Sender's revision**:
 The sender's edit of a reminder they sent, as it reaches a recipient's copy. It replaces what the copy says and when it's due, even while the copy is Nudging, and comes with a change note.
 _Avoid_: Update, sync

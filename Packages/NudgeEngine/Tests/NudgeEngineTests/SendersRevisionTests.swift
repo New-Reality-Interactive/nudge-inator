@@ -304,6 +304,82 @@ struct SendersRevisionTests {
         #expect(try #require(scheduler.lastPlan?.items.min { $0.fireTime < $1.fireTime }).fireTime == NewYork.local(2026, 10, 15, 18))
     }
 
+    /// Due at 9:00 and accepted at 14:00 (its due time then 14:00), a one-off whose sender moves it to
+    /// 8:00 has made its own move to an earlier time: it differs from the original 9:00, so it applies.
+    @Test func aLateAcceptedOneOffTakesTheSendersMoveToAnEarlierTimeThanTheOriginal() {
+        clock.now = NewYork.local(2026, 10, 15, 14)
+        let reminder = receivedOneOff(state: .waiting)
+        var engine = engine(for: reminder)
+        engine.accept(reminder.id)
+
+        clock.now = NewYork.local(2026, 10, 15, 14, 5)
+        let note = engine.applySendersRevision(revision(of: reminder) { $0.dueTime = NewYork.local(2026, 10, 15, 8) })
+
+        #expect(note == [.dueTime(from: NewYork.local(2026, 10, 15, 14), to: NewYork.local(2026, 10, 15, 8))])
+        #expect(engine.reminders.first?.dueTime == NewYork.local(2026, 10, 15, 8))
+    }
+
+    /// Once the sender's own time applies it is the copy's due time, so the original no longer stands for it.
+    @Test func aSendersOwnDueTimeReplacesTheOriginalOnTheOrigin() {
+        clock.now = NewYork.local(2026, 10, 15, 14)
+        let reminder = receivedOneOff(state: .waiting)
+        var engine = engine(for: reminder)
+        engine.accept(reminder.id)
+
+        clock.now = NewYork.local(2026, 10, 15, 14, 5)
+        engine.applySendersRevision(revision(of: reminder) { $0.dueTime = NewYork.local(2026, 10, 15, 18) })
+
+        #expect(engine.reminders.first?.origin == .received(connectionID: connectionID, sendersReminderID: sendersReminderID, revision: 4, state: .accepted))
+    }
+
+    /// A revision carrying no received origin keeps the copy's revision number, and a due time of the
+    /// sender's own still replaces the original, so none is left standing for a time that is gone.
+    @Test func aRevisionWithoutAReceivedOriginStillClearsTheOriginalWhenTheDueTimeMoves() {
+        clock.now = NewYork.local(2026, 10, 15, 14)
+        let reminder = receivedOneOff(state: .waiting)
+        var engine = engine(for: reminder)
+        engine.accept(reminder.id)
+
+        clock.now = NewYork.local(2026, 10, 15, 14, 5)
+        var revised = reminder
+        revised.origin = .mine
+        revised.dueTime = NewYork.local(2026, 10, 15, 18)
+        engine.applySendersRevision(revised)
+
+        #expect(engine.reminders.first?.dueTime == NewYork.local(2026, 10, 15, 18))
+        #expect(engine.reminders.first?.origin == .received(connectionID: connectionID, sendersReminderID: sendersReminderID, revision: 3, state: .accepted))
+    }
+
+    /// A revision that leaves the due time at the original keeps the original, for the next revision.
+    @Test func aLateAcceptedOneOffKeepsItsOriginalThroughARevisionThatLeavesTheDueTime() {
+        clock.now = NewYork.local(2026, 10, 15, 14)
+        let reminder = receivedOneOff(state: .waiting)
+        var engine = engine(for: reminder)
+        engine.accept(reminder.id)
+
+        clock.now = NewYork.local(2026, 10, 15, 14, 5)
+        engine.applySendersRevision(revision(of: reminder) { $0.title = "Call back" })
+
+        #expect(engine.reminders.first?.origin == .received(
+            connectionID: connectionID, sendersReminderID: sendersReminderID, revision: 4, state: .accepted,
+            originalDueTime: NewYork.local(2026, 10, 15, 9)
+        ))
+    }
+
+    /// A one-off accepted before its due time was never late, so its sender's move to an earlier time
+    /// after the time has come applies like any change (ADR 0005 listed this as a limit).
+    @Test func aOneOffNeverAcceptedLateTakesTheSendersMoveToAnEarlierTimeOnceDue() {
+        clock.now = NewYork.local(2026, 10, 15, 8)
+        let reminder = receivedOneOff(state: .waiting)
+        var engine = engine(for: reminder)
+        engine.accept(reminder.id)
+
+        clock.now = NewYork.local(2026, 10, 15, 10)
+        let note = engine.applySendersRevision(revision(of: reminder) { $0.dueTime = NewYork.local(2026, 10, 15, 8, 30) })
+
+        #expect(note == [.dueTime(from: NewYork.local(2026, 10, 15, 9), to: NewYork.local(2026, 10, 15, 8, 30))])
+    }
+
     // MARK: What stays as it was
 
     @Test(arguments: SendersRevisionTests.lockedRevisions)

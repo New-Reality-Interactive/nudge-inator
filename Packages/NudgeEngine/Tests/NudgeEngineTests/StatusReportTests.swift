@@ -239,7 +239,7 @@ struct StatusReportTests {
         clock.now = NewYork.local(2026, 10, 22, 9, 30)
         var revised = reminder
         revised.strength = .gentle
-        if case let .received(connectionID, sendersReminderID, _, state) = reminder.origin {
+        if case let .received(connectionID, sendersReminderID, _, state, _) = reminder.origin {
             revised.origin = .received(connectionID: connectionID, sendersReminderID: sendersReminderID, revision: 2, state: state)
         }
         _ = engine.applySendersRevision(revised)

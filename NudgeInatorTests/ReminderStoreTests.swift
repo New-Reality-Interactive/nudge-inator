@@ -235,6 +235,128 @@ struct ReminderStoreTests {
         #expect(try store().load().reminders.first?.pace == pace)
     }
 
+    // MARK: A received reminder's origin
+
+    let connectionID = UUID()
+    let sendersReminderID = UUID()
+
+    func receivedReminder(
+        state: ReminderOrigin.ReceivedState = .accepted,
+        originalDueTime: Date? = nil,
+        tagIDs: [Tag.ID] = []
+    ) -> Reminder {
+        Reminder(
+            title: "Take the pills",
+            notes: "With food",
+            tagIDs: tagIDs,
+            dueTime: NewYork.local(2026, 11, 12, 9),
+            strength: .firm,
+            createdAt: NewYork.local(2026, 11, 10, 8),
+            origin: .received(
+                connectionID: connectionID, sendersReminderID: sendersReminderID, revision: 4, state: state, originalDueTime: originalDueTime
+            )
+        )
+    }
+
+    /// Both states, the revision, the connection and the sender's reminder ID, beside tags and a history.
+    @Test(arguments: [ReminderOrigin.ReceivedState.accepted, .waiting])
+    func aReceivedReminderReadsBackWithItsOriginTagsAndHistory(state: ReminderOrigin.ReceivedState) throws {
+        let home = Tag(name: "home")
+        let reminder = receivedReminder(state: state, tagIDs: [home.id])
+        let history = ReminderHistory(
+            closedOccurrences: [NewYork.local(2026, 11, 11, 9): Closing(state: .done, closedAt: NewYork.local(2026, 11, 11, 9, 5), nudgesSent: 1)],
+            pauseSpans: [PauseSpan(start: NewYork.local(2026, 11, 11, 10), end: NewYork.local(2026, 11, 11, 12))],
+            replacedTitles: [Replaced(value: "Pills", replacedAt: NewYork.local(2026, 11, 10, 9))]
+        )
+        let saved = StoredData(reminders: [reminder], tags: [home], histories: [reminder.id: history])
+
+        try store().save(saved)
+
+        let loaded = try store().load()
+        #expect(loaded == saved)
+        #expect(loaded.reminders.first?.origin == .received(
+            connectionID: connectionID, sendersReminderID: sendersReminderID, revision: 4, state: state
+        ))
+    }
+
+    /// A one-off accepted late keeps the sender's original due time with its origin.
+    @Test func aLateAcceptedOneOffReadsBackWithTheSendersOriginalDueTime() throws {
+        let original = NewYork.local(2026, 11, 10, 9)
+        var reminder = receivedReminder(originalDueTime: original)
+        reminder.dueTime = NewYork.local(2026, 11, 10, 14)
+        let saved = StoredData(reminders: [reminder], tags: [], histories: [:])
+
+        try store().save(saved)
+
+        let loaded = try store().load()
+        #expect(loaded == saved)
+        #expect(loaded.reminders.first?.origin == .received(
+            connectionID: connectionID, sendersReminderID: sendersReminderID, revision: 4, state: .accepted, originalDueTime: original
+        ))
+    }
+
+    /// A copy never accepted late stores no original, and reads back as it did.
+    @Test func aCopyNeverAcceptedLateReadsBackWithNoOriginalDueTime() throws {
+        try store().save(StoredData(reminders: [receivedReminder()], tags: [], histories: [:]))
+
+        guard case let .received(_, _, _, _, originalDueTime)? = try store().load().reminders.first?.origin else {
+            Issue.record("the reminder didn't read back as received")
+            return
+        }
+        #expect(originalDueTime == nil)
+    }
+
+    /// A reminder of the person's own saves nothing new: no origin field holds a value, so a
+    /// reminder saved without an origin and one saved as mine are the same file.
+    @Test func aPersonalReminderSavedBy140StoresNoOriginAndReadsBackAsMine() throws {
+        let mine = Reminder(title: "Call the plumber", dueTime: NewYork.local(2026, 11, 12, 9), strength: .gentle, createdAt: NewYork.local(2026, 11, 10, 8))
+        try store().save(StoredData(reminders: [mine, receivedReminder()], tags: [], histories: [:]))
+
+        let container = try ModelContainer(
+            for: ReminderRecord.self, ClosedOccurrenceRecord.self, PauseSpanRecord.self, ReplacedTitleRecord.self, TagRecord.self,
+            configurations: ReminderStore.configuration(for: .file(fileURL))
+        )
+        let records = try container.mainContext.fetch(FetchDescriptor<ReminderRecord>(sortBy: [SortDescriptor(\.position)]))
+        let personal = try #require(records.first)
+        #expect(personal.receivedConnectionID == nil)
+        #expect(personal.receivedSendersReminderID == nil)
+        #expect(personal.receivedRevision == nil)
+        #expect(personal.receivedState == nil)
+        #expect(personal.receivedOriginalDueTime == nil)
+        #expect(try store().load().reminders.first?.origin == .mine)
+    }
+
+    /// Saving a received reminder as the person's own again, or the reverse, leaves only the new origin.
+    @Test func changingAnOriginReplacesTheSavedOneWithNoLeftovers() throws {
+        let received = receivedReminder(originalDueTime: NewYork.local(2026, 11, 10, 9))
+        try store().save(StoredData(reminders: [received], tags: [], histories: [:]))
+        var mine = received
+        mine.origin = .mine
+        try store().save(StoredData(reminders: [mine], tags: [], histories: [:]))
+
+        #expect(try store().load().reminders == [mine])
+    }
+
+    /// An origin the store can't read back whole is an error, not a reminder that quietly reads as mine.
+    @Test(arguments: [
+        (UUID?.none, "waiting", StoreError.unreadable(field: .receivedOrigin, value: "no connection")),
+        (UUID?.some(UUID()), "snoozed", StoreError.unreadable(field: .receivedState, value: "snoozed")),
+    ])
+    func anOriginTheStoreCantReadBackWholeIsUnreadable(connection: UUID?, state: String, error: StoreError) throws {
+        try store().save(StoredData(reminders: [receivedReminder()], tags: [], histories: [:]))
+        let container = try ModelContainer(
+            for: ReminderRecord.self, ClosedOccurrenceRecord.self, PauseSpanRecord.self, ReplacedTitleRecord.self, TagRecord.self,
+            configurations: ReminderStore.configuration(for: .file(fileURL))
+        )
+        for record in try container.mainContext.fetch(FetchDescriptor<ReminderRecord>()) {
+            record.receivedConnectionID = connection
+            record.receivedState = state
+        }
+        try container.mainContext.save()
+
+        #expect(throws: error) { try store().load() }
+    }
+
     /// A pace kind the store can't map back is an error, not a reminder that quietly nudges
     /// another way.
     @Test func aPaceKindTheStoreCantMapBackIsUnreadable() throws {

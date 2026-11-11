@@ -342,6 +342,43 @@ struct ReceivedReminderTests {
         #expect(scheduler.lastPlan?.currentBadgeCount == 1)
     }
 
+    /// The origin keeps the sender's due time (9:00) when the copy's own is set to the moment of
+    /// acceptance (11:00), so a later revision can tell the sender's own move from the original.
+    @Test func aOneOffAcceptedAfterItsDueTimeKeepsTheSendersOriginalDueTimeOnItsOrigin() {
+        clock.now = NewYork.local(2026, 10, 15, 11)
+        let reminder = receivedOneOff()
+        var engine = engine(for: reminder)
+
+        engine.accept(reminder.id)
+
+        #expect(engine.reminders.first?.dueTime == NewYork.local(2026, 10, 15, 11))
+        #expect(engine.reminders.first?.origin == .received(
+            connectionID: connectionID, sendersReminderID: sendersReminderID, revision: 3, state: .accepted,
+            originalDueTime: NewYork.local(2026, 10, 15, 9)
+        ))
+    }
+
+    @Test(arguments: [NewYork.local(2026, 10, 15, 8), NewYork.local(2026, 10, 15, 9)])
+    func aOneOffAcceptedBeforeOrAtItsDueTimeKeepsNoOriginalDueTime(acceptedAt: Date) {
+        clock.now = acceptedAt
+        let reminder = receivedOneOff()
+        var engine = engine(for: reminder)
+
+        engine.accept(reminder.id)
+
+        #expect(engine.reminders.first?.origin == received(state: .accepted).origin)
+    }
+
+    @Test func aRepeatingCopyAcceptedAfterItsFirstDueTimeKeepsNoOriginalDueTime() {
+        clock.now = NewYork.local(2026, 10, 17, 9, 30)
+        let reminder = received(state: .waiting)
+        var engine = engine(for: reminder)
+
+        engine.accept(reminder.id)
+
+        #expect(engine.reminders.first?.origin == received(state: .accepted).origin)
+    }
+
     @Test func aOneOffAcceptedBeforeItsDueTimeNudgesAtItsDueTime() throws {
         clock.now = NewYork.local(2026, 10, 15, 8)
         let reminder = receivedOneOff()

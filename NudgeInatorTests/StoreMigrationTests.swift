@@ -186,3 +186,113 @@ struct StoreMigrationTests {
         #expect(try openAfterUpdate().load() == StoredData(reminders: [], tags: [], histories: [:]))
     }
 }
+
+/// 1.4.0 opens 1.3.0's store (schema version 2) under schema version 3, which adds a received
+/// reminder's origin. Each test writes a file with version 2's schema, then opens it as a relaunch
+/// would. Nothing in the file changes for a reminder of the person's own.
+@MainActor
+struct Version2StoreMigrationTests {
+    let storeFile = TemporaryStoreFile()
+    var fileURL: URL { storeFile.url }
+
+    let home = Tag(name: "home")
+    let health = Tag(name: "health")
+    let pills = Reminder(
+        title: "Take the pills",
+        notes: "With food",
+        tagIDs: [UUID(), UUID()],
+        dueTime: NewYork.local(2026, 10, 15, 9),
+        repeatRule: .everyDay,
+        strength: .firm,
+        pace: .consistent(wait: 300),
+        breakThroughFocus: false,
+        createdAt: NewYork.local(2026, 10, 1, 8)
+    )
+    let bins = Reminder(title: "Put the bins out", dueTime: NewYork.local(2026, 10, 16, 19), strength: .relentless, createdAt: NewYork.local(2026, 10, 2, 8))
+    let rent = Reminder(title: "Pay rent", dueTime: NewYork.local(2026, 11, 1, 9), strength: .gentle, createdAt: NewYork.local(2026, 10, 3, 8))
+    let updateInstant = NewYork.local(2026, 11, 10, 12)
+
+    var pillsHistory: ReminderHistory {
+        ReminderHistory(
+            closedOccurrences: [
+                NewYork.local(2026, 10, 15, 9): Closing(state: .done, closedAt: NewYork.local(2026, 10, 15, 9, 5), nudgesSent: 1),
+                NewYork.local(2026, 10, 16, 9): Closing(state: .missed(reason: .giveUpLimit), closedAt: NewYork.local(2026, 10, 16, 11), nudgesSent: 20),
+            ],
+            editAppliesAfter: NewYork.local(2026, 10, 16, 9),
+            pauseSpans: [
+                PauseSpan(start: NewYork.local(2026, 10, 17, 8), end: NewYork.local(2026, 10, 18, 8)),
+                PauseSpan(start: NewYork.local(2026, 10, 19, 8)),
+            ],
+            replacedTitles: [Replaced(value: "Take the blue pills", replacedAt: NewYork.local(2026, 10, 14, 7))]
+        )
+    }
+
+    func openAfterUpdate() throws -> ReminderStore {
+        try ReminderStore(location: .file(fileURL), now: updateInstant)
+    }
+
+    @Test func aVersion2StoreOpensWithEveryReminderHistoryAndTagKeptAndEveryReminderMine() throws {
+        try Version2Store.write(to: fileURL, reminders: [pills, bins, rent], tags: [home, health], histories: [pills.id: pillsHistory])
+
+        let loaded = try openAfterUpdate().load()
+
+        #expect(loaded == StoredData(reminders: [pills, bins, rent], tags: [home, health], histories: [pills.id: pillsHistory]))
+        #expect(loaded.reminders.allSatisfy { $0.origin == .mine })
+    }
+
+    /// The update stores no origin for a reminder of the person's own: every origin field in the
+    /// migrated file is empty, not only read back as mine.
+    @Test func aVersion2StoreHoldsNoOriginValueAfterTheUpdate() throws {
+        try Version2Store.write(to: fileURL, reminders: [pills, bins, rent], tags: [], histories: [:])
+        _ = try openAfterUpdate()
+
+        let container = try ModelContainer(
+            for: ReminderRecord.self, ClosedOccurrenceRecord.self, PauseSpanRecord.self, ReplacedTitleRecord.self, TagRecord.self,
+            configurations: ReminderStore.configuration(for: .file(fileURL))
+        )
+        let records = try container.mainContext.fetch(FetchDescriptor<ReminderRecord>())
+        #expect(records.count == 3)
+        #expect(records.allSatisfy {
+            $0.receivedConnectionID == nil && $0.receivedSendersReminderID == nil && $0.receivedRevision == nil
+                && $0.receivedState == nil && $0.receivedOriginalDueTime == nil
+        })
+    }
+
+    /// IDs, positions and creation dates are exactly what 1.3.0 saved: the update stamps nothing,
+    /// since every 1.3.0 reminder already has a creation date.
+    @Test func aVersion2StoreKeepsEveryIDPositionAndCreationDate() throws {
+        try Version2Store.write(to: fileURL, reminders: [rent, pills, bins], tags: [health, home], histories: [:])
+
+        let loaded = try openAfterUpdate().load()
+
+        #expect(loaded.reminders.map(\.id) == [rent.id, pills.id, bins.id])
+        #expect(loaded.reminders.map(\.createdAt) == [rent.createdAt, pills.createdAt, bins.createdAt])
+        #expect(loaded.tags.map(\.id) == [health.id, home.id])
+    }
+
+    /// The same plan from the same reminders: every notification and alarm identifier comes from it,
+    /// so none changes and nothing is re-planned.
+    @Test func theEnginesPlanOverAVersion2StoresRemindersEqualsThePlanOverTheOnesWrittenIntoIt() throws {
+        try Version2Store.write(to: fileURL, reminders: [pills, bins, rent], tags: [home, health], histories: [pills.id: pillsHistory])
+        func plan(of reminders: [Reminder]) throws -> SchedulePlan {
+            let scheduler = FakeScheduler()
+            var engine = Engine(clock: FakeClock(now: NewYork.local(2026, 10, 20, 8)), scheduler: scheduler, timeZone: NewYork.timeZone)
+            engine.update(reminders: reminders)
+            return try #require(scheduler.lastPlan)
+        }
+
+        let loaded = try openAfterUpdate().load()
+
+        #expect(try plan(of: loaded.reminders) == plan(of: [pills, bins, rent]))
+        #expect(try !plan(of: loaded.reminders).items.isEmpty)
+    }
+
+    @Test func aVersion1StoreStillOpensThroughBothStages() throws {
+        try Version1Store.write(to: fileURL, reminders: [bins, rent], tags: [home], histories: [:])
+
+        let loaded = try openAfterUpdate().load()
+
+        #expect(loaded.reminders.map(\.id) == [bins.id, rent.id])
+        #expect(loaded.reminders.allSatisfy { $0.origin == .mine && $0.createdAt == updateInstant })
+    }
+}

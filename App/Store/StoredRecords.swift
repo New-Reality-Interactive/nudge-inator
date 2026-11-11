@@ -37,6 +37,17 @@ final class ReminderRecord: IdentifiedRecord {
     /// The reminder's creation date (schema version 2). `.distantPast` means none yet: it is the
     /// default the lightweight stage gives 1.2.0's records, and `ReminderStore` replaces it on open.
     var createdAt: Date = Date.distantPast
+    /// A received reminder's origin (schema version 3), flat so a reminder of the person's own stores
+    /// nothing: all five are `nil` and the reminder reads as mine. `receivedConnectionID` says it is
+    /// received; the next three then hold a value too. It names the connection by ID only, so saving
+    /// it needs no sharing store.
+    var receivedConnectionID: UUID?
+    var receivedSendersReminderID: UUID?
+    var receivedRevision: Int?
+    /// `ReminderOrigin.ReceivedState` as the store spells it.
+    var receivedState: String?
+    /// The sender's due time of a one-off accepted after it had come, `nil` for every other copy.
+    var receivedOriginalDueTime: Date?
     /// Its history goes with it: Delete clears a reminder's whole history (ticket 12).
     @Relationship(deleteRule: .cascade, inverse: \ClosedOccurrenceRecord.reminder)
     var closedOccurrences: [ClosedOccurrenceRecord] = []

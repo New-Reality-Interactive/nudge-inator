@@ -308,20 +308,24 @@ public struct Engine {
     /// Starts a received copy that is waiting to be accepted (Ask me first). A repeating one starts
     /// at its next due time: what fell due while it waited stays Skipped, which is a pause from the
     /// beginning of time to now. A one-off whose due time has passed starts nudging at once, so its
-    /// due time becomes now; one not yet due nudges at its due time. Accepting a reminder that
-    /// isn't a waiting copy is ignored.
+    /// due time becomes now, and the sender's due time stays on the origin as its original due time;
+    /// one not yet due nudges at its due time. Accepting a reminder that isn't a waiting copy is ignored.
     public mutating func accept(_ reminderID: Reminder.ID) {
         guard let index = reminders.firstIndex(where: { $0.id == reminderID }),
-              case let .received(connectionID, sendersReminderID, revision, .waiting) = reminders[index].origin
+              case let .received(connectionID, sendersReminderID, revision, .waiting, _) = reminders[index].origin
         else { return }
         let now = clock.now
-        reminders[index].origin = .received(connectionID: connectionID, sendersReminderID: sendersReminderID, revision: revision, state: .accepted)
+        var originalDueTime: Date?
         if reminders[index].repeatRule != nil {
             // First, so the spans stay in time order, which the occurrence lookup relies on.
             historyByReminder[reminderID, default: History()].saved.pauseSpans.insert(PauseSpan(start: .distantPast, end: now), at: 0)
         } else if reminders[index].dueTime < now {
+            originalDueTime = reminders[index].dueTime
             reminders[index].dueTime = now
         }
+        reminders[index].origin = .received(
+            connectionID: connectionID, sendersReminderID: sendersReminderID, revision: revision, state: .accepted, originalDueTime: originalDueTime
+        )
         applyPlan()
     }
 
@@ -397,20 +401,30 @@ public struct Engine {
     /// Returns what changed, in the order of `ReceivedContentField.allCases`: empty for a revision
     /// that changes nothing, for one that is ignored, and for a reminder that isn't a received copy,
     /// which is left alone.
-    /// A one-off whose due time has come keeps it when the revision's is earlier: a copy accepted
-    /// late has its due time set to the moment of acceptance, so the sender's original due time
-    /// isn't a change, and applying it would make the copy a long-overdue Missed.
+    ///
+    /// A one-off accepted late has its due time set to the moment of acceptance and keeps the sender's
+    /// original on its origin. A revision at that original due time is no change, since applying it
+    /// would make the copy a long-overdue Missed; any other due time is the sender's own and applies,
+    /// an earlier one included.
     @discardableResult
     public mutating func applySendersRevision(_ revised: Reminder) -> [ReceivedChange] {
         guard let current = reminder(revised.id),
-              case let .received(connectionID, sendersReminderID, heldRevision, state) = current.origin
+              case let .received(connectionID, sendersReminderID, heldRevision, state, heldOriginalDueTime) = current.origin
         else { return [] }
         // A revision that isn't newer than the copy's came late, out of order, or twice.
-        if case let .received(_, _, revision, _) = revised.origin, revision <= heldRevision { return [] }
+        if case let .received(_, _, revision, _, _) = revised.origin, revision <= heldRevision { return [] }
         var incoming = revised
-        if current.repeatRule == nil, incoming.repeatRule == nil,
-           incoming.dueTime < current.dueTime, current.dueTime <= clock.now {
-            incoming.dueTime = current.dueTime
+        var originalDueTime = heldOriginalDueTime
+        if let heldOriginalDueTime, current.repeatRule == nil, incoming.repeatRule == nil {
+            if incoming.dueTime == heldOriginalDueTime {
+                incoming.dueTime = current.dueTime
+            } else {
+                // The sender's own time is the copy's due time now, so the original stands for nothing.
+                originalDueTime = nil
+            }
+        } else if heldOriginalDueTime != nil {
+            // The sender made it repeat: a repeating copy has no late acceptance to remember.
+            originalDueTime = nil
         }
         let changes = ReceivedContentField.allCases.compactMap { ReceivedChange($0, from: current, to: incoming) }
         var kept = current
@@ -421,9 +435,11 @@ public struct Engine {
         kept.strength = incoming.strength
         kept.pace = incoming.pace
         kept.breakThroughFocus = incoming.breakThroughFocus
-        if case let .received(_, _, newRevision, _) = revised.origin {
-            kept.origin = .received(connectionID: connectionID, sendersReminderID: sendersReminderID, revision: newRevision, state: state)
-        }
+        var newRevision = heldRevision
+        if case let .received(_, _, revision, _, _) = revised.origin { newRevision = revision }
+        kept.origin = .received(
+            connectionID: connectionID, sendersReminderID: sendersReminderID, revision: newRevision, state: state, originalDueTime: originalDueTime
+        )
         guard !changes.isEmpty else {
             replace(kept)
             return []
