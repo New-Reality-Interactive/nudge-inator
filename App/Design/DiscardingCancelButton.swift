@@ -19,7 +19,7 @@ struct DiscardingCancelButton: View {
             if hasChanges { isConfirming = true } else { dismiss() }
         } label: {
             Label {
-                Text("Cancel", comment: "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, and the Reminders and Tags filters'.")
+                Text("Cancel", comment: "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, the Reminders and Tags filters', and the invite hint's.")
             } icon: {
                 Image(systemName: "xmark")
             }

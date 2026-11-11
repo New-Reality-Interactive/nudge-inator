@@ -9,6 +9,11 @@ struct SharingConnection: Equatable {
     var state: State
     /// Whether they share status with the person (GLOSSARY.md, Status sharing).
     var sharesStatus: Bool
+    /// The email address or phone number of the Apple Account this person's invite went to, as the
+    /// sharing sheet named it, or `nil` when the other person did the inviting.
+    var address: String? = nil
+    /// When this person sent the invite, or `nil` when the other person did the inviting.
+    var invitedAt: Date? = nil
 
     enum State: Equatable {
         /// The invite is sent and not accepted yet.

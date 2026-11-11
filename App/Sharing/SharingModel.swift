@@ -20,6 +20,8 @@ final class SharingModel {
     var reach: SharingReach? { accountState?.reach }
 
     private let adapter: any SharingAdapter
+    /// When an invite was sent.
+    private let clock: any EngineClock
     /// Opens the store, as the reminder store's opener does. A store that won't open is tried
     /// again by whatever needs it next: the account read on App opened, a change coming or going.
     private let openStore: () throws -> SharingStore
@@ -28,8 +30,9 @@ final class SharingModel {
     /// finish out of order and put an older state back (as the permission reads do).
     @ObservationIgnored private var accountRefresh: Task<Void, Never>?
 
-    init(adapter: any SharingAdapter, openStore: @escaping () throws -> SharingStore) {
+    init(adapter: any SharingAdapter, clock: any EngineClock, openStore: @escaping () throws -> SharingStore) {
         self.adapter = adapter
+        self.clock = clock
         self.openStore = openStore
         adapter.events = self
     }
@@ -79,6 +82,70 @@ final class SharingModel {
         adapter.submit(change)
     }
 
+    /// What came of Invite Someone.
+    enum InviteOutcome: Equatable {
+        /// The invite was sent, and the person is listed as Invited.
+        case invited(SharingConnection)
+        /// The person is already connected, so no second connection was made.
+        case alreadyConnected(SharingConnection)
+        /// The person closed the sharing sheet: nothing was sent.
+        case canceled
+    }
+
+    /// Invites one person through the adapter's sharing sheet (ticket 194) and lists them as
+    /// Invited. Someone already connected is not connected twice: the sheet's new invite is
+    /// revoked and the outcome names them. An invite to someone already Invited, or Invite Again
+    /// from the invite with `replacedID`, takes the old invite's place and revokes it. Throws,
+    /// keeping nothing, if the store can't be opened (checked before the sheet shows) or keep the
+    /// invite, or the invite couldn't be made.
+    func invite(replacing replacedID: UUID? = nil) async throws -> InviteOutcome {
+        _ = try openedStore()
+        let connectionID = UUID()
+        guard let person = try await adapter.invite(connectionID) else { return .canceled }
+        do {
+            // Read after the sheet: the data may have changed while it was up.
+            var kept = try currentData()
+            if let already = kept.connections.first(where: { $0.state == .connected && $0.isSamePerson(as: person) }) {
+                adapter.revokeInvite(connectionID)
+                return .alreadyConnected(already)
+            }
+            let connection = SharingConnection(
+                id: connectionID,
+                name: person.name,
+                state: .invited,
+                // Status sharing is on by default (spec #127), until the person's own settings arrive.
+                sharesStatus: true,
+                address: person.address,
+                invitedAt: clock.now
+            )
+            let replaced = kept.list(connection, replacingInvitesTo: person, or: replacedID)
+            try keep(kept)
+            replaced.forEach { adapter.revokeInvite($0.id) }
+            return .invited(connection)
+        } catch {
+            // The sheet sent an invite the app can't list, so it mustn't stay working.
+            adapter.revokeInvite(connectionID)
+            throw error
+        }
+    }
+
+    /// What Settings › Connections lists, now by the model's clock, with days in `calendar`.
+    func connectionsList(calendar: Calendar) -> ConnectionsList {
+        ConnectionsList(data, now: clock.now, calendar: calendar)
+    }
+
+    /// Cancel Invite: revokes the invite to the connection with `connectionID`, so it stops
+    /// working even for someone who already has it, and takes them off the list. Leaves a
+    /// connection that is no longer an invite alone: ending one is Disconnect's (#197). Throws,
+    /// revoking nothing, if the store can't keep it.
+    func cancelInvite(_ connectionID: UUID) throws {
+        var kept = try currentData()
+        guard kept.connections.contains(where: { $0.id == connectionID && $0.state == .invited }) else { return }
+        kept.connections.removeAll { $0.id == connectionID }
+        try keep(kept)
+        adapter.revokeInvite(connectionID)
+    }
+
     /// What the store holds, opening it first if it isn't open.
     private func currentData() throws -> SharingData {
         _ = try openedStore()
@@ -90,6 +157,38 @@ final class SharingModel {
     private func keep(_ kept: SharingData) throws {
         try openedStore().save(kept)
         data = kept
+    }
+}
+
+private extension SharingData {
+    /// Lists a new invite: in the place of the invites it replaces (Invite Again's, `replacedID`,
+    /// and any other to the same person), or last. Returns the invites it replaced.
+    mutating func list(_ connection: SharingConnection, replacingInvitesTo person: InvitedPerson, or replacedID: UUID?) -> [SharingConnection] {
+        let replaced = connections.filter { $0.state == .invited && ($0.id == replacedID || $0.isSamePerson(as: person)) }
+        if let index = connections.firstIndex(where: { replaced.contains($0) }) {
+            connections[index] = connection
+            connections.removeAll { replaced.contains($0) }
+        } else {
+            connections.append(connection)
+        }
+        return replaced
+    }
+}
+
+private extension SharingConnection {
+    /// Whether the sharing sheet's `person` is this connection's person: the same address, however
+    /// it's written. Never the name alone, which two people can share (the developer's call at
+    /// #194's phone check, over the mockup's `sendInvite`, which matches either).
+    func isSamePerson(as person: InvitedPerson) -> Bool {
+        guard let address else { return false }
+        return Self.comparable(address) == Self.comparable(person.address)
+    }
+
+    /// An email address ignoring case and spaces; a phone number as its digits alone, so
+    /// "+1 (555) 010-4477" is "+15550104477".
+    static func comparable(_ address: String) -> String {
+        let trimmed = address.trimmingCharacters(in: .whitespaces)
+        return trimmed.contains("@") ? trimmed.lowercased() : trimmed.filter(\.isNumber)
     }
 }
 

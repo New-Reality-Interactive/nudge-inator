@@ -34,6 +34,22 @@ protocol SharingAdapter: AnyObject {
     /// The iCloud account now, read again at launch, on App opened and when `accountStateChanged()`
     /// says so. Async: asking iCloud may take a while, and it mustn't hold up the app.
     func accountState() async -> SharingAccountState
+    /// Starts an invite to one person, for a new connection with this ID (ticket 194): the real
+    /// adapter makes the connection's share and shows the system sharing sheet for it (#217).
+    /// Returns who the sheet sent it to once it has, or `nil` if the person canceled the sheet.
+    /// Throws if the invite couldn't be made, and then nothing was sent.
+    func invite(_ connectionID: UUID) async throws -> InvitedPerson?
+    /// Stops the connection's invite working, even for someone who already has it. The adapter
+    /// keeps the revoke until it has gone through iCloud, as it keeps a change.
+    func revokeInvite(_ connectionID: UUID)
+}
+
+/// Who an invite went to, as the system sharing sheet named them (ticket 194).
+struct InvitedPerson: Equatable {
+    /// Their name, or their address when the sheet had no name for them.
+    var name: String
+    /// The email address or phone number of the Apple Account the invite was sent to.
+    var address: String
 }
 
 /// A change that crosses between the two people's apps, whichever way. Its `entry` is what the
