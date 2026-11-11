@@ -166,6 +166,10 @@ _Avoid_: Update, sync
 What a received reminder shows after a sender's revision: each field that changed, with its old and new value, such as "Due time changed from 8:00 AM to 9:00 AM".
 _Avoid_: Changelog, edit history
 
+**Status report**:
+What the engine says about a received reminder for its sender: its Status label now, and the label of each occurrence due today or in the 7 days before. A Missed in it is the engine's reading when it works out the occurrence's close, which may be later than the give-up limit. Removed is never in it: the engine no longer holds a removed copy. Nor are Waiting and Canceled, which the sender's side works out from the receipt and the sender's own deletion.
+_Avoid_: Sync status, history
+
 **Status sharing**:
 A recipient's choice, per connection, whether the sender sees how their reminders are going. "Don't share this one" turns it off for one received reminder.
 _Avoid_: Visibility, privacy setting
