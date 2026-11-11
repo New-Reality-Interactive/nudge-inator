@@ -170,6 +170,10 @@ _Avoid_: Changelog, edit history
 What the engine says about a received reminder for its sender: its Status label now, and the label of each occurrence due today or in the 7 days before. A Missed in it is the engine's reading when it works out the occurrence's close, which may be later than the give-up limit. Removed is never in it: the engine no longer holds a removed copy. Nor are Waiting and Canceled, which the sender's side works out from the receipt and the sender's own deletion.
 _Avoid_: Sync status, history
 
+**Sent read-out**:
+What the sender's side shows for each reminder it sent, grouped by person, with one row for each recipient's copy. A row says whether the copy was Delivered, is waiting for them to accept, or hasn't been delivered, then its reported status with the 7 days, or "Not sharing status" (status sharing off) or "Not sharing this one", and Waiting to sync. It is worked out from what the sender's app knows, never from the recipient's engine, and its days are the recipient's. A person with nothing sent has no group.
+_Avoid_: Sent status, outbox
+
 **Status sharing**:
 A recipient's choice, per connection, whether the sender sees how their reminders are going. "Don't share this one" turns it off for one received reminder.
 _Avoid_: Visibility, privacy setting
@@ -179,7 +183,7 @@ A recipient's choice, per connection, of how a received reminder starts: Start r
 _Avoid_: Approval, acceptance mode
 
 **Delivered**:
-That a sent reminder's copy has reached the recipient's iPhone. The sender sees it whatever the status sharing.
+That a sent reminder's copy has reached the recipient's iPhone and started. The sender sees it whatever the status sharing. A copy that has reached the iPhone but waits for them to accept it reads "Waiting for them to accept" instead.
 _Avoid_: Received, sent
 
 **Waiting to sync**:
