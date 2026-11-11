@@ -4,6 +4,9 @@
 # of the app scheme).
 # Env: SIMULATORS (simulator names separated by ";", default the iOS 26.5 and 27.2 ones below).
 # SIMULATORS= (set but empty) runs only the steps that need no simulator, as CI does.
+# The String Catalogs (#350): a local run brings them up to date from the app build and names each one it
+# changed; on GitHub Actions (GITHUB_ACTIONS is set) the run only checks them and fails on a stale one.
+# CI has no simulator, so it builds the app for the generic simulator destination instead.
 # Each run adds records to the test metrics: the engine's tests, the app build, each simulator's app
 # tests and the run as a whole (scripts/metrics.sh, #303).
 set -uo pipefail
@@ -136,13 +139,9 @@ scripts/tests/metrics-test.sh || failed+=("metrics")
 step "A screenshot run stops at its first failed test"
 scripts/tests/screenshots-failures-test.sh || failed+=("screenshots-failures")
 
-# sync-strings.sh only marks a removed string with plural variants as stale, and its check passes, so
-# one stays in the catalog unless someone sees it (#139).
-step "String Catalogs hold no stale strings"
-if grep -l '"extractionState" : "stale"' App/Resources/*.xcstrings Packages/NudgeEngine/Sources/NudgeEngine/*.xcstrings; then
-  echo "FAIL: delete the stale entries from these catalogs" >&2
-  failed+=("stale-strings")
-fi
+# No simulator needed: stand-ins for xcrun (#350).
+step "The String Catalog sync changes only what is out of date"
+scripts/tests/sync-strings-test.sh || failed+=("sync-strings")
 
 # chevron.right points the wrong way in right-to-left languages (#121).
 step "Chevrons use chevron.forward"
@@ -247,6 +246,8 @@ done
 # One build for every simulator: they share the SDK and architecture, so a second build compiled
 # nothing anyway. It also keeps the newest build log the one that compiled, which is the log
 # xcode-build-server reads for VS Code's code completion (README).
+# Set once an app build succeeds: only then does .build/derived hold this run's .stringsdata.
+app_built=false
 if [ ${#udids[@]} -gt 0 ]; then
   step "xcodebuild build-for-testing (app + widget extension)"
   began="$(date +%s)"
@@ -254,6 +255,7 @@ if [ ${#udids[@]} -gt 0 ]; then
     -scheme NudgeInator -destination "platform=iOS Simulator,id=${udids[0]}" -derivedDataPath .build/derived
   status=$?
   if record_step app-build "${found[0]}" "$logs/app-build.log" "$began" "$(date +%s)" "$status"; then
+    app_built=true
     # The simulators test side by side from that one build. A background job can't add to `failed`,
     # so each writes its printed results, and when it began and ended, to its own files in $scratch.
     # They are shown one simulator at a time, in order, as each finishes, so the results don't
@@ -282,15 +284,45 @@ if [ ${#udids[@]} -gt 0 ]; then
   fi
 fi
 
-# The app build also builds NudgeEngine, so its .stringsdata covers both catalogs. With no
-# simulator there was no app build to check.
-if [ ${#udids[@]} -gt 0 ]; then
-  step "The String Catalogs hold every string the code shows"
-  scripts/sync-strings.sh --check .build/derived || failed+=("string-catalogs")
+# With no simulator in the run (CI's), the app is built for the generic simulator destination, which
+# needs the SDK and no simulator, so the catalogs can still be checked.
+if [ ${#simulators[@]} -eq 0 ]; then
+  step "xcodebuild build (app + widget extension, no simulator)"
+  began="$(date +%s)"
+  xcodebuild_logged "$logs/app-build.log" build -project NudgeInator.xcodeproj -scheme NudgeInator \
+    -destination 'generic/platform=iOS Simulator' -derivedDataPath .build/derived ARCHS=arm64 ONLY_ACTIVE_ARCH=NO \
+    CODE_SIGNING_ALLOWED=NO
+  status=$?
+  if record_step app-build "" "$logs/app-build.log" "$began" "$(date +%s)" "$status"; then
+    app_built=true
+  else
+    failed+=("app-build")
+  fi
+fi
+
+# The app build also builds NudgeEngine, so its .stringsdata covers both catalogs. Not after a failed
+# build: a sync from a partial build would drop the strings of the files that didn't compile.
+if $app_built; then
+  if [ -n "${GITHUB_ACTIONS:-}" ]; then
+    step "The String Catalogs hold every string the code shows"
+    scripts/sync-strings.sh --check .build/derived || failed+=("string-catalogs")
+  else
+    step "The String Catalogs are brought up to date"
+    scripts/sync-strings.sh .build/derived || failed+=("string-catalogs")
+  fi
   if ! diff "$scratch/InfoPlist.xcstrings" App/Resources/InfoPlist.xcstrings; then
     echo "FAIL: the build added Info.plist keys to App/Resources/InfoPlist.xcstrings: give each a comment and commit it" >&2
     failed+=("infoplist-strings")
   fi
+fi
+
+# sync-strings.sh only marks a removed string with plural variants as stale, and its check passes, so
+# one stays in the catalog unless someone sees it (#139). After the sync, so one the sync just marked
+# fails this run.
+step "String Catalogs hold no stale strings"
+if grep -l '"extractionState" : "stale"' App/Resources/*.xcstrings Packages/NudgeEngine/Sources/NudgeEngine/*.xcstrings; then
+  echo "FAIL: delete the stale entries from these catalogs" >&2
+  failed+=("stale-strings")
 fi
 
 # The device seed is Debug-only (#134). Builds Release for the simulator, which needs the SDK but
