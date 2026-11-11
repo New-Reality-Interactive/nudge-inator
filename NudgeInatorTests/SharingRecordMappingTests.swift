@@ -98,17 +98,22 @@ struct SharingRecordMappingTests {
         try expectCarried(.receipt(receipt, for: reminderID, from: connectionID), from: participant, to: owner)
     }
 
-    @Test(arguments: [true, false])
-    func aPersonsSettingsReachTheOtherSide(sharesStatus: Bool) throws {
-        let settings = SharingChange.ConnectionSettings(name: "Sam", sharesStatus: sharesStatus)
+    @Test(arguments: [true, false], DeliveryMode.allCases)
+    func aPersonsSettingsReachTheOtherSide(sharesStatus: Bool, deliveryMode: DeliveryMode) throws {
+        let settings = SharingChange.ConnectionSettings(name: "Sam", ConnectionChoices(sharesStatus: sharesStatus, deliveryMode: deliveryMode))
 
         try expectCarried(.settings(settings, for: connectionID), from: owner, to: participant)
         try expectCarried(.settings(settings, for: connectionID), from: participant, to: owner)
     }
 
+    /// The app model sends no name (ticket 196); the CloudKit adapter may add one (#216).
+    @Test func settingsWithNoNameReachTheOtherSide() throws {
+        try expectCarried(.settings(.init(ConnectionChoices(deliveryMode: .askMeFirst)), for: connectionID), from: owner, to: participant)
+    }
+
     /// Each person's settings have their own record, so one can't overwrite the other's.
     @Test func eachSideWritesItsOwnSettingsRecord() throws {
-        let change = SharingChange.settings(.init(name: "Sam", sharesStatus: true), for: connectionID)
+        let change = SharingChange.settings(.init(name: "Sam", ConnectionChoices(sharesStatus: true)), for: connectionID)
 
         let ownersRecord = try #require(try owner.writes(for: change, statusSharingOn: true).save.first)
         let participantsRecord = try #require(try participant.writes(for: change, statusSharingOn: true).save.first)
@@ -257,7 +262,7 @@ struct SharingRecordMappingTests {
         case .cancel: .cancel(reminderID, for: connectionID)
         case .receipt: .receipt(.started, for: reminderID, from: connectionID)
         case .status: statusChange(weekOfStatus())
-        case .settings: .settings(.init(name: "Sam", sharesStatus: true), for: connectionID)
+        case .settings: .settings(.init(name: "Sam", ConnectionChoices(sharesStatus: true)), for: connectionID)
         }
     }
 
@@ -430,7 +435,7 @@ struct SharingRecordMappingTests {
         #expect(sentRecord.recordType == "SentReminder")
         #expect(Set(sentRecord.encryptedValues.allKeys()) == ["title", "notes", "dueTime", "repeatRule", "repeatMissingDay", "repeatUntilTime", "strength", "paceKind", "paceWait", "breakThroughFocus", "createdAt", "revision", "changeNote", "canceled"])
         #expect(settings.recordType == "ConnectionSettings")
-        #expect(Set(settings.encryptedValues.allKeys()) == ["name", "sharesStatus"])
+        #expect(Set(settings.encryptedValues.allKeys()) == ["name", "sharesStatus", "deliveryMode"])
         #expect(receipt.recordType == "Receipt")
         #expect(Set(receipt.encryptedValues.allKeys()) == ["receipt"])
         #expect(Set(status.encryptedValues.allKeys()) == ["label", "notSharingThisOne", "occurrenceCount", "reportID"])
@@ -516,7 +521,8 @@ struct SharingRecordMappingTests {
         try expectCarried(.send(SentReminder(reminder: reminder(repeatRule: rule), revision: 0), to: connectionID), from: owner, to: participant)
     }
 
-    @Test(arguments: [(Written.settings, "name"), (.settings, "sharesStatus"), (.receipt, "receipt")])
+    /// The name is optional (`settingsWithNoNameReachTheOtherSide`), so it isn't here.
+    @Test(arguments: [(Written.settings, "sharesStatus"), (.settings, "deliveryMode"), (.receipt, "receipt")])
     func aRecordMissingAFieldIsIgnored(_ written: Written, field: String) throws {
         let record = try #require(try participant.writes(for: change(written), statusSharingOn: true).save.first)
         record.encryptedValues[field] = nil

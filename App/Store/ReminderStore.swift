@@ -23,6 +23,7 @@ enum StoreError: Error, Equatable {
         case receivedOrigin
         case receivedState
         case connectionState
+        case deliveryMode
         case sentCopyReceipt
         case reportedStatus
         case syncDatabase

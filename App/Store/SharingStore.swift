@@ -67,9 +67,13 @@ struct SharingStore {
             record.position = position
             record.name = connection.name
             record.state = connection.state.storedValue
-            record.sharesStatus = connection.sharesStatus
+            record.mySharesStatus = connection.mine.sharesStatus
+            record.myDeliveryMode = connection.mine.deliveryMode.storedValue
+            record.theirSharesStatus = connection.theirs.sharesStatus
+            record.theirDeliveryMode = connection.theirs.deliveryMode.storedValue
             record.address = connection.address
             record.invitedAt = connection.invitedAt
+            record.connectedAt = connection.connectedAt
         }
         records.values.forEach(context.delete)
     }
@@ -128,7 +132,16 @@ struct SharingStore {
         let outbox = try context.fetch(FetchDescriptor<OutboxRecord>(sortBy: [SortDescriptor(\.position)]))
         return SharingData(
             connections: try connections.map {
-                SharingConnection(id: $0.id, name: $0.name, state: try .init(storedValue: $0.state), sharesStatus: $0.sharesStatus, address: $0.address, invitedAt: $0.invitedAt)
+                SharingConnection(
+                    id: $0.id,
+                    name: $0.name,
+                    state: try .init(storedValue: $0.state),
+                    mine: ConnectionChoices(sharesStatus: $0.mySharesStatus, deliveryMode: try .init(storedValue: $0.myDeliveryMode)),
+                    theirs: ConnectionChoices(sharesStatus: $0.theirSharesStatus, deliveryMode: try .init(storedValue: $0.theirDeliveryMode)),
+                    address: $0.address,
+                    invitedAt: $0.invitedAt,
+                    connectedAt: $0.connectedAt
+                )
             },
             sentReminders: try sentReminders.map { try $0.sentReminder() },
             sentCopies: try sentCopies.map { try $0.sentCopy() },
@@ -338,6 +351,24 @@ private extension OutboxChange.Kind {
         case "settings": self = .settings
         case "disconnect": self = .disconnect
         default: throw StoreError.unreadable(field: .outboxKind, value: storedValue)
+        }
+    }
+}
+
+/// Internal, not private: the record mapping spells it the same way in the connection settings record.
+extension DeliveryMode {
+    var storedValue: String {
+        switch self {
+        case .startRightAway: "startRightAway"
+        case .askMeFirst: "askMeFirst"
+        }
+    }
+
+    init(storedValue: String) throws {
+        switch storedValue {
+        case "startRightAway": self = .startRightAway
+        case "askMeFirst": self = .askMeFirst
+        default: throw StoreError.unreadable(field: .deliveryMode, value: storedValue)
         }
     }
 }

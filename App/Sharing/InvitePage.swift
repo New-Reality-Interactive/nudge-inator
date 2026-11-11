@@ -150,7 +150,7 @@ struct InvitePage: View {
 }
 
 #if DEBUG
-private let previewInvite = SharingConnection(id: UUID(), name: "Priya Shah", state: .invited, sharesStatus: true, address: "+1 (555) 010-4477", invitedAt: .now.addingTimeInterval(-3 * 24 * 60 * 60))
+private let previewInvite = SharingConnection(id: UUID(), name: "Priya Shah", state: .invited, address: "+1 (555) 010-4477", invitedAt: .now.addingTimeInterval(-3 * 24 * 60 * 60))
 
 #Preview("Invite") {
     NavigationStack { InvitePage(sharing: StandInSharing.previewModel(), connection: previewInvite) }

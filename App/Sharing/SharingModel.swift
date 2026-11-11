@@ -36,7 +36,12 @@ final class SharingModel {
 
     /// Whether the connection with this ID is connected: an invite accepted, or one accepted here.
     func isConnected(_ connectionID: UUID) -> Bool {
-        data.connections.contains { $0.id == connectionID && $0.state == .connected }
+        connection(connectionID) != nil
+    }
+
+    /// The connection with this ID if it is connected, or `nil`: an invite, ended, or never made.
+    func connection(_ connectionID: UUID) -> SharingConnection? {
+        data.connections.first { $0.id == connectionID && $0.state == .connected }
     }
 
     /// The invites this person is accepting now, and those of them taken off their share meanwhile.
@@ -137,15 +142,8 @@ final class SharingModel {
                 adapter.revokeInvite(connectionID)
                 return .alreadyConnected(already)
             }
-            let connection = SharingConnection(
-                id: connectionID,
-                name: person.name,
-                state: .invited,
-                // Status sharing is on by default (spec #127), until the person's own settings arrive.
-                sharesStatus: true,
-                address: person.address,
-                invitedAt: clock.now
-            )
+            // Both people's choices start as the defaults (spec #127), so neither is sent until changed.
+            let connection = SharingConnection(id: connectionID, name: person.name, state: .invited, address: person.address, invitedAt: clock.now)
             let replaced = kept.list(connection, replacingInvitesTo: person, or: replacedID)
             try keep(kept)
             replaced.forEach { adapter.revokeInvite($0.id) }
@@ -172,6 +170,22 @@ final class SharingModel {
         kept.connections.removeAll { $0.id == connectionID }
         try keep(kept)
         adapter.revokeInvite(connectionID)
+    }
+
+    /// Changes this person's own Status sharing and Delivery mode for the connection with
+    /// `connectionID` (ticket 196), and sends them to the other person, whose app shows them as
+    /// theirs. Changes nothing for a connection that isn't connected, or choices already set.
+    /// Throws, sending nothing, if the store can't keep the choices and the outbox entry together.
+    func change(_ choices: ConnectionChoices, for connectionID: UUID) throws {
+        var kept = try currentData()
+        guard let index = kept.connections.firstIndex(where: { $0.id == connectionID && $0.state == .connected }),
+              kept.connections[index].mine != choices
+        else { return }
+        kept.connections[index].mine = choices
+        let change = SharingChange.settings(.init(choices), for: connectionID)
+        kept.outbox.append(change.entry)
+        try keep(kept)
+        adapter.submit(change)
     }
 
     /// What the store holds, opening it first if it isn't open.
@@ -257,13 +271,8 @@ extension SharingModel: SharingAdapterEvents {
             // Read after accepting: the data may have changed while it waited.
             if try showsConnection(id) { return }
             var kept = try currentData()
-            let connection = SharingConnection(
-                id: invite.connectionID,
-                name: invite.senderName,
-                state: .connected,
-                // Status sharing is on by default (spec #127), until the person's own settings arrive.
-                sharesStatus: true
-            )
+            // Both people's choices start as the defaults (spec #127), so neither is sent until changed.
+            let connection = SharingConnection(id: invite.connectionID, name: invite.senderName, state: .connected, connectedAt: clock.now)
             kept.connections.append(connection)
             try keep(kept)
             acceptance = .connected(connection)
@@ -287,6 +296,7 @@ extension SharingModel: SharingAdapterEvents {
         // Already connected: whoever accepted first was kept, and the rest taken off then.
         guard kept.connections[index].state == .invited else { return }
         kept.connections[index].state = .connected
+        kept.connections[index].connectedAt = clock.now
         try keep(kept)
         adapter.keepOnly(participant, in: connectionID)
     }

@@ -26,8 +26,17 @@ struct SharingStoreTests {
 
     @Test func aConnectionReadsBackEqualAfterARelaunch() throws {
         let saved = SharingData(connections: [
-            SharingConnection(id: UUID(), name: "Sam", state: .connected, sharesStatus: true),
-            SharingConnection(id: UUID(), name: "Alex (invited)", state: .invited, sharesStatus: false),
+            SharingConnection(id: UUID(), name: "Sam", state: .connected, connectedAt: Date(timeIntervalSince1970: 1_790_900_000)),
+            SharingConnection(id: UUID(), name: "Alex (invited)", state: .invited, theirs: ConnectionChoices(sharesStatus: false)),
+            // Each person's two choices are kept apart (ticket 196).
+            SharingConnection(
+                id: UUID(),
+                name: "Riley",
+                state: .connected,
+                mine: ConnectionChoices(sharesStatus: false, deliveryMode: .startRightAway),
+                theirs: ConnectionChoices(sharesStatus: true, deliveryMode: .askMeFirst)
+            ),
+            SharingConnection(id: UUID(), name: "Jordan", state: .connected, mine: ConnectionChoices(sharesStatus: true, deliveryMode: .askMeFirst)),
         ])
 
         try store().save(saved)
@@ -155,7 +164,7 @@ struct SharingStoreTests {
 
     /// Every kind of record at once, so none is read back as another's.
     @Test func everyKindOfRecordTogetherReadsBackEqual() throws {
-        let connection = SharingConnection(id: UUID(), name: "Sam", state: .connected, sharesStatus: true)
+        let connection = SharingConnection(id: UUID(), name: "Sam", state: .connected)
         let reminder = Reminder(title: "Call the plumber", dueTime: Date(timeIntervalSince1970: 1_791_000_000), strength: .firm, createdAt: Date(timeIntervalSince1970: 1_790_900_000))
         let saved = SharingData(
             connections: [connection],
@@ -211,7 +220,7 @@ struct SharingStoreTests {
         let personal = StoredData(reminders: [pills], tags: [tag], histories: [pills.id: history])
         try ReminderStore(location: .file(reminderFile.url), now: .distantPast).save(personal)
 
-        try store().save(SharingData(connections: [SharingConnection(id: UUID(), name: "Sam", state: .connected, sharesStatus: false)]))
+        try store().save(SharingData(connections: [SharingConnection(id: UUID(), name: "Sam", state: .connected, theirs: ConnectionChoices(sharesStatus: false))]))
 
         #expect(try ReminderStore(location: .file(reminderFile.url), now: .distantPast).load() == personal)
         #expect(try store().load().connections.count == 1)
@@ -220,24 +229,24 @@ struct SharingStoreTests {
     @Test func savingReplacesWhatTheStoreHeld() throws {
         let connection = UUID()
         let first = SharingData(
-            connections: [SharingConnection(id: connection, name: "Sam", state: .invited, sharesStatus: false)],
+            connections: [SharingConnection(id: connection, name: "Sam", state: .invited, theirs: ConnectionChoices(sharesStatus: false))],
             sentCopies: [SentCopy(connectionID: connection, reminderID: UUID(), createdAt: .distantPast, receipt: .notDelivered, statusRecord: nil, waitingToSync: true)],
             outbox: [OutboxChange(id: UUID(), kind: .send, connectionID: connection, reminderID: nil)]
         )
         try store().save(first)
 
-        try store().save(SharingData(connections: [SharingConnection(id: connection, name: "Sam T.", state: .connected, sharesStatus: true)]))
+        try store().save(SharingData(connections: [SharingConnection(id: connection, name: "Sam T.", state: .connected)]))
 
-        #expect(try store().load() == SharingData(connections: [SharingConnection(id: connection, name: "Sam T.", state: .connected, sharesStatus: true)]))
+        #expect(try store().load() == SharingData(connections: [SharingConnection(id: connection, name: "Sam T.", state: .connected)]))
     }
 
     @Test func aSaveWithAConnectionIDTwiceIsTurnedDownAndChangesNothing() throws {
-        let kept = SharingData(connections: [SharingConnection(id: UUID(), name: "Sam", state: .connected, sharesStatus: false)])
+        let kept = SharingData(connections: [SharingConnection(id: UUID(), name: "Sam", state: .connected, theirs: ConnectionChoices(sharesStatus: false))])
         try store().save(kept)
         let id = UUID()
         let twice = SharingData(connections: [
-            SharingConnection(id: id, name: "A", state: .connected, sharesStatus: false),
-            SharingConnection(id: id, name: "B", state: .connected, sharesStatus: false),
+            SharingConnection(id: id, name: "A", state: .connected, theirs: ConnectionChoices(sharesStatus: false)),
+            SharingConnection(id: id, name: "B", state: .connected, theirs: ConnectionChoices(sharesStatus: false)),
         ])
 
         #expect(throws: StoreError.duplicateID(id)) { try store().save(twice) }

@@ -78,17 +78,21 @@ struct AcceptInviteTests {
         let invited = try await invite(from: alex, to: [riley])
         await tap(invited, on: riley)
 
-        try alex.sharing.submit(.settings(.init(name: "Alex M", sharesStatus: false), for: invited.id))
-        try riley.sharing.submit(.settings(.init(name: "Riley P", sharesStatus: false), for: invited.id))
+        try alex.sharing.submit(.settings(.init(name: "Alex M", ConnectionChoices(sharesStatus: false)), for: invited.id))
+        try riley.sharing.submit(.settings(.init(name: "Riley P", ConnectionChoices(deliveryMode: .askMeFirst)), for: invited.id))
         await network.settle()
 
-        #expect(riley.sharing.data.connections.map(\.name) == ["Alex M"])
-        #expect(alex.sharing.data.connections.map(\.name) == ["Riley P"])
+        #expect(riley.sharing.data.connections.map(\.theirs) == [ConnectionChoices(sharesStatus: false)])
+        #expect(alex.sharing.data.connections.map(\.theirs) == [ConnectionChoices(deliveryMode: .askMeFirst)])
+        // Each keeps the name the invite or the sharing sheet gave, whatever name the settings carry
+        // (ticket 196).
+        #expect(riley.sharing.data.connections.map(\.name) == ["Alex Morgan"])
+        #expect(alex.sharing.data.connections.map(\.name) == ["Riley Park"])
     }
 
     @Test func theSendersInvitedRowBecomesTheConnectionByItsIDNotItsName() async throws {
         // Someone else invited under the same name stays Invited.
-        let other = SharingConnection(id: UUID(), name: "Riley Park", state: .invited, sharesStatus: true, address: "riley@work.example", invitedAt: NewYork.local(2026, 10, 14, 9))
+        let other = SharingConnection(id: UUID(), name: "Riley Park", state: .invited, address: "riley@work.example", invitedAt: NewYork.local(2026, 10, 14, 9))
         let alex = try Phone(seed: SharingData(connections: [other]))
         let riley = try Phone()
         [alex, riley].forEach { network.add($0.adapter) }

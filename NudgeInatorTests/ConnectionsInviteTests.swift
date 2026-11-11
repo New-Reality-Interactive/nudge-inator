@@ -95,7 +95,7 @@ struct ConnectionsInviteTests {
 
     @Test(arguments: ["jordan.lee@icloud.com", "  Jordan.Lee@iCloud.com "])
     func invitingSomeoneAlreadyConnectedSaysSoAndMakesNoSecondConnection(sheetAddress: String) async throws {
-        let connected = SharingConnection(id: UUID(), name: "Jordan", state: .connected, sharesStatus: true, address: "jordan.lee@icloud.com")
+        let connected = SharingConnection(id: UUID(), name: "Jordan", state: .connected, address: "jordan.lee@icloud.com")
         let phone = try await launchedPhone(seed: SharingData(connections: [connected]))
         phone.adapter.inviteAnswer = .names(InvitedPerson(name: "Jordan Lee", address: sheetAddress))
 
@@ -109,7 +109,7 @@ struct ConnectionsInviteTests {
 
     @Test(arguments: ["+1 (555) 010-4477", "+15550104477"])
     func aPhoneNumberMatchesHoweverItIsWritten(sheetAddress: String) async throws {
-        let connected = SharingConnection(id: UUID(), name: "Priya Shah", state: .connected, sharesStatus: true, address: "+1 555 010 4477")
+        let connected = SharingConnection(id: UUID(), name: "Priya Shah", state: .connected, address: "+1 555 010 4477")
         let phone = try await launchedPhone(seed: SharingData(connections: [connected]))
         phone.adapter.inviteAnswer = .names(InvitedPerson(name: "Priya", address: sheetAddress))
 
@@ -120,8 +120,8 @@ struct ConnectionsInviteTests {
     /// call at #194's phone check, over the mockup's name-or-address match). Someone who invited
     /// this person has no address here, so inviting them back isn't caught.
     @Test(arguments: [
-        SharingConnection(id: UUID(), name: "Sam Ortiz", state: .connected, sharesStatus: true, address: "sam@icloud.com"),
-        SharingConnection(id: UUID(), name: "Sam Ortiz", state: .connected, sharesStatus: true),
+        SharingConnection(id: UUID(), name: "Sam Ortiz", state: .connected, address: "sam@icloud.com"),
+        SharingConnection(id: UUID(), name: "Sam Ortiz", state: .connected),
     ])
     func theSameNameAtAnotherAddressIsSomeoneNew(connected: SharingConnection) async throws {
         let phone = try await launchedPhone(seed: SharingData(connections: [connected]))
@@ -135,7 +135,7 @@ struct ConnectionsInviteTests {
     }
 
     @Test func theSameNameAtAnotherAddressDoesntReplaceTheirInvite() async throws {
-        let first = SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, sharesStatus: true, address: "jordan@icloud.com", invitedAt: NewYork.local(2026, 10, 12, 9))
+        let first = SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, address: "jordan@icloud.com", invitedAt: NewYork.local(2026, 10, 12, 9))
         let phone = try await launchedPhone(seed: SharingData(connections: [first]))
         phone.adapter.inviteAnswer = .names(jordan)
 
@@ -146,7 +146,7 @@ struct ConnectionsInviteTests {
     }
 
     @Test func someoneWithAnotherNameAndAddressIsInvited() async throws {
-        let connected = SharingConnection(id: UUID(), name: "Sam Ortiz", state: .connected, sharesStatus: true, address: "sam@icloud.com")
+        let connected = SharingConnection(id: UUID(), name: "Sam Ortiz", state: .connected, address: "sam@icloud.com")
         let phone = try await launchedPhone(seed: SharingData(connections: [connected]))
         phone.adapter.inviteAnswer = .names(jordan)
 
@@ -158,9 +158,9 @@ struct ConnectionsInviteTests {
     }
 
     @Test func inviteAgainReplacesTheOldInviteWithTheNewOne() async throws {
-        let older = SharingConnection(id: UUID(), name: "Sam", state: .connected, sharesStatus: true, address: "sam@icloud.com")
-        let wrong = SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, sharesStatus: true, address: "jordan@icloud.com", invitedAt: NewYork.local(2026, 10, 12, 9))
-        let later = SharingConnection(id: UUID(), name: "Priya", state: .invited, sharesStatus: true, address: "priya@icloud.com", invitedAt: NewYork.local(2026, 10, 14, 9))
+        let older = SharingConnection(id: UUID(), name: "Sam", state: .connected, address: "sam@icloud.com")
+        let wrong = SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, address: "jordan@icloud.com", invitedAt: NewYork.local(2026, 10, 12, 9))
+        let later = SharingConnection(id: UUID(), name: "Priya", state: .invited, address: "priya@icloud.com", invitedAt: NewYork.local(2026, 10, 14, 9))
         let phone = try await launchedPhone(seed: SharingData(connections: [older, wrong, later]))
         phone.adapter.inviteAnswer = .names(jordan)
 
@@ -176,7 +176,7 @@ struct ConnectionsInviteTests {
     }
 
     @Test func invitingSomeoneAlreadyInvitedReplacesTheirInvite() async throws {
-        let first = SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, sharesStatus: true, address: "jordan.lee@icloud.com", invitedAt: NewYork.local(2026, 10, 12, 9))
+        let first = SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, address: "jordan.lee@icloud.com", invitedAt: NewYork.local(2026, 10, 12, 9))
         let phone = try await launchedPhone(seed: SharingData(connections: [first]))
         phone.adapter.inviteAnswer = .names(jordan)
 
@@ -188,7 +188,7 @@ struct ConnectionsInviteTests {
     }
 
     @Test func inviteAgainClosedLeavesTheOldInvite() async throws {
-        let wrong = SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, sharesStatus: true, address: "jordan@icloud.com", invitedAt: NewYork.local(2026, 10, 12, 9))
+        let wrong = SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, address: "jordan@icloud.com", invitedAt: NewYork.local(2026, 10, 12, 9))
         let phone = try await launchedPhone(seed: SharingData(connections: [wrong]))
         phone.adapter.inviteAnswer = .canceled
 
@@ -199,7 +199,7 @@ struct ConnectionsInviteTests {
     }
 
     @Test func onlyAnInviteCanBeCanceledThisWay() async throws {
-        let connected = SharingConnection(id: UUID(), name: "Sam", state: .connected, sharesStatus: true)
+        let connected = SharingConnection(id: UUID(), name: "Sam", state: .connected)
         let phone = try await launchedPhone(seed: SharingData(connections: [connected]))
 
         try phone.sharing.cancelInvite(connected.id)

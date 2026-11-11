@@ -10,6 +10,8 @@ struct SettingsTab: View {
     /// each urgency reaching the person.
     var previewPermissions = PermissionStates()
     var previewReach = Reach(normal: .notification, high: .timeSensitiveNotification, urgent: .notification)
+    /// The sharing pages pushed (ticket 196), which Change These on the "Connected" sheet sets.
+    var path: Binding<[SharingPage]> = .constant([])
 
     @Environment(AppModel.self) private var model: AppModel?
     @State private var isConfirmingDelete = false
@@ -20,7 +22,7 @@ struct SettingsTab: View {
     @State private var previewDefaultPace = DefaultPace.shipped
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: path) {
             TabScreen(state: state) {
                 List {
                     generalSection
@@ -31,6 +33,7 @@ struct SettingsTab: View {
                     dataSection
                 }
             }
+            .settingsPages(sharing: model?.sharing)
             .navigationTitle(Text(AppTab.settings.title))
             .alert(
                 Text("Delete All Data?", comment: "Settings: title of the question that asks before deleting everything."),
@@ -100,9 +103,7 @@ struct SettingsTab: View {
     /// CloudKit adapter is wired in (#216), and without one Settings is as before.
     private func sharingSection(_ sharing: SharingModel) -> some View {
         Section {
-            NavigationLink {
-                ConnectionsPage(sharing: sharing)
-            } label: {
+            NavigationLink(value: SharingPage.connections) {
                 let count = sharing.data.connections.count { $0.state == .connected }
                 SettingsRow(
                     tile: .tileGray,

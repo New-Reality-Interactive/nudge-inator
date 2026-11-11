@@ -14,6 +14,13 @@ struct OpenedTag: Hashable {
     var id: Tag.ID
 }
 
+/// A sharing page pushed on Settings (ticket 196): Connections, then a connected person's page.
+/// Values, so Change These on the "Connected" sheet can push them from outside Settings.
+enum SharingPage: Hashable {
+    case connections
+    case connection(UUID)
+}
+
 /// Where the tab shell is: the selected tab, and the reminders pushed on Now, My Day and
 /// Reminders. A route from outside the screens (the alarm's Open) and a tap on a card or row both
 /// end up here, so they push the same details.
@@ -30,8 +37,18 @@ struct ShellNavigation {
     /// sets it.
     var tagPath = NavigationPath()
 
+    /// The sharing pages pushed on Settings. Only Change These sets it from outside.
+    var settingsPath: [SharingPage] = []
+
     init(selection: AppTab = .now) {
         self.selection = selection
+    }
+
+    /// Change These on the "Connected" sheet: Settings, with the connection's page over
+    /// Connections, so Back goes to the list.
+    mutating func openConnection(_ connectionID: UUID) {
+        selection = .settings
+        settingsPath = [.connections, .connection(connectionID)]
     }
 
     mutating func follow(_ route: AppModel.Route) {

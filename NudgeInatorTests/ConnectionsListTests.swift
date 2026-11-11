@@ -14,7 +14,7 @@ struct ConnectionsListTests {
     }()
 
     func invite(_ name: String, sentAt: Date) -> SharingConnection {
-        SharingConnection(id: UUID(), name: name, state: .invited, sharesStatus: true, address: "\(name)@icloud.com", invitedAt: sentAt)
+        SharingConnection(id: UUID(), name: name, state: .invited, address: "\(name)@icloud.com", invitedAt: sentAt)
     }
 
     @Test func noConnectionsAndNoInvitesIsTheEmptyState() {
@@ -26,9 +26,9 @@ struct ConnectionsListTests {
     }
 
     @Test func connectedAndInvitedAreListedApartInTheStoresOrder() {
-        let sam = SharingConnection(id: UUID(), name: "Sam", state: .connected, sharesStatus: true)
+        let sam = SharingConnection(id: UUID(), name: "Sam", state: .connected)
         let jordan = invite("Jordan", sentAt: now)
-        let riley = SharingConnection(id: UUID(), name: "Riley", state: .connected, sharesStatus: false)
+        let riley = SharingConnection(id: UUID(), name: "Riley", state: .connected, theirs: ConnectionChoices(sharesStatus: false))
         let priya = invite("Priya", sentAt: now)
 
         let list = ConnectionsList(SharingData(connections: [sam, jordan, riley, priya]), now: now, calendar: calendar)

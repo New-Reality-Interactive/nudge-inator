@@ -111,10 +111,17 @@ struct SharingChange: Equatable {
 
     /// A person's own choices for one connection, which the other person's app shows.
     struct ConnectionSettings: Equatable {
-        /// The name the other person sees them under.
-        var name: String
-        /// Whether they share status with the other person (GLOSSARY.md, Status sharing).
-        var sharesStatus: Bool
+        /// The person's name as iCloud gives it, or `nil` when the app doesn't know it, which is
+        /// always from the app model: the CloudKit adapter can fill it in (#216). The other
+        /// person's app keeps the name the sharing sheet or the invite gave (ticket 196).
+        var name: String?
+        /// Their Status sharing and Delivery mode for what the other person sends them.
+        var choices: ConnectionChoices
+
+        init(name: String? = nil, _ choices: ConnectionChoices) {
+            self.name = name
+            self.choices = choices
+        }
     }
 
     var kind: OutboxChange.Kind { entry.kind }
