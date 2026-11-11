@@ -15,6 +15,15 @@ struct SharingStoreTests {
         try SharingStore(location: .file(storeFile.url))
     }
 
+    @Test func aSentReminderKeepsItsChangeNoteAfterARelaunch() throws {
+        let reminder = Reminder(title: "Water the plants", dueTime: Date(timeIntervalSince1970: 1_791_000_000), strength: .firm)
+        let saved = SharingData(sentReminders: [SentReminder(reminder: reminder, revision: 1, changeNote: SharingChangeNotes.everyField)])
+
+        try store().save(saved)
+
+        #expect(try store().load() == saved)
+    }
+
     @Test func aConnectionReadsBackEqualAfterARelaunch() throws {
         let saved = SharingData(connections: [
             SharingConnection(id: UUID(), name: "Sam", state: .connected, sharesStatus: true),

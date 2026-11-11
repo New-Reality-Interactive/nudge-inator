@@ -111,12 +111,16 @@ if grep -rn --include='*.swift' 'AlarmManager\.shared\.authorizationState' App N
 fi
 
 # 1.4.0 makes no CloudKit request on update or launch (spec #127, Migration plan, point 4), and until
-# the CloudKit adapter ticket (#216) nothing in the app talks to CloudKit: no import, and no iCloud
-# entitlement. That ticket replaces this check with one that says when the app may first call it.
-step "Nothing in the app imports CloudKit or holds an iCloud entitlement"
+# the iCloud capabilities ticket (#215) nothing in the app talks to CloudKit. Only the record mapping
+# (#193) may import it, for the `CKRecord` value, and it may name nothing that reaches iCloud. No iCloud
+# entitlement either. #215 replaces this check with one that says when the app may first call it.
+step "Only the record mapping imports CloudKit, makes no request, and no iCloud entitlement exists"
+record_mapping=App/Sharing/CloudKit/SharingRecordMapping.swift
 if grep -rn --include='*.swift' -E '^\s*(@\w+\s+)*(public\s+)?import\s+(\w+\s+)?CloudKit' App NudgeWidgets Packages \
+    | grep -v "^$record_mapping:" \
+  || grep -nE 'CKContainer|CKDatabase|CKSyncEngine|CK[A-Za-z]*Operation' "$record_mapping" \
   || grep -n 'com\.apple\.developer\.icloud' App/*.entitlements NudgeWidgets/*.entitlements project.yml; then
-  echo "FAIL: the app makes no CloudKit request until #216 (spec #127, Migration plan, point 4)" >&2
+  echo "FAIL: the app makes no CloudKit request until #215 (spec #127, Migration plan, point 4)" >&2
   failed+=("no-cloudkit")
 fi
 

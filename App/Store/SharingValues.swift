@@ -23,6 +23,8 @@ struct SentReminder: Equatable {
     var reminder: Reminder
     /// How many times the sender has changed it.
     var revision: Int
+    /// What the sender's latest change did (GLOSSARY.md, Change note). Empty before any change.
+    var changeNote: [ReceivedChange] = []
 }
 
 /// What the sharing store keeps about one received reminder: the person's choice to keep this one's

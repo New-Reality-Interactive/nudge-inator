@@ -80,7 +80,7 @@ struct SharingStore {
                 context.insert(record)
                 return record
             }()
-            record.update(from: sent, position: position)
+            try record.update(from: sent, position: position)
         }
         records.values.forEach(context.delete)
     }
@@ -162,7 +162,7 @@ struct SharingStore {
 }
 
 private extension SentReminderRecord {
-    func update(from sent: SentReminder, position: Int) {
+    func update(from sent: SentReminder, position: Int) throws {
         let reminder = sent.reminder
         self.position = position
         title = reminder.title
@@ -177,6 +177,7 @@ private extension SentReminderRecord {
         breakThroughFocus = reminder.breakThroughFocus
         createdAt = reminder.createdAt
         revision = sent.revision
+        changeNote = try sent.changeNote.storedData()
     }
 
     func sentReminder() throws -> SentReminder {
@@ -192,7 +193,8 @@ private extension SentReminderRecord {
                 breakThroughFocus: breakThroughFocus,
                 createdAt: createdAt
             ),
-            revision: revision
+            revision: revision,
+            changeNote: try [ReceivedChange](storedData: changeNote)
         )
     }
 }
@@ -248,7 +250,7 @@ private extension SentCopyRecord {
     }
 }
 
-private extension SentCopy.Receipt {
+extension SentCopy.Receipt {
     var storedValue: String {
         switch self {
         case .notDelivered: "notDelivered"
@@ -267,7 +269,7 @@ private extension SentCopy.Receipt {
     }
 }
 
-private extension ReportedStatus {
+extension ReportedStatus {
     var storedValue: String {
         switch self {
         case .nudging: "nudging"

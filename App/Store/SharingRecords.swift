@@ -41,6 +41,8 @@ final class SentReminderRecord: IdentifiedRecord {
     var createdAt: Date
     /// How many times the sender has changed it.
     var revision: Int
+    /// The sender's latest change, as `[ReceivedChange].storedData()` spells it; `nil` before any change.
+    var changeNote: Data?
 
     init(id: UUID, position: Int) {
         self.id = id
