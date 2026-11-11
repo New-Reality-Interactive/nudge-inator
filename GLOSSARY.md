@@ -203,7 +203,7 @@ The sharing store's queue of changes not yet sent to iCloud, oldest first: a sen
 _Avoid_: Pending, sync queue
 
 **Sharing adapter**:
-The one door to sharing in the app: it takes the changes to send (a send, a revision, a cancel, a receipt, a status, a settings change, a disconnect), reports the changes that arrive, and reports the iCloud account. The app model talks only to it, as it does to the alarm and notification adapters; the code behind it is the only place that imports CloudKit.
+The one door to sharing in the app: it takes the changes to send (a send, a revision, a cancel, a receipt, a status, a settings change, a disconnect), reports the changes that arrive, and reports the iCloud account. The app model talks only to it, as it does to the alarm and notification adapters; the code behind it is the only place that talks to iCloud.
 _Avoid_: Sync layer, CloudKit manager
 
 **Sharing reach**:

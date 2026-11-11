@@ -27,6 +27,7 @@ enum StoreError: Error, Equatable {
         case reportedStatus
         case syncDatabase
         case outboxKind
+        case changeNote
     }
 
     /// A saved value the store can't map back to the engine's, such as RRULE text that no longer

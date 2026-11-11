@@ -19,7 +19,7 @@ protocol SharingAdapterEvents: AnyObject {
 
 /// The one door to sharing, in the shape of the alarm and notification adapters: the app model
 /// hands it changes and hears of incoming ones and of the iCloud account, and nothing else touches
-/// the code behind it, which is the only place that imports CloudKit (#216). The model never asks
+/// the code behind it, which is the only place that talks to iCloud (#216). The model never asks
 /// the system about iCloud itself.
 ///
 /// `@MainActor`, like the app model that owns it.
