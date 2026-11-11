@@ -202,6 +202,14 @@ _Avoid_: Shared store
 The sharing store's queue of changes not yet sent to iCloud, oldest first: a send, a revision, a cancel, a receipt, a status, a settings change or a disconnect. What a person sees of it is Waiting to sync.
 _Avoid_: Pending, sync queue
 
+**Sharing adapter**:
+The one door to sharing in the app: it takes the changes to send (a send, a revision, a cancel, a receipt, a status, a settings change, a disconnect), reports the changes that arrive, and reports the iCloud account. The app model talks only to it, as it does to the alarm and notification adapters; the code behind it is the only place that imports CloudKit.
+_Avoid_: Sync layer, CloudKit manager
+
+**Sharing reach**:
+What sharing can do with the person's iCloud account: working, or paused because there is no account, it is restricted, or iCloud is temporarily unavailable. The messages on Connections, Send To and Sent say it, as the permission banners say Reach.
+_Avoid_: Sync status
+
 **Canceled**:
 The state of a received reminder its sender deleted. It no longer nudges and stays, with a note, until the recipient removes it.
 _Avoid_: Deleted, Skipped (an occurrence's close)
