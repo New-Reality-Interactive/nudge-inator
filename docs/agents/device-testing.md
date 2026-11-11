@@ -123,6 +123,8 @@ When closing an acceptance criterion needs device checks that need the person, w
 
 The phone check of a ticket that changes something on screen (`ticket-workflow.md`, step 7) is the exception: it is one checklist the developer works through and reports in one go. VoiceOver checks and automated device runs always stay one step at a time, with the developer's go before each.
 
+Every step, in a checklist or alone, names the exact control to tap and what the developer should see when they stop, such as "Tap Disconnect on Riley's page; stop when the sheet is open". A step that names only a screen sent the developer through a whole Disconnect twice on #197, and each time the data had to be seeded again.
+
 If a run doesn't do what you said it would, stop and explain before running anything else. Once the last check is done, list every check and its result, so the person can see none is left.
 
 A check that runs the app's model sets the Icon badge from its own store, and the badge can't be read back to restore it. If the app was installed before the run, have the person open it once at the end: App opened sets their own count again.
