@@ -3,6 +3,8 @@
 # lets its content touch the screen's edges (the Disconnect sheet's lead text was clipped, #197).
 # Allowed: explicit insets, or a `// <reason>` comment on the same line.
 # Usage: scripts/check-list-row-insets.sh <dir>...
+# Limits: it reads one line at a time and knows two spellings (EdgeInsets() and four literal 0s), so a
+# call split over lines, `.init()`, `0.0` or a constant slips through; any `// word` counts as a reason.
 set -uo pipefail
 status=0
 zero='(EdgeInsets\(\)|EdgeInsets\(top: *0, *leading: *0, *bottom: *0, *trailing: *0\))'
