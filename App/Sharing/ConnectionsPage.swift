@@ -69,6 +69,9 @@ struct ConnectionsPage: View {
         .navigationTitle(Text("Connections", comment: "Connections: the page's title, and the Settings row that opens it."))
         .navigationBarTitleDisplayMode(.inline)
         .inviteFlow(sharing: sharing, isPresented: $isInviting)
+        #if DEBUG
+        .standInSharingControls()
+        #endif
     }
 
     private static func lines(for row: ConnectionsList.InvitedRow) -> [Text] {

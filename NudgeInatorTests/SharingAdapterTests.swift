@@ -436,4 +436,10 @@ final class RecordingSharingEvents: SharingAdapterEvents {
     func accountStateChanged() {
         accountChanges += 1
     }
+
+    func invited(_ invite: IncomingInvite) async {}
+
+    func inviteAccepted(_ connectionID: UUID, by participant: SharingParticipant) async throws {}
+
+    func inviteWithdrawn(_ connectionID: UUID) async throws {}
 }

@@ -2,6 +2,7 @@
 import Foundation
 import NudgeEngine
 import os
+import SwiftUI
 import UIKit
 
 /// Sharing for the phone check of Connections (ticket 194), until the CloudKit adapter (#216) gives
@@ -13,6 +14,9 @@ import UIKit
 @MainActor
 enum StandInSharing {
     static let variable = "NUDGE_SHARING_STANDIN"
+    /// The latest stand-in adapter made, for the stand-in controls on Connections (ticket 195).
+    /// The model holds it; this doesn't.
+    private(set) static weak var current: StandInSharingAdapter?
 
     static func modelIfAsked(clock: any EngineClock, environment: [String: String] = ProcessInfo.processInfo.environment) -> SharingModel? {
         let seed: SharingData
@@ -25,7 +29,9 @@ enum StandInSharing {
             return nil
         }
         var opened: SharingStore?
-        return SharingModel(adapter: StandInSharingAdapter(), clock: clock) {
+        let adapter = StandInSharingAdapter()
+        current = adapter
+        return SharingModel(adapter: adapter, clock: clock) {
             if let opened { return opened }
             let store = try SharingStore(location: .inMemory)
             try store.save(seed)
@@ -55,6 +61,29 @@ enum StandInSharing {
     }
 
     fileprivate static let logger = Logger(subsystem: "com.newrealityinteractive.nudgeinator", category: "StandInSharing")
+}
+
+extension View {
+    /// A Stand-in menu in the toolbar for the phone check (ticket 195), only under the stand-in:
+    /// receiving an invite, one that's unavailable, and with `invited`, that person accepting.
+    func standInSharingControls(invited: SharingConnection? = nil) -> some View {
+        toolbar {
+            if let adapter = StandInSharing.current {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        if let invited {
+                            Button { adapter.acceptedByThem(invited.id) } label: { Text(verbatim: "\(invited.name) Accepts") }
+                        } else {
+                            Button { adapter.receiveInvite(from: "Sam Rivera") } label: { Text(verbatim: "Receive an Invite from Sam Rivera") }
+                            Button { adapter.receiveInvite(from: "Casey Nguyen", unavailable: true) } label: { Text(verbatim: "Receive an Unavailable Invite") }
+                        }
+                    } label: {
+                        Label { Text(verbatim: "Stand-in") } icon: { Image(systemName: "hammer") }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /// Stands in for the CloudKit adapter: the sharing sheet is an alert asking for a name and an
@@ -100,6 +129,31 @@ final class StandInSharingAdapter: SharingAdapter {
 
     func revokeInvite(_ connectionID: UUID) {
         StandInSharing.logger.notice("Stand-in: revoked an invite")
+    }
+
+    /// The invites `receiveInvite(from:unavailable:)` made unavailable.
+    private var unavailable: Set<UUID> = []
+
+    func accept(_ connectionID: UUID) async throws {
+        if unavailable.contains(connectionID) { throw InviteUnavailable() }
+    }
+
+    /// The stand-in shares with no one else, so there is no one to take off.
+    func keepOnly(_ participant: SharingParticipant, in connectionID: UUID) {
+        StandInSharing.logger.notice("Stand-in: kept one person on an invite")
+    }
+
+    /// Stands in for tapping an invite from `name` (ticket 195): the app accepts it, or with
+    /// `unavailable`, finds someone else accepted it first.
+    func receiveInvite(from name: String, unavailable isUnavailable: Bool = false) {
+        let invite = IncomingInvite(connectionID: UUID(), senderName: name)
+        if isUnavailable { unavailable.insert(invite.connectionID) }
+        Task { await events?.invited(invite) }
+    }
+
+    /// Stands in for the invited person accepting the invite to the connection with `connectionID`.
+    func acceptedByThem(_ connectionID: UUID) {
+        Task { try? await events?.inviteAccepted(connectionID, by: SharingParticipant(id: "stand-in")) }
     }
 
     private static func topViewController() -> UIViewController? {

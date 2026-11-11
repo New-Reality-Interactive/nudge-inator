@@ -2,7 +2,7 @@ import Foundation
 import NudgeEngine
 
 /// A person the person is connected with, or has invited (GLOSSARY.md, Connection, Invite).
-struct SharingConnection: Equatable {
+struct SharingConnection: Equatable, Identifiable {
     var id: UUID
     /// The name the person sees them under.
     var name: String

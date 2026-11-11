@@ -15,6 +15,34 @@ final class SharingModel {
     /// The iCloud account as the adapter last reported it, or `nil` before it has.
     private(set) var accountState: SharingAccountState?
 
+    /// What came of the latest invite this person tapped, for the screens to show until
+    /// `dismissAcceptance()`, or `nil` when there's nothing to show.
+    private(set) var acceptance: InviteAcceptance?
+
+    /// What came of accepting an invite (ticket 195).
+    enum InviteAcceptance: Equatable {
+        /// The person is connected with whoever invited them.
+        case connected(SharingConnection)
+        /// The invite no longer includes them: canceled, or someone else accepted it first.
+        case unavailable
+        /// It couldn't be accepted now; tapping the invite again tries again.
+        case failed
+    }
+
+    /// The person has seen what came of accepting.
+    func dismissAcceptance() {
+        acceptance = nil
+    }
+
+    /// Whether the connection with this ID is connected: an invite accepted, or one accepted here.
+    func isConnected(_ connectionID: UUID) -> Bool {
+        data.connections.contains { $0.id == connectionID && $0.state == .connected }
+    }
+
+    /// The invites this person is accepting now, and those of them taken off their share meanwhile.
+    @ObservationIgnored private var accepting: Set<UUID> = []
+    @ObservationIgnored private var withdrawnWhileAccepting: Set<UUID> = []
+
     /// What sharing can do, for the messages that say it is paused, or `nil` before the adapter
     /// has reported the account.
     var reach: SharingReach? { accountState?.reach }
@@ -214,5 +242,74 @@ extension SharingModel: SharingAdapterEvents {
 
     func accountStateChanged() {
         refreshAccountState()
+    }
+
+    func invited(_ invite: IncomingInvite) async {
+        let id = invite.connectionID
+        do {
+            // Opened first, so a store that won't open accepts nothing.
+            if try showsConnection(id) { return }
+            accepting.insert(id)
+            defer { accepting.remove(id) }
+            try await adapter.accept(id)
+            // Taken off the share while accepting: someone else was first (spec #127, A6).
+            if withdrawnWhileAccepting.remove(id) != nil { throw InviteUnavailable() }
+            // Read after accepting: the data may have changed while it waited.
+            if try showsConnection(id) { return }
+            var kept = try currentData()
+            let connection = SharingConnection(
+                id: invite.connectionID,
+                name: invite.senderName,
+                state: .connected,
+                // Status sharing is on by default (spec #127), until the person's own settings arrive.
+                sharesStatus: true
+            )
+            kept.connections.append(connection)
+            try keep(kept)
+            acceptance = .connected(connection)
+        } catch is InviteUnavailable {
+            acceptance = .unavailable
+        } catch {
+            // Accepting again does no harm, so tapping the invite again tries it all again.
+            Self.logger.error("An invite couldn't be accepted: \(error, privacy: .public)")
+            acceptance = .failed
+        }
+    }
+
+    func inviteAccepted(_ connectionID: UUID, by participant: SharingParticipant) async throws {
+        var kept = try currentData()
+        // By its ID, never by name: the person accepting has no address for the sender to match.
+        guard let index = kept.connections.firstIndex(where: { $0.id == connectionID }) else {
+            // Canceled before the acceptance arrived: it stays revoked.
+            adapter.revokeInvite(connectionID)
+            return
+        }
+        // Already connected: whoever accepted first was kept, and the rest taken off then.
+        guard kept.connections[index].state == .invited else { return }
+        kept.connections[index].state = .connected
+        try keep(kept)
+        adapter.keepOnly(participant, in: connectionID)
+    }
+
+    func inviteWithdrawn(_ connectionID: UUID) async throws {
+        // Still accepting it: `invited` says it's unavailable once the accept returns, rather than
+        // keeping a connection that no longer works.
+        if accepting.contains(connectionID) {
+            withdrawnWhileAccepting.insert(connectionID)
+            return
+        }
+        var kept = try currentData()
+        guard kept.connections.contains(where: { $0.id == connectionID }) else { return }
+        kept.connections.removeAll { $0.id == connectionID }
+        try keep(kept)
+        acceptance = .unavailable
+    }
+
+    /// Shows the connection with this ID if it is already connected, and returns whether it did.
+    /// Opens the store first.
+    private func showsConnection(_ connectionID: UUID) throws -> Bool {
+        guard let known = try currentData().connections.first(where: { $0.id == connectionID && $0.state == .connected }) else { return false }
+        acceptance = .connected(known)
+        return true
     }
 }

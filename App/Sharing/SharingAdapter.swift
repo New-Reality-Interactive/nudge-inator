@@ -15,6 +15,17 @@ protocol SharingAdapterEvents: AnyObject {
     func sent(_ changeID: OutboxChange.ID) async throws
     /// The iCloud account changed or came back. Read `accountState()` again.
     func accountStateChanged()
+    /// The person tapped an invite to them and iCloud opened the app with it: the system hand-off,
+    /// which the real adapter has from the scene delegate (#217). The model accepts it with
+    /// `accept(_:)` and says what came of it, so this never throws.
+    func invited(_ invite: IncomingInvite) async
+    /// Someone accepted this person's invite to the connection with this ID (ticket 195). Throws if
+    /// the store couldn't keep that, and the adapter then reports it again.
+    func inviteAccepted(_ connectionID: UUID, by participant: SharingParticipant) async throws
+    /// This person was taken off a connection's share they had accepted, because someone else
+    /// accepted that invite first or it was canceled (spec #127, A6), so it no longer works for
+    /// them. Throws if the store couldn't keep that, and the adapter then reports it again.
+    func inviteWithdrawn(_ connectionID: UUID) async throws
 }
 
 /// The one door to sharing, in the shape of the alarm and notification adapters: the app model
@@ -42,7 +53,32 @@ protocol SharingAdapter: AnyObject {
     /// Stops the connection's invite working, even for someone who already has it. The adapter
     /// keeps the revoke until it has gone through iCloud, as it keeps a change.
     func revokeInvite(_ connectionID: UUID)
+    /// Accepts the invite to the connection with this ID, which `invited(_:)` reported (ticket 195).
+    /// Throws `InviteUnavailable` when the invite no longer includes this person (canceled, or
+    /// someone else accepted it first), or another error when it couldn't be accepted now.
+    /// Accepting an invite already accepted does no harm.
+    func accept(_ connectionID: UUID) async throws
+    /// Takes everyone but `participant` off the connection's share, whether they accepted or not,
+    /// so the invite is unavailable to them (spec #127, A6: one person per invite, the first to
+    /// accept). The adapter keeps it until it has gone through iCloud, as it keeps a revoke.
+    func keepOnly(_ participant: SharingParticipant, in connectionID: UUID)
 }
+
+/// An invite that reached this person (ticket 195), as the system hand-off names it.
+struct IncomingInvite: Equatable {
+    /// The connection the invite is for: the same ID on both people's iPhones.
+    var connectionID: UUID
+    /// The sender, as iCloud names them to this person.
+    var senderName: String
+}
+
+/// Who accepted an invite: iCloud's ID for their account, which the app only hands back.
+struct SharingParticipant: Hashable {
+    var id: String
+}
+
+/// The invite no longer includes this person: canceled, or someone else accepted it first.
+struct InviteUnavailable: Error {}
 
 /// Who an invite went to, as the system sharing sheet named them (ticket 194).
 struct InvitedPerson: Equatable {

@@ -37,6 +37,7 @@ struct RootView: View {
         // The mockup shrinks the tab bar while scrolling down (iOS 26). Ticket 23 records what it
         // does in portrait and landscape.
         .tabBarMinimizeBehavior(.onScrollDown)
+        .inviteAcceptance(sharing: model?.sharing)
         .task { await tickEveryMinute() }
         // `initial`, so a route set before the shell appeared (Open launching the app) is followed.
         .onChange(of: model?.route, initial: true) {
