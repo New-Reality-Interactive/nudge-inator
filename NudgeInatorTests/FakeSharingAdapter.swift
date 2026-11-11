@@ -35,6 +35,83 @@ final class FakeSharingNetwork {
         second.peer = first
     }
 
+    /// Puts an iPhone on the network with no one to send to yet: accepting an invite joins it to
+    /// the sender's.
+    func add(_ adapter: FakeSharingAdapter) {
+        adapter.network = self
+    }
+
+    /// One connection's share, as iCloud holds it (ticket 195).
+    private final class Share {
+        let owner: FakeSharingAdapter
+        let ownerName: String
+        /// Everyone the share still includes: the people the sheet named, until they're taken off.
+        var participants: [FakeSharingAdapter]
+        /// The participants who have accepted, in the order they did.
+        var accepted: [FakeSharingAdapter] = []
+
+        func includes(_ recipient: FakeSharingAdapter) -> Bool { participants.contains { $0 === recipient } }
+        func hasAccepted(_ recipient: FakeSharingAdapter) -> Bool { accepted.contains { $0 === recipient } }
+
+        init(owner: FakeSharingAdapter, ownerName: String, participants: [FakeSharingAdapter]) {
+            self.owner = owner
+            self.ownerName = ownerName
+            self.participants = participants
+        }
+    }
+
+    private var shares: [UUID: Share] = [:]
+
+    /// The sender's sheet sent the invite to the connection with `connectionID` to `recipients`,
+    /// from the sender as iCloud names them (`senderName`). Nobody has tapped it yet.
+    func share(_ connectionID: UUID, from sender: FakeSharingAdapter, senderName: String, with recipients: [FakeSharingAdapter]) {
+        shares[connectionID] = Share(owner: sender, ownerName: senderName, participants: recipients)
+    }
+
+    /// The recipient taps the invite, and iCloud hands it to their app, as the system hand-off does.
+    /// Only someone the sheet named gets it: iCloud refuses anyone else before the app opens.
+    func tapInvite(_ connectionID: UUID, on recipient: FakeSharingAdapter) {
+        guard let share = shares[connectionID], share.includes(recipient) || share.hasAccepted(recipient) else { return }
+        let invite = IncomingInvite(connectionID: connectionID, senderName: share.ownerName)
+        let events = recipient.events
+        run { await events?.invited(invite) }
+    }
+
+    fileprivate func accept(_ connectionID: UUID, by recipient: FakeSharingAdapter) throws {
+        guard let share = shares[connectionID], share.includes(recipient) else {
+            throw InviteUnavailable()
+        }
+        guard !share.hasAccepted(recipient) else { return }
+        share.accepted.append(recipient)
+        let events = share.owner.events
+        let participant = recipient.participant
+        run { try? await events?.inviteAccepted(connectionID, by: participant) }
+    }
+
+    fileprivate func keepOnly(_ participant: SharingParticipant, in connectionID: UUID) {
+        guard let share = shares[connectionID] else { return }
+        let removed = share.participants.filter { $0.participant != participant }
+        share.participants.removeAll { $0.participant != participant }
+        withdraw(removed, from: share, connectionID)
+        if let kept = share.participants.first {
+            join(share.owner, kept)
+        }
+    }
+
+    fileprivate func revoke(_ connectionID: UUID) {
+        guard let share = shares.removeValue(forKey: connectionID) else { return }
+        withdraw(share.participants, from: share, connectionID)
+    }
+
+    /// Tells each of `removed` who had accepted that the invite no longer works for them.
+    private func withdraw(_ removed: [FakeSharingAdapter], from share: Share, _ connectionID: UUID) {
+        for recipient in removed where share.hasAccepted(recipient) {
+            let events = recipient.events
+            run { try? await events?.inviteWithdrawn(connectionID) }
+        }
+        share.accepted.removeAll { recipient in removed.contains { $0 === recipient } }
+    }
+
     /// Waits until every report made so far has finished.
     func settle() async {
         while let task = latest {
@@ -173,6 +250,31 @@ final class FakeSharingAdapter: SharingAdapter {
 
     func revokeInvite(_ connectionID: UUID) {
         revoked.append(connectionID)
+        network?.revoke(connectionID)
+    }
+
+    /// iCloud's ID for this iPhone's account.
+    let participant = SharingParticipant(id: UUID().uuidString)
+    /// While set, accepting fails as if iCloud couldn't be reached.
+    var acceptFails = false
+    struct AcceptFailed: Error {}
+    /// Every participant the app kept on a connection's share, in order.
+    private(set) var keptOnly: [(participant: SharingParticipant, connectionID: UUID)] = []
+
+    /// Runs once iCloud has taken the accept and before it returns: what a real adapter reports
+    /// meanwhile can arrive then.
+    var duringAccept: (() async -> Void)?
+
+    func accept(_ connectionID: UUID) async throws {
+        guard !acceptFails else { throw AcceptFailed() }
+        guard let network else { throw InviteUnavailable() }
+        try network.accept(connectionID, by: self)
+        await duringAccept?()
+    }
+
+    func keepOnly(_ participant: SharingParticipant, in connectionID: UUID) {
+        keptOnly.append((participant, connectionID))
+        network?.keepOnly(participant, in: connectionID)
     }
 
     private func upload(_ change: SharingChange) {

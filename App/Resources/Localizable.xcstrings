@@ -778,6 +778,9 @@
     "Check one or more tags. Match needs two or more." : {
       "comment" : "A filter sheet: under the tags when fewer than two are checked. It says why the Match choice above them is dimmed."
     },
+    "Check that you're online, then tap the invite again." : {
+      "comment" : "Accepting an invite: under Couldn't Accept the Invite."
+    },
     "Check the spelling or try a new search." : {
       "comment" : "Reminders tab: under the title when a search alone finds nothing.\nTags tab: under the title when a search finds nothing."
     },
@@ -824,7 +827,7 @@
       "comment" : "A tag's screen: header of the reminders with nothing more to come."
     },
     "Connected" : {
-      "comment" : "Connections: header of the people connected.\nConnections: under a connected person's name."
+      "comment" : "Accepting an invite: title of the sheet once connected.\nConnections: header of the people connected.\nConnections: under a connected person's name."
     },
     "Connections" : {
       "comment" : "Connections: the page's title, and the Settings row that opens it."
@@ -837,6 +840,9 @@
     },
     "Continue" : {
       "comment" : "Invite hint: opens the system's sharing sheet to send the invite.\nOnboarding: the only button, which goes on to the system's permission prompts."
+    },
+    "Couldn't Accept the Invite" : {
+      "comment" : "Accepting an invite: title of the message shown when the invite couldn't be accepted now."
     },
     "Couldn't Cancel the Invite" : {
       "comment" : "An invited person's page: title of the message shown when canceling the invite failed."
@@ -896,7 +902,7 @@
       "comment" : "Throws away a sheet's changes and closes it."
     },
     "Done" : {
-      "comment" : "My Day's filter sheet's confirm button (a checkmark): closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
+      "comment" : "Accepting an invite: closes the Connected sheet.\nMy Day's filter sheet's confirm button (a checkmark): closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
     },
     "Done after %lld nudges" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence closed as Done. The placeholder is how many nudges it sent.",
@@ -1229,6 +1235,9 @@
     "Invite Someone" : {
       "comment" : "Connections: starts an invite to one person.\nInvite hint: the sheet's title."
     },
+    "Invite Unavailable" : {
+      "comment" : "Accepting an invite: title of the message shown when the invite no longer works for this person."
+    },
     "Invite someone you trust, and you can send each other reminders." : {
       "comment" : "Connections: under \"No Connections\"."
     },
@@ -1551,7 +1560,7 @@
       }
     },
     "OK" : {
-      "comment" : "An invited person's page: dismisses the message that canceling failed.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the message that the invite couldn't be made.\nSettings: dismisses the message that deleting failed."
+      "comment" : "Accepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the message that the invite couldn't be made.\nSettings: dismisses the message that deleting failed."
     },
     "Off" : {
       "comment" : "Reminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off."
@@ -1750,6 +1759,9 @@
     "Skipped: the reminder was paused" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that closed because its reminder was paused."
     },
+    "Someone else accepted it first, or it was canceled. Ask them to invite you again." : {
+      "comment" : "Accepting an invite: under Invite Unavailable."
+    },
     "Sort" : {
       "comment" : "VoiceOver label of the Reminders tab's Sort button, which opens the Sort menu.\nVoiceOver label of the Tags tab's Sort button, which opens the Sort menu."
     },
@@ -1894,8 +1906,14 @@
     "You and %@ are already connected." : {
       "comment" : "Invite: under Already Connected. The argument is the person's name, such as \"Riley Park\"."
     },
+    "You can each send the other reminders now." : {
+      "comment" : "Accepting an invite: under \"You're Connected with\"."
+    },
     "You choose what breaks through" : {
       "comment" : "Onboarding and How It Nudges: the title of the point about Break Through Focus."
+    },
+    "You're Connected with %@" : {
+      "comment" : "Accepting an invite: title of the sheet once connected. The argument is the name of the person who sent the invite, such as \"Alex Morgan\"."
     },
     "Your Data" : {
       "comment" : "Settings: header of the section with Delete All Data."

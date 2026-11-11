@@ -121,6 +121,13 @@ struct InvitePage: View {
         .inviteFlow(sharing: sharing, isPresented: $isInvitingAgain, replacing: connection.id) { again in
             connection = again
         }
+        // Accepted while open: they're connected now, so back to Connections, which lists them so.
+        .onChange(of: sharing.isConnected(connection.id)) { _, accepted in
+            if accepted { dismiss() }
+        }
+        #if DEBUG
+        .standInSharingControls(invited: connection)
+        #endif
     }
 
     private func cancel() {
