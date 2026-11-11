@@ -37,6 +37,8 @@ struct SharingStoreTests {
                 theirs: ConnectionChoices(sharesStatus: true, deliveryMode: .askMeFirst)
             ),
             SharingConnection(id: UUID(), name: "Jordan", state: .connected, mine: ConnectionChoices(sharesStatus: true, deliveryMode: .askMeFirst)),
+            // The other person disconnected, and this person hasn't chosen yet (ticket 197).
+            SharingConnection(id: UUID(), name: "Priya", state: .ended, connectedAt: Date(timeIntervalSince1970: 1_790_000_000)),
         ])
 
         try store().save(saved)

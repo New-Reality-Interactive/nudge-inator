@@ -172,6 +172,28 @@ final class SharingModel {
         adapter.revokeInvite(connectionID)
     }
 
+    /// A connection the other person ended, which waits for this person to choose what happens to
+    /// what they received from them (ticket 197): the Connection Ended sheet's. The first, if the
+    /// other people ended more than one.
+    var endedConnection: SharingConnection? {
+        data.connections.first { $0.state == .ended }
+    }
+
+    /// Disconnect, and the other person's choice on Connection Ended (ticket 197): ends the
+    /// connection with `connectionID`, connected or ended by the other person, with what this
+    /// person sent through it and the sync states of `receivedIDs` (`SharingData.removeConnection`).
+    /// A connection still connected sends the other person a disconnect; one they ended sends
+    /// nothing back. Throws, changing and sending nothing, if the store can't keep it.
+    func disconnect(_ connectionID: UUID, received receivedIDs: Set<Reminder.ID>) throws {
+        var kept = try currentData()
+        guard let ended = kept.removeConnection(connectionID, received: receivedIDs) else { return }
+        guard ended.state == .connected else { return try keep(kept) }
+        let change = SharingChange.disconnect(connectionID)
+        kept.outbox.append(change.entry)
+        try keep(kept)
+        adapter.submit(change)
+    }
+
     /// Changes this person's own Status sharing and Delivery mode for the connection with
     /// `connectionID` (ticket 196), and sends them to the other person, whose app shows them as
     /// theirs. Changes nothing for a connection that isn't connected, or choices already set.

@@ -378,6 +378,7 @@ private extension SharingConnection.State {
         switch self {
         case .invited: "invited"
         case .connected: "connected"
+        case .ended: "ended"
         }
     }
 
@@ -385,6 +386,7 @@ private extension SharingConnection.State {
         switch storedValue {
         case "invited": self = .invited
         case "connected": self = .connected
+        case "ended": self = .ended
         default: throw StoreError.unreadable(field: .connectionState, value: storedValue)
         }
     }

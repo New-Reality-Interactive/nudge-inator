@@ -26,6 +26,12 @@
         }
       }
     },
+    "%@ ended your connection. You can't send each other reminders until one of you invites the other again." : {
+      "comment" : "The Connection Ended sheet: its first line. The argument is the other person's name, such as \"Alex Morgan\"."
+    },
+    "%@ gets a note that the connection ended, and chooses what happens to the reminders you sent." : {
+      "comment" : "Disconnect's sheet: under the choice. The argument is the other person's name, such as \"Alex Morgan\"."
+    },
     "%@ is Done. Its nudges have stopped." : {
       "comment" : "VoiceOver, after Done on a nudge card or a My Day row: what the Done button's place now says. The placeholder is the reminder's title."
     },
@@ -143,6 +149,29 @@
     },
     "%@." : {
       "comment" : "A repeat summary as a sentence, under the reminder form's Starts. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".\nTop of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\"."
+    },
+    "%lld Reminders from %@" : {
+      "comment" : "Disconnect's sheet: header of the choice. 1: how many reminders received from the person Keep would keep. 2: their name, such as \"Alex Morgan\".",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld Reminder from %2$@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld Reminders from %2$@"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "%lld chosen" : {
       "comment" : "VoiceOver value of My Day's filter button while tags are chosen. The placeholder is how many.",
@@ -773,7 +802,7 @@
       "comment" : "Title shown when the app can't read its stored reminders, for example before the first unlock after a restart."
     },
     "Cancel" : {
-      "comment" : "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, the Reminders and Tags filters', and the invite hint's.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nSettings: keeps your data instead of deleting it."
+      "comment" : "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, the Reminders and Tags filters', the invite hint's, and Disconnect's.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nSettings: keeps your data instead of deleting it."
     },
     "Cancel Invite" : {
       "comment" : "An invited person's page: opens the question that asks before canceling the invite.\nThe question before canceling an invite: cancels it."
@@ -848,7 +877,7 @@
       "comment" : "A connection's page: under the person's name. The argument is the day they connected, such as \"Sep 12\"."
     },
     "Connection Ended" : {
-      "comment" : "A connection's page: shown in place of the page once the connection no longer exists."
+      "comment" : "A connection's page: shown in place of the page once the connection no longer exists.\nThe Connection Ended sheet's title: the other person disconnected."
     },
     "Connections" : {
       "comment" : "Connections: the page's title, and the Settings row that opens it."
@@ -860,7 +889,7 @@
       "comment" : "A Consistent pace with its wait, as reminder details show it. The placeholder is the wait between nudges, such as \"30 min\"."
     },
     "Continue" : {
-      "comment" : "Invite hint: opens the system's sharing sheet to send the invite.\nOnboarding: the only button, which goes on to the system's permission prompts."
+      "comment" : "Invite hint: opens the system's sharing sheet to send the invite.\nOnboarding: the only button, which goes on to the system's permission prompts.\nThe Connection Ended sheet: does the chosen Remove or Keep and closes the sheet."
     },
     "Couldn't Accept the Invite" : {
       "comment" : "Accepting an invite: title of the message shown when the invite couldn't be accepted now."
@@ -870,6 +899,9 @@
     },
     "Couldn't Delete Your Data" : {
       "comment" : "Settings: title of the message shown when deleting everything failed."
+    },
+    "Couldn't Disconnect" : {
+      "comment" : "Disconnect's sheet and Connection Ended: title of the message shown when the disconnect couldn't be saved."
     },
     "Couldn't Save the Change" : {
       "comment" : "A connection's page: title of the message shown when a change of Status Sharing or Delivery Mode couldn't be saved."
@@ -916,6 +948,9 @@
     "Delete “%@”?" : {
       "comment" : "Asked before deleting a reminder, from its details or a Reminders tab row. The placeholder is its title."
     },
+    "Deletes them and cancels their nudges and alarms." : {
+      "comment" : "Disconnect's sheet: under Remove."
+    },
     "Delivery Mode" : {
       "comment" : "A connection's page: the choice of how a reminder from the person starts. Also the row on the Connected sheet and under \"What <name> Chose\"."
     },
@@ -927,6 +962,12 @@
     },
     "Discard Changes" : {
       "comment" : "Throws away a sheet's changes and closes it."
+    },
+    "Disconnect" : {
+      "comment" : "A connection's page: ends the connection, after asking what happens to the reminders received from the person.\nDisconnect's sheet: ends the connection, doing the chosen Remove or Keep."
+    },
+    "Disconnect from %@" : {
+      "comment" : "Disconnect's sheet title. The argument is the other person's name, such as \"Alex Morgan\"."
     },
     "Done" : {
       "comment" : "Accepting an invite: closes the Connected sheet.\nMy Day's filter sheet's confirm button (a checkmark): closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
@@ -1286,6 +1327,9 @@
     "Keep Invite" : {
       "comment" : "The question before canceling an invite: keeps it."
     },
+    "Keep as My Own Reminders" : {
+      "comment" : "Disconnect's sheet: the choice that keeps the reminders received from the person as this person's own."
+    },
     "Last 24 Hours" : {
       "comment" : "Now: section header for occurrences closed in the last 24 hours."
     },
@@ -1434,6 +1478,9 @@
     },
     "Nothing closed yet today." : {
       "comment" : "Now: the Last 24 Hours section when no occurrence closed in that time."
+    },
+    "Nothing has changed. Try again." : {
+      "comment" : "Disconnect's sheet and Connection Ended: under Couldn't Disconnect."
     },
     "Nothing is done yet today." : {
       "comment" : "My Day: the list when Done is chosen and nothing is done yet today."
@@ -1590,7 +1637,7 @@
       }
     },
     "OK" : {
-      "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the message that the invite couldn't be made.\nSettings: dismisses the message that deleting failed."
+      "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nDisconnect's sheet and Connection Ended: dismisses Couldn't Disconnect.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the message that the invite couldn't be made.\nSettings: dismisses the message that deleting failed."
     },
     "Off" : {
       "comment" : "A connection's page and the Connected sheet: Status Sharing is off.\nReminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off."
@@ -1693,6 +1740,9 @@
     },
     "Reminders, Most First" : {
       "comment" : "VoiceOver value of the Tags tab's Sort button: sorted by Reminders, Most First."
+    },
+    "Remove" : {
+      "comment" : "Disconnect's sheet: the choice that deletes the reminders received from the person."
     },
     "Remove %@ from the filter" : {
       "comment" : "VoiceOver label of a tag's filter token on My Day. The placeholder is the tag, such as \"#home\"."
@@ -1873,6 +1923,9 @@
     "These pages open in your web browser." : {
       "comment" : "About page: under the Privacy Policy and Support rows."
     },
+    "They stay with the same schedule, history and tags, no longer from %@." : {
+      "comment" : "Disconnect's sheet: under Keep as My Own Reminders. The argument is the other person's name, such as \"Alex Morgan\"."
+    },
     "This Build" : {
       "comment" : "About page: header of the section with the app's version and build number."
     },
@@ -1953,6 +2006,9 @@
     },
     "You and %@ are already connected." : {
       "comment" : "Invite: under Already Connected. The argument is the person's name, such as \"Riley Park\"."
+    },
+    "You and %@ won't be able to send each other reminders until one of you invites the other again." : {
+      "comment" : "Disconnect's sheet: its first line. The argument is the other person's name, such as \"Alex Morgan\"."
     },
     "You can each send the other reminders now." : {
       "comment" : "Accepting an invite: under \"You're Connected with\"."

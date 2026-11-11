@@ -337,6 +337,35 @@ public struct Engine {
         delete(reminderID)
     }
 
+    /// Ends the connection with `connectionID` for the reminders received through it (spec #127,
+    /// Disconnect). Remove deletes them all, with their occurrences and history, and cancels
+    /// everything pending for them. Keep as My Own Reminders makes each accepted copy the person's
+    /// own, its ID, content, schedule, tags and history as they were, so its plan, and its alarms'
+    /// identifiers, don't change; anything else received through it goes, as with Remove (a copy
+    /// still waiting was never accepted: the developer's decision on #197). Returns the IDs of the
+    /// reminders it removed, for the store and for the rings to stop.
+    @discardableResult
+    public mutating func disconnect(_ connectionID: UUID, choosing choice: DisconnectChoice) -> [Reminder.ID] {
+        let received = reminders.filter { $0.receivedThrough == connectionID }
+        guard !received.isEmpty else { return [] }
+        let removed = received.filter { choice == .remove || !$0.isKeptOnDisconnect }.map(\.id)
+        for index in reminders.indices where reminders[index].receivedThrough == connectionID {
+            reminders[index].origin = .mine
+        }
+        for id in removed {
+            historyByReminder[id] = nil
+        }
+        reminders.removeAll { removed.contains($0.id) }
+        applyPlan()
+        return removed
+    }
+
+    /// How many of the reminders received through the connection with `connectionID` Keep as My
+    /// Own Reminders would keep: the number Disconnect's sheet shows.
+    public func keptOnDisconnect(from connectionID: UUID) -> Int {
+        reminders.count { $0.receivedThrough == connectionID && $0.isKeptOnDisconnect }
+    }
+
     /// Applies the person's changes to a reminder the engine holds. An Edit that changes a Locked
     /// field is rejected whole, naming the fields it changed, so nothing is half applied. An
     /// accepted Edit applies from the next occurrence: one that has already closed stays as it

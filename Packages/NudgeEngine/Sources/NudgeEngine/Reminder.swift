@@ -66,6 +66,17 @@ extension Reminder {
         if case .received(_, _, _, .waiting, _) = origin { true } else { false }
     }
 
+    /// The connection a received copy came through, or `nil` for the person's own.
+    public var receivedThrough: UUID? {
+        if case let .received(connectionID, _, _, _, _) = origin { connectionID } else { nil }
+    }
+
+    /// Whether Keep as My Own Reminders keeps it when its connection ends: an accepted copy only.
+    /// One still waiting was never accepted, and goes (the developer's decision on #197).
+    var isKeptOnDisconnect: Bool {
+        if case .received(_, _, _, .accepted, _) = origin { true } else { false }
+    }
+
     /// Whether its nudges break through Focus: its switch, or always for Relentless (ADR 0004).
     public var breaksThroughFocus: Bool {
         strength.breaksThroughFocus(switchedOn: breakThroughFocus)

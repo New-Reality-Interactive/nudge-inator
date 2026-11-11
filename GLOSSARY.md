@@ -144,6 +144,14 @@ _Avoid_: Friend, contact, share, follower
 A personal request to connect, sent to the Apple Account of one person. Until they accept it, the sender sees that person as Invited.
 _Avoid_: Share (for a connection), request
 
+**Disconnect**:
+Ending a Connection. Whoever ends it chooses what happens to the reminders they received from the other person: **Remove** (the default) deletes them, and **Keep as My Own Reminders** makes each accepted one their own, no longer from anyone. One still waiting to be accepted, or Canceled, goes either way. Neither can send to the other again until a new Invite is accepted.
+_Avoid_: Unshare, unfriend, block
+
+**Connection Ended**:
+What a person sees once the other person has disconnected: a note that the connection ended, with the same Remove or Keep as My Own Reminders choice for what they received, which they have to make.
+_Avoid_: Disconnected (for the other person's side)
+
 **Sender**:
 The person who sent a reminder. The sender owns what it says and when it's due.
 
