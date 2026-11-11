@@ -44,7 +44,7 @@ The app ships in English, but every string a person sees goes through a String C
 - Give each string a `comment:` that says where it shows and what each placeholder holds.
 - Whole sentences with placeholders, never fragments glued together. Counts use plural variants in the catalog. Names, lists, ordinals, dates and times come from Foundation's formatters in the locale, never hand-written English.
 - Text the person wrote (a reminder's title) is never translated. Mark its catalog entry "Don't translate".
-- Command-line builds don't update the catalogs. After adding or changing a string, run `scripts/sync-strings.sh .build/derived` (after `scripts/test.sh`, or any build into that folder), then fill in plural variants. `scripts/test.sh` fails if a catalog is out of date.
+- Command-line builds don't update the catalogs, so `scripts/test.sh` does: a local run syncs them from its app build and lists each catalog it updated (`scripts/sync-strings.sh .build/derived` does the same after any build into that folder). Then fill in plural variants and commit the updated catalogs. CI only checks, and fails on a catalog that is out of date.
 
 ## Tests
 

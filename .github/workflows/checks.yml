@@ -1,5 +1,6 @@
-# The checks that need no simulator: the engine's tests and its Foundation-only rule, and the
-# color sets. GitHub's runners don't have the named simulators the full suite runs on
+# The checks that need no simulator: the engine's tests and its Foundation-only rule, the
+# color sets, and the String Catalogs (checked against a build for the generic simulator destination;
+# a local run syncs them instead). GitHub's runners don't have the named simulators the full suite runs on
 # (scripts/test.sh), so that stays a local step before each commit (AGENTS.md, Testing).
 name: Checks
 
