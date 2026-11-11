@@ -62,6 +62,10 @@ final class AppModel {
     private let tagsSortRecord: TagsSortRecord
     /// Where a Done waits while the store can't be read (ticket 32).
     private let doneQueue: DoneQueue
+    /// What sharing keeps and does (ticket 192), or `nil` with no sharing adapter, as the shipped app
+    /// has until the CloudKit adapter (#216) is wired in `AppDelegate.makeModel`. It reads its own
+    /// store and reports to no one but itself, so nothing here waits for it or changes with it.
+    let sharing: SharingModel?
 
     /// `giveUpLimit` is the shipped one; only tests pass another, to reach a take-over.
     init(
@@ -74,6 +78,7 @@ final class AppModel {
         remindersSortRecord: RemindersSortRecord = .standard,
         tagsSortRecord: TagsSortRecord = .standard,
         doneQueue: DoneQueue,
+        sharing: SharingModel? = nil,
         timeZone: TimeZone = .autoupdatingCurrent,
         giveUpLimit: GiveUpLimit = .shipped
     ) {
@@ -88,6 +93,7 @@ final class AppModel {
         self.remindersSortRecord = remindersSortRecord
         self.tagsSortRecord = tagsSortRecord
         self.doneQueue = doneQueue
+        self.sharing = sharing
         onboarding = onboardingRecord.isFinished ? nil : .welcome
         scheduler = CombinedSchedulerAdapter(adapters: [notifications, alarms])
         // Never handed an event before `launch()` replaces it, so it never applies a plan.
@@ -158,6 +164,8 @@ final class AppModel {
         }
         self.engine = engine
         launchState = .ready
+        // Not awaited: sharing's store and iCloud account must never hold up personal reminders.
+        sharing?.refreshAccountState()
         // The file goes only once its Dones are saved; until then the next launch merges them
         // again, and the engine ignores a Done for an occurrence already closed.
         if !queued.isEmpty, save() {
@@ -206,6 +214,7 @@ final class AppModel {
     /// 64 the system keeps pending (ticket 18).
     func appOpened() async {
         await launchTryingAnUnreadStoreAgain()
+        sharing?.refreshAccountState()
         // AlarmKit sent no update for a change made in Settings while the app was suspended
         // (ticket 30's device check), so its state is read again, off the main thread. Not
         // around onboarding's prompts, which each make an App opened: there the answer is the
@@ -485,6 +494,7 @@ final class AppModel {
         await permissionsRefresh?.value
         await alarms.waitUntilApplied()
         await notifications.waitUntilApplied()
+        await sharing?.waitUntilApplied()
     }
 
     /// The latest re-read of the permissions, from App opened or an adapter's report.

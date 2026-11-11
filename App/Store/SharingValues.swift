@@ -52,7 +52,7 @@ struct SyncEngineState: Equatable {
 
 /// A change that has not gone to iCloud yet, in the queue of them. A change names its connection and,
 /// for a change to one reminder, the reminder.
-struct OutboxChange: Equatable {
+struct OutboxChange: Equatable, Identifiable {
     var id: UUID
     var kind: Kind
     var connectionID: UUID
@@ -78,4 +78,35 @@ struct SharingData: Equatable {
     var engineStates: [SyncEngineState] = []
     /// Oldest first.
     var outbox: [OutboxChange] = []
+}
+
+extension SharingData {
+    /// Applies what the other person's app sent to what this person keeps, as far as the store
+    /// holds it today: their settings for a connection, and a recipient's receipt and status for a
+    /// copy this person sent. Returns whether anything changed. A send, a revision, a cancel and a
+    /// disconnect are the recipient's side, which the tickets that build received reminders and
+    /// Disconnect (#198, #204, #205, #197) apply: they change nothing here yet.
+    mutating func apply(incoming change: SharingChange) -> Bool {
+        switch change.content {
+        case .settings(let settings):
+            guard let index = connections.firstIndex(where: { $0.id == change.connectionID }) else { return false }
+            connections[index].name = settings.name
+            connections[index].sharesStatus = settings.sharesStatus
+            return true
+        case .receipt(let receipt):
+            guard let index = copyIndex(of: change) else { return false }
+            sentCopies[index].receipt = receipt
+            return true
+        case .status(let record):
+            guard let index = copyIndex(of: change) else { return false }
+            sentCopies[index].statusRecord = record
+            return true
+        case .none, .reminder:
+            return false
+        }
+    }
+
+    private func copyIndex(of change: SharingChange) -> Int? {
+        sentCopies.firstIndex { $0.connectionID == change.connectionID && $0.reminderID == change.reminderID }
+    }
 }
