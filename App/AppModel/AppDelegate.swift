@@ -60,6 +60,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         doneQueue: DoneQueue = .standard
     ) -> AppModel {
         let clock = SystemClock()
+        // No sharing until the CloudKit adapter is wired in here (#216), except a Debug build's
+        // stand-in for the phone check, when the launch asks for it.
+        #if DEBUG
+        let sharing = StandInSharing.modelIfAsked(clock: clock)
+        #else
+        let sharing: SharingModel? = nil
+        #endif
         return AppModel(
             clock: clock,
             openStore: openStore,
@@ -72,7 +79,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
                 },
                 stopIntent: { RefreshBadgeIntent() }
             ),
-            doneQueue: doneQueue
+            doneQueue: doneQueue,
+            sharing: sharing
         )
     }
 }

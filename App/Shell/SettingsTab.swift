@@ -24,6 +24,9 @@ struct SettingsTab: View {
             TabScreen(state: state) {
                 List {
                     generalSection
+                    if let sharing = model?.sharing {
+                        sharingSection(sharing)
+                    }
                     nudgesSection
                     dataSection
                 }
@@ -90,6 +93,26 @@ struct SettingsTab: View {
                 PermissionBanners(reach: reach)
                 Text("General", comment: "Settings: header of the first section, with the About row.")
             }
+        }
+    }
+
+    /// Connections (ticket 194). Only with a sharing model: the shipped app has none until the
+    /// CloudKit adapter is wired in (#216), and without one Settings is as before.
+    private func sharingSection(_ sharing: SharingModel) -> some View {
+        Section {
+            NavigationLink {
+                ConnectionsPage(sharing: sharing)
+            } label: {
+                let count = sharing.data.connections.count { $0.state == .connected }
+                SettingsRow(
+                    tile: .tileGray,
+                    symbol: "person.2",
+                    title: Text("Connections", comment: "Connections: the page's title, and the Settings row that opens it."),
+                    status: count == 0 ? nil : Text(count, format: .number)
+                )
+            }
+        } header: {
+            Text("Sharing", comment: "Settings: header of the section with Connections.")
         }
     }
 

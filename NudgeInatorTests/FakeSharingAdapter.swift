@@ -143,6 +143,38 @@ final class FakeSharingAdapter: SharingAdapter {
         account
     }
 
+    /// What the system sharing sheet does when the app starts an invite.
+    enum InviteAnswer {
+        /// The person sent the invite to someone.
+        case names(InvitedPerson)
+        /// The person closed the sheet.
+        case canceled
+        /// The invite couldn't be made.
+        case fails
+    }
+
+    struct InviteFailed: Error {}
+
+    /// How the next invites are answered.
+    var inviteAnswer = InviteAnswer.canceled
+    /// The connection of every invite the app started, in order.
+    private(set) var invites: [UUID] = []
+    /// The connection of every invite the app revoked, in order.
+    private(set) var revoked: [UUID] = []
+
+    func invite(_ connectionID: UUID) async throws -> InvitedPerson? {
+        invites.append(connectionID)
+        switch inviteAnswer {
+        case .names(let person): return person
+        case .canceled: return nil
+        case .fails: throw InviteFailed()
+        }
+    }
+
+    func revokeInvite(_ connectionID: UUID) {
+        revoked.append(connectionID)
+    }
+
     private func upload(_ change: SharingChange) {
         guard let network, let peer else { return }
         let events = events

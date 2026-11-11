@@ -16,7 +16,7 @@
       }
     },
     "%@ at %@" : {
-      "comment" : "Reminder details, Schedule: the next due time. 1: \"Today\", \"Tomorrow\" or a short date. 2: the time, such as \"8:00 AM\".",
+      "comment" : "An invited person's page: when the invite was sent. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"7:40 AM\".\nReminder details, Schedule: the next due time. 1: \"Today\", \"Tomorrow\" or a short date. 2: the time, such as \"8:00 AM\".",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -652,6 +652,12 @@
     "All Tags shows reminders with every checked tag. Any Tag shows those with at least one." : {
       "comment" : "A filter sheet: under the tags when two or more are checked."
     },
+    "Already Connected" : {
+      "comment" : "Invite: title of the message shown when the person invited is already connected."
+    },
+    "An invite opens only for the Apple Account it was sent to. Check the email address or phone number of their Apple Account, then invite them again." : {
+      "comment" : "An invited person's page: the help under \"Didn't open for them?\"."
+    },
     "Any Tag" : {
       "comment" : "A filter sheet: the Match choice that needs at least one checked tag."
     },
@@ -755,7 +761,16 @@
       "comment" : "Title shown when the app can't read its stored reminders, for example before the first unlock after a restart."
     },
     "Cancel" : {
-      "comment" : "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, and the Reminders and Tags filters'.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nSettings: keeps your data instead of deleting it."
+      "comment" : "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, the Reminders and Tags filters', and the invite hint's.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nSettings: keeps your data instead of deleting it."
+    },
+    "Cancel Invite" : {
+      "comment" : "An invited person's page: opens the question that asks before canceling the invite.\nThe question before canceling an invite: cancels it."
+    },
+    "Cancel the invite to %@?" : {
+      "comment" : "An invited person's page: the question asked before canceling the invite. The argument is the person's name, such as \"Jordan Lee\", or the address they were invited at."
+    },
+    "Canceling stops the invite from working." : {
+      "comment" : "An invited person's page: under Cancel Invite."
     },
     "Change these in iOS Settings." : {
       "comment" : "Settings: last line of the footer under the Nudges rows."
@@ -808,6 +823,12 @@
     "Completed" : {
       "comment" : "A tag's screen: header of the reminders with nothing more to come."
     },
+    "Connected" : {
+      "comment" : "Connections: header of the people connected.\nConnections: under a connected person's name."
+    },
+    "Connections" : {
+      "comment" : "Connections: the page's title, and the Settings row that opens it."
+    },
     "Consistent" : {
       "comment" : "Pace name: one wait, chosen by the person, between every nudge."
     },
@@ -815,10 +836,16 @@
       "comment" : "A Consistent pace with its wait, as reminder details show it. The placeholder is the wait between nudges, such as \"30 min\"."
     },
     "Continue" : {
-      "comment" : "Onboarding: the only button, which goes on to the system's permission prompts."
+      "comment" : "Invite hint: opens the system's sharing sheet to send the invite.\nOnboarding: the only button, which goes on to the system's permission prompts."
+    },
+    "Couldn't Cancel the Invite" : {
+      "comment" : "An invited person's page: title of the message shown when canceling the invite failed."
     },
     "Couldn't Delete Your Data" : {
       "comment" : "Settings: title of the message shown when deleting everything failed."
+    },
+    "Couldn't Send the Invite" : {
+      "comment" : "Invite: title of the message shown when the invite couldn't be made."
     },
     "Created" : {
       "comment" : "Reminders tab's Sort menu: the header of the section that sorts by when each reminder was made."
@@ -858,6 +885,12 @@
     },
     "Delete “%@”?" : {
       "comment" : "Asked before deleting a reminder, from its details or a Reminders tab row. The placeholder is its title."
+    },
+    "Didn't open for them?" : {
+      "comment" : "An invited person's page: heading of the help for an invite that went to the wrong Apple Account."
+    },
+    "Didn't open for them? Check the address." : {
+      "comment" : "Connections: under an invite 2 days old or more, which may have gone to an address that isn't their Apple Account."
     },
     "Discard Changes" : {
       "comment" : "Throws away a sheet's changes and closes it."
@@ -1187,8 +1220,32 @@
     "How It Nudges" : {
       "comment" : "Section header on reminder details and the reminder form: the nudges a reminder sends, when, and how they arrive.\nSettings: row that opens the page explaining how each strength nudges, and what onboarding said.\nTitle of the page in Settings that explains how each strength nudges."
     },
+    "Invite Again" : {
+      "comment" : "An invited person's page: sends a new invite in place of this one."
+    },
+    "Invite One Person" : {
+      "comment" : "Invite hint: the title."
+    },
+    "Invite Someone" : {
+      "comment" : "Connections: starts an invite to one person.\nInvite hint: the sheet's title."
+    },
+    "Invite someone you trust, and you can send each other reminders." : {
+      "comment" : "Connections: under \"No Connections\"."
+    },
+    "Invited" : {
+      "comment" : "Connections: header of the people invited who haven't accepted yet."
+    },
+    "Invited · Waiting for them to accept" : {
+      "comment" : "Connections and an invited person's page: under the name of someone invited who hasn't accepted yet."
+    },
     "It may have been deleted." : {
       "comment" : "Reminder details: under \"Reminder Not Found\"."
+    },
+    "It stops working, even if they've already got it." : {
+      "comment" : "The question before canceling an invite: under its title."
+    },
+    "Keep Invite" : {
+      "comment" : "The question before canceling an invite: keeps it."
     },
     "Last 24 Hours" : {
       "comment" : "Now: section header for occurrences closed in the last 24 hours."
@@ -1279,6 +1336,9 @@
         }
       }
     },
+    "No Connections" : {
+      "comment" : "Connections: title of the empty state, with no one connected or invited."
+    },
     "No Matches" : {
       "comment" : "Reminders tab: title when reminders exist but what's narrowing the list leaves none.\nTags tab: title when tags exist but the filter leaves none."
     },
@@ -1356,6 +1416,9 @@
     },
     "Nothing was missed today." : {
       "comment" : "My Day: the list when Missed is chosen and nothing was missed today."
+    },
+    "Nothing was sent. Try again." : {
+      "comment" : "Invite: under Couldn't Send the Invite."
     },
     "Notification" : {
       "comment" : "Nudge card: the next nudge comes as a notification."
@@ -1488,7 +1551,7 @@
       }
     },
     "OK" : {
-      "comment" : "Settings: dismisses the message that deleting failed."
+      "comment" : "An invited person's page: dismisses the message that canceling failed.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the message that the invite couldn't be made.\nSettings: dismisses the message that deleting failed."
     },
     "Off" : {
       "comment" : "Reminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off."
@@ -1626,10 +1689,13 @@
       "comment" : "Settings: row that sends a notification in a few seconds, to see how a nudge looks."
     },
     "Sent" : {
-      "comment" : "Settings: shown beside Send a Test Nudge for a few seconds after it was tapped, while the test nudge is on its way."
+      "comment" : "An invited person's page: when the invite was sent.\nSettings: shown beside Send a Test Nudge for a few seconds after it was tapped, while the test nudge is on its way."
     },
     "Settings" : {
       "comment" : "Tab bar: the app's settings tab"
+    },
+    "Sharing" : {
+      "comment" : "Settings: header of the section with Connections."
     },
     "Show All" : {
       "comment" : "My Day: the button that clears the chosen count and shows every row."
@@ -1732,6 +1798,9 @@
     "That was the last nudge. It closes as Missed at %@." : {
       "comment" : "Nudge card: after the occurrence's last nudge. The placeholder is when it gives up or the next occurrence takes over, such as \"11:17 AM\"."
     },
+    "The invite still works. Try again." : {
+      "comment" : "An invited person's page: under Couldn't Cancel the Invite."
+    },
     "The repeat ends before it starts. Change its end date." : {
       "comment" : "Under the reminder form's start when End Repeat's end date is before the start, so Save is disabled."
     },
@@ -1772,7 +1841,7 @@
       "comment" : "The reminder form's title field, which must be filled in."
     },
     "To" : {
-      "comment" : "Reminders' filter sheet: the switch and date picker for the last day a reminder may be due."
+      "comment" : "An invited person's page: the email address or phone number the invite was sent to.\nReminders' filter sheet: the switch and date picker for the last day a reminder may be due."
     },
     "To get every nudge during a Focus, allow %@ in that Focus. Nudges vibrate when your iPhone's settings allow it." : {
       "comment" : "Settings: footer under the Nudges rows. The placeholder is the app's name."
@@ -1798,6 +1867,9 @@
     "Urgent nudges ring as alarms, even in silent mode and in every Focus." : {
       "comment" : "Settings: footer under the Nudges rows, when alarms are allowed."
     },
+    "Use the email address or phone number of their Apple Account, or the invite won't open for them." : {
+      "comment" : "Invite hint: under \"Invite One Person\", before the system's sharing sheet."
+    },
     "Version" : {
       "comment" : "About page: row showing the app's version, such as \"1.1.0\"."
     },
@@ -1818,6 +1890,9 @@
     },
     "You already have the tag %@." : {
       "comment" : "Tag sheet: shown when another tag has the name, ignoring case. The placeholder is that tag, such as \"#home\"."
+    },
+    "You and %@ are already connected." : {
+      "comment" : "Invite: under Already Connected. The argument is the person's name, such as \"Riley Park\"."
     },
     "You choose what breaks through" : {
       "comment" : "Onboarding and How It Nudges: the title of the point about Break Through Focus."

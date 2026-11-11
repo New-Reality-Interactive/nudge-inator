@@ -146,7 +146,7 @@ private struct TagRowContent: View {
         // Stacked at accessibility sizes: beside a tile that large, a long name like
         // "#appointments" had a few letters of width and broke mid-word.
         SizeAdaptiveStack(rowSpacing: Design.Spacing.s3, stackedSpacing: Design.Spacing.s2) {
-            TagTile(size: tile)
+            RoundTile(symbol: "tag", size: tile)
             VStack(alignment: .leading, spacing: Design.Spacing.line) {
                 Text(verbatim: summary.tag.label)
                     .font(.body)

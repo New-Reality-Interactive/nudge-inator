@@ -11,6 +11,8 @@ final class ConnectionRecord: IdentifiedRecord {
     /// `SharingConnection.State` as the store spells it.
     var state: String
     var sharesStatus: Bool
+    var address: String?
+    var invitedAt: Date?
 
     init(id: UUID, position: Int) {
         self.id = id

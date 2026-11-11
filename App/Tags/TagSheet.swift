@@ -95,7 +95,7 @@ struct TagSheet: View {
                 // Left out in landscape: with the keyboard up there is no room for a decoration.
                 if !isCompactHeight {
                     Section {
-                        TagTile(size: tileSize)
+                        RoundTile(symbol: "tag", size: tileSize)
                             .frame(maxWidth: .infinity)
                             .listRowBackground(Color.clear)
                     }

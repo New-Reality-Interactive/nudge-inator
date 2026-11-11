@@ -68,6 +68,8 @@ struct SharingStore {
             record.name = connection.name
             record.state = connection.state.storedValue
             record.sharesStatus = connection.sharesStatus
+            record.address = connection.address
+            record.invitedAt = connection.invitedAt
         }
         records.values.forEach(context.delete)
     }
@@ -126,7 +128,7 @@ struct SharingStore {
         let outbox = try context.fetch(FetchDescriptor<OutboxRecord>(sortBy: [SortDescriptor(\.position)]))
         return SharingData(
             connections: try connections.map {
-                SharingConnection(id: $0.id, name: $0.name, state: try .init(storedValue: $0.state), sharesStatus: $0.sharesStatus)
+                SharingConnection(id: $0.id, name: $0.name, state: try .init(storedValue: $0.state), sharesStatus: $0.sharesStatus, address: $0.address, invitedAt: $0.invitedAt)
             },
             sentReminders: try sentReminders.map { try $0.sentReminder() },
             sentCopies: try sentCopies.map { try $0.sentCopy() },

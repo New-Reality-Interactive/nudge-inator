@@ -1,11 +1,13 @@
 import SwiftUI
 
-/// The gray circle with a white tag glyph, a tag's picture on the list and in the sheet.
-struct TagTile: View {
+/// A gray circle with a white glyph: a tag's picture on the list and in the sheet (`tag`), and a
+/// person's on Connections (`person`). Decoration, so VoiceOver skips it.
+struct RoundTile: View {
+    let symbol: String
     let size: CGFloat
 
     var body: some View {
-        Image(systemName: "tag")
+        Image(systemName: symbol)
             .resizable()
             .scaledToFit()
             .foregroundStyle(Color.white)

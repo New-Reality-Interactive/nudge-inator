@@ -52,7 +52,7 @@ struct SharingAdapterTests {
                 remindersSortRecord: .temporary,
                 tagsSortRecord: .temporary,
                 doneQueue: .temporary,
-                sharing: SharingModel(adapter: adapter) {
+                sharing: SharingModel(adapter: adapter, clock: clock) {
                     guard opens() else { throw StoreWouldNotOpen() }
                     return try SharingStore(location: .file(sharingFile.url))
                 },
