@@ -46,12 +46,23 @@ public struct StatusReport: Equatable, Sendable {
     /// one for each of those days it falls due on; a one-off has its own, if it falls in them.
     public var occurrences: [OccurrenceStatus]
 
+    public init(label: ReportedStatus, occurrences: [OccurrenceStatus]) {
+        self.label = label
+        self.occurrences = occurrences
+    }
+
     /// One occurrence's status on the day it falls due.
     public struct OccurrenceStatus: Equatable, Sendable {
         public var dueTime: Date
         /// The day `dueTime` falls on, in the engine's calendar.
         public var day: CalendarDay
         public var label: ReportedStatus
+
+        public init(dueTime: Date, day: CalendarDay, label: ReportedStatus) {
+            self.dueTime = dueTime
+            self.day = day
+            self.label = label
+        }
     }
 }
 

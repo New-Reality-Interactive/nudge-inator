@@ -194,6 +194,14 @@ _Avoid_: Received, sent
 What hasn't reached the other person yet because it hasn't gone through iCloud: a sent reminder, a change or a status.
 _Avoid_: Pending, offline
 
+**Sharing store**:
+The second store on the iPhone, beside the one holding the person's reminders, for what sharing needs: connections, sent reminders, how each recipient's copy is going, what each received reminder has yet to sync, the sync engine's saved state, and the changes not yet sent to iCloud. It is new and empty in 1.4.0, never synced by the system, and the reminders' own store never holds any of it.
+_Avoid_: Shared store
+
+**Outbox**:
+The sharing store's queue of changes not yet sent to iCloud, oldest first: a send, a revision, a cancel, a receipt, a status, a settings change or a disconnect. What a person sees of it is Waiting to sync.
+_Avoid_: Pending, sync queue
+
 **Canceled**:
 The state of a received reminder its sender deleted. It no longer nudges and stays, with a note, until the recipient removes it.
 _Avoid_: Deleted, Skipped (an occurrence's close)

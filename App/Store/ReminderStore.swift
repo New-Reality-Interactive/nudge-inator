@@ -22,6 +22,11 @@ enum StoreError: Error, Equatable {
         case closedOccurrenceDueTime
         case receivedOrigin
         case receivedState
+        case connectionState
+        case sentCopyReceipt
+        case reportedStatus
+        case syncDatabase
+        case outboxKind
     }
 
     /// A saved value the store can't map back to the engine's, such as RRULE text that no longer
@@ -30,6 +35,8 @@ enum StoreError: Error, Equatable {
     /// A save that lists a reminder or tag ID twice. The engine's lists aren't checked, so the
     /// store turns it down rather than write two records for one ID.
     case duplicateID(UUID)
+    /// A save that lists a database's sync engine state twice.
+    case duplicateDatabase
 }
 
 /// Where the store file lives.
@@ -211,9 +218,10 @@ private extension ReminderRecord {
         notes = reminder.notes
         tagIDs = reminder.tagIDs
         dueTime = reminder.dueTime
-        repeatRule = reminder.repeatRule?.rrule
-        repeatMissingDay = reminder.repeatRule.map { $0.missingDay.storedValue }
-        repeatUntilTime = if case .untilTime(let time) = reminder.repeatRule?.end { time } else { nil }
+        let repeating = reminder.repeatRule?.storedValue
+        repeatRule = repeating?.rrule
+        repeatMissingDay = repeating?.missingDay
+        repeatUntilTime = repeating?.untilTime
         strength = reminder.strength.storedValue
         (paceKind, paceWait) = reminder.pace.storedValue
         breakThroughFocus = reminder.breakThroughFocus
@@ -294,16 +302,27 @@ private extension ReminderRecord {
 
     func storedRepeatRule() throws -> RepeatRule? {
         guard let repeatRule else { return nil }
-        var rule: RepeatRule
+        return try RepeatRule(storedRRULE: repeatRule, missingDay: repeatMissingDay, untilTime: repeatUntilTime)
+    }
+}
+
+extension RepeatRule {
+    /// The three fields a repeat is saved in: RRULE text, the `missingDay` that RRULE has no part
+    /// for, and the exact instant of an UNTIL that ends at a time (RRULE text keeps whole seconds).
+    var storedValue: (rrule: String, missingDay: String, untilTime: Date?) {
+        let untilTime: Date? = if case .untilTime(let time) = end { time } else { nil }
+        return (rrule, missingDay.storedValue, untilTime)
+    }
+
+    /// The repeat the three fields say, or an error for RRULE text that no longer parses.
+    init(storedRRULE: String, missingDay: String?, untilTime: Date?) throws {
         do {
-            rule = try RepeatRule(rrule: repeatRule)
+            self = try RepeatRule(rrule: storedRRULE)
         } catch {
-            throw StoreError.unreadable(field: .repeatRule, value: repeatRule)
+            throw StoreError.unreadable(field: .repeatRule, value: storedRRULE)
         }
-        rule.missingDay = try RepeatRule.MissingDay(storedValue: repeatMissingDay ?? "")
-        // RRULE text keeps UNTIL to the second; the exact instant is saved beside it.
-        if case .untilTime = rule.end, let repeatUntilTime { rule.end = .untilTime(repeatUntilTime) }
-        return rule
+        self.missingDay = try MissingDay(storedValue: missingDay ?? "")
+        if case .untilTime = end, let untilTime { end = .untilTime(untilTime) }
     }
 }
 
@@ -311,7 +330,7 @@ private extension ReminderRecord {
 /// case names, so renaming a case in the engine can't change what's on disk. Each has a switch
 /// both ways: the engine's enums aren't `CaseIterable`, so the writing switch is the only one the
 /// compiler checks for a new case, and the round-trip tests cover every case of the reading one.
-private extension Strength {
+extension Strength {
     var storedValue: String {
         switch self {
         case .gentle: "gentle"
@@ -330,7 +349,7 @@ private extension Strength {
     }
 }
 
-private extension Pace {
+extension Pace {
     /// The kind and wait the record holds: no wait for Escalating.
     var storedValue: (kind: String, wait: Double?) {
         switch self {
@@ -369,7 +388,7 @@ private extension ReminderOrigin.ReceivedState {
     }
 }
 
-private extension RepeatRule.MissingDay {
+extension RepeatRule.MissingDay {
     var storedValue: String {
         switch self {
         case .skip: "skip"

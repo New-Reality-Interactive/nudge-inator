@@ -110,6 +110,16 @@ if grep -rn --include='*.swift' 'AlarmManager\.shared\.authorizationState' App N
   failed+=("alarm-authorization-read")
 fi
 
+# 1.4.0 makes no CloudKit request on update or launch (spec #127, Migration plan, point 4), and until
+# the CloudKit adapter ticket (#216) nothing in the app talks to CloudKit: no import, and no iCloud
+# entitlement. That ticket replaces this check with one that says when the app may first call it.
+step "Nothing in the app imports CloudKit or holds an iCloud entitlement"
+if grep -rn --include='*.swift' -E '^\s*(@\w+\s+)*(public\s+)?import\s+(\w+\s+)?CloudKit' App NudgeWidgets Packages \
+  || grep -n 'com\.apple\.developer\.icloud' App/*.entitlements NudgeWidgets/*.entitlements project.yml; then
+  echo "FAIL: the app makes no CloudKit request until #216 (spec #127, Migration plan, point 4)" >&2
+  failed+=("no-cloudkit")
+fi
+
 # Which simulator or clone runs which screenshot variants (#301). No simulator needed.
 step "The screenshot plan assigns variants to simulators and clones"
 scripts/tests/screenshots-plan-test.sh || failed+=("screenshots-plan")
