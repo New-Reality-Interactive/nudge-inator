@@ -51,7 +51,7 @@ struct DisconnectSheet: View {
                         .controlSize(.large)
                 }
                 .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
+                .listRowInsets(EdgeInsets()) // the button fills the row on a clear background; no text in the row
             }
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)

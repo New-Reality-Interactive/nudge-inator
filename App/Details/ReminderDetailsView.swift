@@ -149,7 +149,7 @@ private struct DetailsList: View {
             if let card = details.card ?? heldCard {
                 Section {
                     NudgeCardView(card: card, now: now, markDone: markDone, isDoneHeld: heldBinding(for: card))
-                        .listRowInsets(EdgeInsets())
+                        .listRowInsets(EdgeInsets()) // the card draws its own margins and background
                         .listRowBackground(Color.clear)
                 } header: {
                     Text("Nudging Now", comment: "Reminder details: section header above the card of a reminder that is nudging.")

@@ -115,7 +115,7 @@ private struct AcceptedInviteSheet: View {
                     .controlSize(.large)
                 }
                 .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
+                .listRowInsets(EdgeInsets()) // the buttons fill the row on a clear background; no text in the row
             }
             .navigationTitle(Text("Connected", comment: "Accepting an invite: title of the sheet once connected."))
             .navigationBarTitleDisplayMode(.inline)
