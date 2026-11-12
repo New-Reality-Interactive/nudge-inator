@@ -604,8 +604,9 @@ sharing paused and offline banner.
   own: who sent a reminder isn't a status. Where the row has no strength badge (My Day, Reminders,
   Last 24 Hours) the strength badge follows the label. Details add the strength in words, as How It
   Nudges says it ("Relentless: rings an alarm until you mark it done").
-- **Mine | Sent:** the system's segmented `Picker` under the navigation bar and above the search field,
-  filling the content width. Two short words, so it stays segmented at the accessibility sizes.
+- **Mine | Sent:** the system's segmented `Picker` under the search field (iOS keeps the search field
+  in the navigation bar; #201), or under the title where there's no search field, filling the content
+  width. Two short words, so it stays segmented at the accessibility sizes.
 - **Segmented choices' capitalization:** the spec's words as written ("Start right away", "Ask me
   first"), which are glossary terms. `All Tags | Any Tag` keeps its title style.
 - **Connection rows:** a round `{colors.tile-gray}` tile with `person`, the name in `{typography.body}`,

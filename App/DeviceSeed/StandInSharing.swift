@@ -68,7 +68,8 @@ extension View {
     /// A Stand-in menu in the toolbar for the phone check (ticket 195), only under the stand-in:
     /// receiving an invite, one that's unavailable, with `invited`, that person accepting, and with
     /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196), sending
-    /// a reminder (ticket 198) or disconnecting (ticket 197).
+    /// a reminder (ticket 198), getting what was sent to them (ticket 201) or disconnecting (ticket
+    /// 197).
     func standInSharingControls(invited: SharingConnection? = nil, connected: SharingConnection? = nil) -> some View {
         toolbar {
             if let adapter = StandInSharing.current {
@@ -91,6 +92,7 @@ extension View {
                             }
                             Button { adapter.theySend(.gentle, through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Gentle Reminder") }
                             Button { adapter.theySend(.relentless, through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Relentless Reminder") }
+                            Button { adapter.theyGetWhatWasSent(through: connected.id) } label: { Text(verbatim: "\(connected.name) Gets What You Sent") }
                             Button { adapter.theyDisconnect(connected.id) } label: { Text(verbatim: "\(connected.name) Disconnects") }
                         } else {
                             Button { adapter.receiveInvite(from: "Sam Rivera") } label: { Text(verbatim: "Receive an Invite from Sam Rivera") }
@@ -114,6 +116,26 @@ final class StandInSharingAdapter: SharingAdapter {
 
     func submit(_ change: SharingChange) {
         StandInSharing.logger.notice("Stand-in: not sending a \(String(describing: change.kind), privacy: .public) change")
+        if change.kind == .send, let reminderID = change.reminderID {
+            undelivered.append((reminderID, change.connectionID))
+        }
+    }
+
+    /// The reminders sent through each connection that `theyGetWhatWasSent(through:)` hasn't
+    /// delivered yet.
+    private var undelivered: [(reminderID: Reminder.ID, connectionID: UUID)] = []
+
+    /// Stands in for the other person's iPhone getting every reminder sent through the connection
+    /// with `connectionID` since the last time (ticket 201): each copy's receipt arrives, started,
+    /// as through iCloud, so Sent shows it Delivered.
+    func theyGetWhatWasSent(through connectionID: UUID) {
+        let arrived = undelivered.filter { $0.connectionID == connectionID }
+        undelivered.removeAll { $0.connectionID == connectionID }
+        Task {
+            for copy in arrived {
+                try? await events?.received(.receipt(.started, for: copy.reminderID, from: connectionID))
+            }
+        }
     }
 
     func accountState() async -> SharingAccountState {

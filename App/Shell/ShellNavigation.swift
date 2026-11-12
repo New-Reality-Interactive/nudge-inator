@@ -8,6 +8,12 @@ struct OpenedReminder: Hashable {
     var id: Reminder.ID
 }
 
+/// A sent reminder's details pushed on Reminders from the Sent view (ticket 201). A type of its own:
+/// the sharing store keeps it, not the engine, so it has a screen of its own.
+struct OpenedSentReminder: Hashable {
+    var id: Reminder.ID
+}
+
 /// A tag's screen pushed on the Tags tab. Like `OpenedReminder`, a type of its own, not the bare
 /// ID.
 struct OpenedTag: Hashable {
@@ -30,8 +36,9 @@ struct ShellNavigation {
     var nowPath: [OpenedReminder] = []
     /// The reminder details pushed on My Day. A route never sets it: Open goes to Now.
     var dayPath: [OpenedReminder] = []
-    /// The reminder details pushed on Reminders. A route never sets it.
-    var remindersPath: [OpenedReminder] = []
+    /// What is pushed on Reminders: a reminder's details from Mine, or a sent reminder's from Sent.
+    /// A route never sets it.
+    var remindersPath = NavigationPath()
 
     /// What is pushed on Tags: a tag's screen, then a reminder's details from it. A route never
     /// sets it.

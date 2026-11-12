@@ -154,6 +154,51 @@ final class SharingModel {
     /// Someone chosen in Send To is no longer connected, so nothing was sent.
     struct NotConnected: Error {}
 
+    /// The sender's Edit (ticket 201): keeps `edited`'s content as the sent reminder with its ID, at
+    /// the next revision, and sends that to each person still connected who has a copy. What their
+    /// copy does with it, and the change note, are #204's. It keeps no tags, and its creation date
+    /// stays the send's. A change to nothing sends nothing. Throws, changing and sending nothing, if
+    /// the sent reminder was deleted meanwhile, or the store can't keep it.
+    func reviseSent(_ edited: Reminder) throws {
+        var kept = try currentData()
+        guard let index = kept.sentReminders.firstIndex(where: { $0.reminder.id == edited.id }) else { throw SentReminderGone() }
+        var reminder = edited
+        reminder.tagIDs = []
+        reminder.origin = .mine
+        reminder.createdAt = kept.sentReminders[index].reminder.createdAt
+        guard reminder != kept.sentReminders[index].reminder else { return }
+        kept.sentReminders[index].reminder = reminder
+        kept.sentReminders[index].revision += 1
+        let revised = kept.sentReminders[index]
+        let recipients = kept.sentCopies.filter { $0.reminderID == edited.id }.map(\.connectionID)
+        try keep(kept, sending: recipients) { .revise(revised, for: $0) }
+    }
+
+    /// The sent reminder being changed is no longer kept: deleted while its form was open.
+    struct SentReminderGone: Error {}
+
+    /// The sender's Delete (ticket 201): the sent reminder with `reminderID` and every sent copy of
+    /// it leave the store, and each person still connected is sent a cancel. What their copy does
+    /// with it is #205's. Throws, changing and sending nothing, if the store can't keep it.
+    func deleteSent(_ reminderID: Reminder.ID) throws {
+        var kept = try currentData()
+        guard kept.sentReminders.contains(where: { $0.reminder.id == reminderID }) else { return }
+        let recipients = kept.sentCopies.filter { $0.reminderID == reminderID }.map(\.connectionID)
+        kept.sentReminders.removeAll { $0.reminder.id == reminderID }
+        kept.sentCopies.removeAll { $0.reminderID == reminderID }
+        try keep(kept, sending: recipients) { .cancel(reminderID, for: $0) }
+    }
+
+    /// Keeps `kept` with `change` for each of `connectionIDs` still connected in the outbox, and
+    /// only then hands the changes to the adapter, so nothing goes out that the store doesn't hold.
+    private func keep(_ kept: SharingData, sending connectionIDs: [UUID], _ change: (UUID) -> SharingChange) throws {
+        var kept = kept
+        let changes = connectionIDs.filter { connection($0) != nil }.map(change)
+        kept.outbox.append(contentsOf: changes.map(\.entry))
+        try keep(kept)
+        changes.forEach(adapter.submit)
+    }
+
     /// What came of Invite Someone.
     enum InviteOutcome: Equatable {
         /// The invite was sent, and the person is listed as Invited.

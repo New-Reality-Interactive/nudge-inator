@@ -45,6 +45,9 @@ final class ReminderForm: Identifiable {
     /// Set when Add couldn't send it: the store wouldn't keep it. The sheet says so, and the person
     /// can try again.
     var isShowingCouldntSend = false
+    /// Set when Save found the sent reminder deleted while the form was open (ticket 201): there is
+    /// nothing left to save, so the sheet says so and closes.
+    var isShowingDeletedMeanwhile = false
 
     /// The draft's pace, from the Pace control and the Every row.
     var pace: Pace {
@@ -112,6 +115,7 @@ final class ReminderForm: Identifiable {
         self.now = now
         original = nil
         senderName = nil
+        isSent = false
         let dueTime = Self.nextWholeHour(after: now())
         self.dueTime = dueTime
         repeatEnd = currentEngine().repeatEnd(of: nil, startingAt: dueTime)
@@ -130,15 +134,30 @@ final class ReminderForm: Identifiable {
 
     /// An Edit form for a reminder the engine holds, or `nil` if it doesn't hold it. `senders` names
     /// a received reminder's sender.
-    init?(engine currentEngine: @escaping () -> Engine, editing reminderID: Reminder.ID, now: @escaping () -> Date, senders: Senders = Senders()) {
+    convenience init?(engine currentEngine: @escaping () -> Engine, editing reminderID: Reminder.ID, now: @escaping () -> Date, senders: Senders = Senders()) {
+        guard let reminder = currentEngine().reminders.first(where: { $0.id == reminderID }) else { return nil }
+        self.init(engine: currentEngine, original: reminder, now: now, senderName: senders.name(of: reminder), isSent: false)
+    }
+
+    /// The sender's Edit form for a reminder they sent (ticket 201), as the sharing store keeps it.
+    /// It has no Tags row and no Send To, and nothing is locked: the engine doesn't hold it, and a
+    /// sender's change passes the copies' lock (ADR 0005). Save sends the change to its recipients.
+    convenience init(engine currentEngine: @escaping () -> Engine, editingSent reminder: Reminder, now: @escaping () -> Date) {
+        self.init(engine: currentEngine, original: reminder, now: now, senderName: nil, isSent: true)
+    }
+
+    /// Whether this is the sender's form for a reminder they sent (ticket 201).
+    let isSent: Bool
+
+    private init(engine currentEngine: @escaping () -> Engine, original reminder: Reminder, now: @escaping () -> Date, senderName: String?, isSent: Bool) {
         let engine = currentEngine()
-        guard let reminder = engine.reminders.first(where: { $0.id == reminderID }) else { return nil }
         self.currentEngine = currentEngine
         tagRules = engine
         self.now = now
         sharing = nil
         original = reminder
-        senderName = senders.name(of: reminder)
+        self.senderName = senderName
+        self.isSent = isSent
         title = reminder.title
         notes = reminder.notes
         tagIDs = reminder.tagIDs
@@ -209,9 +228,10 @@ final class ReminderForm: Identifiable {
         return names.isEmpty ? nil : names.formatted(.list(type: .and))
     }
 
-    /// Whether the form has a Tags row: not with anyone chosen in Send To, since a sent reminder has
-    /// no tags. The chosen tags are kept, and come back if no one is chosen.
-    var showsTags: Bool { recipients.isEmpty }
+    /// Whether the form has a Tags row: not with anyone chosen in Send To, nor for a reminder already
+    /// sent, since a sent reminder has no tags. The chosen tags are kept, and come back if no one is
+    /// chosen.
+    var showsTags: Bool { recipients.isEmpty && !isSent }
 
     /// `nil` repeats Never. The repeat's pattern (a preset's rule, or a custom repeat's, built from
     /// its choices and the start, so a monthly choice a new start doesn't offer falls back to the
@@ -501,6 +521,7 @@ final class ReminderForm: Identifiable {
             return true
         }
         if isContentLocked { return saveTags(of: original, to: model) }
+        if isSent { return saveSent(to: model) }
         // It may have started nudging since the form opened. Checked with the engine's own rule
         // before any typed tag is created, so a turned-down save leaves nothing behind.
         let locked = model.engine.lockedFields(of: original.id)
@@ -516,6 +537,23 @@ final class ReminderForm: Identifiable {
             restoreLockedFields(from: original)
             return false
         }
+    }
+
+    /// The sender's Save of a reminder they sent (ticket 201): the draft goes to its recipients
+    /// through sharing. `false`, with the form saying so, if sharing couldn't keep it or it was
+    /// deleted meanwhile.
+    private func saveSent(to model: AppModel) -> Bool {
+        do {
+            try model.reviseSent(draft(tagIDs: []))
+        } catch is SharingModel.SentReminderGone {
+            isShowingDeletedMeanwhile = true
+            return false
+        } catch {
+            isShowingCouldntSend = true
+            return false
+        }
+        isSaved = true
+        return true
     }
 
     /// A received reminder's Save: the reminder as it is, with the chosen tags, so nothing the
