@@ -24,12 +24,13 @@ SH
 chmod +x "$work/bin/"*
 export PATH="$work/bin:$PATH" FAKE_GH_LOG="$work/gh.log"
 
-phone='{"hardwareProperties":{"reality":"physical","marketingName":"iPhone 15"},"deviceProperties":{"osVersionNumber":"27.2.1"},"connectionProperties":{"tunnelState":"connected"}}'
-sim='{"hardwareProperties":{"reality":"simulated","marketingName":"iPhone 18 Pro"},"deviceProperties":{"osVersionNumber":"27.2"},"connectionProperties":{"tunnelState":"disconnected"}}'
-away='{"hardwareProperties":{"reality":"physical","marketingName":"iPhone 15"},"deviceProperties":{"osVersionNumber":"27.2.1"},"connectionProperties":{"tunnelState":"disconnected"}}'
+phone='{"hardwareProperties":{"reality":"physical","marketingName":"iPhone 15","productType":"iPhone15,4"},"deviceProperties":{"osVersionNumber":"27.2.1"},"connectionProperties":{"tunnelState":"connected"}}'
+ipad='{"hardwareProperties":{"reality":"physical","marketingName":"iPad Pro","productType":"iPad16,3"},"deviceProperties":{"osVersionNumber":"27.2"},"connectionProperties":{"tunnelState":"connected"}}'
+sim='{"hardwareProperties":{"reality":"simulated","marketingName":"iPhone 18 Pro","productType":"iPhone19,2"},"deviceProperties":{"osVersionNumber":"27.2"},"connectionProperties":{"tunnelState":"disconnected"}}'
+away='{"hardwareProperties":{"reality":"physical","marketingName":"iPhone 15","productType":"iPhone15,4"},"deviceProperties":{"osVersionNumber":"27.2.1"},"connectionProperties":{"tunnelState":"disconnected"}}'
 devices() { echo "{\"result\":{\"devices\":[$1]}}" > "$work/devices.json"; export FAKE_DEVICES="$work/devices.json"; rm -f "$FAKE_GH_LOG"; }
 
-devices "$sim,$phone"
+devices "$ipad,$sim,$phone"
 scripts/phone-check.sh 352 installed
 expect "install comment names the model and iOS version the device reports" \
   $'issue\ncomment\n352\n--body\nPhone check: installed, checklist sent (iPhone 15, iOS 27.2.1)' "$(cat "$FAKE_GH_LOG")"
@@ -41,14 +42,14 @@ expect "report takes findings one per line from stdin" \
 
 rm -f "$FAKE_GH_LOG"
 scripts/phone-check.sh 352 report "Found by: the phone; Kind: a flake; Where: portrait"
-expect "report takes findings as arguments" "- Found by: the phone; Kind: a flake; Where: portrait" "$(sed -n '7p' "$FAKE_GH_LOG")"
+expect "report takes findings as arguments" "- Found by: the phone; Kind: a flake; Where: portrait" "$(tail -1 "$FAKE_GH_LOG")"
 
 rm -f "$FAKE_GH_LOG"
 scripts/phone-check.sh 352 report < /dev/null
-expect "a report with no findings says so" "- Nothing found." "$(sed -n '7p' "$FAKE_GH_LOG")"
+expect "a report with no findings says so" "- Nothing found." "$(tail -1 "$FAKE_GH_LOG")"
 
-for case in "$sim" "$away" ""; do
-  devices "$case"
+for scenario in "$sim" "$away" "$ipad" ""; do
+  devices "$scenario"
   out="$(scripts/phone-check.sh 352 installed 2>&1)"; code=$?
   expect "no connected iPhone: exit 1" "1" "$code"
   expect "no connected iPhone: says so" "1" "$(echo "$out" | grep -c 'No iPhone is connected')"

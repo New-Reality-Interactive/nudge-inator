@@ -16,14 +16,14 @@ set -euo pipefail
 
 usage() { echo "usage: scripts/phone-check.sh <ticket> installed | report [finding...]" >&2; exit 2; }
 [ $# -ge 2 ] || usage
-ticket="$1" kind="$2"; shift 2
+ticket="$1" action="$2"; shift 2
 case "$ticket" in ''|*[!0-9]*) usage ;; esac
-case "$kind" in installed|report) ;; *) usage ;; esac
+case "$action" in installed|report) ;; *) usage ;; esac
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
-# The model and iOS version of the first connected physical iPhone, as "<model>, iOS <version>".
+# The model and iOS version of the first connected physical iPhone (an iPad or Watch is skipped), as "<model>, iOS <version>".
 xcrun devicectl list devices --json-output "$work/devices.json" > /dev/null 2>&1 || true
 phone="$(python3 -I - "$work/devices.json" 2> /dev/null <<'PY' || true
 import json, sys
@@ -34,7 +34,7 @@ except Exception:
 for d in devices:
     hw, dev, conn = d.get("hardwareProperties", {}), d.get("deviceProperties", {}), d.get("connectionProperties", {})
     model, version = hw.get("marketingName"), dev.get("osVersionNumber")
-    if hw.get("reality") == "physical" and conn.get("tunnelState") == "connected" and model and version:
+    if hw.get("reality") == "physical" and str(hw.get("productType", "")).startswith("iPhone") and conn.get("tunnelState") == "connected" and model and version:
         print(f"{model}, iOS {version}")
         break
 PY
@@ -44,7 +44,7 @@ if [ -z "$phone" ]; then
   exit 1
 fi
 
-if [ "$kind" = installed ]; then
+if [ "$action" = installed ]; then
   body="Phone check: installed, checklist sent ($phone)"
 else
   if [ $# -gt 0 ]; then printf '%s\n' "$@" > "$work/findings"; else cat > "$work/findings"; fi
