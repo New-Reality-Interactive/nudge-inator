@@ -101,6 +101,7 @@ final class AppModel {
         // Here rather than after launch, so no report is missed: each one waits for launch.
         notifications.events = self
         alarms.events = self
+        sharing?.receivedCopies = self
     }
 
     /// Launch, after setting aside a launch that couldn't read the store. Before the first unlock
@@ -443,6 +444,14 @@ final class AppModel {
     /// The reminder store hasn't been read, so what was received can't be removed or kept yet.
     struct RemindersNotLoaded: Error {}
 
+    /// Send To (ticket 198): sends `reminder` to the people whose connections are in
+    /// `connectionIDs`, through sharing, never adding it to this person's own reminders. Throws,
+    /// sending nothing, with no sharing, or if sharing turns it down (`SharingModel.send`).
+    func send(_ reminder: Reminder, to connectionIDs: [UUID]) throws {
+        guard let sharing else { throw SharingModel.NotConnected() }
+        try sharing.send(reminder, to: connectionIDs)
+    }
+
     /// Settings' Default Pace (ticket 09), what a new reminder starts with. Read from the record
     /// each time, not kept from launch: before the first unlock `UserDefaults` reads as empty, so
     /// a launch then would see Consistent · 10 min whatever the person chose.
@@ -571,6 +580,29 @@ final class AppModel {
             saveError = error
             return false
         }
+    }
+}
+
+extension AppModel: ReceivedCopies {
+    func copy(of sendersReminderID: Reminder.ID, through connectionID: UUID) throws -> Reminder? {
+        guard case .ready = launchState, store != nil else { throw RemindersNotLoaded() }
+        return engine.reminders.first {
+            guard case let .received(id, sendersID, _, _, _) = $0.origin else { return false }
+            return id == connectionID && sendersID == sendersReminderID
+        }
+    }
+
+    /// Saved before the engine has it, so a store that won't keep it leaves nothing planned. Its
+    /// creation date is now, as the engine's add stamps one.
+    func keep(_ copy: Reminder) throws {
+        guard case .ready = launchState, let store else { throw RemindersNotLoaded() }
+        var added = copy
+        added.createdAt = clock.now
+        try store.save(StoredData(reminders: engine.reminders + [added], tags: engine.tags, histories: engine.histories))
+        saveError = nil
+        engine.update(reminders: engine.reminders + [added])
+        // Anything the plan wrote, such as a history for an occurrence that opened on arrival.
+        save()
     }
 }
 

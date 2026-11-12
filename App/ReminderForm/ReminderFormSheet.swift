@@ -13,12 +13,15 @@ struct ReminderFormSheet: View {
     @State private var pages: [ReminderFormPage] = []
     /// Whether the Custom repeat sheet is open over the form (#284).
     @State private var isShowingCustomRepeat = false
+    /// Whether Send To's Invite Someone New is under way (ticket 198).
+    @State private var isInviting = false
 
     var body: some View {
         NavigationStack(path: $pages) {
             Form {
                 if form.isEditing { EditNoteSection(isLocked: !form.lockedFields.isEmpty) }
                 WhatSection(form: form)
+                if form.offersSendTo { SendToSection(form: form, isInviting: $isInviting) }
                 ScheduleSection(form: form, isShowingCustomRepeat: $isShowingCustomRepeat)
                 StrengthSection(form: form)
                 PaceSection(form: form)
@@ -34,6 +37,7 @@ struct ReminderFormSheet: View {
             .navigationDestination(for: ReminderFormPage.self) { page in
                 switch page {
                 case .tags: TagsPage(form: form)
+                case .sendTo: SendToPage(form: form, isInviting: $isInviting)
                 }
             }
             .toolbar { toolbar }
@@ -44,6 +48,18 @@ struct ReminderFormSheet: View {
                     CustomRepeatPage(form: form)
                 }
             }
+        }
+        .sendToInviteFlow(sharing: model?.sharing, isPresented: $isInviting)
+        .alert(
+            Text("Couldn't Send the Reminder", comment: "The reminder form: title of the message shown when Add couldn't send the reminder to the people chosen in Send To."),
+            isPresented: $form.couldntSend
+        ) {
+            Button {
+            } label: {
+                Text("OK", comment: "The reminder form: dismisses the message that the reminder couldn't be sent.")
+            }
+        } message: {
+            Text("Nothing was sent. Check who's chosen in Send To and try again.", comment: "The reminder form: under Couldn't Send the Reminder.")
         }
         // On the stack, not its root: the root is covered by the Tags page and the Custom sheet,
         // which lock too when the reminder falls due while they're open.
@@ -77,6 +93,19 @@ struct ReminderFormSheet: View {
 /// The pages the form pushes. Custom is a sheet over the form instead (#284).
 enum ReminderFormPage: Hashable {
     case tags
+    case sendTo
+}
+
+private extension View {
+    /// Send To's Invite Someone New: the invite flow, when the app has sharing.
+    @ViewBuilder
+    func sendToInviteFlow(sharing: SharingModel?, isPresented: Binding<Bool>) -> some View {
+        if let sharing {
+            inviteFlow(sharing: sharing, isPresented: isPresented)
+        } else {
+            self
+        }
+    }
 }
 
 /// The note at the top of the Edit form: why the schedule is locked, or when changes apply.
@@ -129,18 +158,8 @@ private struct WhatSection: View {
                 Text("Notes", comment: "The reminder form's notes field.")
             }
             .lineLimit(3...)
-            NavigationLink(value: ReminderFormPage.tags) {
-                LabeledContent {
-                    if let tags = form.chosenTagsText {
-                        // The person's own tag names, never translated.
-                        Text(verbatim: tags)
-                    } else {
-                        Text("None", comment: "The reminder form's Tags row when no tag is chosen.")
-                    }
-                } label: {
-                    Text("Tags", comment: "The reminder form's row that opens the Tags page.")
-                }
-            }
+            // A sent reminder has no tags (ticket 198).
+            if form.showsTags { tagsRow }
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                 if form.saveBlock == .noTitle {
@@ -154,6 +173,21 @@ private struct WhatSection: View {
         .onAppear {
             // A new reminder starts at its title, as the mockup's sheet does.
             if form.title.isEmpty { isTitleFocused = true }
+        }
+    }
+
+    private var tagsRow: some View {
+        NavigationLink(value: ReminderFormPage.tags) {
+            LabeledContent {
+                if let tags = form.chosenTagsText {
+                    // The person's own tag names, never translated.
+                    Text(verbatim: tags)
+                } else {
+                    Text("None", comment: "The reminder form's Tags row when no tag is chosen.")
+                }
+            } label: {
+                Text("Tags", comment: "The reminder form's row that opens the Tags page.")
+            }
         }
     }
 }

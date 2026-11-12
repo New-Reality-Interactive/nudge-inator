@@ -10,6 +10,12 @@ extension ReminderForm {
         return ReminderForm(engine: { engine }, now: { .now }, defaultPace: .shipped)
     }
 
+    /// A New Reminder form with Send To over the stand-in's people, or with `seeded` false, no one.
+    static func previewSendTo(seeded: Bool = true) -> ReminderForm {
+        let engine = Engine(clock: PreviewClock(), scheduler: NoOpScheduler())
+        return ReminderForm(engine: { engine }, now: { .now }, defaultPace: .shipped, sharing: StandInSharing.previewModel(seeded: seeded))
+    }
+
     /// The Edit form of a Firm reminder that fell due ten minutes ago, so it is Nudging.
     static func previewNudging() -> ReminderForm {
         edit(Reminder(title: "Take the bins out", dueTime: .now.addingTimeInterval(-600), strength: .firm))
