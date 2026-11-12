@@ -188,6 +188,13 @@ struct WaitingLabel: View {
     }
 }
 
+/// "Canceled" on a received reminder its sender deleted (ticket 205).
+struct CanceledLabel: View {
+    var body: some View {
+        ReminderStatusLabel(status: .canceled)
+    }
+}
+
 /// A reminder's status label, in DESIGN.md's Status label colors: Nudging red, Paused, Coming up
 /// and Waiting in the secondary label color, a closed occurrence as the Now tab's status label.
 /// The details page's hero and the Reminders tab's rows.
@@ -201,7 +208,7 @@ struct ReminderStatusLabel: View {
             StatusLabel(state: .nudging(nudgeNumber: 0))
         case .closed(let state):
             StatusLabel(state: state)
-        case .paused, .comingUp, .waiting:
+        case .paused, .comingUp, .waiting, .canceled:
             Text(status.name)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
@@ -218,6 +225,7 @@ extension ReminderStatus {
         case .paused: LocalizedStringResource("Paused", comment: "Status label, and a Status row in the Reminders filter sheet: the reminder is paused.")
         case .comingUp: LocalizedStringResource("Coming up", comment: "Status label, and a Status row in the Reminders filter sheet: the reminder isn't due yet.")
         case .waiting: LocalizedStringResource("Waiting", comment: "Status label: a reminder someone sent is waiting for the person to accept it, so it doesn't nudge yet.")
+        case .canceled: LocalizedStringResource("Canceled", comment: "Status label: the person who sent a reminder deleted it, so it no longer nudges.")
         }
     }
 }

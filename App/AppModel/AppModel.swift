@@ -676,6 +676,22 @@ extension AppModel: ReceivedReminders {
         return changes
     }
 
+    /// The sender's Delete of a copy held (ticket 205): the engine cancels it, so nothing is planned
+    /// and a ringing alarm stops as Delete stops it, and its nudges already in Notification Center go
+    /// (the copy's own banners, so none points at a reminder no longer wanted). The copy stays, with
+    /// its tags and change note, until the person removes it. Throws if the reminders haven't been read.
+    func cancel(_ copyID: Reminder.ID) throws {
+        guard case .ready = launchState, store != nil else { throw RemindersNotLoaded() }
+        perform { engine in
+            let dueTimes = engine.dueTimesAnAlarmMayBeRinging(for: copyID)
+            engine.cancel(copyID)
+            if engine.reminders.contains(where: { $0.id == copyID && $0.isCanceled }) {
+                alarms.stopRinging(of: copyID, dueAt: dueTimes)
+                notifications.removeDeliveredNotifications(of: copyID)
+            }
+        }
+    }
+
     /// The notification of a sender's change (ticket 204): the reminder's title, then "<name> changed
     /// this: <what changed>". It takes the place of the copy's arrival or last change in Notification
     /// Center, which share an identifier.

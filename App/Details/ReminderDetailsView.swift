@@ -72,14 +72,17 @@ struct ReminderDetailsView: View {
         .navigationTitle(Text(verbatim: ""))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button(action: openEdit) {
-                    Text("Edit", comment: "Reminder details: the toolbar button that opens the Edit Reminder form.")
+            // A canceled copy has nothing to edit, not even tags (the mockup's `viewReceived`).
+            if !details.isCanceled {
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: openEdit) {
+                        Text("Edit", comment: "Reminder details: the toolbar button that opens the Edit Reminder form.")
+                    }
+                    .accessibilityLabel(details.received == nil
+                        ? Text("Edit \(details.title)", comment: "VoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title.")
+                        : Text("Edit tags of \(details.title)", comment: "VoiceOver label of a received reminder's Edit button on its details, whose form changes only its tags. The placeholder is the reminder's title."))
+                    .disabled(model == nil || deleted != nil)
                 }
-                .accessibilityLabel(details.received == nil
-                    ? Text("Edit \(details.title)", comment: "VoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title.")
-                    : Text("Edit tags of \(details.title)", comment: "VoiceOver label of a received reminder's Edit button on its details, whose form changes only its tags. The placeholder is the reminder's title."))
-                .disabled(model == nil || deleted != nil)
             }
         }
         .newTimeAlert(isPresented: $isAskingForNewTime, title: details.title) {
@@ -164,6 +167,9 @@ private struct DetailsList: View {
             Section {
                 DetailsHero(details: details)
             }
+            if details.isCanceled, let received = details.received {
+                CanceledSection(senderName: received.senderName)
+            }
             if let note = details.received?.changeNote {
                 ChangeNoteSection(note: note)
             }
@@ -200,7 +206,7 @@ private struct DetailsList: View {
                 }
             }
             HowItNudgesSection(howItNudges: details.howItNudges)
-            if let received = details.received, let notSharing = received.notSharingThisOne {
+            if let received = details.received, let notSharing = received.notSharingThisOne, !details.isCanceled {
                 DontShareSection(senderName: received.senderName, isOn: notSharing, set: setNotSharing)
             }
             // A waiting copy's Remove is in its Waiting section, with Accept (the mockup's `viewReceived`).
@@ -236,7 +242,9 @@ private struct DetailsList: View {
                 DeleteButton(title: details.title, isReceived: details.received != nil, confirm: delete)
             } footer: {
                 VStack(alignment: .leading, spacing: Design.Spacing.s1) {
-                    if let received = details.received {
+                    if details.isCanceled {
+                        Text("Removing it clears it from your list.", comment: "Reminder details: under Remove Reminder on a received reminder its sender deleted.")
+                    } else if let received = details.received {
                         Text("You can mark it Done, pause it, remove it and add your own tags. \(received.senderName) owns its title, notes, schedule, strength and pace.",
                              comment: "Reminder details: under Remove Reminder on a received reminder, what the person can and can't change. The placeholder is the sender's name.")
                     }
@@ -302,6 +310,20 @@ private struct ChangeNoteSection: View {
             ForEach(Array(note.lines.enumerated()), id: \.offset) { _, line in
                 Text(line)
             }
+        }
+    }
+}
+
+/// A received reminder its sender deleted (ticket 205, the mockup's `viewReceived`): the note that it
+/// won't nudge and stays until removed, above the change note.
+private struct CanceledSection: View {
+    let senderName: String
+
+    var body: some View {
+        NoteCard(symbol: "info.circle") {
+            Text("Canceled", comment: "Reminder details: the heading of the note on a received reminder its sender deleted.")
+        } detail: {
+            Text("\(senderName) canceled this reminder, so it won't nudge you. It stays here until you remove it.", comment: "Reminder details: under \"Canceled\" on a received reminder its sender deleted. The placeholder is the sender's name.")
         }
     }
 }

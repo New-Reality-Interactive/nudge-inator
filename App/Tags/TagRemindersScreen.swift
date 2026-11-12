@@ -61,6 +61,9 @@ struct TagRemindersScreen {
                 kind = dueToday.contains(reminder.id) ? .today : .later
             case .paused: kind = .paused
             case .closed: kind = .completed
+            // A received copy its sender deleted (ticket 205): nothing of it is coming, so it sits
+            // with what is over.
+            case .canceled: kind = .completed
             // A received copy waiting to be accepted, which may carry the person's own tags (#200):
             // under Later at its next due time, since nothing of it is due until it is accepted.
             case .waiting:

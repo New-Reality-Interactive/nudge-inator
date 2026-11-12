@@ -38,6 +38,9 @@ struct ReminderDetails {
     /// A received copy waiting to be accepted (ticket 203): the waiting note, Accept and Remove in
     /// place of Pause and Remove Reminder.
     var isWaiting: Bool { status == .waiting }
+    /// A received copy its sender deleted (ticket 205): the Canceled note and Remove Reminder, with
+    /// no Edit, Pause or Status Sharing.
+    var isCanceled: Bool { status == .canceled }
 
     /// The tags as VoiceOver reads them, a list in the engine's words, or `nil` with none.
     var tagsVoiceOverLabel: LocalizedStringResource? {
@@ -129,7 +132,11 @@ struct ReminderDetails {
 
         let nextDueTime = engine.nextDueTime(of: reminder)
         let isPaused = engine.isPaused(id)
-        if reminder.isWaiting {
+        if reminder.isCanceled {
+            // Nothing is coming, as the mockup's `viewReceived` reads "None".
+            next = .none
+            pauseAction = nil
+        } else if reminder.isWaiting {
             // A one-off past its due time shows that time, as the mockup's `viewReceived` does. It
             // can't be paused (the engine ignores it): Accept or Remove.
             let due = nextDueTime ?? reminder.dueTime

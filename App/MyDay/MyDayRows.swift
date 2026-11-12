@@ -149,6 +149,8 @@ struct MyDayRowView: View {
             PausedLabel()
         case .waiting:
             WaitingLabel()
+        case .canceled:
+            CanceledLabel()
         }
     }
 

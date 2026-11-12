@@ -66,6 +66,16 @@ extension Reminder {
         if case .received(_, _, _, .waiting, _) = origin { true } else { false }
     }
 
+    /// Whether it is a received copy whose sender deleted the reminder (GLOSSARY.md, Canceled). It
+    /// plans nothing and stays until the recipient removes it, or its connection ends.
+    public var isCanceled: Bool {
+        if case .received(_, _, _, .canceled, _) = origin { true } else { false }
+    }
+
+    /// Whether it is held: waiting to be accepted, or Canceled. It plans nothing, and what falls due
+    /// meanwhile reads Skipped, as while Paused.
+    var isHeld: Bool { isWaiting || isCanceled }
+
     /// The connection a received copy came through, or `nil` for the person's own.
     public var receivedThrough: UUID? {
         if case let .received(connectionID, _, _, _, _) = origin { connectionID } else { nil }
@@ -77,7 +87,8 @@ extension Reminder {
     }
 
     /// Whether Keep as My Own Reminders keeps it when its connection ends: an accepted copy only.
-    /// One still waiting was never accepted, and goes (the developer's decision on #197).
+    /// One still waiting was never accepted, and goes (the developer's decision on #197); a canceled
+    /// one is no longer wanted, and goes too (ticket 205).
     var isKeptOnDisconnect: Bool {
         if case .received(_, _, _, .accepted, _) = origin { true } else { false }
     }
@@ -135,6 +146,9 @@ public enum ReminderOrigin: Equatable, Sendable {
         case accepted
         /// Waiting for the recipient to accept it.
         case waiting
+        /// Its sender deleted it: it nudges no more, and stays, with a note, until the recipient
+        /// removes it (ticket 205).
+        case canceled
     }
 }
 

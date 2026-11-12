@@ -42,7 +42,7 @@ extension ReminderDetails {
 
     /// A Relentless reminder Maya Lee sent, nudging, with her Status sharing on (ticket 200).
     /// `state` `.waiting` is one waiting to be accepted (ticket 203); `changed` one whose sender has
-    /// changed its due time and strength (ticket 204).
+    /// changed its due time and strength (ticket 204); `.canceled` one its sender deleted (ticket 205).
     static func previewReceived(_ state: ReminderOrigin.ReceivedState = .accepted, changed: Bool = false) -> ReminderDetails {
         let connectionID = UUID()
         let reminder = Reminder(
@@ -87,6 +87,15 @@ extension ReminderDetails {
 
 #Preview("Received, waiting, largest text") {
     NavigationStack { ReminderDetailsView(id: UUID(), preview: .previewReceived(.waiting)) }
+        .environment(\.dynamicTypeSize, .accessibility5)
+}
+
+#Preview("Received, canceled") {
+    NavigationStack { ReminderDetailsView(id: UUID(), preview: .previewReceived(.canceled, changed: true)) }
+}
+
+#Preview("Received, canceled, largest text") {
+    NavigationStack { ReminderDetailsView(id: UUID(), preview: .previewReceived(.canceled, changed: true)) }
         .environment(\.dynamicTypeSize, .accessibility5)
 }
 

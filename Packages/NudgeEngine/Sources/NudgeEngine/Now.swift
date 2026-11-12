@@ -25,13 +25,13 @@ extension Engine {
     /// The Now tab's Coming Up: each unpaused reminder's next due time after now, soonest first, up
     /// to and including the same local time 7 days later. Counted in local days, not 7 × 24 hours
     /// as the mockup does, so across a DST change day 7's due time at this time of day is still in.
-    /// A copy waiting to be accepted is in Waiting for You instead.
+    /// A copy waiting to be accepted is in Waiting for You instead, and a Canceled one is in neither.
     public func comingUp() -> [ComingUpItem] {
         let now = clock.now
         guard let end = calendar.date(byAdding: .day, value: 7, to: now) else { return [] }
         let titles = titles
         return reminders
-            .filter { !isPaused($0.id) && !$0.isWaiting }
+            .filter { !isPaused($0.id) && !$0.isHeld }
             .compactMap { reminder in
                 reminder.nextDueTime(after: now, calendar: calendar)
                     .flatMap { $0 <= end ? ComingUpItem(reminderID: reminder.id, dueTime: $0) : nil }

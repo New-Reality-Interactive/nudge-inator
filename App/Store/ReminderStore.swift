@@ -378,6 +378,7 @@ private extension ReminderOrigin.ReceivedState {
         switch self {
         case .accepted: "accepted"
         case .waiting: "waiting"
+        case .canceled: "canceled"
         }
     }
 
@@ -385,6 +386,7 @@ private extension ReminderOrigin.ReceivedState {
         switch storedValue {
         case "accepted": self = .accepted
         case "waiting": self = .waiting
+        case "canceled": self = .canceled
         default: throw StoreError.unreadable(field: .receivedState, value: storedValue)
         }
     }
