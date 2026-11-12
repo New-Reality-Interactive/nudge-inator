@@ -137,7 +137,7 @@ struct MyDayRowView: View {
         return AttributedString(localized: "\(tags) · \(note)", comment: "My Day: under the title of a tagged reminder. 1: its tags, such as \"#home #errands\", the ones the filter chose in bold. 2: the note, such as \"Nudging · 2 nudges · next 1:15 PM\".")
     }
 
-    /// What the row shows in place of Done: how it closed, or that it is paused. Nothing while
+    /// What the row shows in place of Done: how it closed, or that it is paused or waiting. Nothing while
     /// it is still to come.
     @ViewBuilder private var outcome: some View {
         switch item.status {
@@ -147,6 +147,8 @@ struct MyDayRowView: View {
             StatusLabel(state: state)
         case .paused:
             PausedLabel()
+        case .waiting:
+            WaitingLabel()
         }
     }
 

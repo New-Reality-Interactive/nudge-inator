@@ -25,9 +25,11 @@ struct SentReminderDetails {
     struct Recipient: Identifiable, Equatable {
         var connectionID: UUID
         var name: String
-        var isDelivered: Bool
+        var delivery: SentReadOut.Delivery
 
         var id: UUID { connectionID }
+        var isDelivered: Bool { delivery.isDelivered }
+        var detailLine: LocalizedStringResource? { delivery.detailLine }
     }
 
     /// `nil` when the sharing store doesn't keep a sent reminder with this ID: one of the person's
@@ -36,7 +38,7 @@ struct SentReminderDetails {
         guard let sent = sharing.sentReminders.first(where: { $0.reminder.id == id }) else { return nil }
         reminder = sent.reminder
         recipients = SentScreen(engine: engine, sharing: sharing).recipients(of: id).map {
-            Recipient(connectionID: $0.person.connectionID, name: $0.person.name, isDelivered: $0.row.isDelivered)
+            Recipient(connectionID: $0.person.connectionID, name: $0.person.name, delivery: $0.row.delivery)
         }
         repeats = engine.repeatSummary(of: sent.reminder)
         next = engine.upcomingDueTimes(of: sent.reminder, count: 1).first

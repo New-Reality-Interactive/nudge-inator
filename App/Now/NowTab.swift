@@ -1,8 +1,8 @@
 import NudgeEngine
 import SwiftUI
 
-/// Now: the nudge cards with Done, Coming Up (the next 7 days) and the Last 24 Hours, from the
-/// engine's read-outs. They change as time passes with no change to the engine (a nudge fires,
+/// Now: the nudge cards with Done, Waiting for You (ticket 203), Coming Up (the next 7 days) and
+/// the Last 24 Hours, from the engine's read-outs. They change as time passes with no change to the engine (a nudge fires,
 /// an occurrence falls due or gives up), so the list is read again at the start of every minute.
 struct NowTab: View {
     let state: ScreenState
@@ -20,6 +20,10 @@ struct NowTab: View {
                 TimelineView(.everyMinute) { context in
                     NowList(screen: screen, reach: model?.engine.reach, now: context.date) { reminderID in
                         model?.markDone(reminderID)
+                    } accept: { reminderID in
+                        model?.accept(reminderID)
+                    } remove: { reminderID in
+                        model?.delete(reminderID)
                     } openDetails: { reminderID in
                         path.append(OpenedReminder(id: reminderID))
                     }
@@ -38,13 +42,17 @@ struct NowTab: View {
     }
 }
 
-/// The three sections, in the mockup's `viewNow` order.
+/// The sections, in the mockup's `viewNow` order. Waiting for You shows only with something in it.
 private struct NowList: View {
     let screen: NowScreen
     /// What can still reach the person, for the permission banners under the subhead.
     let reach: Reach?
     let now: Date
     let markDone: (Reminder.ID) -> Void
+    /// Starts a waiting copy, which nudges from then on.
+    let accept: (Reminder.ID) -> Void
+    /// Remove on a Waiting for You row, once the person confirmed it.
+    let remove: (Reminder.ID) -> Void
     let openDetails: (Reminder.ID) -> Void
 
     /// A card Done was chosen on with VoiceOver, kept until VoiceOver moves on.
@@ -63,6 +71,20 @@ private struct NowList: View {
                 }
             } header: {
                 NowHeader(subhead: screen.subhead(on: now), reach: reach)
+            }
+            if !screen.waiting.isEmpty {
+                Section {
+                    ForEach(screen.waiting) { row in
+                        WaitingRowView(row: row, accept: { accept(row.id) }, remove: { remove(row.id) }, openDetails: { openDetails(row.id) })
+                    }
+                } header: {
+                    Text("Waiting for You", comment: "Now: section header for reminders someone sent that wait for the person to accept them (Ask me first).")
+                } footer: {
+                    Text("These won't nudge you until you accept them.", comment: "Now: under the Waiting for You section.")
+                        // The list puts the next header right under a footer; the mockup's
+                        // `waitingSection` leaves a section's gap before Coming Up (#203's phone check).
+                        .padding(.bottom, Design.Spacing.s4)
+                }
             }
             Section {
                 if screen.comingUp.isEmpty {

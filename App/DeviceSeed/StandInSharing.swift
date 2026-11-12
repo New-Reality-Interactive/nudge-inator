@@ -68,8 +68,8 @@ extension View {
     /// A Stand-in menu in the toolbar for the phone check (ticket 195), only under the stand-in:
     /// receiving an invite, one that's unavailable, with `invited`, that person accepting, and with
     /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196), sending
-    /// a reminder (ticket 198), getting what was sent to them (ticket 201) or disconnecting (ticket
-    /// 197).
+    /// a reminder (ticket 198), getting what was sent to them (ticket 201), accepting what waits for
+    /// them (ticket 203) or disconnecting (ticket 197).
     func standInSharingControls(invited: SharingConnection? = nil, connected: SharingConnection? = nil) -> some View {
         toolbar {
             if let adapter = StandInSharing.current {
@@ -92,7 +92,12 @@ extension View {
                             }
                             Button { adapter.theySend(.gentle, through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Gentle Reminder") }
                             Button { adapter.theySend(.relentless, through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Relentless Reminder") }
-                            Button { adapter.theyGetWhatWasSent(through: connected.id) } label: { Text(verbatim: "\(connected.name) Gets What You Sent") }
+                            Button {
+                                adapter.theyGetWhatWasSent(through: connected.id, askingFirst: theirs.deliveryMode == .askMeFirst)
+                            } label: {
+                                Text(verbatim: "\(connected.name) Gets What You Sent")
+                            }
+                            Button { adapter.theyAcceptWhatWaits(through: connected.id) } label: { Text(verbatim: "\(connected.name) Accepts What You Sent") }
                             Button { adapter.theyDisconnect(connected.id) } label: { Text(verbatim: "\(connected.name) Disconnects") }
                         } else {
                             Button { adapter.receiveInvite(from: "Sam Rivera") } label: { Text(verbatim: "Receive an Invite from Sam Rivera") }
@@ -125,14 +130,32 @@ final class StandInSharingAdapter: SharingAdapter {
     /// delivered yet.
     private var undelivered: [(reminderID: Reminder.ID, connectionID: UUID)] = []
 
+    /// The reminders delivered through each connection that wait there for the other person to
+    /// accept them (ticket 203).
+    private var waitingThere: [(reminderID: Reminder.ID, connectionID: UUID)] = []
+
     /// Stands in for the other person's iPhone getting every reminder sent through the connection
-    /// with `connectionID` since the last time (ticket 201): each copy's receipt arrives, started,
-    /// as through iCloud, so Sent shows it Delivered.
-    func theyGetWhatWasSent(through connectionID: UUID) {
+    /// with `connectionID` since the last time (ticket 201): each copy's receipt arrives as through
+    /// iCloud, started, so Sent shows it Delivered, or waiting when they ask first (ticket 203), so
+    /// Sent shows "Waiting for them to accept" until `theyAcceptWhatWaits(through:)`.
+    func theyGetWhatWasSent(through connectionID: UUID, askingFirst: Bool) {
         let arrived = undelivered.filter { $0.connectionID == connectionID }
         undelivered.removeAll { $0.connectionID == connectionID }
+        if askingFirst { waitingThere += arrived }
         Task {
             for copy in arrived {
+                try? await events?.received(.receipt(askingFirst ? .waitingForAcceptance : .started, for: copy.reminderID, from: connectionID))
+            }
+        }
+    }
+
+    /// Stands in for the other person accepting every copy waiting on their iPhone from the
+    /// connection with `connectionID` (ticket 203): each one's started receipt arrives.
+    func theyAcceptWhatWaits(through connectionID: UUID) {
+        let accepted = waitingThere.filter { $0.connectionID == connectionID }
+        waitingThere.removeAll { $0.connectionID == connectionID }
+        Task {
+            for copy in accepted {
                 try? await events?.received(.receipt(.started, for: copy.reminderID, from: connectionID))
             }
         }

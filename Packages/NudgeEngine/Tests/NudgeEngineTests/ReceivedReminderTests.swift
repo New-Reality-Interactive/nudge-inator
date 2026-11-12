@@ -540,6 +540,93 @@ struct ReceivedReminderTests {
         #expect(states(of: reminder, in: engine, onDays: [15, 16, 17]) == Array(repeating: .skipped(reason: .paused), count: 3))
     }
 
+    // MARK: Waiting, as the screens read it (ticket 203)
+
+    /// Before its due time and after it: a one-off's past due time closed as Skipped, and a
+    /// repeat's next due time ahead, read Waiting all the same.
+    @Test(arguments: [false, true])
+    func aWaitingReminderReadsWaiting(isRepeating: Bool) {
+        clock.now = NewYork.local(2026, 10, 16, 9, 30)
+        let reminder = isRepeating ? received(state: .waiting) : receivedOneOff()
+        let engine = engine(for: reminder)
+
+        #expect(engine.status(of: reminder.id) == .waiting)
+        #expect(engine.remindersList().items.map(\.status) == [.waiting])
+    }
+
+    /// Now's Waiting for You: each waiting copy at its next due time, or its due time when none is
+    /// left, soonest first; nothing of the person's own or already accepted.
+    @Test func waitingForAcceptanceListsWaitingCopiesSoonestFirst() {
+        clock.now = NewYork.local(2026, 10, 15, 10)
+        let repeating = received(state: .waiting)
+        var lateOneOff = receivedOneOff()
+        lateOneOff.dueTime = NewYork.local(2026, 10, 15, 8)
+        let accepted = received()
+        let engine = engine(for: repeating, lateOneOff, accepted, mine())
+
+        let items = engine.waitingForAcceptance()
+
+        #expect(items == [
+            ComingUpItem(reminderID: lateOneOff.id, dueTime: NewYork.local(2026, 10, 15, 8)),
+            ComingUpItem(reminderID: repeating.id, dueTime: NewYork.local(2026, 10, 16, 9)),
+        ])
+    }
+
+    @Test func aWaitingReminderIsNotComingUp() {
+        clock.now = NewYork.local(2026, 10, 15, 8)
+        let mine = mine()
+        let engine = engine(for: received(state: .waiting), mine)
+
+        #expect(engine.comingUp().map(\.reminderID) == [mine.id])
+    }
+
+    /// Its time today reads Waiting before and after it falls due, and is in none of My Day's counts.
+    @Test(arguments: [8, 10])
+    func aWaitingReminderIsOnMyDayAsWaitingInNoCount(hour: Int) throws {
+        clock.now = NewYork.local(2026, 10, 15, hour)
+        let reminder = received(state: .waiting)
+        let engine = engine(for: reminder)
+
+        let item = try #require(engine.myDay().items.first)
+        #expect(item.status == .waiting)
+        #expect(item.dueTime == NewYork.local(2026, 10, 15, 9))
+        #expect(item.countedIn == nil)
+    }
+
+    @Test func anyStatusChosenInTheFilterHidesAWaitingReminder() {
+        clock.now = NewYork.local(2026, 10, 15, 8)
+        let reminder = received(state: .waiting)
+        let engine = engine(for: reminder)
+
+        let comingUp = engine.remindersList(filteredBy: RemindersFilter(statuses: [.comingUp]))
+        let all = engine.remindersList(filteredBy: RemindersFilter(statuses: Set(RemindersFilter.Status.allCases)))
+
+        #expect(comingUp.items.isEmpty)
+        #expect(all.items.isEmpty)
+        #expect(engine.remindersList().items.count == 1)
+    }
+
+    @Test func anAcceptedReminderLeavesWaitingEverywhere() throws {
+        clock.now = NewYork.local(2026, 10, 15, 8)
+        let reminder = received(state: .waiting)
+        var engine = engine(for: reminder)
+
+        engine.accept(reminder.id)
+
+        #expect(engine.status(of: reminder.id) == .comingUp)
+        #expect(engine.comingUp().map(\.reminderID) == [reminder.id])
+        #expect(try #require(engine.myDay().items.first).status == .left)
+    }
+
+    /// The sender's side works Waiting out from the receipt, so the report still reads Coming up (#188).
+    @Test func aWaitingReminderStillReportsComingUp() throws {
+        clock.now = NewYork.local(2026, 10, 15, 8)
+        let reminder = received(state: .waiting)
+        let engine = engine(for: reminder)
+
+        #expect(try #require(engine.statusReport(of: reminder.id)).label == .comingUp)
+    }
+
     @Test func pausingAWaitingReminderIsIgnoredSoAcceptStillStartsIt() throws {
         clock.now = NewYork.local(2026, 10, 15, 8)
         let reminder = received(state: .waiting)

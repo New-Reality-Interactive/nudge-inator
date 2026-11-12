@@ -61,6 +61,11 @@ struct TagRemindersScreen {
                 kind = dueToday.contains(reminder.id) ? .today : .later
             case .paused: kind = .paused
             case .closed: kind = .completed
+            // A received copy waiting to be accepted, which may carry the person's own tags (#200):
+            // under Later at its next due time, since nothing of it is due until it is accepted.
+            case .waiting:
+                dueTime = engine.upcomingDueTimes(of: reminder, count: 1).first
+                kind = .later
             }
             byKind[kind, default: []].append(Row(
                 reminder: reminder,

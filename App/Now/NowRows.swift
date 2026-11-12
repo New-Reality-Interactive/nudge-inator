@@ -26,6 +26,58 @@ struct ComingUpRowView: View {
     }
 }
 
+/// A Waiting for You row (ticket 203, the mockup's `waitingSection`): the time and its day, the title
+/// and who sent it, which open the reminder's details, then bordered small Accept and Remove, which
+/// asks first as Remove does everywhere (#200). At accessibility sizes the pieces stack.
+struct WaitingRowView: View {
+    let row: WaitingRow
+    let accept: () -> Void
+    let remove: () -> Void
+    let openDetails: () -> Void
+
+    @State private var isConfirmingRemove = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    /// As `ReminderRowLayout`'s, so the titles line up with Coming Up's.
+    @ScaledMetric(relativeTo: .body) private var timeWidth: CGFloat = Design.Size.timeColumn
+
+    var body: some View {
+        let isStacked = dynamicTypeSize.isAccessibilitySize
+        VStack(alignment: .leading, spacing: Design.Spacing.s2) {
+            SizeAdaptiveStack(rowAlignment: .firstTextBaseline, rowSpacing: Design.Spacing.s3, stackedSpacing: Design.Spacing.s1) {
+                TimeColumn(time: row.time, day: row.day)
+                    .frame(minWidth: isStacked ? nil : timeWidth, alignment: .leading)
+                VStack(alignment: .leading, spacing: Design.Spacing.line) {
+                    Text(verbatim: row.title)
+                        .font(.body)
+                    if let from = row.from {
+                        FromLabel(from: from, strength: row.reminder.strength)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .opensDetails(openDetails)
+            .accessibilityElement(children: .combine)
+            SizeAdaptiveStack(rowSpacing: Design.Spacing.s2, stackedSpacing: Design.Spacing.s2) {
+                Button(action: accept) {
+                    Text("Accept", comment: "Now, Waiting for You: starts a reminder someone sent, which waited for the person to accept it.")
+                }
+                .accessibilityLabel(Text(row.acceptVoiceOverLabel))
+                Button(role: .destructive) {
+                    isConfirmingRemove = true
+                } label: {
+                    Text("Remove", comment: "Now, Waiting for You: opens the question that asks before removing a reminder someone sent, which waits to be accepted.")
+                }
+                .accessibilityLabel(Text(row.removeVoiceOverLabel))
+                // On the button, so a popover points at it.
+                .deleteReminderConfirmation(title: row.title, kind: .received, isPresented: $isConfirmingRemove, confirm: remove)
+            }
+            // Full width when stacked, where a capsule's ends would grow with a wrapped label.
+            .buttonStyle(SmallBorderedButtonStyle(fillsWidth: isStacked))
+            .padding(.leading, isStacked ? 0 : timeWidth + Design.Spacing.s3)
+        }
+    }
+}
+
 /// A Last 24 Hours row: when it closed, the title and how it closed, who sent a received one with
 /// its strength, and the status label. It opens the reminder's details.
 struct ClosedRowView: View {

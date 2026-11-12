@@ -35,6 +35,9 @@ struct ReminderDetails {
     var pace: Pace { reminder.pace }
     /// Done is shown only while the reminder is Nudging.
     var offersDone: Bool { card != nil }
+    /// A received copy waiting to be accepted (ticket 203): the waiting note, Accept and Remove in
+    /// place of Pause and Remove Reminder.
+    var isWaiting: Bool { status == .waiting }
 
     /// The tags as VoiceOver reads them, a list in the engine's words, or `nil` with none.
     var tagsVoiceOverLabel: LocalizedStringResource? {
@@ -113,11 +116,18 @@ struct ReminderDetails {
 
         let nextDueTime = engine.nextDueTime(of: reminder)
         let isPaused = engine.isPaused(id)
-        if isPaused {
+        if reminder.isWaiting {
+            // A one-off past its due time shows that time, as the mockup's `viewReceived` does. It
+            // can't be paused (the engine ignores it): Accept or Remove.
+            let due = nextDueTime ?? reminder.dueTime
+            next = .at(day: engine.dayLabel(of: due), time: engine.timeOfDay(of: due))
+            pauseAction = nil
+        } else if isPaused {
             next = .paused
+            pauseAction = .resume
         } else {
             next = nextDueTime.map { .at(day: engine.dayLabel(of: $0), time: engine.timeOfDay(of: $0)) } ?? .none
+            pauseAction = card != nil || nextDueTime != nil ? .pause : nil
         }
-        pauseAction = isPaused ? .resume : (card != nil || nextDueTime != nil ? .pause : nil)
     }
 }

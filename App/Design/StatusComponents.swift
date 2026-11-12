@@ -163,7 +163,8 @@ struct SmallBorderedButtonStyle: ButtonStyle {
             : AnyShape(Capsule())
         configuration.label
             .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Color.accentColor)
+            // A destructive one, such as Waiting for You's Remove, in destructive text (DESIGN.md).
+            .foregroundStyle(configuration.role == .destructive ? Color.negative : Color.accentColor)
             .padding(.horizontal, Design.Spacing.s4)
             .padding(.vertical, fillsWidth ? Design.Spacing.s2 : 0)
             .frame(maxWidth: fillsWidth ? .infinity : nil, minHeight: Design.Spacing.rowMin)
@@ -180,9 +181,16 @@ struct PausedLabel: View {
     }
 }
 
-/// A reminder's status label, in DESIGN.md's Status label colors: Nudging red, Paused and Coming
-/// up in the secondary label color, a closed occurrence as the Now tab's status label. The details
-/// page's hero and the Reminders tab's rows.
+/// "Waiting" on a received reminder waiting to be accepted (ticket 203).
+struct WaitingLabel: View {
+    var body: some View {
+        ReminderStatusLabel(status: .waiting)
+    }
+}
+
+/// A reminder's status label, in DESIGN.md's Status label colors: Nudging red, Paused, Coming up
+/// and Waiting in the secondary label color, a closed occurrence as the Now tab's status label.
+/// The details page's hero and the Reminders tab's rows.
 struct ReminderStatusLabel: View {
     let status: ReminderStatus
 
@@ -193,7 +201,7 @@ struct ReminderStatusLabel: View {
             StatusLabel(state: .nudging(nudgeNumber: 0))
         case .closed(let state):
             StatusLabel(state: state)
-        case .paused, .comingUp:
+        case .paused, .comingUp, .waiting:
             Text(status.name)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
@@ -209,6 +217,7 @@ extension ReminderStatus {
         case .closed(let state): state.statusName
         case .paused: LocalizedStringResource("Paused", comment: "Status label, and a Status row in the Reminders filter sheet: the reminder is paused.")
         case .comingUp: LocalizedStringResource("Coming up", comment: "Status label, and a Status row in the Reminders filter sheet: the reminder isn't due yet.")
+        case .waiting: LocalizedStringResource("Waiting", comment: "Status label: a reminder someone sent is waiting for the person to accept it, so it doesn't nudge yet.")
         }
     }
 }

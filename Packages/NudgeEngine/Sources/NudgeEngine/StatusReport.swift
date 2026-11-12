@@ -22,7 +22,10 @@ extension ReportedStatus {
         switch status {
         case .nudging: self = .nudging
         case .paused: self = .paused
-        case .comingUp: self = .comingUp
+        // A waiting copy reports what is coming: the sender's side says Waiting from the receipt
+        // (#188). `statusReport(of:)` reads `scheduledStatus(of:)`, so a one-off past its due time
+        // reports how that closed.
+        case .comingUp, .waiting: self = .comingUp
         case .closed(let state): self.init(state)
         }
     }
@@ -75,9 +78,8 @@ extension Engine {
     /// still Nudging reads Missed once it is asked after its give-up limit, however much later.
     /// "Today" and the days before are the local days, in the engine's time zone.
     public func statusReport(of reminderID: Reminder.ID) -> StatusReport? {
-        guard let reminder = reminder(reminderID), reminder.isReceived,
-              let label = status(of: reminderID).map(ReportedStatus.init)
-        else { return nil }
+        guard let reminder = reminder(reminderID), reminder.isReceived else { return nil }
+        let label = ReportedStatus(scheduledStatus(of: reminder))
         let now = clock.now
         let today = calendar.startOfDay(for: now)
         guard let windowStart = calendar.date(byAdding: .day, value: -Self.statusReportDays, to: today),

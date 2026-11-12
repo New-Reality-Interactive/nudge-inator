@@ -41,14 +41,15 @@ extension ReminderDetails {
     }
 
     /// A Relentless reminder Maya Lee sent, nudging, with her Status sharing on (ticket 200).
-    static func previewReceived() -> ReminderDetails {
+    /// `state` `.waiting` is one waiting to be accepted (ticket 203).
+    static func previewReceived(_ state: ReminderOrigin.ReceivedState = .accepted) -> ReminderDetails {
         let connectionID = UUID()
         let reminder = Reminder(
             title: "Take your allergy pill",
             notes: "The blue box, with food.",
             dueTime: .now.addingTimeInterval(-10 * 60),
             strength: .relentless,
-            origin: .received(connectionID: connectionID, sendersReminderID: UUID(), revision: 0, state: .accepted)
+            origin: .received(connectionID: connectionID, sendersReminderID: UUID(), revision: 0, state: state)
         )
         let sharing = SharingData(connections: [SharingConnection(id: connectionID, name: "Maya Lee", state: .connected)])
         return preview(reminder, tags: ["health"], sharing: sharing)
@@ -61,6 +62,15 @@ extension ReminderDetails {
 
 #Preview("Received") {
     NavigationStack { ReminderDetailsView(id: UUID(), preview: .previewReceived()) }
+}
+
+#Preview("Received, waiting") {
+    NavigationStack { ReminderDetailsView(id: UUID(), preview: .previewReceived(.waiting)) }
+}
+
+#Preview("Received, waiting, largest text") {
+    NavigationStack { ReminderDetailsView(id: UUID(), preview: .previewReceived(.waiting)) }
+        .environment(\.dynamicTypeSize, .accessibility5)
 }
 
 #Preview("Received, largest text") {

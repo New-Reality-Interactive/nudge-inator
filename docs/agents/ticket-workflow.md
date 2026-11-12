@@ -39,6 +39,10 @@ Everything else the ticket needs is in the ticket: its sections, and **Before yo
      checks). The check covers the ticket's acceptance criteria and the screens next to the change,
      plus landscape and the largest text size on the changed screens, and, for a ticket with a
      mockup, a comparison with the mockup's screen.
+   - A phone step whose behavior a unit test already covers is dropped unless it shows something
+     new on screen (the developer's rule, 2026-11-12, #203). What stays is what only the phone
+     shows: layout against the mockup, landscape, the largest text size, VoiceOver, and anything
+     the Debug stand-in or a seed alone can drive.
    - Give it **one numbered step per message**: where to start, one action, and what to report,
      then wait for the answer before the next step (the developer's rule, 2026-11-11, #198). Never
      send the whole list at once. A step that fails is said so before the next one is sent.

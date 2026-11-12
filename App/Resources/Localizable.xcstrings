@@ -124,7 +124,7 @@
       }
     },
     "%@, %@, %@, %@, %@" : {
-      "comment" : "VoiceOver label of a row on the Reminders tab's Sent view. 1: who it was sent to, such as \"Riley Park\". 2: the reminder's title. 3: \"Delivered\" or \"Not delivered yet\". 4: its due day, such as \"Today\". 5: its due time, such as \"9:00 AM\".",
+      "comment" : "VoiceOver label of a row on the Reminders tab's Sent view. 1: who it was sent to, such as \"Riley Park\". 2: the reminder's title. 3: \"Delivered\", \"Not delivered yet\" or \"Waiting for them to accept\". 4: its due day, such as \"Today\". 5: its due time, such as \"9:00 AM\".",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -657,6 +657,12 @@
     },
     "About" : {
       "comment" : "Settings: row that opens the page with the privacy policy, support and the app's version and build number.\nTitle of the page in Settings with the privacy policy, support and the app's version."
+    },
+    "Accept" : {
+      "comment" : "Now, Waiting for You: starts a reminder someone sent, which waited for the person to accept it.\nReminder details: starts a reminder someone sent, which waited for the person to accept it."
+    },
+    "Accept: %@" : {
+      "comment" : "VoiceOver label of Accept on a Waiting for You row on Now. The placeholder is the reminder's title."
     },
     "Add" : {
       "comment" : "The New Reminder form's confirm button (a checkmark).\nThe Tags page's button that adds the typed tag to the reminder."
@@ -1430,6 +1436,9 @@
     "It was deleted while you were editing it, so there's nothing to save." : {
       "comment" : "The Edit Reminder form: under This Reminder Was Deleted."
     },
+    "It won't nudge you until you accept it. Anything due before then is skipped." : {
+      "comment" : "Reminder details: under \"Waiting for you to accept\" on a reminder someone sent."
+    },
     "It's canceled on everyone's iPhone, with a note saying so." : {
       "comment" : "Under the question asked before deleting a reminder this person sent to others."
     },
@@ -1878,7 +1887,7 @@
       "comment" : "VoiceOver value of the Tags tab's Sort button: sorted by Reminders, Most First."
     },
     "Remove" : {
-      "comment" : "Disconnect's sheet: the choice that deletes the reminders received from the person.\nReminders tab: a received reminder's swipe action and VoiceOver action that asks before removing the person's copy."
+      "comment" : "Disconnect's sheet: the choice that deletes the reminders received from the person.\nNow, Waiting for You: opens the question that asks before removing a reminder someone sent, which waits to be accepted.\nReminder details: on a reminder someone sent that waits to be accepted, opens the question that asks before removing it.\nReminders tab: a received reminder's swipe action and VoiceOver action that asks before removing the person's copy."
     },
     "Remove %@ from the filter" : {
       "comment" : "VoiceOver label of a tag's filter token on My Day. The placeholder is the tag, such as \"#home\"."
@@ -1891,6 +1900,9 @@
     },
     "Remove “%@”?" : {
       "comment" : "Asked before removing a received reminder, from its details or a Reminders tab row. The placeholder is its title."
+    },
+    "Remove: %@" : {
+      "comment" : "VoiceOver label of Remove on a Waiting for You row on Now. The placeholder is the reminder's title."
     },
     "Rename Tag" : {
       "comment" : "Title of the sheet that renames a tag."
@@ -2077,6 +2089,9 @@
     "These pages open in your web browser." : {
       "comment" : "About page: under the Privacy Policy and Support rows."
     },
+    "These won't nudge you until you accept them." : {
+      "comment" : "Now: under the Waiting for You section."
+    },
     "They stay with the same schedule, history and tags, no longer from %@." : {
       "comment" : "Disconnect's sheet: under Keep as My Own Reminders. The argument is the other person's name, such as \"Alex Morgan\"."
     },
@@ -2145,6 +2160,18 @@
     },
     "Version" : {
       "comment" : "About page: row showing the app's version, such as \"1.1.0\"."
+    },
+    "Waiting" : {
+      "comment" : "Status label: a reminder someone sent is waiting for the person to accept it, so it doesn't nudge yet."
+    },
+    "Waiting for You" : {
+      "comment" : "Now: section header for reminders someone sent that wait for the person to accept them (Ask me first)."
+    },
+    "Waiting for them to accept" : {
+      "comment" : "Under a sent reminder's title on the Sent view, and under a person's name on its details: their copy has reached their iPhone, which asks them first (Ask me first), and they haven't accepted it yet."
+    },
+    "Waiting for you to accept" : {
+      "comment" : "My Day: under the title of a reminder someone sent that waits for the person to accept it before it nudges.\nReminder details: the note on a reminder someone sent that waits for the person to accept it (Ask me first)."
     },
     "Weekly" : {
       "comment" : "The Custom repeat page's frequency."

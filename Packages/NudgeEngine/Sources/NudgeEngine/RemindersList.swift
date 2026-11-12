@@ -9,6 +9,9 @@ public enum ReminderStatus: Equatable, Sendable {
     case comingUp
     /// Nothing more is coming, so how the latest occurrence closed.
     case closed(OccurrenceState)
+    /// A received copy waiting to be accepted (Ask me first): it nudges for nothing until it is,
+    /// whatever its due times say (ticket 203).
+    case waiting
 }
 
 /// How the Reminders tab's list is ordered: the Sort menu's choice.
@@ -96,8 +99,11 @@ public struct RemindersFilter: Equatable, Sendable {
         (dueFrom.map { $0 <= dueDay } ?? true) && (dueTo.map { dueDay <= $0 } ?? true)
     }
 
+    /// A waiting copy matches no status the sheet offers, so any chosen hides it, as the mockup's
+    /// `REM_STATUSES`, which has no Waiting.
     private func matches(_ status: ReminderStatus) -> Bool {
-        statuses.isEmpty || statuses.contains(Status(status))
+        guard !statuses.isEmpty else { return true }
+        return Status(status).map(statuses.contains) ?? false
     }
 
     private func matchesStrength(_ reminder: Reminder) -> Bool {
@@ -115,8 +121,10 @@ public struct RemindersFilter: Equatable, Sendable {
 }
 
 extension RemindersFilter.Status {
-    init(_ status: ReminderStatus) {
+    /// `nil` for a waiting copy: the sheet has no Waiting.
+    init?(_ status: ReminderStatus) {
         switch status {
+        case .waiting: return nil
         case .nudging, .closed(.nudging): self = .nudging
         case .paused: self = .paused
         case .comingUp: self = .comingUp
@@ -144,9 +152,9 @@ public struct RemindersList: Equatable, Sendable {
 }
 
 extension Engine {
-    /// The reminder's status now, or `nil` if the engine doesn't hold it. Nudging while an
-    /// occurrence is; Paused while the reminder is; Coming up while a due time is ahead;
-    /// otherwise how its latest occurrence closed.
+    /// The reminder's status now, or `nil` if the engine doesn't hold it. Waiting while a received
+    /// copy waits to be accepted; otherwise Nudging while an occurrence is; Paused while the
+    /// reminder is; Coming up while a due time is ahead; otherwise how its latest occurrence closed.
     public func status(of reminderID: Reminder.ID) -> ReminderStatus? {
         reminder(reminderID).map { listItem(of: $0).status }
     }
@@ -191,16 +199,7 @@ extension Engine {
         let open = openOccurrence(for: reminderID)
         let next = nextDueTime(of: reminder)
         let latest = latestOccurrence(for: reminderID)
-        let status: ReminderStatus
-        if open != nil {
-            status = .nudging
-        } else if isPaused(reminderID) {
-            status = .paused
-        } else if next != nil {
-            status = .comingUp
-        } else {
-            status = latest.map { .closed($0.state) } ?? .comingUp
-        }
+        let status: ReminderStatus = reminder.isWaiting ? .waiting : scheduledStatus(open: open, next: next, latest: latest, isPaused: isPaused(reminderID))
         // A reminder with no occurrence and nothing coming shows its Start (spec #104, Decision 60).
         // A defensive fallback: a repeat that ended before its Start still has that Start coming,
         // since a rule's first due time always counts. The one state found that reaches it is a
@@ -208,5 +207,23 @@ extension Engine {
         // after that due time and no closing recorded for it.
         let dueTime = open?.dueTime ?? next ?? latest?.dueTime ?? reminder.dueTime
         return RemindersList.Item(reminder: reminder, status: status, dueTime: dueTime)
+    }
+
+    /// The status as the reminder's occurrences and pause make it, Waiting aside: what the status
+    /// report tells the sender of a copy still waiting, whose side says Waiting from the receipt (#188).
+    func scheduledStatus(of reminder: Reminder) -> ReminderStatus {
+        scheduledStatus(
+            open: openOccurrence(for: reminder.id),
+            next: nextDueTime(of: reminder),
+            latest: latestOccurrence(for: reminder.id),
+            isPaused: isPaused(reminder.id)
+        )
+    }
+
+    private func scheduledStatus(open: Occurrence?, next: Date?, latest: Occurrence?, isPaused: Bool) -> ReminderStatus {
+        if open != nil { return .nudging }
+        if isPaused { return .paused }
+        if next != nil { return .comingUp }
+        return latest.map { .closed($0.state) } ?? .comingUp
     }
 }

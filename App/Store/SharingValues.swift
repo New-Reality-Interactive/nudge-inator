@@ -130,6 +130,8 @@ extension SharingData {
             return true
         case .receipt(let receipt):
             guard let index = copyIndex(of: change) else { return false }
+            // A copy that started never waits again: a waiting receipt after it came late (ticket 203).
+            if receipt == .waitingForAcceptance, sentCopies[index].receipt == .started { return false }
             sentCopies[index].receipt = receipt
             return true
         case .status(let record):
