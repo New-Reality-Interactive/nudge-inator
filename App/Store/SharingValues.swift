@@ -109,8 +109,9 @@ extension SharingData {
     /// holds it today: their settings for a connection, a recipient's receipt and status for a
     /// copy this person sent, and their disconnect, which leaves the connection ended until this
     /// person chooses what happens to what they received (ticket 197). Returns whether anything
-    /// changed. A send, a revision and a cancel are the recipient's side, which the tickets that
-    /// build received reminders (#198, #204, #205) apply: they change nothing here yet.
+    /// changed. A send, a revision and a cancel are the recipient's side: `SharingModel` keeps a
+    /// send's copy among the person's reminders before it gets here (ticket 198), and applying a
+    /// revision and a cancel to a copy is #204's and #205's, so they change nothing here yet.
     ///
     /// The other person's settings set their choices, never the name: the name a person sees stays
     /// the one the sharing sheet or the invite gave (ticket 196).

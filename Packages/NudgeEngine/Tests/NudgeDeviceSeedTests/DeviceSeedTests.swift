@@ -186,6 +186,22 @@ struct DeviceSeedTests {
         #expect(target.reminders.map(\.id) == [theirs.id])
     }
 
+    /// The stand-in sharing's Riley Park can send reminders on the phone check (ticket 198). Their
+    /// copies have IDs of their own, so removal finds them by the stand-in's connection instead, and
+    /// leaves what came through any other.
+    @Test func removalDeletesWhatTheStandInsPersonSent() {
+        let fromStandIn = Reminder(title: "Bring the umbrella", dueTime: target.now, strength: .gentle,
+                                   origin: .received(connectionID: SeedSet.standInConnectionID, sendersReminderID: UUID(), revision: 0, state: .accepted))
+        let fromSomeoneElse = Reminder(title: "Feed the cat", dueTime: target.now, strength: .gentle,
+                                       origin: .received(connectionID: UUID(), sendersReminderID: UUID(), revision: 0, state: .accepted))
+        target.add(fromStandIn)
+        target.add(fromSomeoneElse)
+
+        #expect(run(DeviceSeed.cleanCommand) == .cleaned)
+
+        #expect(target.reminders.map(\.title) == ["Feed the cat"])
+    }
+
     @Test func removalWithNothingLoadedDoesNothing() {
         let mine = target.addPersonsOwn(title: "Mine")
 

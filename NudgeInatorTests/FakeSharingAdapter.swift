@@ -35,6 +35,17 @@ final class FakeSharingNetwork {
         second.peer = first
     }
 
+    /// Joins two iPhones through the connection with `connectionID` alone, so one iPhone can be
+    /// joined to several people, each through their own connection (ticket 198: one send to two).
+    /// A change for that connection goes to the other; any other change goes to the `peer` `join`
+    /// gave, if any.
+    func join(_ first: FakeSharingAdapter, _ second: FakeSharingAdapter, through connectionID: UUID) {
+        first.network = self
+        second.network = self
+        first.peers[connectionID] = second
+        second.peers[connectionID] = first
+    }
+
     /// Puts an iPhone on the network with no one to send to yet: accepting an invite joins it to
     /// the sender's.
     func add(_ adapter: FakeSharingAdapter) {
@@ -173,6 +184,8 @@ final class FakeSharingAdapter: SharingAdapter {
     weak var events: (any SharingAdapterEvents)?
     fileprivate var network: FakeSharingNetwork?
     fileprivate var peer: FakeSharingAdapter?
+    /// The other iPhone of each connection `join(_:_:through:)` joined, ahead of `peer`.
+    fileprivate var peers: [UUID: FakeSharingAdapter] = [:]
 
     /// Every change the app model submitted, in order.
     private(set) var submitted: [SharingChange] = []
@@ -278,7 +291,7 @@ final class FakeSharingAdapter: SharingAdapter {
     }
 
     private func upload(_ change: SharingChange) {
-        guard let network, let peer else { return }
+        guard let network, let peer = peers[change.connectionID] ?? peer else { return }
         let events = events
         network.run { try? await events?.sent(change.entry.id) }
         network.travel(change, to: peer)

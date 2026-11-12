@@ -44,6 +44,12 @@ final class SharingModel {
         data.connections.first { $0.id == connectionID && $0.state == .connected }
     }
 
+    /// The people a reminder can be sent to (Send To, ticket 198): every connection that is
+    /// connected, in the order Connections lists them. Never an invite, nor one the other person ended.
+    var connected: [SharingConnection] {
+        data.connections.filter { $0.state == .connected }
+    }
+
     /// The invites this person is accepting now, and those of them taken off their share meanwhile.
     @ObservationIgnored private var accepting: Set<UUID> = []
     @ObservationIgnored private var withdrawnWhileAccepting: Set<UUID> = []
@@ -51,6 +57,11 @@ final class SharingModel {
     /// What sharing can do, for the messages that say it is paused, or `nil` before the adapter
     /// has reported the account.
     var reach: SharingReach? { accountState?.reach }
+
+    /// Where a received reminder's copy is kept: the app model, which holds the person's reminders
+    /// (ticket 198). Held weakly; until it is set, a send that arrives is turned down, and the
+    /// adapter offers it again.
+    @ObservationIgnored weak var receivedReminders: (any ReceivedReminders)?
 
     private let adapter: any SharingAdapter
     /// When an invite was sent.
@@ -114,6 +125,34 @@ final class SharingModel {
         try keep(kept)
         adapter.submit(change)
     }
+
+    /// Send To (ticket 198): sends `reminder` to each person whose connection is in `connectionIDs`,
+    /// each getting a copy of their own. It is kept as sent, with one sent copy per person, and never
+    /// joins this person's own reminders, so it doesn't nudge them (spec #127, Decisions, Q2). Its
+    /// tags stay here: a sent reminder has none. Sending to no one sends nothing. Throws, keeping and
+    /// sending nothing, if one of them isn't connected any more, or the store can't keep the send.
+    func send(_ reminder: Reminder, to connectionIDs: [UUID]) throws {
+        var kept = try currentData()
+        guard !connectionIDs.isEmpty else { return }
+        guard connectionIDs.allSatisfy({ connection($0) != nil }) else { throw NotConnected() }
+        var stripped = reminder
+        stripped.tagIDs = []
+        stripped.origin = .mine
+        stripped.createdAt = clock.now
+        // Revision 0 is a send; the record mapping reads anything later as a revision (#193).
+        let sent = SentReminder(reminder: stripped, revision: 0)
+        kept.sentReminders.append(sent)
+        let changes = connectionIDs.map { SharingChange.send(sent, to: $0) }
+        for connectionID in connectionIDs {
+            kept.sentCopies.append(SentCopy(connectionID: connectionID, reminderID: stripped.id, createdAt: clock.now, receipt: .notDelivered, statusRecord: nil, waitingToSync: false))
+        }
+        kept.outbox.append(contentsOf: changes.map(\.entry))
+        try keep(kept)
+        changes.forEach(adapter.submit)
+    }
+
+    /// Someone chosen in Send To is no longer connected, so nothing was sent.
+    struct NotConnected: Error {}
 
     /// What came of Invite Someone.
     enum InviteOutcome: Equatable {
@@ -224,6 +263,37 @@ final class SharingModel {
     }
 }
 
+/// Where the person's received reminders (GLOSSARY.md, Received reminder) are kept: among their
+/// own reminders, in the app model (ticket 198).
+@MainActor
+protocol ReceivedReminders: AnyObject {
+    /// The copy held of the sender's reminder with `sendersReminderID`, received through the
+    /// connection with `connectionID`, or `nil` when none is. Throws if the reminders haven't been
+    /// read, so it can't say.
+    func copy(of sendersReminderID: Reminder.ID, through connectionID: UUID) throws -> Reminder?
+    /// Keeps `copy` among the person's reminders and plans it as their own. Throws, keeping
+    /// nothing, if the reminders haven't been read or the store won't keep it.
+    func keep(_ copy: Reminder) throws
+}
+
+extension SentReminder {
+    /// The recipient's copy of it, received through the connection with `connectionID`: an ID of its
+    /// own, the sender's content and no tags, accepted or waiting as the recipient's `deliveryMode`
+    /// for that connection says.
+    func copy(through connectionID: UUID, deliveryMode: DeliveryMode) -> Reminder {
+        Reminder(
+            title: reminder.title,
+            notes: reminder.notes,
+            dueTime: reminder.dueTime,
+            repeatRule: reminder.repeatRule,
+            strength: reminder.strength,
+            pace: reminder.pace,
+            breakThroughFocus: reminder.breakThroughFocus,
+            origin: .received(connectionID: connectionID, sendersReminderID: reminder.id, revision: revision, state: deliveryMode == .startRightAway ? .accepted : .waiting)
+        )
+    }
+}
+
 private extension SharingData {
     /// Lists a new invite: in the place of the invites it replaces (Invite Again's, `replacedID`,
     /// and any other to the same person), or last. Returns the invites it replaced.
@@ -262,6 +332,9 @@ extension SharingModel {
 
 extension SharingModel: SharingAdapterEvents {
     func received(_ change: SharingChange) async throws {
+        if case .reminder(let sent) = change.content, change.kind == .send || change.kind == .revise {
+            return try receive(sent, through: change.connectionID, isRevision: change.kind == .revise)
+        }
         var applied = try currentData()
         if applied.apply(incoming: change) {
             try keep(applied)
@@ -336,6 +409,43 @@ extension SharingModel: SharingAdapterEvents {
         try keep(kept)
         acceptance = .unavailable
     }
+
+    /// A reminder someone sent through the connection with `connectionID` (ticket 198): kept as a
+    /// copy of this person's own, which starts right away or waits, as their Delivery mode for that
+    /// connection says, and a receipt saying which goes back (#189's comment on #198). A send already
+    /// kept is kept once. A revision of a copy not held yet creates it, since a person offline across
+    /// a send and a revision hears of the revision first (#193); applying a revision to a copy held
+    /// is #204's. Through a connection that isn't connected, it is ignored.
+    ///
+    /// The reminder store goes first, so a sharing store that then won't keep the receipt leaves a
+    /// copy the next delivery finds, and keeps the receipt then. Throws, for the adapter to offer it
+    /// again, if either store can't keep it, or the reminders haven't been read.
+    private func receive(_ sent: SentReminder, through connectionID: UUID, isRevision: Bool) throws {
+        var kept = try currentData()
+        guard let connection = connection(connectionID) else {
+            Self.logger.info("A reminder sent through a connection that isn't connected wasn't kept")
+            return
+        }
+        guard let receivedReminders else { throw ReceivedRemindersNotReady() }
+        let held = try receivedReminders.copy(of: sent.reminder.id, through: connectionID)
+        if held != nil, isRevision { return }
+        let copy: Reminder
+        if let held {
+            copy = held
+        } else {
+            copy = sent.copy(through: connectionID, deliveryMode: connection.mine.deliveryMode)
+            try receivedReminders.keep(copy)
+        }
+        guard !kept.receivedSyncStates.contains(where: { $0.reminderID == copy.id }) else { return }
+        kept.receivedSyncStates.append(ReceivedSyncState(reminderID: copy.id, notSharingThisOne: false, waitingToSync: false))
+        let receipt = SharingChange.receipt(copy.isWaiting ? .waitingForAcceptance : .started, for: sent.reminder.id, from: connectionID)
+        kept.outbox.append(receipt.entry)
+        try keep(kept)
+        adapter.submit(receipt)
+    }
+
+    /// The app model hasn't been joined to sharing yet.
+    struct ReceivedRemindersNotReady: Error {}
 
     /// Shows the connection with this ID if it is already connected, and returns whether it did.
     /// Opens the store first.

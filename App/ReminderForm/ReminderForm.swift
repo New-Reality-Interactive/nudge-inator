@@ -39,6 +39,13 @@ final class ReminderForm: Identifiable {
     /// choosing Consistent again finds it (spec story 25).
     var consistentWait = DefaultPace.shipped.consistentWait
 
+    /// The connections of the people chosen in Send To (ticket 198), in the order chosen, including
+    /// any who have stopped being connected since: `recipients` leaves those out.
+    private var chosen: [UUID] = []
+    /// Set when Add couldn't send it: the store wouldn't keep it. The sheet says so, and the person
+    /// can try again.
+    var isShowingCouldntSend = false
+
     /// The draft's pace, from the Pace control and the Every row.
     var pace: Pace {
         paceChoice.pace(wait: consistentWait)
@@ -79,6 +86,9 @@ final class ReminderForm: Identifiable {
     /// cancelled form leaves no tag behind (the mockup's `newTags`).
     private var tagRules: Engine
     private let now: () -> Date
+    /// Sharing, for Send To and its Invite Someone New, or `nil` when the app has none (the shipped
+    /// app until #216) or the form edits a reminder.
+    let sharing: SharingModel?
 
     /// The reminder being edited, or `nil` for a new one.
     private let original: Reminder?
@@ -91,8 +101,10 @@ final class ReminderForm: Identifiable {
 
     /// A New Reminder form, starting with Settings' Default Pace (spec story 39). `tagIDs` are
     /// chosen when it opens, as from a tag's screen. Neither is a change the person made.
-    init(engine currentEngine: @escaping () -> Engine, now: @escaping () -> Date, defaultPace: DefaultPace, tagIDs: [Tag.ID] = []) {
+    /// `sharing` offers Send To.
+    init(engine currentEngine: @escaping () -> Engine, now: @escaping () -> Date, defaultPace: DefaultPace, tagIDs: [Tag.ID] = [], sharing: SharingModel? = nil) {
         self.tagIDs = tagIDs
+        self.sharing = sharing
         paceChoice = defaultPace.choice
         consistentWait = defaultPace.consistentWait
         self.currentEngine = currentEngine
@@ -118,6 +130,7 @@ final class ReminderForm: Identifiable {
         self.currentEngine = currentEngine
         tagRules = engine
         self.now = now
+        sharing = nil
         original = reminder
         title = reminder.title
         notes = reminder.notes
@@ -139,8 +152,55 @@ final class ReminderForm: Identifiable {
     /// Whether Cancel should ask before throwing the draft away (the mockup's `draftDirty`). The
     /// Custom sheet's changes are in the draft as they're made (#284), so they count too.
     var hasChanges: Bool {
-        draft(tagIDs: tagIDs) != opened
+        draft(tagIDs: tagIDs) != opened || !recipients.isEmpty
     }
+
+    /// Whether the form has a Send To row: a New form, with sharing.
+    var offersSendTo: Bool { sharing != nil }
+
+    /// The people Send To offers: those connected, as Connections lists them. With no one, the
+    /// row offers only Invite Someone New.
+    var sendToChoices: [SharingConnection] { sharing?.connected ?? [] }
+
+    /// Send To (ticket 198): the connections of the people chosen to send it to, in the order chosen.
+    /// With anyone chosen, Add sends it to them instead of adding it to the person's own reminders.
+    /// Someone chosen who stops being connected while the form is open drops off, so the row always
+    /// shows who it goes to.
+    var recipients: [UUID] {
+        let connected = Set(sendToChoices.map(\.id))
+        return chosen.filter(connected.contains)
+    }
+
+    /// Whether the person with the connection `connectionID` is chosen in Send To.
+    func isRecipient(_ connectionID: UUID) -> Bool {
+        recipients.contains(connectionID)
+    }
+
+    /// A row on the Send To page: chooses the person, or unchooses them.
+    func toggleRecipient(_ connectionID: UUID) {
+        if let index = chosen.firstIndex(of: connectionID) {
+            chosen.remove(at: index)
+        } else {
+            chosen.append(connectionID)
+        }
+    }
+
+    /// The chosen people's whole names (#194), in the order Send To lists them.
+    var recipientNames: [String] {
+        let recipients = Set(recipients)
+        return sendToChoices.filter { recipients.contains($0.id) }.map(\.name)
+    }
+
+    /// The chosen people's names as one list ("Riley Park and Sam Rivera"), for the row and its
+    /// footer, or `nil` when no one is chosen.
+    var recipientsText: String? {
+        let names = recipientNames
+        return names.isEmpty ? nil : names.formatted(.list(type: .and))
+    }
+
+    /// Whether the form has a Tags row: not with anyone chosen in Send To, since a sent reminder has
+    /// no tags. The chosen tags are kept, and come back if no one is chosen.
+    var showsTags: Bool { recipients.isEmpty }
 
     /// `nil` repeats Never. The repeat's pattern (a preset's rule, or a custom repeat's, built from
     /// its choices and the start, so a monthly choice a new start doesn't offer falls back to the
@@ -410,6 +470,17 @@ final class ReminderForm: Identifiable {
     /// it was already saved.
     func save(to model: AppModel) -> Bool {
         guard !isSaved, saveBlock == nil else { return false }
+        if original == nil, !recipients.isEmpty {
+            do {
+                // Sharing leaves the tags out: a sent reminder has none.
+                try model.send(draft(tagIDs: tagIDs), to: recipients)
+            } catch {
+                isShowingCouldntSend = true
+                return false
+            }
+            isSaved = true
+            return true
+        }
         guard let original else {
             model.add(draft(tagIDs: savedTagIDs(through: model)))
             isSaved = true

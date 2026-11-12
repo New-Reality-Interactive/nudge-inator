@@ -67,8 +67,8 @@ enum StandInSharing {
 extension View {
     /// A Stand-in menu in the toolbar for the phone check (ticket 195), only under the stand-in:
     /// receiving an invite, one that's unavailable, with `invited`, that person accepting, and with
-    /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196) or
-    /// disconnecting (ticket 197).
+    /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196), sending
+    /// a reminder (ticket 198) or disconnecting (ticket 197).
     func standInSharingControls(invited: SharingConnection? = nil, connected: SharingConnection? = nil) -> some View {
         toolbar {
             if let adapter = StandInSharing.current {
@@ -89,6 +89,8 @@ extension View {
                             } label: {
                                 Text(verbatim: "\(connected.name) Chooses \(theirs.deliveryMode == .askMeFirst ? "Start right away" : "Ask me first")")
                             }
+                            Button { adapter.theySend(.gentle, through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Gentle Reminder") }
+                            Button { adapter.theySend(.relentless, through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Relentless Reminder") }
                             Button { adapter.theyDisconnect(connected.id) } label: { Text(verbatim: "\(connected.name) Disconnects") }
                         } else {
                             Button { adapter.receiveInvite(from: "Sam Rivera") } label: { Text(verbatim: "Receive an Invite from Sam Rivera") }
@@ -177,6 +179,18 @@ final class StandInSharingAdapter: SharingAdapter {
     /// (ticket 196): their settings arrive, as through iCloud.
     func theyChoose(_ choices: ConnectionChoices, for connectionID: UUID) {
         Task { try? await events?.received(.settings(.init(choices), for: connectionID)) }
+    }
+
+    /// Stands in for the other person sending a reminder of `strength` through the connection with
+    /// `connectionID` (ticket 198): their send arrives, as through iCloud, due at the start of the
+    /// minute 2 minutes from now, and the app keeps the copy as their Delivery mode says.
+    /// `NUDGE_SEED=clean` removes what the stand-in's Riley Park sent.
+    func theySend(_ strength: Strength, through connectionID: UUID) {
+        let soon = Date.now.addingTimeInterval(2 * 60)
+        let due = Calendar.autoupdatingCurrent.dateInterval(of: .minute, for: soon)?.start ?? soon
+        let title = strength == .relentless ? "Take the medicine" : "Bring the umbrella"
+        let sent = SentReminder(reminder: Reminder(title: title, notes: "Sent from the stand-in.", dueTime: due, strength: strength), revision: 0)
+        Task { try? await events?.received(.send(sent, to: connectionID)) }
     }
 
     /// Stands in for the other person disconnecting the connection with `connectionID` (ticket
