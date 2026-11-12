@@ -262,10 +262,19 @@ private struct DetailsList: View {
 /// VoiceOver reads it as one element.
 private struct ChangeNoteSection: View {
     let note: ReminderDetails.ChangeNote
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         Section {
-            Label {
+            // The icon at the top beside the heading, as the mockup's `noteCard` has it; at accessibility
+            // sizes above the text, so the wrapped lines don't drop under it.
+            let layout = dynamicTypeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: Design.Spacing.s1))
+                : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: Design.Spacing.s2))
+            layout {
+                Image(systemName: "info.circle")
+                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: Design.Spacing.line) {
                     Text(note.heading)
                         .font(.subheadline.weight(.semibold))
@@ -276,10 +285,6 @@ private struct ChangeNoteSection: View {
                             .foregroundStyle(Color(uiColor: .secondaryLabel))
                     }
                 }
-            } icon: {
-                Image(systemName: "info.circle")
-                    .foregroundStyle(Color(uiColor: .secondaryLabel))
-                    .accessibilityHidden(true)
             }
             .accessibilityElement(children: .combine)
         }
