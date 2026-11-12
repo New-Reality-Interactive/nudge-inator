@@ -114,6 +114,28 @@
         }
       }
     },
+    "%@, %@, %@, %@, %@, %@" : {
+      "comment" : "VoiceOver label of a Reminders tab row of a received reminder with no tags. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\". 3: its strength, such as \"Firm\". 4: its status, such as \"Nudging\". 5: its due day, such as \"Today\". 6: its due time, such as \"9:00 AM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, %3$@, %4$@, %5$@, %6$@"
+          }
+        }
+      }
+    },
+    "%@, %@, %@, %@, %@, %@, tags: %@" : {
+      "comment" : "VoiceOver label of a Reminders tab row of a received reminder. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\". 3: its strength, such as \"Firm\". 4: its status, such as \"Nudging\". 5: its due day, such as \"Today\". 6: its due time, such as \"9:00 AM\". 7: its tags, such as \"#home and #errands\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, %3$@, %4$@, %5$@, %6$@, tags: %7$@"
+          }
+        }
+      }
+    },
     "%@, %@, %@, %@, tags: %@" : {
       "comment" : "VoiceOver label of a Reminders tab row. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\". 5: its tags, such as \"#home and #errands\".",
       "localizations" : {
@@ -149,6 +171,17 @@
     },
     "%@." : {
       "comment" : "A repeat summary as a sentence, under the reminder form's Starts. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".\nTop of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\"."
+    },
+    "%@. %@" : {
+      "comment" : "VoiceOver value of a received reminder's nudge card. 1: who sent it, such as \"From Riley Park\". 2: the rest of the card's value, from its strength to its next nudge.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@. %2$@"
+          }
+        }
+      }
     },
     "%lld Reminders from %@" : {
       "comment" : "Disconnect's sheet: header of the choice. 1: how many reminders received from the person Keep would keep. 2: their name, such as \"Alex Morgan\".",
@@ -1261,6 +1294,12 @@
     },
     "From" : {
       "comment" : "Reminders' filter sheet: the switch and date picker for the first day a reminder may be due."
+    },
+    "From %@" : {
+      "comment" : "Under a received reminder's title on Now, My Day and the Reminders tab. The placeholder is the sender's name, such as \"Riley Park\"."
+    },
+    "From Someone" : {
+      "comment" : "Under a received reminder's title on Now, My Day and the Reminders tab, when the app doesn't know who sent it."
     },
     "General" : {
       "comment" : "Settings: header of the first section, with the About row."

@@ -67,6 +67,12 @@ final class AppModel {
     /// store and reports to no one but itself, so nothing here waits for it or changes with it.
     let sharing: SharingModel?
 
+    /// Who sent each received reminder, for its "From <name>" label (ticket 199). Read from the
+    /// sharing store's data, so a screen that reads it changes when a connection does.
+    var senders: Senders {
+        sharing.map { Senders(connections: $0.data.connections) } ?? Senders()
+    }
+
     /// `giveUpLimit` is the shipped one; only tests pass another, to reach a take-over.
     init(
         clock: any EngineClock,

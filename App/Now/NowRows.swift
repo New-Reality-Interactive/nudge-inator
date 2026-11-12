@@ -1,8 +1,8 @@
 import NudgeEngine
 import SwiftUI
 
-/// A Coming Up row: the time and its day, the title and the repeat summary, and the strength
-/// badge. It opens the reminder's details.
+/// A Coming Up row: the time and its day, the title and the repeat summary, who sent a received
+/// one, and the strength badge. It opens the reminder's details.
 struct ComingUpRowView: View {
     let row: ComingUpRow
     let openDetails: () -> Void
@@ -16,14 +16,18 @@ struct ComingUpRowView: View {
             Text(verbatim: row.schedule)
                 .font(.subheadline)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
+            if let from = row.from {
+                // The row's own badge shows the strength.
+                FromLabel(from: from)
+            }
         } trailing: {
             StrengthBadge(strength: row.reminder.strength)
         }
     }
 }
 
-/// A Last 24 Hours row: when it closed, the title and how it closed, and the status label. It
-/// opens the reminder's details.
+/// A Last 24 Hours row: when it closed, the title and how it closed, who sent a received one with
+/// its strength, and the status label. It opens the reminder's details.
 struct ClosedRowView: View {
     let row: ClosedRow
     let openDetails: () -> Void
@@ -37,6 +41,9 @@ struct ClosedRowView: View {
             Text(row.detail)
                 .font(.subheadline)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
+            if let from = row.from {
+                FromLabel(from: from, strength: row.reminder.strength)
+            }
         } trailing: {
             StatusLabel(state: row.closed.occurrence.state)
         }

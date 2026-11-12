@@ -46,7 +46,8 @@ struct RemindersTab: View {
                             engine: $0,
                             sort: sort.wrappedValue,
                             filter: filter,
-                            keptOrder: keptOrder.ids(for: sort.wrappedValue, filter: filter)
+                            keptOrder: keptOrder.ids(for: sort.wrappedValue, filter: filter),
+                            senders: model?.senders ?? Senders()
                         )
                     }
                     if let screen, screen.emptyState != .noReminders {
@@ -269,8 +270,8 @@ private struct RemindersNoMatchView: View {
 }
 
 /// A Reminders row, the mockup's `remListRow`: the due time and its day, the title with its tags,
-/// and the status label. It opens the reminder's details. VoiceOver reads the title first, then
-/// the status, the due time and the tags.
+/// who sent a received one with its strength, and the status label. It opens the reminder's
+/// details. VoiceOver reads `Row.voiceOverLabel`.
 ///
 /// The trailing swipe offers Done while Nudging, at the edge, and Delete on every row, which asks
 /// first. Nothing is on the leading edge and there's no full swipe (ADR 0001). VoiceOver gets
@@ -295,10 +296,13 @@ private struct RemindersRowView: View {
                     .font(.subheadline)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
+            if let from = row.from {
+                FromLabel(from: from, strength: row.reminder.strength)
+            }
         } trailing: {
             ReminderStatusLabel(status: row.status)
         }
-        .accessibilityLabel(Text(voiceOverLabel))
+        .accessibilityLabel(Text(row.voiceOverLabel))
         .accessibilityActions {
             if row.offersDone {
                 Button(action: markDone) { doneLabel }
@@ -335,15 +339,6 @@ private struct RemindersRowView: View {
 
     private var deleteLabel: Text {
         Text("Delete", comment: "Reminders tab: a row's swipe action and VoiceOver action that asks before deleting the reminder.")
-    }
-
-    private var voiceOverLabel: LocalizedStringResource {
-        let status = String(localized: row.status.name)
-        guard !row.tags.isEmpty else {
-            return LocalizedStringResource("\(row.title), \(status), \(row.day), \(row.time)", comment: "VoiceOver label of a Reminders tab row with no tags. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\".")
-        }
-        let tags = row.tags.map(\.text).formatted(.list(type: .and))
-        return LocalizedStringResource("\(row.title), \(status), \(row.day), \(row.time), tags: \(tags)", comment: "VoiceOver label of a Reminders tab row. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\". 5: its tags, such as \"#home and #errands\".")
     }
 }
 

@@ -90,6 +90,10 @@ struct NudgeCardView: View {
 
     private var details: some View {
         VStack(alignment: .leading, spacing: Design.Spacing.line) {
+            if let from = card.from {
+                // The top row's badge shows the strength.
+                FromLabel(from: from)
+            }
             Text(card.detail)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
             nextLine

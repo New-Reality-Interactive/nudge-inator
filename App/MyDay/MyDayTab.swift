@@ -84,7 +84,7 @@ struct MyDayTab: View {
     }
 
     private func screen(at now: Date) -> MyDayScreen {
-        engine.map { MyDayScreen(engine: $0, filter: filter, now: now) } ?? MyDayScreen(filter: filter, now: now)
+        engine.map { MyDayScreen(engine: $0, filter: filter, now: now, senders: model?.senders ?? Senders()) } ?? MyDayScreen(filter: filter, now: now)
     }
 
     private func remove(_ token: MyDayScreen.FilterToken) {

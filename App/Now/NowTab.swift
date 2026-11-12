@@ -34,7 +34,7 @@ struct NowTab: View {
     }
 
     private var screen: NowScreen {
-        model.map { NowScreen(engine: $0.engine) } ?? preview ?? NowScreen()
+        model.map { NowScreen(engine: $0.engine, senders: $0.senders) } ?? preview ?? NowScreen()
     }
 }
 
