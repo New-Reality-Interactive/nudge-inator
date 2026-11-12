@@ -153,6 +153,44 @@ struct SentTests {
         #expect(screen.people.map(\.name) == ["Riley Park"])
     }
 
+    // MARK: Empty states (ticket 202)
+
+    /// With no one connected, Sent offers an invite: someone only invited can't be sent anything yet.
+    @Test func withNoOneConnectedSentHasNoOneToSendTo() async throws {
+        let alex = try Phone(seed: SharingData(connections: [
+            SharingConnection(id: rileyID, name: "Riley Park", state: .invited),
+        ]))
+        await alex.launch()
+
+        #expect(sent(on: alex).emptyState == .noOneToSendTo)
+    }
+
+    /// Connected, with nothing sent to anyone still connected: Sent offers New Reminder. What went
+    /// to someone since ended doesn't count.
+    @Test func withSomeoneConnectedAndNothingSentToThemSentHasNothingSent() async throws {
+        let (alex, riley, sam) = try await phones()
+        #expect(sent(on: alex).emptyState == .nothingSent)
+
+        try alex.model.send(pills, to: [samID])
+        await settle(alex, riley, sam)
+        var data = try #require(alex.model.sharing?.data)
+        data.connections = data.connections.map { connection in
+            var connection = connection
+            if connection.id == samID { connection.state = .ended }
+            return connection
+        }
+
+        #expect(SentScreen(engine: alex.model.engine, sharing: data).emptyState == .nothingSent)
+    }
+
+    @Test func anythingSentToSomeoneConnectedHasNoEmptyState() async throws {
+        let (alex, riley, sam) = try await phones()
+        try alex.model.send(pills, to: [rileyID])
+        await settle(alex, riley, sam)
+
+        #expect(sent(on: alex).emptyState == nil)
+    }
+
     // MARK: Details
 
     func details(of reminderID: Reminder.ID, on alex: Phone) -> SentReminderDetails? {

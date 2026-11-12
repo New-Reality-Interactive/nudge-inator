@@ -22,6 +22,8 @@ struct RemindersTab: View {
     /// Whether Reminders is the chosen tab. Choosing it again sorts again; `onAppear` isn't relied
     /// on for that, since the docs don't say a tab's content appears again on each return.
     var isChosen = true
+    /// Manage People on Sent with no one connected: Settings › Connections (ticket 202).
+    var manageConnections: () -> Void = {}
     /// What previews show, since they have no app model.
     var previewEngine: Engine?
 
@@ -61,9 +63,12 @@ struct RemindersTab: View {
             TabScreen(state: state) {
                 TimelineView(.everyMinute) { _ in
                     if mineOrSentChoice == .sent, let model, let sharing = model.sharing {
-                        SentList(screen: SentScreen(engine: model.engine, sharing: sharing.data)) {
-                            path.append(OpenedSentReminder(id: $0))
-                        }
+                        SentList(
+                            screen: SentScreen(engine: model.engine, sharing: sharing.data),
+                            sharing: sharing,
+                            manageConnections: manageConnections,
+                            openDetails: { path.append(OpenedSentReminder(id: $0)) }
+                        )
                     } else {
                         mine
                     }

@@ -100,11 +100,12 @@ extension View {
     }
 }
 
-/// Invite Someone with its icon, as the page's first row and the empty state's button.
-private struct InviteSomeoneLabel: View {
+/// Invite Someone with its icon: the page's first row and the empty state's button, and Sent's
+/// with no one connected (ticket 202).
+struct InviteSomeoneLabel: View {
     var body: some View {
         Label {
-            Text("Invite Someone", comment: "Connections: starts an invite to one person.")
+            Text("Invite Someone", comment: "Connections, and the Reminders tab's Sent when no one is connected: starts an invite to one person.")
         } icon: {
             Image(systemName: "person.badge.plus")
         }

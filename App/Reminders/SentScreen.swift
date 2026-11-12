@@ -7,6 +7,16 @@ import NudgeEngine
 /// under each. A value, so the tests and previews read it with no view.
 struct SentScreen {
     let people: [Person]
+    /// What Sent shows instead of groups, or `nil` when it has some (ticket 202).
+    let emptyState: EmptyState?
+
+    /// Sent's two empty states, the mockup's `viewSentTab`.
+    enum EmptyState: Equatable {
+        /// No one connected, so nothing can be sent yet: Invite Someone and Manage People.
+        case noOneToSendTo
+        /// Someone connected, but nothing sent to anyone connected: New Reminder.
+        case nothingSent
+    }
 
     struct Person: Identifiable {
         var connectionID: UUID
@@ -43,9 +53,6 @@ struct SentScreen {
         static let notDeliveredText = LocalizedStringResource("Not delivered yet", comment: "Under a sent reminder's title on the Sent view, and under a person's name on its details: their copy hasn't reached their iPhone yet.")
     }
 
-    /// Nothing sent to anyone connected.
-    var isEmpty: Bool { people.isEmpty }
-
     /// The people the reminder with `reminderID` went to, in the screen's order, each with their row.
     func recipients(of reminderID: Reminder.ID) -> [(person: Person, row: Row)] {
         people.compactMap { person in
@@ -80,5 +87,6 @@ struct SentScreen {
             )
         }
         .filter { !$0.rows.isEmpty }
+        emptyState = connections.isEmpty ? .noOneToSendTo : people.isEmpty ? .nothingSent : nil
     }
 }

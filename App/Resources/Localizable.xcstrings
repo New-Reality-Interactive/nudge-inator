@@ -1398,13 +1398,16 @@
       "comment" : "Invite hint: the title."
     },
     "Invite Someone" : {
-      "comment" : "Connections: starts an invite to one person.\nInvite hint: the sheet's title."
+      "comment" : "Connections, and the Reminders tab's Sent when no one is connected: starts an invite to one person.\nInvite hint: the sheet's title."
     },
     "Invite Someone New" : {
       "comment" : "The Send To page's last row: invites someone to connect.\nThe reminder form's Send To row when no one is connected: invites someone."
     },
     "Invite Unavailable" : {
       "comment" : "Accepting an invite: title of the message shown when the invite no longer works for this person."
+    },
+    "Invite someone you trust, and what you send them shows here." : {
+      "comment" : "Reminders tab, Sent: under \"No One to Send To\"."
     },
     "Invite someone you trust, and you can send each other reminders." : {
       "comment" : "Connections: under \"No Connections\"."
@@ -1456,6 +1459,12 @@
     },
     "Locked while it's nudging. Mark it Done or pause it to change it." : {
       "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging."
+    },
+    "Make a reminder and choose who to send it to." : {
+      "comment" : "Reminders tab, Sent: under \"Nothing Sent\", when someone is connected."
+    },
+    "Manage People" : {
+      "comment" : "Reminders tab, Sent: under Invite Someone when no one is connected. Opens Settings › Connections."
     },
     "Match" : {
       "comment" : "A filter sheet: label of the choice between All Tags and Any Tag."
@@ -1536,6 +1545,9 @@
     },
     "No Matches" : {
       "comment" : "Reminders tab: title when reminders exist but what's narrowing the list leaves none.\nTags tab: title when tags exist but the filter leaves none."
+    },
+    "No One to Send To" : {
+      "comment" : "Reminders tab, Sent: title when this person is connected with no one."
     },
     "No Reminders" : {
       "comment" : "A tag's screen when no reminder has the tag.\nReminders tab: title when there are no reminders at all."
