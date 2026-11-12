@@ -1515,11 +1515,8 @@
     "Nothing was missed today." : {
       "comment" : "My Day: the list when Missed is chosen and nothing was missed today."
     },
-    "Nothing was sent. Check who's chosen in Send To and try again." : {
-      "comment" : "The reminder form: under Couldn't Send the Reminder."
-    },
     "Nothing was sent. Try again." : {
-      "comment" : "Invite: under Couldn't Send the Invite."
+      "comment" : "Invite: under Couldn't Send the Invite.\nThe reminder form: under Couldn't Send the Reminder."
     },
     "Notification" : {
       "comment" : "Nudge card: the next nudge comes as a notification."

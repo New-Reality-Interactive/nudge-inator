@@ -101,7 +101,7 @@ final class AppModel {
         // Here rather than after launch, so no report is missed: each one waits for launch.
         notifications.events = self
         alarms.events = self
-        sharing?.receivedCopies = self
+        sharing?.receivedReminders = self
     }
 
     /// Launch, after setting aside a launch that couldn't read the store. Before the first unlock
@@ -448,9 +448,12 @@ final class AppModel {
     /// `connectionIDs`, through sharing, never adding it to this person's own reminders. Throws,
     /// sending nothing, with no sharing, or if sharing turns it down (`SharingModel.send`).
     func send(_ reminder: Reminder, to connectionIDs: [UUID]) throws {
-        guard let sharing else { throw SharingModel.NotConnected() }
+        guard let sharing else { throw NoSharing() }
         try sharing.send(reminder, to: connectionIDs)
     }
+
+    /// The app has no sharing (the shipped app until #216), so nothing can be sent.
+    struct NoSharing: Error {}
 
     /// Settings' Default Pace (ticket 09), what a new reminder starts with. Read from the record
     /// each time, not kept from launch: before the first unlock `UserDefaults` reads as empty, so
@@ -583,13 +586,10 @@ final class AppModel {
     }
 }
 
-extension AppModel: ReceivedCopies {
+extension AppModel: ReceivedReminders {
     func copy(of sendersReminderID: Reminder.ID, through connectionID: UUID) throws -> Reminder? {
         guard case .ready = launchState, store != nil else { throw RemindersNotLoaded() }
-        return engine.reminders.first {
-            guard case let .received(id, sendersID, _, _, _) = $0.origin else { return false }
-            return id == connectionID && sendersID == sendersReminderID
-        }
+        return engine.reminders.first { $0.receivedThrough == connectionID && $0.sendersReminderID == sendersReminderID }
     }
 
     /// Saved before the engine has it, so a store that won't keep it leaves nothing planned. Its

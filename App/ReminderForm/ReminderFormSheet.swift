@@ -49,17 +49,17 @@ struct ReminderFormSheet: View {
                 }
             }
         }
-        .sendToInviteFlow(sharing: model?.sharing, isPresented: $isInviting)
+        .sendToInviteFlow(sharing: form.sharing, isPresented: $isInviting)
         .alert(
             Text("Couldn't Send the Reminder", comment: "The reminder form: title of the message shown when Add couldn't send the reminder to the people chosen in Send To."),
-            isPresented: $form.couldntSend
+            isPresented: $form.isShowingCouldntSend
         ) {
             Button {
             } label: {
                 Text("OK", comment: "The reminder form: dismisses the message that the reminder couldn't be sent.")
             }
         } message: {
-            Text("Nothing was sent. Check who's chosen in Send To and try again.", comment: "The reminder form: under Couldn't Send the Reminder.")
+            Text("Nothing was sent. Try again.", comment: "The reminder form: under Couldn't Send the Reminder.")
         }
         // On the stack, not its root: the root is covered by the Tags page and the Custom sheet,
         // which lock too when the reminder falls due while they're open.

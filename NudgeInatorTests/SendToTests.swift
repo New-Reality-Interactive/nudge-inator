@@ -151,6 +151,35 @@ struct SendToTests {
         #expect(!riley.center.pending.isEmpty || !riley.manager.scheduled.isEmpty)
     }
 
+    /// Any repeat and pace: the copy plans as a personal reminder with the same ones would.
+    @Test(arguments: [
+        (RepeatRule?.none, Pace.consistent(wait: 10 * 60)),
+        (RepeatRule.everyDay, Pace.consistent(wait: 60 * 60)),
+        (RepeatRule(frequency: .daily, interval: 3), Pace.escalating),
+    ])
+    func aCopyWithAnyRepeatAndPaceNudgesAsAPersonalReminderWould(repeatRule: RepeatRule?, pace: Pace) async throws {
+        let (alex, riley, sam) = try await phones()
+        var reminder = pills
+        reminder.repeatRule = repeatRule
+        reminder.pace = pace
+        let form = form(on: alex, filledWith: reminder)
+        form.toggleRecipient(rileyID)
+        #expect(form.save(to: alex.model))
+        await settle(alex, riley, sam)
+
+        let personal = try Phone()
+        await personal.launch()
+        personal.model.add(reminder)
+        await personal.model.waitUntilApplied()
+
+        let copy = try #require(riley.model.engine.reminders.first)
+        #expect(copy.repeatRule == repeatRule)
+        #expect(copy.pace == pace)
+        #expect(riley.manager.scheduled.map(\.fireDate) == personal.manager.scheduled.map(\.fireDate))
+        #expect(riley.center.pending.map { ($0.trigger as? UNTimeIntervalNotificationTrigger)?.timeInterval }
+            == personal.center.pending.map { ($0.trigger as? UNTimeIntervalNotificationTrigger)?.timeInterval })
+    }
+
     @Test func aCopyThatStartsRightAwayIsReportedStarted() async throws {
         let (alex, riley, sam) = try await phones()
         let form = form(on: alex, filledWith: pills)
@@ -250,24 +279,47 @@ struct SendToTests {
 
     // MARK: What can't be sent
 
-    @Test func aSharingStoreThatWontOpenSendsNothingAndTheFormSaysSo() async throws {
+    @Test func aSharingStoreThatWontOpenSendsNothing() async throws {
         let (alex, riley, sam) = try await phones()
         alex.sharingStoreOpens = false
         alex.relaunch()
         await alex.launch()
-        let reopened = self.form(on: alex, filledWith: pills)
-        reopened.toggleRecipient(rileyID)
 
-        #expect(!reopened.save(to: alex.model))
+        #expect(throws: Phone.StoreWouldNotOpen.self) {
+            try alex.sharing.send(pills, to: [rileyID])
+        }
         await settle(alex, riley, sam)
 
-        #expect(reopened.couldntSend)
         #expect(alex.adapter.submitted.isEmpty)
-        #expect(alex.model.engine.reminders.isEmpty)
         #expect(riley.model.engine.reminders.isEmpty)
     }
 
-    @Test func someoneNoLongerConnectedByAddMeansNothingIsSent() async throws {
+    /// A send the app model turns down keeps the form open and says so, adding nothing: here, a
+    /// model with no sharing behind it.
+    @Test func aSendTurnedDownKeepsTheFormOpenAndSaysSo() async throws {
+        let (alex, _, _) = try await phones()
+        let unshared = AppModel(
+            clock: alex.clock,
+            openStore: { try ReminderStore(location: .inMemory) },
+            notifications: NotificationAdapter(center: FakeNotificationCenter(), clock: alex.clock),
+            alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: alex.clock),
+            doneQueue: .temporary,
+            timeZone: NewYork.timeZone
+        )
+        await unshared.launch()
+        let form = form(on: alex, filledWith: pills)
+        form.toggleRecipient(rileyID)
+
+        #expect(!form.save(to: unshared))
+
+        #expect(form.isShowingCouldntSend)
+        #expect(unshared.engine.reminders.isEmpty)
+        #expect(alex.adapter.submitted.isEmpty)
+    }
+
+    /// Someone chosen who disconnects while the form is open drops off what's chosen, so the row
+    /// shows who it goes to and Add sends to the rest.
+    @Test func someoneWhoDisconnectsWhileTheFormIsOpenIsNoLongerChosen() async throws {
         let (alex, riley, sam) = try await phones()
         let form = form(on: alex, filledWith: pills)
         form.toggleRecipient(rileyID)
@@ -275,12 +327,41 @@ struct SendToTests {
         try alex.model.disconnect(samID, choosing: .remove)
         await settle(alex, riley, sam)
 
-        #expect(!form.save(to: alex.model))
+        #expect(form.recipientNames == ["Riley Park"])
+        #expect(form.save(to: alex.model))
+        await settle(alex, riley, sam)
 
-        #expect(form.couldntSend)
+        #expect(alex.sharing.data.sentCopies.map(\.connectionID) == [rileyID])
+        #expect(riley.model.engine.reminders.count == 1)
+        #expect(sam.model.engine.reminders.isEmpty)
+    }
+
+    /// Everyone chosen disconnects: the form is a personal reminder's again, Tags row and all.
+    @Test func whenEveryoneChosenDisconnectsTheFormSavesAPersonalReminder() async throws {
+        let (alex, riley, sam) = try await phones()
+        let form = form(on: alex, filledWith: pills)
+        form.toggleRecipient(samID)
+        try alex.model.disconnect(samID, choosing: .remove)
+        await settle(alex, riley, sam)
+
+        #expect(form.showsTags)
+        #expect(form.save(to: alex.model))
+
+        #expect(alex.model.engine.reminders.map(\.title) == ["Take the pills"])
         #expect(!alex.adapter.submitted.contains { $0.kind == .send })
+    }
+
+    /// Sharing turns down a send to someone not connected, whatever the form shows.
+    @Test func sharingSendsNothingWhenSomeoneIsntConnected() async throws {
+        let (alex, riley, sam) = try await phones()
+        try alex.model.disconnect(samID, choosing: .remove)
+        await settle(alex, riley, sam)
+
+        #expect(throws: SharingModel.NotConnected.self) {
+            try alex.sharing.send(pills, to: [rileyID, samID])
+        }
         #expect(alex.sharing.data.sentReminders.isEmpty)
-        #expect(riley.model.engine.reminders.isEmpty)
+        #expect(!alex.adapter.submitted.contains { $0.kind == .send })
     }
 
     // MARK: The form

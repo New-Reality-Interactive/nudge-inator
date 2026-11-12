@@ -71,6 +71,11 @@ extension Reminder {
         if case let .received(connectionID, _, _, _, _) = origin { connectionID } else { nil }
     }
 
+    /// The sender's own reminder a received copy is of, or `nil` for the person's own.
+    public var sendersReminderID: Reminder.ID? {
+        if case let .received(_, sendersReminderID, _, _, _) = origin { sendersReminderID } else { nil }
+    }
+
     /// Whether Keep as My Own Reminders keeps it when its connection ends: an accepted copy only.
     /// One still waiting was never accepted, and goes (the developer's decision on #197).
     var isKeptOnDisconnect: Bool {

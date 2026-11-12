@@ -25,11 +25,11 @@ struct SendToSection: View {
             } else {
                 NavigationLink(value: ReminderFormPage.sendTo) {
                     LabeledContent {
-                        if form.recipientNames.isEmpty {
-                            Text("None", comment: "The reminder form's Send To row when no one is chosen.")
-                        } else {
+                        if let names = form.recipientsText {
                             // People's own names, never translated.
-                            Text(verbatim: form.recipientNames.formatted(.list(type: .and)))
+                            Text(verbatim: names)
+                        } else {
+                            Text("None", comment: "The reminder form's Send To row when no one is chosen.")
                         }
                     } label: {
                         Text("Send To", comment: "The reminder form's row that chooses who the reminder is sent to.")
@@ -37,8 +37,8 @@ struct SendToSection: View {
                 }
             }
         } footer: {
-            if !form.recipientNames.isEmpty {
-                Text("It nudges \(form.recipientNames.formatted(.list(type: .and))), not you, and you'll find it under Sent.",
+            if let names = form.recipientsText {
+                Text("It nudges \(names), not you, and you'll find it under Sent.",
                      comment: "Under the reminder form's Send To row once someone is chosen. The argument is the chosen people's whole names as a list, such as \"Riley Park and Sam Rivera\".")
             }
         }
