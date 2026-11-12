@@ -27,8 +27,16 @@ struct SentReminderDetails {
         var name: String
         /// How their copy is going, as the sender may read it.
         var state: SentCopyState
+        /// "<first name>, Last 7 Days" for a repeating reminder, as the Sent row's strip has it.
+        var history: SentHistory?
 
         var id: UUID { connectionID }
+
+        /// The header over their history: "Riley, Last 7 Days", with the person's short name.
+        var historyHeader: LocalizedStringResource {
+            let name = (try? PersonNameComponents(name))?.formatted(.name(style: .short)) ?? name
+            return LocalizedStringResource("\(name), Last 7 Days", comment: "A sent reminder's details: section header over one person's last 7 days of the reminder. The placeholder is the person's short name, such as \"Riley\".")
+        }
         var isDelivered: Bool { state.isDelivered }
         var trailing: SentReadOut.Trailing { state.trailing }
         var detailLine: LocalizedStringResource? { state.detailLine }
@@ -40,7 +48,7 @@ struct SentReminderDetails {
         guard let sent = sharing.sentReminders.first(where: { $0.reminder.id == id }) else { return nil }
         reminder = sent.reminder
         recipients = SentScreen(engine: engine, sharing: sharing).recipients(of: id).map {
-            Recipient(connectionID: $0.person.connectionID, name: $0.person.name, state: $0.row.state)
+            Recipient(connectionID: $0.person.connectionID, name: $0.person.name, state: $0.row.state, history: $0.row.history)
         }
         repeats = engine.repeatSummary(of: sent.reminder)
         next = engine.upcomingDueTimes(of: sent.reminder, count: 1).first

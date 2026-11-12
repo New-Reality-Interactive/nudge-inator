@@ -110,6 +110,7 @@ extension View {
                                 Button { adapter.theyReport(.skipped, through: connected.id) } label: { Text(verbatim: "Skipped") }
                                 Button { adapter.theyReport(.removed, through: connected.id) } label: { Text(verbatim: "Removed") }
                                 Button { adapter.theyReport(nil, through: connected.id) } label: { Text(verbatim: "Not sharing this one") }
+                                Button { adapter.theyReportAWeek(through: connected.id) } label: { Text(verbatim: "Nudging, with a Week of History") }
                             } label: {
                                 Text(verbatim: "\(connected.name) Reports…")
                             }
@@ -150,7 +151,28 @@ final class StandInSharingAdapter: SharingAdapter {
     /// `nil` the flag that they keep this one from the sender ("Not sharing this one"). Nothing
     /// arrives for a copy not yet delivered: the status comes with the receipt.
     func theyReport(_ status: ReportedStatus?, through connectionID: UUID) {
-        let record = status.map { SentCopy.StatusRecord(report: StatusReport(label: $0, occurrences: []), notSharingThisOne: false) } ?? .heldBack
+        send(status.map { SentCopy.StatusRecord(report: StatusReport(label: $0, occurrences: []), notSharingThisOne: false) } ?? .heldBack, through: connectionID)
+    }
+
+    /// Stands in for the other person's app reporting each copy Nudging, with a history for the 7
+    /// days before today and today (ticket 207): Done, Done, Missed, Done, Done, Skipped, Done, and
+    /// Nudging today, each at this hour. A one-off's row shows none of it.
+    func theyReportAWeek(through connectionID: UUID) {
+        let calendar = Calendar.current
+        let now = Date.now
+        let labels: [ReportedStatus] = [.done, .done, .missed, .done, .done, .skipped, .done, .nudging]
+        let occurrences = labels.enumerated().compactMap { index, label -> StatusReport.OccurrenceStatus? in
+            guard let dueTime = calendar.date(byAdding: .day, value: index - 7, to: now) else { return nil }
+            let parts = calendar.dateComponents([.year, .month, .day], from: dueTime)
+            guard let year = parts.year, let month = parts.month, let day = parts.day else { return nil }
+            return StatusReport.OccurrenceStatus(dueTime: dueTime, day: CalendarDay(year: year, month: month, day: day), label: label)
+        }
+        send(SentCopy.StatusRecord(report: StatusReport(label: .nudging, occurrences: occurrences), notSharingThisOne: false), through: connectionID)
+    }
+
+    /// Sends `record` as through iCloud for each copy delivered through the connection with
+    /// `connectionID`.
+    private func send(_ record: SentCopy.StatusRecord, through connectionID: UUID) {
         let delivered = (sentThrough[connectionID] ?? []).filter { reminderID in !undelivered.contains { $0.reminderID == reminderID && $0.connectionID == connectionID } }
         Task {
             for reminderID in delivered {

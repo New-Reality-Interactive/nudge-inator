@@ -105,20 +105,23 @@ struct ClosedRowView: View {
 /// The mockup's `.cell`, on Now and the Reminders tab: a time column, the main text, and a
 /// trailing item, then DESIGN.md's chevron. The row is a button that opens the reminder. At
 /// accessibility sizes they stack and wrap. VoiceOver reads the row as one element.
-struct ReminderRowLayout<Leading: View, Main: View, Trailing: View>: View {
+struct ReminderRowLayout<Leading: View, Main: View, Trailing: View, Footer: View>: View {
     let openDetails: () -> Void
     /// Inside the button, so the height it adds opens the details too.
     var minHeight: CGFloat? = nil
     @ViewBuilder let leading: () -> Leading
     @ViewBuilder let main: () -> Main
     @ViewBuilder let trailing: () -> Trailing
+    /// Under the whole row, across its width, inside the button: a Sent row's 7-day history
+    /// (ticket 207).
+    @ViewBuilder let footer: () -> Footer
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// Wide enough for "12:30 PM", so the titles line up.
     @ScaledMetric(relativeTo: .body) private var timeWidth: CGFloat = Design.Size.timeColumn
 
     var body: some View {
-        Group {
+        VStack(alignment: .leading, spacing: Design.Spacing.s2) {
             if dynamicTypeSize.isAccessibilitySize {
                 VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                     leading()
@@ -139,6 +142,7 @@ struct ReminderRowLayout<Leading: View, Main: View, Trailing: View>: View {
                     chevron
                 }
             }
+            footer()
         }
         .frame(minHeight: minHeight)
         .opensDetails(openDetails)
@@ -157,6 +161,19 @@ struct ReminderRowLayout<Leading: View, Main: View, Trailing: View>: View {
             .font(.footnote.weight(.semibold))
             .foregroundStyle(Color(uiColor: .tertiaryLabel))
             .accessibilityHidden(true)
+    }
+}
+
+extension ReminderRowLayout where Footer == EmptyView {
+    /// A row with nothing under it: every row but a repeating Sent row's.
+    init(
+        openDetails: @escaping () -> Void,
+        minHeight: CGFloat? = nil,
+        @ViewBuilder leading: @escaping () -> Leading,
+        @ViewBuilder main: @escaping () -> Main,
+        @ViewBuilder trailing: @escaping () -> Trailing
+    ) {
+        self.init(openDetails: openDetails, minHeight: minHeight, leading: leading, main: main, trailing: trailing, footer: { EmptyView() })
     }
 }
 

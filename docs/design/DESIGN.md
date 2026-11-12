@@ -631,8 +631,10 @@ sharing paused and offline banner.
   `checkmark.circle.fill` Done (positive), `xmark` Missed (negative), `bell` Nudging (negative), `minus`
   Skipped, `pause` Paused and `clock` Coming up (secondary label, or `{colors.label}` on today's cell,
   with its initial). The fill's rule is about text, and these are glyphs, so the status colors stay on
-  it. VoiceOver reads it as one element naming each day and
-  status, and details list the days in words. It's hidden with status sharing off, "Not sharing this
+  it. A day with nothing due (a weekly repeat) keeps its cell and initial, with no glyph. At the
+  accessibility sizes the cells run four to a line. VoiceOver reads it as one element naming each day and
+  status (the row's value, after its label: "Thursday: Done, …, Today: Coming up"), and details list the
+  days in words, newest first, under "<first name>, Last 7 Days", "Nothing due" where a day had none. It's hidden with status sharing off, "Not sharing this
   one", Waiting to sync and Waiting for them to accept.
 - **Waiting for You:** a section on Now between Nudging and Coming Up, each row with bordered small
   Accept and Remove (destructive text) buttons. It doesn't count toward the Now badge.

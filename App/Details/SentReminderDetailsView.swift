@@ -4,8 +4,8 @@ import SwiftUI
 
 /// A sent reminder's details (ticket 201, the mockup's `viewSent`), pushed from a Sent row: the hero
 /// with its strength, Sent To with each person and how their copy is going, the Schedule, and
-/// Delete. Edit opens the sender's form, whose Save goes to every copy. Each person's 7-day history is
-/// #207's. It reads the sharing store again at every change and every minute.
+/// Delete. Edit opens the sender's form, whose Save goes to every copy. Under Sent To, each person
+/// whose copy shares a repeating reminder's status has their last 7 days in words (ticket 207). It reads the sharing store again at every change and every minute.
 struct SentReminderDetailsView: View {
     let id: Reminder.ID
 
@@ -88,7 +88,7 @@ struct SentReminderDetailsView: View {
     }
 }
 
-/// The list: hero, Sent To, Schedule, and Delete.
+/// The list: hero, Sent To, each person's last 7 days, Schedule, and Delete.
 private struct SentDetailsList: View {
     let details: SentReminderDetails
     let isEnabled: Bool
@@ -115,6 +115,28 @@ private struct SentDetailsList: View {
                 }
             } header: {
                 Text("Sent To", comment: "A sent reminder's details: section header above the people it was sent to.")
+            }
+            ForEach(details.recipients) { recipient in
+                if let history = recipient.history {
+                    Section {
+                        // As the mockup's `viewSent`: newest first, the day leading, its status trailing.
+                        ForEach(history.newestFirst) { day in
+                            LabeledContent {
+                                if let status = day.status {
+                                    ReportedStatusLabel(status: status)
+                                } else {
+                                    Text(SentHistory.nothingDueText)
+                                        .font(.subheadline)
+                                        .foregroundStyle(Color(uiColor: .secondaryLabel))
+                                }
+                            } label: {
+                                Text(verbatim: day.label)
+                            }
+                        }
+                    } header: {
+                        Text(recipient.historyHeader)
+                    }
+                }
             }
             Section {
                 ScheduleSummaryRows(repeats: details.repeats, next: details.next, pace: details.pace, breaksThroughFocus: details.breaksThroughFocus)

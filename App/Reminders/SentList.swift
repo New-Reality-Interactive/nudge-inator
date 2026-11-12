@@ -48,8 +48,9 @@ struct SentList: View {
 
 /// A Sent row, the mockup's `sentRow`: the due time and its day, the title, and Delivered once the
 /// person's copy has arrived, or "Not delivered yet" under the title before it. Once their app
-/// reports how the copy is going, the status label takes Delivered's place (ticket 206). VoiceOver
-/// reads `Row.voiceOverLabel`.
+/// reports how the copy is going, the status label takes Delivered's place (ticket 206), and a
+/// repeating reminder's 7-day history runs under the row (ticket 207). VoiceOver reads
+/// `Row.voiceOverLabel`, then the history as the row's value.
 private struct SentRowView: View {
     let row: SentScreen.Row
     let openDetails: () -> Void
@@ -67,8 +68,100 @@ private struct SentRowView: View {
             }
         } trailing: {
             SentTrailingLabel(trailing: row.trailing)
+        } footer: {
+            if let history = row.history {
+                SentHistoryStrip(history: history)
+            }
         }
         .accessibilityLabel(Text(row.voiceOverLabel))
+        .accessibilityValue(Text(verbatim: row.history?.voiceOverValue ?? ""))
+    }
+}
+
+/// DESIGN.md's 7-day history, the mockup's `histStrip`: eight cells, oldest first, each with the
+/// day's initial over its status glyph, today's on the tertiary fill. Four to a line at the
+/// accessibility sizes, as the mockup's cells wrap. VoiceOver reads the row's value instead.
+struct SentHistoryStrip: View {
+    let history: SentHistory
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        Grid(horizontalSpacing: Design.Spacing.s1, verticalSpacing: Design.Spacing.s1) {
+            ForEach(lines, id: \.first?.id) { line in
+                GridRow {
+                    ForEach(line) { day in
+                        SentHistoryCell(day: day)
+                    }
+                }
+            }
+        }
+        .accessibilityHidden(true)
+    }
+
+    private var lines: [[SentHistory.Day]] {
+        let perLine = dynamicTypeSize.isAccessibilitySize ? 4 : history.days.count
+        return stride(from: 0, to: history.days.count, by: perLine).map {
+            Array(history.days[$0..<min($0 + perLine, history.days.count)])
+        }
+    }
+}
+
+/// One day of the strip, the mockup's `.hday`.
+private struct SentHistoryCell: View {
+    let day: SentHistory.Day
+
+    var body: some View {
+        VStack(spacing: Design.Spacing.line) {
+            Text(verbatim: day.initial)
+                .font(day.isToday ? .footnote.weight(.semibold) : .footnote)
+            glyph
+                .font(.footnote)
+                .imageScale(.small)
+        }
+        .foregroundStyle(day.isToday ? Color(uiColor: .label) : Color(uiColor: .secondaryLabel))
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, Design.Spacing.historyCellVertical)
+        .background {
+            if day.isToday {
+                RoundedRectangle(cornerRadius: Design.Radius.historyCell, style: .continuous)
+                    .fill(Color(uiColor: .tertiarySystemFill))
+            }
+        }
+    }
+
+    /// The status's glyph, in the status colors Done, Missed and Nudging have; a day with nothing
+    /// due keeps the glyph's height, empty.
+    @ViewBuilder private var glyph: some View {
+        if let status = day.status {
+            Image(systemName: status.historyGlyph)
+                .foregroundStyle(status.historyColor ?? (day.isToday ? Color(uiColor: .label) : Color(uiColor: .secondaryLabel)))
+        } else {
+            Image(systemName: "clock").hidden()
+        }
+    }
+}
+
+private extension ReportedStatus {
+    /// DESIGN.md's 7-day history glyphs.
+    var historyGlyph: String {
+        switch self {
+        case .done: "checkmark.circle.fill"
+        case .missed: "xmark"
+        case .nudging: "bell"
+        case .skipped, .removed: "minus"
+        case .paused: "pause"
+        case .comingUp: "clock"
+        }
+    }
+
+    /// Positive for Done, negative for Missed and Nudging; the others take the cell's color.
+    var historyColor: Color? {
+        switch self {
+        case .done: .positive
+        case .missed, .nudging: .negative
+        case .skipped, .removed, .paused, .comingUp: nil
+        }
     }
 }
 
