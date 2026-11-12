@@ -124,10 +124,10 @@ struct StatusLabel: View {
     var body: some View {
         let text = Text(state.statusName)
         Group {
-            if case .done = state {
+            if let glyph = state.statusGlyph {
                 HStack(spacing: Design.Spacing.s1) {
                     // The word says it; the glyph only shows it.
-                    Image(systemName: "checkmark.circle.fill")
+                    Image(systemName: glyph)
                         .accessibilityHidden(true)
                     text
                 }
@@ -136,16 +136,29 @@ struct StatusLabel: View {
             }
         }
         .font(.subheadline.weight(.semibold))
-        .foregroundStyle(color)
+        .foregroundStyle(state.statusTint ?? Color(uiColor: .secondaryLabel))
     }
+}
 
-    private var color: Color {
-        switch state {
+extension OccurrenceState {
+    /// DESIGN.md's status colors: Done positive, Nudging and Missed negative, or `nil` for a status
+    /// with none of its own (Skipped), which takes the secondary label color, or the label color on
+    /// a 7-day history's today. The status label and the history's glyphs both take it from here.
+    var statusTint: Color? {
+        switch self {
         case .done: .positive
         case .nudging, .missed: .negative
-        case .skipped: Color(uiColor: .secondaryLabel)
+        case .skipped: nil
         }
     }
+
+    /// The glyph the status label shows beside its word: only Done has one.
+    var statusGlyph: String? {
+        if case .done = self { Self.doneGlyph } else { nil }
+    }
+
+    /// Done's glyph, on its status label and in a 7-day history.
+    static let doneGlyph = "checkmark.circle.fill"
 }
 
 /// DESIGN.md's `button-bordered` as a small capsule, or with `fillsWidth` a full-width rounded
@@ -220,21 +233,45 @@ struct ReminderStatusLabel: View {
 /// Removed in the secondary label color with Paused and Waiting.
 struct ReportedStatusLabel: View {
     let status: ReportedStatus
-    // The reasons below mean nothing here: the label's word and color don't depend on one, so they
-    // only let the existing `ReminderStatus` label draw a Missed and a Skipped.
 
     var body: some View {
-        switch status {
-        case .nudging: ReminderStatusLabel(status: .nudging)
-        case .comingUp: ReminderStatusLabel(status: .comingUp)
-        case .paused: ReminderStatusLabel(status: .paused)
-        case .done: ReminderStatusLabel(status: .closed(.done))
-        case .missed: ReminderStatusLabel(status: .closed(.missed(reason: .giveUpLimit)))
-        case .skipped: ReminderStatusLabel(status: .closed(.skipped(reason: .paused)))
-        case .removed:
+        if let state = status.occurrenceState {
+            StatusLabel(state: state)
+        } else {
             Text(status.name)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
+        }
+    }
+}
+
+extension ReportedStatus {
+    /// The occurrence state whose status label this status shares, or `nil` for Coming up, Paused
+    /// and Removed, which are in the secondary label color. The reasons mean nothing here: a
+    /// label's word, color and glyph don't depend on one.
+    var occurrenceState: OccurrenceState? {
+        switch self {
+        case .nudging: .nudging(nudgeNumber: 0)
+        case .done: .done
+        case .missed: .missed(reason: .giveUpLimit)
+        case .skipped: .skipped(reason: .paused)
+        case .comingUp, .paused, .removed: nil
+        }
+    }
+
+    /// The status color its label and its 7-day history glyph share (`OccurrenceState.statusTint`).
+    var statusTint: Color? { occurrenceState?.statusTint }
+
+    /// DESIGN.md's 7-day history glyphs. A day's report never holds Removed (GLOSSARY's Status
+    /// report); were it to, it reads as Skipped does.
+    var historyGlyph: String {
+        switch self {
+        case .done: OccurrenceState.doneGlyph
+        case .missed: "xmark"
+        case .nudging: "bell"
+        case .skipped, .removed: "minus"
+        case .paused: "pause"
+        case .comingUp: "clock"
         }
     }
 }

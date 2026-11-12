@@ -152,34 +152,9 @@ private struct SentHistoryCell: View {
     @ViewBuilder private var glyph: some View {
         if let status = day.status {
             Image(systemName: status.historyGlyph)
-                .foregroundStyle(status.historyColor ?? textColor)
+                .foregroundStyle(status.statusTint ?? textColor)
         } else {
             Image(systemName: "clock").hidden()
-        }
-    }
-}
-
-private extension ReportedStatus {
-    /// DESIGN.md's 7-day history glyphs.
-    var historyGlyph: String {
-        switch self {
-        case .done: "checkmark.circle.fill"
-        case .missed: "xmark"
-        case .nudging: "bell"
-        // A report never holds Removed for a day (GLOSSARY's Status report); were it to, it
-        // reads as Skipped does.
-        case .skipped, .removed: "minus"
-        case .paused: "pause"
-        case .comingUp: "clock"
-        }
-    }
-
-    /// Positive for Done, negative for Missed and Nudging; the others take the cell's color.
-    var historyColor: Color? {
-        switch self {
-        case .done: .positive
-        case .missed, .nudging: .negative
-        case .skipped, .removed, .paused, .comingUp: nil
         }
     }
 }
