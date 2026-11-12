@@ -50,6 +50,13 @@ Nothing else changed.
 - **A waiting copy under status sharing off** shows "Waiting for them to accept", not "Not sharing
   status": the sender needs to know it hasn't started.
 
+## Changed after sign-off
+
+- **Mine | Sent sits under the search field** (#201, Brian's call at its phone check, 2026-11-12). iOS
+  draws the search field in the navigation bar, so the control, in the content, comes below it; this
+  mockup was changed to match. With no reminders, Mine has no search field, so the control is under the
+  title.
+
 ## Checked
 
 Rendered in headless Chrome in portrait, landscape and a large text size, and the invite, send,

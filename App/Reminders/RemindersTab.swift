@@ -74,9 +74,9 @@ struct RemindersTab: View {
                 text: searchField,
                 prompt: Text("Search titles and notes", comment: "Reminders tab: the search field's prompt.")
             ))
-            // Under the navigation bar and above the search field (DESIGN.md, Mine | Sent). Outside the
-            // search field's modifier, which comes and goes with Mine, so choosing Sent doesn't make
-            // the control a new view under the person's finger.
+            // Under the search field, which iOS keeps in the navigation bar (DESIGN.md, Mine | Sent;
+            // #201), and as wide. Outside the search field's modifier, which comes and goes with Mine,
+            // so choosing Sent doesn't make the control a new view under the person's finger.
             .safeAreaBar(edge: .top) {
                 if offersSent { mineOrSent }
             }
@@ -176,7 +176,6 @@ struct RemindersTab: View {
         .labelsHidden()
         .padding(.horizontal, Design.Spacing.s4)
         .padding(.bottom, Design.Spacing.s2)
-        .frame(maxWidth: Design.Spacing.readableWidth)
     }
 
     private var hasReminders: Bool {

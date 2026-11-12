@@ -2209,7 +2209,7 @@ function viewRems() {
   }
   const rows = remRows();
   const list = rows.length ? `<div class="sec"><ul class="list remrow" aria-label="Reminders">${rows.map(remListRow).join("")}</ul></div>` : noMatch();
-  return `${navBar({ title: "Reminders", trailing: `<span class="bar-group">${remFilterButton()}${sortButton()}</span>${plusBtn}` })}${remsSeg()}${searchBar()}${remHeader(rows.length)}${list}`;
+  return `${navBar({ title: "Reminders", trailing: `<span class="bar-group">${remFilterButton()}${sortButton()}</span>${plusBtn}` })}${searchBar()}${remsSeg()}${remHeader(rows.length)}${list}`;
 }
 /* Done from a row's swipe: the same act as Done on Now. The row stays where it is with its new
    status label, unless an active status filter now leaves it out: then it animates out, the count
@@ -2923,7 +2923,8 @@ function finishDisconnect() {
   nav();
 }
 
-/* The Reminders tab's Mine | Sent control. Two short words, so it stays segmented at every size. */
+/* The Reminders tab's Mine | Sent control. Two short words, so it stays segmented at every size.
+   Under the search field, where iOS puts content below a navigation bar's search drawer (#201). */
 function remsSeg() {
   const v = state.remsView;
   return `<fieldset class="seg remsview" aria-label="Show">${[["mine", "Mine"], ["sent", "Sent"]].map(([k, t]) => `<label><input type="radio" name="remsview" data-remsview value="${k}" ${k === v ? "checked" : ""}><span>${t}</span></label>`).join("")}</fieldset>`;
@@ -3045,7 +3046,7 @@ function viewSentTab() {
     const rows = sentRowsOf(c).map(({ s, t }) => sentRow(s, t, c));
     return rows.length ? `<h2 class="sec-h"><span>${esc(c.name)}</span><span>${c.theirStatus ? "Sharing status" : "Not sharing status"}</span></h2><div class="sec"><ul class="list remrow" aria-label="Sent to ${esc(c.first)}">${rows.join("")}</ul></div>` : "";
   }).join("") : sentNoMatch();
-  return `${navBar({ title: "Reminders", trailing: `<span class="bar-group">${sentFilterButton()}${sentSortButton()}</span>${plusBtn}` })}${remsSeg()}${sharingBanner()}${sentSearchBar()}<div class="remhead"><p class="remcount" id="sent-count">${sentCount(shown)}</p></div>${groups}`;
+  return `${navBar({ title: "Reminders", trailing: `<span class="bar-group">${sentFilterButton()}${sentSortButton()}</span>${plusBtn}` })}${sentSearchBar()}${remsSeg()}${sharingBanner()}<div class="remhead"><p class="remcount" id="sent-count">${sentCount(shown)}</p></div>${groups}`;
 }
 function viewSent(id) {
   const s = remById(id), back = backLabel();
