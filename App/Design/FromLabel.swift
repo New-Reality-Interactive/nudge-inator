@@ -12,13 +12,17 @@ struct FromLabel: View {
     var strength: Strength?
 
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: Design.Spacing.s2) { content }
-            VStack(alignment: .leading, spacing: Design.Spacing.line) { content }
+        if let strength {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: Design.Spacing.s2) { name; StrengthBadge(strength: strength) }
+                VStack(alignment: .leading, spacing: Design.Spacing.line) { name; StrengthBadge(strength: strength) }
+            }
+        } else {
+            name
         }
     }
 
-    @ViewBuilder private var content: some View {
+    private var name: some View {
         HStack(alignment: .firstTextBaseline, spacing: Design.Spacing.s1) {
             // The words say who; the glyph only shows it.
             Image(systemName: "person")
@@ -27,9 +31,6 @@ struct FromLabel: View {
         }
         .font(.subheadline)
         .foregroundStyle(Color(uiColor: .secondaryLabel))
-        if let strength {
-            StrengthBadge(strength: strength)
-        }
     }
 }
 

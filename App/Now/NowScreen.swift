@@ -40,7 +40,10 @@ struct NowScreen {
         lastDay = engine.closedInLast24Hours().compactMap { item in
             reminders[item.reminderID].map {
                 ClosedRow(
-                    reminder: $0, closed: item, day: engine.dayLabel(of: item.closedAt), time: engine.timeOfDay(of: item.closedAt),
+                    reminder: $0,
+                    closed: item,
+                    day: engine.dayLabel(of: item.closedAt),
+                    time: engine.timeOfDay(of: item.closedAt),
                     from: senders.label(of: $0)
                 )
             }
@@ -119,17 +122,16 @@ struct NudgeCard: Identifiable {
         return LocalizedStringResource("\(tags) · due \(dueTime)", comment: "Nudge card: under the title. 1: the reminder's tags, such as \"#home #errands\". 2: its due time, such as \"9:00 AM\".")
     }
 
-    /// What VoiceOver reads after the title. The card's top row and title are one element, so
-    /// this says everything they and the details show: who sent it, for a received reminder, then
-    /// the strength.
-    var voiceOverValue: LocalizedStringResource {
-        guard let from else { return nudgeValue }
-        let nudge = String(localized: nudgeValue)
-        return LocalizedStringResource("\(String(localized: from)). \(nudge)", comment: "VoiceOver value of a received reminder's nudge card. 1: who sent it, such as \"From Riley Park\". 2: the rest of the card's value, from its strength to its next nudge.")
+    /// What VoiceOver reads first on a received reminder's card: the title, then who sent it, as
+    /// it shows under the title. `nil` for the person's own, whose label is the title alone.
+    var voiceOverLabel: LocalizedStringResource? {
+        guard let from else { return nil }
+        return LocalizedStringResource("\(title), \(String(localized: from))", comment: "VoiceOver label of a received reminder's nudge card. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\".")
     }
 
-    /// The card's VoiceOver value from the strength on.
-    private var nudgeValue: LocalizedStringResource {
+    /// What VoiceOver reads after the label. The card's top row and title are one element, so
+    /// this says everything they and the details show, the strength first.
+    var voiceOverValue: LocalizedStringResource {
         let strength = String(localized: reminder.strength.title)
         let detail = String(localized: detail)
         guard let next = status.nextNudge, let nextNudgeTime else {

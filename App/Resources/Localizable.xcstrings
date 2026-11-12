@@ -93,7 +93,7 @@
       }
     },
     "%@, %@" : {
-      "comment" : "Reminder details, Schedule: when the latest occurrence closed. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"9:40 AM\".",
+      "comment" : "Reminder details, Schedule: when the latest occurrence closed. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"9:40 AM\".\nVoiceOver label of a received reminder's nudge card. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\".",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -171,17 +171,6 @@
     },
     "%@." : {
       "comment" : "A repeat summary as a sentence, under the reminder form's Starts. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".\nTop of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\"."
-    },
-    "%@. %@" : {
-      "comment" : "VoiceOver value of a received reminder's nudge card. 1: who sent it, such as \"From Riley Park\". 2: the rest of the card's value, from its strength to its next nudge.",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@. %2$@"
-          }
-        }
-      }
     },
     "%lld Reminders from %@" : {
       "comment" : "Disconnect's sheet: header of the choice. 1: how many reminders received from the person Keep would keep. 2: their name, such as \"Alex Morgan\".",
