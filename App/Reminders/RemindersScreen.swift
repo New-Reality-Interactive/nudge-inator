@@ -27,11 +27,32 @@ struct RemindersScreen {
         var day: String
         /// The reminder's tags that the engine holds, as "#home". The ones the filter chose are bold.
         var tags: [MyDayScreen.TagLabel]
+        /// "From Riley Park" under the title of a received reminder, or `nil` (ticket 199).
+        var from: LocalizedStringResource?
 
         var id: Reminder.ID { reminder.id }
         var title: String { reminder.title }
         /// Done is offered only while Nudging (DESIGN.md, Swipe actions). Every row offers Delete.
         var offersDone: Bool { status == .nudging }
+
+        /// What VoiceOver reads for the row: the title first, then who sent it and its strength
+        /// (which only a received row shows), the status, the due time and the tags.
+        var voiceOverLabel: LocalizedStringResource {
+            let status = String(localized: status.name)
+            let tags = tags.isEmpty ? nil : tags.map(\.text).formatted(.list(type: .and))
+            switch (from.map { String(localized: $0) }, tags) {
+            case (nil, nil):
+                return LocalizedStringResource("\(title), \(status), \(day), \(time)", comment: "VoiceOver label of a Reminders tab row with no tags. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\".")
+            case (nil, let tags?):
+                return LocalizedStringResource("\(title), \(status), \(day), \(time), tags: \(tags)", comment: "VoiceOver label of a Reminders tab row. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\". 5: its tags, such as \"#home and #errands\".")
+            case (let from?, nil):
+                let strength = String(localized: reminder.strength.title)
+                return LocalizedStringResource("\(title), \(from), \(strength), \(status), \(day), \(time)", comment: "VoiceOver label of a Reminders tab row of a received reminder with no tags. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\". 3: its strength, such as \"Firm\". 4: its status, such as \"Nudging\". 5: its due day, such as \"Today\". 6: its due time, such as \"9:00 AM\".")
+            case (let from?, let tags?):
+                let strength = String(localized: reminder.strength.title)
+                return LocalizedStringResource("\(title), \(from), \(strength), \(status), \(day), \(time), tags: \(tags)", comment: "VoiceOver label of a Reminders tab row of a received reminder. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\". 3: its strength, such as \"Firm\". 4: its status, such as \"Nudging\". 5: its due day, such as \"Today\". 6: its due time, such as \"9:00 AM\". 7: its tags, such as \"#home and #errands\".")
+            }
+        }
     }
 
     /// The rows shown: the count's first number.
@@ -47,12 +68,14 @@ struct RemindersScreen {
     /// `keptOrder` is the rows' order when the list's inputs (the sort and the filter) last changed.
     /// Sorted by Due Date, Done or going Missed changes a row's due time, so the rows keep that order
     /// rather than move under the person (spec #104, Decision 35). A reminder it doesn't hold, added
-    /// since, goes where the sort puts it.
+    /// since, goes where the sort puts it. `senders` names who sent each received reminder; with
+    /// none, each reads "From Someone".
     init(
         engine: Engine,
         sort: RemindersSort = .createdOldestFirst,
         filter: RemindersFilter = RemindersFilter(),
-        keptOrder: [Reminder.ID]? = nil
+        keptOrder: [Reminder.ID]? = nil,
+        senders: Senders = Senders()
     ) {
         let list = engine.remindersList(sortedBy: sort, filteredBy: filter)
         let items = keptOrder.map { Self.items(list.items, keeping: $0) } ?? list.items
@@ -65,7 +88,8 @@ struct RemindersScreen {
                 day: engine.dayLabel(of: item.dueTime),
                 tags: item.reminder.tagIDs.compactMap { tagID in
                     engine.tag(withID: tagID).map { MyDayScreen.TagLabel(text: $0.label, isChosen: filter.tags.chosen.contains(tagID)) }
-                }
+                },
+                from: senders.label(of: item.reminder)
             )
         }
         emptyState = engine.reminders.isEmpty ? .noReminders : (rows.isEmpty ? .noMatch : nil)

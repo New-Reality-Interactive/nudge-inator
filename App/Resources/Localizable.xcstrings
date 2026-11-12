@@ -93,7 +93,7 @@
       }
     },
     "%@, %@" : {
-      "comment" : "Reminder details, Schedule: when the latest occurrence closed. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"9:40 AM\".",
+      "comment" : "Reminder details, Schedule: when the latest occurrence closed. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"9:40 AM\".\nVoiceOver label of a received reminder's nudge card. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\".",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -110,6 +110,28 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@, %2$@, %3$@, %4$@"
+          }
+        }
+      }
+    },
+    "%@, %@, %@, %@, %@, %@" : {
+      "comment" : "VoiceOver label of a Reminders tab row of a received reminder with no tags. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\". 3: its strength, such as \"Firm\". 4: its status, such as \"Nudging\". 5: its due day, such as \"Today\". 6: its due time, such as \"9:00 AM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, %3$@, %4$@, %5$@, %6$@"
+          }
+        }
+      }
+    },
+    "%@, %@, %@, %@, %@, %@, tags: %@" : {
+      "comment" : "VoiceOver label of a Reminders tab row of a received reminder. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\". 3: its strength, such as \"Firm\". 4: its status, such as \"Nudging\". 5: its due day, such as \"Today\". 6: its due time, such as \"9:00 AM\". 7: its tags, such as \"#home and #errands\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, %3$@, %4$@, %5$@, %6$@, tags: %7$@"
           }
         }
       }
@@ -1261,6 +1283,12 @@
     },
     "From" : {
       "comment" : "Reminders' filter sheet: the switch and date picker for the first day a reminder may be due."
+    },
+    "From %@" : {
+      "comment" : "Under a received reminder's title on Now, My Day and the Reminders tab. The placeholder is the sender's name, such as \"Riley Park\"."
+    },
+    "From Someone" : {
+      "comment" : "Under a received reminder's title on Now, My Day and the Reminders tab, when the app doesn't know who sent it."
     },
     "General" : {
       "comment" : "Settings: header of the first section, with the About row."

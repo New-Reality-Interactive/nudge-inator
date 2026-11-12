@@ -75,12 +75,20 @@ struct NudgeCardView: View {
     private var summary: some View {
         VStack(alignment: .leading, spacing: Design.Spacing.s2) {
             TopRow(card: card)
-            Text(verbatim: card.title)
-                .font(.headline)
-                .foregroundStyle(Color(uiColor: .label))
+            VStack(alignment: .leading, spacing: Design.Spacing.line) {
+                Text(verbatim: card.title)
+                    .font(.headline)
+                    .foregroundStyle(Color(uiColor: .label))
+                // Here, not in the details: at accessibility sizes Done comes between the two,
+                // and the label stays under the title (DESIGN.md). The top row's badge shows the
+                // strength.
+                if let from = card.from {
+                    FromLabel(from: from)
+                }
+            }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: card.title))
+        .accessibilityLabel(card.voiceOverLabel.map { Text($0) } ?? Text(verbatim: card.title))
         .accessibilityValue(Text(card.voiceOverValue))
         // The summary is one element, so say outright that it opens something.
         .accessibilityAddTraits(openDetails == nil ? [] : .isButton)
