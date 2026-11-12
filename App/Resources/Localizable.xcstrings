@@ -123,6 +123,17 @@
         }
       }
     },
+    "%@, %@, %@, %@, %@" : {
+      "comment" : "VoiceOver label of a row on the Reminders tab's Sent view. 1: who it was sent to, such as \"Riley Park\". 2: the reminder's title. 3: \"Delivered\" or \"Not delivered yet\". 4: its due day, such as \"Today\". 5: its due time, such as \"9:00 AM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, %3$@, %4$@, %5$@"
+          }
+        }
+      }
+    },
     "%@, %@, %@, %@, %@, %@" : {
       "comment" : "VoiceOver label of a Reminders tab row of a received reminder with no tags. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\". 3: its strength, such as \"Firm\". 4: its status, such as \"Nudging\". 5: its due day, such as \"Today\". 6: its due time, such as \"9:00 AM\".",
       "localizations" : {
@@ -962,6 +973,9 @@
     "Couldn't Delete Your Data" : {
       "comment" : "Settings: title of the message shown when deleting everything failed."
     },
+    "Couldn't Delete the Reminder" : {
+      "comment" : "A sent reminder's details: title of the message shown when Delete couldn't be kept, so nothing was canceled."
+    },
     "Couldn't Disconnect" : {
       "comment" : "Disconnect's sheet and Connection Ended: title of the message shown when the disconnect couldn't be saved."
     },
@@ -972,7 +986,7 @@
       "comment" : "Invite: title of the message shown when the invite couldn't be made."
     },
     "Couldn't Send the Reminder" : {
-      "comment" : "The reminder form: title of the message shown when Add couldn't send the reminder to the people chosen in Send To."
+      "comment" : "The reminder form: title of the message shown when Add couldn't send the reminder to the people chosen in Send To, or Save couldn't keep a change to a reminder already sent."
     },
     "Created" : {
       "comment" : "Reminders tab's Sort menu: the header of the section that sorts by when each reminder was made."
@@ -1011,10 +1025,13 @@
       "comment" : "Tags: confirms deleting the tag, as Delete Reminder does for a reminder. The reminders that have it are kept."
     },
     "Delete “%@”?" : {
-      "comment" : "Asked before deleting a reminder, from its details or a Reminders tab row. The placeholder is its title."
+      "comment" : "Asked before deleting a reminder, from its details, a Reminders tab row, or a sent reminder's details. The placeholder is its title."
     },
     "Deletes them and cancels their nudges and alarms." : {
       "comment" : "Disconnect's sheet: under Remove."
+    },
+    "Delivered" : {
+      "comment" : "A sent reminder's label on the Sent view and its details: the person's copy has reached their iPhone."
     },
     "Delivery Mode" : {
       "comment" : "A connection's page: the choice of how a reminder from the person starts. Also the row on the Connected sheet and under \"What <name> Chose\"."
@@ -1407,6 +1424,12 @@
     "It stops working, even if they've already got it." : {
       "comment" : "The question before canceling an invite: under its title."
     },
+    "It was deleted while you were editing it, so there's nothing to save." : {
+      "comment" : "The Edit Reminder form: under This Reminder Was Deleted."
+    },
+    "It's canceled on everyone's iPhone, with a note saying so." : {
+      "comment" : "Under the question asked before deleting a reminder this person sent to others."
+    },
     "Its sender owns this. You can change only its tags." : {
       "comment" : "VoiceOver hint on each field of a received reminder's Edit Reminder form, which only its sender can change."
     },
@@ -1436,6 +1459,9 @@
     },
     "Match" : {
       "comment" : "A filter sheet: label of the choice between All Tags and Any Tag."
+    },
+    "Mine" : {
+      "comment" : "Reminders tab: the Mine | Sent control's choice that shows the person's own reminders, received ones included."
     },
     "Missed" : {
       "comment" : "My Day: the caption of the count of occurrences missed today.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed without Done, by its give-up limit or a take-over."
@@ -1556,11 +1582,17 @@
     "Not Set" : {
       "comment" : "Settings: status of the Alarms row before the person has been asked about alarms.\nSettings: status of the Badges row before the person has been asked about badges, or just after an update while the app turns them on."
     },
+    "Not delivered yet" : {
+      "comment" : "Under a sent reminder's title on the Sent view, and under a person's name on its details: their copy hasn't reached their iPhone yet."
+    },
     "Notes" : {
       "comment" : "The reminder form's notes field."
     },
     "Notes and tags stay in the app. Notifications and alarms show the title, not these." : {
       "comment" : "Under the reminder form's Title, Notes and Tags."
+    },
+    "Nothing Sent" : {
+      "comment" : "Reminders tab, Sent: title when this person has sent nothing to anyone connected."
     },
     "Nothing closed yet today." : {
       "comment" : "Now: the Last 24 Hours section when no occurrence closed in that time."
@@ -1582,6 +1614,9 @@
     },
     "Nothing scheduled this week." : {
       "comment" : "Now: the Coming Up section when nothing is due in the next 7 days."
+    },
+    "Nothing was canceled. Try again." : {
+      "comment" : "A sent reminder's details: under Couldn't Delete the Reminder."
     },
     "Nothing was deleted. Your reminders and their nudges are as they were. Try again." : {
       "comment" : "Settings: under the message shown when deleting everything failed."
@@ -1723,7 +1758,7 @@
       }
     },
     "OK" : {
-      "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nDisconnect's sheet and Connection Ended: dismisses Couldn't Disconnect.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the message that the invite couldn't be made.\nSettings: dismisses the message that deleting failed.\nThe reminder form: dismisses the message that the reminder couldn't be sent."
+      "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nA sent reminder's details: dismisses the message that the reminder couldn't be deleted.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nDisconnect's sheet and Connection Ended: dismisses Couldn't Disconnect.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the message that the invite couldn't be made.\nSettings: dismisses the message that deleting failed.\nThe Edit Reminder form: closes the form of a sent reminder that was deleted while it was open.\nThe reminder form: dismisses the message that the reminder couldn't be sent."
     },
     "Off" : {
       "comment" : "A connection's page and the Connected sheet: Status Sharing is off.\nReminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off."
@@ -1882,13 +1917,19 @@
       "comment" : "Settings: row that sends a notification in a few seconds, to see how a nudge looks."
     },
     "Sent" : {
-      "comment" : "An invited person's page: when the invite was sent.\nSettings: shown beside Send a Test Nudge for a few seconds after it was tapped, while the test nudge is on its way."
+      "comment" : "An invited person's page: when the invite was sent.\nReminders tab: the Mine | Sent control's choice that shows the reminders the person sent to others.\nSettings: shown beside Send a Test Nudge for a few seconds after it was tapped, while the test nudge is on its way."
+    },
+    "Sent To" : {
+      "comment" : "A sent reminder's details: section header above the people it was sent to."
     },
     "Settings" : {
       "comment" : "Tab bar: the app's settings tab"
     },
     "Sharing" : {
       "comment" : "Settings: header of the section with Connections."
+    },
+    "Show" : {
+      "comment" : "Reminders tab: the hidden label of the Mine | Sent control."
     },
     "Show All" : {
       "comment" : "My Day: the button that clears the chosen count and shows every row."
@@ -2030,11 +2071,17 @@
     "This Build" : {
       "comment" : "About page: header of the section with the app's version and build number."
     },
+    "This Reminder Was Deleted" : {
+      "comment" : "The Edit Reminder form of a reminder this person sent: title of the message shown when Save finds it was deleted while the form was open."
+    },
     "This deletes every reminder, tag and all history from this iPhone, and cancels every nudge and alarm. It can't be undone." : {
       "comment" : "Settings: under the question asked before deleting everything."
     },
     "This deletes its history too, and cancels any nudges and alarms." : {
       "comment" : "Under the question asked before deleting a reminder."
+    },
+    "This doesn't nudge you. Deleting cancels it on everyone's iPhone, with a note." : {
+      "comment" : "A sent reminder's details: under Delete Reminder."
     },
     "This removes your copy and cancels its nudges and alarms." : {
       "comment" : "Under the question asked before removing a received reminder."

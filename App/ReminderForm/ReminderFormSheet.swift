@@ -53,7 +53,7 @@ struct ReminderFormSheet: View {
         }
         .sendToInviteFlow(sharing: form.sharing, isPresented: $isInviting)
         .alert(
-            Text("Couldn't Send the Reminder", comment: "The reminder form: title of the message shown when Add couldn't send the reminder to the people chosen in Send To."),
+            Text("Couldn't Send the Reminder", comment: "The reminder form: title of the message shown when Add couldn't send the reminder to the people chosen in Send To, or Save couldn't keep a change to a reminder already sent."),
             isPresented: $form.isShowingCouldntSend
         ) {
             Button {
@@ -62,6 +62,18 @@ struct ReminderFormSheet: View {
             }
         } message: {
             Text("Nothing was sent. Try again.", comment: "The reminder form: under Couldn't Send the Reminder.")
+        }
+        .alert(
+            Text("This Reminder Was Deleted", comment: "The Edit Reminder form of a reminder this person sent: title of the message shown when Save finds it was deleted while the form was open."),
+            isPresented: $form.isShowingDeletedMeanwhile
+        ) {
+            Button {
+                dismiss()
+            } label: {
+                Text("OK", comment: "The Edit Reminder form: closes the form of a sent reminder that was deleted while it was open.")
+            }
+        } message: {
+            Text("It was deleted while you were editing it, so there's nothing to save.", comment: "The Edit Reminder form: under This Reminder Was Deleted.")
         }
         // On the stack, not its root: the root is covered by the Tags page and the Custom sheet,
         // which lock too when the reminder falls due while they're open.

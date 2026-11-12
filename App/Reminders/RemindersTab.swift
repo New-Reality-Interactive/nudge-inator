@@ -11,10 +11,14 @@ import SwiftUI
 ///
 /// The sheet's filters and the search are screen state, so a launch resets them and Back from
 /// details keeps them.
+///
+/// With sharing (ticket 201), a Mine | Sent control chooses between this person's own reminders,
+/// received ones included, and what they sent (`SentList`). It is screen state too, so a launch
+/// starts on Mine. The shipped app has no sharing until #216, so it has no control.
 struct RemindersTab: View {
     let state: ScreenState
-    /// The reminders whose details are pushed on Reminders.
-    @Binding var path: [OpenedReminder]
+    /// What is pushed on Reminders: reminders' details from Mine, sent reminders' from Sent.
+    @Binding var path: NavigationPath
     /// Whether Reminders is the chosen tab. Choosing it again sorts again; `onAppear` isn't relied
     /// on for that, since the docs don't say a tab's content appears again on each return.
     var isChosen = true
@@ -36,40 +40,46 @@ struct RemindersTab: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// The sort previews show, since they have no app model to keep it.
     @State private var previewSort = RemindersSort.createdOldestFirst
+    /// Mine or Sent (ticket 201).
+    @State private var mineOrSentChoice = MineOrSent.mine
+
+    /// The Mine | Sent control's choices.
+    enum MineOrSent: Hashable, CaseIterable {
+        case mine
+        case sent
+
+        var title: Text {
+            switch self {
+            case .mine: Text("Mine", comment: "Reminders tab: the Mine | Sent control's choice that shows the person's own reminders, received ones included.")
+            case .sent: Text("Sent", comment: "Reminders tab: the Mine | Sent control's choice that shows the reminders the person sent to others.")
+            }
+        }
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
             TabScreen(state: state) {
                 TimelineView(.everyMinute) { _ in
-                    let screen = engine.map {
-                        RemindersScreen(
-                            engine: $0,
-                            sort: sort.wrappedValue,
-                            filter: filter,
-                            keptOrder: keptOrder.ids(for: sort.wrappedValue, filter: filter),
-                            senders: model?.senders ?? Senders()
-                        )
-                    }
-                    if let screen, screen.emptyState != .noReminders {
-                        RemindersListView(
-                            screen: screen,
-                            filter: filter,
-                            countFocusRequests: countFocusRequests,
-                            clearFilters: clearSearchAndFilter,
-                            openDetails: { path.append(OpenedReminder(id: $0)) },
-                            markDone: { model?.markDone($0) },
-                            delete: { model?.delete($0) }
-                        )
+                    if mineOrSentChoice == .sent, let model, let sharing = model.sharing {
+                        SentList(screen: SentScreen(engine: model.engine, sharing: sharing.data)) {
+                            path.append(OpenedSentReminder(id: $0))
+                        }
                     } else {
-                        noReminders
+                        mine
                     }
                 }
             }
             .modifier(ListSearchField(
-                isShown: hasReminders,
+                isShown: hasReminders && mineOrSentChoice == .mine,
                 text: searchField,
                 prompt: Text("Search titles and notes", comment: "Reminders tab: the search field's prompt.")
             ))
+            // Under the navigation bar and above the search field (DESIGN.md, Mine | Sent). Outside the
+            // search field's modifier, which comes and goes with Mine, so choosing Sent doesn't make
+            // the control a new view under the person's finger.
+            .safeAreaBar(edge: .top) {
+                if offersSent { mineOrSent }
+            }
             // The field and the Filter button go with the last reminder, and an old search or filter
             // mustn't hide the next one made. The sort stays: it persists by design.
             .onChange(of: hasReminders) {
@@ -77,8 +87,10 @@ struct RemindersTab: View {
             }
             .navigationTitle(Text(AppTab.reminders.title))
             .reminderDetailsDestination()
+            .navigationDestination(for: OpenedSentReminder.self) { SentReminderDetailsView(id: $0.id) }
             .toolbar {
-                if hasReminders {
+                // Sent's search, Filter and Sort are #328's and #329's.
+                if hasReminders, mineOrSentChoice == .mine {
                     ToolbarItem(placement: .topBarTrailing) {
                         FilterButton(
                             sectionsInUse: appliedChoices.sectionsInUse,
@@ -118,6 +130,53 @@ struct RemindersTab: View {
 
     private var engine: Engine? {
         model?.engine ?? previewEngine
+    }
+
+    /// Mine: the person's own reminders and those received, as before sharing.
+    @ViewBuilder private var mine: some View {
+        let screen = engine.map {
+            RemindersScreen(
+                engine: $0,
+                sort: sort.wrappedValue,
+                filter: filter,
+                keptOrder: keptOrder.ids(for: sort.wrappedValue, filter: filter),
+                senders: model?.senders ?? Senders()
+            )
+        }
+        if let screen, screen.emptyState != .noReminders {
+            RemindersListView(
+                screen: screen,
+                filter: filter,
+                countFocusRequests: countFocusRequests,
+                clearFilters: clearSearchAndFilter,
+                openDetails: { path.append(OpenedReminder(id: $0)) },
+                markDone: { model?.markDone($0) },
+                delete: { model?.delete($0) }
+            )
+        } else {
+            noReminders
+        }
+    }
+
+    /// Whether the tab offers Sent: only with the sharing model.
+    private var offersSent: Bool {
+        model?.sharing != nil
+    }
+
+    /// The Mine | Sent control: the system's segmented picker, filling the content width. Two short
+    /// words, so it stays segmented at the accessibility sizes (DESIGN.md). Its label is hidden, as a
+    /// segmented control shows none; VoiceOver reads the choices and which one is chosen.
+    private var mineOrSent: some View {
+        Picker(selection: $mineOrSentChoice.transaction(Self.noAnimation)) {
+            ForEach(MineOrSent.allCases, id: \.self) { $0.title.tag($0) }
+        } label: {
+            Text("Show", comment: "Reminders tab: the hidden label of the Mine | Sent control.")
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .padding(.horizontal, Design.Spacing.s4)
+        .padding(.bottom, Design.Spacing.s2)
+        .frame(maxWidth: Design.Spacing.readableWidth)
     }
 
     private var hasReminders: Bool {
@@ -319,7 +378,7 @@ private struct RemindersRowView: View {
                 SwipeDeleteTile(label: deleteLabel) { isConfirmingDelete = true }
             }
         }
-        .deleteReminderConfirmation(title: row.title, isReceived: row.reminder.isReceived, isPresented: $isConfirmingDelete, confirm: delete)
+        .deleteReminderConfirmation(title: row.title, kind: DeletedReminderKind(isReceived: row.reminder.isReceived), isPresented: $isConfirmingDelete, confirm: delete)
     }
 
     /// Tokens, joined by spaces: they are not a sentence. The filter's are bold (DESIGN.md).
@@ -347,25 +406,25 @@ private struct RemindersRowView: View {
 
 #if DEBUG
 #Preview("Light") {
-    RemindersTab(state: .ready, path: .constant([]), previewEngine: .myDayPreview())
+    RemindersTab(state: .ready, path: .constant(NavigationPath()), previewEngine: .myDayPreview())
 }
 
 #Preview("Dark") {
-    RemindersTab(state: .ready, path: .constant([]), previewEngine: .myDayPreview())
+    RemindersTab(state: .ready, path: .constant(NavigationPath()), previewEngine: .myDayPreview())
         .preferredColorScheme(.dark)
 }
 
 #Preview("Largest text") {
-    RemindersTab(state: .ready, path: .constant([]), previewEngine: .myDayPreview())
+    RemindersTab(state: .ready, path: .constant(NavigationPath()), previewEngine: .myDayPreview())
         .environment(\.dynamicTypeSize, .accessibility5)
 }
 
 #Preview("Landscape", traits: .landscapeLeft) {
-    RemindersTab(state: .ready, path: .constant([]), previewEngine: .myDayPreview())
+    RemindersTab(state: .ready, path: .constant(NavigationPath()), previewEngine: .myDayPreview())
 }
 
 #Preview("Empty") {
-    RemindersTab(state: .ready, path: .constant([]))
+    RemindersTab(state: .ready, path: .constant(NavigationPath()))
 }
 
 #Preview("No match, filters") {

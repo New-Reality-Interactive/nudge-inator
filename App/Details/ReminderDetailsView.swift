@@ -258,7 +258,7 @@ private struct DeleteButton: View {
                 Image(systemName: "trash")
             }
         }
-        .deleteReminderConfirmation(title: title, isReceived: isReceived, isPresented: $isConfirming, confirm: confirm)
+        .deleteReminderConfirmation(title: title, kind: DeletedReminderKind(isReceived: isReceived), isPresented: $isConfirming, confirm: confirm)
     }
 }
 
@@ -332,36 +332,49 @@ private struct ScheduleRows: View {
     let details: ReminderDetails
 
     var body: some View {
+        ScheduleSummaryRows(repeats: details.repeats, next: details.next, pace: details.pace, breaksThroughFocus: details.reminder.breaksThroughFocus)
+        if let last = details.lastOccurrence {
+            LastOccurrenceRow(last: last)
+        }
+    }
+}
+
+/// Repeats, Next, Pace and Break Through Focus: a reminder's details, and a sent reminder's
+/// (ticket 201).
+struct ScheduleSummaryRows: View {
+    let repeats: String
+    let next: ReminderDetails.Next
+    let pace: Pace
+    /// On for Relentless, which always breaks through Focus (ADR 0004).
+    let breaksThroughFocus: Bool
+
+    var body: some View {
         LabeledContent {
-            Text(verbatim: details.repeats)
+            Text(verbatim: repeats)
         } label: {
             Text("Repeats", comment: "Reminder details, Schedule: how often the reminder comes due.")
         }
         LabeledContent {
-            next
+            nextText
         } label: {
             Text("Next", comment: "Reminder details, Schedule: when the reminder is next due.")
         }
         LabeledContent {
-            Text(details.pace.title)
+            Text(pace.title)
         } label: {
             Text("Pace", comment: "Reminder details, Schedule: how the waits between the reminder's nudges are spaced.")
         }
         LabeledContent {
-            // On for Relentless, which always breaks through Focus (ADR 0004).
-            details.reminder.breaksThroughFocus
+            breaksThroughFocus
                 ? Text("On", comment: "Reminder details: Break Through Focus is on.")
                 : Text("Off", comment: "Reminder details: Break Through Focus is off.")
         } label: {
             Text("Break Through Focus", comment: "Reminder details, Schedule: the per-reminder switch that sends nudges as alarms.")
         }
-        if let last = details.lastOccurrence {
-            LastOccurrenceRow(last: last)
-        }
     }
 
-    @ViewBuilder private var next: some View {
-        switch details.next {
+    @ViewBuilder private var nextText: some View {
+        switch next {
         case .at(let day, let time):
             Text("\(day) at \(time)", comment: "Reminder details, Schedule: the next due time. 1: \"Today\", \"Tomorrow\" or a short date. 2: the time, such as \"8:00 AM\".")
         case .paused:
@@ -396,8 +409,8 @@ private struct LastOccurrenceRow: View {
     }
 }
 
-/// What a pushed reminder shows when the engine no longer holds it.
-private struct NotFoundView: View {
+/// What a pushed reminder shows when it is no longer held: deleted, or never there.
+struct NotFoundView: View {
     var body: some View {
         ContentUnavailableView {
             Label {

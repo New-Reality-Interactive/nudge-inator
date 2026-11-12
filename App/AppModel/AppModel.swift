@@ -467,6 +467,20 @@ final class AppModel {
         try sharing.send(reminder, to: connectionIDs)
     }
 
+    /// The sender's Edit of a sent reminder (ticket 201): it goes to its recipients through sharing.
+    /// Throws, changing and sending nothing, with no sharing, or if the sharing store won't keep it.
+    func reviseSent(_ edited: Reminder) throws {
+        guard let sharing else { throw NoSharing() }
+        try sharing.reviseSent(edited)
+    }
+
+    /// The sender's Delete on a sent reminder's details (ticket 201). Throws, changing and sending
+    /// nothing, with no sharing, or if the sharing store won't keep it.
+    func deleteSent(_ reminderID: Reminder.ID) throws {
+        guard let sharing else { throw NoSharing() }
+        try sharing.deleteSent(reminderID)
+    }
+
     /// A received reminder's "Don't share this one" (ticket 200). Throws with no sharing, or if the
     /// sharing store won't keep it.
     func setNotSharing(_ notSharing: Bool, for reminderID: Reminder.ID) throws {
