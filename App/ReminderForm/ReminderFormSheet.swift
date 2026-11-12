@@ -240,12 +240,15 @@ private struct ScheduleSection: View {
     var body: some View {
         let locked = form.lockedFields
         Section {
-            DatePicker(selection: $form.dueTime) {
-                LockableLabel(isLocked: locked.contains(.dueTime)) {
-                    Text("Starts", comment: "The reminder form's start date and time.")
-                }
+            let starts = Text("Starts", comment: "The reminder form's start date and time.")
+            if locked.contains(.dueTime) {
+                // Plain text, as the other locked rows are: a disabled date picker's VoiceOver
+                // element is its label alone, which never reads the lock's hint (ticket 200's
+                // device check).
+                LockedValueRow(label: starts, value: Text(form.dueTime, format: .dateTime.month(.abbreviated).day().year().hour().minute()))
+            } else {
+                DatePicker(selection: $form.dueTime) { starts }
             }
-            .lockedWhileNudging(locked.contains(.dueTime))
             RepeatRow(form: form, isLocked: locked.contains(.repeatRule), isShowingCustomRepeat: $isShowingCustomRepeat)
             if form.showsEndRepeat {
                 EndRepeatRows(form: form, isLocked: locked.contains(.repeatRule))
@@ -357,12 +360,13 @@ private struct EndRepeatRows: View {
             // stays in range, or the picker would show the start in its place while the rule kept
             // the old date (device check, ticket 25); the reason under Starts says why.
             let startDay = Calendar.autoupdatingCurrent.startOfDay(for: form.dueTime)
-            DatePicker(selection: $form.repeatEnd.endDate, in: min(startDay, form.repeatEnd.endDate)..., displayedComponents: .date) {
-                LockableLabel(isLocked: isLocked) {
-                    Text("End Date", comment: "The reminder form's row under End Repeat: the last day the repeat can fall due.")
-                }
+            let endDate = Text("End Date", comment: "The reminder form's row under End Repeat: the last day the repeat can fall due.")
+            if isLocked {
+                // Plain text, as Starts is when locked, so VoiceOver reads the lock's hint.
+                LockedValueRow(label: endDate, value: Text(form.repeatEnd.endDate, format: .dateTime.month(.abbreviated).day().year()))
+            } else {
+                DatePicker(selection: $form.repeatEnd.endDate, in: min(startDay, form.repeatEnd.endDate)..., displayedComponents: .date) { endDate }
             }
-            .lockedWhileNudging(isLocked)
         }
     }
 }

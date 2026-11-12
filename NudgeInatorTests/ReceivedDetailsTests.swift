@@ -207,6 +207,22 @@ struct ReceivedDetailsTests {
         #expect(saved.notes == "Two with water.")
     }
 
+    @Test func aTagChangeOnANudgingCopySaves() async throws {
+        let (alex, riley) = try await phones()
+        try await send(pills, from: alex, to: riley)
+        riley.clock.now = NewYork.local(2026, 10, 15, 8, 40)
+        await riley.model.appOpened()
+        await settle(riley)
+        let copy = try received(on: riley)
+        let form = try editForm(of: copy.id, on: riley)
+
+        form.addTag(named: "Pills")
+
+        #expect(form.save(to: riley.model))
+        let saved = try received(on: riley)
+        #expect(riley.model.engine.tagLabels(for: saved.tagIDs) == ["#Pills"])
+    }
+
     @Test func theFormOfAnOwnReminderIsAsBefore() async throws {
         let (_, riley) = try await phones()
         riley.model.add(pills)
