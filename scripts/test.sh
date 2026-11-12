@@ -143,6 +143,10 @@ scripts/tests/screenshots-failures-test.sh || failed+=("screenshots-failures")
 step "The String Catalog sync changes only what is out of date"
 scripts/tests/sync-strings-test.sh || failed+=("sync-strings")
 
+# No phone needed: stand-ins for xcrun and gh (#352).
+step "The phone-check comments name the connected phone, and post nothing without one"
+scripts/tests/phone-check-test.sh || failed+=("phone-check")
+
 # chevron.right points the wrong way in right-to-left languages (#121).
 step "Chevrons use chevron.forward"
 if grep -rn --include='*.swift' 'chevron\.right' App NudgeWidgets Packages; then
