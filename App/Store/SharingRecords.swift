@@ -1,4 +1,5 @@
 import Foundation
+import NudgeEngine
 import SwiftData
 
 /// A connection as SwiftData saves it in the sharing store.
@@ -133,12 +134,28 @@ final class ReceivedSyncRecord {
     var notSharingThisOne: Bool
     var waitingToSync: Bool
     var recordSystemFields: Data?
+    /// The copy's change note, as `[ReceivedChange].storedData()` spells it, and when it was taken;
+    /// `nil` while nobody has changed the copy.
+    var changeNote: Data?
+    var changeNoteAt: Date?
 
     init(position: Int, reminderID: UUID) {
         self.position = position
         self.reminderID = reminderID
         notSharingThisOne = false
         waitingToSync = false
+    }
+
+    /// The state as the app reads it. Throws for a change note that can't be read.
+    func receivedSyncState() throws -> ReceivedSyncState {
+        let changes = try [ReceivedChange](storedData: changeNote)
+        return ReceivedSyncState(
+            reminderID: reminderID,
+            notSharingThisOne: notSharingThisOne,
+            waitingToSync: waitingToSync,
+            recordSystemFields: recordSystemFields,
+            changeNote: changes.isEmpty ? nil : ReceivedChangeNote(changes: changes, at: changeNoteAt ?? .distantPast)
+        )
     }
 }
 

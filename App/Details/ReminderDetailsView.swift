@@ -164,6 +164,9 @@ private struct DetailsList: View {
             Section {
                 DetailsHero(details: details)
             }
+            if let note = details.received?.changeNote {
+                ChangeNoteSection(note: note)
+            }
             if details.isWaiting {
                 WaitingSection(title: details.title, accept: accept, remove: delete)
             }
@@ -250,6 +253,34 @@ private struct DetailsList: View {
             heldCard != nil
         } set: { isHeld in
             heldCard = isHeld ? card : nil
+        }
+    }
+}
+
+/// What the sender changed on a received reminder (ticket 204, the mockup's `noteCard`): a note
+/// under the hero, with `info.circle`, a semibold heading and a line each field, in no status color.
+/// VoiceOver reads it as one element.
+private struct ChangeNoteSection: View {
+    let note: ReminderDetails.ChangeNote
+
+    var body: some View {
+        Section {
+            Label {
+                VStack(alignment: .leading, spacing: Design.Spacing.line) {
+                    Text(note.heading)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color(uiColor: .label))
+                    ForEach(Array(note.lines.enumerated()), id: \.offset) { _, line in
+                        Text(line)
+                            .font(.subheadline)
+                            .foregroundStyle(Color(uiColor: .secondaryLabel))
+                    }
+                }
+            } icon: {
+                Image(systemName: "info.circle")
+                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+            }
+            .accessibilityElement(children: .combine)
         }
     }
 }

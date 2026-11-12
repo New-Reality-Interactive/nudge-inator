@@ -16,12 +16,34 @@
       }
     },
     "%@ at %@" : {
-      "comment" : "An invited person's page: when the invite was sent. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"7:40 AM\".\nReminder details, Schedule: the next due time. 1: \"Today\", \"Tomorrow\" or a short date. 2: the time, such as \"8:00 AM\".",
+      "comment" : "A day and a time of day, such as \"Today at 8:02 AM\". 1: the day, such as \"Today\" or \"Tue, Oct 20\". 2: the time.\nAn invited person's page: when the invite was sent. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"7:40 AM\".\nReminder details, Schedule: the next due time. 1: \"Today\", \"Tomorrow\" or a short date. 2: the time, such as \"8:00 AM\".",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "%@ changed this · %@" : {
+      "comment" : "Reminder details: heading of the note on a received reminder its sender changed. 1: the sender's name. 2: when the change arrived, such as \"Today at 8:02 AM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ changed this · %2$@"
+          }
+        }
+      }
+    },
+    "%@ changed this: %@" : {
+      "comment" : "Body of the notification that the sender changed a reminder they sent. 1: the sender's name. 2: what changed, such as \"due time changed from 8:30 AM to 9:00 AM\", or several joined as a list.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ changed this: %2$@"
           }
         }
       }
@@ -871,6 +893,12 @@
     "Break Through Focus is off, so during a Focus every nudge waits, unless you allow %@ in that Focus." : {
       "comment" : "How It Nudges footer, for a reminder whose Break Through Focus switch is off. The placeholder is the app's name."
     },
+    "Break Through Focus turned off" : {
+      "comment" : "Change note line: the sender turned a reminder's Break Through Focus switch off."
+    },
+    "Break Through Focus turned on" : {
+      "comment" : "Change note line: the sender turned a reminder's Break Through Focus switch on."
+    },
     "Build" : {
       "comment" : "About page: row showing the app's build number, such as \"12\"."
     },
@@ -1126,6 +1154,17 @@
     },
     "Due Date, Latest First" : {
       "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Latest First."
+    },
+    "Due time changed from %@ to %@" : {
+      "comment" : "Change note line: the sender moved a reminder's due time. 1: the old time, such as \"8:00 AM\", or with its day, such as \"Today at 8:00 AM\", when the day changed too. 2: the new time, in the same style.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Due time changed from %1$@ to %2$@"
+          }
+        }
+      }
     },
     "Due today with all selected tags" : {
       "comment" : "My Day: under the filter tokens when two or more tags are chosen and Match is All Tags."
@@ -1512,7 +1551,7 @@
       "comment" : "A filter sheet: VoiceOver's reason the Match choice is disabled."
     },
     "Never" : {
-      "comment" : "Repeat preset, in the form's Repeat menu: the reminder doesn't repeat.\nThe reminder form's End Repeat choice: the repeat never ends."
+      "comment" : "Change note line: a reminder that doesn't repeat, as the old or new repeat.\nRepeat preset, in the form's Repeat menu: the reminder doesn't repeat.\nThe reminder form's End Repeat choice: the repeat never ends."
     },
     "Never rings as an alarm." : {
       "comment" : "Under the reminder form's strength, when none of its nudges rings."
@@ -1611,6 +1650,9 @@
     },
     "Notes and tags stay in the app. Notifications and alarms show the title, not these." : {
       "comment" : "Under the reminder form's Title, Notes and Tags."
+    },
+    "Notes changed" : {
+      "comment" : "Change note line: the sender changed a reminder's notes, which are shown above, so the old and new text aren't repeated."
     },
     "Nothing Sent" : {
       "comment" : "Reminders tab, Sent: title when this person has sent nothing to anyone connected."
@@ -1841,6 +1883,17 @@
     "Pace" : {
       "comment" : "Reminder details, Schedule: how the waits between the reminder's nudges are spaced.\nThe pace choice, in the reminder form and on Settings' Default Pace page: Escalating or Consistent."
     },
+    "Pace changed from %@ to %@" : {
+      "comment" : "Change note line: the sender changed a reminder's pace. 1: the old pace, such as \"Escalating\". 2: the new one, such as \"Consistent · 30 min\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Pace changed from %1$@ to %2$@"
+          }
+        }
+      }
+    },
     "Pause Reminder" : {
       "comment" : "Reminder details: stops the reminder's nudging until it is resumed."
     },
@@ -1909,6 +1962,17 @@
     },
     "Repeat" : {
       "comment" : "The reminder form's Repeat row, which opens a menu of repeats."
+    },
+    "Repeat changed from %@ to %@" : {
+      "comment" : "Change note line: the sender changed how a reminder repeats. 1: the old repeat in words, such as \"Every day at 8:30 AM\", or \"Never\". 2: the new one.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Repeat changed from %1$@ to %2$@"
+          }
+        }
+      }
     },
     "Repeats" : {
       "comment" : "Reminder details, Schedule: how often the reminder comes due."
@@ -2038,6 +2102,17 @@
     "Strength" : {
       "comment" : "Reminders' filter sheet: header of the list of strengths.\nThe reminder form's strength choice: Gentle, Firm or Relentless."
     },
+    "Strength changed from %@ to %@" : {
+      "comment" : "Change note line: the sender changed a reminder's strength. 1: the old strength, such as \"Gentle\". 2: the new one.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Strength changed from %1$@ to %2$@"
+          }
+        }
+      }
+    },
     "Support" : {
       "comment" : "About page: row that opens the app's support page on the website, in the web browser."
     },
@@ -2127,6 +2202,17 @@
     },
     "Title" : {
       "comment" : "The reminder form's title field, which must be filled in."
+    },
+    "Title changed from “%@” to “%@”" : {
+      "comment" : "Change note line: the sender renamed a reminder. 1: the old title. 2: the new title.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Title changed from “%1$@” to “%2$@”"
+          }
+        }
+      }
     },
     "To" : {
       "comment" : "An invited person's page: the email address or phone number the invite was sent to.\nReminders' filter sheet: the switch and date picker for the last day a reminder may be due."

@@ -657,6 +657,34 @@ extension AppModel: ReceivedReminders {
         postArrival(of: added)
     }
 
+    /// The sender's revision of a copy held (ticket 204): the engine applies it, passing the lock, and
+    /// plans from the new values; a ringing alarm of a due time it moved stops, as Pause stops it.
+    /// Returns what changed: nothing for a revision that isn't newer or changes nothing. A change
+    /// posts a notification saying what, in place of the copy's last one. Throws if the reminders
+    /// haven't been read.
+    func applySendersRevision(_ revised: Reminder) throws -> [ReceivedChange] {
+        guard case .ready = launchState, store != nil else { throw RemindersNotLoaded() }
+        var changes: [ReceivedChange] = []
+        perform { engine in
+            let dueTimes = engine.dueTimesAnAlarmMayBeRinging(for: revised.id)
+            changes = engine.applySendersRevision(revised)
+            if changes.contains(where: \.movesNudging) {
+                alarms.stopRinging(of: revised.id, dueAt: dueTimes)
+            }
+        }
+        if !changes.isEmpty { postChange(of: revised.id, changes) }
+        return changes
+    }
+
+    /// The notification of a sender's change (ticket 204): the reminder's title, then "<name> changed
+    /// this: <what changed>". It takes the place of the copy's arrival or last change in Notification
+    /// Center, which share an identifier.
+    private func postChange(of reminderID: Reminder.ID, _ changes: [ReceivedChange]) {
+        guard let copy = engine.reminders.first(where: { $0.id == reminderID }), let name = senders.name(of: copy) else { return }
+        let words = ChangeNoteText(ReceivedChangeNote(changes: changes, at: clock.now), dueTime: copy.dueTime, engine: engine)
+        notifications.postArrival(of: copy.id, title: copy.title, body: words.notificationBody(from: name))
+    }
+
     /// The arrival notification (ticket 200): the title, then who sent it and its strength in
     /// words, "From Alex Morgan · Firm: rings as an alarm from nudge 4".
     private func postArrival(of copy: Reminder) {

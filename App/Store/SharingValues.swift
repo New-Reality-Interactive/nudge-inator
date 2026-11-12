@@ -59,6 +59,16 @@ struct ReceivedSyncState: Equatable {
     /// What the sharing adapter keeps of the reminder's CloudKit records so it can update them: bytes
     /// the store doesn't read.
     var recordSystemFields: Data?
+    /// What the sender's latest change did to this copy, or `nil` while nobody has changed it.
+    var changeNote: ReceivedChangeNote?
+}
+
+/// What a received reminder shows after a sender's revision (GLOSSARY.md, Change note): the fields
+/// that changed with their old and new values, and when the copy took the change. The latest change
+/// only: a later one replaces it.
+struct ReceivedChangeNote: Equatable {
+    var changes: [ReceivedChange]
+    var at: Date
 }
 
 /// `CKSyncEngine`'s saved state for one database, as the adapter serialized it: bytes the store
@@ -110,8 +120,9 @@ extension SharingData {
     /// copy this person sent, and their disconnect, which leaves the connection ended until this
     /// person chooses what happens to what they received (ticket 197). Returns whether anything
     /// changed. A send, a revision and a cancel are the recipient's side: `SharingModel` keeps a
-    /// send's copy among the person's reminders before it gets here (ticket 198), and applying a
-    /// revision and a cancel to a copy is #204's and #205's, so they change nothing here yet.
+    /// send's copy among the person's reminders, and applies a revision to it with its change note,
+    /// before it gets here (tickets 198 and 204); applying a cancel is #205's, so it changes nothing
+    /// here yet.
     ///
     /// The other person's settings set their choices, never the name: the name a person sees stays
     /// the one the sharing sheet or the invite gave (ticket 196).
