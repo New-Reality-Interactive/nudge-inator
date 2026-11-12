@@ -74,7 +74,7 @@ struct StatusOnSentRowsTests {
         let row = try row(on: alex)
 
         #expect(row.trailing == .status(.comingUp))
-        #expect(row.detailLine == nil ? false : String(localized: row.detailLine!) == "Delivered")
+        #expect(String(localized: try #require(row.detailLine)) == "Delivered")
         #expect(String(localized: row.voiceOverLabel) == "Riley Park, Take the pills, Coming up, Today, 8:30\u{202F}AM")
     }
 
@@ -159,7 +159,7 @@ struct StatusOnSentRowsTests {
         #expect(statusReports(from: riley).isEmpty)
         #expect(row.trailing == .delivered)
         #expect(String(localized: try #require(row.detailLine)) == "Not sharing status")
-        #expect(String(localized: row.voiceOverLabel) == "Riley Park, Take the pills, Delivered, Not sharing status, Today, 8:30\u{202F}AM")
+        #expect(String(localized: row.voiceOverLabel) == "Riley Park, Take the pills, Delivered, not sharing status, Today, 8:30\u{202F}AM")
     }
 
     @Test func turningStatusSharingOffHidesWhatTheSenderSawAndOnShowsTheCurrentStatus() async throws {
@@ -297,6 +297,28 @@ struct StatusOnSentRowsTests {
         await open(riley, at: 8, 35, alex: alex)
 
         #expect(statusReports(from: riley).count == before)
+    }
+
+    @Test func aDisconnectSendsNoStatusReport() async throws {
+        let (alex, riley) = try await phones()
+        try await send(pills, from: alex, to: riley)
+        let before = statusReports(from: riley).count
+
+        try riley.model.disconnect(connectionID, choosing: .keepAsMyOwnReminders)
+        await open(riley, at: 8, 35, alex: alex)
+
+        #expect(statusReports(from: riley).count == before)
+    }
+
+    @Test func theSpokenRowNamesTheStatusAndWhyNoneShows() async throws {
+        let (alex, riley) = try await phones()
+        try await send(call, from: alex, to: riley)
+        await open(riley, at: 9, 5, alex: alex)
+        #expect(String(localized: try row(on: alex).voiceOverLabel) == "Riley Park, Call the clinic, Nudging, Today, 9:00\u{202F}AM")
+
+        try riley.model.setNotSharing(true, for: try copy(on: riley).id)
+        await settle(alex, riley)
+        #expect(String(localized: try row(on: alex).voiceOverLabel) == "Riley Park, Call the clinic, Delivered, not sharing this one, Today, 9:00\u{202F}AM")
     }
 
     // MARK: Accepting

@@ -69,8 +69,8 @@ extension View {
     /// receiving an invite, one that's unavailable, with `invited`, that person accepting, and with
     /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196), sending
     /// a reminder (ticket 198), getting what was sent to them (ticket 201), accepting what waits for
-    /// them (ticket 203), reporting how what you sent is going (ticket 206), changing what they sent (ticket 204), deleting it (ticket 205) or disconnecting
-    /// (ticket 197).
+    /// them (ticket 203), reporting how what you sent is going (ticket 206), changing what they sent
+    /// (ticket 204), deleting it (ticket 205) or disconnecting (ticket 197).
     func standInSharingControls(invited: SharingConnection? = nil, connected: SharingConnection? = nil) -> some View {
         toolbar {
             if let adapter = StandInSharing.current {

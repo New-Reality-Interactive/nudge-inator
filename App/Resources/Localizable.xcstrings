@@ -127,7 +127,7 @@
       }
     },
     "%@, %@" : {
-      "comment" : "Reminder details, Schedule: when the latest occurrence closed. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"9:40 AM\".\nVoiceOver label of a received reminder's nudge card. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\".\nVoiceOver: \"Delivered\", then why the person's status isn't shown. 1: \"Delivered\". 2: \"Not sharing status\" or \"Not sharing this one\".",
+      "comment" : "Reminder details, Schedule: when the latest occurrence closed. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"9:40 AM\".\nVoiceOver label of a received reminder's nudge card. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\".",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1072,6 +1072,12 @@
     },
     "Delivered" : {
       "comment" : "A sent reminder's label on the Sent view and its details: the person's copy has reached their iPhone."
+    },
+    "Delivered, not sharing status" : {
+      "comment" : "VoiceOver, on a Sent row: the copy reached the person's iPhone, and they keep how their reminders are going from the sender."
+    },
+    "Delivered, not sharing this one" : {
+      "comment" : "VoiceOver, on a Sent row: the copy reached the person's iPhone, and they keep how this one reminder is going from the sender."
     },
     "Delivery Mode" : {
       "comment" : "A connection's page: the choice of how a reminder from the person starts. Also the row on the Connected sheet and under \"What <name> Chose\"."

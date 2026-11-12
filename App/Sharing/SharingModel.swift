@@ -333,15 +333,20 @@ final class SharingModel {
             let kept = try currentData()
             for (copy, report) in reports {
                 guard let through = copy.receivedThrough, let sendersReminderID = copy.sendersReminderID, let connection = connection(through) else { continue }
-                let notSharing = kept.receivedSyncStates.first { $0.reminderID == copy.id }?.notSharingThisOne ?? false
-                let record: SentCopy.StatusRecord? = connection.mine.sharesStatus
-                    ? (notSharing ? .heldBack : SentCopy.StatusRecord(report: report, notSharingThisOne: false))
-                    : nil
+                let record = statusRecord(of: copy, report: report, in: kept, sharesStatus: connection.mine.sharesStatus)
                 try sendStatus(record, of: copy.id, sendersReminderID: sendersReminderID, through: through, deleting: through == connectionID)
             }
         } catch {
             Self.logger.error("A status report couldn't be sent: \(error, privacy: .public)")
         }
+    }
+
+    /// What the sender may be told of `copy`: its `report`, or only that this one is held back
+    /// ("Don't share this one", kept in `data`'s sync state), or with status sharing off, nothing.
+    private func statusRecord(of copy: Reminder, report: StatusReport, in data: SharingData, sharesStatus: Bool) -> SentCopy.StatusRecord? {
+        guard sharesStatus else { return nil }
+        let notSharing = data.receivedSyncStates.first { $0.reminderID == copy.id }?.notSharingThisOne ?? false
+        return notSharing ? .heldBack : SentCopy.StatusRecord(report: report, notSharingThisOne: false)
     }
 
     /// Sends `record` for the copy `copyID` of the sender's reminder `sendersReminderID`, unless it
@@ -364,8 +369,8 @@ final class SharingModel {
               let connection = connection(through), connection.mine.sharesStatus
         else { return }
         do {
-            let notSharing = try currentData().receivedSyncStates.first { $0.reminderID == copy.id }?.notSharingThisOne ?? false
-            let record: SentCopy.StatusRecord = notSharing ? .heldBack : SentCopy.StatusRecord(report: StatusReport(label: .removed, occurrences: []), notSharingThisOne: false)
+            let removed = StatusReport(label: .removed, occurrences: [])
+            let record = statusRecord(of: copy, report: removed, in: try currentData(), sharesStatus: true)
             try submit(.status(record, for: sendersReminderID, from: through))
         } catch {
             Self.logger.error("A Removed report couldn't be sent: \(error, privacy: .public)")

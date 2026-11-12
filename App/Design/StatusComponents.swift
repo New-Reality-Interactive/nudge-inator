@@ -220,6 +220,8 @@ struct ReminderStatusLabel: View {
 /// Removed in the secondary label color with Paused and Waiting.
 struct ReportedStatusLabel: View {
     let status: ReportedStatus
+    // The reasons below mean nothing here: the label's word and color don't depend on one, so they
+    // only let the existing `ReminderStatus` label draw a Missed and a Skipped.
 
     var body: some View {
         switch status {

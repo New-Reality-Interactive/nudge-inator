@@ -53,7 +53,7 @@ struct SentScreen {
         /// What VoiceOver reads for the row: the person, the title, how the copy is going or
         /// whether it was delivered or waits to be accepted, and the due time.
         var voiceOverLabel: LocalizedStringResource {
-            let state = delivery.spokenState(status)
+            let state = String(localized: delivery.spokenState(status))
             return LocalizedStringResource("\(personName), \(title), \(state), \(day), \(time)", comment: "VoiceOver label of a row on the Reminders tab's Sent view. 1: who it was sent to, such as \"Riley Park\". 2: the reminder's title. 3: how the copy is going, such as \"Done\", \"Delivered, Not sharing status\", \"Not delivered yet\" or \"Waiting for them to accept\". 4: its due day, such as \"Today\". 5: its due time, such as \"9:00 AM\".")
         }
 
@@ -113,7 +113,7 @@ extension SentReadOut.Delivery {
     /// it is on their iPhone, and nothing before (ticket 206).
     func trailing(_ status: SentReadOut.Status) -> SentReadOut.Trailing {
         switch self {
-        case .notDelivered: .none
+        case .notDelivered: .nothing
         case .waitingForAcceptance: .delivered
         case .delivered:
             if case .reported(let reported, _) = status { .status(reported) } else { .delivered }
@@ -137,13 +137,19 @@ extension SentReadOut.Delivery {
         }
     }
 
-    /// What VoiceOver reads for the copy: its status when there is one, else what the detail line
-    /// says after "Delivered".
-    func spokenState(_ status: SentReadOut.Status) -> String {
-        if case .status(let reported) = trailing(status) { return String(localized: reported.name) }
-        guard let line = detailLine(status) else { return String(localized: SentScreen.Row.deliveredText) }
-        guard self == .delivered else { return String(localized: line) }
-        return String(localized: "\(String(localized: SentScreen.Row.deliveredText)), \(String(localized: line))", comment: "VoiceOver: \"Delivered\", then why the person's status isn't shown. 1: \"Delivered\". 2: \"Not sharing status\" or \"Not sharing this one\".")
+    /// What VoiceOver reads for the copy: its status when there is one, else "Delivered" with why
+    /// no status is shown, else what the detail line says. Whole sentences, so a translation can
+    /// order the words as it needs.
+    func spokenState(_ status: SentReadOut.Status) -> LocalizedStringResource {
+        if case .status(let reported) = trailing(status) { return reported.name }
+        switch (self, status) {
+        case (.delivered, .notSharingStatus):
+            return LocalizedStringResource("Delivered, not sharing status", comment: "VoiceOver, on a Sent row: the copy reached the person's iPhone, and they keep how their reminders are going from the sender.")
+        case (.delivered, .notSharingThisOne):
+            return LocalizedStringResource("Delivered, not sharing this one", comment: "VoiceOver, on a Sent row: the copy reached the person's iPhone, and they keep how this one reminder is going from the sender.")
+        default:
+            return detailLine(status) ?? SentScreen.Row.deliveredText
+        }
     }
 }
 
@@ -151,7 +157,7 @@ extension SentReadOut {
     /// The label trailing a Sent row.
     enum Trailing: Equatable {
         /// Not delivered yet.
-        case none
+        case nothing
         /// Delivered, with no status to show.
         case delivered
         case status(ReportedStatus)

@@ -79,7 +79,7 @@ struct SentTrailingLabel: View {
 
     var body: some View {
         switch trailing {
-        case .none: EmptyView()
+        case .nothing: EmptyView()
         case .delivered: DeliveredLabel()
         case .status(let status): ReportedStatusLabel(status: status)
         }
