@@ -94,7 +94,7 @@ struct SentTests {
         let row = try #require(sent(on: alex).people.first?.rows.first)
 
         #expect(row.isDelivered)
-        #expect(String(localized: row.voiceOverLabel) == "Riley Park, Take the pills, Delivered, Today, 8:30\u{202F}AM")
+        #expect(String(localized: row.voiceOverLabel) == "Riley Park, Take the pills, Delivered, Not sharing status, Today, 8:30\u{202F}AM")
     }
 
     /// Each person's reminders in the order they were sent, the read-out's.

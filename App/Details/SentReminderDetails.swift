@@ -26,10 +26,13 @@ struct SentReminderDetails {
         var connectionID: UUID
         var name: String
         var delivery: SentReadOut.Delivery
+        /// What their app reported of the copy, as the sender may read it (ticket 206).
+        var status: SentReadOut.Status
 
         var id: UUID { connectionID }
         var isDelivered: Bool { delivery.isDelivered }
-        var detailLine: LocalizedStringResource? { delivery.detailLine }
+        var trailing: SentReadOut.Trailing { delivery.trailing(status) }
+        var detailLine: LocalizedStringResource? { delivery.detailLine(status) }
     }
 
     /// `nil` when the sharing store doesn't keep a sent reminder with this ID: one of the person's
@@ -38,7 +41,7 @@ struct SentReminderDetails {
         guard let sent = sharing.sentReminders.first(where: { $0.reminder.id == id }) else { return nil }
         reminder = sent.reminder
         recipients = SentScreen(engine: engine, sharing: sharing).recipients(of: id).map {
-            Recipient(connectionID: $0.person.connectionID, name: $0.person.name, delivery: $0.row.delivery)
+            Recipient(connectionID: $0.person.connectionID, name: $0.person.name, delivery: $0.row.delivery, status: $0.row.status)
         }
         repeats = engine.repeatSummary(of: sent.reminder)
         next = engine.upcomingDueTimes(of: sent.reminder, count: 1).first
