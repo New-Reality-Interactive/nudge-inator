@@ -81,6 +81,9 @@ private struct NowList: View {
                     Text("Waiting for You", comment: "Now: section header for reminders someone sent that wait for the person to accept them (Ask me first).")
                 } footer: {
                     Text("These won't nudge you until you accept them.", comment: "Now: under the Waiting for You section.")
+                        // The list puts the next header right under a footer; the mockup's
+                        // `waitingSection` leaves a section's gap before Coming Up (#203's phone check).
+                        .padding(.bottom, Design.Spacing.s4)
                 }
             }
             Section {
