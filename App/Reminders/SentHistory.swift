@@ -10,12 +10,12 @@ struct SentHistory: Equatable {
     let days: [Day]
     /// What VoiceOver reads for the whole strip, one day after another, such as "Thursday: Done,
     /// Friday: Missed, …, Today: Coming up". Each day is a whole localized string, and the days are
-    /// joined with the locale's list format.
+    /// joined with the engine's locale's list format.
     let voiceOverValue: String
 
     /// One day of the history.
     struct Day: Equatable, Identifiable {
-        var day: CalendarDay
+        var calendarDay: CalendarDay
         /// The weekday's initial, such as "T", the cell's text.
         var initial: String
         /// "Today", or a short date such as "Wed, Oct 21": the details' row.
@@ -24,7 +24,7 @@ struct SentHistory: Equatable {
         var status: ReportedStatus?
         var isToday: Bool
 
-        var id: CalendarDay { day }
+        var id: CalendarDay { calendarDay }
     }
 
     /// The details list the days newest first, today at the top, as the mockup's `viewSent` does.
@@ -35,16 +35,16 @@ struct SentHistory: Equatable {
         let today = engine.dayLabel(of: engine.startOfDay(engine.today))
         days = history.days.map { day in
             Day(
-                day: day.day,
+                calendarDay: day.day,
                 initial: engine.weekdayInitial(of: day.day),
                 label: day.isToday ? today : engine.shortDate(of: engine.startOfDay(day.day)),
                 status: day.status,
                 isToday: day.isToday
             )
         }
-        voiceOverValue = history.days
-            .map { day in String(localized: Self.spoken(day.isToday ? today : engine.weekdayName(of: day.day), day.status)) }
-            .formatted(.list(type: .and, width: .narrow))
+        voiceOverValue = engine.list(history.days.map { day in
+            String(localized: Self.spoken(day.isToday ? today : engine.weekdayName(of: day.day), day.status))
+        })
     }
 
     private static func spoken(_ day: String, _ status: ReportedStatus?) -> LocalizedStringResource {

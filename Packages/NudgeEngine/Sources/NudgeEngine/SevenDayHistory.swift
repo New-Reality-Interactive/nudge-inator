@@ -49,6 +49,12 @@ extension Engine {
         startOfDay(day).formatted(dayStyle.weekday(.wide))
     }
 
+    /// `items` as a list in the engine's locale, with no "and" before the last, such as "Thursday:
+    /// Done, Friday: Missed, Today: Coming up": what VoiceOver reads for a history.
+    public func list(_ items: [String]) -> String {
+        items.formatted(.list(type: .and, width: .narrow).locale(locale))
+    }
+
     private var dayStyle: Date.FormatStyle {
         Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone)
     }

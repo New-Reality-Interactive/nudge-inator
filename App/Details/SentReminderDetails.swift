@@ -27,7 +27,8 @@ struct SentReminderDetails {
         var name: String
         /// How their copy is going, as the sender may read it.
         var state: SentCopyState
-        /// "<first name>, Last 7 Days" for a repeating reminder, as the Sent row's strip has it.
+        /// Their last 7 days of a repeating reminder, as their Sent row has it, or `nil` where the row
+        /// has none.
         var history: SentHistory?
 
         var id: UUID { connectionID }

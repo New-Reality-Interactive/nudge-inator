@@ -121,7 +121,9 @@ struct ReminderRowLayout<Leading: View, Main: View, Trailing: View, Footer: View
     @ScaledMetric(relativeTo: .body) private var timeWidth: CGFloat = Design.Size.timeColumn
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Design.Spacing.s2) {
+        // No spacing of its own, so a row with an empty footer is as tall as before: the footer
+        // brings its own gap.
+        VStack(alignment: .leading, spacing: 0) {
             if dynamicTypeSize.isAccessibilitySize {
                 VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                     leading()

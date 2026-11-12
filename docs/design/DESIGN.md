@@ -629,7 +629,7 @@ sharing paused and offline banner.
 - **7-day history:** on a repeating Sent row, under its text: today and the 7 days before, eight cells,
   oldest first, today on a `{colors.tertiary-fill}` cell, each with the day's initial and a glyph:
   `checkmark.circle.fill` Done (positive), `xmark` Missed (negative), `bell` Nudging (negative), `minus`
-  Skipped, `pause` Paused and `clock` Coming up (secondary label, or `{colors.label}` on today's cell,
+  Skipped (and Removed, which a day's report never holds), `pause` Paused and `clock` Coming up (secondary label, or `{colors.label}` on today's cell,
   with its initial). The fill's rule is about text, and these are glyphs, so the status colors stay on
   it. A day with nothing due (a weekly repeat) keeps its cell and initial, with no glyph. At the
   accessibility sizes the cells run four to a line. VoiceOver reads it as one element naming each day and

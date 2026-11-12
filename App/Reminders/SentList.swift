@@ -71,10 +71,22 @@ private struct SentRowView: View {
         } footer: {
             if let history = row.history {
                 SentHistoryStrip(history: history)
+                    .padding(.top, Design.Spacing.s2)
             }
         }
         .accessibilityLabel(Text(row.voiceOverLabel))
-        .accessibilityValue(Text(verbatim: row.history?.voiceOverValue ?? ""))
+        .accessibilityValue(spoken: row.history?.voiceOverValue)
+    }
+}
+
+private extension View {
+    /// The row's value, only when it has one: a one-off row reads its label alone, as before.
+    @ViewBuilder func accessibilityValue(spoken value: String?) -> some View {
+        if let value {
+            accessibilityValue(Text(verbatim: value))
+        } else {
+            self
+        }
     }
 }
 
@@ -119,7 +131,7 @@ private struct SentHistoryCell: View {
                 .font(.footnote)
                 .imageScale(.small)
         }
-        .foregroundStyle(day.isToday ? Color(uiColor: .label) : Color(uiColor: .secondaryLabel))
+        .foregroundStyle(textColor)
         .frame(maxWidth: .infinity)
         .padding(.vertical, Design.Spacing.historyCellVertical)
         .background {
@@ -130,12 +142,17 @@ private struct SentHistoryCell: View {
         }
     }
 
+    /// The label color on today's fill, as DESIGN.md asks; the secondary label color elsewhere.
+    private var textColor: Color {
+        day.isToday ? Color(uiColor: .label) : Color(uiColor: .secondaryLabel)
+    }
+
     /// The status's glyph, in the status colors Done, Missed and Nudging have; a day with nothing
     /// due keeps the glyph's height, empty.
     @ViewBuilder private var glyph: some View {
         if let status = day.status {
             Image(systemName: status.historyGlyph)
-                .foregroundStyle(status.historyColor ?? (day.isToday ? Color(uiColor: .label) : Color(uiColor: .secondaryLabel)))
+                .foregroundStyle(status.historyColor ?? textColor)
         } else {
             Image(systemName: "clock").hidden()
         }
@@ -149,6 +166,8 @@ private extension ReportedStatus {
         case .done: "checkmark.circle.fill"
         case .missed: "xmark"
         case .nudging: "bell"
+        // A report never holds Removed for a day (GLOSSARY's Status report); were it to, it
+        // reads as Skipped does.
         case .skipped, .removed: "minus"
         case .paused: "pause"
         case .comingUp: "clock"

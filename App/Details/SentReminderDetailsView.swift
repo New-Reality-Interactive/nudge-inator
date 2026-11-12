@@ -5,7 +5,8 @@ import SwiftUI
 /// A sent reminder's details (ticket 201, the mockup's `viewSent`), pushed from a Sent row: the hero
 /// with its strength, Sent To with each person and how their copy is going, the Schedule, and
 /// Delete. Edit opens the sender's form, whose Save goes to every copy. Under Sent To, each person
-/// whose copy shares a repeating reminder's status has their last 7 days in words (ticket 207). It reads the sharing store again at every change and every minute.
+/// whose copy shares a repeating reminder's status has their last 7 days in words (ticket 207).
+/// It reads the sharing store again at every change and every minute.
 struct SentReminderDetailsView: View {
     let id: Reminder.ID
 
