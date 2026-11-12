@@ -7,7 +7,8 @@ import UIKit
 
 /// Sharing for the phone check of Connections (ticket 194), until the CloudKit adapter (#216) gives
 /// the app a real sharing model: a launch with `NUDGE_SHARING_STANDIN=seeded` (a connection and two
-/// invites, one 3 days old) or `=empty` gets a stand-in adapter over an in-memory sharing store. A
+/// invites, one 3 days old), `=sent` (those, and two reminders already delivered to Riley, ticket
+/// 207) or `=empty` gets a stand-in adapter over an in-memory sharing store. A
 /// launch without the variable gets no sharing, as the shipped app. Nothing it holds outlives the
 /// launch, so a launch without the variable is its cleanup. Debug builds only:
 /// `scripts/check-release-has-no-seed.sh` checks Release builds hold none of it.
@@ -19,17 +20,25 @@ enum StandInSharing {
     private(set) static weak var current: StandInSharingAdapter?
 
     static func modelIfAsked(clock: any EngineClock, environment: [String: String] = ProcessInfo.processInfo.environment) -> SharingModel? {
-        let seed: SharingData
+        var seed: SharingData
         switch environment[variable] {
         case "seeded": seed = seeded(now: clock.now)
+        case "sent":
+            seed = seeded(now: clock.now)
+            let (reminders, copies) = sentToRiley(now: clock.now)
+            seed.sentReminders = reminders
+            seed.sentCopies = copies
         case "empty": seed = SharingData()
         case .none: return nil
         case .some(let other):
-            logger.error("No stand-in sharing called \(other, privacy: .public): use seeded or empty")
+            logger.error("No stand-in sharing called \(other, privacy: .public): use seeded, sent or empty")
             return nil
         }
         var opened: SharingStore?
         let adapter = StandInSharingAdapter()
+        for copy in seed.sentCopies {
+            adapter.knowDelivered(copy.reminderID, through: copy.connectionID)
+        }
         current = adapter
         return SharingModel(adapter: adapter, clock: clock) {
             if let opened { return opened }
@@ -59,6 +68,22 @@ enum StandInSharing {
             SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, address: "jordan.lee@icloud.com", invitedAt: now.addingTimeInterval(-20 * 60)),
             SharingConnection(id: UUID(), name: "Priya Shah", state: .invited, address: "+1 (555) 010-4477", invitedAt: now.addingTimeInterval(-3 * 24 * 60 * 60)),
         ])
+    }
+
+    /// Two reminders Riley already has, started (ticket 207): "Take the pills" every day at 9:00
+    /// since 8 days ago, and "Call the clinic" once, tomorrow at 10:00. The sender's app doesn't
+    /// nudge them, so nothing rings.
+    private static func sentToRiley(now: Date) -> ([SentReminder], [SentCopy]) {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: now)
+        let pillsStart = calendar.date(byAdding: DateComponents(day: -8, hour: 9), to: today) ?? now
+        let callDue = calendar.date(byAdding: DateComponents(day: 1, hour: 10), to: today) ?? now
+        let pills = Reminder(title: "Take the pills", dueTime: pillsStart, repeatRule: .everyDay, strength: .firm)
+        let call = Reminder(title: "Call the clinic", dueTime: callDue, strength: .gentle)
+        let copies = [pills, call].enumerated().map { index, reminder in
+            SentCopy(connectionID: SeedSet.standInConnectionID, reminderID: reminder.id, createdAt: now.addingTimeInterval(Double(index - 2) * 60), receipt: .started, statusRecord: nil, waitingToSync: false)
+        }
+        return ([SentReminder(reminder: pills, revision: 0), SentReminder(reminder: call, revision: 0)], copies)
     }
 
     fileprivate static let logger = Logger(subsystem: "com.newrealityinteractive.nudgeinator", category: "StandInSharing")
@@ -146,6 +171,12 @@ final class StandInSharingAdapter: SharingAdapter {
     /// Every reminder sent through each connection, which `theyReport` reports on (ticket 206).
     private var sentThrough: [UUID: [Reminder.ID]] = [:]
 
+    /// A reminder the launch's store already holds as delivered through the connection with
+    /// `connectionID` (`NUDGE_SHARING_STANDIN=sent`), so `theyReport` reports on it too.
+    func knowDelivered(_ reminderID: Reminder.ID, through connectionID: UUID) {
+        sentThrough[connectionID, default: []].append(reminderID)
+    }
+
     /// Stands in for the other person's app reporting how each copy sent through the connection with
     /// `connectionID` is going (ticket 206): `status` arrives as through iCloud for each, or with
     /// `nil` the flag that they keep this one from the sender ("Not sharing this one"). Nothing
@@ -155,14 +186,15 @@ final class StandInSharingAdapter: SharingAdapter {
     }
 
     /// Stands in for the other person's app reporting each copy Nudging, with a history for the 7
-    /// days before today and today (ticket 207): Done, Done, Missed, Done, Done, Skipped, Done, and
-    /// Nudging today, each at this hour. A one-off's row shows none of it.
+    /// days before today and today (ticket 207): Done, Done, Missed, nothing due (as a weekly
+    /// repeat's off day), Done, Skipped, Done, and Nudging today, each at this hour. A one-off's row
+    /// shows none of it.
     func theyReportAWeek(through connectionID: UUID) {
         let calendar = Calendar.current
         let now = Date.now
-        let labels: [ReportedStatus] = [.done, .done, .missed, .done, .done, .skipped, .done, .nudging]
+        let labels: [ReportedStatus?] = [.done, .done, .missed, nil, .done, .skipped, .done, .nudging]
         let occurrences = labels.enumerated().compactMap { index, label -> StatusReport.OccurrenceStatus? in
-            guard let dueTime = calendar.date(byAdding: .day, value: index - 7, to: now) else { return nil }
+            guard let label, let dueTime = calendar.date(byAdding: .day, value: index - 7, to: now) else { return nil }
             let parts = calendar.dateComponents([.year, .month, .day], from: dueTime)
             guard let year = parts.year, let month = parts.month, let day = parts.day else { return nil }
             return StatusReport.OccurrenceStatus(dueTime: dueTime, day: CalendarDay(year: year, month: month, day: day), label: label)
