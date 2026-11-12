@@ -59,6 +59,15 @@ struct ReminderDetails {
         /// connection is off, so there's nothing to hold back (the mockup's `viewReceived`). Its
         /// effect on what the sender sees is the status tickets'.
         var notSharingThisOne: Bool?
+        /// What the sender's latest change did, or `nil` while nobody has changed the copy (ticket 204).
+        var changeNote: ChangeNote?
+    }
+
+    /// A received reminder's change note as the details show it (the mockup's `noteCard`): the
+    /// heading says who changed it and when, a line each field.
+    struct ChangeNote: Equatable {
+        var heading: LocalizedStringResource
+        var lines: [LocalizedStringResource]
     }
 
     /// A closed occurrence, for the Schedule's last occurrence row.
@@ -110,7 +119,11 @@ struct ReminderDetails {
                 from: from,
                 senderName: senders.name(of: reminder) ?? "",
                 strengthLine: StrengthLine(reminder.strength, howItNudges),
-                notSharingThisOne: connection?.mine.sharesStatus == true ? syncState?.notSharingThisOne ?? false : nil
+                notSharingThisOne: connection?.mine.sharesStatus == true ? syncState?.notSharingThisOne ?? false : nil,
+                changeNote: syncState?.changeNote.map {
+                    let words = ChangeNoteText($0, dueTime: reminder.dueTime, engine: engine)
+                    return ChangeNote(heading: words.heading(from: senders.name(of: reminder) ?? "", at: $0.at), lines: words.lines)
+                }
             )
         }
 

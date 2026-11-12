@@ -156,9 +156,9 @@ final class SharingModel {
 
     /// The sender's Edit (ticket 201): keeps `edited`'s content as the sent reminder with its ID, at
     /// the next revision, and sends that to each person still connected who has a copy. What their
-    /// copy does with it, and the change note, are #204's. It keeps no tags, and its creation date
-    /// stays the send's. A change to nothing sends nothing. Throws, changing and sending nothing, if
-    /// the sent reminder was deleted meanwhile, or the store can't keep it.
+    /// copy does with it, and the change note, are `receive`'s (ticket 204). It keeps no tags, and its
+    /// creation date stays the send's. A change to nothing sends nothing. Throws, changing and sending
+    /// nothing, if the sent reminder was deleted meanwhile, or the store can't keep it.
     func reviseSent(_ edited: Reminder) throws {
         var kept = try currentData()
         guard let index = kept.sentReminders.firstIndex(where: { $0.reminder.id == edited.id }) else { throw SentReminderGone() }
@@ -299,12 +299,8 @@ final class SharingModel {
     /// status tickets', so nothing is sent. Throws, changing nothing, if the store can't keep it.
     func setNotSharingThisOne(_ notSharing: Bool, for reminderID: Reminder.ID) throws {
         var kept = try currentData()
-        if let index = kept.receivedSyncStates.firstIndex(where: { $0.reminderID == reminderID }) {
-            guard kept.receivedSyncStates[index].notSharingThisOne != notSharing else { return }
-            kept.receivedSyncStates[index].notSharingThisOne = notSharing
-        } else {
-            kept.receivedSyncStates.append(ReceivedSyncState(reminderID: reminderID, notSharingThisOne: notSharing, waitingToSync: false))
-        }
+        guard kept.receivedSyncStates.first(where: { $0.reminderID == reminderID })?.notSharingThisOne != notSharing else { return }
+        kept.updateReceivedState(of: reminderID) { $0.notSharingThisOne = notSharing }
         try keep(kept)
     }
 
@@ -350,6 +346,10 @@ protocol ReceivedReminders: AnyObject {
     /// Keeps `copy` among the person's reminders and plans it as their own. Throws, keeping
     /// nothing, if the reminders haven't been read or the store won't keep it.
     func keep(_ copy: Reminder) throws
+    /// Applies the sender's revision to the copy held (ticket 204), as the engine's
+    /// `applySendersRevision(_:)` does, and returns what changed. Throws if the reminders haven't
+    /// been read.
+    func applySendersRevision(_ revised: Reminder) throws -> [ReceivedChange]
 }
 
 extension SentReminder {
@@ -490,8 +490,8 @@ extension SharingModel: SharingAdapterEvents {
     /// copy of this person's own, which starts right away or waits, as their Delivery mode for that
     /// connection says, and a receipt saying which goes back (#189's comment on #198). A send already
     /// kept is kept once. A revision of a copy not held yet creates it, since a person offline across
-    /// a send and a revision hears of the revision first (#193); applying a revision to a copy held
-    /// is #204's. Through a connection that isn't connected, it is ignored.
+    /// a send and a revision hears of the revision first (#193); one of a copy held is applied to it
+    /// (`applyRevision`, ticket 204). Through a connection that isn't connected, it is ignored.
     ///
     /// The reminder store goes first, so a sharing store that then won't keep the receipt leaves a
     /// copy the next delivery finds, and keeps the receipt then. Throws, for the adapter to offer it
@@ -504,7 +504,9 @@ extension SharingModel: SharingAdapterEvents {
         }
         guard let receivedReminders else { throw ReceivedRemindersNotReady() }
         let held = try receivedReminders.copy(of: sent.reminder.id, through: connectionID)
-        if held != nil, isRevision { return }
+        if let held, isRevision {
+            return try applyRevision(sent, to: held, through: connection, in: receivedReminders)
+        }
         let copy: Reminder
         if let held {
             copy = held
@@ -518,6 +520,28 @@ extension SharingModel: SharingAdapterEvents {
         kept.outbox.append(receipt.entry)
         try keep(kept)
         adapter.submit(receipt)
+    }
+
+    /// The sender's revision of a copy held (ticket 204): the app model applies it, and a revision that
+    /// changed something leaves the copy's change note, the latest change only. A sharing store that
+    /// won't keep the note logs and carries on: the copy has changed, and the revision offered again
+    /// would be ignored as not newer.
+    private func applyRevision(_ sent: SentReminder, to held: Reminder, through connection: SharingConnection, in receivedReminders: any ReceivedReminders) throws {
+        let senders = sent.copy(through: connection.id, deliveryMode: connection.mine.deliveryMode)
+        let revised = Reminder(
+            id: held.id, title: senders.title, notes: senders.notes, dueTime: senders.dueTime, repeatRule: senders.repeatRule,
+            strength: senders.strength, pace: senders.pace, breakThroughFocus: senders.breakThroughFocus, origin: senders.origin
+        )
+        let changes = try receivedReminders.applySendersRevision(revised)
+        guard !changes.isEmpty else { return }
+        do {
+            var kept = try currentData()
+            let note = ReceivedChangeNote(changes: changes, at: clock.now)
+            kept.updateReceivedState(of: held.id) { $0.changeNote = note }
+            try keep(kept)
+        } catch {
+            Self.logger.error("A change note couldn't be kept: \(error, privacy: .public)")
+        }
     }
 
     /// The app model hasn't been joined to sharing yet.

@@ -69,7 +69,7 @@ extension View {
     /// receiving an invite, one that's unavailable, with `invited`, that person accepting, and with
     /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196), sending
     /// a reminder (ticket 198), getting what was sent to them (ticket 201), accepting what waits for
-    /// them (ticket 203) or disconnecting (ticket 197).
+    /// them (ticket 203), changing what they sent (ticket 204) or disconnecting (ticket 197).
     func standInSharingControls(invited: SharingConnection? = nil, connected: SharingConnection? = nil) -> some View {
         toolbar {
             if let adapter = StandInSharing.current {
@@ -92,6 +92,7 @@ extension View {
                             }
                             Button { adapter.theySend(.gentle, through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Gentle Reminder") }
                             Button { adapter.theySend(.relentless, through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Relentless Reminder") }
+                            Button { adapter.theySendAChange(through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Change") }
                             Button {
                                 adapter.theyGetWhatWasSent(through: connected.id, askingFirst: theirs.deliveryMode == .askMeFirst)
                             } label: {
@@ -129,6 +130,9 @@ final class StandInSharingAdapter: SharingAdapter {
     /// The reminders sent through each connection that `theyGetWhatWasSent(through:)` hasn't
     /// delivered yet.
     private var undelivered: [(reminderID: Reminder.ID, connectionID: UUID)] = []
+
+    /// The reminder the stand-in last sent through each connection, which `theySendAChange` changes.
+    private var lastSent: [UUID: SentReminder] = [:]
 
     /// The reminders delivered through each connection that wait there for the other person to
     /// accept them (ticket 203).
@@ -231,17 +235,35 @@ final class StandInSharingAdapter: SharingAdapter {
     /// minute 2 minutes from now, and the app keeps the copy as their Delivery mode says.
     /// `NUDGE_SEED=clean` removes what the stand-in's Riley Park sent.
     func theySend(_ strength: Strength, through connectionID: UUID) {
-        let soon = Date.now.addingTimeInterval(2 * 60)
-        let due = Calendar.autoupdatingCurrent.dateInterval(of: .minute, for: soon)?.start ?? soon
+        let due = Self.startOfMinute(minutesFromNow: 2)
         let title = strength == .relentless ? "Take the medicine" : "Bring the umbrella"
         let sent = SentReminder(reminder: Reminder(title: title, notes: SeedSet.standInSentNotes, dueTime: due, strength: strength), revision: 0)
+        lastSent[connectionID] = sent
         Task { try? await events?.received(.send(sent, to: connectionID)) }
+    }
+
+    /// Stands in for the other person changing the reminder they last sent through the connection with
+    /// `connectionID` (ticket 204): their revision arrives, as through iCloud, moving it to the start
+    /// of the minute 2 minutes from now and switching its strength between Gentle and Firm, so the
+    /// copy's change note has two lines, whether the copy is nudging or waiting to be accepted.
+    func theySendAChange(through connectionID: UUID) {
+        guard var sent = lastSent[connectionID] else { return }
+        sent.reminder.dueTime = Self.startOfMinute(minutesFromNow: 2)
+        sent.reminder.strength = sent.reminder.strength == .gentle ? .firm : .gentle
+        sent.revision += 1
+        lastSent[connectionID] = sent
+        Task { try? await events?.received(.revise(sent, for: connectionID)) }
     }
 
     /// Stands in for the other person disconnecting the connection with `connectionID` (ticket
     /// 197): their disconnect arrives, as through iCloud, and Connection Ended shows.
     func theyDisconnect(_ connectionID: UUID) {
         Task { try? await events?.received(.disconnect(connectionID)) }
+    }
+
+    private static func startOfMinute(minutesFromNow minutes: Double) -> Date {
+        let soon = Date.now.addingTimeInterval(minutes * 60)
+        return Calendar.autoupdatingCurrent.dateInterval(of: .minute, for: soon)?.start ?? soon
     }
 
     private static func topViewController() -> UIViewController? {

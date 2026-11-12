@@ -164,6 +164,9 @@ private struct DetailsList: View {
             Section {
                 DetailsHero(details: details)
             }
+            if let note = details.received?.changeNote {
+                ChangeNoteSection(note: note)
+            }
             if details.isWaiting {
                 WaitingSection(title: details.title, accept: accept, remove: delete)
             }
@@ -254,6 +257,55 @@ private struct DetailsList: View {
     }
 }
 
+/// A note on a received reminder (ticket 204, the mockup's `noteCard`): a cell-colored card under the
+/// hero with a symbol, a semibold heading and detail lines, in no status color. The symbol is at the top
+/// beside the heading, and above the text at accessibility sizes so the wrapped lines don't drop under
+/// it. VoiceOver reads it as one element, without the symbol.
+private struct NoteCard<Heading: View, Detail: View>: View {
+    let symbol: String
+    @ViewBuilder let heading: Heading
+    @ViewBuilder let detail: Detail
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        Section {
+            let layout = dynamicTypeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: Design.Spacing.s1))
+                : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: Design.Spacing.s2))
+            layout {
+                Image(systemName: symbol)
+                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: Design.Spacing.line) {
+                    heading
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color(uiColor: .label))
+                    detail
+                        .font(.subheadline)
+                        .foregroundStyle(Color(uiColor: .secondaryLabel))
+                }
+            }
+            .accessibilityElement(children: .combine)
+        }
+    }
+}
+
+/// What the sender changed on a received reminder (ticket 204): who changed it and when, then a line
+/// each field.
+private struct ChangeNoteSection: View {
+    let note: ReminderDetails.ChangeNote
+
+    var body: some View {
+        NoteCard(symbol: "info.circle") {
+            Text(note.heading)
+        } detail: {
+            ForEach(Array(note.lines.enumerated()), id: \.offset) { _, line in
+                Text(line)
+            }
+        }
+    }
+}
+
 /// A received reminder waiting to be accepted (ticket 203, the mockup's `viewReceived`): the note that
 /// it won't nudge until accepted, then Accept, tinted, and Remove, which asks first as Remove
 /// Reminder does.
@@ -264,21 +316,10 @@ private struct WaitingSection: View {
     @State private var isConfirmingRemove = false
 
     var body: some View {
-        Section {
-            Label {
-                VStack(alignment: .leading, spacing: Design.Spacing.line) {
-                    Text("Waiting for you to accept", comment: "Reminder details: the note on a reminder someone sent that waits for the person to accept it (Ask me first).")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color(uiColor: .label))
-                    Text("It won't nudge you until you accept it. Anything due before then is skipped.", comment: "Reminder details: under \"Waiting for you to accept\" on a reminder someone sent.")
-                        .font(.subheadline)
-                        .foregroundStyle(Color(uiColor: .secondaryLabel))
-                }
-            } icon: {
-                Image(systemName: "clock")
-                    .foregroundStyle(Color(uiColor: .secondaryLabel))
-            }
-            .accessibilityElement(children: .combine)
+        NoteCard(symbol: "clock") {
+            Text("Waiting for you to accept", comment: "Reminder details: the note on a reminder someone sent that waits for the person to accept it (Ask me first).")
+        } detail: {
+            Text("It won't nudge you until you accept it. Anything due before then is skipped.", comment: "Reminder details: under \"Waiting for you to accept\" on a reminder someone sent.")
         }
         Section {
             Button(action: accept) {

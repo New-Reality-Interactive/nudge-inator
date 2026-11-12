@@ -132,6 +132,13 @@ struct SharingStoreTests {
         let saved = SharingData(receivedSyncStates: [
             ReceivedSyncState(reminderID: UUID(), notSharingThisOne: false, waitingToSync: false, recordSystemFields: nil),
             ReceivedSyncState(reminderID: UUID(), notSharingThisOne: true, waitingToSync: true, recordSystemFields: Data([0, 1, 2, 255])),
+            ReceivedSyncState(
+                reminderID: UUID(), notSharingThisOne: false, waitingToSync: false, recordSystemFields: nil,
+                changeNote: ReceivedChangeNote(
+                    changes: [.title(from: "Call", to: "Call the clinic"), .strength(from: .gentle, to: .firm)],
+                    at: Date(timeIntervalSince1970: 1_800_000_000)
+                )
+            ),
         ])
 
         try store().save(saved)

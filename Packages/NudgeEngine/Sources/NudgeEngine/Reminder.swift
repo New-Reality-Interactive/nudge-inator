@@ -187,6 +187,15 @@ public enum ReceivedChange: Equatable, Sendable {
         }
     }
 
+    /// Whether the change is to a field the schedule or the nudging reads, which closes a Nudging
+    /// occurrence, not to the title or notes.
+    public var movesNudging: Bool {
+        switch field {
+        case .title, .notes: false
+        case .dueTime, .repeatRule, .strength, .pace, .breakThroughFocus: true
+        }
+    }
+
     /// The change `field` makes going from `current` to `revised`, or `nil` if it has the same value in both.
     init?(_ field: ReceivedContentField, from current: Reminder, to revised: Reminder) {
         guard field.isChanged(from: current, to: revised) else { return nil }

@@ -41,8 +41,9 @@ extension ReminderDetails {
     }
 
     /// A Relentless reminder Maya Lee sent, nudging, with her Status sharing on (ticket 200).
-    /// `state` `.waiting` is one waiting to be accepted (ticket 203).
-    static func previewReceived(_ state: ReminderOrigin.ReceivedState = .accepted) -> ReminderDetails {
+    /// `state` `.waiting` is one waiting to be accepted (ticket 203); `changed` one whose sender has
+    /// changed its due time and strength (ticket 204).
+    static func previewReceived(_ state: ReminderOrigin.ReceivedState = .accepted, changed: Bool = false) -> ReminderDetails {
         let connectionID = UUID()
         let reminder = Reminder(
             title: "Take your allergy pill",
@@ -51,7 +52,14 @@ extension ReminderDetails {
             strength: .relentless,
             origin: .received(connectionID: connectionID, sendersReminderID: UUID(), revision: 0, state: state)
         )
-        let sharing = SharingData(connections: [SharingConnection(id: connectionID, name: "Maya Lee", state: .connected)])
+        var sharing = SharingData(connections: [SharingConnection(id: connectionID, name: "Maya Lee", state: .connected)])
+        if changed {
+            let note = ReceivedChangeNote(
+                changes: [.dueTime(from: reminder.dueTime.addingTimeInterval(-3600), to: reminder.dueTime), .strength(from: .firm, to: .relentless)],
+                at: .now.addingTimeInterval(-5 * 60)
+            )
+            sharing.receivedSyncStates = [ReceivedSyncState(reminderID: reminder.id, notSharingThisOne: false, waitingToSync: false, changeNote: note)]
+        }
         return preview(reminder, tags: ["health"], sharing: sharing)
     }
 
@@ -62,6 +70,15 @@ extension ReminderDetails {
 
 #Preview("Received") {
     NavigationStack { ReminderDetailsView(id: UUID(), preview: .previewReceived()) }
+}
+
+#Preview("Received, changed") {
+    NavigationStack { ReminderDetailsView(id: UUID(), preview: .previewReceived(changed: true)) }
+}
+
+#Preview("Received, changed, largest text") {
+    NavigationStack { ReminderDetailsView(id: UUID(), preview: .previewReceived(changed: true)) }
+        .environment(\.dynamicTypeSize, .accessibility5)
 }
 
 #Preview("Received, waiting") {

@@ -106,6 +106,8 @@ struct SharingStore {
             record.notSharingThisOne = state.notSharingThisOne
             record.waitingToSync = state.waitingToSync
             record.recordSystemFields = state.recordSystemFields
+            record.changeNote = try state.changeNote?.changes.storedData()
+            record.changeNoteAt = state.changeNote?.at
             context.insert(record)
         }
         try deleteAll(SyncEngineStateRecord.self)
@@ -145,9 +147,7 @@ struct SharingStore {
             },
             sentReminders: try sentReminders.map { try $0.sentReminder() },
             sentCopies: try sentCopies.map { try $0.sentCopy() },
-            receivedSyncStates: receivedStates.map {
-                ReceivedSyncState(reminderID: $0.reminderID, notSharingThisOne: $0.notSharingThisOne, waitingToSync: $0.waitingToSync, recordSystemFields: $0.recordSystemFields)
-            },
+            receivedSyncStates: try receivedStates.map { try $0.receivedSyncState() },
             engineStates: try engineStates.map { SyncEngineState(database: try .init(storedValue: $0.database), data: $0.data) },
             outbox: try outbox.map {
                 OutboxChange(id: $0.id, kind: try .init(storedValue: $0.kind), connectionID: $0.connectionID, reminderID: $0.reminderID)
