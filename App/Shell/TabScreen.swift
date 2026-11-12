@@ -51,8 +51,9 @@ struct EmptyRow: View {
     }
 }
 
-/// The + that opens the New Reminder form, on Now and My Day. Saving it lands back here, so the
-/// new reminder shows on the screen the person came from. It is disabled until the store has been
+/// The + that opens the New Reminder form, in each tab's toolbar, and with its title showing under
+/// Sent's Nothing Sent (ticket 202). Saving it lands back here, so the new reminder shows on the
+/// screen the person came from. It is disabled until the store has been
 /// read, since the model drops events before then, and without a model (previews, the test host).
 struct NewReminderButton: View {
     /// Tags the form opens with chosen: a tag's screen passes its own.
@@ -66,7 +67,7 @@ struct NewReminderButton: View {
             if let model { form = ReminderForm(engine: { model.engine }, now: { .now }, defaultPace: model.defaultPace, tagIDs: tagIDs, sharing: model.sharing) }
         } label: {
             Label {
-                Text("New Reminder", comment: "Toolbar button (a plus) that opens the New Reminder form.")
+                Text("New Reminder", comment: "Toolbar button (a plus) that opens the New Reminder form, and the button under Nothing Sent on the Reminders tab's Sent.")
             } icon: {
                 Image(systemName: "plus")
             }

@@ -15,10 +15,19 @@ struct SentList: View {
     let manageConnections: () -> Void
     let openDetails: (Reminder.ID) -> Void
 
+    /// Invite Someone's flow, kept here above the empty states, so an invite under way isn't lost
+    /// when someone connects and No One to Send To goes.
+    @State private var isInviting = false
+
     var body: some View {
+        content
+            .inviteFlow(sharing: sharing, isPresented: $isInviting)
+    }
+
+    @ViewBuilder private var content: some View {
         switch screen.emptyState {
         case .noOneToSendTo:
-            NoOneToSendToView(sharing: sharing, manageConnections: manageConnections)
+            NoOneToSendToView(invite: { isInviting = true }, manageConnections: manageConnections)
         case .nothingSent:
             NothingSentView()
         case nil:
@@ -78,10 +87,8 @@ struct DeliveredLabel: View {
 /// Connections on Reminders, README Known differences). It scrolls, so the buttons are reached at
 /// the largest text size, on the grouped background the mockup's screens have.
 private struct NoOneToSendToView: View {
-    let sharing: SharingModel?
+    let invite: () -> Void
     let manageConnections: () -> Void
-
-    @State private var isInviting = false
 
     var body: some View {
         ScrollView {
@@ -94,9 +101,7 @@ private struct NoOneToSendToView: View {
             } description: {
                 Text("Invite someone you trust, and what you send them shows here.", comment: "Reminders tab, Sent: under \"No One to Send To\".")
             } actions: {
-                Button {
-                    isInviting = true
-                } label: {
+                Button(action: invite) {
                     InviteSomeoneLabel()
                 }
                 .buttonStyle(.bordered)
@@ -106,7 +111,6 @@ private struct NoOneToSendToView: View {
             }
         }
         .background(Color(uiColor: .systemGroupedBackground))
-        .sentInviteFlow(sharing: sharing, isPresented: $isInviting)
     }
 }
 
@@ -132,17 +136,6 @@ private struct NothingSentView: View {
     }
 }
 
-private extension View {
-    /// Invite Someone's flow, when there is a sharing model (previews may have none).
-    @ViewBuilder
-    func sentInviteFlow(sharing: SharingModel?, isPresented: Binding<Bool>) -> some View {
-        if let sharing {
-            inviteFlow(sharing: sharing, isPresented: isPresented)
-        } else {
-            self
-        }
-    }
-}
 
 #if DEBUG
 private extension SentScreen {

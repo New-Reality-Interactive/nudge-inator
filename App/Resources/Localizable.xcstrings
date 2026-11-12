@@ -1509,7 +1509,7 @@
       "comment" : "Under the reminder form's strength, when none of its nudges rings."
     },
     "New Reminder" : {
-      "comment" : "Title of the form that makes a reminder.\nToolbar button (a plus) that opens the New Reminder form."
+      "comment" : "Title of the form that makes a reminder.\nToolbar button (a plus) that opens the New Reminder form, and the button under Nothing Sent on the Reminders tab's Sent."
     },
     "New Tag" : {
       "comment" : "The Tags page's field for typing a new tag's name.\nTitle of the sheet that adds a tag.\nToolbar button (a plus) on Tags that adds a tag."

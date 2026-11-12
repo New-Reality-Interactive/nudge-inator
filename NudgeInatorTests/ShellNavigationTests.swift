@@ -68,11 +68,13 @@ struct ShellNavigationTests {
     /// nothing over Connections, so Back goes to Settings. Reminders keeps what it had.
     @Test func managePeopleShowsConnectionsOnSettings() {
         var navigation = ShellNavigation(selection: .reminders)
+        navigation.remindersPath.append(OpenedSentReminder(id: UUID()))
         navigation.settingsPath = [.connections, .connection(UUID())]
 
         navigation.openConnections()
 
         #expect(navigation.selection == .settings)
         #expect(navigation.settingsPath == [.connections])
+        #expect(navigation.remindersPath.count == 1)
     }
 }

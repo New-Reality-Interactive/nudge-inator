@@ -155,11 +155,13 @@ struct SentTests {
 
     // MARK: Empty states (ticket 202)
 
-    /// With no one connected, Sent offers an invite: someone only invited can't be sent anything yet.
-    @Test func withNoOneConnectedSentHasNoOneToSendTo() async throws {
-        let alex = try Phone(seed: SharingData(connections: [
-            SharingConnection(id: rileyID, name: "Riley Park", state: .invited),
-        ]))
+    /// With no one connected, Sent offers an invite: someone only invited, or no longer connected,
+    /// can't be sent anything.
+    @Test(arguments: [[], [SharingConnection.State.invited], [.ended], [.invited, .ended]])
+    func withNoOneConnectedSentHasNoOneToSendTo(states: [SharingConnection.State]) async throws {
+        let alex = try Phone(seed: SharingData(connections: states.map {
+            SharingConnection(id: UUID(), name: "Riley Park", state: $0)
+        }))
         await alex.launch()
 
         #expect(sent(on: alex).emptyState == .noOneToSendTo)
