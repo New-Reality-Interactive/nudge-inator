@@ -149,7 +149,7 @@
       }
     },
     "%@, %@, %@, %@, %@" : {
-      "comment" : "VoiceOver label of a row on the Reminders tab's Sent view. 1: who it was sent to, such as \"Riley Park\". 2: the reminder's title. 3: \"Delivered\", \"Not delivered yet\" or \"Waiting for them to accept\". 4: its due day, such as \"Today\". 5: its due time, such as \"9:00 AM\".",
+      "comment" : "VoiceOver label of a row on the Reminders tab's Sent view. 1: who it was sent to, such as \"Riley Park\". 2: the reminder's title. 3: how the copy is going, such as \"Done\", \"Delivered, Not sharing status\", \"Not delivered yet\" or \"Waiting for them to accept\". 4: its due day, such as \"Today\". 5: its due time, such as \"9:00 AM\".",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1073,6 +1073,12 @@
     "Delivered" : {
       "comment" : "A sent reminder's label on the Sent view and its details: the person's copy has reached their iPhone."
     },
+    "Delivered, not sharing status" : {
+      "comment" : "VoiceOver, on a Sent row: the copy reached the person's iPhone, and they keep how their reminders are going from the sender."
+    },
+    "Delivered, not sharing this one" : {
+      "comment" : "VoiceOver, on a Sent row: the copy reached the person's iPhone, and they keep how this one reminder is going from the sender."
+    },
     "Delivery Mode" : {
       "comment" : "A connection's page: the choice of how a reminder from the person starts. Also the row on the Connected sheet and under \"What <name> Chose\"."
     },
@@ -1651,6 +1657,12 @@
     "Not delivered yet" : {
       "comment" : "Under a sent reminder's title on the Sent view, and under a person's name on its details: their copy hasn't reached their iPhone yet."
     },
+    "Not sharing status" : {
+      "comment" : "Under a sent reminder's title on the Sent view, and under a person's name on its details: the person keeps how their reminders are going from the sender, so the sender sees only that it was delivered."
+    },
+    "Not sharing this one" : {
+      "comment" : "Under a sent reminder's title on the Sent view, and under a person's name on its details: the person keeps how this one reminder is going from the sender, so the sender sees only that it was delivered."
+    },
     "Notes" : {
       "comment" : "The reminder form's notes field."
     },
@@ -1962,6 +1974,9 @@
     },
     "Remove: %@" : {
       "comment" : "VoiceOver label of Remove on a Waiting for You row on Now. The placeholder is the reminder's title."
+    },
+    "Removed" : {
+      "comment" : "Status label on a Sent row: the person removed their copy of the reminder."
     },
     "Removing it clears it from your list." : {
       "comment" : "Reminder details: under Remove Reminder on a received reminder its sender deleted."

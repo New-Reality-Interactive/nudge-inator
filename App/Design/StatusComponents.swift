@@ -216,6 +216,44 @@ struct ReminderStatusLabel: View {
     }
 }
 
+/// A status as the sender reads it on a Sent row (ticket 206): DESIGN.md's Status label, and
+/// Removed in the secondary label color with Paused and Waiting.
+struct ReportedStatusLabel: View {
+    let status: ReportedStatus
+    // The reasons below mean nothing here: the label's word and color don't depend on one, so they
+    // only let the existing `ReminderStatus` label draw a Missed and a Skipped.
+
+    var body: some View {
+        switch status {
+        case .nudging: ReminderStatusLabel(status: .nudging)
+        case .comingUp: ReminderStatusLabel(status: .comingUp)
+        case .paused: ReminderStatusLabel(status: .paused)
+        case .done: ReminderStatusLabel(status: .closed(.done))
+        case .missed: ReminderStatusLabel(status: .closed(.missed(reason: .giveUpLimit)))
+        case .skipped: ReminderStatusLabel(status: .closed(.skipped(reason: .paused)))
+        case .removed:
+            Text(status.name)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color(uiColor: .secondaryLabel))
+        }
+    }
+}
+
+extension ReportedStatus {
+    /// The status label's word, for VoiceOver to read with the rest of a Sent row.
+    var name: LocalizedStringResource {
+        switch self {
+        case .nudging: ReminderStatus.nudging.name
+        case .comingUp: ReminderStatus.comingUp.name
+        case .paused: ReminderStatus.paused.name
+        case .done: OccurrenceState.done.statusName
+        case .missed: OccurrenceState.missed(reason: .giveUpLimit).statusName
+        case .skipped: OccurrenceState.skipped(reason: .paused).statusName
+        case .removed: LocalizedStringResource("Removed", comment: "Status label on a Sent row: the person removed their copy of the reminder.")
+        }
+    }
+}
+
 extension ReminderStatus {
     /// The status label's word, for VoiceOver to read with the rest of a row.
     var name: LocalizedStringResource {

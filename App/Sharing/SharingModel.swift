@@ -63,6 +63,9 @@ final class SharingModel {
     /// adapter offers it again.
     @ObservationIgnored weak var receivedReminders: (any ReceivedReminders)?
 
+    /// Tells the sender how each copy this person holds is going (ticket 206).
+    let statusReporter = StatusReporter()
+
     private let adapter: any SharingAdapter
     /// When an invite was sent.
     private let clock: any EngineClock
@@ -79,6 +82,7 @@ final class SharingModel {
         self.clock = clock
         self.openStore = openStore
         adapter.events = self
+        statusReporter.host = self
     }
 
     /// Opens and reads the store if that hasn't worked yet, and returns it. Synchronous, so two
@@ -287,21 +291,27 @@ final class SharingModel {
         guard let index = kept.connections.firstIndex(where: { $0.id == connectionID && $0.state == .connected }),
               kept.connections[index].mine != choices
         else { return }
+        let wasSharing = kept.connections[index].mine.sharesStatus
         kept.connections[index].mine = choices
         let change = SharingChange.settings(.init(choices), for: connectionID)
         kept.outbox.append(change.entry)
         try keep(kept)
         adapter.submit(change)
+        // Turning Status sharing off deletes what the sender was sent, whether or not this launch
+        // sent it; turning it on sends where each copy stands now (ticket 206).
+        statusReporter.report(retractingThrough: wasSharing && !choices.sharesStatus ? connectionID : nil)
     }
 
     /// A received reminder's "Don't share this one" (ticket 200), kept with its sync state, or with a
-    /// new one if the store holds none. Its effect, holding its status back from the sender, is the
-    /// status tickets', so nothing is sent. Throws, changing nothing, if the store can't keep it.
+    /// new one if the store holds none, and the sender's view of it changed to match: held back
+    /// while status sharing is on, and the current status sent when it goes off (ticket 206).
+    /// Throws, changing nothing, if the store can't keep it.
     func setNotSharingThisOne(_ notSharing: Bool, for reminderID: Reminder.ID) throws {
         var kept = try currentData()
         guard kept.receivedSyncStates.first(where: { $0.reminderID == reminderID })?.notSharingThisOne != notSharing else { return }
         kept.updateReceivedState(of: reminderID) { $0.notSharingThisOne = notSharing }
         try keep(kept)
+        statusReporter.report()
     }
 
     /// Remove (ticket 200): the received reminder with `reminderID` is gone, so its sync state goes
@@ -322,7 +332,7 @@ final class SharingModel {
     }
 
     /// What the store holds, opening it first if it isn't open.
-    private func currentData() throws -> SharingData {
+    func currentData() throws -> SharingData {
         _ = try openedStore()
         return data
     }
@@ -334,6 +344,8 @@ final class SharingModel {
         data = kept
     }
 }
+
+extension SharingModel: StatusReportHost {}
 
 /// Where the person's received reminders (GLOSSARY.md, Received reminder) are kept: among their
 /// own reminders, in the app model (ticket 198).
@@ -353,6 +365,11 @@ protocol ReceivedReminders: AnyObject {
     /// Cancels the copy with `copyID` (ticket 205), as the engine's `cancel(_:)` does: it nudges no
     /// more and stays until the person removes it. Throws if the reminders haven't been read.
     func cancel(_ copyID: Reminder.ID) throws
+
+    /// The status report of every copy the person holds that the sender may be told about (ticket
+    /// 206), as the engine reads them now: every received reminder but a Canceled one, whose sender
+    /// deleted it and so reads nothing.
+    func statusReports() -> [(copy: Reminder, report: StatusReport)]
 }
 
 extension SentReminder {
@@ -526,6 +543,8 @@ extension SharingModel: SharingAdapterEvents {
         kept.outbox.append(receipt.entry)
         try keep(kept)
         adapter.submit(receipt)
+        // The copy's status as it arrives, if status sharing is on (ticket 206).
+        statusReporter.report()
     }
 
     /// The sender's revision of a copy held (ticket 204): the app model applies it, and a revision that

@@ -37,24 +37,30 @@ struct SentScreen {
         var time: String
         /// "Today", "Tomorrow", "Yesterday" or a short date, under the time.
         var day: String
-        /// Whether the copy has reached the person's iPhone, whatever their status sharing, and
-        /// whether it waits there for them to accept it (ticket 203).
-        var delivery: SentReadOut.Delivery
+        /// How the person's copy is going, as the sender may read it.
+        var state: SentCopyState
 
         var id: Reminder.ID { reminderID }
 
-        var isDelivered: Bool { delivery.isDelivered }
-        var detailLine: LocalizedStringResource? { delivery.detailLine }
+        /// Whether the copy has reached the person's iPhone, whatever their status sharing, and
+        /// whether it waits there for them to accept it (ticket 203).
+        var delivery: SentReadOut.Delivery { state.delivery }
+        var isDelivered: Bool { state.isDelivered }
+        /// The label trailing the row: the copy's status once the person's app reports one.
+        var trailing: SentReadOut.Trailing { state.trailing }
+        var detailLine: LocalizedStringResource? { state.detailLine }
 
-        /// What VoiceOver reads for the row: the person, the title, whether it was delivered or
-        /// waits to be accepted, and the due time.
+        /// What VoiceOver reads for the row: the person, the title, how the copy is going or
+        /// whether it was delivered or waits to be accepted, and the due time.
         var voiceOverLabel: LocalizedStringResource {
-            let delivery = String(localized: detailLine ?? Self.deliveredText)
-            return LocalizedStringResource("\(personName), \(title), \(delivery), \(day), \(time)", comment: "VoiceOver label of a row on the Reminders tab's Sent view. 1: who it was sent to, such as \"Riley Park\". 2: the reminder's title. 3: \"Delivered\", \"Not delivered yet\" or \"Waiting for them to accept\". 4: its due day, such as \"Today\". 5: its due time, such as \"9:00 AM\".")
+            let state = String(localized: state.spokenState)
+            return LocalizedStringResource("\(personName), \(title), \(state), \(day), \(time)", comment: "VoiceOver label of a row on the Reminders tab's Sent view. 1: who it was sent to, such as \"Riley Park\". 2: the reminder's title. 3: how the copy is going, such as \"Done\", \"Delivered, Not sharing status\", \"Not delivered yet\" or \"Waiting for them to accept\". 4: its due day, such as \"Today\". 5: its due time, such as \"9:00 AM\".")
         }
 
         static let waitingText = LocalizedStringResource("Waiting for them to accept", comment: "Under a sent reminder's title on the Sent view, and under a person's name on its details: their copy has reached their iPhone, which asks them first (Ask me first), and they haven't accepted it yet.")
         static let deliveredText = LocalizedStringResource("Delivered", comment: "A sent reminder's label on the Sent view and its details: the person's copy has reached their iPhone.")
+        static let notSharingStatusText = LocalizedStringResource("Not sharing status", comment: "Under a sent reminder's title on the Sent view, and under a person's name on its details: the person keeps how their reminders are going from the sender, so the sender sees only that it was delivered.")
+        static let notSharingThisOneText = LocalizedStringResource("Not sharing this one", comment: "Under a sent reminder's title on the Sent view, and under a person's name on its details: the person keeps how this one reminder is going from the sender, so the sender sees only that it was delivered.")
         static let notDeliveredText = LocalizedStringResource("Not delivered yet", comment: "Under a sent reminder's title on the Sent view, and under a person's name on its details: their copy hasn't reached their iPhone yet.")
     }
 
@@ -86,7 +92,7 @@ struct SentScreen {
                         personName: person.name,
                         time: engine.timeOfDay(of: due),
                         day: engine.dayLabel(of: due),
-                        delivery: row.delivery
+                        state: SentCopyState(delivery: row.delivery, status: row.status)
                     )
                 }
             )
@@ -96,18 +102,68 @@ struct SentScreen {
     }
 }
 
-extension SentReadOut.Delivery {
+/// How one person's copy of a sent reminder reads to the sender (ticket 206): whether it reached
+/// them, and what their app reported. What a Sent row and a recipient on the details both say.
+struct SentCopyState: Equatable {
+    var delivery: SentReadOut.Delivery
+    var status: SentReadOut.Status
+
     /// Delivered trails a Sent row and a recipient on the details once the copy is on their
     /// iPhone, waiting or started, as the mockup's `sentStatus` labels a waiting copy (ticket 203).
-    var isDelivered: Bool { self != .notDelivered }
+    var isDelivered: Bool { delivery != .notDelivered }
+
+    /// The label trailing a Sent row, and a recipient on the details (the mockup's `sentStatus`): the
+    /// copy's status when the person's app reported one the sender may read, otherwise Delivered once
+    /// it is on their iPhone, and nothing before.
+    var trailing: SentReadOut.Trailing {
+        switch delivery {
+        case .notDelivered: .nothing
+        case .waitingForAcceptance: .delivered
+        case .delivered:
+            if case .reported(let reported, _) = status { .status(reported) } else { .delivered }
+        }
+    }
 
     /// Under the title of a Sent row, and under a person's name on the details: "Not delivered
-    /// yet", "Waiting for them to accept", or nothing once it started.
+    /// yet", "Waiting for them to accept", then, once it started, "Delivered" beside a status,
+    /// "Not sharing status" or "Not sharing this one", and nothing while no status has come.
     var detailLine: LocalizedStringResource? {
-        switch self {
+        switch delivery {
         case .notDelivered: SentScreen.Row.notDeliveredText
         case .waitingForAcceptance: SentScreen.Row.waitingText
-        case .delivered: nil
+        case .delivered:
+            switch status {
+            case .reported: SentScreen.Row.deliveredText
+            case .notSharingStatus: SentScreen.Row.notSharingStatusText
+            case .notSharingThisOne: SentScreen.Row.notSharingThisOneText
+            case .notReportedYet: nil
+            }
         }
+    }
+
+    /// What VoiceOver reads for the copy: its status when there is one, else "Delivered" with why
+    /// no status is shown, else what the detail line says. Whole sentences, so a translation can
+    /// order the words as it needs.
+    var spokenState: LocalizedStringResource {
+        if case .status(let reported) = trailing { return reported.name }
+        switch (delivery, status) {
+        case (.delivered, .notSharingStatus):
+            return LocalizedStringResource("Delivered, not sharing status", comment: "VoiceOver, on a Sent row: the copy reached the person's iPhone, and they keep how their reminders are going from the sender.")
+        case (.delivered, .notSharingThisOne):
+            return LocalizedStringResource("Delivered, not sharing this one", comment: "VoiceOver, on a Sent row: the copy reached the person's iPhone, and they keep how this one reminder is going from the sender.")
+        default:
+            return detailLine ?? SentScreen.Row.deliveredText
+        }
+    }
+}
+
+extension SentReadOut {
+    /// The label trailing a Sent row.
+    enum Trailing: Equatable {
+        /// Not delivered yet.
+        case nothing
+        /// Delivered, with no status to show.
+        case delivered
+        case status(ReportedStatus)
     }
 }

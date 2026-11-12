@@ -233,7 +233,8 @@ struct SendToTests {
 
         let copy = try #require(riley.model.engine.reminders.first)
         #expect(copy.origin == .received(connectionID: rileyID, sendersReminderID: pills.id, revision: 2, state: .accepted))
-        #expect(riley.adapter.submitted.map(\.kind) == [.receipt])
+        // The receipt, and the copy's status, which status sharing sends (ticket 206).
+        #expect(riley.adapter.submitted.map(\.kind) == [.receipt, .status])
     }
 
     @Test(arguments: [SharingConnection.State.invited, .ended])

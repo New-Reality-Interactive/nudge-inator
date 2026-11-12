@@ -47,8 +47,9 @@ struct SentList: View {
 }
 
 /// A Sent row, the mockup's `sentRow`: the due time and its day, the title, and Delivered once the
-/// person's copy has arrived, or "Not delivered yet" under the title before it. The status label is
-/// #206's. VoiceOver reads `Row.voiceOverLabel`.
+/// person's copy has arrived, or "Not delivered yet" under the title before it. Once their app
+/// reports how the copy is going, the status label takes Delivered's place (ticket 206). VoiceOver
+/// reads `Row.voiceOverLabel`.
 private struct SentRowView: View {
     let row: SentScreen.Row
     let openDetails: () -> Void
@@ -65,11 +66,23 @@ private struct SentRowView: View {
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
         } trailing: {
-            if row.isDelivered {
-                DeliveredLabel()
-            }
+            SentTrailingLabel(trailing: row.trailing)
         }
         .accessibilityLabel(Text(row.voiceOverLabel))
+    }
+}
+
+/// The label trailing a Sent row, or a recipient on a sent reminder's details: the copy's status, or
+/// Delivered (ticket 206), or nothing while it hasn't arrived.
+struct SentTrailingLabel: View {
+    let trailing: SentReadOut.Trailing
+
+    var body: some View {
+        switch trailing {
+        case .nothing: EmptyView()
+        case .delivered: DeliveredLabel()
+        case .status(let status): ReportedStatusLabel(status: status)
+        }
     }
 }
 

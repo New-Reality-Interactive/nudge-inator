@@ -238,14 +238,15 @@ struct AskMeFirstTests {
         #expect(details.recipients.first?.detailLine.map { String(localized: $0) } == "Waiting for them to accept")
     }
 
-    @Test func aStartedCopyReadsDeliveredWithNoLine() async throws {
+    /// Its status shows beside "Delivered" (ticket 206): a started copy never reads waiting.
+    @Test func aStartedCopyReadsDeliveredAndNeverWaiting() async throws {
         let (alex, riley) = try await phones(rileysMode: .startRightAway)
         try await send(pills, from: alex, to: riley)
 
         let row = try #require(sentRow(on: alex))
 
         #expect(row.delivery == .delivered)
-        #expect(row.detailLine == nil)
+        #expect(row.detailLine.map { String(localized: $0) } == "Delivered")
     }
 
     /// Receipts can come out of order: a waiting receipt late after the started one doesn't put the

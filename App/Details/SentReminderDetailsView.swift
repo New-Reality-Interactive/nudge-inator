@@ -3,9 +3,9 @@ import os
 import SwiftUI
 
 /// A sent reminder's details (ticket 201, the mockup's `viewSent`), pushed from a Sent row: the hero
-/// with its strength, Sent To with each person and whether their copy has arrived, the Schedule, and
-/// Delete. Edit opens the sender's form, whose Save goes to every copy. Each person's status and
-/// history are #206's and #207's. It reads the sharing store again at every change and every minute.
+/// with its strength, Sent To with each person and how their copy is going, the Schedule, and
+/// Delete. Edit opens the sender's form, whose Save goes to every copy. Each person's 7-day history is
+/// #207's. It reads the sharing store again at every change and every minute.
 struct SentReminderDetailsView: View {
     let id: Reminder.ID
 
@@ -105,9 +105,7 @@ private struct SentDetailsList: View {
                 ForEach(details.recipients) { recipient in
                     // As the mockup's `viewSent`: the detail line under the name, the label trailing.
                     LabeledContent {
-                        if recipient.isDelivered {
-                            DeliveredLabel()
-                        }
+                        SentTrailingLabel(trailing: recipient.trailing)
                     } label: {
                         Text(verbatim: recipient.name)
                         if let line = recipient.detailLine {

@@ -69,8 +69,8 @@ extension View {
     /// receiving an invite, one that's unavailable, with `invited`, that person accepting, and with
     /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196), sending
     /// a reminder (ticket 198), getting what was sent to them (ticket 201), accepting what waits for
-    /// them (ticket 203), changing what they sent (ticket 204), deleting it (ticket 205) or disconnecting
-    /// (ticket 197).
+    /// them (ticket 203), reporting how what you sent is going (ticket 206), changing what they sent
+    /// (ticket 204), deleting it (ticket 205) or disconnecting (ticket 197).
     func standInSharingControls(invited: SharingConnection? = nil, connected: SharingConnection? = nil) -> some View {
         toolbar {
             if let adapter = StandInSharing.current {
@@ -101,6 +101,18 @@ extension View {
                                 Text(verbatim: "\(connected.name) Gets What You Sent")
                             }
                             Button { adapter.theyAcceptWhatWaits(through: connected.id) } label: { Text(verbatim: "\(connected.name) Accepts What You Sent") }
+                            Menu {
+                                Button { adapter.theyReport(.comingUp, through: connected.id) } label: { Text(verbatim: "Coming up") }
+                                Button { adapter.theyReport(.nudging, through: connected.id) } label: { Text(verbatim: "Nudging") }
+                                Button { adapter.theyReport(.paused, through: connected.id) } label: { Text(verbatim: "Paused") }
+                                Button { adapter.theyReport(.done, through: connected.id) } label: { Text(verbatim: "Done") }
+                                Button { adapter.theyReport(.missed, through: connected.id) } label: { Text(verbatim: "Missed") }
+                                Button { adapter.theyReport(.skipped, through: connected.id) } label: { Text(verbatim: "Skipped") }
+                                Button { adapter.theyReport(.removed, through: connected.id) } label: { Text(verbatim: "Removed") }
+                                Button { adapter.theyReport(nil, through: connected.id) } label: { Text(verbatim: "Not sharing this one") }
+                            } label: {
+                                Text(verbatim: "\(connected.name) Reports…")
+                            }
                             Button { adapter.theyDisconnect(connected.id) } label: { Text(verbatim: "\(connected.name) Disconnects") }
                         } else {
                             Button { adapter.receiveInvite(from: "Sam Rivera") } label: { Text(verbatim: "Receive an Invite from Sam Rivera") }
@@ -126,6 +138,24 @@ final class StandInSharingAdapter: SharingAdapter {
         StandInSharing.logger.notice("Stand-in: not sending a \(String(describing: change.kind), privacy: .public) change")
         if change.kind == .send, let reminderID = change.reminderID {
             undelivered.append((reminderID, change.connectionID))
+            sentThrough[change.connectionID, default: []].append(reminderID)
+        }
+    }
+
+    /// Every reminder sent through each connection, which `theyReport` reports on (ticket 206).
+    private var sentThrough: [UUID: [Reminder.ID]] = [:]
+
+    /// Stands in for the other person's app reporting how each copy sent through the connection with
+    /// `connectionID` is going (ticket 206): `status` arrives as through iCloud for each, or with
+    /// `nil` the flag that they keep this one from the sender ("Not sharing this one"). Nothing
+    /// arrives for a copy not yet delivered: the status comes with the receipt.
+    func theyReport(_ status: ReportedStatus?, through connectionID: UUID) {
+        let record = status.map { SentCopy.StatusRecord(report: StatusReport(label: $0, occurrences: []), notSharingThisOne: false) } ?? .heldBack
+        let delivered = (sentThrough[connectionID] ?? []).filter { reminderID in !undelivered.contains { $0.reminderID == reminderID && $0.connectionID == connectionID } }
+        Task {
+            for reminderID in delivered {
+                try? await events?.received(.status(record, for: reminderID, from: connectionID))
+            }
         }
     }
 

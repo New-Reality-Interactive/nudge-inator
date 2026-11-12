@@ -241,6 +241,8 @@ final class AppModel {
     /// occurrence closing as Missed, tells the app nothing, so the Icon badge catches up with the
     /// Now badge here: a re-plan, only when the count has changed.
     func minutePassed() {
+        // A copy coming due changes its status with no event, and the sender is told (ticket 206).
+        sharing?.statusReporter.report()
         guard engine.badgeCount != notifications.plannedBadgeCount else { return }
         replan()
     }
@@ -421,7 +423,9 @@ final class AppModel {
     /// is the same, and its sync state goes from the sharing store; a sharing store that won't keep
     /// that leaves a sync state with no reminder, which nothing reads.
     func delete(_ reminderID: Reminder.ID) {
-        if engine.reminders.contains(where: { $0.id == reminderID && $0.isReceived }) {
+        if let copy = engine.reminders.first(where: { $0.id == reminderID && $0.isReceived }) {
+            // Before the sync state goes: it holds "Don't share this one" (ticket 206).
+            sharing?.statusReporter.removing(copy)
             do {
                 try sharing?.forgetReceived(reminderID)
             } catch {
@@ -617,6 +621,8 @@ final class AppModel {
         guard case .ready = launchState, store != nil else { return }
         try event(&engine)
         save(storeChange: storeChange)
+        // Whatever the event did to a received copy, its sender hears of (ticket 206).
+        sharing?.statusReporter.report()
     }
 
     /// Saves what the engine holds, after the event's own store change, if any. Returns whether
@@ -674,6 +680,14 @@ extension AppModel: ReceivedReminders {
         }
         if !changes.isEmpty { postChange(of: revised.id, changes) }
         return changes
+    }
+
+    /// The copies the sender may be told about (ticket 206): every received reminder but a Canceled
+    /// one, each with the engine's status report of it.
+    func statusReports() -> [(copy: Reminder, report: StatusReport)] {
+        engine.reminders.filter { $0.isReceived && !$0.isCanceled }.compactMap { copy in
+            engine.statusReport(of: copy.id).map { (copy, $0) }
+        }
     }
 
     /// The sender's Delete of a copy held (ticket 205): the engine cancels it, so nothing is planned
