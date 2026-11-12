@@ -108,9 +108,9 @@ struct ReminderDetails {
         let from = senders.label(of: reminder)
         card = NudgeCard(engine: engine, reminder: reminder, from: from)
         let latest = engine.latestOccurrence(for: id)
-        lastOccurrence = latest
-            .flatMap { engine.closedOccurrence(of: id, dueAt: $0.dueTime) }
-            .map { LastOccurrence(state: $0.occurrence.state, day: engine.dayLabel(of: $0.closedAt), time: engine.timeOfDay(of: $0.closedAt)) }
+        // A canceled copy's last occurrence closed Skipped only to stop it nudging: it wasn't paused.
+        let closed = reminder.isCanceled ? nil : latest.flatMap { engine.closedOccurrence(of: id, dueAt: $0.dueTime) }
+        lastOccurrence = closed.map { LastOccurrence(state: $0.occurrence.state, day: engine.dayLabel(of: $0.closedAt), time: engine.timeOfDay(of: $0.closedAt)) }
         repeats = engine.repeatSummary(of: reminder)
         showsLockNote = !engine.lockedFields(of: id).isEmpty
         let howItNudges = engine.howItNudges(reminder.strength, pace: reminder.pace, breakThroughFocus: reminder.breakThroughFocus)

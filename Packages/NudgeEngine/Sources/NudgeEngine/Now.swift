@@ -69,11 +69,15 @@ extension Engine {
     /// The Now tab's Last 24 Hours: occurrences that closed (Done, Missed or Skipped) from 24 hours
     /// before now up to now, both ends in, newest first. Measured in hours, not local days, so a
     /// DST change doesn't stretch or shrink it.
+    ///
+    /// A Canceled copy has none: the occurrence it was nudging closed as Skipped only to stop, and
+    /// it wasn't paused, so the row would say so (ticket 205).
     public func closedInLast24Hours() -> [ClosedOccurrence] {
         let now = clock.now
         let windowStart = now - 24 * 60 * 60
         let titles = titles
         return reminders
+            .filter { !$0.isCanceled }
             .flatMap { reminder in
                 dueTimes(of: reminder, in: earliestListedDueTime...now).compactMap { dueTime in
                     closedOccurrence(of: reminder.id, dueAt: dueTime)

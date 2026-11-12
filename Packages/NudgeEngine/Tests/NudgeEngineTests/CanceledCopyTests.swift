@@ -97,6 +97,17 @@ struct CanceledCopyTests {
         #expect(engine.occurrence(of: copy.id, dueAt: NewYork.local(2026, 10, 16))?.state == yesterday)
     }
 
+    /// The open occurrence closes as Skipped only to stop it nudging: it wasn't paused, so Last 24
+    /// Hours doesn't list it as "the reminder was paused" (phone check).
+    @Test func aCanceledCopyHasNoRowInTheLast24Hours() {
+        let canceled = received()
+        let other = received(title: "Call Mum")
+        var engine = engine(for: canceled, other)
+        engine.cancel(canceled.id)
+
+        #expect(engine.closedInLast24Hours().filter { $0.reminderID == canceled.id }.isEmpty)
+    }
+
     @Test func aCanceledCopyCountsTowardNeitherBadge() throws {
         let other = received(title: "Call Mum")
         let copy = received()

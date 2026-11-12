@@ -204,6 +204,8 @@ struct ReceivedCancelTests {
         #expect(shown.pauseAction == nil)
         #expect(shown.next == .none)
         #expect(shown.card == nil)
+        // It closed Skipped only to stop nudging; it wasn't paused (phone check).
+        #expect(shown.lastOccurrence == nil)
         #expect(shown.received?.senderName == "Alex Morgan")
     }
 
