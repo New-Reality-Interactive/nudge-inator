@@ -25,6 +25,8 @@ struct ReminderDetails {
     var showsLockNote: Bool
     /// The reminder's ladder with its own Break Through Focus switch (ticket 31).
     var howItNudges: HowItNudges
+    /// What a received reminder's details add (ticket 200), or `nil` for the person's own.
+    var received: Received?
 
     var title: String { reminder.title }
     var notes: String { reminder.notes }
@@ -39,6 +41,21 @@ struct ReminderDetails {
         guard !tags.isEmpty else { return nil }
         let list = tags.formatted(.list(type: .and))
         return LocalizedStringResource("Tags: \(list)", comment: "VoiceOver label of a reminder's tags on its details. The placeholder lists them, such as \"#home and #errands\".")
+    }
+
+    /// A received reminder's sender and strength, and the person's choice to keep its status from
+    /// them (ticket 200): the sender owns everything but the tags.
+    struct Received: Equatable {
+        /// "From Alex Morgan", as Now, My Day and the Reminders tab label it.
+        var from: LocalizedStringResource
+        /// Who owns its content, for "Alex Morgan owns this schedule."
+        var senderName: String
+        /// "Firm: rings as an alarm from nudge 4", under the strength badge.
+        var strengthLine: StrengthLine
+        /// The "Don't share this one" switch, or `nil` when the person's Status sharing for the
+        /// connection is off, so there's nothing to hold back (the mockup's `viewReceived`). Its
+        /// effect on what the sender sees is the status tickets'.
+        var notSharingThisOne: Bool?
     }
 
     /// A closed occurrence, for the Schedule's last occurrence row.
@@ -64,19 +81,35 @@ struct ReminderDetails {
 
     /// `nil` when the engine doesn't hold the reminder: an ID that was never one, or a reminder
     /// that was deleted while its details were open. The screen then says it wasn't found.
-    init?(engine: Engine, id: Reminder.ID) {
+    ///
+    /// `sharing` names a received reminder's sender and holds its "Don't share this one"; with none
+    /// (previews, the shipped app until #216) it reads "From Someone", with no switch.
+    init?(engine: Engine, id: Reminder.ID, sharing: SharingData = SharingData()) {
         guard let reminder = engine.reminders.first(where: { $0.id == id }), let status = engine.status(of: id) else { return nil }
         self.reminder = reminder
         self.status = status
         tags = engine.tagLabels(for: reminder.tagIDs)
-        card = NudgeCard(engine: engine, reminder: reminder)
+        let senders = Senders(connections: sharing.connections)
+        let from = senders.label(of: reminder)
+        card = NudgeCard(engine: engine, reminder: reminder, from: from)
         let latest = engine.latestOccurrence(for: id)
         lastOccurrence = latest
             .flatMap { engine.closedOccurrence(of: id, dueAt: $0.dueTime) }
             .map { LastOccurrence(state: $0.occurrence.state, day: engine.dayLabel(of: $0.closedAt), time: engine.timeOfDay(of: $0.closedAt)) }
         repeats = engine.repeatSummary(of: reminder)
         showsLockNote = !engine.lockedFields(of: id).isEmpty
-        howItNudges = engine.howItNudges(reminder.strength, pace: reminder.pace, breakThroughFocus: reminder.breakThroughFocus)
+        let howItNudges = engine.howItNudges(reminder.strength, pace: reminder.pace, breakThroughFocus: reminder.breakThroughFocus)
+        self.howItNudges = howItNudges
+        received = from.map { from in
+            let connection = sharing.connections.first { $0.id == reminder.receivedThrough }
+            let syncState = sharing.receivedSyncStates.first { $0.reminderID == reminder.id }
+            return Received(
+                from: from,
+                senderName: senders.name(of: reminder) ?? "",
+                strengthLine: StrengthLine(reminder.strength, howItNudges),
+                notSharingThisOne: connection?.mine.sharesStatus == true ? syncState?.notSharingThisOne ?? false : nil
+            )
+        }
 
         let nextDueTime = engine.nextDueTime(of: reminder)
         let isPaused = engine.isPaused(id)

@@ -111,6 +111,7 @@ final class ReminderForm: Identifiable {
         tagRules = currentEngine()
         self.now = now
         original = nil
+        senderName = nil
         let dueTime = Self.nextWholeHour(after: now())
         self.dueTime = dueTime
         repeatEnd = currentEngine().repeatEnd(of: nil, startingAt: dueTime)
@@ -123,8 +124,13 @@ final class ReminderForm: Identifiable {
         Calendar.autoupdatingCurrent.nextDate(after: date, matching: DateComponents(minute: 0, second: 0), matchingPolicy: .nextTime) ?? date
     }
 
-    /// An Edit form for a reminder the engine holds, or `nil` if it doesn't hold it.
-    init?(engine currentEngine: @escaping () -> Engine, editing reminderID: Reminder.ID, now: @escaping () -> Date) {
+    /// The sender of a received reminder, who owns its content, for the form's note (ticket 200),
+    /// or `nil` for the person's own.
+    let senderName: String?
+
+    /// An Edit form for a reminder the engine holds, or `nil` if it doesn't hold it. `senders` names
+    /// a received reminder's sender.
+    init?(engine currentEngine: @escaping () -> Engine, editing reminderID: Reminder.ID, now: @escaping () -> Date, senders: Senders = Senders()) {
         let engine = currentEngine()
         guard let reminder = engine.reminders.first(where: { $0.id == reminderID }) else { return nil }
         self.currentEngine = currentEngine
@@ -132,6 +138,7 @@ final class ReminderForm: Identifiable {
         self.now = now
         sharing = nil
         original = reminder
+        senderName = senders.name(of: reminder)
         title = reminder.title
         notes = reminder.notes
         tagIDs = reminder.tagIDs
@@ -148,6 +155,10 @@ final class ReminderForm: Identifiable {
 
     /// The Edit form, rather than New: its title and Save's label.
     var isEditing: Bool { original != nil }
+
+    /// A received reminder's form (ticket 200): its sender owns the title and notes, which are
+    /// read-only, and every schedule field, which is locked. Only the tags can change.
+    var isContentLocked: Bool { original?.isReceived == true }
 
     /// Whether Cancel should ask before throwing the draft away (the mockup's `draftDirty`). The
     /// Custom sheet's changes are in the draft as they're made (#284), so they count too.
@@ -387,6 +398,7 @@ final class ReminderForm: Identifiable {
     /// the form has no rule of its own; a new reminder has none.
     var lockedFields: Set<LockedField> {
         _ = lockCheckedAt
+        if isContentLocked { return Set(LockedField.allCases) }
         return original.map { currentEngine().lockedFields(of: $0.id) } ?? []
     }
 
@@ -412,6 +424,8 @@ final class ReminderForm: Identifiable {
     }
 
     var saveBlock: SaveBlock? {
+        // A received reminder saves its tags alone, whatever its schedule.
+        if isContentLocked { return nil }
         if title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return .noTitle }
         if dueTime <= now(), !keepsItsStart { return .pastTime }
         return repeatBlock
@@ -486,6 +500,7 @@ final class ReminderForm: Identifiable {
             isSaved = true
             return true
         }
+        if isContentLocked { return saveTags(of: original, to: model) }
         // It may have started nudging since the form opened. Checked with the engine's own rule
         // before any typed tag is created, so a turned-down save leaves nothing behind.
         let locked = model.engine.lockedFields(of: original.id)
@@ -499,6 +514,21 @@ final class ReminderForm: Identifiable {
             return true
         } catch {
             restoreLockedFields(from: original)
+            return false
+        }
+    }
+
+    /// A received reminder's Save: the reminder as it is, with the chosen tags, so nothing the
+    /// sender owns can change, even as the draft writes it (a title's spaces, say). `false` if the
+    /// engine turned it down.
+    private func saveTags(of original: Reminder, to model: AppModel) -> Bool {
+        var edited = model.engine.reminders.first { $0.id == original.id } ?? original
+        edited.tagIDs = savedTagIDs(through: model)
+        do throws(EditError) {
+            try model.edit(edited)
+            isSaved = true
+            return true
+        } catch {
             return false
         }
     }

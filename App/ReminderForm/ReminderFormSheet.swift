@@ -19,7 +19,7 @@ struct ReminderFormSheet: View {
     var body: some View {
         NavigationStack(path: $pages) {
             Form {
-                if form.isEditing { EditNoteSection(isLocked: !form.lockedFields.isEmpty) }
+                if form.isEditing { EditNoteSection(isLocked: !form.lockedFields.isEmpty, senderName: form.senderName) }
                 WhatSection(form: form)
                 if form.offersSendTo { SendToSection(form: form, isInviting: $isInviting) }
                 ScheduleSection(form: form, isShowingCustomRepeat: $isShowingCustomRepeat)
@@ -30,6 +30,8 @@ struct ReminderFormSheet: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .centeredInReadableColumn()
+            // A received reminder's fields are locked because its sender owns them (ticket 200).
+            .environment(\.lockHint, form.isContentLocked ? LockNote.senderHint : LockNote.hint)
             .navigationTitle(form.isEditing
                 ? Text("Edit Reminder", comment: "Title of the form that edits a reminder.")
                 : Text("New Reminder", comment: "Title of the form that makes a reminder."))
@@ -108,15 +110,25 @@ private extension View {
     }
 }
 
-/// The note at the top of the Edit form: why the schedule is locked, or when changes apply.
+/// The note at the top of the Edit form: who owns a received reminder (ticket 200), why the
+/// schedule is locked, or when changes apply.
 private struct EditNoteSection: View {
     let isLocked: Bool
+    /// A received reminder's sender, or `nil` for the person's own.
+    let senderName: String?
 
     var body: some View {
         Section {
         } header: {
             Group {
-                if isLocked {
+                if let senderName {
+                    Label {
+                        Text("**\(senderName) owns this reminder.** You can add or remove your own tags. Its title, notes, schedule, strength and pace stay as \(senderName) set them.",
+                             comment: "Top of the Edit Reminder form of a received reminder, whose sender owns everything but the tags. Both placeholders are the sender's name.")
+                    } icon: {
+                        LockGlyph()
+                    }
+                } else if isLocked {
                     Label {
                         Text("**Nudging now.** Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge.",
                              comment: "Top of the Edit Reminder form while the reminder is nudging: why five fields are locked.")
@@ -142,22 +154,14 @@ private struct WhatSection: View {
 
     var body: some View {
         Section {
-            TextField(text: $form.title, axis: .vertical) {
-                Text("Title", comment: "The reminder form's title field, which must be filled in.")
+            if form.isContentLocked {
+                OwnedText(text: form.title, label: Text("Title", comment: "The reminder form's title field, which must be filled in."))
+                if !form.notes.isEmpty {
+                    OwnedText(text: form.notes, label: Text("Notes", comment: "The reminder form's notes field."))
+                }
+            } else {
+                editableFields
             }
-            .focused($isTitleFocused)
-            .submitLabel(.done)
-            // A vertical field takes Return as a new line. Return at the end ends editing instead,
-            // as the mockup's "done" key; the form saves any pasted line breaks as spaces.
-            .onChange(of: form.title) { _, title in
-                guard title.last?.isNewline == true else { return }
-                form.title.removeLast()
-                isTitleFocused = false
-            }
-            TextField(text: $form.notes, axis: .vertical) {
-                Text("Notes", comment: "The reminder form's notes field.")
-            }
-            .lineLimit(3...)
             // A sent reminder has no tags (ticket 198).
             if form.showsTags { tagsRow }
         } footer: {
@@ -176,6 +180,25 @@ private struct WhatSection: View {
         }
     }
 
+    @ViewBuilder private var editableFields: some View {
+        TextField(text: $form.title, axis: .vertical) {
+            Text("Title", comment: "The reminder form's title field, which must be filled in.")
+        }
+        .focused($isTitleFocused)
+        .submitLabel(.done)
+        // A vertical field takes Return as a new line. Return at the end ends editing instead,
+        // as the mockup's "done" key; the form saves any pasted line breaks as spaces.
+        .onChange(of: form.title) { _, title in
+            guard title.last?.isNewline == true else { return }
+            form.title.removeLast()
+            isTitleFocused = false
+        }
+        TextField(text: $form.notes, axis: .vertical) {
+            Text("Notes", comment: "The reminder form's notes field.")
+        }
+        .lineLimit(3...)
+    }
+
     private var tagsRow: some View {
         NavigationLink(value: ReminderFormPage.tags) {
             LabeledContent {
@@ -189,6 +212,23 @@ private struct WhatSection: View {
                 Text("Tags", comment: "The reminder form's row that opens the Tags page.")
             }
         }
+    }
+}
+
+/// A received reminder's title or notes on its form (ticket 200): the sender's words as plain
+/// text, as the mockup's read-only fields show them, never a field to type in. VoiceOver reads its
+/// label, the words and why they can't change.
+private struct OwnedText: View {
+    let text: String
+    let label: Text
+    @Environment(\.lockHint) private var lockHint
+
+    var body: some View {
+        Text(verbatim: text)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityLabel(label)
+            .accessibilityValue(Text(verbatim: text))
+            .accessibilityHint(Text(lockHint))
     }
 }
 
@@ -481,12 +521,31 @@ extension View {
         }
     }
 
-    /// Disables a field that is locked while nudging, and gives it the reason as its VoiceOver
-    /// hint, so the reason isn't only the dimmed look and the glyph.
+    /// Disables a field that is locked while nudging, or because its sender owns it (the name is
+    /// older than received reminders), and gives it
+    /// the reason (`lockHint`) as its VoiceOver hint, so the reason isn't only the dimmed look and
+    /// the glyph.
     func lockedWhileNudging(_ isLocked: Bool) -> some View {
-        disabled(isLocked)
-            .accessibilityHint(Text(LockNote.hint), isEnabled: isLocked)
+        modifier(LockedFieldModifier(isLocked: isLocked))
     }
+}
+
+/// `lockedWhileNudging`'s modifier, which reads the reason from the environment.
+private struct LockedFieldModifier: ViewModifier {
+    let isLocked: Bool
+    @Environment(\.lockHint) private var lockHint
+
+    func body(content: Content) -> some View {
+        content
+            .disabled(isLocked)
+            .accessibilityHint(Text(lockHint), isEnabled: isLocked)
+    }
+}
+
+extension EnvironmentValues {
+    /// Why the form's locked fields are locked, as their VoiceOver hint: nudging (`LockNote.hint`),
+    /// or a received reminder's sender owns them (`LockNote.senderHint`, ticket 200).
+    @Entry var lockHint = LockNote.hint
 }
 
 /// Why a Nudging reminder's schedule is locked (ticket 13).
@@ -503,6 +562,12 @@ enum LockNote {
     static let hint = LocalizedStringResource(
         "Locked while it's nudging. Mark it Done or pause it to change it.",
         comment: "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging."
+    )
+
+    /// The reason on each field of a received reminder's form (ticket 200), brief for the same reason.
+    static let senderHint = LocalizedStringResource(
+        "Its sender owns this. You can change only its tags.",
+        comment: "VoiceOver hint on each field of a received reminder's Edit Reminder form, which only its sender can change."
     )
 }
 
@@ -547,6 +612,15 @@ struct RepeatSummarySentence: View {
 
 #Preview("Locked, largest text") {
     ReminderFormSheet(form: .previewNudging())
+        .environment(\.dynamicTypeSize, .accessibility5)
+}
+
+#Preview("Received") {
+    ReminderFormSheet(form: .previewReceived())
+}
+
+#Preview("Received, largest text") {
+    ReminderFormSheet(form: .previewReceived())
         .environment(\.dynamicTypeSize, .accessibility5)
 }
 

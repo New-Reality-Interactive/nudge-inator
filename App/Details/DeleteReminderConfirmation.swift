@@ -8,21 +8,31 @@ extension View {
     /// iOS draws it as a popover with Delete Reminder alone (seen on the iOS 27.0 simulator, from
     /// a button and from a swipe tile): a tap outside it, or VoiceOver's "Dismiss popup", closes it
     /// and deletes nothing. Where iOS draws an action sheet instead, its Cancel does the same.
-    func deleteReminderConfirmation(title: String, isPresented: Binding<Bool>, confirm: @escaping () -> Void) -> some View {
+    ///
+    /// A received reminder asks to Remove it instead (ticket 200, the mockup's `removeReceived`): it
+    /// is the person's copy that goes. The mockup's "<name> sees it as Removed." waits for the
+    /// status tickets, which send Removed.
+    func deleteReminderConfirmation(title: String, isReceived: Bool = false, isPresented: Binding<Bool>, confirm: @escaping () -> Void) -> some View {
         confirmationDialog(
-            Text("Delete “\(title)”?", comment: "Asked before deleting a reminder, from its details or a Reminders tab row. The placeholder is its title."),
+            isReceived
+                ? Text("Remove “\(title)”?", comment: "Asked before removing a received reminder, from its details or a Reminders tab row. The placeholder is its title.")
+                : Text("Delete “\(title)”?", comment: "Asked before deleting a reminder, from its details or a Reminders tab row. The placeholder is its title."),
             isPresented: isPresented,
             titleVisibility: .visible
         ) {
             Button(role: .destructive, action: confirm) {
-                Text("Delete Reminder", comment: "Confirms deleting the reminder.")
+                isReceived
+                    ? Text("Remove Reminder", comment: "Confirms removing the person's copy of a received reminder.")
+                    : Text("Delete Reminder", comment: "Confirms deleting the reminder.")
             }
             Button(role: .cancel) {
             } label: {
                 Text("Cancel", comment: "Keeps the reminder instead of deleting it.")
             }
         } message: {
-            Text("This deletes its history too, and cancels any nudges and alarms.", comment: "Under the question asked before deleting a reminder.")
+            isReceived
+                ? Text("This removes your copy and cancels its nudges and alarms.", comment: "Under the question asked before removing a received reminder.")
+                : Text("This deletes its history too, and cancels any nudges and alarms.", comment: "Under the question asked before deleting a reminder.")
         }
     }
 }

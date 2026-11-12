@@ -9,7 +9,8 @@ extension ReminderDetails {
     static func preview(
         _ reminder: Reminder = Reminder(title: "Take the bins out", notes: "Green one too", dueTime: .now, strength: .firm),
         tags: [String] = ["home", "weekly"],
-        pausedAt: Double? = nil
+        pausedAt: Double? = nil,
+        sharing: SharingData = SharingData()
     ) -> ReminderDetails {
         let now = Calendar.current.dateInterval(of: .minute, for: .now)?.start ?? .now
         let clock = PreviewClock(now: now)
@@ -24,7 +25,7 @@ extension ReminderDetails {
             engine.pause(reminder.id)
             clock.now = now
         }
-        guard let details = ReminderDetails(engine: engine, id: reminder.id) else { preconditionFailure("The preview's reminder is in its engine") }
+        guard let details = ReminderDetails(engine: engine, id: reminder.id, sharing: sharing) else { preconditionFailure("The preview's reminder is in its engine") }
         return details
     }
 
@@ -39,9 +40,32 @@ extension ReminderDetails {
                 tags: ["garden"], pausedAt: -5)
     }
 
+    /// A Relentless reminder Maya Lee sent, nudging, with her Status sharing on (ticket 200).
+    static func previewReceived() -> ReminderDetails {
+        let connectionID = UUID()
+        let reminder = Reminder(
+            title: "Take your allergy pill",
+            notes: "The blue box, with food.",
+            dueTime: .now.addingTimeInterval(-10 * 60),
+            strength: .relentless,
+            origin: .received(connectionID: connectionID, sendersReminderID: UUID(), revision: 0, state: .accepted)
+        )
+        let sharing = SharingData(connections: [SharingConnection(id: connectionID, name: "Maya Lee", state: .connected)])
+        return preview(reminder, tags: ["health"], sharing: sharing)
+    }
+
     static func previewComingUp() -> ReminderDetails {
         preview(Reminder(title: "Pay rent", dueTime: .now.addingTimeInterval(2 * 24 * 3600), strength: .relentless), tags: [])
     }
+}
+
+#Preview("Received") {
+    NavigationStack { ReminderDetailsView(id: UUID(), preview: .previewReceived()) }
+}
+
+#Preview("Received, largest text") {
+    NavigationStack { ReminderDetailsView(id: UUID(), preview: .previewReceived()) }
+        .environment(\.dynamicTypeSize, .accessibility5)
 }
 
 #Preview("Nudging") {

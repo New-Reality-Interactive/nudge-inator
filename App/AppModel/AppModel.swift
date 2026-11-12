@@ -417,8 +417,17 @@ final class AppModel {
 
     /// The reminder and its whole history go, from the engine and the store (ticket 12), and its
     /// alarm stops if it is ringing (#124), and its nudges already in Notification Center go (#156).
-    /// The due times are read first: Delete forgets them.
+    /// The due times are read first: Delete forgets them. A received reminder's Remove (ticket 200)
+    /// is the same, and its sync state goes from the sharing store; a sharing store that won't keep
+    /// that leaves a sync state with no reminder, which nothing reads.
     func delete(_ reminderID: Reminder.ID) {
+        if engine.reminders.contains(where: { $0.id == reminderID && $0.isReceived }) {
+            do {
+                try sharing?.forgetReceived(reminderID)
+            } catch {
+                Self.logger.error("A removed reminder's sync state couldn't be forgotten: \(error, privacy: .public)")
+            }
+        }
         perform({ engine in
             let dueTimes = engine.dueTimesAnAlarmMayBeRinging(for: reminderID)
             engine.delete(reminderID)
@@ -456,6 +465,13 @@ final class AppModel {
     func send(_ reminder: Reminder, to connectionIDs: [UUID]) throws {
         guard let sharing else { throw NoSharing() }
         try sharing.send(reminder, to: connectionIDs)
+    }
+
+    /// A received reminder's "Don't share this one" (ticket 200). Throws with no sharing, or if the
+    /// sharing store won't keep it.
+    func setNotSharing(_ notSharing: Bool, for reminderID: Reminder.ID) throws {
+        guard let sharing else { throw NoSharing() }
+        try sharing.setNotSharingThisOne(notSharing, for: reminderID)
     }
 
     /// The app has no sharing (the shipped app until #216), so nothing can be sent.
@@ -609,6 +625,16 @@ extension AppModel: ReceivedReminders {
         engine.update(reminders: engine.reminders + [added])
         // Anything the plan wrote, such as a history for an occurrence that opened on arrival.
         save()
+        postArrival(of: added)
+    }
+
+    /// The arrival notification (ticket 200): the title, then who sent it and its strength in
+    /// words, "From Alex Morgan · Firm: rings as an alarm from nudge 4".
+    private func postArrival(of copy: Reminder) {
+        guard let from = senders.label(of: copy) else { return }
+        let strength = StrengthLine(of: copy, in: engine)
+        let body = String(localized: "\(String(localized: from)) · \(String(localized: strength.text))", comment: "Body of the notification that a reminder someone sent has arrived. 1: who sent it, such as \"From Alex Morgan\". 2: its strength in words, such as \"Firm: rings as an alarm from nudge 4\".")
+        notifications.postArrival(of: copy.id, title: copy.title, body: body)
     }
 }
 

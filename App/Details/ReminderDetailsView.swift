@@ -1,4 +1,5 @@
 import NudgeEngine
+import os
 import SwiftUI
 
 extension View {
@@ -10,9 +11,11 @@ extension View {
 }
 
 /// A reminder's details, as the mockup's `viewRem` less its History (out of scope): the hero, the
-/// Nudging Now card with Done, Schedule, How It Nudges, Pause or Resume, and Delete. It reads the
-/// engine again at every change and every minute, so it follows a Done from a notification while
-/// it is open.
+/// Nudging Now card with Done, Schedule, How It Nudges, Pause or Resume, and Delete. A received
+/// reminder's (the mockup's `viewReceived`, ticket 200) adds who sent it and its strength in words,
+/// says its sender owns the schedule, offers "Don't share this one", and has Remove for Delete. It
+/// reads the engine again at every change and every minute, so it follows a Done from a
+/// notification while it is open.
 struct ReminderDetailsView: View {
     let id: Reminder.ID
     /// What previews show, since they have no app model.
@@ -49,6 +52,14 @@ struct ReminderDetailsView: View {
             isEnabled: deleted == nil,
             markDone: { model?.markDone(id) },
             togglePause: { togglePause(details) },
+            setNotSharing: { notSharing in
+                // A store that won't keep it leaves the switch as it was: it shows what's kept.
+                do {
+                    try model?.setNotSharing(notSharing, for: id)
+                } catch {
+                    AppModel.logger.error("Don't share this one couldn't be kept: \(error, privacy: .public)")
+                }
+            },
             delete: {
                 deleted = details
                 model?.delete(id)
@@ -63,7 +74,9 @@ struct ReminderDetailsView: View {
                 Button(action: openEdit) {
                     Text("Edit", comment: "Reminder details: the toolbar button that opens the Edit Reminder form.")
                 }
-                .accessibilityLabel(Text("Edit \(details.title)", comment: "VoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title."))
+                .accessibilityLabel(details.received == nil
+                    ? Text("Edit \(details.title)", comment: "VoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title.")
+                    : Text("Edit tags of \(details.title)", comment: "VoiceOver label of a received reminder's Edit button on its details, whose form changes only its tags. The placeholder is the reminder's title."))
                 .disabled(model == nil || deleted != nil)
             }
         }
@@ -74,12 +87,12 @@ struct ReminderDetailsView: View {
     }
 
     private var current: ReminderDetails? {
-        model.flatMap { ReminderDetails(engine: $0.engine, id: id) } ?? preview
+        model.flatMap { ReminderDetails(engine: $0.engine, id: id, sharing: $0.sharing?.data ?? SharingData()) } ?? preview
     }
 
     private func openEdit() {
         guard let model else { return }
-        form = ReminderForm(engine: { model.engine }, editing: id, now: { .now })
+        form = ReminderForm(engine: { model.engine }, editing: id, now: { .now }, senders: model.senders)
     }
 
     /// Pause, or Resume, which asks for a new time when there is none left to resume at.
@@ -136,6 +149,7 @@ private struct DetailsList: View {
     let isEnabled: Bool
     let markDone: () -> Void
     let togglePause: () -> Void
+    let setNotSharing: (Bool) -> Void
     let delete: () -> Void
 
     /// The card Done was chosen on with VoiceOver, kept until VoiceOver moves on.
@@ -160,7 +174,13 @@ private struct DetailsList: View {
             } header: {
                 Text("Schedule", comment: "Reminder details: section header for when and how the reminder nudges.")
             } footer: {
-                if details.showsLockNote {
+                if let received = details.received {
+                    Label {
+                        Text("\(received.senderName) owns this schedule.", comment: "Reminder details: under Schedule of a received reminder, which only its sender can change. The placeholder is the sender's name.")
+                    } icon: {
+                        LockGlyph()
+                    }
+                } else if details.showsLockNote {
                     Label {
                         Text("Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them.",
                              comment: "Reminder details: under Schedule while the reminder is nudging, why five fields can't be edited.")
@@ -170,6 +190,9 @@ private struct DetailsList: View {
                 }
             }
             HowItNudgesSection(howItNudges: details.howItNudges)
+            if let received = details.received, let notSharing = received.notSharingThisOne {
+                DontShareSection(senderName: received.senderName, isOn: notSharing, set: setNotSharing)
+            }
             Section {
                 if let action = details.pauseAction {
                     Button(action: togglePause) {
@@ -189,11 +212,17 @@ private struct DetailsList: View {
                         }
                     }
                 }
-                DeleteButton(title: details.title, confirm: delete)
+                DeleteButton(title: details.title, isReceived: details.received != nil, confirm: delete)
             } footer: {
-                if details.pauseAction == .pause {
-                    Text("Pausing stops the nudging. Anything due while it's paused is skipped, not missed.",
-                         comment: "Reminder details: under Pause Reminder.")
+                VStack(alignment: .leading, spacing: Design.Spacing.s1) {
+                    if let received = details.received {
+                        Text("You can mark it Done, pause it, remove it and add your own tags. \(received.senderName) owns its title, notes, schedule, strength and pace.",
+                             comment: "Reminder details: under Remove Reminder on a received reminder, what the person can and can't change. The placeholder is the sender's name.")
+                    }
+                    if details.pauseAction == .pause {
+                        Text("Pausing stops the nudging. Anything due while it's paused is skipped, not missed.",
+                             comment: "Reminder details: under Pause Reminder.")
+                    }
                 }
             }
         }
@@ -210,9 +239,10 @@ private struct DetailsList: View {
     }
 }
 
-/// Delete Reminder, which asks first.
+/// Delete Reminder, or Remove Reminder on a received one (ticket 200), which asks first.
 private struct DeleteButton: View {
     let title: String
+    let isReceived: Bool
     let confirm: () -> Void
     @State private var isConfirming = false
 
@@ -221,12 +251,36 @@ private struct DeleteButton: View {
             isConfirming = true
         } label: {
             Label {
-                Text("Delete Reminder", comment: "Reminder details: opens the question that asks before deleting the reminder.")
+                isReceived
+                    ? Text("Remove Reminder", comment: "Reminder details: on a received reminder, opens the question that asks before removing the person's copy.")
+                    : Text("Delete Reminder", comment: "Reminder details: opens the question that asks before deleting the reminder.")
             } icon: {
                 Image(systemName: "trash")
             }
         }
-        .deleteReminderConfirmation(title: title, isPresented: $isConfirming, confirm: confirm)
+        .deleteReminderConfirmation(title: title, isReceived: isReceived, isPresented: $isConfirming, confirm: confirm)
+    }
+}
+
+/// A received reminder's "Don't share this one" (ticket 200), while the person's Status sharing for
+/// its sender is on: it holds this one's status back from them. Its effect is the status tickets'.
+private struct DontShareSection: View {
+    let senderName: String
+    let isOn: Bool
+    let set: (Bool) -> Void
+
+    var body: some View {
+        Section {
+            Toggle(isOn: Binding { isOn } set: { set($0) }) {
+                Text("Don't share this one", comment: "Reminder details: on a received reminder, the switch that keeps its status from its sender.")
+            }
+        } header: {
+            Text("Status Sharing", comment: "Reminder details: section header above a received reminder's Don't share this one.")
+        } footer: {
+            isOn
+                ? Text("\(senderName) sees “Not sharing this one” in place of how it's going.", comment: "Reminder details: under Don't share this one while it's on. The placeholder is the sender's name.")
+                : Text("\(senderName) sees how this one is going.", comment: "Reminder details: under Don't share this one while it's off. The placeholder is the sender's name.")
+        }
     }
 }
 
@@ -245,12 +299,21 @@ private struct DetailsHero: View {
                     .font(.body)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
+            if let received = details.received {
+                // The badge is in the row below, so the label goes alone.
+                FromLabel(from: received.from)
+            }
             let layout = dynamicTypeSize.isAccessibilitySize
                 ? AnyLayout(VStackLayout(alignment: .leading, spacing: Design.Spacing.s2))
                 : AnyLayout(HStackLayout(spacing: Design.Spacing.s3))
             layout {
                 StrengthBadge(strength: details.strength)
                 ReminderStatusLabel(status: details.status)
+            }
+            if let received = details.received {
+                Text(received.strengthLine.text)
+                    .font(.subheadline)
+                    .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
             if let tagsLabel = details.tagsVoiceOverLabel {
                 // Tokens, joined by spaces: they are not a sentence. Ticket 29 makes them buttons.

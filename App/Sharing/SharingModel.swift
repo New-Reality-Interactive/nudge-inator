@@ -249,6 +249,29 @@ final class SharingModel {
         adapter.submit(change)
     }
 
+    /// A received reminder's "Don't share this one" (ticket 200), kept with its sync state, or with a
+    /// new one if the store holds none. Its effect, holding its status back from the sender, is the
+    /// status tickets', so nothing is sent. Throws, changing nothing, if the store can't keep it.
+    func setNotSharingThisOne(_ notSharing: Bool, for reminderID: Reminder.ID) throws {
+        var kept = try currentData()
+        if let index = kept.receivedSyncStates.firstIndex(where: { $0.reminderID == reminderID }) {
+            guard kept.receivedSyncStates[index].notSharingThisOne != notSharing else { return }
+            kept.receivedSyncStates[index].notSharingThisOne = notSharing
+        } else {
+            kept.receivedSyncStates.append(ReceivedSyncState(reminderID: reminderID, notSharingThisOne: notSharing, waitingToSync: false))
+        }
+        try keep(kept)
+    }
+
+    /// Remove (ticket 200): the received reminder with `reminderID` is gone, so its sync state goes
+    /// too. Throws if the store can't keep that.
+    func forgetReceived(_ reminderID: Reminder.ID) throws {
+        var kept = try currentData()
+        guard kept.receivedSyncStates.contains(where: { $0.reminderID == reminderID }) else { return }
+        kept.receivedSyncStates.removeAll { $0.reminderID == reminderID }
+        try keep(kept)
+    }
+
     /// What the store holds, opening it first if it isn't open.
     private func currentData() throws -> SharingData {
         _ = try openedStore()

@@ -18,6 +18,14 @@ struct Senders {
         names = Dictionary(connections.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
     }
 
+    /// The sender's name for a received reminder ("Riley Park"), or `nil` for the person's own. A
+    /// connection the sharing store doesn't hold reads "Someone", as `label(of:)` does (ticket 200's
+    /// "Someone owns this schedule.").
+    func name(of reminder: Reminder) -> String? {
+        guard let connectionID = reminder.receivedThrough else { return nil }
+        return names[connectionID] ?? String(localized: "Someone", comment: "Who owns a received reminder, on its details and form, when the app doesn't know who sent it, as in \"Someone owns this schedule.\"")
+    }
+
     /// "From Riley Park" for a received reminder, or `nil` for the person's own. A connection the
     /// sharing store doesn't hold (a store that won't open, the `received` seed set without the
     /// stand-in) reads "From Someone", as the mockup's `fromName` does: never no label at all.

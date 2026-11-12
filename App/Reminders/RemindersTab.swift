@@ -319,7 +319,7 @@ private struct RemindersRowView: View {
                 SwipeDeleteTile(label: deleteLabel) { isConfirmingDelete = true }
             }
         }
-        .deleteReminderConfirmation(title: row.title, isPresented: $isConfirmingDelete, confirm: delete)
+        .deleteReminderConfirmation(title: row.title, isReceived: row.reminder.isReceived, isPresented: $isConfirmingDelete, confirm: delete)
     }
 
     /// Tokens, joined by spaces: they are not a sentence. The filter's are bold (DESIGN.md).
@@ -337,8 +337,11 @@ private struct RemindersRowView: View {
         Text("Done", comment: "Reminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.")
     }
 
+    /// Remove on a received reminder's row (ticket 200), as the mockup's swipe says it.
     private var deleteLabel: Text {
-        Text("Delete", comment: "Reminders tab: a row's swipe action and VoiceOver action that asks before deleting the reminder.")
+        row.reminder.isReceived
+            ? Text("Remove", comment: "Reminders tab: a received reminder's swipe action and VoiceOver action that asks before removing the person's copy.")
+            : Text("Delete", comment: "Reminders tab: a row's swipe action and VoiceOver action that asks before deleting the reminder.")
     }
 }
 
