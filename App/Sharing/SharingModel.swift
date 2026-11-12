@@ -63,10 +63,8 @@ final class SharingModel {
     /// adapter offers it again.
     @ObservationIgnored weak var receivedReminders: (any ReceivedReminders)?
 
-    /// The status record last sent for each received copy this launch, by the copy's ID. A copy
-    /// with none has had no report sent this launch, so its current one goes once (a status record
-    /// is replaced, never added to). Not kept: a relaunch sends each copy's status again.
-    @ObservationIgnored private var reportedStatuses: [Reminder.ID: SentCopy.StatusRecord] = [:]
+    /// Tells the sender how each copy this person holds is going (ticket 206).
+    let statusReporter = StatusReporter()
 
     private let adapter: any SharingAdapter
     /// When an invite was sent.
@@ -84,6 +82,7 @@ final class SharingModel {
         self.clock = clock
         self.openStore = openStore
         adapter.events = self
+        statusReporter.host = self
     }
 
     /// Opens and reads the store if that hasn't worked yet, and returns it. Synchronous, so two
@@ -300,7 +299,7 @@ final class SharingModel {
         adapter.submit(change)
         // Turning Status sharing off deletes what the sender was sent, whether or not this launch
         // sent it; turning it on sends where each copy stands now (ticket 206).
-        reportStatus(retractingThrough: wasSharing && !choices.sharesStatus ? connectionID : nil)
+        statusReporter.report(retractingThrough: wasSharing && !choices.sharesStatus ? connectionID : nil)
     }
 
     /// A received reminder's "Don't share this one" (ticket 200), kept with its sync state, or with a
@@ -312,69 +311,7 @@ final class SharingModel {
         guard kept.receivedSyncStates.first(where: { $0.reminderID == reminderID })?.notSharingThisOne != notSharing else { return }
         kept.updateReceivedState(of: reminderID) { $0.notSharingThisOne = notSharing }
         try keep(kept)
-        reportStatus()
-    }
-
-    /// What the sender is sent, ticket 206's rule: for each copy this person holds, with status
-    /// sharing on for its connection, its status report, or only that this one is held back (the
-    /// status itself never leaves the iPhone); with status sharing off, nothing. It sends a copy's
-    /// record only when it differs from the last one sent this launch, so it can run after every
-    /// event, and a copy that has nothing to say and had nothing sent sends nothing. With
-    /// `connectionID`, whose status sharing was just turned off, it deletes the status record of
-    /// each copy from that connection whether or not one was sent this launch.
-    ///
-    /// A store that won't keep an outbox entry stops it, with the rest left for the next run: it
-    /// logs, since the event that ran it has happened and mustn't fail for it.
-    func reportStatus(retractingThrough connectionID: UUID? = nil) {
-        guard let receivedReminders else { return }
-        let reports = receivedReminders.statusReports()
-        guard !reports.isEmpty else { return }
-        do {
-            let kept = try currentData()
-            for (copy, report) in reports {
-                guard let through = copy.receivedThrough, let sendersReminderID = copy.sendersReminderID, let connection = connection(through) else { continue }
-                let record = statusRecord(of: copy, report: report, in: kept, sharesStatus: connection.mine.sharesStatus)
-                try sendStatus(record, of: copy.id, sendersReminderID: sendersReminderID, through: through, deleting: through == connectionID)
-            }
-        } catch {
-            Self.logger.error("A status report couldn't be sent: \(error, privacy: .public)")
-        }
-    }
-
-    /// What the sender may be told of `copy`: its `report`, or only that this one is held back
-    /// ("Don't share this one", kept in `data`'s sync state), or with status sharing off, nothing.
-    private func statusRecord(of copy: Reminder, report: StatusReport, in data: SharingData, sharesStatus: Bool) -> SentCopy.StatusRecord? {
-        guard sharesStatus else { return nil }
-        let notSharing = data.receivedSyncStates.first { $0.reminderID == copy.id }?.notSharingThisOne ?? false
-        return notSharing ? .heldBack : SentCopy.StatusRecord(report: report, notSharingThisOne: false)
-    }
-
-    /// Sends `record` for the copy `copyID` of the sender's reminder `sendersReminderID`, unless it
-    /// is what was last sent. A `nil` record deletes the sender's status record, and with nothing sent
-    /// this launch it does that only if `deleting`.
-    private func sendStatus(_ record: SentCopy.StatusRecord?, of copyID: Reminder.ID, sendersReminderID: Reminder.ID, through connectionID: UUID, deleting: Bool = false) throws {
-        let last = reportedStatuses[copyID]
-        guard record != last || (record == nil && deleting) else { return }
-        try submit(.status(record, for: sendersReminderID, from: connectionID))
-        reportedStatuses[copyID] = record
-    }
-
-    /// Remove (ticket 200), before the copy goes: with status sharing on the sender is sent Removed,
-    /// or only that this one is held back, and with it off, nothing. A copy its sender canceled sends
-    /// nothing, since the sender deleted theirs. Sent before `forgetReceived` forgets the copy's sync
-    /// state, which holds "Don't share this one". A store that won't keep the outbox entry logs.
-    func removing(_ copy: Reminder) {
-        defer { reportedStatuses[copy.id] = nil }
-        guard !copy.isCanceled, let through = copy.receivedThrough, let sendersReminderID = copy.sendersReminderID,
-              let connection = connection(through), connection.mine.sharesStatus
-        else { return }
-        do {
-            let removed = StatusReport(label: .removed, occurrences: [])
-            let record = statusRecord(of: copy, report: removed, in: try currentData(), sharesStatus: true)
-            try submit(.status(record, for: sendersReminderID, from: through))
-        } catch {
-            Self.logger.error("A Removed report couldn't be sent: \(error, privacy: .public)")
-        }
+        statusReporter.report()
     }
 
     /// Remove (ticket 200): the received reminder with `reminderID` is gone, so its sync state goes
@@ -395,7 +332,7 @@ final class SharingModel {
     }
 
     /// What the store holds, opening it first if it isn't open.
-    private func currentData() throws -> SharingData {
+    func currentData() throws -> SharingData {
         _ = try openedStore()
         return data
     }
@@ -407,6 +344,8 @@ final class SharingModel {
         data = kept
     }
 }
+
+extension SharingModel: StatusReportHost {}
 
 /// Where the person's received reminders (GLOSSARY.md, Received reminder) are kept: among their
 /// own reminders, in the app model (ticket 198).
@@ -431,12 +370,6 @@ protocol ReceivedReminders: AnyObject {
     /// 206), as the engine reads them now: every received reminder but a Canceled one, whose sender
     /// deleted it and so reads nothing.
     func statusReports() -> [(copy: Reminder, report: StatusReport)]
-}
-
-extension SentCopy.StatusRecord {
-    /// A copy whose status the person keeps from the sender ("Don't share this one"): only the
-    /// flag, as the record mapping reads it back (the status itself never leaves the iPhone).
-    static let heldBack = SentCopy.StatusRecord(report: StatusReport(label: .comingUp, occurrences: []), notSharingThisOne: true)
 }
 
 extension SentReminder {
@@ -611,7 +544,7 @@ extension SharingModel: SharingAdapterEvents {
         try keep(kept)
         adapter.submit(receipt)
         // The copy's status as it arrives, if status sharing is on (ticket 206).
-        reportStatus()
+        statusReporter.report()
     }
 
     /// The sender's revision of a copy held (ticket 204): the app model applies it, and a revision that

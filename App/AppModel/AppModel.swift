@@ -242,7 +242,7 @@ final class AppModel {
     /// Now badge here: a re-plan, only when the count has changed.
     func minutePassed() {
         // A copy coming due changes its status with no event, and the sender is told (ticket 206).
-        sharing?.reportStatus()
+        sharing?.statusReporter.report()
         guard engine.badgeCount != notifications.plannedBadgeCount else { return }
         replan()
     }
@@ -425,7 +425,7 @@ final class AppModel {
     func delete(_ reminderID: Reminder.ID) {
         if let copy = engine.reminders.first(where: { $0.id == reminderID && $0.isReceived }) {
             // Before the sync state goes: it holds "Don't share this one" (ticket 206).
-            sharing?.removing(copy)
+            sharing?.statusReporter.removing(copy)
             do {
                 try sharing?.forgetReceived(reminderID)
             } catch {
@@ -622,7 +622,7 @@ final class AppModel {
         try event(&engine)
         save(storeChange: storeChange)
         // Whatever the event did to a received copy, its sender hears of (ticket 206).
-        sharing?.reportStatus()
+        sharing?.statusReporter.report()
     }
 
     /// Saves what the engine holds, after the event's own store change, if any. Returns whether
