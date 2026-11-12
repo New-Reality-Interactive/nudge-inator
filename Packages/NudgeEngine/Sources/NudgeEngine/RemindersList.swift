@@ -12,6 +12,9 @@ public enum ReminderStatus: Equatable, Sendable {
     /// A received copy waiting to be accepted (Ask me first): it nudges for nothing until it is,
     /// whatever its due times say (ticket 203).
     case waiting
+    /// A received copy whose sender deleted it: it nudges no more and stays until the recipient
+    /// removes it (ticket 205).
+    case canceled
 }
 
 /// How the Reminders tab's list is ordered: the Sort menu's choice.
@@ -99,8 +102,8 @@ public struct RemindersFilter: Equatable, Sendable {
         (dueFrom.map { $0 <= dueDay } ?? true) && (dueTo.map { dueDay <= $0 } ?? true)
     }
 
-    /// A waiting copy matches no status the sheet offers, so any chosen hides it, as the mockup's
-    /// `REM_STATUSES`, which has no Waiting.
+    /// A waiting or Canceled copy matches no status the sheet offers, so any chosen hides it, as the
+    /// mockup's `REM_STATUSES`, which has neither.
     private func matches(_ status: ReminderStatus) -> Bool {
         guard !statuses.isEmpty else { return true }
         return Status(status).map(statuses.contains) ?? false
@@ -121,10 +124,10 @@ public struct RemindersFilter: Equatable, Sendable {
 }
 
 extension RemindersFilter.Status {
-    /// `nil` for a waiting copy: the sheet has no Waiting.
+    /// `nil` for a waiting or Canceled copy: the sheet has no Waiting or Canceled.
     init?(_ status: ReminderStatus) {
         switch status {
-        case .waiting: return nil
+        case .waiting, .canceled: return nil
         case .nudging, .closed(.nudging): self = .nudging
         case .paused: self = .paused
         case .comingUp: self = .comingUp
@@ -199,7 +202,7 @@ extension Engine {
         let open = openOccurrence(for: reminderID)
         let next = nextDueTime(of: reminder)
         let latest = latestOccurrence(for: reminderID)
-        let status: ReminderStatus = reminder.isWaiting ? .waiting : scheduledStatus(open: open, next: next, latest: latest, isPaused: isPaused(reminderID))
+        let status: ReminderStatus = reminder.isCanceled ? .canceled : reminder.isWaiting ? .waiting : scheduledStatus(open: open, next: next, latest: latest, isPaused: isPaused(reminderID))
         // A reminder with no occurrence and nothing coming shows its Start (spec #104, Decision 60).
         // A defensive fallback: a repeat that ended before its Start still has that Start coming,
         // since a rule's first due time always counts. The one state found that reaches it is a

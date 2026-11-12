@@ -28,7 +28,7 @@ extension View {
     /// status tickets, which send Removed.
     ///
     /// A sent reminder's (ticket 201, the mockup's `deleteSent`) says it's canceled on everyone's
-    /// iPhone; what the copies do with the cancel is #205's.
+    /// iPhone; each copy is Canceled (ticket 205).
     func deleteReminderConfirmation(title: String, kind: DeletedReminderKind, isPresented: Binding<Bool>, confirm: @escaping () -> Void) -> some View {
         let isReceived = kind == .received
         return confirmationDialog(

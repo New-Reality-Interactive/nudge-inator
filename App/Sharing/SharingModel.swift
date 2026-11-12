@@ -179,7 +179,7 @@ final class SharingModel {
 
     /// The sender's Delete (ticket 201): the sent reminder with `reminderID` and every sent copy of
     /// it leave the store, and each person still connected is sent a cancel. What their copy does
-    /// with it is #205's. Throws, changing and sending nothing, if the store can't keep it.
+    /// with it is `cancelCopy(sentThrough:)`'s. Throws, changing and sending nothing, if the store can't keep it.
     func deleteSent(_ reminderID: Reminder.ID) throws {
         var kept = try currentData()
         guard kept.sentReminders.contains(where: { $0.reminder.id == reminderID }) else { return }
@@ -350,6 +350,9 @@ protocol ReceivedReminders: AnyObject {
     /// `applySendersRevision(_:)` does, and returns what changed. Throws if the reminders haven't
     /// been read.
     func applySendersRevision(_ revised: Reminder) throws -> [ReceivedChange]
+    /// Cancels the copy with `copyID` (ticket 205), as the engine's `cancel(_:)` does: it nudges no
+    /// more and stays until the person removes it. Throws if the reminders haven't been read.
+    func cancel(_ copyID: Reminder.ID) throws
 }
 
 extension SentReminder {
@@ -410,6 +413,9 @@ extension SharingModel: SharingAdapterEvents {
     func received(_ change: SharingChange) async throws {
         if case .reminder(let sent) = change.content, change.kind == .send || change.kind == .revise {
             return try receive(sent, through: change.connectionID, isRevision: change.kind == .revise)
+        }
+        if change.kind == .cancel {
+            return try cancelCopy(sentThrough: change)
         }
         var applied = try currentData()
         if applied.apply(incoming: change) {
@@ -542,6 +548,20 @@ extension SharingModel: SharingAdapterEvents {
         } catch {
             Self.logger.error("A change note couldn't be kept: \(error, privacy: .public)")
         }
+    }
+
+    /// The sender's Delete (ticket 205): the copy held of their reminder is Canceled, with its
+    /// nudges and alarms. A cancel for a copy not held, delivered again, or through a connection
+    /// that isn't connected changes nothing. Throws, for the adapter to offer it again, if the
+    /// reminders haven't been read.
+    private func cancelCopy(sentThrough change: SharingChange) throws {
+        guard connection(change.connectionID) != nil, let sendersReminderID = change.reminderID else {
+            Self.logger.info("A cancel through a connection that isn't connected, or for no reminder, wasn't applied")
+            return
+        }
+        guard let receivedReminders else { throw ReceivedRemindersNotReady() }
+        guard let held = try receivedReminders.copy(of: sendersReminderID, through: change.connectionID) else { return }
+        try receivedReminders.cancel(held.id)
     }
 
     /// The app model hasn't been joined to sharing yet.

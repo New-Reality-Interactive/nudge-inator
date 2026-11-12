@@ -25,13 +25,13 @@ extension Engine {
     /// The Now tab's Coming Up: each unpaused reminder's next due time after now, soonest first, up
     /// to and including the same local time 7 days later. Counted in local days, not 7 × 24 hours
     /// as the mockup does, so across a DST change day 7's due time at this time of day is still in.
-    /// A copy waiting to be accepted is in Waiting for You instead.
+    /// A copy waiting to be accepted is in Waiting for You instead, and a Canceled one is in neither.
     public func comingUp() -> [ComingUpItem] {
         let now = clock.now
         guard let end = calendar.date(byAdding: .day, value: 7, to: now) else { return [] }
         let titles = titles
         return reminders
-            .filter { !isPaused($0.id) && !$0.isWaiting }
+            .filter { !isPaused($0.id) && !$0.isHeld }
             .compactMap { reminder in
                 reminder.nextDueTime(after: now, calendar: calendar)
                     .flatMap { $0 <= end ? ComingUpItem(reminderID: reminder.id, dueTime: $0) : nil }
@@ -69,11 +69,15 @@ extension Engine {
     /// The Now tab's Last 24 Hours: occurrences that closed (Done, Missed or Skipped) from 24 hours
     /// before now up to now, both ends in, newest first. Measured in hours, not local days, so a
     /// DST change doesn't stretch or shrink it.
+    ///
+    /// A Canceled copy has none: the occurrence it was nudging closed as Skipped only to stop, and
+    /// it wasn't paused, so the row would say so (ticket 205).
     public func closedInLast24Hours() -> [ClosedOccurrence] {
         let now = clock.now
         let windowStart = now - 24 * 60 * 60
         let titles = titles
         return reminders
+            .filter { !$0.isCanceled }
             .flatMap { reminder in
                 dueTimes(of: reminder, in: earliestListedDueTime...now).compactMap { dueTime in
                     closedOccurrence(of: reminder.id, dueAt: dueTime)

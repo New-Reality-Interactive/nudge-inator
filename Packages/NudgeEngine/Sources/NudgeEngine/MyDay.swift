@@ -21,6 +21,8 @@ public struct MyDay: Equatable, Sendable {
         case paused
         /// A received copy waiting to be accepted, due today before or after now (ticket 203).
         case waiting
+        /// A received copy its sender deleted (ticket 205).
+        case canceled
     }
 
     public func count(of count: MyDayCount) -> Int {
@@ -49,7 +51,7 @@ extension MyDay.Item {
         case .due(.done): .done
         case .due(.nudging): .nudging
         case .due(.missed): .missed
-        case .due(.skipped), .paused, .waiting: nil
+        case .due(.skipped), .paused, .waiting, .canceled: nil
         case .left: .left
         }
     }
@@ -97,7 +99,9 @@ extension Engine {
         let items = reminders.filter { tagFilter.includes(tagIDs.intersection($0.tagIDs)) }.flatMap { reminder in
             dueTimes(of: reminder, in: start...end.justBefore).compactMap { dueTime -> MyDay.Item? in
                 let status: MyDay.Status
-                if reminder.isWaiting {
+                if reminder.isCanceled {
+                    status = .canceled
+                } else if reminder.isWaiting {
                     status = .waiting
                 } else if dueTime > now {
                     status = isPaused(reminder.id) ? .paused : .left

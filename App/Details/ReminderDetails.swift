@@ -38,6 +38,9 @@ struct ReminderDetails {
     /// A received copy waiting to be accepted (ticket 203): the waiting note, Accept and Remove in
     /// place of Pause and Remove Reminder.
     var isWaiting: Bool { status == .waiting }
+    /// A received copy its sender deleted (ticket 205): the Canceled note and Remove Reminder, with
+    /// no Edit, Pause or Status Sharing.
+    var isCanceled: Bool { status == .canceled }
 
     /// The tags as VoiceOver reads them, a list in the engine's words, or `nil` with none.
     var tagsVoiceOverLabel: LocalizedStringResource? {
@@ -105,9 +108,9 @@ struct ReminderDetails {
         let from = senders.label(of: reminder)
         card = NudgeCard(engine: engine, reminder: reminder, from: from)
         let latest = engine.latestOccurrence(for: id)
-        lastOccurrence = latest
-            .flatMap { engine.closedOccurrence(of: id, dueAt: $0.dueTime) }
-            .map { LastOccurrence(state: $0.occurrence.state, day: engine.dayLabel(of: $0.closedAt), time: engine.timeOfDay(of: $0.closedAt)) }
+        // A canceled copy's last occurrence closed Skipped only to stop it nudging: it wasn't paused.
+        let closed = reminder.isCanceled ? nil : latest.flatMap { engine.closedOccurrence(of: id, dueAt: $0.dueTime) }
+        lastOccurrence = closed.map { LastOccurrence(state: $0.occurrence.state, day: engine.dayLabel(of: $0.closedAt), time: engine.timeOfDay(of: $0.closedAt)) }
         repeats = engine.repeatSummary(of: reminder)
         showsLockNote = !engine.lockedFields(of: id).isEmpty
         let howItNudges = engine.howItNudges(reminder.strength, pace: reminder.pace, breakThroughFocus: reminder.breakThroughFocus)
@@ -129,7 +132,11 @@ struct ReminderDetails {
 
         let nextDueTime = engine.nextDueTime(of: reminder)
         let isPaused = engine.isPaused(id)
-        if reminder.isWaiting {
+        if reminder.isCanceled {
+            // Nothing is coming, as the mockup's `viewReceived` reads "None".
+            next = .none
+            pauseAction = nil
+        } else if reminder.isWaiting {
             // A one-off past its due time shows that time, as the mockup's `viewReceived` does. It
             // can't be paused (the engine ignores it): Accept or Remove.
             let due = nextDueTime ?? reminder.dueTime

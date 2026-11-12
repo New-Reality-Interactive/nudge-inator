@@ -121,8 +121,7 @@ extension SharingData {
     /// person chooses what happens to what they received (ticket 197). Returns whether anything
     /// changed. A send, a revision and a cancel are the recipient's side: `SharingModel` keeps a
     /// send's copy among the person's reminders, and applies a revision to it with its change note,
-    /// before it gets here (tickets 198 and 204); applying a cancel is #205's, so it changes nothing
-    /// here yet.
+    /// and cancels it on a cancel, before it gets here (tickets 198, 204 and 205).
     ///
     /// The other person's settings set their choices, never the name: the name a person sees stays
     /// the one the sharing sheet or the invite gave (ticket 196).

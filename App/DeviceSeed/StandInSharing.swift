@@ -69,7 +69,8 @@ extension View {
     /// receiving an invite, one that's unavailable, with `invited`, that person accepting, and with
     /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196), sending
     /// a reminder (ticket 198), getting what was sent to them (ticket 201), accepting what waits for
-    /// them (ticket 203), changing what they sent (ticket 204) or disconnecting (ticket 197).
+    /// them (ticket 203), changing what they sent (ticket 204), deleting it (ticket 205) or disconnecting
+    /// (ticket 197).
     func standInSharingControls(invited: SharingConnection? = nil, connected: SharingConnection? = nil) -> some View {
         toolbar {
             if let adapter = StandInSharing.current {
@@ -93,6 +94,7 @@ extension View {
                             Button { adapter.theySend(.gentle, through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Gentle Reminder") }
                             Button { adapter.theySend(.relentless, through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Relentless Reminder") }
                             Button { adapter.theySendAChange(through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Change") }
+                            Button { adapter.theyCancel(through: connected.id) } label: { Text(verbatim: "\(connected.name) Cancels") }
                             Button {
                                 adapter.theyGetWhatWasSent(through: connected.id, askingFirst: theirs.deliveryMode == .askMeFirst)
                             } label: {
@@ -253,6 +255,14 @@ final class StandInSharingAdapter: SharingAdapter {
         sent.revision += 1
         lastSent[connectionID] = sent
         Task { try? await events?.received(.revise(sent, for: connectionID)) }
+    }
+
+    /// Stands in for the other person deleting the reminder they last sent through the connection with
+    /// `connectionID` (ticket 205): their cancel arrives, as through iCloud, and the copy is Canceled,
+    /// whether it is nudging or waiting to be accepted.
+    func theyCancel(through connectionID: UUID) {
+        guard let sent = lastSent[connectionID] else { return }
+        Task { try? await events?.received(.cancel(sent.reminder.id, for: connectionID)) }
     }
 
     /// Stands in for the other person disconnecting the connection with `connectionID` (ticket

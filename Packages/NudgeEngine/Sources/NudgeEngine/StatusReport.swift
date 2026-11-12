@@ -26,6 +26,8 @@ extension ReportedStatus {
         // (#188). `statusReport(of:)` reads `scheduledStatus(of:)`, so a one-off past its due time
         // reports how that closed.
         case .comingUp, .waiting: self = .comingUp
+        // Nothing reads this: the sender deleted a canceled copy, so no report of it is wanted.
+        case .canceled: self = .skipped
         case .closed(let state): self.init(state)
         }
     }

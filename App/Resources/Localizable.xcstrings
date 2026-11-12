@@ -26,6 +26,9 @@
         }
       }
     },
+    "%@ canceled this reminder, so it won't nudge you. It stays here until you remove it." : {
+      "comment" : "Reminder details: under \"Canceled\" on a received reminder its sender deleted. The placeholder is the sender's name."
+    },
     "%@ changed this · %@" : {
       "comment" : "Reminder details: heading of the note on a received reminder its sender changed. 1: the sender's name. 2: when the change arrived, such as \"Today at 8:02 AM\".",
       "localizations" : {
@@ -913,6 +916,9 @@
     },
     "Cancel the invite to %@?" : {
       "comment" : "An invited person's page: the question asked before canceling the invite. The argument is the person's name, such as \"Jordan Lee\", or the address they were invited at."
+    },
+    "Canceled" : {
+      "comment" : "My Day: under the title of a reminder someone sent that its sender deleted. It no longer nudges.\nReminder details: the heading of the note on a received reminder its sender deleted.\nStatus label: the person who sent a reminder deleted it, so it no longer nudges."
     },
     "Canceling stops the invite from working." : {
       "comment" : "An invited person's page: under Cancel Invite."
@@ -1956,6 +1962,9 @@
     },
     "Remove: %@" : {
       "comment" : "VoiceOver label of Remove on a Waiting for You row on Now. The placeholder is the reminder's title."
+    },
+    "Removing it clears it from your list." : {
+      "comment" : "Reminder details: under Remove Reminder on a received reminder its sender deleted."
     },
     "Rename Tag" : {
       "comment" : "Title of the sheet that renames a tag."
