@@ -131,6 +131,9 @@ final class StandInSharingAdapter: SharingAdapter {
     /// delivered yet.
     private var undelivered: [(reminderID: Reminder.ID, connectionID: UUID)] = []
 
+    /// The reminder the stand-in last sent through each connection, which `theySendAChange` changes.
+    private var lastSent: [UUID: SentReminder] = [:]
+
     /// The reminders delivered through each connection that wait there for the other person to
     /// accept them (ticket 203).
     private var waitingThere: [(reminderID: Reminder.ID, connectionID: UUID)] = []
@@ -232,16 +235,12 @@ final class StandInSharingAdapter: SharingAdapter {
     /// minute 2 minutes from now, and the app keeps the copy as their Delivery mode says.
     /// `NUDGE_SEED=clean` removes what the stand-in's Riley Park sent.
     func theySend(_ strength: Strength, through connectionID: UUID) {
-        let soon = Date.now.addingTimeInterval(2 * 60)
-        let due = Calendar.autoupdatingCurrent.dateInterval(of: .minute, for: soon)?.start ?? soon
+        let due = Self.startOfMinute(minutesFromNow: 2)
         let title = strength == .relentless ? "Take the medicine" : "Bring the umbrella"
         let sent = SentReminder(reminder: Reminder(title: title, notes: SeedSet.standInSentNotes, dueTime: due, strength: strength), revision: 0)
         lastSent[connectionID] = sent
         Task { try? await events?.received(.send(sent, to: connectionID)) }
     }
-
-    /// The reminder the stand-in last sent through each connection, which `theySendAChange` changes.
-    private var lastSent: [UUID: SentReminder] = [:]
 
     /// Stands in for the other person changing the reminder they last sent through the connection with
     /// `connectionID` (ticket 204): their revision arrives, as through iCloud, moving it to the start
@@ -249,8 +248,7 @@ final class StandInSharingAdapter: SharingAdapter {
     /// copy's change note has two lines, whether the copy is nudging or waiting to be accepted.
     func theySendAChange(through connectionID: UUID) {
         guard var sent = lastSent[connectionID] else { return }
-        let soon = Date.now.addingTimeInterval(2 * 60)
-        sent.reminder.dueTime = Calendar.autoupdatingCurrent.dateInterval(of: .minute, for: soon)?.start ?? soon
+        sent.reminder.dueTime = Self.startOfMinute(minutesFromNow: 2)
         sent.reminder.strength = sent.reminder.strength == .gentle ? .firm : .gentle
         sent.revision += 1
         lastSent[connectionID] = sent
@@ -261,6 +259,11 @@ final class StandInSharingAdapter: SharingAdapter {
     /// 197): their disconnect arrives, as through iCloud, and Connection Ended shows.
     func theyDisconnect(_ connectionID: UUID) {
         Task { try? await events?.received(.disconnect(connectionID)) }
+    }
+
+    private static func startOfMinute(minutesFromNow minutes: Double) -> Date {
+        let soon = Date.now.addingTimeInterval(minutes * 60)
+        return Calendar.autoupdatingCurrent.dateInterval(of: .minute, for: soon)?.start ?? soon
     }
 
     private static func topViewController() -> UIViewController? {

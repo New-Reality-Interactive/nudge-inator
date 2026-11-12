@@ -122,7 +122,7 @@ struct ReminderDetails {
                 notSharingThisOne: connection?.mine.sharesStatus == true ? syncState?.notSharingThisOne ?? false : nil,
                 changeNote: syncState?.changeNote.map {
                     let words = ChangeNoteText($0, dueTime: reminder.dueTime, engine: engine)
-                    return ChangeNote(heading: ChangeNoteText.heading(from: senders.name(of: reminder) ?? "", at: $0.at, engine: engine), lines: words.lines)
+                    return ChangeNote(heading: words.heading(from: senders.name(of: reminder) ?? "", at: $0.at), lines: words.lines)
                 }
             )
         }

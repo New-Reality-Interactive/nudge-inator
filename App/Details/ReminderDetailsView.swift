@@ -279,6 +279,7 @@ private struct ChangeNoteSection: View {
             } icon: {
                 Image(systemName: "info.circle")
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
+                    .accessibilityHidden(true)
             }
             .accessibilityElement(children: .combine)
         }

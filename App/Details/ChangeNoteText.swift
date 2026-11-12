@@ -7,7 +7,7 @@ import NudgeEngine
 /// returns the values; the words, the times and the lists are the app's, in the person's locale.
 struct ChangeNoteText {
     /// Words the engine's times, days and repeats in the person's locale.
-    let engine: Engine
+    private let engine: Engine
     private let changes: [ReceivedChange]
     /// The copy's due time, the time of day of a repeat's words when the note doesn't move it.
     private let dueTime: Date
@@ -24,8 +24,8 @@ struct ChangeNoteText {
     }
 
     /// The details' heading: "Alex Morgan changed this · Today at 8:02 AM".
-    static func heading(from name: String, at date: Date, engine: Engine) -> LocalizedStringResource {
-        let when = dayAndTime(of: date, engine: engine)
+    func heading(from name: String, at date: Date) -> LocalizedStringResource {
+        let when = Self.dayAndTime(of: date, engine: engine)
         return LocalizedStringResource("\(name) changed this · \(when)", comment: "Reminder details: heading of the note on a received reminder its sender changed. 1: the sender's name. 2: when the change arrived, such as \"Today at 8:02 AM\".")
     }
 

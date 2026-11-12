@@ -271,11 +271,11 @@ struct ReceivedRevisionTests {
 
         try await revise(pills, from: alex, to: riley) { $0.dueTime = NewYork.local(2026, 10, 15, 9, 0) }
 
-        let notices = notices(on: riley)
-        #expect(notices.count == 2)
-        #expect(notices.last?.title == "Take the pills")
-        #expect(notices.last?.body == "Alex Morgan changed this: due time changed from 8:30\u{202F}AM to 9:00\u{202F}AM")
-        #expect(self.notices(on: alex).isEmpty)
+        let rileys = notices(on: riley)
+        #expect(rileys.count == 2)
+        #expect(rileys.last?.title == "Take the pills")
+        #expect(rileys.last?.body == "Alex Morgan changed this: due time changed from 8:30\u{202F}AM to 9:00\u{202F}AM")
+        #expect(notices(on: alex).isEmpty)
     }
 
     @Test func severalChangesAreOneNotificationListingThemAll() async throws {

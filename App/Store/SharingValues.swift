@@ -170,6 +170,18 @@ extension SharingData {
         return removed
     }
 
+    /// Changes the received reminder's sync state with `reminderID`, adding one first if the store
+    /// holds none.
+    mutating func updateReceivedState(of reminderID: Reminder.ID, _ update: (inout ReceivedSyncState) -> Void) {
+        if let index = receivedSyncStates.firstIndex(where: { $0.reminderID == reminderID }) {
+            update(&receivedSyncStates[index])
+        } else {
+            var state = ReceivedSyncState(reminderID: reminderID, notSharingThisOne: false, waitingToSync: false)
+            update(&state)
+            receivedSyncStates.append(state)
+        }
+    }
+
     private func copyIndex(of change: SharingChange) -> Int? {
         sentCopies.firstIndex { $0.connectionID == change.connectionID && $0.reminderID == change.reminderID }
     }

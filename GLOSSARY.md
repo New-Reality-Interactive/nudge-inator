@@ -175,7 +175,7 @@ The sender's edit of a reminder they sent, as it reaches a recipient's copy. It 
 _Avoid_: Update, sync
 
 **Change note**:
-What a received reminder shows after a sender's revision: each field that changed, with its old and new value, such as "Due time changed from 8:00 AM to 9:00 AM".
+What a received reminder shows after a sender's revision: each field that changed, with its old and new value, such as "Due time changed from 8:00 AM to 9:00 AM" (a change to the notes says only that they changed).
 _Avoid_: Changelog, edit history
 
 **Status report**:

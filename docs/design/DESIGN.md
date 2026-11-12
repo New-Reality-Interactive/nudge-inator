@@ -637,8 +637,9 @@ sharing paused and offline banner.
 - **Waiting for You:** a section on Now between Nudging and Coming Up, each row with bordered small
   Accept and Remove (destructive text) buttons. It doesn't count toward the Now badge.
 - **Notes on a received reminder:** a `{colors.cell}` card with `{rounded.control}` corners, `info.circle`
-  or `clock` in `{colors.secondary-label}`, a semibold line and a detail line. No color: a change or a
-  cancellation isn't "needs you now".
+  or `clock` in `{colors.secondary-label}`, a semibold line and a detail line, which for a sender's change is one line per changed field ("Due
+  time changed from 8:00 AM to 9:00 AM"; a notes change reads "Notes changed", with no text). No color:
+  a change or a cancellation isn't "needs you now".
 - **Disconnect's choice is a sheet, an exception to confirmation dialogs (Components):** a dialog can
   only list buttons, so it can't show Remove as the default. A checked list of the two options, then a
   bordered Disconnect in destructive text, with the form's Cancel. When the other person ended the
