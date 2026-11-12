@@ -35,17 +35,26 @@
     "%@ is Done. Its nudges have stopped." : {
       "comment" : "VoiceOver, after Done on a nudge card or a My Day row: what the Done button's place now says. The placeholder is the reminder's title."
     },
+    "%@ owns this schedule." : {
+      "comment" : "Reminder details: under Schedule of a received reminder, which only its sender can change. The placeholder is the sender's name."
+    },
     "%@ sees how the reminders they send you are going: Done, Paused, Missed or Removed, and the last 7 days of a repeating one." : {
       "comment" : "A connection's page: under Status Sharing when it's on. The argument is the other person's name, such as \"Alex Morgan\"."
     },
+    "%@ sees how this one is going." : {
+      "comment" : "Reminder details: under Don't share this one while it's off. The placeholder is the sender's name."
+    },
     "%@ sees only that a reminder was Delivered." : {
       "comment" : "A connection's page: under Status Sharing when it's off. The argument is the other person's name, such as \"Alex Morgan\"."
+    },
+    "%@ sees “Not sharing this one” in place of how it's going." : {
+      "comment" : "Reminder details: under Don't share this one while it's on. The placeholder is the sender's name."
     },
     "%@ sets these, for the reminders you send them." : {
       "comment" : "A connection's page: under the other person's choices. The argument is their name, such as \"Alex Morgan\"."
     },
     "%@ · %@" : {
-      "comment" : "A tag's screen: under a reminder's title. 1: its tags, such as \"#home #errands\", this screen's tag in bold. 2: its schedule, such as \"Every day at 8:00 AM\".\nMy Day: under the title of a tagged reminder. 1: its tags, such as \"#home #errands\", the ones the filter chose in bold. 2: the note, such as \"Nudging · 2 nudges · next 1:15 PM\".",
+      "comment" : "A tag's screen: under a reminder's title. 1: its tags, such as \"#home #errands\", this screen's tag in bold. 2: its schedule, such as \"Every day at 8:00 AM\".\nBody of the notification that a reminder someone sent has arrived. 1: who sent it, such as \"From Alex Morgan\". 2: its strength in words, such as \"Firm: rings as an alarm from nudge 4\".\nMy Day: under the title of a tagged reminder. 1: its tags, such as \"#home #errands\", the ones the filter chose in bold. 2: the note, such as \"Nudging · 2 nudges · next 1:15 PM\".",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -171,6 +180,23 @@
     },
     "%@." : {
       "comment" : "A repeat summary as a sentence, under the reminder form's Starts. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".\nTop of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\"."
+    },
+    "%@: every nudge rings as an alarm" : {
+      "comment" : "A received reminder's strength in words, on its arrival notification and its details, when every nudge rings. The placeholder is the strength, such as \"Firm\"."
+    },
+    "%@: never rings as an alarm" : {
+      "comment" : "A received reminder's strength in words, on its arrival notification and its details, when none of its nudges rings. The placeholder is the strength, such as \"Gentle\"."
+    },
+    "%@: rings as an alarm from nudge %lld" : {
+      "comment" : "A received reminder's strength in words, on its arrival notification and its details. 1: the strength, such as \"Firm\". 2: the first nudge that rings as an alarm.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: rings as an alarm from nudge %2$lld"
+          }
+        }
+      }
     },
     "%lld Reminders from %@" : {
       "comment" : "Disconnect's sheet: header of the choice. 1: how many reminders received from the person Keep would keep. 2: their name, such as \"Alex Morgan\".",
@@ -517,6 +543,17 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "**%@ owns this reminder.** You can add or remove your own tags. Its title, notes, schedule, strength and pace stay as %@ set them." : {
+      "comment" : "Top of the Edit Reminder form of a received reminder, whose sender owns everything but the tags. Both placeholders are the sender's name.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**%1$@ owns this reminder.** You can add or remove your own tags. Its title, notes, schedule, strength and pace stay as %2$@ set them."
           }
         }
       }
@@ -997,6 +1034,9 @@
     "Disconnect from %@" : {
       "comment" : "Disconnect's sheet title. The argument is the other person's name, such as \"Alex Morgan\"."
     },
+    "Don't share this one" : {
+      "comment" : "Reminder details: on a received reminder, the switch that keeps its status from its sender."
+    },
     "Done" : {
       "comment" : "Accepting an invite: closes the Connected sheet.\nMy Day's filter sheet's confirm button (a checkmark): closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
     },
@@ -1099,6 +1139,9 @@
     },
     "Edit Reminder" : {
       "comment" : "Title of the form that edits a reminder."
+    },
+    "Edit tags of %@" : {
+      "comment" : "VoiceOver label of a received reminder's Edit button on its details, whose form changes only its tags. The placeholder is the reminder's title."
     },
     "End Date" : {
       "comment" : "The reminder form's row under End Repeat: the last day the repeat can fall due."
@@ -1363,6 +1406,9 @@
     },
     "It stops working, even if they've already got it." : {
       "comment" : "The question before canceling an invite: under its title."
+    },
+    "Its sender owns this. You can change only its tags." : {
+      "comment" : "VoiceOver hint on each field of a received reminder's Edit Reminder form, which only its sender can change."
     },
     "Keep Invite" : {
       "comment" : "The question before canceling an invite: keeps it."
@@ -1760,6 +1806,9 @@
     "Relentless always rings, so it always breaks through a Focus." : {
       "comment" : "Under Break Through Focus when the strength is Relentless, which shows the switch on and dimmed."
     },
+    "Relentless: rings an alarm until you mark it done" : {
+      "comment" : "A received Relentless reminder's strength in words, on its arrival notification and its details."
+    },
     "Reminder Not Found" : {
       "comment" : "Reminder details: title when the reminder isn't there."
     },
@@ -1782,13 +1831,19 @@
       "comment" : "VoiceOver value of the Tags tab's Sort button: sorted by Reminders, Most First."
     },
     "Remove" : {
-      "comment" : "Disconnect's sheet: the choice that deletes the reminders received from the person."
+      "comment" : "Disconnect's sheet: the choice that deletes the reminders received from the person.\nReminders tab: a received reminder's swipe action and VoiceOver action that asks before removing the person's copy."
     },
     "Remove %@ from the filter" : {
       "comment" : "VoiceOver label of a tag's filter token on My Day. The placeholder is the tag, such as \"#home\"."
     },
     "Remove No Tags from the filter" : {
       "comment" : "VoiceOver label of My Day's No Tags filter token."
+    },
+    "Remove Reminder" : {
+      "comment" : "Confirms removing the person's copy of a received reminder.\nReminder details: on a received reminder, opens the question that asks before removing the person's copy."
+    },
+    "Remove “%@”?" : {
+      "comment" : "Asked before removing a received reminder, from its details or a Reminders tab row. The placeholder is its title."
     },
     "Rename Tag" : {
       "comment" : "Title of the sheet that renames a tag."
@@ -1888,6 +1943,9 @@
     "Skipped: the reminder was paused" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that closed because its reminder was paused."
     },
+    "Someone" : {
+      "comment" : "Who owns a received reminder, on its details and form, when the app doesn't know who sent it, as in \"Someone owns this schedule.\""
+    },
     "Someone else accepted it first, or it was canceled. Ask them to invite you again." : {
       "comment" : "Accepting an invite: under Invite Unavailable."
     },
@@ -1907,7 +1965,7 @@
       "comment" : "Reminders' filter sheet: header of the list of statuses."
     },
     "Status Sharing" : {
-      "comment" : "A connection's page: the switch for whether the person sees how the reminders they send are going. Also the row on the Connected sheet and under \"What <name> Chose\"."
+      "comment" : "A connection's page: the switch for whether the person sees how the reminders they send are going. Also the row on the Connected sheet and under \"What <name> Chose\".\nReminder details: section header above a received reminder's Don't share this one."
     },
     "Stays on your iPhone" : {
       "comment" : "Onboarding and How It Nudges: the title of the point about privacy."
@@ -1977,6 +2035,9 @@
     },
     "This deletes its history too, and cancels any nudges and alarms." : {
       "comment" : "Under the question asked before deleting a reminder."
+    },
+    "This removes your copy and cancels its nudges and alarms." : {
+      "comment" : "Under the question asked before removing a received reminder."
     },
     "This repeat has no times left. Change when it ends." : {
       "comment" : "Under the Custom repeat page's Next Times when the repeat has ended."
@@ -2055,6 +2116,9 @@
     },
     "You can each send the other reminders now." : {
       "comment" : "Accepting an invite: under \"You're Connected with\"."
+    },
+    "You can mark it Done, pause it, remove it and add your own tags. %@ owns its title, notes, schedule, strength and pace." : {
+      "comment" : "Reminder details: under Remove Reminder on a received reminder, what the person can and can't change. The placeholder is the sender's name."
     },
     "You choose what breaks through" : {
       "comment" : "Onboarding and How It Nudges: the title of the point about Break Through Focus."

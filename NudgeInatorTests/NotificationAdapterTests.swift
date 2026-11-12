@@ -455,7 +455,7 @@ struct NotificationAdapterTests {
 
     @Test func anEmptyPlanRemovesEveryRequestOfTheAdaptersAndLeavesOthers() async throws {
         let adapter = adapter()
-        let testNudge = UNNotificationRequest(identifier: "test-nudge", content: UNNotificationContent(), trigger: nil)
+        let testNudge = UNNotificationRequest(identifier: "test-nudge", content: UNNotificationContent(), trigger: UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false))
         try await center.add(testNudge)
         adapter.apply(SchedulePlan(items: [
             nudge(1, at: NewYork.local(2026, 10, 16, 9, 10), .normal, .notification),
@@ -506,7 +506,7 @@ struct NotificationAdapterTests {
     /// The system's 64 counts every pending request, so one the adapter didn't make takes a place.
     @Test func anotherPendingRequestLeavesRoomForSixtyThreeNudges() async throws {
         let adapter = adapter()
-        try await center.add(UNNotificationRequest(identifier: "test-nudge", content: UNNotificationContent(), trigger: nil))
+        try await center.add(UNNotificationRequest(identifier: "test-nudge", content: UNNotificationContent(), trigger: UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)))
         let items = (1...70).map { minute in
             nudge(1, at: clock.now + TimeInterval(minute * 60), .normal, .notification, of: UUID())
         }
@@ -514,7 +514,7 @@ struct NotificationAdapterTests {
         adapter.apply(SchedulePlan(items: items))
         await adapter.waitUntilApplied()
 
-        let intervals = center.pending.compactMap { ($0.trigger as? UNTimeIntervalNotificationTrigger)?.timeInterval }
+        let intervals = center.pending.filter { $0.identifier != "test-nudge" }.compactMap { ($0.trigger as? UNTimeIntervalNotificationTrigger)?.timeInterval }
         #expect(center.pending.count == 64)
         #expect(intervals.sorted() == (1...63).map { TimeInterval($0 * 60) })
     }

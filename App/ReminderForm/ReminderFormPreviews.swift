@@ -35,10 +35,24 @@ extension ReminderForm {
         return form
     }
 
-    private static func edit(_ reminder: Reminder) -> ReminderForm {
+    /// The Edit form of a reminder Maya Lee sent (ticket 200): only its tags can change.
+    static func previewReceived() -> ReminderForm {
+        let connectionID = UUID()
+        let reminder = Reminder(
+            title: "Take your allergy pill",
+            notes: "The blue box, with food.",
+            dueTime: .now.addingTimeInterval(3600),
+            repeatRule: .everyDay,
+            strength: .relentless,
+            origin: .received(connectionID: connectionID, sendersReminderID: UUID(), revision: 0, state: .accepted)
+        )
+        return edit(reminder, senders: Senders(connections: [SharingConnection(id: connectionID, name: "Maya Lee", state: .connected)]))
+    }
+
+    private static func edit(_ reminder: Reminder, senders: Senders = Senders()) -> ReminderForm {
         var engine = Engine(clock: PreviewClock(), scheduler: NoOpScheduler())
         engine.update(reminders: [reminder])
-        return ReminderForm(engine: { engine }, editing: reminder.id, now: { .now }) ?? preview()
+        return ReminderForm(engine: { engine }, editing: reminder.id, now: { .now }, senders: senders) ?? preview()
     }
 }
 #endif

@@ -58,7 +58,13 @@ final class FakeNotificationCenter: UserNotificationCenter {
     func add(_ request: UNNotificationRequest) async throws {
         added.append(request)
         if let addError { throw addError }
-        // As the real center does: the same identifier replaces the pending request.
+        // As the real center does: a request with no trigger is delivered at once, never pending
+        // (a received reminder's arrival, ticket 200), and the same identifier replaces the
+        // pending request.
+        if request.trigger == nil {
+            delivered.append(request.identifier)
+            return
+        }
         pending.removeAll { $0.identifier == request.identifier }
         pending.append(request)
     }
