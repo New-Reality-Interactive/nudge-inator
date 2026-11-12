@@ -22,19 +22,30 @@ public struct ClosedOccurrence: Equatable, Sendable {
 }
 
 extension Engine {
-    /// The Now tab's Coming Up: each unpaused reminder's next due time after now, soonest first, up to and
-    /// including the same local time 7 days later. Counted in local days, not 7 × 24 hours as the
-    /// mockup does, so across a DST change day 7's due time at this time of day is still in.
+    /// The Now tab's Coming Up: each unpaused reminder's next due time after now, soonest first, up
+    /// to and including the same local time 7 days later. Counted in local days, not 7 × 24 hours
+    /// as the mockup does, so across a DST change day 7's due time at this time of day is still in.
+    /// A copy waiting to be accepted is in Waiting for You instead.
     public func comingUp() -> [ComingUpItem] {
         let now = clock.now
         guard let end = calendar.date(byAdding: .day, value: 7, to: now) else { return [] }
         let titles = titles
         return reminders
-            .filter { !isPaused($0.id) }
+            .filter { !isPaused($0.id) && !$0.isWaiting }
             .compactMap { reminder in
                 reminder.nextDueTime(after: now, calendar: calendar)
                     .flatMap { $0 <= end ? ComingUpItem(reminderID: reminder.id, dueTime: $0) : nil }
             }
+            .inTimeOrder(titles: titles, at: \.dueTime, of: \.reminderID)
+    }
+
+    /// The Now tab's Waiting for You (ticket 203): each received copy waiting to be accepted, at the
+    /// due time the Reminders tab shows for it (its next one, or its due time when none is left),
+    /// soonest first.
+    public func waitingForAcceptance() -> [ComingUpItem] {
+        remindersList().items
+            .filter { $0.status == .waiting }
+            .map { ComingUpItem(reminderID: $0.reminder.id, dueTime: $0.dueTime) }
             .inTimeOrder(titles: titles, at: \.dueTime, of: \.reminderID)
     }
 

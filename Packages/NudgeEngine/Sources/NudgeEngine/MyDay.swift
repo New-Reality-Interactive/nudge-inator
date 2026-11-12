@@ -19,6 +19,8 @@ public struct MyDay: Equatable, Sendable {
         case left
         /// Due later today, but its reminder is paused, so it will be Skipped unless resumed first.
         case paused
+        /// A received copy waiting to be accepted, due today before or after now (ticket 203).
+        case waiting
     }
 
     public func count(of count: MyDayCount) -> Int {
@@ -31,8 +33,8 @@ public struct MyDay: Equatable, Sendable {
     }
 }
 
-/// My Day's counts, which double as a filter. Skipped and paused items are in none: a pause
-/// isn't counted against the person as Missed is.
+/// My Day's counts, which double as a filter. Skipped, paused and waiting items are in none: a
+/// pause isn't counted against the person as Missed is, nor is a copy not yet accepted.
 public enum MyDayCount: CaseIterable, Sendable {
     case done
     case nudging
@@ -47,7 +49,7 @@ extension MyDay.Item {
         case .due(.done): .done
         case .due(.nudging): .nudging
         case .due(.missed): .missed
-        case .due(.skipped), .paused: nil
+        case .due(.skipped), .paused, .waiting: nil
         case .left: .left
         }
     }
@@ -95,7 +97,9 @@ extension Engine {
         let items = reminders.filter { tagFilter.includes(tagIDs.intersection($0.tagIDs)) }.flatMap { reminder in
             dueTimes(of: reminder, in: start...end.justBefore).compactMap { dueTime -> MyDay.Item? in
                 let status: MyDay.Status
-                if dueTime > now {
+                if reminder.isWaiting {
+                    status = .waiting
+                } else if dueTime > now {
                     status = isPaused(reminder.id) ? .paused : .left
                 } else if let occurrence = occurrence(of: reminder.id, dueAt: dueTime) {
                     status = .due(occurrence.state)

@@ -74,6 +74,8 @@ struct MyDayScreen {
                 return ClosedRow.detail(closingAs: state, nudgesSent: nudgesSent)
             case .paused:
                 return LocalizedStringResource("Paused: this one will be skipped", comment: "My Day: under the title of an occurrence due later today whose reminder is paused.")
+            case .waiting:
+                return LocalizedStringResource("Waiting for you to accept", comment: "My Day: under the title of a reminder someone sent that waits for the person to accept it before it nudges.")
             case .left:
                 let relative = dueTime.shortRelative(to: now)
                 return LocalizedStringResource("\(relative)", comment: "My Day: under the title of an occurrence due later today. The placeholder is how soon, such as \"in 4 hr.\".")

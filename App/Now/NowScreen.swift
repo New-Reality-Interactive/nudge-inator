@@ -1,10 +1,13 @@
 import Foundation
 import NudgeEngine
 
-/// What the Now tab shows, read from the engine at one moment: the nudge cards, Coming Up and the
-/// Last 24 Hours, in the engine's order. A value, so the tests and previews read it with no view.
+/// What the Now tab shows, read from the engine at one moment: the nudge cards, Waiting for You,
+/// Coming Up and the Last 24 Hours, in the engine's order. A value, so the tests and previews read
+/// it with no view.
 struct NowScreen {
     var nudging: [NudgeCard]
+    /// Received reminders waiting to be accepted (Ask me first, ticket 203), with Accept and Remove.
+    var waiting: [WaitingRow]
     var comingUp: [ComingUpRow]
     var lastDay: [ClosedRow]
     /// The engine's short date, so the subhead's day is in its time zone, as every other time is.
@@ -13,6 +16,7 @@ struct NowScreen {
     /// Nothing to show: the app hosting tests, and previews without an engine.
     init() {
         nudging = []
+        waiting = []
         comingUp = []
         lastDay = []
         shortDate = { $0.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)) }
@@ -24,6 +28,16 @@ struct NowScreen {
         let reminders = Dictionary(engine.reminders.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         nudging = engine.nudgingOccurrences().compactMap { item in
             reminders[item.reminderID].flatMap { NudgeCard(engine: engine, reminder: $0, from: senders.label(of: $0)) }
+        }
+        waiting = engine.waitingForAcceptance().compactMap { item in
+            reminders[item.reminderID].map {
+                WaitingRow(
+                    reminder: $0,
+                    day: engine.dayLabel(of: item.dueTime),
+                    time: engine.timeOfDay(of: item.dueTime),
+                    from: senders.label(of: $0)
+                )
+            }
         }
         comingUp = engine.comingUp().compactMap { item in
             reminders[item.reminderID].map {
@@ -188,6 +202,30 @@ struct ComingUpRow: Identifiable {
 
     var id: Reminder.ID { reminder.id }
     var title: String { reminder.title }
+}
+
+/// One Waiting for You row: a received reminder waiting to be accepted, at the due time the Reminders
+/// tab shows for it (its next one, or its due time when none is left), with Accept and Remove.
+struct WaitingRow: Identifiable {
+    var reminder: Reminder
+    /// "Today", "Tomorrow" or a short date, under the time.
+    var day: String
+    var time: String
+    /// "From Riley Park" under the title.
+    var from: LocalizedStringResource?
+
+    var id: Reminder.ID { reminder.id }
+    var title: String { reminder.title }
+
+    /// VoiceOver's name for the row's Accept, which says which reminder it accepts.
+    var acceptVoiceOverLabel: LocalizedStringResource {
+        LocalizedStringResource("Accept: \(title)", comment: "VoiceOver label of Accept on a Waiting for You row on Now. The placeholder is the reminder's title.")
+    }
+
+    /// VoiceOver's name for the row's Remove, which says which reminder it removes.
+    var removeVoiceOverLabel: LocalizedStringResource {
+        LocalizedStringResource("Remove: \(title)", comment: "VoiceOver label of Remove on a Waiting for You row on Now. The placeholder is the reminder's title.")
+    }
 }
 
 /// One Last 24 Hours row: an occurrence that closed.

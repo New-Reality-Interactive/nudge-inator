@@ -436,6 +436,21 @@ final class AppModel {
         }, storeChange: { try $0.delete(reminderID) })
     }
 
+    /// Accept on a received reminder waiting to be accepted (Ask me first, ticket 203): it starts as
+    /// the engine's `accept(_:)` says, and the sender is told it started. Accepting anything else is
+    /// ignored and tells no one. A sharing store that won't keep the receipt leaves the copy started
+    /// and the sender seeing it waiting; that is logged.
+    func accept(_ reminderID: Reminder.ID) {
+        guard let waiting = engine.reminders.first(where: { $0.id == reminderID && $0.isWaiting }) else { return }
+        perform { $0.accept(reminderID) }
+        guard engine.reminders.contains(where: { $0.id == reminderID && !$0.isWaiting }) else { return }
+        do {
+            try sharing?.accepted(waiting)
+        } catch {
+            Self.logger.error("An accepted reminder's receipt couldn't be sent: \(error, privacy: .public)")
+        }
+    }
+
     /// Disconnect, and the other person's Continue on Connection Ended (ticket 197): ends the
     /// connection with `connectionID` and does the person's choice to what they received through
     /// it. The sharing store goes first, so one that won't keep it changes nothing, reminders

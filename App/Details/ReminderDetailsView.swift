@@ -13,7 +13,8 @@ extension View {
 /// A reminder's details, as the mockup's `viewRem` less its History (out of scope): the hero, the
 /// Nudging Now card with Done, Schedule, How It Nudges, Pause or Resume, and Delete. A received
 /// reminder's (the mockup's `viewReceived`, ticket 200) adds who sent it and its strength in words,
-/// says its sender owns the schedule, offers "Don't share this one", and has Remove for Delete. It
+/// says its sender owns the schedule, offers "Don't share this one", and has Remove for Delete; one
+/// waiting to be accepted (ticket 203) has the waiting note, Accept and Remove instead of Pause. It
 /// reads the engine again at every change and every minute, so it follows a Done from a
 /// notification while it is open.
 struct ReminderDetailsView: View {
@@ -52,6 +53,7 @@ struct ReminderDetailsView: View {
             isEnabled: deleted == nil,
             markDone: { model?.markDone(id) },
             togglePause: { togglePause(details) },
+            accept: { model?.accept(id) },
             setNotSharing: { notSharing in
                 // A store that won't keep it leaves the switch as it was: it shows what's kept.
                 do {
@@ -149,6 +151,8 @@ private struct DetailsList: View {
     let isEnabled: Bool
     let markDone: () -> Void
     let togglePause: () -> Void
+    /// Accept on a received reminder waiting to be accepted (ticket 203).
+    let accept: () -> Void
     let setNotSharing: (Bool) -> Void
     let delete: () -> Void
 
@@ -159,6 +163,9 @@ private struct DetailsList: View {
         List {
             Section {
                 DetailsHero(details: details)
+            }
+            if details.isWaiting {
+                WaitingSection(title: details.title, accept: accept, remove: delete)
             }
             if let card = details.card ?? heldCard {
                 Section {
@@ -193,6 +200,17 @@ private struct DetailsList: View {
             if let received = details.received, let notSharing = received.notSharingThisOne {
                 DontShareSection(senderName: received.senderName, isOn: notSharing, set: setNotSharing)
             }
+            // A waiting copy's Remove is in its Waiting section, with Accept (the mockup's `viewReceived`).
+            if !details.isWaiting {
+                actionsSection
+            }
+        }
+        .disabled(!isEnabled)
+        .centeredInReadableColumn()
+    }
+
+    /// Pause or Resume, and Delete or Remove Reminder.
+    private var actionsSection: some View {
             Section {
                 if let action = details.pauseAction {
                     Button(action: togglePause) {
@@ -225,9 +243,6 @@ private struct DetailsList: View {
                     }
                 }
             }
-        }
-        .disabled(!isEnabled)
-        .centeredInReadableColumn()
     }
 
     private func heldBinding(for card: NudgeCard) -> Binding<Bool> {
@@ -235,6 +250,54 @@ private struct DetailsList: View {
             heldCard != nil
         } set: { isHeld in
             heldCard = isHeld ? card : nil
+        }
+    }
+}
+
+/// A received reminder waiting to be accepted (ticket 203, the mockup's `viewReceived`): the note that
+/// it won't nudge until accepted, then Accept, tinted, and Remove, which asks first as Remove
+/// Reminder does.
+private struct WaitingSection: View {
+    let title: String
+    let accept: () -> Void
+    let remove: () -> Void
+    @State private var isConfirmingRemove = false
+
+    var body: some View {
+        Section {
+            Label {
+                VStack(alignment: .leading, spacing: Design.Spacing.line) {
+                    Text("Waiting for you to accept", comment: "Reminder details: the note on a reminder someone sent that waits for the person to accept it (Ask me first).")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color(uiColor: .label))
+                    Text("It won't nudge you until you accept it. Anything due before then is skipped.", comment: "Reminder details: under \"Waiting for you to accept\" on a reminder someone sent.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color(uiColor: .secondaryLabel))
+                }
+            } icon: {
+                Image(systemName: "clock")
+                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+            }
+            .accessibilityElement(children: .combine)
+        }
+        Section {
+            Button(action: accept) {
+                Label {
+                    Text("Accept", comment: "Reminder details: starts a reminder someone sent, which waited for the person to accept it.")
+                } icon: {
+                    Image(systemName: "checkmark")
+                }
+            }
+            Button(role: .destructive) {
+                isConfirmingRemove = true
+            } label: {
+                Label {
+                    Text("Remove", comment: "Reminder details: on a reminder someone sent that waits to be accepted, opens the question that asks before removing it.")
+                } icon: {
+                    Image(systemName: "trash")
+                }
+            }
+            .deleteReminderConfirmation(title: title, kind: .received, isPresented: $isConfirmingRemove, confirm: remove)
         }
     }
 }

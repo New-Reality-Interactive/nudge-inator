@@ -317,6 +317,14 @@ final class SharingModel {
         try keep(kept)
     }
 
+    /// Accept (ticket 203): tells the sender of `copy`, a received reminder that was waiting, that it
+    /// has started, so their Sent stops saying "Waiting for them to accept". A copy of the person's
+    /// own sends nothing. Throws, sending nothing, if the store can't keep the receipt.
+    func accepted(_ copy: Reminder) throws {
+        guard case let .received(connectionID, sendersReminderID, _, _, _) = copy.origin else { return }
+        try submit(.receipt(.started, for: sendersReminderID, from: connectionID))
+    }
+
     /// What the store holds, opening it first if it isn't open.
     private func currentData() throws -> SharingData {
         _ = try openedStore()

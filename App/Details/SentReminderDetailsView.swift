@@ -110,8 +110,8 @@ private struct SentDetailsList: View {
                         }
                     } label: {
                         Text(verbatim: recipient.name)
-                        if !recipient.isDelivered {
-                            Text(SentScreen.Row.notDeliveredText)
+                        if let line = recipient.detailLine {
+                            Text(line)
                         }
                     }
                 }

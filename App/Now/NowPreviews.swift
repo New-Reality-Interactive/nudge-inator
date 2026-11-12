@@ -19,6 +19,9 @@ extension NowScreen {
             Reminder(title: "Walk the dog", dueTime: ago(180), strength: .gentle),
             Reminder(title: "Tidy the desk", dueTime: ago(300), strength: .firm),
             Reminder(title: "Stretch break", dueTime: ago(60), strength: .firm),
+            // Waiting for You (ticket 203): sent by someone, waiting to be accepted.
+            Reminder(title: "Sign the field-trip form", dueTime: ago(-6 * 60), strength: .gentle,
+                     origin: .received(connectionID: UUID(), sendersReminderID: UUID(), revision: 1, state: .waiting)),
         ]
         let clock = PreviewClock(now: ago(170))
         var engine = Engine(clock: clock, scheduler: NoOpScheduler())

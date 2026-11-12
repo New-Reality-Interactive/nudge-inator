@@ -59,8 +59,8 @@ private struct SentRowView: View {
         } main: {
             Text(verbatim: row.title)
                 .font(.body)
-            if !row.isDelivered {
-                Text(SentScreen.Row.notDeliveredText)
+            if let line = row.detailLine {
+                Text(line)
                     .font(.subheadline)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
