@@ -677,9 +677,9 @@ extension AppModel: ReceivedReminders {
     }
 
     /// The sender's Delete of a copy held (ticket 205): the engine cancels it, so nothing is planned
-    /// and a ringing alarm stops as Delete stops it, and its nudges already in Notification Center go
-    /// (the copy's own banners, so none points at a reminder no longer wanted). The copy stays, with
-    /// its tags and change note, until the person removes it. Throws if the reminders haven't been read.
+    /// and a ringing alarm stops as Pause stops it. The copy's banners already in Notification Center
+    /// stay, as Pause and a sender's change leave them (#204's phone check). The copy stays, with its
+    /// tags and change note, until the person removes it. Throws if the reminders haven't been read.
     func cancel(_ copyID: Reminder.ID) throws {
         guard case .ready = launchState, store != nil else { throw RemindersNotLoaded() }
         perform { engine in
@@ -687,7 +687,6 @@ extension AppModel: ReceivedReminders {
             engine.cancel(copyID)
             if engine.reminders.contains(where: { $0.id == copyID && $0.isCanceled }) {
                 alarms.stopRinging(of: copyID, dueAt: dueTimes)
-                notifications.removeDeliveredNotifications(of: copyID)
             }
         }
     }

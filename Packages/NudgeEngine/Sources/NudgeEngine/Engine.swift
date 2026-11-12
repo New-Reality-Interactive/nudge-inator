@@ -274,7 +274,7 @@ public struct Engine {
     /// pausing a copy still waiting to be accepted: it is already held, and a pause then would
     /// outlast Accept. A canceled copy is held for good, so it is ignored too.
     public mutating func pause(_ reminderID: Reminder.ID) {
-        guard !isPaused(reminderID), reminder(reminderID)?.isWaiting != true, reminder(reminderID)?.isCanceled != true else { return }
+        guard !isPaused(reminderID), reminder(reminderID)?.isHeld != true else { return }
         historyByReminder[reminderID, default: History()].saved.pauseSpans.append(PauseSpan(start: clock.now))
         applyPlan()
     }
