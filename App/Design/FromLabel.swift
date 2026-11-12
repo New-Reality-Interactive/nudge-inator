@@ -28,6 +28,10 @@ struct FromLabel: View {
             Image(systemName: "person")
                 .accessibilityHidden(true)
             Text(from)
+                // It wraps, never truncates: when neither of `ViewThatFits`'s layouts fits (the
+                // largest text sizes), the stacked one could get one line's height, and the phone
+                // showed "From Riley…" (#199's phone check).
+                .fixedSize(horizontal: false, vertical: true)
         }
         .font(.subheadline)
         .foregroundStyle(Color(uiColor: .secondaryLabel))

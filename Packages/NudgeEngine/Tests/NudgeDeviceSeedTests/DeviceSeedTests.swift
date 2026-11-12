@@ -202,6 +202,19 @@ struct DeviceSeedTests {
         #expect(target.reminders.map(\.title) == ["Feed the cat"])
     }
 
+    /// Keep as My Own Reminders makes a stand-in send the person's own, with no connection to find
+    /// it by (#199's phone check left one behind), so removal finds it by the notes the stand-in
+    /// writes, and leaves the person's own.
+    @Test func removalDeletesWhatTheStandInsPersonSentAfterItWasKept() {
+        let kept = Reminder(title: "Bring the umbrella", notes: SeedSet.standInSentNotes, dueTime: target.now, strength: .gentle)
+        let mine = target.addPersonsOwn(title: "Mine")
+        target.add(kept)
+
+        #expect(run(DeviceSeed.cleanCommand) == .cleaned)
+
+        #expect(target.reminders.map(\.id) == [mine.id])
+    }
+
     @Test func removalWithNothingLoadedDoesNothing() {
         let mine = target.addPersonsOwn(title: "Mine")
 

@@ -189,7 +189,7 @@ final class StandInSharingAdapter: SharingAdapter {
         let soon = Date.now.addingTimeInterval(2 * 60)
         let due = Calendar.autoupdatingCurrent.dateInterval(of: .minute, for: soon)?.start ?? soon
         let title = strength == .relentless ? "Take the medicine" : "Bring the umbrella"
-        let sent = SentReminder(reminder: Reminder(title: title, notes: "Sent from the stand-in.", dueTime: due, strength: strength), revision: 0)
+        let sent = SentReminder(reminder: Reminder(title: title, notes: SeedSet.standInSentNotes, dueTime: due, strength: strength), revision: 0)
         Task { try? await events?.received(.send(sent, to: connectionID)) }
     }
 

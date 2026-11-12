@@ -82,13 +82,16 @@ public enum DeviceSeed {
     }
 
     /// Deletes what the record lists, found by ID, and what the stand-in sharing's person sent
-    /// (ticket 198), found by the stand-in's connection, and puts the settings back. A tag stays if a
+    /// (ticket 198), found by the stand-in's connection or, once kept, by the notes the stand-in
+    /// writes, and puts the settings back. A tag stays if a
     /// reminder that isn't the seed's now uses it.
     private static func removeEverything(from target: some SeedTarget, record store: some SeedRecordStore) {
         let record = store.read()
         let loadedSets = record.sets.values
 
-        let fromStandIn = target.reminders.filter { $0.receivedThrough == SeedSet.standInConnectionID }.map(\.id)
+        let fromStandIn = target.reminders.filter {
+            $0.receivedThrough == SeedSet.standInConnectionID || $0.notes == SeedSet.standInSentNotes
+        }.map(\.id)
         for id in loadedSets.flatMap(\.reminderIDs) + fromStandIn {
             target.delete(id)
         }

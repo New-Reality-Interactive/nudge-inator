@@ -105,6 +105,19 @@ struct ReceivedRowsTests {
         #expect(pills.from.map { String(localized: $0) } == "From Someone")
     }
 
+    /// The other person ended the connection and this person hasn't chosen Remove or Keep yet
+    /// (spec A8): the copy keeps its sender's name. Connection Ended's sheet hides this on the
+    /// phone, so only here.
+    @Test func aReceivedReminderKeepsItsSendersNameAfterTheyEndTheConnection() async throws {
+        let riley = try await rileysPhone(at: 8, 40)
+        let ended = Senders(connections: [SharingConnection(id: connectionID, name: "Alex Morgan", state: .ended)])
+
+        let screen = NowScreen(engine: riley.model.engine, senders: ended)
+
+        let pills = try #require(screen.nudging.first { $0.title == "Take the pills" })
+        #expect(pills.from.map { String(localized: $0) } == "From Alex Morgan")
+    }
+
     // MARK: My Day
 
     @Test func aReceivedItemOnMyDaySaysWhoSentItAndCountsAsAnyOther() async throws {

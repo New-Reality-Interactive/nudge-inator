@@ -7,6 +7,11 @@ extension SeedSet {
     /// this set's reminders come from them.
     public static let standInConnectionID = UUID(uuid: (0x5E, 0xED, 0x00, 0x02, 0x00, 0x00, 0x40, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01))
 
+    /// The notes on every reminder the stand-in's Riley Park sends (ticket 198). Removal finds a
+    /// send by them once Keep as My Own Reminders has made it the person's own, with no connection
+    /// left to find it by (#199's phone check).
+    public static let standInSentNotes = "Sent from the stand-in."
+
     /// Disconnect's check (ticket 197): reminders received from the stand-in's Riley Park, to
     /// Remove or Keep as My Own Reminders. Two accepted, which Keep keeps, and one still waiting to
     /// be accepted, which goes either way, so Disconnect's sheet counts 2. The first nudges
