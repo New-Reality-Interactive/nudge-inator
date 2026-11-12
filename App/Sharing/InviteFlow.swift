@@ -8,6 +8,17 @@ extension View {
     func inviteFlow(sharing: SharingModel, isPresented: Binding<Bool>, replacing: UUID? = nil, onInvited: @escaping (SharingConnection) -> Void = { _ in }) -> some View {
         modifier(InviteFlow(sharing: sharing, isPresented: isPresented, replacing: replacing, onInvited: onInvited))
     }
+
+    /// Invite Someone where there may be no sharing model (previews, and the form without sharing):
+    /// the flow when there is one, nothing otherwise.
+    @ViewBuilder
+    func inviteFlow(sharing: SharingModel?, isPresented: Binding<Bool>) -> some View {
+        if let sharing {
+            inviteFlow(sharing: sharing, isPresented: isPresented)
+        } else {
+            self
+        }
+    }
 }
 
 private struct InviteFlow: ViewModifier {

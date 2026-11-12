@@ -63,4 +63,18 @@ struct ShellNavigationTests {
         navigation.follow(.now)
         #expect(navigation.dayPath == [open])
     }
+
+    /// Manage People on Sent's empty state (ticket 202): Settings, with Connections over it and
+    /// nothing over Connections, so Back goes to Settings. Reminders keeps what it had.
+    @Test func managePeopleShowsConnectionsOnSettings() {
+        var navigation = ShellNavigation(selection: .reminders)
+        navigation.remindersPath.append(OpenedSentReminder(id: UUID()))
+        navigation.settingsPath = [.connections, .connection(UUID())]
+
+        navigation.openConnections()
+
+        #expect(navigation.selection == .settings)
+        #expect(navigation.settingsPath == [.connections])
+        #expect(navigation.remindersPath.count == 1)
+    }
 }

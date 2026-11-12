@@ -44,7 +44,7 @@ struct ShellNavigation {
     /// sets it.
     var tagPath = NavigationPath()
 
-    /// The sharing pages pushed on Settings. Only Change These sets it from outside.
+    /// The sharing pages pushed on Settings. Change These and Sent's Manage People set it from outside.
     var settingsPath: [SharingPage] = []
 
     init(selection: AppTab = .now) {
@@ -56,6 +56,13 @@ struct ShellNavigation {
     mutating func openConnection(_ connectionID: UUID) {
         selection = .settings
         settingsPath = [.connections, .connection(connectionID)]
+    }
+
+    /// Manage People on Sent's empty state (ticket 202): Settings, with Connections pushed, so Back
+    /// goes to Settings.
+    mutating func openConnections() {
+        selection = .settings
+        settingsPath = [.connections]
     }
 
     mutating func follow(_ route: AppModel.Route) {

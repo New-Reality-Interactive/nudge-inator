@@ -3,16 +3,34 @@ import SwiftUI
 
 /// The Reminders tab's Sent view (ticket 201, the mockup's `viewSentTab`): what this person sent,
 /// grouped under each person it went to, each row opening the sent reminder's details. Rows have no
-/// swipe (DESIGN.md, Sent rows). Search, Filter, Sort and the count are #328's and #329's; the
-/// empty states #202's.
+/// swipe (DESIGN.md, Sent rows). Search, Filter, Sort and the count are #328's and #329's.
+///
+/// With no one connected it offers Invite Someone and Manage People, and with nothing sent New
+/// Reminder (ticket 202). Neither empty state has tools (DESIGN.md, Sent's tools).
 struct SentList: View {
     let screen: SentScreen
+    /// What Invite Someone invites through. Previews without one show the button but invite no one.
+    let sharing: SharingModel?
+    /// Manage People: Settings › Connections.
+    let manageConnections: () -> Void
     let openDetails: (Reminder.ID) -> Void
 
+    /// Invite Someone's flow, kept here above the empty states, so an invite under way isn't lost
+    /// when someone connects and No One to Send To goes.
+    @State private var isInviting = false
+
     var body: some View {
-        if screen.isEmpty {
+        content
+            .inviteFlow(sharing: sharing, isPresented: $isInviting)
+    }
+
+    @ViewBuilder private var content: some View {
+        switch screen.emptyState {
+        case .noOneToSendTo:
+            NoOneToSendToView(invite: { isInviting = true }, manageConnections: manageConnections)
+        case .nothingSent:
             NothingSentView()
-        } else {
+        case nil:
             List {
                 ForEach(screen.people) { person in
                     Section {
@@ -64,18 +82,60 @@ struct DeliveredLabel: View {
     }
 }
 
-/// Sent with nothing in it, until #202 brings the mockup's two empty states.
-private struct NothingSentView: View {
+/// Sent with no one connected, the mockup's "No One to Send To": Invite Someone, as Connections
+/// offers it, and Manage People, which goes to Settings › Connections (the spec; the mockup pushes
+/// Connections on Reminders, README Known differences). It scrolls, so the buttons are reached at
+/// the largest text size, on the grouped background the mockup's screens have.
+private struct NoOneToSendToView: View {
+    let invite: () -> Void
+    let manageConnections: () -> Void
+
     var body: some View {
-        ContentUnavailableView {
-            Label {
-                Text("Nothing Sent", comment: "Reminders tab, Sent: title when this person has sent nothing to anyone connected.")
-            } icon: {
-                Image(systemName: "list.bullet.clipboard")
+        ScrollView {
+            ContentUnavailableView {
+                Label {
+                    Text("No One to Send To", comment: "Reminders tab, Sent: title when this person is connected with no one.")
+                } icon: {
+                    Image(systemName: "person.2")
+                }
+            } description: {
+                Text("Invite someone you trust, and what you send them shows here.", comment: "Reminders tab, Sent: under \"No One to Send To\".")
+            } actions: {
+                Button(action: invite) {
+                    InviteSomeoneLabel()
+                }
+                .buttonStyle(.bordered)
+                Button(action: manageConnections) {
+                    Text("Manage People", comment: "Reminders tab, Sent: under Invite Someone when no one is connected. Opens Settings › Connections.")
+                }
             }
         }
+        .background(Color(uiColor: .systemGroupedBackground))
     }
 }
+
+/// Sent with someone connected but nothing sent to them, the mockup's "Nothing Sent": New Reminder,
+/// the toolbar's button with its title showing.
+private struct NothingSentView: View {
+    var body: some View {
+        ScrollView {
+            ContentUnavailableView {
+                Label {
+                    Text("Nothing Sent", comment: "Reminders tab, Sent: title when this person has sent nothing to anyone connected.")
+                } icon: {
+                    Image(systemName: "list.bullet.clipboard")
+                }
+            } description: {
+                Text("Make a reminder and choose who to send it to.", comment: "Reminders tab, Sent: under \"Nothing Sent\", when someone is connected.")
+            } actions: {
+                NewReminderButton()
+                    .buttonStyle(.bordered)
+            }
+        }
+        .background(Color(uiColor: .systemGroupedBackground))
+    }
+}
+
 
 #if DEBUG
 private extension SentScreen {
@@ -96,21 +156,52 @@ private extension SentScreen {
     }
 }
 
+private extension SentList {
+    init(preview screen: SentScreen) {
+        self.init(screen: screen, sharing: nil, manageConnections: {}, openDetails: { _ in })
+    }
+}
+
+/// Sent's screens with no one connected, then with Riley connected and nothing sent.
+private extension SentScreen {
+    static var noOneToSendTo: SentScreen {
+        SentScreen(engine: .myDayPreview(), sharing: SharingData())
+    }
+
+    static var nothingSent: SentScreen {
+        SentScreen(engine: .myDayPreview(), sharing: SharingData(connections: [SharingConnection(id: UUID(), name: "Riley Park", state: .connected)]))
+    }
+}
+
 #Preview("Light") {
-    SentList(screen: .preview) { _ in }
+    SentList(preview: .preview)
 }
 
 #Preview("Dark") {
-    SentList(screen: .preview) { _ in }
+    SentList(preview: .preview)
         .preferredColorScheme(.dark)
 }
 
 #Preview("Largest text") {
-    SentList(screen: .preview) { _ in }
+    SentList(preview: .preview)
+        .environment(\.dynamicTypeSize, .accessibility5)
+}
+
+#Preview("No one to send to") {
+    SentList(preview: .noOneToSendTo)
+}
+
+#Preview("No one to send to, dark, largest text") {
+    SentList(preview: .noOneToSendTo)
+        .preferredColorScheme(.dark)
         .environment(\.dynamicTypeSize, .accessibility5)
 }
 
 #Preview("Nothing sent") {
-    SentList(screen: SentScreen(engine: .myDayPreview(), sharing: SharingData())) { _ in }
+    SentList(preview: .nothingSent)
+}
+
+#Preview("Nothing sent, landscape", traits: .landscapeLeft) {
+    SentList(preview: .nothingSent)
 }
 #endif

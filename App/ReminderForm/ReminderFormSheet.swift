@@ -51,7 +51,7 @@ struct ReminderFormSheet: View {
                 }
             }
         }
-        .sendToInviteFlow(sharing: form.sharing, isPresented: $isInviting)
+        .inviteFlow(sharing: form.sharing, isPresented: $isInviting)
         .alert(
             Text("Couldn't Send the Reminder", comment: "The reminder form: title of the message shown when Add couldn't send the reminder to the people chosen in Send To, or Save couldn't keep a change to a reminder already sent."),
             isPresented: $form.isShowingCouldntSend
@@ -108,18 +108,6 @@ struct ReminderFormSheet: View {
 enum ReminderFormPage: Hashable {
     case tags
     case sendTo
-}
-
-private extension View {
-    /// Send To's Invite Someone New: the invite flow, when the app has sharing.
-    @ViewBuilder
-    func sendToInviteFlow(sharing: SharingModel?, isPresented: Binding<Bool>) -> some View {
-        if let sharing {
-            inviteFlow(sharing: sharing, isPresented: isPresented)
-        } else {
-            self
-        }
-    }
 }
 
 /// The note at the top of the Edit form: who owns a received reminder (ticket 200), why the

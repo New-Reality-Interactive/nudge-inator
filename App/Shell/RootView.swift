@@ -25,7 +25,9 @@ struct RootView: View {
                 MyDayTab(state: state, path: $navigation.dayPath)
             }
             Tab(AppTab.reminders.title, systemImage: AppTab.reminders.systemImage, value: .reminders) {
-                RemindersTab(state: state, path: $navigation.remindersPath, isChosen: navigation.selection == .reminders)
+                RemindersTab(state: state, path: $navigation.remindersPath, isChosen: navigation.selection == .reminders, manageConnections: {
+                    navigation.openConnections()
+                })
             }
             Tab(AppTab.tags.title, systemImage: AppTab.tags.systemImage, value: .tags) {
                 TagsTab(state: state, path: $navigation.tagPath)
