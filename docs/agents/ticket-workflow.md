@@ -28,7 +28,8 @@ Everything else the ticket needs is in the ticket: its sections, and **Before yo
 5. Run `mattpocock-skills:domain-modeling` when a name isn't in `GLOSSARY.md`, and
    `mattpocock-skills:diagnosing-bugs` when something fails and a first look doesn't explain it.
 6. Test with `scripts/test.sh`.
-7. Review as `review.md` says, starting once step 6 passes. Make the review's fixes, rerun
+7. Review as `review.md` says, starting once step 6 passes. Once the developer has answered the
+   review's list (`review.md`), make the fixes they settled in one round, rerun
    `scripts/test.sh` (not when every fix changes only comments, `review.md`), and commit. A change
    on screen then gets the **phone check**, unless the developer has opted out for this ticket (by
    saying so in the ticket or when starting it). Never install it while the review runs: the
