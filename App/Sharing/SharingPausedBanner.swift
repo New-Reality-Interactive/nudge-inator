@@ -35,6 +35,22 @@ extension SharingReach.Pause {
         }
     }
 
+    /// Under Couldn't Send the Reminder, when Add found sharing paused: nothing was sent, why, and
+    /// what to do.
+    var couldntSendText: LocalizedStringResource {
+        switch self {
+        case .noAccount:
+            LocalizedStringResource("Nothing was sent. Sharing is paused: sign in to iCloud in iOS Settings, then try again.",
+                                    comment: "The reminder form: under Couldn't Send the Reminder, when Add found no iCloud account signed in.")
+        case .restricted:
+            LocalizedStringResource("Nothing was sent. Sharing is paused: iCloud is restricted on this iPhone. Screen Time or whoever manages it can change that.",
+                                    comment: "The reminder form: under Couldn't Send the Reminder, when Add found iCloud restricted, for example by Screen Time or a device management profile.")
+        case .temporarilyUnavailable:
+            LocalizedStringResource("Nothing was sent. Sharing is paused: iCloud isn't available right now. Try again in a little while.",
+                                    comment: "The reminder form: under Couldn't Send the Reminder, when Add found iCloud can't be reached for now.")
+        }
+    }
+
     /// Whether the banner offers Open Settings: not when iCloud comes back by itself.
     var offersOpenSettings: Bool {
         self != .temporarilyUnavailable

@@ -192,47 +192,77 @@ struct SharingPausedTests {
     }
 
     @Test(arguments: pausedAccounts)
-    func sendToIsShownOffWithTheReason(account: SharingAccountState) async throws {
+    func withNoOneChosenSendToIsShownOffWithTheReason(account: SharingAccountState) async throws {
         let (alex, _) = try await phones()
         await setAccount(account, on: alex)
 
         let form = form(on: alex)
 
         #expect(form.offersSendTo)
+        #expect(form.showsSendToPaused)
         #expect(form.sendToPause == account.reach.pause)
-        #expect(form.recipients.isEmpty)
         #expect(form.showsTags)
     }
 
-    @Test func whoWasChosenIsLeftOutWhilePausedAndComesBackAfter() async throws {
-        let (alex, riley) = try await phones()
+    /// Brian (#210): nothing is checked until Add. Someone chosen stays chosen when iCloud goes,
+    /// and the row keeps their name.
+    @Test(arguments: pausedAccounts)
+    func whoWasChosenStaysChosenWhenICloudGoes(account: SharingAccountState) async throws {
+        let (alex, _) = try await phones()
         let form = form(on: alex)
         form.toggleRecipient(connectionID)
 
-        await setAccount(.temporarilyUnavailable, on: alex)
-        #expect(form.recipients.isEmpty)
-        #expect(form.recipientsText == nil)
+        await setAccount(account, on: alex)
 
-        await setAccount(.available, on: alex)
-        #expect(form.sendToPause == nil)
         #expect(form.recipients == [connectionID])
-        #expect(form.save(to: alex.model))
-        await settle(alex, riley)
-        #expect(riley.model.engine.reminders.map(\.title) == ["Take the pills"])
+        #expect(form.recipientsText == "Riley Park")
+        #expect(!form.showsSendToPaused)
+        #expect(!form.showsTags)
     }
 
-    @Test func addWhilePausedSendsNothing() async throws {
+    @Test(arguments: pausedAccounts)
+    func addWhilePausedSaysWhyAndSavesNothing(account: SharingAccountState) async throws {
         let (alex, riley) = try await phones()
         let form = form(on: alex)
         form.toggleRecipient(connectionID)
-        await setAccount(.noAccount, on: alex)
+        await setAccount(account, on: alex)
 
-        _ = form.save(to: alex.model)
+        #expect(!form.save(to: alex.model))
         await settle(alex, riley)
 
+        #expect(form.isShowingCouldntSend)
+        #expect(form.couldntSendPause == account.reach.pause)
+        #expect(alex.model.engine.reminders.isEmpty)
         #expect(alex.adapter.submitted.isEmpty)
         #expect(alex.sharing.data.sentReminders.isEmpty)
         #expect(riley.model.engine.reminders.isEmpty)
     }
-}
 
+    @Test func addOnceICloudIsBackSendsToWhoWasChosen() async throws {
+        let (alex, riley) = try await phones()
+        let form = form(on: alex)
+        form.toggleRecipient(connectionID)
+        await setAccount(.noAccount, on: alex)
+        #expect(!form.save(to: alex.model))
+
+        await setAccount(.available, on: alex)
+        #expect(form.save(to: alex.model))
+        await settle(alex, riley)
+
+        #expect(riley.model.engine.reminders.map(\.title) == ["Take the pills"])
+        #expect(alex.model.engine.reminders.isEmpty)
+    }
+
+    /// The message under Couldn't Send the Reminder when Add found sharing paused.
+    @Test(arguments: [
+        (SharingReach.Pause.noAccount,
+         "Nothing was sent. Sharing is paused: sign in to iCloud in iOS Settings, then try again."),
+        (.restricted,
+         "Nothing was sent. Sharing is paused: iCloud is restricted on this iPhone. Screen Time or whoever manages it can change that."),
+        (.temporarilyUnavailable,
+         "Nothing was sent. Sharing is paused: iCloud isn't available right now. Try again in a little while."),
+    ])
+    func addSaysWhyItCouldntSend(pause: SharingReach.Pause, message: String) {
+        #expect(String(localized: pause.couldntSendText) == message)
+    }
+}

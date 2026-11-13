@@ -45,6 +45,9 @@ final class ReminderForm: Identifiable {
     /// Set when Add couldn't send it: the store wouldn't keep it. The sheet says so, and the person
     /// can try again.
     var isShowingCouldntSend = false
+    /// Why Add couldn't send it, when it was because sharing is paused without iCloud (ticket
+    /// 210): the message says why instead of only "try again". `nil` for any other failure.
+    var couldntSendPause: SharingReach.Pause?
     /// Set when Save found the sent reminder deleted while the form was open (ticket 201): there is
     /// nothing left to save, so the sheet says so and closes.
     var isShowingDeletedMeanwhile = false
@@ -192,17 +195,19 @@ final class ReminderForm: Identifiable {
     /// row offers only Invite Someone New.
     var sendToChoices: [SharingConnection] { sharing?.connected ?? [] }
 
-    /// Why Send To is shown off (ticket 210), or `nil` while sharing works: without iCloud nothing
-    /// can be sent, so the row says so and no one chosen counts.
+    /// Why sharing is paused (ticket 210), or `nil` while it works. It changes nothing already
+    /// chosen: the form checks it only on Add, which then says why and sends nothing.
     var sendToPause: SharingReach.Pause? { sharing?.pause }
+
+    /// Whether the Send To row is shown off, saying Paused with the reason under it (ticket 210):
+    /// while sharing is paused and no one is chosen. Someone chosen stays on the row, as chosen.
+    var showsSendToPaused: Bool { sendToPause != nil && recipients.isEmpty }
 
     /// Send To (ticket 198): the connections of the people chosen to send it to, in the order chosen.
     /// With anyone chosen, Add sends it to them instead of adding it to the person's own reminders.
     /// Someone chosen who stops being connected while the form is open drops off, so the row always
-    /// shows who it goes to. While sharing is paused no one counts, so Add sends nothing; whoever
-    /// was chosen comes back once it works again.
+    /// shows who it goes to. Sharing pausing doesn't change who is chosen: Add checks it (ticket 210).
     var recipients: [UUID] {
-        guard sendToPause == nil else { return [] }
         let connected = Set(sendToChoices.map(\.id))
         return chosen.filter(connected.contains)
     }
@@ -515,6 +520,7 @@ final class ReminderForm: Identifiable {
                 // Sharing leaves the tags out: a sent reminder has none.
                 try model.send(draft(tagIDs: tagIDs), to: recipients)
             } catch {
+                couldntSendPause = error is SharingModel.SharingPaused ? sendToPause : nil
                 isShowingCouldntSend = true
                 return false
             }
@@ -555,6 +561,7 @@ final class ReminderForm: Identifiable {
             isShowingDeletedMeanwhile = true
             return false
         } catch {
+            couldntSendPause = nil
             isShowingCouldntSend = true
             return false
         }

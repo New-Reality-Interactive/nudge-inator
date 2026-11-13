@@ -1724,6 +1724,15 @@
     "Nothing was missed today." : {
       "comment" : "My Day: the list when Missed is chosen and nothing was missed today."
     },
+    "Nothing was sent. Sharing is paused: iCloud is restricted on this iPhone. Screen Time or whoever manages it can change that." : {
+      "comment" : "The reminder form: under Couldn't Send the Reminder, when Add found iCloud restricted, for example by Screen Time or a device management profile."
+    },
+    "Nothing was sent. Sharing is paused: iCloud isn't available right now. Try again in a little while." : {
+      "comment" : "The reminder form: under Couldn't Send the Reminder, when Add found iCloud can't be reached for now."
+    },
+    "Nothing was sent. Sharing is paused: sign in to iCloud in iOS Settings, then try again." : {
+      "comment" : "The reminder form: under Couldn't Send the Reminder, when Add found no iCloud account signed in."
+    },
     "Nothing was sent. Try again." : {
       "comment" : "Invite: under Couldn't Send the Invite.\nThe reminder form: under Couldn't Send the Reminder."
     },

@@ -4,14 +4,15 @@ import SwiftUI
 /// The New Reminder form's Send To row (ticket 198), as the mockup's `sendToSection`: with someone
 /// connected it opens the Send To page and names who's chosen; with no one, it is Invite Someone New.
 /// Under it, once someone is chosen, a line saying it nudges them, not the person. While sharing is
-/// paused (ticket 210) the row is shown off, saying Paused, with the reason under it.
+/// paused (ticket 210) with no one chosen, the row is shown off, saying Paused, with the reason
+/// under it; someone already chosen stays, and Add says why it can't send.
 struct SendToSection: View {
     @Bindable var form: ReminderForm
     @Binding var isInviting: Bool
 
     var body: some View {
         Section {
-            if form.sendToPause != nil {
+            if form.showsSendToPaused {
                 LabeledContent {
                     Text("Paused", comment: "The reminder form's Send To row while sharing is paused without iCloud.")
                 } label: {
@@ -45,7 +46,7 @@ struct SendToSection: View {
                 }
             }
         } footer: {
-            if let pause = form.sendToPause {
+            if form.showsSendToPaused, let pause = form.sendToPause {
                 Text(pause.sendToFooter)
             } else if let names = form.recipientsText {
                 Text("It nudges \(names), not you, and you'll find it under Sent.",
@@ -57,7 +58,8 @@ struct SendToSection: View {
 
 /// The form's Send To page, as the mockup's `editorSendTo`: everyone connected, with a checkmark on
 /// the chosen, then Invite Someone New. While sharing is paused (ticket 210), which can happen
-/// while the page is open, the paused banner leads it and its rows are off.
+/// while the page is open, the paused banner leads it and Invite Someone New is off. People can
+/// still be chosen: Add checks sharing and says why it can't send.
 struct SendToPage: View {
     @Bindable var form: ReminderForm
     @Binding var isInviting: Bool
@@ -70,8 +72,6 @@ struct SendToPage: View {
                     CheckmarkRow(title: Text(verbatim: connection.name), isChecked: form.isRecipient(connection.id)) {
                         form.toggleRecipient(connection.id)
                     }
-                    // While paused no one counts, so a check would do nothing.
-                    .disabled(form.sendToPause != nil)
                 }
                 Button {
                     isInviting = true
