@@ -108,6 +108,7 @@ final class AppModel {
         notifications.events = self
         alarms.events = self
         sharing?.receivedReminders = self
+        sharing?.noticePoster = self
     }
 
     /// Launch, after setting aside a launch that couldn't read the store. Before the first unlock
@@ -721,6 +722,12 @@ extension AppModel: ReceivedReminders {
         let strength = StrengthLine(of: copy, in: engine)
         let body = String(localized: "\(String(localized: from)) · \(String(localized: strength.text))", comment: "Body of the notification that a reminder someone sent has arrived. 1: who sent it, such as \"From Alex Morgan\". 2: its strength in words, such as \"Firm: rings as an alarm from nudge 4\".")
         notifications.postArrival(of: copy.id, title: copy.title, body: body)
+    }
+}
+
+extension AppModel: SenderNoticePosting {
+    func postSenderNotice(_ notice: SenderNotice) {
+        notifications.postSenderNotice(notice)
     }
 }
 

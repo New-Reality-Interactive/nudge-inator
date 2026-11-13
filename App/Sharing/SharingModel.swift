@@ -63,6 +63,11 @@ final class SharingModel {
     /// adapter offers it again.
     @ObservationIgnored weak var receivedReminders: (any ReceivedReminders)?
 
+    /// Where the notices to the sender are posted (ticket 208): the app model, which holds the
+    /// notification adapter. Held weakly; with none set, nothing is posted and the Sent view is
+    /// right all the same.
+    @ObservationIgnored weak var noticePoster: (any SenderNoticePosting)?
+
     /// Tells the sender how each copy this person holds is going (ticket 206).
     let statusReporter = StatusReporter()
 
@@ -435,8 +440,12 @@ extension SharingModel: SharingAdapterEvents {
             return try cancelCopy(sentThrough: change)
         }
         var applied = try currentData()
+        let notice = SenderNotice(for: change, in: applied)
         if applied.apply(incoming: change) {
             try keep(applied)
+            // After the status is kept: a store that won't keep it has the change offered again,
+            // and that run posts the notice.
+            if let notice { noticePoster?.postSenderNotice(notice) }
         } else {
             Self.logger.info("An incoming \(String(describing: change.kind), privacy: .public) change wasn't applied")
         }
