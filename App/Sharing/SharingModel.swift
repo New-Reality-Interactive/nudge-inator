@@ -132,7 +132,9 @@ final class SharingModel {
             await previous?.value
             _ = try? openedStore()
             isOnline = adapter.isOnline
-            accountState = await adapter.accountState()
+            let account = await adapter.signedInAccount()
+            accountState = account.state
+            record(account)
         }
     }
 
@@ -367,57 +369,14 @@ final class SharingModel {
     }
 
     /// Saves `kept` and only then makes it the model's data, so what the model shows is what the store
-    /// holds.
-    private func keep(_ kept: SharingData) throws {
+    /// holds. The one way anything the model holds is saved.
+    func keep(_ kept: SharingData) throws {
         try openedStore().save(kept)
         data = kept
     }
 }
 
 extension SharingModel: StatusReportHost {}
-
-/// Where the person's received reminders (GLOSSARY.md, Received reminder) are kept: among their
-/// own reminders, in the app model (ticket 198).
-@MainActor
-protocol ReceivedReminders: AnyObject {
-    /// The copy held of the sender's reminder with `sendersReminderID`, received through the
-    /// connection with `connectionID`, or `nil` when none is. Throws if the reminders haven't been
-    /// read, so it can't say.
-    func copy(of sendersReminderID: Reminder.ID, through connectionID: UUID) throws -> Reminder?
-    /// Keeps `copy` among the person's reminders and plans it as their own. Throws, keeping
-    /// nothing, if the reminders haven't been read or the store won't keep it.
-    func keep(_ copy: Reminder) throws
-    /// Applies the sender's revision to the copy held (ticket 204), as the engine's
-    /// `applySendersRevision(_:)` does, and returns what changed. Throws if the reminders haven't
-    /// been read.
-    func applySendersRevision(_ revised: Reminder) throws -> [ReceivedChange]
-    /// Cancels the copy with `copyID` (ticket 205), as the engine's `cancel(_:)` does: it nudges no
-    /// more and stays until the person removes it. Throws if the reminders haven't been read.
-    func cancel(_ copyID: Reminder.ID) throws
-
-    /// The status report of every copy the person holds that the sender may be told about (ticket
-    /// 206), as the engine reads them now: every received reminder but a Canceled one, whose sender
-    /// deleted it and so reads nothing.
-    func statusReports() -> [(copy: Reminder, report: StatusReport)]
-}
-
-extension SentReminder {
-    /// The recipient's copy of it, received through the connection with `connectionID`: an ID of its
-    /// own, the sender's content and no tags, accepted or waiting as the recipient's `deliveryMode`
-    /// for that connection says.
-    func copy(through connectionID: UUID, deliveryMode: DeliveryMode) -> Reminder {
-        Reminder(
-            title: reminder.title,
-            notes: reminder.notes,
-            dueTime: reminder.dueTime,
-            repeatRule: reminder.repeatRule,
-            strength: reminder.strength,
-            pace: reminder.pace,
-            breakThroughFocus: reminder.breakThroughFocus,
-            origin: .received(connectionID: connectionID, sendersReminderID: reminder.id, revision: revision, state: deliveryMode == .startRightAway ? .accepted : .waiting)
-        )
-    }
-}
 
 private extension SharingData {
     /// Lists a new invite: in the place of the invites it replaces (Invite Again's, `replacedID`,

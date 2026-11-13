@@ -155,6 +155,19 @@ struct SharingStoreTests {
         #expect(try store().load() == saved)
     }
 
+    /// Which Apple Account the data belongs to, and the note of what a change of account removed
+    /// (ticket 212), each kept alone and together, and gone once saved as `nil`.
+    @Test(arguments: [("account-1", false), (nil, true), ("account-2", true), (nil, false)] as [(String?, Bool)])
+    func theAccountAndItsChangeNoteReadBackAfterARelaunch(accountID: String?, hasNote: Bool) throws {
+        let note = AccountChangeNote(receivedCount: 2, senders: ["Maya"], connections: ["Maya", "Sam"], sentCount: 3)
+        try store().save(SharingData(accountID: AppleAccountID("an-earlier-account"), accountChangeNote: note))
+        let saved = SharingData(accountID: accountID.map(AppleAccountID.init), accountChangeNote: hasNote ? note : nil)
+
+        try store().save(saved)
+
+        #expect(try store().load() == saved)
+    }
+
     /// The outbox is a queue, so it reads back in the order its changes were saved.
     @Test func theOutboxReadsBackInOrderAfterARelaunch() throws {
         let connection = UUID()

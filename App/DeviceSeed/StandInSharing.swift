@@ -155,6 +155,7 @@ extension View {
                                 Text(verbatim: "iCloud")
                             }
                             .pickerStyle(.menu)
+                            Button { adapter.anotherAccountSignsIn() } label: { Text(verbatim: "Another Apple Account Signs In") }
                             Picker(selection: Binding { adapter.isOnline } set: { adapter.isOnline = $0 }) {
                                 Text(verbatim: "Online").tag(true)
                                 Text(verbatim: "Offline").tag(false)
@@ -314,8 +315,30 @@ final class StandInSharingAdapter: SharingAdapter {
         }
     }
 
-    func accountState() async -> SharingAccountState {
-        account
+    /// iCloud's ID for the stand-in's Apple Account, reported while `account` is available. The
+    /// in-memory sharing store records the first one it sees, so a launch starts on it.
+    private var accountID = AppleAccountID("stand-in-account")
+
+    /// Stands in for a different Apple Account signing in on the iPhone (ticket 212), from the Stand-in
+    /// menu on Connections: the account is available under a new ID, and the app model is told, so
+    /// the old account's sharing leaves the phone and the Apple Account Changed note shows. What the
+    /// old account held back while offline is dropped, as `CKSyncEngine` drops its pending changes.
+    func anotherAccountSignsIn() {
+        accountID = AppleAccountID(UUID().uuidString)
+        unsent = []
+        sentThrough = [:]
+        undelivered = []
+        lastSent = [:]
+        waitingThere = []
+        if account == .available {
+            events?.accountStateChanged()
+        } else {
+            account = .available
+        }
+    }
+
+    func signedInAccount() async -> SharingAccount {
+        SharingAccount(state: account, idWhenAvailable: accountID)
     }
 
     func invite(_ connectionID: UUID) async throws -> InvitedPerson? {

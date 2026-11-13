@@ -467,11 +467,22 @@ final class AppModel {
         guard case .ready = launchState, store != nil else { throw RemindersNotLoaded() }
         let received = engine.reminders.filter { $0.receivedThrough == connectionID }.map(\.id)
         try sharing.disconnect(connectionID, received: Set(received))
+        endReceiving(through: [connectionID], choosing: choice)
+    }
+
+    /// Does `choice` to what was received through each of `connectionIDs`, as the engine's
+    /// `disconnect(_:choosing:)` does: what it removes stops ringing and leaves Notification Center,
+    /// as Delete does; what it keeps is planned as before. Disconnect's, and a change of Apple
+    /// Account's (ticket 212).
+    private func endReceiving(through connectionIDs: Set<UUID>, choosing choice: DisconnectChoice) {
         perform { engine in
-            let dueTimes = Dictionary(uniqueKeysWithValues: received.map { ($0, engine.dueTimesAnAlarmMayBeRinging(for: $0)) })
-            for reminderID in engine.disconnect(connectionID, choosing: choice) {
-                alarms.stopRinging(of: reminderID, dueAt: dueTimes[reminderID] ?? [])
-                notifications.removeDeliveredNotifications(of: reminderID)
+            let received = engine.reminders.filter { $0.receivedThrough.map(connectionIDs.contains) ?? false }
+            let dueTimes = Dictionary(uniqueKeysWithValues: received.map { ($0.id, engine.dueTimesAnAlarmMayBeRinging(for: $0.id)) })
+            for connectionID in connectionIDs {
+                for reminderID in engine.disconnect(connectionID, choosing: choice) {
+                    alarms.stopRinging(of: reminderID, dueAt: dueTimes[reminderID] ?? [])
+                    notifications.removeDeliveredNotifications(of: reminderID)
+                }
             }
         }
     }
@@ -681,6 +692,16 @@ extension AppModel: ReceivedReminders {
         }
         if !changes.isEmpty { postChange(of: revised.id, changes) }
         return changes
+    }
+
+    func everyReceived() throws -> [Reminder] {
+        guard case .ready = launchState, store != nil else { throw RemindersNotLoaded() }
+        return engine.reminders.filter(\.isReceived)
+    }
+
+    /// Disconnect's Remove, through every connection anything was received through.
+    func removeEveryReceived() {
+        endReceiving(through: Set(engine.reminders.compactMap(\.receivedThrough)), choosing: .remove)
     }
 
     /// The copies the sender may be told about (ticket 206): every received reminder but a Canceled

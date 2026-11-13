@@ -111,6 +111,25 @@ struct SharingData: Equatable {
     var engineStates: [SyncEngineState] = []
     /// Oldest first.
     var outbox: [OutboxChange] = []
+    /// iCloud's ID for the Apple Account all of the above belongs to (ticket 212), or `nil` before
+    /// the adapter has reported one.
+    var accountID: AppleAccountID?
+    /// What a different Apple Account signing in removed from this iPhone, kept until the person has
+    /// seen the note, or `nil` when there's nothing to tell them.
+    var accountChangeNote: AccountChangeNote?
+}
+
+/// What the Apple Account Changed note says was removed from this iPhone when a different account
+/// signed in (ticket 212, spec #127 decision A13): the old account's sharing, all of it.
+struct AccountChangeNote: Hashable, Codable {
+    /// How many received reminders were removed, with their nudges and alarms.
+    var receivedCount: Int
+    /// The names of the people they were from, in the order Connections listed them.
+    var senders: [String]
+    /// The names of the connections removed, invites among them, in the order Connections listed them.
+    var connections: [String]
+    /// How many reminders this person had sent.
+    var sentCount: Int
 }
 
 extension SharingData {

@@ -45,7 +45,8 @@ struct ConnectionsInviteTests {
 
         #expect(try await phone.sharing.invite() == .canceled)
 
-        #expect(phone.sharing.data == SharingData())
+        // Only the account the launch recorded (ticket 212).
+        #expect(phone.sharing.data == SharingData(accountID: phone.adapter.accountID))
         #expect(phone.adapter.revoked.isEmpty)
     }
 
@@ -57,7 +58,8 @@ struct ConnectionsInviteTests {
             try await phone.sharing.invite()
         }
 
-        #expect(phone.sharing.data == SharingData())
+        // Only the account the launch recorded (ticket 212).
+        #expect(phone.sharing.data == SharingData(accountID: phone.adapter.accountID))
     }
 
     @Test func aSharingStoreThatWontOpenShowsNoSheet() async throws {
