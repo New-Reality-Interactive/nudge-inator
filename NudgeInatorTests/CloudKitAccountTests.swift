@@ -5,6 +5,7 @@ import Testing
 
 /// The real adapter's account state (#215), read from a stand-in for `CKContainer`.
 struct CloudKitAccountTests {
+    // @unchecked Sendable: each test sets the answers before it reads and checks `calls` after its awaits, on one task.
     final class Source: CloudKitAccountSource, @unchecked Sendable {
         var status: Result<CKAccountStatus, Error> = .success(.available)
         var name: Result<String, Error> = .success("_abc123")
