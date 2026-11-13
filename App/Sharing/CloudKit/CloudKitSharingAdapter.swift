@@ -80,13 +80,17 @@ final class CloudKitSharingAdapter: SharingAdapter {
         }
         connectivity.start()
         keep()
+        // The first request to iCloud: the device check reads it to see none came before (#216).
+        Self.logger.notice("Sync engines started")
     }
 
     /// Also offers the app model again what it couldn't keep before (at launch, before its
     /// reminders were read, say): read at launch and on App opened.
     func signedInAccount() async -> SharingAccount {
         if !undelivered.isEmpty || !unreported.isEmpty { report(CloudKitSync.Outcome()) }
-        return await reader.read()
+        let account = await reader.read()
+        Self.logger.notice("iCloud account read: \(String(describing: account.state), privacy: .public)")
+        return account
     }
 
     /// Whether the iPhone has a network path, which a path monitor keeps up to date. Online until
@@ -231,14 +235,18 @@ extension CloudKitSharingAdapter: CKSyncEngineDelegate {
     }
 
     private func accountChanged(_ change: CKSyncEngine.Event.AccountChange.ChangeType, sync: CloudKitSync) {
+        let kind: CloudKitSync.AccountChange
         switch change {
-        case .signIn: sync.accountChanged(.signIn)
-        case .signOut: sync.accountChanged(.signOut)
-        case .switchAccounts:
-            sync.accountChanged(.switchAccounts)
+        case .signIn: kind = .signIn
+        case .signOut: kind = .signOut
+        case .switchAccounts: kind = .switchAccounts
+        @unknown default: return
+        }
+        Self.logger.notice("Account change event: \(String(describing: kind), privacy: .public)")
+        sync.accountChanged(kind)
+        if kind == .switchAccounts {
             undelivered = []
             unreported = []
-        @unknown default: break
         }
         keep()
         events?.accountStateChanged()
