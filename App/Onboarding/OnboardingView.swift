@@ -112,7 +112,7 @@ enum WelcomeFeature: CaseIterable {
         case .chooseWhatBreaksThrough:
             Text("Each Gentle or Firm reminder has a Break Through Focus switch. Turn it off and a Focus can hold its nudges, and nothing rings. Relentless always breaks through.", comment: "Onboarding and How It Nudges: under \"You choose what breaks through\".")
         case .staysOnYourIPhone:
-            Text("No account and no server. Your reminders stay on this iPhone and in your own backups.", comment: "Onboarding and How It Nudges: under \"Stays on your iPhone\".")
+            Text("Your own reminders stay on this iPhone. Reminders you send or receive via an approved share, go through your iCloud. There's no account and no server of ours involved.", comment: "Onboarding and How It Nudges: under \"Stays on your iPhone\".")
         }
     }
 }

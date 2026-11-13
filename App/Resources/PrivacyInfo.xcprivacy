@@ -6,6 +6,11 @@
 	<false/>
 	<key>NSPrivacyTrackingDomains</key>
 	<array/>
+	<!--
+	Collected data types stay empty on purpose: sharing keeps its encrypted fields in the person's own
+	iCloud (Name, Other User Content; purpose App Functionality), which New Reality Interactive can't
+	read, so Apple doesn't count it as collected. Reasoning and sources: docs/agents/privacy-compliance.md.
+	-->
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>
 	<key>NSPrivacyAccessedAPITypes</key>

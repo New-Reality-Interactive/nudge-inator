@@ -31,7 +31,8 @@ struct BuiltBundleTests {
     }
 
     /// Without this key every upload stops at the export compliance questionnaire. `NO` because
-    /// the only cryptography is `Insecure.SHA1` hashing for alarm IDs.
+    /// the only cryptography of our own is `Insecure.SHA1` hashing for alarm IDs, and CloudKit
+    /// sharing uses the system's encryption alone (docs/agents/privacy-compliance.md).
     @Test func exportComplianceIsDeclaredAsNoNonExemptEncryption() {
         #expect(Self.app.object(forInfoDictionaryKey: "ITSAppUsesNonExemptEncryption") as? Bool == false)
     }
