@@ -3,39 +3,39 @@ import SwiftUI
 
 /// DESIGN.md's Permission banner: the cell color, a 2 pt border (red for notifications off,
 /// orange otherwise), an icon, a bold lead sentence and Open Settings as a small bordered button.
-/// At accessibility sizes the icon goes above the text and Open Settings fills the banner's width,
-/// as a nudge card's Done does, its label wrapping rather than being cut to "Open…".
 struct PermissionBannerView: View {
     let banner: PermissionBanner
 
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    var body: some View {
+        BannerCard(systemImage: banner.systemImage, text: banner.text, borderColor: banner.isNegative ? .negative : .warning) {
+            OpenSettingsButton(accessibilityLabel: banner.openSettingsLabel) { banner.openSettings.open() }
+        }
+    }
+}
+
+/// The look of DESIGN.md's Permission banner, which the sharing paused banner shares (ticket 210):
+/// the cell color, a 2 pt border, an icon, the text and, under it, the banner's action, if any
+/// (Open Settings). At accessibility sizes the icon goes above the text.
+struct BannerCard<Action: View>: View {
+    let systemImage: String
+    let text: Text
+    let borderColor: Color
+    @ViewBuilder let action: () -> Action
 
     var body: some View {
         SizeAdaptiveStack(rowAlignment: .firstTextBaseline, rowSpacing: Design.Spacing.controlGap,
                           stackedSpacing: Design.Spacing.s2) {
-            Image(systemName: banner.systemImage)
+            Image(systemName: systemImage)
                 .font(.title3)
                 .foregroundStyle(borderColor)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: Design.Spacing.s2) {
-                banner.text
+                text
                     .font(.subheadline)
                     // In a section header, which would turn it gray.
                     .foregroundStyle(Color(uiColor: .label))
                     .fixedSize(horizontal: false, vertical: true)
-                Button {
-                    banner.openSettings.open()
-                } label: {
-                    Text("Open Settings", comment: "Permission banner: opens the iOS Settings page where the missing permission is turned on.")
-                        .multilineTextAlignment(.center)
-                }
-                .buttonStyle(SmallBorderedButtonStyle(fillsWidth: dynamicTypeSize.isAccessibilitySize))
-                // At the largest sizes even the full width holds less than its two words, so the
-                // label may wrap, and the whole button, background too, grows to fit it. On one
-                // line these change nothing.
-                .fixedSize(horizontal: false, vertical: true)
-                // Two banners can show at once, so VoiceOver hears which permission each opens.
-                .accessibilityLabel(banner.openSettingsLabel)
+                action()
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -49,11 +49,29 @@ struct PermissionBannerView: View {
     private var shape: RoundedRectangle {
         RoundedRectangle(cornerRadius: Design.Radius.card)
     }
+}
 
-    private var borderColor: Color {
-        banner.isNegative ? .negative : .warning
+/// A banner's Open Settings, a small bordered button. At accessibility sizes it fills the banner's
+/// width, as a nudge card's Done does, its label wrapping rather than being cut to "Open…".
+struct OpenSettingsButton: View {
+    /// What VoiceOver calls it, since two banners can show at once.
+    let accessibilityLabel: Text
+    let open: () -> Void
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        Button(action: open) {
+            Text("Open Settings", comment: "Permission banner and the sharing paused banner: opens the iOS Settings page where the missing permission, or iCloud, is turned on.")
+                .multilineTextAlignment(.center)
+        }
+        .buttonStyle(SmallBorderedButtonStyle(fillsWidth: dynamicTypeSize.isAccessibilitySize))
+        // At the largest sizes even the full width holds less than its two words, so the label may
+        // wrap, and the whole button, background too, grows to fit it. On one line these change
+        // nothing.
+        .fixedSize(horizontal: false, vertical: true)
+        .accessibilityLabel(accessibilityLabel)
     }
-
 }
 
 /// Every banner that applies, one under the other, for the top of Now, My Day and Settings.

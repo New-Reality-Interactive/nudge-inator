@@ -75,6 +75,8 @@ struct InvitePage: View {
                         Image(systemName: "person.badge.plus")
                     }
                 }
+                // No invite can be made without iCloud (ticket 210), as the mockup's `viewInvite`.
+                .disabled(sharing.pause != nil)
                 Button(role: .destructive) {
                     isConfirmingCancel = true
                 } label: {

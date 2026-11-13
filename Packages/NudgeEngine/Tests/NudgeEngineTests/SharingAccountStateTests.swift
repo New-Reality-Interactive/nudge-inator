@@ -17,5 +17,10 @@ struct SharingAccountStateTests {
     ])
     func everyOtherStatePausesSharingForItsOwnReason(state: SharingAccountState, pause: SharingReach.Pause) {
         #expect(state.reach == .paused(pause))
+        #expect(state.reach.pause == pause)
+    }
+
+    @Test func workingSharingHasNoPause() {
+        #expect(SharingReach.working.pause == nil)
     }
 }

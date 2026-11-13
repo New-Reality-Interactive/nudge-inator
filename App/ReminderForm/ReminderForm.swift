@@ -192,11 +192,17 @@ final class ReminderForm: Identifiable {
     /// row offers only Invite Someone New.
     var sendToChoices: [SharingConnection] { sharing?.connected ?? [] }
 
+    /// Why Send To is shown off (ticket 210), or `nil` while sharing works: without iCloud nothing
+    /// can be sent, so the row says so and no one chosen counts.
+    var sendToPause: SharingReach.Pause? { sharing?.pause }
+
     /// Send To (ticket 198): the connections of the people chosen to send it to, in the order chosen.
     /// With anyone chosen, Add sends it to them instead of adding it to the person's own reminders.
     /// Someone chosen who stops being connected while the form is open drops off, so the row always
-    /// shows who it goes to.
+    /// shows who it goes to. While sharing is paused no one counts, so Add sends nothing; whoever
+    /// was chosen comes back once it works again.
     var recipients: [UUID] {
+        guard sendToPause == nil else { return [] }
         let connected = Set(sendToChoices.map(\.id))
         return chosen.filter(connected.contains)
     }

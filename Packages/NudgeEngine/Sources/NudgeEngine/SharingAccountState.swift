@@ -30,6 +30,11 @@ public enum SharingReach: Equatable, Sendable {
     case working
     case paused(Pause)
 
+    /// Why sharing is paused, or `nil` while it works (ticket 210).
+    public var pause: Pause? {
+        if case .paused(let pause) = self { pause } else { nil }
+    }
+
     /// Why sharing is paused, which decides what the person is told to do.
     public enum Pause: Equatable, Sendable {
         case noAccount

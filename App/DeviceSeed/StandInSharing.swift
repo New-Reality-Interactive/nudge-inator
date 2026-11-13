@@ -95,7 +95,8 @@ extension View {
     /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196), sending
     /// a reminder (ticket 198), getting what was sent to them (ticket 201), accepting what waits for
     /// them (ticket 203), reporting how what you sent is going (ticket 206), changing what they sent
-    /// (ticket 204), deleting it (ticket 205) or disconnecting (ticket 197).
+    /// (ticket 204), deleting it (ticket 205) or disconnecting (ticket 197). Without either, on
+    /// Connections, it also chooses the iCloud account the stand-in reports (ticket 210).
     func standInSharingControls(invited: SharingConnection? = nil, connected: SharingConnection? = nil) -> some View {
         toolbar {
             if let adapter = StandInSharing.current {
@@ -144,6 +145,15 @@ extension View {
                         } else {
                             Button { adapter.receiveInvite(from: "Sam Rivera") } label: { Text(verbatim: "Receive an Invite from Sam Rivera") }
                             Button { adapter.receiveInvite(from: "Casey Nguyen", unavailable: true) } label: { Text(verbatim: "Receive an Unavailable Invite") }
+                            Picker(selection: Binding { adapter.account } set: { adapter.account = $0 }) {
+                                Text(verbatim: "Available").tag(SharingAccountState.available)
+                                Text(verbatim: "No iCloud Account").tag(SharingAccountState.noAccount)
+                                Text(verbatim: "Restricted").tag(SharingAccountState.restricted)
+                                Text(verbatim: "Temporarily Unavailable").tag(SharingAccountState.temporarilyUnavailable)
+                            } label: {
+                                Text(verbatim: "iCloud")
+                            }
+                            .pickerStyle(.menu)
                         }
                     } label: {
                         Label { Text(verbatim: "Stand-in") } icon: { Image(systemName: "hammer") }
@@ -252,8 +262,18 @@ final class StandInSharingAdapter: SharingAdapter {
         }
     }
 
+    /// The iCloud account the stand-in reports (ticket 210), chosen from the Stand-in menu on
+    /// Connections. A change tells the app model, as the real adapter's account change event does.
+    /// It lasts until the app quits, so a check can go on to Send To and Sent.
+    var account = SharingAccountState.available {
+        didSet {
+            guard account != oldValue else { return }
+            events?.accountStateChanged()
+        }
+    }
+
     func accountState() async -> SharingAccountState {
-        .available
+        account
     }
 
     func invite(_ connectionID: UUID) async throws -> InvitedPerson? {

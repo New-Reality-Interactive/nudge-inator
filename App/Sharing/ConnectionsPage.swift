@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Settings › Connections (ticket 194): Invite Someone, then the people connected and the people
 /// invited, or with no one, an empty state that offers only Invite. The mockup's `viewConnections`.
+/// While sharing is paused (ticket 210) the paused banner leads the page and Invite is off.
 struct ConnectionsPage: View {
     let sharing: SharingModel
 
@@ -12,6 +13,7 @@ struct ConnectionsPage: View {
         Group {
             if list.isEmpty {
                 ScrollView {
+                    PausedBannerAboveEmptyState(pause: sharing.pause)
                     ContentUnavailableView {
                         Label {
                             Text("No Connections", comment: "Connections: title of the empty state, with no one connected or invited.")
@@ -27,6 +29,7 @@ struct ConnectionsPage: View {
                             InviteSomeoneLabel()
                         }
                         .buttonStyle(.bordered)
+                        .disabled(sharing.pause != nil)
                     }
                 }
                 .background(Color(uiColor: .systemGroupedBackground))
@@ -38,6 +41,9 @@ struct ConnectionsPage: View {
                         } label: {
                             InviteSomeoneLabel()
                         }
+                        .disabled(sharing.pause != nil)
+                    } header: {
+                        SharingPausedBanner(pause: sharing.pause)
                     }
                     if !list.connected.isEmpty {
                         Section {
