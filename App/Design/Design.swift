@@ -25,6 +25,8 @@ enum Design {
         static let line: CGFloat = 2
         /// A nudge card's padding above and below its content (the mockup's `.nudgecard`).
         static let cardVertical: CGFloat = 14
+        /// A 7-day history cell's padding above and below (the mockup's `.hday`).
+        static let historyCellVertical: CGFloat = 3
         /// Between a wide nudge card's text and its side column (the mockup's `.nc` gap).
         static let sideColumnGap: CGFloat = 20
     }
@@ -36,6 +38,8 @@ enum Design {
         static let card: CGFloat = 12
         /// Tag tokens, drawn by the system.
         static let token: CGFloat = 7
+        /// A 7-day history cell's today fill (the mockup's `.hday`).
+        static let historyCell: CGFloat = 7
         /// Sheet tops, set by the system.
         static let sheet: CGFloat = 38
         /// A count cell, set inside the Counts container's own radius (the mockup's `.count`).

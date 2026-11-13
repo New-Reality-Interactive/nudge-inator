@@ -39,6 +39,9 @@ struct SentScreen {
         var day: String
         /// How the person's copy is going, as the sender may read it.
         var state: SentCopyState
+        /// The strip under a repeating reminder's text: today and the 7 days before, or `nil` for a
+        /// one-off and whenever `state` hides it (ticket 207).
+        var history: SentHistory?
 
         var id: Reminder.ID { reminderID }
 
@@ -86,13 +89,15 @@ struct SentScreen {
                 rows: person.rows.compactMap { row in
                     guard let reminder = reminders[row.reminderID] else { return nil }
                     let due = engine.upcomingDueTimes(of: reminder, count: 1).first ?? reminder.dueTime
+                    let state = SentCopyState(delivery: row.delivery, status: row.status, waitingToSync: row.waitingToSync)
                     return Row(
                         reminderID: reminder.id,
                         title: reminder.title,
                         personName: person.name,
                         time: engine.timeOfDay(of: due),
                         day: engine.dayLabel(of: due),
-                        state: SentCopyState(delivery: row.delivery, status: row.status)
+                        state: state,
+                        history: reminder.repeatRule == nil ? nil : state.historyOccurrences.map { SentHistory(engine: engine, occurrences: $0) }
                     )
                 }
             )
@@ -107,6 +112,16 @@ struct SentScreen {
 struct SentCopyState: Equatable {
     var delivery: SentReadOut.Delivery
     var status: SentReadOut.Status
+    /// The sent reminder or a change to it hasn't gone through iCloud yet (GLOSSARY.md).
+    var waitingToSync = false
+
+    /// The occurrences a repeating reminder's 7-day history shows, or `nil` where DESIGN.md hides
+    /// it: status sharing off, "Not sharing this one", Waiting to sync, Waiting for them to accept,
+    /// and before a status has come (ticket 207).
+    var historyOccurrences: [StatusReport.OccurrenceStatus]? {
+        guard delivery == .delivered, !waitingToSync, case .reported(_, let history) = status else { return nil }
+        return history
+    }
 
     /// Delivered trails a Sent row and a recipient on the details once the copy is on their
     /// iPhone, waiting or started, as the mockup's `sentStatus` labels a waiting copy (ticket 203).

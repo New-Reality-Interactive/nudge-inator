@@ -192,6 +192,9 @@
         }
       }
     },
+    "%@, Last 7 Days" : {
+      "comment" : "A sent reminder's details: section header over one person's last 7 days of the reminder. The placeholder is the person's short name, such as \"Riley\"."
+    },
     "%@, nudge %lld of %lld, urgency %@. %@. %@" : {
       "comment" : "VoiceOver value of a nudge card after its last nudge. 1: the strength, such as \"Gentle\". 2: the nudges sent. 3: the most it sends. 4: the urgency now, such as \"High\". 5: the tags and due time, such as \"#home · due 9:00 AM\". 6: the card's line saying that was the last nudge and when it closes as Missed.",
       "localizations" : {
@@ -216,6 +219,20 @@
     },
     "%@." : {
       "comment" : "A repeat summary as a sentence, under the reminder form's Starts. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".\nTop of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\"."
+    },
+    "%@: %@" : {
+      "comment" : "VoiceOver, a repeating sent reminder's last 7 days on the Sent view: one day and how the person's copy went. 1: the weekday, such as \"Thursday\", or \"Today\". 2: the status, such as \"Done\" or \"Missed\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@"
+          }
+        }
+      }
+    },
+    "%@: Nothing due" : {
+      "comment" : "VoiceOver, a repeating sent reminder's last 7 days on the Sent view: a day the person's copy had nothing due. The placeholder is the weekday, such as \"Thursday\", or \"Today\"."
     },
     "%@: every nudge rings as an alarm" : {
       "comment" : "A received reminder's strength in words, on its arrival notification and its details, when every nudge rings. The placeholder is the strength, such as \"Firm\"."
@@ -1677,6 +1694,9 @@
     },
     "Nothing closed yet today." : {
       "comment" : "Now: the Last 24 Hours section when no occurrence closed in that time."
+    },
+    "Nothing due" : {
+      "comment" : "A sent reminder's details, under \"<name>, Last 7 Days\": the person's copy had nothing due that day."
     },
     "Nothing has changed. Try again." : {
       "comment" : "Disconnect's sheet and Connection Ended: under Couldn't Disconnect."

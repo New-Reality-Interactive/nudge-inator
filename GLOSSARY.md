@@ -186,6 +186,10 @@ _Avoid_: Sync status, history
 What the sender's side shows for each reminder it sent, grouped by person, with one row for each recipient's copy. A row says whether the copy was Delivered, is waiting for them to accept, or hasn't been delivered, then its reported status with the 7 days, or "Not sharing status" (status sharing off) or "Not sharing this one", and Waiting to sync. It is worked out from what the sender's app knows, never from the recipient's engine, and its days are the recipient's. A person with nothing sent has no group.
 _Avoid_: Sent status, outbox
 
+**7-day history**:
+What the sender sees of one recipient's copy of a repeating reminder: today and each of the 7 days before, oldest first, each with the Status label of the occurrence due that day, or nothing due. Its days are the recipient's. It shows only where the copy's status does: never with Status sharing off, "Not sharing this one", Waiting to sync or waiting for them to accept. A one-off has none.
+_Avoid_: Streak, week view, history (alone)
+
 **Status sharing**:
 A recipient's choice, per connection, whether the sender sees how their reminders are going. "Don't share this one" turns it off for one received reminder.
 _Avoid_: Visibility, privacy setting

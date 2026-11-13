@@ -48,8 +48,9 @@ struct SentList: View {
 
 /// A Sent row, the mockup's `sentRow`: the due time and its day, the title, and Delivered once the
 /// person's copy has arrived, or "Not delivered yet" under the title before it. Once their app
-/// reports how the copy is going, the status label takes Delivered's place (ticket 206). VoiceOver
-/// reads `Row.voiceOverLabel`.
+/// reports how the copy is going, the status label takes Delivered's place (ticket 206), and a
+/// repeating reminder's 7-day history runs under the row (ticket 207). VoiceOver reads
+/// `Row.voiceOverLabel`, then the history as the row's value.
 private struct SentRowView: View {
     let row: SentScreen.Row
     let openDetails: () -> Void
@@ -67,8 +68,111 @@ private struct SentRowView: View {
             }
         } trailing: {
             SentTrailingLabel(trailing: row.trailing)
+        } footer: {
+            if let history = row.history {
+                SentHistoryStrip(history: history)
+                    .padding(.top, Design.Spacing.s2)
+            }
         }
         .accessibilityLabel(Text(row.voiceOverLabel))
+        .accessibilityValue(spoken: row.history?.voiceOverValue)
+    }
+}
+
+private extension View {
+    /// The row's value, only when it has one: a one-off row reads its label alone, as before.
+    @ViewBuilder func accessibilityValue(spoken value: String?) -> some View {
+        if let value {
+            accessibilityValue(Text(verbatim: value))
+        } else {
+            self
+        }
+    }
+}
+
+/// DESIGN.md's 7-day history, the mockup's `histStrip`: eight cells, oldest first, each with the
+/// day's initial over its status glyph, today's on the tertiary fill. Four to a line at the
+/// accessibility sizes, as the mockup's cells wrap. VoiceOver reads the row's value instead.
+struct SentHistoryStrip: View {
+    let history: SentHistory
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        Grid(horizontalSpacing: Design.Spacing.s1, verticalSpacing: Design.Spacing.s1) {
+            ForEach(lines, id: \.first?.id) { line in
+                GridRow {
+                    ForEach(line) { day in
+                        SentHistoryCell(day: day)
+                    }
+                }
+            }
+        }
+        .accessibilityHidden(true)
+    }
+
+    private var lines: [[SentHistory.Day]] {
+        let perLine = dynamicTypeSize.isAccessibilitySize ? 4 : history.days.count
+        return stride(from: 0, to: history.days.count, by: perLine).map {
+            Array(history.days[$0..<min($0 + perLine, history.days.count)])
+        }
+    }
+}
+
+/// One day of the strip, the mockup's `.hday`.
+private struct SentHistoryCell: View {
+    let day: SentHistory.Day
+
+    var body: some View {
+        VStack(spacing: Design.Spacing.line) {
+            Text(verbatim: day.initial)
+                .font(day.isToday ? .footnote.weight(.semibold) : .footnote)
+            // Every glyph in the box Done's takes, so a short one (a minus, a ✕) doesn't make its
+            // cell shorter and drop its initial below the others' (the #207 phone check).
+            Image(systemName: OccurrenceState.doneGlyph)
+                .hidden()
+                .overlay {
+                    Image(systemName: day.glyph)
+                        .foregroundStyle(day.status?.statusTint ?? textColor)
+                }
+                .font(.footnote)
+                .imageScale(.small)
+        }
+        .foregroundStyle(textColor)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, Design.Spacing.historyCellVertical)
+        .background {
+            if day.isToday {
+                RoundedRectangle(cornerRadius: Design.Radius.historyCell, style: .continuous)
+                    .fill(Color(uiColor: .tertiarySystemFill))
+            }
+        }
+    }
+
+    /// The label color on today's fill, as DESIGN.md asks; the secondary label color elsewhere.
+    private var textColor: Color {
+        day.isToday ? Color(uiColor: .label) : Color(uiColor: .secondaryLabel)
+    }
+}
+
+/// A day on a sent reminder's details' "<name>, Last 7 Days" (the #207 change mockup): its strip
+/// glyph beside its status word, as Done's status label has its check, or "Nothing due".
+struct SentHistoryDayLabel: View {
+    let day: SentHistory.Day
+
+    var body: some View {
+        HStack(spacing: Design.Spacing.s1) {
+            // The word says it; the glyph only shows it.
+            Image(systemName: day.glyph)
+                .accessibilityHidden(true)
+            if let status = day.status {
+                Text(status.name)
+            } else {
+                Text(SentHistory.nothingDueText)
+            }
+        }
+        .font(.subheadline.weight(.semibold))
+        .foregroundStyle(day.status?.statusTint ?? Color(uiColor: .secondaryLabel))
     }
 }
 
