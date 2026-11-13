@@ -50,6 +50,12 @@ targets:
         com.apple.developer.usernotifications.time-sensitive: true
         com.apple.security.application-groups:
           - group.com.newrealityinteractive.nudgeinator
+        # CloudKit sharing (#215). Only the sharing adapter's folder uses it (scripts/test.sh).
+        com.apple.developer.icloud-container-identifiers:
+          - iCloud.com.newrealityinteractive.nudgeinator
+        com.apple.developer.icloud-services:
+          - CloudKit
+        aps-environment: development
     info:
       path: App/Info.plist
       properties:
@@ -61,6 +67,8 @@ targets:
         # that is exempt. A feature that adds other cryptography or its own network code revisits
         # this. Sources: docs/agents/privacy-compliance.md (testflight-readiness 01, shared-reminders #213).
         ITSAppUsesNonExemptEncryption: false
+        UIBackgroundModes: [remote-notification]
+        CKSharingSupported: true
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         NSAlarmKitUsageDescription: "Nudge-inator rings an alarm to keep nudging you about a reminder until you mark it done."

@@ -113,18 +113,15 @@ if grep -rn --include='*.swift' 'AlarmManager\.shared\.authorizationState' App N
   failed+=("alarm-authorization-read")
 fi
 
-# 1.4.0 makes no CloudKit request on update or launch (spec #127, Migration plan, point 4), and until
-# the iCloud capabilities ticket (#215) nothing in the app talks to CloudKit. Only the record mapping
-# (#193) may import it, for the `CKRecord` value, and it may name nothing that reaches iCloud. No iCloud
-# entitlement either. #215 replaces this check with one that says when the app may first call it.
-step "Only the record mapping imports CloudKit, makes no request, and no iCloud entitlement exists"
-record_mapping=App/Sharing/CloudKit/SharingRecordMapping.swift
-if grep -rn --include='*.swift' -E '^\s*(@\w+\s+)*(public\s+)?import\s+(\w+\s+)?CloudKit' App NudgeWidgets Packages \
-    | grep -v "^$record_mapping:" \
-  || grep -nE 'CKContainer|CKDatabase|CKSyncEngine|CK[A-Za-z]*Operation' "$record_mapping" \
-  || grep -n 'com\.apple\.developer\.icloud' App/*.entitlements NudgeWidgets/*.entitlements project.yml; then
-  echo "FAIL: the app makes no CloudKit request until #215 (spec #127, Migration plan, point 4)" >&2
-  failed+=("no-cloudkit")
+# CloudKit is allowed only inside the sharing adapter's own folder (App/Sharing/CloudKit, #215): the
+# app model, views and stores never import it, and the widget and packages never use it. Nothing
+# there may be called before the person opens Connections or accepts an invite (spec #127, decision 4):
+# that is the adapter's callers' rule, kept by its tests.
+step "CloudKit is imported only inside App/Sharing/CloudKit"
+if grep -rn --include='*.swift' -E '^\s*(@\w+\s+)*(public\s+)?import\s+(\w+\s+)?CloudKit' App NudgeWidgets Packages NudgeInatorTests \
+    | grep -v -e '^App/Sharing/CloudKit/' -e '^NudgeInatorTests/'; then
+  echo "FAIL: only App/Sharing/CloudKit may import CloudKit (#215)" >&2
+  failed+=("cloudkit-folder")
 fi
 
 # Which simulator or clone runs which screenshot variants (#301). No simulator needed.
