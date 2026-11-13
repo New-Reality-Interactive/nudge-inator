@@ -627,15 +627,18 @@ sharing paused and offline banner.
   reminders inside each person's group. Sent has no tags, and no tools in its empty states. The count
   is of reminders, so one sent to two people counts once.
 - **7-day history:** on a repeating Sent row, under its text: today and the 7 days before, eight cells,
-  oldest first, today on a `{colors.tertiary-fill}` cell, each with the day's initial and a glyph:
-  `checkmark.circle.fill` Done (positive), `xmark` Missed (negative), `bell` Nudging (negative), `minus`
-  Skipped (and Removed, which a day's report never holds), `pause` Paused and `clock` Coming up (secondary label, or `{colors.label}` on today's cell,
-  with its initial). The fill's rule is about text, and these are glyphs, so the status colors stay on
-  it. A day with nothing due (a weekly repeat) keeps its cell and initial, with no glyph. At the
-  accessibility sizes the cells run four to a line. VoiceOver reads it as one element naming each day and
-  status (the row's value, after its label: "Thursday: Done, …, Today: Coming up"), and details list the
-  days in words, newest first, under "<first name>, Last 7 Days", "Nothing due" where a day had none. It's hidden with status sharing off, "Not sharing this
-  one", Waiting to sync and Waiting for them to accept.
+  oldest first, today on a `{colors.tertiary-fill}` cell, each with the day's initial and a glyph
+  (#207's change mockup): `checkmark.circle.fill` Done (positive), `xmark.circle.fill` Missed
+  (negative), `bell` Nudging (negative), `circle.dashed` Skipped (and Removed, which a day's report
+  never holds), `pause` Paused, `clock` Coming up and `circle.slash` for a day with nothing due (a
+  weekly repeat's off day), in the secondary label color, or `{colors.label}` on today's cell with its
+  initial. The fill's rule is about text, and these are glyphs, so the status colors stay on it. Every
+  glyph takes the box Done's does, so the initials line up. At the accessibility sizes the cells run
+  four to a line. VoiceOver reads it as one element naming each day and status (the row's value,
+  after its label: "Thursday: Done, …, Today: Coming up"). Details list the days newest first under
+  "<first name>, Last 7 Days", each with its glyph beside its status word, as Done's status label has
+  its check, or "Nothing due". It's hidden with status sharing off, "Not sharing this one", Waiting to
+  sync and Waiting for them to accept. The status labels on the row and on Sent To keep their own look.
 - **Waiting for You:** a section on Now between Nudging and Coming Up, each row with bordered small
   Accept and Remove (destructive text) buttons. It doesn't count toward the Now badge.
 - **Notes on a received reminder:** a `{colors.cell}` card with `{rounded.control}` corners, `info.circle`

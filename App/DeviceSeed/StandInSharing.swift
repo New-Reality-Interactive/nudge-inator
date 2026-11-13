@@ -135,7 +135,8 @@ extension View {
                                 Button { adapter.theyReport(.skipped, through: connected.id) } label: { Text(verbatim: "Skipped") }
                                 Button { adapter.theyReport(.removed, through: connected.id) } label: { Text(verbatim: "Removed") }
                                 Button { adapter.theyReport(nil, through: connected.id) } label: { Text(verbatim: "Not sharing this one") }
-                                Button { adapter.theyReportAWeek(through: connected.id) } label: { Text(verbatim: "Nudging, with a Week of History") }
+                                Button { adapter.theyReportAWeek(today: .nudging, through: connected.id) } label: { Text(verbatim: "Nudging, with a Week of History") }
+                                Button { adapter.theyReportAWeek(today: .comingUp, through: connected.id) } label: { Text(verbatim: "Coming up, with a Week of History") }
                             } label: {
                                 Text(verbatim: "\(connected.name) Reports…")
                             }
@@ -185,21 +186,21 @@ final class StandInSharingAdapter: SharingAdapter {
         send(status.map { SentCopy.StatusRecord(report: StatusReport(label: $0, occurrences: []), notSharingThisOne: false) } ?? .heldBack, through: connectionID)
     }
 
-    /// Stands in for the other person's app reporting each copy Nudging, with a history for the 7
+    /// Stands in for the other person's app reporting each copy as `today`, with a history for the 7
     /// days before today and today (ticket 207): Done, Done, Missed, nothing due (as a weekly
-    /// repeat's off day), Done, Skipped, Done, and Nudging today, each at this hour. A one-off's row
-    /// shows none of it.
-    func theyReportAWeek(through connectionID: UUID) {
+    /// repeat's off day), Done, Skipped, Done, and `today`, each at this hour. A one-off's row shows
+    /// none of it.
+    func theyReportAWeek(today: ReportedStatus, through connectionID: UUID) {
         let calendar = Calendar.current
         let now = Date.now
-        let labels: [ReportedStatus?] = [.done, .done, .missed, nil, .done, .skipped, .done, .nudging]
+        let labels: [ReportedStatus?] = [.done, .done, .missed, nil, .done, .skipped, .done, today]
         let occurrences = labels.enumerated().compactMap { index, label -> StatusReport.OccurrenceStatus? in
             guard let label, let dueTime = calendar.date(byAdding: .day, value: index - 7, to: now) else { return nil }
             let parts = calendar.dateComponents([.year, .month, .day], from: dueTime)
             guard let year = parts.year, let month = parts.month, let day = parts.day else { return nil }
             return StatusReport.OccurrenceStatus(dueTime: dueTime, day: CalendarDay(year: year, month: month, day: day), label: label)
         }
-        send(SentCopy.StatusRecord(report: StatusReport(label: .nudging, occurrences: occurrences), notSharingThisOne: false), through: connectionID)
+        send(SentCopy.StatusRecord(report: StatusReport(label: today, occurrences: occurrences), notSharingThisOne: false), through: connectionID)
     }
 
     /// Sends `record` as through iCloud for each copy delivered through the connection with

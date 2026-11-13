@@ -262,14 +262,14 @@ extension ReportedStatus {
     /// The status color its label and its 7-day history glyph share (`OccurrenceState.statusTint`).
     var statusTint: Color? { occurrenceState?.statusTint }
 
-    /// DESIGN.md's 7-day history glyphs. A day's report never holds Removed (GLOSSARY's Status
-    /// report); were it to, it reads as Skipped does.
+    /// DESIGN.md's 7-day history glyphs (the #207 change mockup). A day's report never holds
+    /// Removed (GLOSSARY's Status report); were it to, it reads as Skipped does.
     var historyGlyph: String {
         switch self {
         case .done: OccurrenceState.doneGlyph
-        case .missed: "xmark"
+        case .missed: "xmark.circle.fill"
         case .nudging: "bell"
-        case .skipped, .removed: "minus"
+        case .skipped, .removed: "circle.dashed"
         case .paused: "pause"
         case .comingUp: "clock"
         }

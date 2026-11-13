@@ -113,6 +113,7 @@ struct SentHistoryTests {
         #expect(String(localized: recipient.historyHeader) == "Riley, Last 7 Days")
         #expect(history.newestFirst.map(\.label) == ["Today", "Wed, Oct 21", "Tue, Oct 20", "Mon, Oct 19", "Sun, Oct 18", "Sat, Oct 17", "Fri, Oct 16", "Thu, Oct 15"])
         #expect(history.newestFirst.map(\.status) == [.comingUp, .done, .done, .done, .done, .done, .missed, .done])
+        #expect(history.newestFirst.map(\.glyph) == ["clock", "checkmark.circle.fill", "checkmark.circle.fill", "checkmark.circle.fill", "checkmark.circle.fill", "checkmark.circle.fill", "xmark.circle.fill", "checkmark.circle.fill"])
     }
 
     @Test func aDayBeforeItWasSentHasNothingDue() async throws {
@@ -124,6 +125,7 @@ struct SentHistoryTests {
         let history = try #require(try row(on: alex).history)
 
         #expect(history.days.map(\.status) == [nil, nil, nil, nil, nil, nil, .missed, .comingUp])
+        #expect(history.days.first?.glyph == "circle.slash")
         #expect(history.voiceOverValue.hasPrefix("Friday: Nothing due, "))
     }
 

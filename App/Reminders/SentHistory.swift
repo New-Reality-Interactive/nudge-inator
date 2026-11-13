@@ -25,6 +25,9 @@ struct SentHistory: Equatable {
         var isToday: Bool
 
         var id: CalendarDay { calendarDay }
+
+        /// DESIGN.md's 7-day history glyph: the status's, or a slashed circle for nothing due.
+        var glyph: String { status?.historyGlyph ?? SentHistory.nothingDueGlyph }
     }
 
     /// The details list the days newest first, today at the top, as the mockup's `viewSent` does.
@@ -54,6 +57,9 @@ struct SentHistory: Equatable {
         let name = String(localized: status.name)
         return LocalizedStringResource("\(day): \(name)", comment: "VoiceOver, a repeating sent reminder's last 7 days on the Sent view: one day and how the person's copy went. 1: the weekday, such as \"Thursday\", or \"Today\". 2: the status, such as \"Done\" or \"Missed\".")
     }
+
+    /// A day with nothing due: "not applicable", a slashed circle.
+    static let nothingDueGlyph = "circle.slash"
 
     /// What the details say for a day with nothing due, where a status would trail.
     static let nothingDueText = LocalizedStringResource("Nothing due", comment: "A sent reminder's details, under \"<name>, Last 7 Days\": the person's copy had nothing due that day.")

@@ -127,7 +127,14 @@ private struct SentHistoryCell: View {
         VStack(spacing: Design.Spacing.line) {
             Text(verbatim: day.initial)
                 .font(day.isToday ? .footnote.weight(.semibold) : .footnote)
-            glyph
+            // Every glyph in the box Done's takes, so a short one (a minus, a ✕) doesn't make its
+            // cell shorter and drop its initial below the others' (the #207 phone check).
+            Image(systemName: OccurrenceState.doneGlyph)
+                .hidden()
+                .overlay {
+                    Image(systemName: day.glyph)
+                        .foregroundStyle(day.status?.statusTint ?? textColor)
+                }
                 .font(.footnote)
                 .imageScale(.small)
         }
@@ -146,16 +153,26 @@ private struct SentHistoryCell: View {
     private var textColor: Color {
         day.isToday ? Color(uiColor: .label) : Color(uiColor: .secondaryLabel)
     }
+}
 
-    /// The status's glyph, in the status colors Done, Missed and Nudging have; a day with nothing
-    /// due keeps the glyph's height, empty.
-    @ViewBuilder private var glyph: some View {
-        if let status = day.status {
-            Image(systemName: status.historyGlyph)
-                .foregroundStyle(status.statusTint ?? textColor)
-        } else {
-            Image(systemName: "clock").hidden()
+/// A day on a sent reminder's details' "<name>, Last 7 Days" (the #207 change mockup): its strip
+/// glyph beside its status word, as Done's status label has its check, or "Nothing due".
+struct SentHistoryDayLabel: View {
+    let day: SentHistory.Day
+
+    var body: some View {
+        HStack(spacing: Design.Spacing.s1) {
+            // The word says it; the glyph only shows it.
+            Image(systemName: day.glyph)
+                .accessibilityHidden(true)
+            if let status = day.status {
+                Text(status.name)
+            } else {
+                Text(SentHistory.nothingDueText)
+            }
         }
+        .font(.subheadline.weight(.semibold))
+        .foregroundStyle(day.status?.statusTint ?? Color(uiColor: .secondaryLabel))
     }
 }
 

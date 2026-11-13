@@ -120,16 +120,11 @@ private struct SentDetailsList: View {
             ForEach(details.recipients) { recipient in
                 if let history = recipient.history {
                     Section {
-                        // As the mockup's `viewSent`: newest first, the day leading, its status trailing.
+                        // As the #207 change mockup's `viewSent`: newest first, the day leading, its glyph and
+                        // status trailing.
                         ForEach(history.newestFirst) { day in
                             LabeledContent {
-                                if let status = day.status {
-                                    ReportedStatusLabel(status: status)
-                                } else {
-                                    Text(SentHistory.nothingDueText)
-                                        .font(.subheadline)
-                                        .foregroundStyle(Color(uiColor: .secondaryLabel))
-                                }
+                                SentHistoryDayLabel(day: day)
                             } label: {
                                 Text(verbatim: day.label)
                             }
