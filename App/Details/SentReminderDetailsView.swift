@@ -190,8 +190,8 @@ private extension SentReminderDetails {
         var sharing = SharingData(connections: [riley, sam])
         sharing.sentReminders = [SentReminder(reminder: pills, revision: 0)]
         sharing.sentCopies = [
-            SentCopy(connectionID: riley.id, reminderID: pills.id, createdAt: .now, receipt: .started, statusRecord: nil, waitingToSync: false),
-            SentCopy(connectionID: sam.id, reminderID: pills.id, createdAt: .now, receipt: .notDelivered, statusRecord: nil, waitingToSync: false),
+            SentCopy(connectionID: riley.id, reminderID: pills.id, createdAt: .now, receipt: .started, statusRecord: nil),
+            SentCopy(connectionID: sam.id, reminderID: pills.id, createdAt: .now, receipt: .notDelivered, statusRecord: nil),
         ]
         return SentReminderDetails(engine: .myDayPreview(), sharing: sharing, id: pills.id)!
     }

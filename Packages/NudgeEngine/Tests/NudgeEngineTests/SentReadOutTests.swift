@@ -32,16 +32,14 @@ struct SentReadOutTests {
         to connection: SentConnection,
         createdAt: Date = Date(timeIntervalSince1970: 1_000),
         receipt: SentCopy.Receipt = .started,
-        statusRecord: SentCopy.StatusRecord? = nil,
-        waitingToSync: Bool = false
+        statusRecord: SentCopy.StatusRecord? = nil
     ) -> SentCopy {
         SentCopy(
             connectionID: connection.id,
             reminderID: reminderID,
             createdAt: createdAt,
             receipt: receipt,
-            statusRecord: statusRecord,
-            waitingToSync: waitingToSync
+            statusRecord: statusRecord
         )
     }
 
@@ -74,12 +72,14 @@ struct SentReadOutTests {
     // MARK: Waiting to sync, Removed and the history
 
     @Test func aCopyNotYetSyncedIsWaitingToSyncAndTheRestAreNot() {
+        let notSynced = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
         let readOut = SentReadOut(
             connections: [sam],
             copies: [
-                copy(of: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!, to: sam, waitingToSync: true),
+                copy(of: notSynced, to: sam),
                 copy(of: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!, to: sam)
-            ]
+            ],
+            isWaitingToSync: { $0.reminderID == notSynced }
         )
         #expect(readOut.people.first?.rows.map(\.waitingToSync) == [true, false])
     }

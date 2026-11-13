@@ -48,7 +48,7 @@ struct MyDayScreen {
         /// The reminder's tags that the engine holds.
         var tags: [TagLabel]
         /// "From Riley Park" under the title of a received reminder, or `nil` (ticket 199).
-        var from: LocalizedStringResource?
+        var from: FromLine?
 
         /// A reminder can be due twice in a day after an Edit, so its ID alone isn't unique.
         var id: String { "\(reminder.id.uuidString) \(dueTime.timeIntervalSinceReferenceDate)" }
@@ -196,13 +196,13 @@ struct MyDayScreen {
         let reminders = Dictionary(engine.reminders.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let shown = filter.count.map(myDay.items(countedIn:)) ?? myDay.items
         items = shown.compactMap { item in
-            reminders[item.reminderID].map { Item(engine: engine, reminder: $0, item: item, chosen: Set(filter.tagIDs), from: senders.label(of: $0)) }
+            reminders[item.reminderID].map { Item(engine: engine, reminder: $0, item: item, chosen: Set(filter.tagIDs), from: senders.fromLine(of: $0)) }
         }
     }
 }
 
 extension MyDayScreen.Item {
-    init(engine: Engine, reminder: Reminder, item: MyDay.Item, chosen: Set<Tag.ID>, from: LocalizedStringResource?) {
+    init(engine: Engine, reminder: Reminder, item: MyDay.Item, chosen: Set<Tag.ID>, from: FromLine?) {
         self.reminder = reminder
         self.from = from
         dueTime = item.dueTime

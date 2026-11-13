@@ -15,6 +15,8 @@ protocol SharingAdapterEvents: AnyObject {
     func sent(_ changeID: OutboxChange.ID) async throws
     /// The iCloud account changed or came back. Read `accountState()` again.
     func accountStateChanged()
+    /// The iPhone went offline or came back (ticket 211). Read `isOnline` again.
+    func connectivityChanged()
     /// The person tapped an invite to them and iCloud opened the app with it: the system hand-off,
     /// which the real adapter has from the scene delegate (#217). The model accepts it with
     /// `accept(_:)` and says what came of it, so this never throws.
@@ -42,6 +44,13 @@ protocol SharingAdapter: AnyObject {
     /// long that takes, and then reports with `sent(_:)`. The model keeps the change in the outbox
     /// until then.
     func submit(_ change: SharingChange)
+    /// Whether the iPhone can reach iCloud now (ticket 211), read at launch, on App opened and when
+    /// `connectivityChanged()` says so. A synchronous main-actor read, so it returns a value the
+    /// adapter already holds (kept up to date by a path monitor, say) and never asks the system or
+    /// iCloud: a synchronous system read froze the app for 69 s once (AlarmKit, ticket 22). Knowing
+    /// it makes no iCloud request (spec #127, decision 4); the real adapter's way of knowing is #216's. While it is false, what the model submits waits
+    /// with the adapter and in the outbox, and goes when it is back.
+    var isOnline: Bool { get }
     /// The iCloud account now, read again at launch, on App opened and when `accountStateChanged()`
     /// says so. Async: asking iCloud may take a while, and it mustn't hold up the app.
     func accountState() async -> SharingAccountState

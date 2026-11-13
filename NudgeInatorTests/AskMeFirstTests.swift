@@ -78,7 +78,7 @@ struct AskMeFirstTests {
         let row = try #require(screen.waiting.first)
         #expect(screen.waiting.count == 1)
         #expect(row.title == "Take the pills")
-        #expect(row.from.map { String(localized: $0) } == "From Alex Morgan")
+        #expect(row.from.map { String(localized: $0.label) } == "From Alex Morgan")
         #expect(row.day == "Tomorrow")
         #expect(row.time == "8:30\u{202F}AM")
         #expect(screen.nudging.map(\.title) == ["Walk the dog"])

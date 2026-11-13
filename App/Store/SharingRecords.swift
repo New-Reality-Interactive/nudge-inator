@@ -88,7 +88,6 @@ final class SentCopyRecord {
     var statusLabel: String?
     @Relationship(deleteRule: .cascade, inverse: \SentCopyOccurrenceRecord.copy)
     var occurrences: [SentCopyOccurrenceRecord] = []
-    var waitingToSync: Bool
 
     init(position: Int, connectionID: UUID, reminderID: UUID) {
         self.position = position
@@ -98,7 +97,6 @@ final class SentCopyRecord {
         receipt = ""
         hasStatusRecord = false
         notSharingThisOne = false
-        waitingToSync = false
     }
 }
 
@@ -132,7 +130,6 @@ final class ReceivedSyncRecord {
     var reminderID: UUID
     var position: Int
     var notSharingThisOne: Bool
-    var waitingToSync: Bool
     var recordSystemFields: Data?
     /// The copy's change note, as `[ReceivedChange].storedData()` spells it, and when it was taken;
     /// `nil` while nobody has changed the copy.
@@ -143,7 +140,6 @@ final class ReceivedSyncRecord {
         self.position = position
         self.reminderID = reminderID
         notSharingThisOne = false
-        waitingToSync = false
     }
 
     /// The state as the app reads it. Throws for a change note that can't be read.
@@ -152,7 +148,6 @@ final class ReceivedSyncRecord {
         return ReceivedSyncState(
             reminderID: reminderID,
             notSharingThisOne: notSharingThisOne,
-            waitingToSync: waitingToSync,
             recordSystemFields: recordSystemFields,
             changeNote: changes.isEmpty ? nil : ReceivedChangeNote(changes: changes, at: changeNoteAt ?? .distantPast)
         )

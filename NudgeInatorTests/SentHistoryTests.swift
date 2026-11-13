@@ -168,7 +168,9 @@ struct SentHistoryTests {
     @Test func waitingToSyncHidesTheHistory() async throws {
         let (alex, _) = try await aWeekOfPills()
         var sharing = alex.sharing.data
-        sharing.sentCopies[0].waitingToSync = true
+        // A revision not yet through iCloud: Waiting to sync is read from the outbox (ticket 211).
+        let copy = sharing.sentCopies[0]
+        sharing.outbox.append(OutboxChange(id: UUID(), kind: .revise, connectionID: copy.connectionID, reminderID: copy.reminderID))
 
         let screen = SentScreen(engine: alex.model.engine, sharing: sharing)
 

@@ -104,7 +104,6 @@ struct SharingStore {
         for (position, state) in data.receivedSyncStates.enumerated() {
             let record = ReceivedSyncRecord(position: position, reminderID: state.reminderID)
             record.notSharingThisOne = state.notSharingThisOne
-            record.waitingToSync = state.waitingToSync
             record.recordSystemFields = state.recordSystemFields
             record.changeNote = try state.changeNote?.changes.storedData()
             record.changeNoteAt = state.changeNote?.at
@@ -219,7 +218,6 @@ private extension SentCopyRecord {
         self.init(position: position, connectionID: copy.connectionID, reminderID: copy.reminderID)
         createdAt = copy.createdAt
         receipt = copy.receipt.storedValue
-        waitingToSync = copy.waitingToSync
         guard let record = copy.statusRecord else { return }
         hasStatusRecord = true
         notSharingThisOne = record.notSharingThisOne
@@ -259,8 +257,7 @@ private extension SentCopyRecord {
             reminderID: reminderID,
             createdAt: createdAt,
             receipt: try SentCopy.Receipt(storedValue: receipt),
-            statusRecord: statusRecord,
-            waitingToSync: waitingToSync
+            statusRecord: statusRecord
         )
     }
 }

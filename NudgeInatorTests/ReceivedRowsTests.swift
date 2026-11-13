@@ -59,7 +59,7 @@ struct ReceivedRowsTests {
 
         let pills = try #require(screen.nudging.first { $0.title == "Take the pills" })
         let walk = try #require(screen.nudging.first { $0.title == "Walk the dog" })
-        #expect(pills.from.map { String(localized: $0) } == "From Alex Morgan")
+        #expect(pills.from.map { String(localized: $0.label) } == "From Alex Morgan")
         #expect(walk.from == nil)
     }
 
@@ -76,7 +76,7 @@ struct ReceivedRowsTests {
         let screen = NowScreen(engine: riley.model.engine, senders: riley.model.senders)
 
         #expect(screen.comingUp.map(\.title) == ["Walk the dog", "Take the pills"])
-        let labels: [String?] = screen.comingUp.map { $0.from.map { String(localized: $0) } }
+        let labels: [String?] = screen.comingUp.map { $0.from.map { String(localized: $0.label) } }
         #expect(labels == [nil, "From Alex Morgan"])
     }
 
@@ -90,7 +90,7 @@ struct ReceivedRowsTests {
 
         let pills = try #require(screen.lastDay.first { $0.title == "Take the pills" })
         let walk = try #require(screen.lastDay.first { $0.title == "Walk the dog" })
-        #expect(pills.from.map { String(localized: $0) } == "From Alex Morgan")
+        #expect(pills.from.map { String(localized: $0.label) } == "From Alex Morgan")
         #expect(walk.from == nil)
     }
 
@@ -102,7 +102,7 @@ struct ReceivedRowsTests {
         let screen = NowScreen(engine: riley.model.engine, senders: Senders())
 
         let pills = try #require(screen.nudging.first { $0.title == "Take the pills" })
-        #expect(pills.from.map { String(localized: $0) } == "From Someone")
+        #expect(pills.from.map { String(localized: $0.label) } == "From Someone")
     }
 
     /// The other person ended the connection and this person hasn't chosen Remove or Keep yet
@@ -115,7 +115,7 @@ struct ReceivedRowsTests {
         let screen = NowScreen(engine: riley.model.engine, senders: ended)
 
         let pills = try #require(screen.nudging.first { $0.title == "Take the pills" })
-        #expect(pills.from.map { String(localized: $0) } == "From Alex Morgan")
+        #expect(pills.from.map { String(localized: $0.label) } == "From Alex Morgan")
     }
 
     // MARK: My Day
@@ -130,7 +130,7 @@ struct ReceivedRowsTests {
 
         let pills = try #require(screen.items.first { $0.title == "Take the pills" })
         let walk = try #require(screen.items.first { $0.title == "Walk the dog" })
-        #expect(pills.from.map { String(localized: $0) } == "From Alex Morgan")
+        #expect(pills.from.map { String(localized: $0.label) } == "From Alex Morgan")
         #expect(walk.from == nil)
         #expect(pills.offersDone)
         #expect(screen.counts.first { $0.kind == .nudging }?.number == 2)
@@ -154,7 +154,7 @@ struct ReceivedRowsTests {
         let untagged = MyDayScreen(engine: riley.model.engine, filter: noTags, now: riley.clock.now, senders: riley.model.senders)
 
         #expect(tagged.items.map(\.title) == ["Take the pills"])
-        #expect(tagged.items.first?.from.map { String(localized: $0) } == "From Alex Morgan")
+        #expect(tagged.items.first?.from.map { String(localized: $0.label) } == "From Alex Morgan")
         #expect(untagged.items.map(\.title) == ["Walk the dog"])
     }
 
@@ -171,7 +171,7 @@ struct ReceivedRowsTests {
 
         let pills = try #require(screen.rows.first { $0.title == "Take the pills" })
         let walk = try #require(screen.rows.first { $0.title == "Walk the dog" })
-        #expect(pills.from.map { String(localized: $0) } == "From Alex Morgan")
+        #expect(pills.from.map { String(localized: $0.label) } == "From Alex Morgan")
         #expect(walk.from == nil)
         #expect(pills.offersDone)
     }

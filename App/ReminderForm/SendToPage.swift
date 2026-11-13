@@ -91,7 +91,7 @@ struct SendToPage: View {
                 }
                 .disabled(form.sendToPause != nil)
             } header: {
-                SharingPausedBanner(pause: form.sendToPause)
+                SharingBannerView(banner: form.sendToBanner)
             } footer: {
                 Text("Choose one or more people. Each gets their own copy, at this strength, and it won't nudge you.",
                      comment: "Under the Send To page's list of people.")

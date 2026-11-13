@@ -81,7 +81,7 @@ enum StandInSharing {
         let pills = Reminder(title: "Take the pills", dueTime: pillsStart, repeatRule: .everyDay, strength: .firm)
         let call = Reminder(title: "Call the clinic", dueTime: callDue, strength: .gentle)
         let copies = [pills, call].enumerated().map { index, reminder in
-            SentCopy(connectionID: SeedSet.standInConnectionID, reminderID: reminder.id, createdAt: now.addingTimeInterval(Double(index - 2) * 60), receipt: .started, statusRecord: nil, waitingToSync: false)
+            SentCopy(connectionID: SeedSet.standInConnectionID, reminderID: reminder.id, createdAt: now.addingTimeInterval(Double(index - 2) * 60), receipt: .started, statusRecord: nil)
         }
         return ([SentReminder(reminder: pills, revision: 0), SentReminder(reminder: call, revision: 0)], copies)
     }
@@ -96,7 +96,8 @@ extension View {
     /// a reminder (ticket 198), getting what was sent to them (ticket 201), accepting what waits for
     /// them (ticket 203), reporting how what you sent is going (ticket 206), changing what they sent
     /// (ticket 204), deleting it (ticket 205) or disconnecting (ticket 197). Without either, on
-    /// Connections, it also chooses the iCloud account the stand-in reports (ticket 210).
+    /// Connections, it also chooses the iCloud account the stand-in reports (ticket 210), and whether
+    /// it says the iPhone is online (ticket 211).
     func standInSharingControls(invited: SharingConnection? = nil, connected: SharingConnection? = nil) -> some View {
         toolbar {
             if let adapter = StandInSharing.current {
@@ -154,6 +155,13 @@ extension View {
                                 Text(verbatim: "iCloud")
                             }
                             .pickerStyle(.menu)
+                            Picker(selection: Binding { adapter.isOnline } set: { adapter.isOnline = $0 }) {
+                                Text(verbatim: "Online").tag(true)
+                                Text(verbatim: "Offline").tag(false)
+                            } label: {
+                                Text(verbatim: "Network")
+                            }
+                            .pickerStyle(.menu)
                         }
                     } label: {
                         Label { Text(verbatim: "Stand-in") } icon: { Image(systemName: "hammer") }
@@ -176,6 +184,40 @@ final class StandInSharingAdapter: SharingAdapter {
         if change.kind == .send, let reminderID = change.reminderID {
             undelivered.append((reminderID, change.connectionID))
             sentThrough[change.connectionID, default: []].append(reminderID)
+        }
+        if isOnline {
+            reportSent([change.entry.id])
+        } else {
+            unsent.append(change.entry.id)
+        }
+    }
+
+    /// Whether the stand-in says the iPhone can reach iCloud (ticket 211), chosen from the Stand-in
+    /// menu on Connections. Offline, what the app submits waits as Waiting to sync; back online, it
+    /// is reported sent, as through iCloud. A change tells the app model, as the real adapter will.
+    var isOnline = true {
+        didSet {
+            guard isOnline != oldValue else { return }
+            events?.connectivityChanged()
+            guard isOnline else { return }
+            let held = unsent
+            unsent = []
+            reportSent(held)
+        }
+    }
+
+    /// What was submitted offline, waiting to be reported sent.
+    private var unsent: [OutboxChange.ID] = []
+
+    private func reportSent(_ changeIDs: [OutboxChange.ID]) {
+        Task {
+            for changeID in changeIDs {
+                do {
+                    try await events?.sent(changeID)
+                } catch {
+                    StandInSharing.logger.error("Stand-in: a change sent couldn't be kept: \(error, privacy: .public)")
+                }
+            }
         }
     }
 

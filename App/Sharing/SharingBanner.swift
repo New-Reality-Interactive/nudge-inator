@@ -57,17 +57,53 @@ extension SharingReach.Pause {
     }
 }
 
-/// DESIGN.md's sharing paused banner: the Permission banner's look in Warning, with
-/// `icloud.slash`, on Connections, Send To and Sent only. Open Settings opens the app's own page in
-/// iOS Settings, the one Apple documents an app can open (`openSettingsURLString`); iCloud is a
-/// step back from there. Nothing while sharing works or the account isn't known yet.
-struct SharingPausedBanner: View {
-    let pause: SharingReach.Pause?
+/// What the banner on Connections, Send To and Sent says (DESIGN.md, Sharing paused and offline):
+/// sharing is paused without iCloud (ticket 210), or the iPhone is offline (ticket 211). Two
+/// different reasons, and paused wins (`SharingModel.banner`).
+enum SharingBanner: Equatable {
+    case paused(SharingReach.Pause)
+    case offline
+
+    /// The banner's words, the lead sentence in bold.
+    var text: LocalizedStringResource {
+        switch self {
+        case .paused(let pause): pause.bannerText
+        case .offline:
+            LocalizedStringResource("**You're offline.** Reminders you've received keep nudging. What you send or change goes when you're back online.",
+                                    comment: "Offline banner on Connections, Send To and Sent, while the iPhone can't reach iCloud. Keep the first sentence bold.")
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .paused: "icloud.slash"
+        case .offline: "wifi.slash"
+        }
+    }
+
+    /// Whether sharing is paused, which switches Invite off; offline leaves it on, as the mockup does.
+    var pausesSharing: Bool {
+        if case .paused = self { true } else { false }
+    }
+
+    /// Whether the banner offers Open Settings: only to sign in to iCloud or lift a restriction.
+    var offersOpenSettings: Bool {
+        if case .paused(let pause) = self { pause.offersOpenSettings } else { false }
+    }
+}
+
+/// DESIGN.md's sharing paused and offline banner: the Permission banner's look in Warning, with
+/// `icloud.slash` or `wifi.slash`, on Connections, Send To and Sent only. Open Settings opens the
+/// app's own page in iOS Settings, the one Apple documents an app can open
+/// (`openSettingsURLString`); iCloud is a step back from there. Nothing while sharing works and the
+/// iPhone is online, or before the account is known.
+struct SharingBannerView: View {
+    let banner: SharingBanner?
 
     var body: some View {
-        if let pause {
-            BannerCard(systemImage: "icloud.slash", text: Text(AttributedString(localized: pause.bannerText)), borderColor: .warning) {
-                if pause.offersOpenSettings {
+        if let banner {
+            BannerCard(systemImage: banner.systemImage, text: Text(AttributedString(localized: banner.text)), borderColor: .warning) {
+                if banner.offersOpenSettings {
                     OpenSettingsButton {
                         SettingsStatus.OpenSettings.appSettings.open()
                     }
@@ -80,13 +116,13 @@ struct SharingPausedBanner: View {
     }
 }
 
-/// The sharing paused banner above an empty state on Connections and Sent (ticket 210), in the
+/// The sharing banner above an empty state on Connections and Sent (tickets 210 and 211), in the
 /// list's margins.
-struct PausedBannerAboveEmptyState: View {
-    let pause: SharingReach.Pause?
+struct BannerAboveEmptyState: View {
+    let banner: SharingBanner?
 
     var body: some View {
-        SharingPausedBanner(pause: pause)
+        SharingBannerView(banner: banner)
             .padding(.horizontal, Design.Spacing.s4)
             .padding(.top, Design.Spacing.s3)
     }
@@ -95,9 +131,10 @@ struct PausedBannerAboveEmptyState: View {
 #Preview("Every reason") {
     ScrollView {
         VStack(spacing: Design.Spacing.s3) {
-            SharingPausedBanner(pause: .noAccount)
-            SharingPausedBanner(pause: .restricted)
-            SharingPausedBanner(pause: .temporarilyUnavailable)
+            SharingBannerView(banner: .paused(.noAccount))
+            SharingBannerView(banner: .paused(.restricted))
+            SharingBannerView(banner: .paused(.temporarilyUnavailable))
+            SharingBannerView(banner: .offline)
         }
         .padding()
     }
@@ -106,7 +143,7 @@ struct PausedBannerAboveEmptyState: View {
 
 #Preview("Largest text") {
     ScrollView {
-        SharingPausedBanner(pause: .noAccount).padding()
+        SharingBannerView(banner: .offline).padding()
     }
     .background(Color(uiColor: .systemGroupedBackground))
     .dynamicTypeSize(.accessibility5)

@@ -27,7 +27,7 @@ struct NowScreen {
         shortDate = { engine.shortDate(of: $0) }
         let reminders = Dictionary(engine.reminders.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         nudging = engine.nudgingOccurrences().compactMap { item in
-            reminders[item.reminderID].flatMap { NudgeCard(engine: engine, reminder: $0, from: senders.label(of: $0)) }
+            reminders[item.reminderID].flatMap { NudgeCard(engine: engine, reminder: $0, from: senders.fromLine(of: $0)) }
         }
         waiting = engine.waitingForAcceptance().compactMap { item in
             reminders[item.reminderID].map {
@@ -35,7 +35,7 @@ struct NowScreen {
                     reminder: $0,
                     day: engine.dayLabel(of: item.dueTime),
                     time: engine.timeOfDay(of: item.dueTime),
-                    from: senders.label(of: $0)
+                    from: senders.fromLine(of: $0)
                 )
             }
         }
@@ -47,7 +47,7 @@ struct NowScreen {
                     day: engine.dayLabel(of: item.dueTime),
                     time: engine.timeOfDay(of: item.dueTime),
                     schedule: engine.repeatSummary(of: $0),
-                    from: senders.label(of: $0)
+                    from: senders.fromLine(of: $0)
                 )
             }
         }
@@ -58,7 +58,7 @@ struct NowScreen {
                     closed: item,
                     day: engine.dayLabel(of: item.closedAt),
                     time: engine.timeOfDay(of: item.closedAt),
-                    from: senders.label(of: $0)
+                    from: senders.fromLine(of: $0)
                 )
             }
         }
@@ -109,13 +109,13 @@ struct NudgeCard: Identifiable {
     /// When it closes as Missed, for the line after its last nudge.
     var missedAtTime: String
     /// "From Riley Park" under the title of a received reminder, or `nil` (ticket 199).
-    var from: LocalizedStringResource?
+    var from: FromLine?
 
     var id: Reminder.ID { reminder.id }
     var title: String { reminder.title }
 
     /// The reminder's card, or `nil` if it isn't nudging. `from` is its "From <name>" label.
-    init?(engine: Engine, reminder: Reminder, from: LocalizedStringResource? = nil) {
+    init?(engine: Engine, reminder: Reminder, from: FromLine? = nil) {
         guard let status = engine.nudgingStatus(of: reminder.id) else { return nil }
         self.reminder = reminder
         self.from = from
@@ -140,7 +140,7 @@ struct NudgeCard: Identifiable {
     /// it shows under the title. `nil` for the person's own, whose label is the title alone.
     var voiceOverLabel: LocalizedStringResource? {
         guard let from else { return nil }
-        return LocalizedStringResource("\(title), \(String(localized: from))", comment: "VoiceOver label of a received reminder's nudge card. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\".")
+        return LocalizedStringResource("\(title), \(from.spoken)", comment: "VoiceOver label of a received reminder's nudge card. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\".")
     }
 
     /// What VoiceOver reads after the label. The card's top row and title are one element, so
@@ -198,7 +198,7 @@ struct ComingUpRow: Identifiable {
     /// The repeat summary, such as "Every day at 8:00 AM".
     var schedule: String
     /// "From Riley Park" under the title of a received reminder, or `nil` (ticket 199).
-    var from: LocalizedStringResource?
+    var from: FromLine?
 
     var id: Reminder.ID { reminder.id }
     var title: String { reminder.title }
@@ -212,7 +212,7 @@ struct WaitingRow: Identifiable {
     var day: String
     var time: String
     /// "From Riley Park" under the title.
-    var from: LocalizedStringResource?
+    var from: FromLine?
 
     var id: Reminder.ID { reminder.id }
     var title: String { reminder.title }
@@ -236,7 +236,7 @@ struct ClosedRow: Identifiable {
     var day: String
     var time: String
     /// "From Riley Park" under the title of a received reminder, or `nil` (ticket 199).
-    var from: LocalizedStringResource?
+    var from: FromLine?
 
     /// A reminder can close twice in a day, so its ID alone isn't unique.
     var id: String { "\(reminder.id.uuidString) \(closed.occurrence.dueTime.timeIntervalSinceReferenceDate)" }
