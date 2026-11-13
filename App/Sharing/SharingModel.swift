@@ -94,6 +94,8 @@ final class SharingModel {
     /// again by whatever needs it next: the account read on App opened, a change coming or going.
     private let openStore: () throws -> SharingStore
     @ObservationIgnored private var store: SharingStore?
+    /// Whether `allowICloud()` was called this launch.
+    @ObservationIgnored private var iCloudAllowedThisLaunch = false
     /// The latest read of the account. Each waits for the one before, so reads that overlap can't
     /// finish out of order and put an older state back (as the permission reads do).
     @ObservationIgnored private var accountRefresh: Task<Void, Never>?
@@ -132,10 +134,27 @@ final class SharingModel {
             await previous?.value
             _ = try? openedStore()
             isOnline = adapter.isOnline
+            guard mayAskICloud else { return }
+            adapter.start()
             let account = await adapter.signedInAccount()
             accountState = account.state
             record(account)
         }
+    }
+
+    /// Whether the app may ask iCloud (spec #127, decision 4): only once the person has opened
+    /// Connections or an invite has reached them, this launch (`allowICloud()`), or the sharing
+    /// store holds sharing from before. Until then the adapter isn't started and the account isn't
+    /// read, so a person who never shares is never asked about iCloud.
+    var mayAskICloud: Bool {
+        iCloudAllowedThisLaunch || data.holdsSharing
+    }
+
+    /// The person opened Connections or an invite reached them: from now on, the app may ask iCloud.
+    func allowICloud() {
+        guard !iCloudAllowedThisLaunch else { return }
+        iCloudAllowedThisLaunch = true
+        refreshAccountState()
     }
 
     /// Returns once the account read started so far has finished.
@@ -474,6 +493,7 @@ extension SharingModel: SharingAdapterEvents {
 
     func invited(_ invite: IncomingInvite) async {
         let id = invite.connectionID
+        allowICloud()
         do {
             // Opened first, so a store that won't open accepts nothing.
             if try showsConnection(id) { return }
@@ -513,6 +533,19 @@ extension SharingModel: SharingAdapterEvents {
         kept.connections[index].connectedAt = clock.now
         try keep(kept)
         adapter.keepOnly(participant, in: connectionID)
+    }
+
+    func savedSyncState() -> SharingSyncState? {
+        guard let kept = try? currentData() else { return nil }
+        return SharingSyncState(engines: kept.engineStates, cache: kept.syncCache)
+    }
+
+    func keepSyncState(_ state: SharingSyncState) throws {
+        var kept = try currentData()
+        guard kept.engineStates != state.engines || kept.syncCache != state.cache else { return }
+        kept.engineStates = state.engines
+        kept.syncCache = state.cache
+        try keep(kept)
     }
 
     func inviteWithdrawn(_ connectionID: UUID) async throws {

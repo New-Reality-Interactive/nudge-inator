@@ -248,8 +248,18 @@ final class FakeSharingAdapter: SharingAdapter {
         }
     }
 
+    /// How many times the app model started the adapter and read the account: the real adapter
+    /// asks iCloud then (spec #127, decision 4).
+    private(set) var starts = 0
+    private(set) var accountReads = 0
+
+    func start() {
+        starts += 1
+    }
+
     func signedInAccount() async -> SharingAccount {
-        SharingAccount(state: account, idWhenAvailable: accountID)
+        accountReads += 1
+        return SharingAccount(state: account, idWhenAvailable: accountID)
     }
 
     /// What the system sharing sheet does when the app starts an invite.

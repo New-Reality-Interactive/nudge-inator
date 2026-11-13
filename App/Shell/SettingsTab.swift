@@ -104,8 +104,8 @@ struct SettingsTab: View {
         }
     }
 
-    /// Connections (ticket 194). Only with a sharing model: the shipped app has none until the
-    /// CloudKit adapter is wired in (#216), and without one Settings is as before.
+    /// Connections (ticket 194). Only with a sharing model: Debug builds have one (#216), and
+    /// Release builds none until the Sharing switch (#387); without one Settings is as before.
     private func sharingSection(_ sharing: SharingModel) -> some View {
         Section {
             NavigationLink(value: SharingPage.connections) {

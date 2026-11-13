@@ -443,4 +443,17 @@ final class RecordingSharingEvents: SharingAdapterEvents {
     func inviteAccepted(_ connectionID: UUID, by participant: SharingParticipant) async throws {}
 
     func inviteWithdrawn(_ connectionID: UUID) async throws {}
+
+    /// What the adapter last kept, as the sharing store would hold it.
+    var syncState = SharingSyncState()
+    /// Whether the sharing store opens; while it doesn't, there's no saved state to read.
+    var storeOpens = true
+
+    func savedSyncState() -> SharingSyncState? {
+        storeOpens ? syncState : nil
+    }
+
+    func keepSyncState(_ state: SharingSyncState) throws {
+        syncState = state
+    }
 }

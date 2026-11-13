@@ -83,6 +83,14 @@ struct SyncEngineState: Equatable {
     }
 }
 
+/// What the sharing adapter keeps between launches (#216): `CKSyncEngine`'s saved state per
+/// database, and the adapter's own cache of what it writes and what waits to go. Bytes the store
+/// doesn't read.
+struct SharingSyncState: Equatable {
+    var engines: [SyncEngineState] = []
+    var cache: Data?
+}
+
 /// A change that has not gone to iCloud yet, in the queue of them. A change names its connection and,
 /// for a change to one reminder, the reminder.
 struct OutboxChange: Equatable, Identifiable {
@@ -109,6 +117,8 @@ struct SharingData: Equatable {
     var sentCopies: [SentCopy] = []
     var receivedSyncStates: [ReceivedSyncState] = []
     var engineStates: [SyncEngineState] = []
+    /// The sharing adapter's own cache (`SharingSyncState.cache`), or `nil` before it has kept one.
+    var syncCache: Data?
     /// Oldest first.
     var outbox: [OutboxChange] = []
     /// iCloud's ID for the Apple Account all of the above belongs to (ticket 212), or `nil` before
@@ -133,6 +143,12 @@ struct AccountChangeNote: Hashable, Codable {
 }
 
 extension SharingData {
+    /// Whether anything of sharing is kept: a connection or invite, something sent or received, or
+    /// a change still to go. Then the app may ask iCloud at launch (`SharingModel.mayAskICloud`).
+    var holdsSharing: Bool {
+        !connections.isEmpty || !sentReminders.isEmpty || !sentCopies.isEmpty || !receivedSyncStates.isEmpty || !outbox.isEmpty
+    }
+
     /// Applies what the other person's app sent to what this person keeps, as far as the store
     /// holds it today: their settings for a connection, a recipient's receipt and status for a
     /// copy this person sent, and their disconnect, which leaves the connection ended until this

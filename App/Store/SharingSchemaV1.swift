@@ -7,7 +7,7 @@ enum SharingSchemaV1: VersionedSchema {
 
     static var models: [any PersistentModel.Type] {
         [ConnectionRecord.self, SentReminderRecord.self, SentCopyRecord.self, SentCopyOccurrenceRecord.self,
-         ReceivedSyncRecord.self, SyncEngineStateRecord.self, OutboxRecord.self, SharingAccountRecord.self]
+         ReceivedSyncRecord.self, SyncEngineStateRecord.self, OutboxRecord.self, SharingAccountRecord.self, SyncCacheRecord.self]
     }
 }
 

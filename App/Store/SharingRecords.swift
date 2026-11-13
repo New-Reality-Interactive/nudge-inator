@@ -204,3 +204,13 @@ final class SharingAccountRecord {
         self.changeNote = changeNote
     }
 }
+
+/// The sharing adapter's own cache (#216): bytes the store doesn't read. At most one.
+@Model
+final class SyncCacheRecord {
+    var data: Data
+
+    init(data: Data) {
+        self.data = data
+    }
+}

@@ -225,6 +225,8 @@ struct AccountChangeTests {
         let riley = try Phone()
         await riley.launch()
         riley.model.add(pills)
+        // Nothing shared, but Connections opened, so the app reads the account (#216).
+        riley.sharing.allowICloud()
 
         riley.adapter.signIn(as: "another-account")
         await settle(riley)

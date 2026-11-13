@@ -28,6 +28,13 @@ protocol SharingAdapterEvents: AnyObject {
     /// accepted that invite first or it was canceled (spec #127, A6), so it no longer works for
     /// them. Throws if the store couldn't keep that, and the adapter then reports it again.
     func inviteWithdrawn(_ connectionID: UUID) async throws
+    /// What the adapter last asked the sharing store to keep for it, empty if nothing, or `nil`
+    /// while the store won't open.
+    func savedSyncState() -> SharingSyncState?
+    /// Keeps the adapter's own state (#216) in the sharing store, so a relaunch carries on where
+    /// it left off. Throws if the store couldn't keep it, and the adapter then asks again on its
+    /// next change.
+    func keepSyncState(_ state: SharingSyncState) throws
 }
 
 /// The one door to sharing, in the shape of the alarm and notification adapters: the app model
@@ -40,6 +47,10 @@ protocol SharingAdapterEvents: AnyObject {
 protocol SharingAdapter: AnyObject {
     /// Held weakly by the adapter.
     var events: (any SharingAdapterEvents)? { get set }
+    /// Starts syncing: the real adapter asks iCloud from here on (#216). The app model calls it only
+    /// once the person opens Connections or an invite reaches them, or the sharing store holds
+    /// sharing already (spec #127, decision 4). Calling it again does nothing.
+    func start()
     /// Takes a change to send, which the adapter keeps until it has gone through iCloud, however
     /// long that takes, and then reports with `sent(_:)`. The model keeps the change in the outbox
     /// until then.
@@ -48,8 +59,9 @@ protocol SharingAdapter: AnyObject {
     /// `connectivityChanged()` says so. A synchronous main-actor read, so it returns a value the
     /// adapter already holds (kept up to date by a path monitor, say) and never asks the system or
     /// iCloud: a synchronous system read froze the app for 69 s once (AlarmKit, ticket 22). Knowing
-    /// it makes no iCloud request (spec #127, decision 4); the real adapter's way of knowing is #216's. While it is false, what the model submits waits
-    /// with the adapter and in the outbox, and goes when it is back.
+    /// it makes no iCloud request (spec #127, decision 4): the real adapter watches the network path.
+    /// While it is false, what the model submits waits with the adapter and in the outbox, and goes
+    /// when it is back.
     var isOnline: Bool { get }
     /// The iCloud account now, read again at launch, on App opened and when `accountStateChanged()`
     /// says so. Async: asking iCloud may take a while, and it mustn't hold up the app.
@@ -77,9 +89,10 @@ protocol SharingAdapter: AnyObject {
 /// Account it is, so a different one signing in can be told from the same one signing in again.
 struct SharingAccount: Equatable {
     var state: SharingAccountState
-    /// iCloud's ID for the signed-in Apple Account (the real adapter's is #215's), or `nil` when the
-    /// adapter doesn't know it: no account is available, or it hasn't asked iCloud yet, which it
-    /// doesn't before the app may make a request (spec #127, decision 4). `nil` changes nothing.
+    /// iCloud's ID for the signed-in Apple Account (the real adapter's user record name), or `nil`
+    /// when the adapter doesn't know it: no account is available, or it hasn't asked iCloud yet,
+    /// which it doesn't before the app may make a request (spec #127, decision 4). `nil` changes
+    /// nothing.
     var id: AppleAccountID?
 
     init(state: SharingAccountState, id: AppleAccountID?) {
@@ -152,8 +165,8 @@ struct SharingChange: Equatable {
     /// A person's own choices for one connection, which the other person's app shows.
     struct ConnectionSettings: Equatable {
         /// The person's name as iCloud gives it, or `nil` when the app doesn't know it, which is
-        /// always from the app model: the CloudKit adapter can fill it in (#216). The other
-        /// person's app keeps the name the sharing sheet or the invite gave (ticket 196).
+        /// always from the app model. The other person's app keeps the name the sharing sheet or
+        /// the invite gave (ticket 196).
         var name: String?
         /// Their Status sharing and Delivery mode for what the other person sends them.
         var choices: ConnectionChoices
