@@ -104,7 +104,7 @@ struct ReceivedDetailsTests {
         let details = try details(of: received(on: riley).id, on: riley)
 
         let received = try #require(details.received)
-        #expect(String(localized: received.from) == "From Alex Morgan")
+        #expect(String(localized: received.from.label) == "From Alex Morgan")
         #expect(received.senderName == "Alex Morgan")
         #expect(String(localized: received.strengthLine.text) == "Firm: rings as an alarm from nudge 4")
         #expect(details.notes == "Two with water.")

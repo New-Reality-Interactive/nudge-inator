@@ -86,23 +86,21 @@ struct SharingStoreTests {
         }
         let receipts: [SentCopy.Receipt] = [.notDelivered, .waitingForAcceptance, .started]
         var copies = receipts.map { receipt in
-            SentCopy(connectionID: connection, reminderID: UUID(), createdAt: made, receipt: receipt, statusRecord: nil, waitingToSync: false)
+            SentCopy(connectionID: connection, reminderID: UUID(), createdAt: made, receipt: receipt, statusRecord: nil)
         }
         copies.append(SentCopy(
             connectionID: connection,
             reminderID: reminder,
             createdAt: made,
             receipt: .started,
-            statusRecord: SentCopy.StatusRecord(report: StatusReport(label: .nudging, occurrences: history), notSharingThisOne: false),
-            waitingToSync: true
+            statusRecord: SentCopy.StatusRecord(report: StatusReport(label: .nudging, occurrences: history), notSharingThisOne: false)
         ))
         copies.append(SentCopy(
             connectionID: connection,
             reminderID: UUID(),
             createdAt: made,
             receipt: .started,
-            statusRecord: SentCopy.StatusRecord(report: StatusReport(label: .comingUp, occurrences: []), notSharingThisOne: true),
-            waitingToSync: false
+            statusRecord: SentCopy.StatusRecord(report: StatusReport(label: .comingUp, occurrences: []), notSharingThisOne: true)
         ))
         let saved = SharingData(sentCopies: copies)
 
@@ -120,7 +118,7 @@ struct SharingStoreTests {
             ),
             notSharingThisOne: false
         )
-        let copy = SentCopy(connectionID: UUID(), reminderID: UUID(), createdAt: .distantPast, receipt: .started, statusRecord: record, waitingToSync: false)
+        let copy = SentCopy(connectionID: UUID(), reminderID: UUID(), createdAt: .distantPast, receipt: .started, statusRecord: record)
         let saved = SharingData(sentCopies: [copy])
 
         try store().save(saved)
@@ -130,10 +128,10 @@ struct SharingStoreTests {
 
     @Test func aReceivedRemindersSyncStateReadsBackEqualAfterARelaunch() throws {
         let saved = SharingData(receivedSyncStates: [
-            ReceivedSyncState(reminderID: UUID(), notSharingThisOne: false, waitingToSync: false, recordSystemFields: nil),
-            ReceivedSyncState(reminderID: UUID(), notSharingThisOne: true, waitingToSync: true, recordSystemFields: Data([0, 1, 2, 255])),
+            ReceivedSyncState(reminderID: UUID(), notSharingThisOne: false, recordSystemFields: nil),
+            ReceivedSyncState(reminderID: UUID(), notSharingThisOne: true, recordSystemFields: Data([0, 1, 2, 255])),
             ReceivedSyncState(
-                reminderID: UUID(), notSharingThisOne: false, waitingToSync: false, recordSystemFields: nil,
+                reminderID: UUID(), notSharingThisOne: false, recordSystemFields: nil,
                 changeNote: ReceivedChangeNote(
                     changes: [.title(from: "Call", to: "Call the clinic"), .strength(from: .gentle, to: .firm)],
                     at: Date(timeIntervalSince1970: 1_800_000_000)
@@ -178,8 +176,8 @@ struct SharingStoreTests {
         let saved = SharingData(
             connections: [connection],
             sentReminders: [SentReminder(reminder: reminder, revision: 1)],
-            sentCopies: [SentCopy(connectionID: connection.id, reminderID: reminder.id, createdAt: reminder.createdAt, receipt: .started, statusRecord: nil, waitingToSync: false)],
-            receivedSyncStates: [ReceivedSyncState(reminderID: UUID(), notSharingThisOne: true, waitingToSync: false, recordSystemFields: Data([7]))],
+            sentCopies: [SentCopy(connectionID: connection.id, reminderID: reminder.id, createdAt: reminder.createdAt, receipt: .started, statusRecord: nil)],
+            receivedSyncStates: [ReceivedSyncState(reminderID: UUID(), notSharingThisOne: true, recordSystemFields: Data([7]))],
             engineStates: [SyncEngineState(database: .shared, data: Data([9]))],
             outbox: [OutboxChange(id: UUID(), kind: .send, connectionID: connection.id, reminderID: reminder.id)]
         )
@@ -239,7 +237,7 @@ struct SharingStoreTests {
         let connection = UUID()
         let first = SharingData(
             connections: [SharingConnection(id: connection, name: "Sam", state: .invited, theirs: ConnectionChoices(sharesStatus: false))],
-            sentCopies: [SentCopy(connectionID: connection, reminderID: UUID(), createdAt: .distantPast, receipt: .notDelivered, statusRecord: nil, waitingToSync: true)],
+            sentCopies: [SentCopy(connectionID: connection, reminderID: UUID(), createdAt: .distantPast, receipt: .notDelivered, statusRecord: nil)],
             outbox: [OutboxChange(id: UUID(), kind: .send, connectionID: connection, reminderID: nil)]
         )
         try store().save(first)
@@ -272,8 +270,7 @@ struct SharingStoreTests {
             reminderID: UUID(),
             createdAt: .distantPast,
             receipt: .started,
-            statusRecord: SentCopy.StatusRecord(report: StatusReport(label: .done, occurrences: [occurrence, occurrence]), notSharingThisOne: false),
-            waitingToSync: false
+            statusRecord: SentCopy.StatusRecord(report: StatusReport(label: .done, occurrences: [occurrence, occurrence]), notSharingThisOne: false)
         )
         let sharing = try store()
         try sharing.save(SharingData(sentCopies: [withHistory]))

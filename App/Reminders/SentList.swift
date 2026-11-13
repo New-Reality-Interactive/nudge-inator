@@ -25,14 +25,14 @@ struct SentList: View {
             .inviteFlow(sharing: sharing, isPresented: $isInviting)
     }
 
-    private var pause: SharingReach.Pause? { sharing?.pause }
+    private var banner: SharingBanner? { sharing?.banner }
 
     @ViewBuilder private var content: some View {
         switch screen.emptyState {
         case .noOneToSendTo:
-            NoOneToSendToView(pause: pause, invite: { isInviting = true }, manageConnections: manageConnections)
+            NoOneToSendToView(banner: banner, invite: { isInviting = true }, manageConnections: manageConnections)
         case .nothingSent:
-            NothingSentView(pause: pause)
+            NothingSentView(banner: banner)
         case nil:
             List {
                 ForEach(screen.people) { person in
@@ -44,7 +44,7 @@ struct SentList: View {
                         // Above the first person's name, as Now's first header holds its banners.
                         VStack(alignment: .leading, spacing: Design.Spacing.s3) {
                             if person.id == screen.people.first?.id {
-                                SharingPausedBanner(pause: pause)
+                                SharingBannerView(banner: banner)
                             }
                             Text(verbatim: person.name)
                                 // The banner beside it in the header drops the header trait,
@@ -196,6 +196,7 @@ struct SentTrailingLabel: View {
     var body: some View {
         switch trailing {
         case .nothing: EmptyView()
+        case .waitingToSync: WaitingToSyncLabel()
         case .delivered: DeliveredLabel()
         case .status(let status): ReportedStatusLabel(status: status)
         }
@@ -216,13 +217,13 @@ struct DeliveredLabel: View {
 /// Connections on Reminders, README Known differences). It scrolls, so the buttons are reached at
 /// the largest text size, on the grouped background the mockup's screens have.
 private struct NoOneToSendToView: View {
-    let pause: SharingReach.Pause?
+    let banner: SharingBanner?
     let invite: () -> Void
     let manageConnections: () -> Void
 
     var body: some View {
         ScrollView {
-            PausedBannerAboveEmptyState(pause: pause)
+            BannerAboveEmptyState(banner: banner)
             ContentUnavailableView {
                 Label {
                     Text("No One to Send To", comment: "Reminders tab, Sent: title when this person is connected with no one.")
@@ -236,7 +237,7 @@ private struct NoOneToSendToView: View {
                     InviteSomeoneLabel()
                 }
                 .buttonStyle(.bordered)
-                .disabled(pause != nil)
+                .disabled(banner?.pausesSharing == true)
                 Button(action: manageConnections) {
                     Text("Manage People", comment: "Reminders tab, Sent: under Invite Someone when no one is connected. Opens Settings › Connections.")
                 }
@@ -249,11 +250,11 @@ private struct NoOneToSendToView: View {
 /// Sent with someone connected but nothing sent to them, the mockup's "Nothing Sent": New Reminder,
 /// the toolbar's button with its title showing.
 private struct NothingSentView: View {
-    let pause: SharingReach.Pause?
+    let banner: SharingBanner?
 
     var body: some View {
         ScrollView {
-            PausedBannerAboveEmptyState(pause: pause)
+            BannerAboveEmptyState(banner: banner)
             ContentUnavailableView {
                 Label {
                     Text("Nothing Sent", comment: "Reminders tab, Sent: title when this person has sent nothing to anyone connected.")
@@ -282,9 +283,9 @@ private extension SentScreen {
         var sharing = SharingData(connections: [riley, sam])
         sharing.sentReminders = [SentReminder(reminder: pills, revision: 0), SentReminder(reminder: call, revision: 0)]
         sharing.sentCopies = [
-            SentCopy(connectionID: riley.id, reminderID: pills.id, createdAt: .now, receipt: .started, statusRecord: nil, waitingToSync: false),
-            SentCopy(connectionID: sam.id, reminderID: pills.id, createdAt: .now, receipt: .started, statusRecord: nil, waitingToSync: false),
-            SentCopy(connectionID: sam.id, reminderID: call.id, createdAt: .now.addingTimeInterval(60), receipt: .notDelivered, statusRecord: nil, waitingToSync: false),
+            SentCopy(connectionID: riley.id, reminderID: pills.id, createdAt: .now, receipt: .started, statusRecord: nil),
+            SentCopy(connectionID: sam.id, reminderID: pills.id, createdAt: .now, receipt: .started, statusRecord: nil),
+            SentCopy(connectionID: sam.id, reminderID: call.id, createdAt: .now.addingTimeInterval(60), receipt: .notDelivered, statusRecord: nil),
         ]
         return SentScreen(engine: .myDayPreview(), sharing: sharing)
     }

@@ -14,6 +14,9 @@ final class SharingModel {
     private(set) var data = SharingData()
     /// The iCloud account as the adapter last reported it, or `nil` before it has.
     private(set) var accountState: SharingAccountState?
+    /// Whether the iPhone can reach iCloud, as the adapter last said (ticket 211). Online until it
+    /// says otherwise, so nothing says offline before it has.
+    private(set) var isOnline = true
 
     /// What came of the latest invite this person tapped, for the screens to show until
     /// `dismissAcceptance()`, or `nil` when there's nothing to show.
@@ -62,6 +65,14 @@ final class SharingModel {
     /// reported the account. While it is, nothing is sent and no one is invited; received reminders
     /// keep nudging, and what waits in the outbox stays there.
     var pause: SharingReach.Pause? { reach?.pause }
+
+    /// What the banner on Connections, Send To and Sent says (tickets 210 and 211), or `nil` while
+    /// sharing works and the iPhone is online. Paused wins: without iCloud, being back online
+    /// changes nothing, so offline isn't what to tell the person.
+    var banner: SharingBanner? {
+        if let pause { return .paused(pause) }
+        return isOnline ? nil : .offline
+    }
 
     /// Where a received reminder's copy is kept: the app model, which holds the person's reminders
     /// (ticket 198). Held weakly; until it is set, a send that arrives is turned down, and the
@@ -120,6 +131,7 @@ final class SharingModel {
         accountRefresh = Task {
             await previous?.value
             _ = try? openedStore()
+            isOnline = adapter.isOnline
             accountState = await adapter.accountState()
         }
     }
@@ -160,7 +172,7 @@ final class SharingModel {
         kept.sentReminders.append(sent)
         let changes = connectionIDs.map { SharingChange.send(sent, to: $0) }
         for connectionID in connectionIDs {
-            kept.sentCopies.append(SentCopy(connectionID: connectionID, reminderID: stripped.id, createdAt: clock.now, receipt: .notDelivered, statusRecord: nil, waitingToSync: false))
+            kept.sentCopies.append(SentCopy(connectionID: connectionID, reminderID: stripped.id, createdAt: clock.now, receipt: .notDelivered, statusRecord: nil))
         }
         kept.outbox.append(contentsOf: changes.map(\.entry))
         try keep(kept)
@@ -473,6 +485,10 @@ extension SharingModel: SharingAdapterEvents {
         refreshAccountState()
     }
 
+    func connectivityChanged() {
+        isOnline = adapter.isOnline
+    }
+
     func invited(_ invite: IncomingInvite) async {
         let id = invite.connectionID
         do {
@@ -559,7 +575,7 @@ extension SharingModel: SharingAdapterEvents {
             try receivedReminders.keep(copy)
         }
         guard !kept.receivedSyncStates.contains(where: { $0.reminderID == copy.id }) else { return }
-        kept.receivedSyncStates.append(ReceivedSyncState(reminderID: copy.id, notSharingThisOne: false, waitingToSync: false))
+        kept.receivedSyncStates.append(ReceivedSyncState(reminderID: copy.id, notSharingThisOne: false))
         let receipt = SharingChange.receipt(copy.isWaiting ? .waitingForAcceptance : .started, for: sent.reminder.id, from: connectionID)
         kept.outbox.append(receipt.entry)
         try keep(kept)

@@ -13,7 +13,7 @@ struct ConnectionsPage: View {
         Group {
             if list.isEmpty {
                 ScrollView {
-                    PausedBannerAboveEmptyState(pause: sharing.pause)
+                    BannerAboveEmptyState(banner: sharing.banner)
                     ContentUnavailableView {
                         Label {
                             Text("No Connections", comment: "Connections: title of the empty state, with no one connected or invited.")
@@ -43,7 +43,7 @@ struct ConnectionsPage: View {
                         }
                         .disabled(sharing.pause != nil)
                     } header: {
-                        SharingPausedBanner(pause: sharing.pause)
+                        SharingBannerView(banner: sharing.banner)
                     }
                     if !list.connected.isEmpty {
                         Section {

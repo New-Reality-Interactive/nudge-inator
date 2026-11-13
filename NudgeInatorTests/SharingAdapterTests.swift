@@ -84,7 +84,7 @@ struct SharingAdapterTests {
     }
 
     func copy(receipt: SentCopy.Receipt = .notDelivered) -> SentCopy {
-        SentCopy(connectionID: connectionID, reminderID: reminderID, createdAt: NewYork.local(2026, 10, 15, 8), receipt: receipt, statusRecord: nil, waitingToSync: false)
+        SentCopy(connectionID: connectionID, reminderID: reminderID, createdAt: NewYork.local(2026, 10, 15, 8), receipt: receipt, statusRecord: nil)
     }
 
     func settings(_ deliveryMode: DeliveryMode, sharesStatus: Bool = true) -> SharingChange {
@@ -435,6 +435,8 @@ final class RecordingSharingEvents: SharingAdapterEvents {
     func accountStateChanged() {
         accountChanges += 1
     }
+
+    func connectivityChanged() {}
 
     func invited(_ invite: IncomingInvite) async {}
 

@@ -70,7 +70,7 @@ final class AppModel {
     /// Who sent each received reminder, for its "From <name>" label (ticket 199). Read from the
     /// sharing store's data, so a screen that reads it changes when a connection does.
     var senders: Senders {
-        sharing.map { Senders(connections: $0.data.connections) } ?? Senders()
+        sharing.map { Senders(sharing: $0.data) } ?? Senders()
     }
 
     /// `giveUpLimit` is the shipped one; only tests pass another, to reach a take-over.

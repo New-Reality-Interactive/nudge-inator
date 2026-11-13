@@ -243,7 +243,7 @@ struct SharingRecordMappingTests {
             Issue.record("Expected a status, got \(read.content)")
             return
         }
-        let copy = SentCopy(connectionID: connectionID, reminderID: reminderID, createdAt: .distantPast, receipt: .started, statusRecord: status, waitingToSync: false)
+        let copy = SentCopy(connectionID: connectionID, reminderID: reminderID, createdAt: .distantPast, receipt: .started, statusRecord: status)
 
         let readOut = SentReadOut(connections: [SentConnection(id: connectionID, name: "Sam", sharesStatus: true)], copies: [copy])
 

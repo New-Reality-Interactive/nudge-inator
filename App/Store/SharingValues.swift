@@ -50,12 +50,11 @@ struct SentReminder: Equatable {
 }
 
 /// What the sharing store keeps about one received reminder: the person's choice to keep this one's
-/// status from its sender (GLOSSARY.md, Status sharing), and what hasn't gone through iCloud yet
-/// (Waiting to sync). `reminderID` is the received reminder's ID in the reminder store.
+/// status from its sender (GLOSSARY.md, Status sharing). Whether it is Waiting to sync is the
+/// outbox's (ticket 211). `reminderID` is the received reminder's ID in the reminder store.
 struct ReceivedSyncState: Equatable {
     var reminderID: Reminder.ID
     var notSharingThisOne: Bool
-    var waitingToSync: Bool
     /// What the sharing adapter keeps of the reminder's CloudKit records so it can update them: bytes
     /// the store doesn't read.
     var recordSystemFields: Data?
@@ -92,7 +91,7 @@ struct OutboxChange: Equatable, Identifiable {
     var connectionID: UUID
     var reminderID: Reminder.ID?
 
-    enum Kind: Equatable {
+    enum Kind: Hashable {
         case send
         case revise
         case cancel
@@ -175,10 +174,29 @@ extension SharingData {
         if let index = receivedSyncStates.firstIndex(where: { $0.reminderID == reminderID }) {
             update(&receivedSyncStates[index])
         } else {
-            var state = ReceivedSyncState(reminderID: reminderID, notSharingThisOne: false, waitingToSync: false)
+            var state = ReceivedSyncState(reminderID: reminderID, notSharingThisOne: false)
             update(&state)
             receivedSyncStates.append(state)
         }
+    }
+
+    /// Whether the sent `copy` is Waiting to sync (ticket 211): its send or a revision of it is still
+    /// in the outbox.
+    func waitsToSync(_ copy: SentCopy) -> Bool {
+        hasInOutbox([.send, .revise], for: copy.reminderID, through: copy.connectionID)
+    }
+
+    /// Whether the received `copy` is Waiting to sync (ticket 211): its receipt or a status this
+    /// person's app sends its sender is still in the outbox. Never for the person's own.
+    func waitsToSync(received copy: Reminder) -> Bool {
+        guard let connectionID = copy.receivedThrough, let sendersReminderID = copy.sendersReminderID else { return false }
+        return hasInOutbox([.receipt, .status], for: sendersReminderID, through: connectionID)
+    }
+
+    /// Whether the outbox holds a change of one of `kinds` to the sender's reminder with
+    /// `reminderID`, through the connection with `connectionID`.
+    private func hasInOutbox(_ kinds: Set<OutboxChange.Kind>, for reminderID: Reminder.ID, through connectionID: UUID) -> Bool {
+        outbox.contains { kinds.contains($0.kind) && $0.connectionID == connectionID && $0.reminderID == reminderID }
     }
 
     private func copyIndex(of change: SharingChange) -> Int? {

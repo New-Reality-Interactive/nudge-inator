@@ -58,7 +58,7 @@ extension ReminderDetails {
                 changes: [.dueTime(from: reminder.dueTime.addingTimeInterval(-3600), to: reminder.dueTime), .strength(from: .firm, to: .relentless)],
                 at: .now.addingTimeInterval(-5 * 60)
             )
-            sharing.receivedSyncStates = [ReceivedSyncState(reminderID: reminder.id, notSharingThisOne: false, waitingToSync: false, changeNote: note)]
+            sharing.receivedSyncStates = [ReceivedSyncState(reminderID: reminder.id, notSharingThisOne: false, changeNote: note)]
         }
         return preview(reminder, tags: ["health"], sharing: sharing)
     }

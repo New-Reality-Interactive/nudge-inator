@@ -28,7 +28,7 @@ struct RemindersScreen {
         /// The reminder's tags that the engine holds, as "#home". The ones the filter chose are bold.
         var tags: [MyDayScreen.TagLabel]
         /// "From Riley Park" under the title of a received reminder, or `nil` (ticket 199).
-        var from: LocalizedStringResource?
+        var from: FromLine?
 
         var id: Reminder.ID { reminder.id }
         var title: String { reminder.title }
@@ -40,7 +40,7 @@ struct RemindersScreen {
         var voiceOverLabel: LocalizedStringResource {
             let status = String(localized: status.name)
             let tags = tags.isEmpty ? nil : tags.map(\.text).formatted(.list(type: .and))
-            switch (from.map { String(localized: $0) }, tags) {
+            switch (from?.spoken, tags) {
             case (nil, nil):
                 return LocalizedStringResource("\(title), \(status), \(day), \(time)", comment: "VoiceOver label of a Reminders tab row with no tags. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\".")
             case (nil, let tags?):
@@ -89,7 +89,7 @@ struct RemindersScreen {
                 tags: item.reminder.tagIDs.compactMap { tagID in
                     engine.tag(withID: tagID).map { MyDayScreen.TagLabel(text: $0.label, isChosen: filter.tags.chosen.contains(tagID)) }
                 },
-                from: senders.label(of: item.reminder)
+                from: senders.fromLine(of: item.reminder)
             )
         }
         emptyState = engine.reminders.isEmpty ? .noReminders : (rows.isEmpty ? .noMatch : nil)

@@ -201,6 +201,9 @@
     "%@, Last 7 Days" : {
       "comment" : "A sent reminder's details: section header over one person's last 7 days of the reminder. The placeholder is the person's short name, such as \"Riley\"."
     },
+    "%@, Waiting to sync" : {
+      "comment" : "VoiceOver, on a received reminder's row or card: who sent it, then that what this person's app tells them hasn't gone through iCloud yet. The placeholder is such as \"From Riley Park\"."
+    },
     "%@, nudge %lld of %lld, urgency %@. %@. %@" : {
       "comment" : "VoiceOver value of a nudge card after its last nudge. 1: the strength, such as \"Gentle\". 2: the nudges sent. 3: the most it sends. 4: the urgency now, such as \"High\". 5: the tags and due time, such as \"#home · due 9:00 AM\". 6: the card's line saying that was the last nudge and when it closes as Missed.",
       "localizations" : {
@@ -636,6 +639,9 @@
     },
     "**Time Sensitive is off.** High nudges come as ordinary notifications, so a Focus can hold them." : {
       "comment" : "Permission banner, when the app's Time Sensitive notifications are turned off. Keep the first sentence bold."
+    },
+    "**You're offline.** Reminders you've received keep nudging. What you send or change goes when you're back online." : {
+      "comment" : "Offline banner on Connections, Send To and Sent, while the iPhone can't reach iCloud. Keep the first sentence bold."
     },
     "+%lld more" : {
       "comment" : "My Day: the filter token after the tags that fit in three rows. The placeholder is how many more are chosen. Opens the filter.",
@@ -2302,6 +2308,12 @@
     },
     "Waiting for you to accept" : {
       "comment" : "My Day: under the title of a reminder someone sent that waits for the person to accept it before it nudges.\nReminder details: the note on a reminder someone sent that waits for the person to accept it (Ask me first)."
+    },
+    "Waiting to sync" : {
+      "comment" : "Trailing a sent reminder's row on the Sent view and a person on its details, and on a received reminder's From line: what was sent or changed hasn't gone through iCloud yet."
+    },
+    "Waiting to sync, %@" : {
+      "comment" : "VoiceOver, on a Sent row and a recipient on a sent reminder's details: the send or a change to it hasn't gone through iCloud yet. The placeholder is the line under the title, such as \"Not delivered yet\" or \"Delivered\"."
     },
     "Weekly" : {
       "comment" : "The Custom repeat page's frequency."

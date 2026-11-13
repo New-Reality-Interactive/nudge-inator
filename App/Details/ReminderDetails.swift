@@ -53,7 +53,7 @@ struct ReminderDetails {
     /// them (ticket 200): the sender owns everything but the tags.
     struct Received: Equatable {
         /// "From Alex Morgan", as Now, My Day and the Reminders tab label it.
-        var from: LocalizedStringResource
+        var from: FromLine
         /// Who owns its content, for "Alex Morgan owns this schedule."
         var senderName: String
         /// "Firm: rings as an alarm from nudge 4", under the strength badge.
@@ -104,8 +104,8 @@ struct ReminderDetails {
         self.reminder = reminder
         self.status = status
         tags = engine.tagLabels(for: reminder.tagIDs)
-        let senders = Senders(connections: sharing.connections)
-        let from = senders.label(of: reminder)
+        let senders = Senders(sharing: sharing)
+        let from = senders.fromLine(of: reminder)
         card = NudgeCard(engine: engine, reminder: reminder, from: from)
         let latest = engine.latestOccurrence(for: id)
         // A canceled copy's last occurrence closed Skipped only to stop it nudging: it wasn't paused.

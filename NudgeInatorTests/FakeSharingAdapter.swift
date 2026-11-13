@@ -192,11 +192,14 @@ final class FakeSharingAdapter: SharingAdapter {
     /// Submitted while this iPhone was offline: kept, and uploaded when it comes back.
     private(set) var unsent: [SharingChange] = []
 
-    /// Whether this iPhone can reach iCloud. Coming back online uploads what was kept, in order, and
-    /// lets in what waited for this iPhone.
+    /// Whether this iPhone can reach iCloud. A change tells the app model, as the real adapter's
+    /// does (ticket 211). Coming back online uploads what was kept, in order, and lets in what
+    /// waited for this iPhone.
     var isOnline = true {
         didSet {
-            guard isOnline, !oldValue else { return }
+            guard isOnline != oldValue else { return }
+            events?.connectivityChanged()
+            guard isOnline else { return }
             let kept = unsent
             unsent = []
             kept.forEach(upload)

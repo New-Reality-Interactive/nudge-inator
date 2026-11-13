@@ -198,6 +198,8 @@ final class ReminderForm: Identifiable {
     /// Why sharing is paused (ticket 210), or `nil` while it works. It changes nothing already
     /// chosen: the form checks it only on Add, which then says why and sends nothing.
     var sendToPause: SharingReach.Pause? { sharing?.pause }
+    /// The banner over the Send To page's people: paused, or offline (ticket 211).
+    var sendToBanner: SharingBanner? { sharing?.banner }
 
     /// Whether the Send To row is shown off, saying Paused with the reason under it (ticket 210):
     /// while sharing is paused and no one is chosen. Someone chosen stays on the row, as chosen.

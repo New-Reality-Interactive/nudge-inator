@@ -80,7 +80,8 @@ struct SentScreen {
         let connections = sharing.connections
             .filter { $0.state == .connected }
             .map { SentConnection(id: $0.id, name: $0.name, sharesStatus: $0.theirs.sharesStatus) }
-        let readOut = SentReadOut(connections: connections, copies: sharing.sentCopies)
+        // Waiting to sync is read from the outbox: the send or a revision not yet through iCloud.
+        let readOut = SentReadOut(connections: connections, copies: sharing.sentCopies, isWaitingToSync: sharing.waitsToSync)
         let reminders = Dictionary(sharing.sentReminders.map { ($0.reminder.id, $0.reminder) }, uniquingKeysWith: { first, _ in first })
         people = readOut.people.map { person in
             Person(
@@ -127,11 +128,13 @@ struct SentCopyState: Equatable {
     /// iPhone, waiting or started, as the mockup's `sentStatus` labels a waiting copy (ticket 203).
     var isDelivered: Bool { delivery != .notDelivered }
 
-    /// The label trailing a Sent row, and a recipient on the details (the mockup's `sentStatus`): the
+    /// The label trailing a Sent row, and a recipient on the details (the mockup's `sentStatus`):
+    /// Waiting to sync while the send or a revision hasn't gone through iCloud (ticket 211), else the
     /// copy's status when the person's app reported one the sender may read, otherwise Delivered once
     /// it is on their iPhone, and nothing before.
     var trailing: SentReadOut.Trailing {
-        switch delivery {
+        if waitingToSync { return .waitingToSync }
+        return switch delivery {
         case .notDelivered: .nothing
         case .waitingForAcceptance: .delivered
         case .delivered:
@@ -160,6 +163,11 @@ struct SentCopyState: Equatable {
     /// no status is shown, else what the detail line says. Whole sentences, so a translation can
     /// order the words as it needs.
     var spokenState: LocalizedStringResource {
+        if waitingToSync {
+            guard let line = detailLine else { return LocalizedStringResource.waitingToSync }
+            let detail = String(localized: line)
+            return LocalizedStringResource("Waiting to sync, \(detail)", comment: "VoiceOver, on a Sent row and a recipient on a sent reminder's details: the send or a change to it hasn't gone through iCloud yet. The placeholder is the line under the title, such as \"Not delivered yet\" or \"Delivered\".")
+        }
         if case .status(let reported) = trailing { return reported.name }
         switch (delivery, status) {
         case (.delivered, .notSharingStatus):
@@ -177,6 +185,8 @@ extension SentReadOut {
     enum Trailing: Equatable {
         /// Not delivered yet.
         case nothing
+        /// The send or a revision hasn't gone through iCloud yet (ticket 211).
+        case waitingToSync
         /// Delivered, with no status to show.
         case delivered
         case status(ReportedStatus)

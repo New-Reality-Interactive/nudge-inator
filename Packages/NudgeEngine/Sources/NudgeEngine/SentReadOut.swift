@@ -28,9 +28,6 @@ public struct SentCopy: Equatable, Sendable {
     public var receipt: Receipt
     /// The status record the recipient's app wrote, or `nil` when none has arrived.
     public var statusRecord: StatusRecord?
-    /// The sent reminder or a change to it has not gone through iCloud yet (GLOSSARY.md, Waiting
-    /// to sync).
-    public var waitingToSync: Bool
 
     /// How far the copy has got, as the recipient's app reported it. The recipient's app marks a
     /// copy that starts right away as `started` when it delivers it.
@@ -60,15 +57,13 @@ public struct SentCopy: Equatable, Sendable {
         reminderID: UUID,
         createdAt: Date,
         receipt: Receipt,
-        statusRecord: StatusRecord?,
-        waitingToSync: Bool
+        statusRecord: StatusRecord?
     ) {
         self.connectionID = connectionID
         self.reminderID = reminderID
         self.createdAt = createdAt
         self.receipt = receipt
         self.statusRecord = statusRecord
-        self.waitingToSync = waitingToSync
     }
 }
 
@@ -121,7 +116,10 @@ public struct SentReadOut: Equatable, Sendable {
     /// The same input in any order gives the same read-out. The name order is deliberately not
     /// localized, so it is the same on every iPhone and in every test; a screen that wants the
     /// person's own locale's order sorts the people again.
-    public init(connections: [SentConnection], copies: [SentCopy]) {
+    ///
+    /// `isWaitingToSync` says which copies' send or revision hasn't gone through iCloud yet (GLOSSARY.md,
+    /// Waiting to sync): the sender's app knows from its outbox, which the engine doesn't hold.
+    public init(connections: [SentConnection], copies: [SentCopy], isWaitingToSync: (SentCopy) -> Bool = { _ in false }) {
         let copiesByConnection = Dictionary(grouping: copies, by: \.connectionID)
         people = connections
             .sorted { Self.isOrdered($0, before: $1) }
@@ -129,7 +127,7 @@ public struct SentReadOut: Equatable, Sendable {
                 guard let sent = copiesByConnection[connection.id], !sent.isEmpty else { return nil }
                 let rows = sent
                     .sorted(by: Self.isOrdered)
-                    .map { Row($0, sharesStatus: connection.sharesStatus) }
+                    .map { Row($0, sharesStatus: connection.sharesStatus, waitingToSync: isWaitingToSync($0)) }
                 return Person(connectionID: connection.id, name: connection.name, rows: rows)
             }
     }
@@ -149,9 +147,9 @@ public struct SentReadOut: Equatable, Sendable {
 }
 
 extension SentReadOut.Row {
-    init(_ copy: SentCopy, sharesStatus: Bool) {
+    init(_ copy: SentCopy, sharesStatus: Bool, waitingToSync: Bool) {
         reminderID = copy.reminderID
-        waitingToSync = copy.waitingToSync
+        self.waitingToSync = waitingToSync
         status = Self.status(of: copy, sharesStatus: sharesStatus)
         switch copy.receipt {
         case .notDelivered:

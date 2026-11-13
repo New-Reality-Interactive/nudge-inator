@@ -5,20 +5,33 @@ import SwiftUI
 /// cards and every list row: `person`, then "From Riley Park" in the subhead and the secondary
 /// label color. Who sent it isn't a status, so it has no color of its own. On a row with no
 /// strength badge of its own (My Day, Reminders, Last 24 Hours) the badge follows it, as the
-/// mockup's `fromLabel(r)`; when the two don't fit side by side, the badge goes under it.
+/// mockup's `fromLabel(r)`, and Waiting to sync after them while it applies (ticket 211); when they
+/// don't fit side by side, each goes under the one before.
 struct FromLabel: View {
-    let from: LocalizedStringResource
+    let from: FromLine
     /// The strength badge to follow the label, or `nil` where the row already shows one.
     var strength: Strength?
 
     var body: some View {
-        if let strength {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: Design.Spacing.s2) { name; StrengthBadge(strength: strength) }
-                VStack(alignment: .leading, spacing: Design.Spacing.line) { name; StrengthBadge(strength: strength) }
-            }
-        } else {
+        if strength == nil && !from.waitsToSync {
             name
+        } else {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: Design.Spacing.s2) { parts }
+                VStack(alignment: .leading, spacing: Design.Spacing.line) { parts }
+            }
+        }
+    }
+
+    /// The name, then the strength badge where the row has none, then Waiting to sync (ticket 211)
+    /// while it applies, as the mockup's `fromLabel`.
+    @ViewBuilder private var parts: some View {
+        name
+        if let strength {
+            StrengthBadge(strength: strength)
+        }
+        if from.waitsToSync {
+            WaitingToSyncLabel(weight: .regular)
         }
     }
 
@@ -27,7 +40,7 @@ struct FromLabel: View {
             // The words say who; the glyph only shows it.
             Image(systemName: "person")
                 .accessibilityHidden(true)
-            Text(from)
+            Text(from.label)
                 // It wraps, never truncates: when neither of `ViewThatFits`'s layouts fits (the
                 // largest text sizes), the stacked one could get one line's height, and the phone
                 // showed "From Riley…" (#199's phone check).
@@ -40,7 +53,7 @@ struct FromLabel: View {
 
 #if DEBUG
 /// "From Riley Park", as `Senders` writes it, so the previews add no string to the catalog.
-private let previewFrom: LocalizedStringResource = {
+private let previewFrom: FromLine = {
     let connectionID = UUID()
     let reminder = Reminder(
         title: "Take the pills",
@@ -50,11 +63,16 @@ private let previewFrom: LocalizedStringResource = {
     )
     let senders = Senders(connections: [SharingConnection(id: connectionID, name: "Riley Park", state: .connected)])
     // A received reminder always has a label.
-    return senders.label(of: reminder)!
+    return senders.fromLine(of: reminder)!
 }()
 
 #Preview("With the strength") {
     FromLabel(from: previewFrom, strength: .relentless)
+        .padding()
+}
+
+#Preview("Waiting to sync") {
+    FromLabel(from: FromLine(label: previewFrom.label, waitsToSync: true), strength: .firm)
         .padding()
 }
 
