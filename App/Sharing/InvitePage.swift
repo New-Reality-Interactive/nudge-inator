@@ -74,6 +74,7 @@ struct InvitePage: View {
                     } icon: {
                         Image(systemName: "person.badge.plus")
                     }
+                    .switchedOffLooksSecondary()
                 }
                 // No invite can be made without iCloud (ticket 210), as the mockup's `viewInvite`.
                 .disabled(sharing.pause != nil)

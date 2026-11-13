@@ -115,6 +115,27 @@ struct InviteSomeoneLabel: View {
         } icon: {
             Image(systemName: "person.badge.plus")
         }
+        .switchedOffLooksSecondary()
+    }
+}
+
+extension View {
+    /// DESIGN.md's Disabled: secondary label for text and icon while the button holding it is off
+    /// (ticket 210). A list row's Label kept its colors when its button was disabled (phone check).
+    func switchedOffLooksSecondary() -> some View {
+        modifier(SwitchedOffLooksSecondary())
+    }
+}
+
+private struct SwitchedOffLooksSecondary: ViewModifier {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content
+        } else {
+            content.foregroundStyle(Color(uiColor: .secondaryLabel))
+        }
     }
 }
 

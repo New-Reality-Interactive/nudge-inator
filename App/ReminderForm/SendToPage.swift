@@ -19,6 +19,8 @@ struct SendToSection: View {
                     Text("Send To", comment: "The reminder form's row that chooses who the reminder is sent to.")
                 }
                 .disabled(true)
+                // One VoiceOver stop, "Send To, Paused", as a row with a value is (phone check).
+                .accessibilityElement(children: .combine)
             } else if form.sendToChoices.isEmpty {
                 Button {
                     isInviting = true
@@ -81,6 +83,7 @@ struct SendToPage: View {
                     } icon: {
                         Image(systemName: "person.badge.plus")
                     }
+                    .switchedOffLooksSecondary()
                 }
                 .disabled(form.sendToPause != nil)
             } header: {
