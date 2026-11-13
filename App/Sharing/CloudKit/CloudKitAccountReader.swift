@@ -11,7 +11,6 @@ protocol CloudKitAccountSource: Sendable {
 }
 
 extension CKContainer: CloudKitAccountSource {
-    // `accountStatus()` is CKContainer's own.
     func userRecordName() async throws -> String {
         try await userRecordID().recordName
     }
