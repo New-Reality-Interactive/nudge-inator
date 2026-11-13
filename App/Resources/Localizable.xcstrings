@@ -204,6 +204,9 @@
     "%@, Waiting to sync" : {
       "comment" : "VoiceOver, on a received reminder's row or card: who sent it, then that what this person's app tells them hasn't gone through iCloud yet. The placeholder is such as \"From Riley Park\"."
     },
+    "%@, including invites not yet accepted." : {
+      "comment" : "The Apple Account Changed sheet: under the connections removed. The placeholder is their names, as a list, such as \"Maya Torres, Sam Okafor, and Jordan Lee\"."
+    },
     "%@, nudge %lld of %lld, urgency %@. %@. %@" : {
       "comment" : "VoiceOver value of a nudge card after its last nudge. 1: the strength, such as \"Gentle\". 2: the nudges sent. 3: the most it sends. 4: the urgency now, such as \"High\". 5: the tags and due time, such as \"#home · due 9:00 AM\". 6: the card's line saying that was the last nudge and when it closes as Missed.",
       "localizations" : {
@@ -306,6 +309,29 @@
         }
       }
     },
+    "%lld connections" : {
+      "comment" : "The Apple Account Changed sheet: the connections removed, invites among them. The placeholder is how many.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld connection"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld connections"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld filters on" : {
       "comment" : "VoiceOver value of the Filter button on Reminders and Tags while the sheet's filters are on. The placeholder is how many of its sections are in use.",
       "localizations" : {
@@ -385,6 +411,29 @@
         }
       }
     },
+    "%lld reminders from %@" : {
+      "comment" : "The Apple Account Changed sheet: the received reminders removed. 1: how many. 2: who sent them, as a list, such as \"Maya Torres and Sam Okafor\".",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld reminder from %2$@"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld reminders from %2$@"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld reminders out of %lld" : {
       "comment" : "Reminders tab: the header row's count, in every case, even with nothing narrowing the list. 1: the reminders shown. 2: every reminder.",
       "localizations" : {
@@ -457,6 +506,29 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%1$lld reminders with %2$@"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld reminders you sent" : {
+      "comment" : "The Apple Account Changed sheet: the reminders this person sent, removed. The placeholder is how many.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld reminder you sent"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld reminders you sent"
                 }
               }
             }
@@ -791,6 +863,9 @@
     },
     "Any Tag" : {
       "comment" : "A filter sheet: the Match choice that needs at least one checked tag."
+    },
+    "Apple Account Changed" : {
+      "comment" : "The Apple Account Changed sheet's title: a different Apple Account signed in on the iPhone."
     },
     "Apply" : {
       "comment" : "A filter sheet's confirm button (a checkmark), on My Day, Reminders and Tags: applies the choices and closes the sheet.\nThe Custom repeat sheet's only button (a checkmark): it closes the sheet. Its choices are already the reminder form's repeat."
@@ -1873,7 +1948,7 @@
       }
     },
     "OK" : {
-      "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nA sent reminder's details: dismisses the message that the reminder couldn't be deleted.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nDisconnect's sheet and Connection Ended: dismisses Couldn't Disconnect.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the message that the invite couldn't be made.\nSettings: dismisses the message that deleting failed.\nThe Edit Reminder form: closes the form of a sent reminder that was deleted while it was open.\nThe reminder form: dismisses the message that the reminder couldn't be sent."
+      "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nA sent reminder's details: dismisses the message that the reminder couldn't be deleted.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nDisconnect's sheet and Connection Ended: dismisses Couldn't Disconnect.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the message that the invite couldn't be made.\nSettings: dismisses the message that deleting failed.\nThe Apple Account Changed sheet: closes it.\nThe Edit Reminder form: closes the form of a sent reminder that was deleted while it was open.\nThe reminder form: dismisses the message that the reminder couldn't be sent."
     },
     "Off" : {
       "comment" : "A connection's page and the Connected sheet: Status Sharing is off.\nReminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off."
@@ -2017,6 +2092,9 @@
     },
     "Removed" : {
       "comment" : "Status label on a Sent row: the person removed their copy of the reminder."
+    },
+    "Removed from This iPhone" : {
+      "comment" : "The Apple Account Changed sheet: header of what was removed."
     },
     "Removing it clears it from your list." : {
       "comment" : "Reminder details: under Remove Reminder on a received reminder its sender deleted."
@@ -2202,6 +2280,9 @@
     "The repeat has already ended. Change when it ends." : {
       "comment" : "Under the reminder form's start when the repeat has no times left, so Save is disabled."
     },
+    "Their nudges and alarms are canceled." : {
+      "comment" : "The Apple Account Changed sheet: under the received reminders removed."
+    },
     "Then it ends." : {
       "comment" : "Under the Custom repeat page's Next Times when fewer than three are left."
     },
@@ -2234,6 +2315,9 @@
     },
     "This doesn't nudge you. Deleting cancels it on everyone's iPhone, with a note." : {
       "comment" : "A sent reminder's details: under Delete Reminder."
+    },
+    "This iPhone is signed in to a different Apple Account now, so sharing stopped for the people you were connected with through the other account." : {
+      "comment" : "The Apple Account Changed sheet: its first line."
     },
     "This removes your copy and cancels its nudges and alarms." : {
       "comment" : "Under the question asked before removing a received reminder."
@@ -2357,11 +2441,17 @@
     "Your Data" : {
       "comment" : "Settings: header of the section with Delete All Data."
     },
+    "Your Sent view starts empty." : {
+      "comment" : "The Apple Account Changed sheet: under the reminders this person sent, removed."
+    },
     "Your Tags" : {
       "comment" : "The Tags page's section header above every tag."
     },
     "Your choices are as they were. Try again." : {
       "comment" : "A connection's page: under Couldn't Save the Change."
+    },
+    "Your own reminders haven't changed. To share again, invite people from Settings › Connections." : {
+      "comment" : "The Apple Account Changed sheet: under what was removed."
     },
     "Your reminders are still on this iPhone, and nudges already scheduled will still come. Unlock your iPhone, then open %@ again." : {
       "comment" : "Explains the unreadable store: nothing is lost, and reopening the app tries again. The placeholder is the app's name."

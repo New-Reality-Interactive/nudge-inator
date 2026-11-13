@@ -661,6 +661,12 @@ sharing paused and offline banner.
   bordered Disconnect in destructive text, with the form's Cancel. When the other person ended the
   connection the sheet has a prominent Continue and no Cancel, because the connection is already over
   and the choice has to be made: the one question without a way to close it that changes nothing.
+- **Apple Account Changed** (#212's change mockup, `docs/mockups/2026-11-13-account-change/`): a
+  sheet over whatever screen is up, once, when a different Apple Account signs in. Connection Ended's
+  shape with no choice: a lead line, a list headed "Removed from This iPhone" (received reminders,
+  connections, sent reminders, each a `{typography.body}` line over a `{typography.subhead}`
+  `{colors.secondary-label}` detail, a row with nothing in it left out), a footer, and one prominent
+  OK. A swipe down closes it too, since it only informs.
 - **Sharing paused and offline, an exception to Warning's meaning (Colors):** the `permission-banner`
   with `{colors.warning}`, `icloud.slash` or `wifi.slash`, on Connections, Send To and Sent only. It
   extends Warning from the alarms-off and Time Sensitive-off banners to these two, as the same kind of

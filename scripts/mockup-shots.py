@@ -125,6 +125,7 @@ SCREENS = {
   "invite-accepted": ("showAccepted()", 1),
   "disconnect": ("state.sheet={kind:'disconnect',id:'maya',choice:'remove'};render()", 1),
   "disconnect-other-person": ("state.sheet={kind:'disconnect',id:'maya',choice:'remove',other:true};render()", 1),
+  "account-changed": ("changeAccount()", 1),
   "form-send-to": ("openEditor();state.sheet.draft.to=['maya'];render()", 1),
   "form-send-to-page": ("openEditor();state.sheet.page='sendto';state.sheet.draft.to=['maya'];render()", 1),
   "form-received": ("openEditor('rc2')", 2),
@@ -147,11 +148,11 @@ SCREENS = {
   "sharing-offline": ("sharing.offline=true;state.tab='rems';state.remsView='sent';nav()", 1),
   "form-send-to-paused": ("sharing.icloud='none';openEditor()", 1),
   "invite-already-connected": ("openInvite('1');CLICK.invitego();CLICK.cksug('maya.torres@icloud.com|Maya Torres');CLICK.invitesend()", 1),
-  "notification-arrival": ("showSharedNotification('Take your allergy pill','From Maya · Relentless: rings an alarm until you mark it done')", 1),
-  "notification-changed": ("showSharedNotification('Call the plumber before noon','Maya changed this: due time changed from 9:00 AM to 11:30 AM')", 1),
-  "notification-done": ("showSharedNotification('Book the vet','Maya marked it Done')", 1),
-  "notification-removed": ("showSharedNotification('Pick up the groceries','Maya removed it')", 1),
-  "notification-missed": ("showSharedNotification('Sign the lease renewal','Missed: Maya didn\\'t mark it Done')", 1),
+  "notification-arrival": ("showSharedNotification('Take your allergy pill','From Maya Torres · Relentless: rings an alarm until you mark it done')", 1),
+  "notification-changed": ("showSharedNotification('Call the plumber before noon','Maya Torres changed this: due time changed from 9:00 AM to 11:30 AM')", 1),
+  "notification-done": ("showSharedNotification('Book the vet','Maya Torres marked it Done')", 1),
+  "notification-removed": ("showSharedNotification('Pick up the groceries','Maya Torres removed it')", 1),
+  "notification-missed": ("showSharedNotification('Sign the lease renewal','Missed: Maya Torres didn\\'t mark it Done')", 1),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}

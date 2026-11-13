@@ -188,3 +188,19 @@ final class OutboxRecord {
         self.reminderID = reminderID
     }
 }
+
+/// Which Apple Account the store's data belongs to, and the note of what a change of account
+/// removed until the person has seen it (ticket 212). The store holds one, or none before either
+/// is known.
+@Model
+final class SharingAccountRecord {
+    /// `AppleAccountID`'s raw value.
+    var accountID: String?
+    /// `AccountChangeNote` as JSON, or `nil` when there's no note to show.
+    var changeNote: Data?
+
+    init(accountID: String?, changeNote: Data?) {
+        self.accountID = accountID
+        self.changeNote = changeNote
+    }
+}

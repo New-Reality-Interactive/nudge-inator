@@ -216,6 +216,22 @@ final class FakeSharingAdapter: SharingAdapter {
     }
     private var tellsTheApp = true
 
+    /// iCloud's ID for the Apple Account signed in on this iPhone, reported while `account` is available.
+    private(set) var accountID = AppleAccountID(UUID().uuidString)
+
+    /// A different Apple Account signs in on this iPhone (ticket 212), and the app is told unless
+    /// `tellingTheApp` is false, as for a change made in Settings while the app was suspended. What
+    /// waited to upload under the old account is dropped, as `CKSyncEngine` drops its pending
+    /// changes when the account changes: the new account never sends it.
+    func signIn(as id: String, tellingTheApp: Bool = true) {
+        unsent = []
+        accountID = AppleAccountID(id)
+        self.tellsTheApp = false
+        account = .available
+        self.tellsTheApp = true
+        if tellingTheApp { events?.accountStateChanged() }
+    }
+
     /// A change of account the app is not told of, as one made in Settings while the app was suspended.
     func setAccountWithoutTellingTheApp(_ state: SharingAccountState) {
         tellsTheApp = false
@@ -232,8 +248,8 @@ final class FakeSharingAdapter: SharingAdapter {
         }
     }
 
-    func accountState() async -> SharingAccountState {
-        account
+    func signedInAccount() async -> SharingAccount {
+        SharingAccount(state: account, idWhenAvailable: accountID)
     }
 
     /// What the system sharing sheet does when the app starts an invite.

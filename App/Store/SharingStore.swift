@@ -117,6 +117,10 @@ struct SharingStore {
         for (position, change) in data.outbox.enumerated() {
             context.insert(OutboxRecord(id: change.id, position: position, kind: change.kind.storedValue, connectionID: change.connectionID, reminderID: change.reminderID))
         }
+        try deleteAll(SharingAccountRecord.self)
+        if data.accountID != nil || data.accountChangeNote != nil {
+            context.insert(SharingAccountRecord(accountID: data.accountID?.rawValue, changeNote: try data.accountChangeNote.map { try JSONEncoder().encode($0) }))
+        }
     }
 
     private func deleteAll<Record: PersistentModel>(_ type: Record.Type) throws {
@@ -131,6 +135,7 @@ struct SharingStore {
         let receivedStates = try context.fetch(FetchDescriptor<ReceivedSyncRecord>(sortBy: [SortDescriptor(\.position)]))
         let engineStates = try context.fetch(FetchDescriptor<SyncEngineStateRecord>(sortBy: [SortDescriptor(\.position)]))
         let outbox = try context.fetch(FetchDescriptor<OutboxRecord>(sortBy: [SortDescriptor(\.position)]))
+        let account = try context.fetch(FetchDescriptor<SharingAccountRecord>()).first
         return SharingData(
             connections: try connections.map {
                 SharingConnection(
@@ -150,7 +155,9 @@ struct SharingStore {
             engineStates: try engineStates.map { SyncEngineState(database: try .init(storedValue: $0.database), data: $0.data) },
             outbox: try outbox.map {
                 OutboxChange(id: $0.id, kind: try .init(storedValue: $0.kind), connectionID: $0.connectionID, reminderID: $0.reminderID)
-            }
+            },
+            accountID: account?.accountID.map(AppleAccountID.init),
+            accountChangeNote: try account?.changeNote.map { try JSONDecoder().decode(AccountChangeNote.self, from: $0) }
         )
     }
 

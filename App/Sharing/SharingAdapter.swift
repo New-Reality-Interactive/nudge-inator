@@ -13,7 +13,7 @@ protocol SharingAdapterEvents: AnyObject {
     /// outbox entry (`OutboxChange.id`). Throws if the store couldn't keep that, and the adapter
     /// then reports it again.
     func sent(_ changeID: OutboxChange.ID) async throws
-    /// The iCloud account changed or came back. Read `accountState()` again.
+    /// The iCloud account changed or came back. Read `signedInAccount()` again.
     func accountStateChanged()
     /// The iPhone went offline or came back (ticket 211). Read `isOnline` again.
     func connectivityChanged()
@@ -53,7 +53,7 @@ protocol SharingAdapter: AnyObject {
     var isOnline: Bool { get }
     /// The iCloud account now, read again at launch, on App opened and when `accountStateChanged()`
     /// says so. Async: asking iCloud may take a while, and it mustn't hold up the app.
-    func accountState() async -> SharingAccountState
+    func signedInAccount() async -> SharingAccount
     /// Starts an invite to one person, for a new connection with this ID (ticket 194): the real
     /// adapter makes the connection's share and shows the system sharing sheet for it (#217).
     /// Returns who the sheet sent it to once it has, or `nil` if the person canceled the sheet.
@@ -71,6 +71,37 @@ protocol SharingAdapter: AnyObject {
     /// so the invite is unavailable to them (spec #127, A6: one person per invite, the first to
     /// accept). The adapter keeps it until it has gone through iCloud, as it keeps a revoke.
     func keepOnly(_ participant: SharingParticipant, in connectionID: UUID)
+}
+
+/// The iCloud account as the adapter reports it (tickets 210 and 212): its state, and which Apple
+/// Account it is, so a different one signing in can be told from the same one signing in again.
+struct SharingAccount: Equatable {
+    var state: SharingAccountState
+    /// iCloud's ID for the signed-in Apple Account (the real adapter's is #215's), or `nil` when the
+    /// adapter doesn't know it: no account is available, or it hasn't asked iCloud yet, which it
+    /// doesn't before the app may make a request (spec #127, decision 4). `nil` changes nothing.
+    var id: AppleAccountID?
+
+    init(state: SharingAccountState, id: AppleAccountID?) {
+        self.state = state
+        self.id = id
+    }
+
+    /// The account in `state`, with `id` only while it is available: no other state has an account
+    /// to name.
+    init(state: SharingAccountState, idWhenAvailable id: AppleAccountID) {
+        self.init(state: state, id: state == .available ? id : nil)
+    }
+}
+
+/// iCloud's ID for one Apple Account (for the real adapter, its user record's name), which the app
+/// only compares: a different one means a different person's iCloud.
+struct AppleAccountID: Hashable {
+    var rawValue: String
+
+    init(_ rawValue: String) {
+        self.rawValue = rawValue
+    }
 }
 
 /// An invite that reached this person (ticket 195), as the system hand-off names it.
