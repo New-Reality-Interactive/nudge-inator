@@ -47,7 +47,7 @@ struct SettingsTab: View {
                     Text("Delete", comment: "Settings: confirms deleting every reminder, tag and all history.")
                 }
             } message: {
-                if model?.sharing?.data.connections.isEmpty == false {
+                if model?.sharing?.hasLiveConnections == true {
                     Text("This deletes every reminder, tag and all history from this iPhone, and cancels every nudge and alarm. It also disconnects everyone and deletes the reminders you've sent and received, here and in iCloud. It can't be undone.",
                          comment: "Settings: under the question asked before deleting everything, for a person with connections or invites.")
                 } else {

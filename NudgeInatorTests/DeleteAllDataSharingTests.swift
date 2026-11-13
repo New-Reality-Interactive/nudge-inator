@@ -58,20 +58,54 @@ struct DeleteAllDataSharingTests {
         riley.adapter.inviteAnswer = .names(InvitedPerson(name: "Sam Rivera", address: "sam@example.com"))
         _ = try await riley.sharing.invite()
         await settle(alex, riley)
-
+        #expect(alex.sharing.data.sentCopies.isEmpty)
+        #expect(riley.sharing.data.sentCopies.count == 1)
         let account = riley.sharing.data.accountID
         #expect(account != nil)
 
         try await riley.model.deleteAllData()
         await settle(alex, riley)
 
-        // The account ID stays: it is still the account signed in.
+        // The account ID stays: it is still the account signed in. The disconnect went, so the
+        // outbox is empty again.
         #expect(riley.sharing.data == SharingData(accountID: account))
         #expect(try riley.sharing.currentData() == SharingData(accountID: account))
         #expect(riley.model.engine.reminders.isEmpty)
         #expect(riley.manager.scheduled.isEmpty)
         #expect(riley.center.pending.isEmpty)
         #expect(alex.sharing.data.connections.first?.state == .ended)
+    }
+
+    /// The disconnect waits in the store, not only in the adapter, so the other person still gets
+    /// Connection Ended when Riley was offline or the app was stopped before iCloud had it.
+    @Test func theDisconnectOutlivesTheDeleteWhileICloudIsOutOfReach() async throws {
+        let (alex, riley) = try await phones()
+        riley.model.add(received())
+        riley.model.add(pills)
+        try riley.model.send(pills, to: [connectionID])
+        await settle(alex, riley)
+        let account = riley.sharing.data.accountID
+        riley.adapter.isOnline = false
+
+        try await riley.model.deleteAllData()
+        riley.relaunch()
+        await riley.launch()
+
+        let kept = try riley.sharing.currentData()
+        #expect(kept.connections.isEmpty)
+        #expect(kept.sentReminders.isEmpty)
+        #expect(kept.sentCopies.isEmpty)
+        #expect(kept.receivedSyncStates.isEmpty)
+        #expect(kept.engineStates.isEmpty)
+        #expect(kept.accountID == account)
+        #expect(kept.outbox.map(\.kind) == [.disconnect])
+        #expect(alex.sharing.data.connections.first?.state == .connected)
+
+        riley.adapter.isOnline = true
+        await settle(alex, riley)
+
+        #expect(alex.sharing.data.connections.first?.state == .ended)
+        #expect(try riley.sharing.currentData().outbox.isEmpty)
     }
 
     @Test func deleteAllDataRevokesAnOpenInvite() async throws {

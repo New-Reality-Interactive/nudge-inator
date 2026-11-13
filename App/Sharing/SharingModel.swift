@@ -313,24 +313,28 @@ final class SharingModel {
         adapter.submit(change)
     }
 
-    /// Delete All Data (ticket 214): ends every connection as Disconnect does, so each other person
-    /// sees Connection Ended, and revokes every open invite. Then the sharing store is emptied: the
-    /// sent reminders and their copies, the received reminders' sync states, `CKSyncEngine`'s saved
-    /// state and the outbox, so nothing resumes syncing a connection that is gone. The adapter keeps
-    /// the disconnects and revokes until iCloud has them. The account ID stays, as it is still the
-    /// account signed in. Throws, changing and sending nothing, if the store can't be emptied.
+    /// Whether anyone is connected or an invite is open: what Delete All Data's confirmation warns
+    /// about. A connection the other person ended doesn't count.
+    var hasLiveConnections: Bool {
+        data.connections.contains { $0.state != .ended }
+    }
+
+    /// Delete All Data (ticket 214): empties the sharing store, and ends every connection as
+    /// Disconnect does, so each other person sees Connection Ended. Open invites are revoked. The
+    /// disconnects stay in the outbox until iCloud has them, so they survive the app being
+    /// stopped or iCloud being out of reach (#211); everything else goes, `CKSyncEngine`'s saved
+    /// state included. The account ID stays, as it is still the account signed in. Throws, sending
+    /// nothing, if the store can't be emptied.
     func deleteEverything() throws {
         let kept = try currentData()
-        var emptied = SharingData()
-        emptied.accountID = kept.accountID
+        var emptied = SharingData(accountID: kept.accountID)
+        let disconnects = kept.connections.filter { $0.state == .connected }.map { SharingChange.disconnect($0.id) }
+        emptied.outbox = disconnects.map(\.entry)
         try keep(emptied)
-        for connection in kept.connections {
-            switch connection.state {
-            case .invited: adapter.revokeInvite(connection.id)
-            case .connected: adapter.submit(.disconnect(connection.id))
-            case .ended: break
-            }
+        for connection in kept.connections where connection.state == .invited {
+            adapter.revokeInvite(connection.id)
         }
+        disconnects.forEach(adapter.submit)
     }
 
     /// Changes this person's own Status sharing and Delivery mode for the connection with
