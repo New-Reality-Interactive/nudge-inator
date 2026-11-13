@@ -68,7 +68,7 @@ struct SharingPausedBanner: View {
         if let pause {
             BannerCard(systemImage: "icloud.slash", text: Text(AttributedString(localized: pause.bannerText)), borderColor: .warning) {
                 if pause.offersOpenSettings {
-                    OpenSettingsButton(accessibilityLabel: Text("Open Settings for iCloud", comment: "VoiceOver label of the sharing paused banner's Open Settings button.")) {
+                    OpenSettingsButton {
                         SettingsStatus.OpenSettings.appSettings.open()
                     }
                 }

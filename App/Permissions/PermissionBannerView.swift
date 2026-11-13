@@ -54,8 +54,9 @@ struct BannerCard<Action: View>: View {
 /// A banner's Open Settings, a small bordered button. At accessibility sizes it fills the banner's
 /// width, as a nudge card's Done does, its label wrapping rather than being cut to "Open…".
 struct OpenSettingsButton: View {
-    /// What VoiceOver calls it, since two banners can show at once.
-    let accessibilityLabel: Text
+    /// What VoiceOver calls it, since two permission banners can show at once. `nil` keeps its
+    /// own words: the sharing paused banner shows alone.
+    var accessibilityLabel: Text?
     let open: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -70,7 +71,7 @@ struct OpenSettingsButton: View {
         // wrap, and the whole button, background too, grows to fit it. On one line these change
         // nothing.
         .fixedSize(horizontal: false, vertical: true)
-        .accessibilityLabel(accessibilityLabel)
+        .accessibilityLabel(accessibilityLabel ?? Text("Open Settings", comment: "Permission banner and the sharing paused banner: opens the iOS Settings page where the missing permission, or iCloud, is turned on."))
     }
 }
 

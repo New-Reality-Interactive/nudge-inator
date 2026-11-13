@@ -1917,9 +1917,6 @@
     "Open Settings for alarms" : {
       "comment" : "VoiceOver label of the alarms-off banner's Open Settings button."
     },
-    "Open Settings for iCloud" : {
-      "comment" : "VoiceOver label of the sharing paused banner's Open Settings button."
-    },
     "Open Settings for notifications" : {
       "comment" : "VoiceOver label of the notifications-off banner's Open Settings button."
     },
