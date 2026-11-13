@@ -7,13 +7,9 @@
 	<key>NSPrivacyTrackingDomains</key>
 	<array/>
 	<!--
-	Collected data types stay empty on purpose. Sharing puts these in the person's own iCloud
-	(CloudKit records, end-to-end encrypted), only to send and receive reminders (App Functionality):
-	Name (NSPrivacyCollectedDataTypeName), the person's name as iCloud gives it; Other User Content
-	(NSPrivacyCollectedDataTypeOtherUserContent), a sender's reminder content and a recipient's
-	receipt and status. Apple counts data as "collected" only when it is sent off the device so that
-	the developer can reach it; New Reality Interactive can't read the person's iCloud, so none of it
-	is. Source and the App Store label answer: docs/agents/privacy-compliance.md.
+	Collected data types stay empty on purpose: sharing keeps its encrypted fields in the person's own
+	iCloud (Name, Other User Content; purpose App Functionality), which New Reality Interactive can't
+	read, so Apple doesn't count it as collected. Reasoning and sources: docs/agents/privacy-compliance.md.
 	-->
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>

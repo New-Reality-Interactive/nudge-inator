@@ -213,7 +213,7 @@ struct SettingsTab: View {
         } header: {
             Text("Your Data", comment: "Settings: header of the section with Delete All Data.")
         } footer: {
-            Text("Your own reminders stay on this iPhone. Reminders you send or receive go through your iCloud. There's no account and no server of ours.",
+            Text("Your own reminders stay on this iPhone. Reminders you send or receive via an approved share, go through your iCloud. There's no account and no server of ours involved.",
                  comment: "Settings: the privacy note under Your Data.")
         }
     }
