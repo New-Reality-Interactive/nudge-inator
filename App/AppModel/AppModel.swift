@@ -726,8 +726,8 @@ extension AppModel: ReceivedReminders {
 }
 
 extension AppModel: SenderNoticePosting {
-    func postSenderNotice(key: String, title: String, body: String) {
-        notifications.postSenderNotice(key: key, title: title, body: body)
+    func postSenderNotice(_ notice: SenderNotice) {
+        notifications.postSenderNotice(notice)
     }
 }
 

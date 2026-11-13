@@ -245,4 +245,23 @@ struct SenderNoticesTests {
         #expect(notices(on: riley).count == 1)
         #expect(notices(on: alex).isEmpty)
     }
+
+    /// Alex's edit moves the due times: what Riley already marked Done is not told again.
+    @Test func theSendersEditAfterADoneTellsNothingMore() async throws {
+        let (alex, riley) = try await phones()
+        try await send(pills, from: alex, to: riley)
+        await open(riley, at: 8, 35, alex: alex)
+        riley.model.markDone(try copy(on: riley).id)
+        await settle(alex, riley)
+        let before = notices(on: alex).count
+
+        var edited = pills
+        edited.dueTime = NewYork.local(2026, 10, 15, 9, 30)
+        try alex.model.reviseSent(edited)
+        await settle(alex, riley)
+        await open(riley, at: 8, 40, alex: alex)
+
+        #expect(before == 1)
+        #expect(notices(on: alex).count == before)
+    }
 }

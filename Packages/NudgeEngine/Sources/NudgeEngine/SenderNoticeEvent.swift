@@ -3,7 +3,7 @@ import Foundation
 /// What a status record the sender has just received is news of (ticket 208, spec #127, Status): a
 /// copy marked Done, removed, or gone Missed. Pause, Resume and Skipped show only in the app, so
 /// they are no notice.
-public struct SentStatusNotice: Equatable, Sendable {
+public struct SenderNoticeEvent: Equatable, Sendable {
     public enum Kind: Equatable, Sendable {
         case done
         case missed
@@ -14,6 +14,13 @@ public struct SentStatusNotice: Equatable, Sendable {
     /// The due time of the occurrence that closed, or `nil` for a copy removed, or a one-off whose
     /// occurrence is older than the report's days and so is read from its label.
     public var occurrence: Date?
+
+    /// Names the event: what happened and which occurrence, so the same event delivered again is
+    /// the same token and a Done after a Missed of one occurrence is another.
+    public var token: String {
+        guard let occurrence else { return "\(kind)" }
+        return "\(kind).\(Int(occurrence.timeIntervalSinceReferenceDate))"
+    }
 
     public init(kind: Kind, occurrence: Date?) {
         self.kind = kind
@@ -60,7 +67,7 @@ private extension ReportedStatus {
     /// Done and Missed: the two ways an occurrence closes that tell the sender something.
     var closes: Bool { self == .done || self == .missed }
 
-    var noticeKind: SentStatusNotice.Kind? {
+    var noticeKind: SenderNoticeEvent.Kind? {
         switch self {
         case .done: .done
         case .missed: .missed

@@ -52,6 +52,10 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     /// What a notice to the sender's identifier starts with (ticket 208): a copy Done, removed or
     /// Missed. Not `nudge.`, so no plan removes it.
     nonisolated static let senderNoticePrefix = "sent."
+    /// Whether the identifier is an arrival or a notice to the sender, which change no count.
+    nonisolated static func isNotice(_ identifier: String) -> Bool {
+        identifier.hasPrefix(arrivalPrefix) || identifier.hasPrefix(senderNoticePrefix)
+    }
     /// Long enough to lock the phone or leave the app and see how a nudge looks there.
     static let testNudgeDelay: TimeInterval = 5
     /// Where a request keeps its nudge, so Done needn't parse the identifier.
@@ -229,32 +233,23 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     /// the badge alone. A refusal is reported like any other. Joins the same chain as the plans, so
     /// `waitUntilApplied()` waits for it.
     func postArrival(of reminderID: Reminder.ID, title: String, body: String) {
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-        content.interruptionLevel = .active
-        let request = UNNotificationRequest(identifier: Self.arrivalPrefix + reminderID.uuidString, content: content, trigger: nil)
-        let previous = applying
-        applying = Task {
-            await previous?.value
-            do {
-                try await center.add(request)
-            } catch {
-                events?.schedulingFailed(error)
-            }
-        }
+        postNotice(identifier: Self.arrivalPrefix + reminderID.uuidString, title: title, body: body)
     }
 
     /// The notice to the sender that a copy they sent is Done, removed or Missed (ticket 208): the
-    /// reminder's title and what happened, shown at once. `key` names the event, so the same one
-    /// delivered again replaces its banner. Like the arrival it has no Done, since it isn't a nudge,
-    /// and leaves the badge alone. Joins the same chain as the plans, so `waitUntilApplied()` waits.
-    func postSenderNotice(key: String, title: String, body: String) {
+    /// reminder's title and what happened, shown at once. Its key names the event, so the same one
+    /// delivered again replaces its banner. Posted like an arrival.
+    func postSenderNotice(_ notice: SenderNotice) {
+        postNotice(identifier: Self.senderNoticePrefix + notice.key, title: notice.title, body: notice.body)
+    }
+
+    /// One active notification, shown at once, that isn't a nudge.
+    private func postNotice(identifier: String, title: String, body: String) {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
         content.interruptionLevel = .active
-        let request = UNNotificationRequest(identifier: Self.senderNoticePrefix + key, content: content, trigger: nil)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
         let previous = applying
         applying = Task {
             await previous?.value
@@ -458,16 +453,16 @@ final class NotificationResponder: NSObject, UNUserNotificationCenterDelegate, S
 
     /// Without this, a nudge that fires while the app is open isn't shown at all. No `.badge`: the
     /// model re-plans instead, so the icon gets the live count. A received reminder's arrival
-    /// (ticket 200) and a notice to the sender (ticket 208) change no count, so they are shown with no re-plan.
+    /// (ticket 200) and a notice to the sender (ticket 208) change no count, so they are shown
+    /// with no re-plan.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping @Sendable (UNNotificationPresentationOptions) -> Void
     ) {
-        let identifier = notification.request.identifier
-        let isNudge = !identifier.hasPrefix(NotificationAdapter.arrivalPrefix) && !identifier.hasPrefix(NotificationAdapter.senderNoticePrefix)
+        let isNotice = NotificationAdapter.isNotice(notification.request.identifier)
         Task { @MainActor [adapter] in
-            if isNudge { adapter?.handlePresentation() }
+            if !isNotice { adapter?.handlePresentation() }
             completionHandler([.banner, .list, .sound])
         }
     }

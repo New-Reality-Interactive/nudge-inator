@@ -190,6 +190,10 @@ _Avoid_: Sent status, outbox
 What the sender sees of one recipient's copy of a repeating reminder: today and each of the 7 days before, oldest first, each with the Status label of the occurrence due that day, or nothing due. Its days are the recipient's. It shows only where the copy's status does: never with Status sharing off, "Not sharing this one", Waiting to sync or waiting for them to accept. A one-off has none.
 _Avoid_: Streak, week view, history (alone)
 
+**Sender notice**:
+The notification the sender's app posts when a status report it just received shows a copy newly marked Done, removed, or Missed, set against the report it held; Pause, Resume and Skipped are never one. With nothing held (before the first report, after status sharing was turned back on, or while "Don't share this one" held it back) the report is the baseline and is no notice, except Removed. A Missed may come long after the give-up limit, and a notice is best effort: the Sent read-out is always right once fetched.
+_Avoid_: Sent status, sender alert
+
 **Status sharing**:
 A recipient's choice, per connection, whether the sender sees how their reminders are going. "Don't share this one" turns it off for one received reminder.
 _Avoid_: Visibility, privacy setting
