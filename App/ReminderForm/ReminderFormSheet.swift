@@ -61,7 +61,11 @@ struct ReminderFormSheet: View {
                 Text("OK", comment: "The reminder form: dismisses the message that the reminder couldn't be sent.")
             }
         } message: {
-            Text("Nothing was sent. Try again.", comment: "The reminder form: under Couldn't Send the Reminder.")
+            if let pause = form.couldntSendPause {
+                Text(pause.couldntSendText)
+            } else {
+                Text("Nothing was sent. Try again.", comment: "The reminder form: under Couldn't Send the Reminder.")
+            }
         }
         .alert(
             Text("This Reminder Was Deleted", comment: "The Edit Reminder form of a reminder this person sent: title of the message shown when Save finds it was deleted while the form was open."),

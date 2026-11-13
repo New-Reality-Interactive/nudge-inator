@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Settings › Connections (ticket 194): Invite Someone, then the people connected and the people
 /// invited, or with no one, an empty state that offers only Invite. The mockup's `viewConnections`.
+/// While sharing is paused (ticket 210) the paused banner leads the page and Invite is off.
 struct ConnectionsPage: View {
     let sharing: SharingModel
 
@@ -12,6 +13,7 @@ struct ConnectionsPage: View {
         Group {
             if list.isEmpty {
                 ScrollView {
+                    PausedBannerAboveEmptyState(pause: sharing.pause)
                     ContentUnavailableView {
                         Label {
                             Text("No Connections", comment: "Connections: title of the empty state, with no one connected or invited.")
@@ -27,6 +29,7 @@ struct ConnectionsPage: View {
                             InviteSomeoneLabel()
                         }
                         .buttonStyle(.bordered)
+                        .disabled(sharing.pause != nil)
                     }
                 }
                 .background(Color(uiColor: .systemGroupedBackground))
@@ -38,6 +41,9 @@ struct ConnectionsPage: View {
                         } label: {
                             InviteSomeoneLabel()
                         }
+                        .disabled(sharing.pause != nil)
+                    } header: {
+                        SharingPausedBanner(pause: sharing.pause)
                     }
                     if !list.connected.isEmpty {
                         Section {
@@ -108,6 +114,27 @@ struct InviteSomeoneLabel: View {
             Text("Invite Someone", comment: "Connections, and the Reminders tab's Sent when no one is connected: starts an invite to one person.")
         } icon: {
             Image(systemName: "person.badge.plus")
+        }
+        .switchedOffLooksSecondary()
+    }
+}
+
+extension View {
+    /// DESIGN.md's Disabled: secondary label for text and icon while the button holding it is off
+    /// (ticket 210). A list row's Label kept its colors when its button was disabled (phone check).
+    func switchedOffLooksSecondary() -> some View {
+        modifier(SwitchedOffLooksSecondary())
+    }
+}
+
+private struct SwitchedOffLooksSecondary: ViewModifier {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content
+        } else {
+            content.foregroundStyle(Color(uiColor: .secondaryLabel))
         }
     }
 }

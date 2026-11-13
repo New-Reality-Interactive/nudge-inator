@@ -58,6 +58,11 @@ final class SharingModel {
     /// has reported the account.
     var reach: SharingReach? { accountState?.reach }
 
+    /// Why sharing is paused (ticket 210), or `nil` while it works or before the adapter has
+    /// reported the account. While it is, nothing is sent and no one is invited; received reminders
+    /// keep nudging, and what waits in the outbox stays there.
+    var pause: SharingReach.Pause? { reach?.pause }
+
     /// Where a received reminder's copy is kept: the app model, which holds the person's reminders
     /// (ticket 198). Held weakly; until it is set, a send that arrives is turned down, and the
     /// adapter offers it again.
@@ -139,10 +144,12 @@ final class SharingModel {
     /// each getting a copy of their own. It is kept as sent, with one sent copy per person, and never
     /// joins this person's own reminders, so it doesn't nudge them (spec #127, Decisions, Q2). Its
     /// tags stay here: a sent reminder has none. Sending to no one sends nothing. Throws, keeping and
-    /// sending nothing, if one of them isn't connected any more, or the store can't keep the send.
+    /// sending nothing, if one of them isn't connected any more, sharing is paused (ticket 210), or
+    /// the store can't keep the send.
     func send(_ reminder: Reminder, to connectionIDs: [UUID]) throws {
         var kept = try currentData()
         guard !connectionIDs.isEmpty else { return }
+        guard pause == nil else { throw SharingPaused() }
         guard connectionIDs.allSatisfy({ connection($0) != nil }) else { throw NotConnected() }
         var stripped = reminder
         stripped.tagIDs = []
@@ -162,6 +169,9 @@ final class SharingModel {
 
     /// Someone chosen in Send To is no longer connected, so nothing was sent.
     struct NotConnected: Error {}
+
+    /// Sharing is paused without iCloud (ticket 210), so nothing was sent and no one invited.
+    struct SharingPaused: Error {}
 
     /// The sender's Edit (ticket 201): keeps `edited`'s content as the sent reminder with its ID, at
     /// the next revision, and sends that to each person still connected who has a copy. What their
@@ -222,10 +232,12 @@ final class SharingModel {
     /// Invited. Someone already connected is not connected twice: the sheet's new invite is
     /// revoked and the outcome names them. An invite to someone already Invited, or Invite Again
     /// from the invite with `replacedID`, takes the old invite's place and revokes it. Throws,
-    /// keeping nothing, if the store can't be opened (checked before the sheet shows) or keep the
-    /// invite, or the invite couldn't be made.
+    /// keeping nothing, if the store can't be opened or sharing is paused (ticket 210), both
+    /// checked before the sheet shows, or the store can't keep the invite, or the invite couldn't
+    /// be made.
     func invite(replacing replacedID: UUID? = nil) async throws -> InviteOutcome {
         _ = try openedStore()
+        guard pause == nil else { throw SharingPaused() }
         let connectionID = UUID()
         guard let person = try await adapter.invite(connectionID) else { return .canceled }
         do {

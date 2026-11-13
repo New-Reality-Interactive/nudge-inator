@@ -625,6 +625,15 @@
     "**Nudging now.** Start, repeat, strength, pace and Break Through Focus are locked while it's nudging. Mark it Done or pause it to change them. A new title shows from the next nudge." : {
       "comment" : "Top of the Edit Reminder form while the reminder is nudging: why five fields are locked."
     },
+    "**Sharing is paused.** Sign in to iCloud in iOS Settings to send and receive reminders. Reminders you've received keep nudging." : {
+      "comment" : "Sharing paused banner on Connections, Send To and Sent, when no iCloud account is signed in. Keep the first sentence bold."
+    },
+    "**Sharing is paused.** iCloud is restricted on this iPhone. Screen Time or whoever manages it can change that. Reminders you've received keep nudging." : {
+      "comment" : "Sharing paused banner on Connections, Send To and Sent, when iCloud is restricted, for example by Screen Time or a device management profile. Keep the first sentence bold."
+    },
+    "**Sharing is paused.** iCloud isn't available right now. Sharing starts again by itself. Reminders you've received keep nudging." : {
+      "comment" : "Sharing paused banner on Connections, Send To and Sent, when iCloud can't be reached for now. Keep the first sentence bold."
+    },
     "**Time Sensitive is off.** High nudges come as ordinary notifications, so a Focus can hold them." : {
       "comment" : "Permission banner, when the app's Time Sensitive notifications are turned off. Keep the first sentence bold."
     },
@@ -1715,6 +1724,15 @@
     "Nothing was missed today." : {
       "comment" : "My Day: the list when Missed is chosen and nothing was missed today."
     },
+    "Nothing was sent. Sharing is paused: iCloud is restricted on this iPhone. Screen Time or whoever manages it can change that." : {
+      "comment" : "The reminder form: under Couldn't Send the Reminder, when Add found iCloud restricted, for example by Screen Time or a device management profile."
+    },
+    "Nothing was sent. Sharing is paused: iCloud isn't available right now. Try again in a little while." : {
+      "comment" : "The reminder form: under Couldn't Send the Reminder, when Add found iCloud can't be reached for now."
+    },
+    "Nothing was sent. Sharing is paused: sign in to iCloud in iOS Settings, then try again." : {
+      "comment" : "The reminder form: under Couldn't Send the Reminder, when Add found no iCloud account signed in."
+    },
     "Nothing was sent. Try again." : {
       "comment" : "Invite: under Couldn't Send the Invite.\nThe reminder form: under Couldn't Send the Reminder."
     },
@@ -1891,7 +1909,7 @@
       "comment" : "Alarm button: opens the app on the reminder, where Done is. Shown on the Lock Screen; keep it short."
     },
     "Open Settings" : {
-      "comment" : "Permission banner: opens the iOS Settings page where the missing permission is turned on."
+      "comment" : "Permission banner and the sharing paused banner: opens the iOS Settings page where the missing permission, or iCloud, is turned on."
     },
     "Open Settings for Time Sensitive notifications" : {
       "comment" : "VoiceOver label of the Time Sensitive-off banner's Open Settings button."
@@ -1929,7 +1947,7 @@
       "comment" : "Reminder details: stops the reminder's nudging until it is resumed."
     },
     "Paused" : {
-      "comment" : "A tag's screen: header of the paused reminders.\nReminder details, Schedule: the reminder is paused, so nothing is next.\nStatus label, and a Status row in the Reminders filter sheet: the reminder is paused."
+      "comment" : "A tag's screen: header of the paused reminders.\nReminder details, Schedule: the reminder is paused, so nothing is next.\nStatus label, and a Status row in the Reminders filter sheet: the reminder is paused.\nThe reminder form's Send To row while sharing is paused without iCloud."
     },
     "Paused: this one will be skipped" : {
       "comment" : "My Day: under the title of an occurrence due later today whose reminder is paused."
@@ -2055,6 +2073,15 @@
     },
     "Sharing" : {
       "comment" : "Settings: header of the section with Connections."
+    },
+    "Sharing is paused. Sign in to iCloud in iOS Settings to send and receive reminders." : {
+      "comment" : "Under the reminder form's Send To row, shown off, when no iCloud account is signed in."
+    },
+    "Sharing is paused. iCloud is restricted on this iPhone. Screen Time or whoever manages it can change that." : {
+      "comment" : "Under the reminder form's Send To row, shown off, when iCloud is restricted, for example by Screen Time or a device management profile."
+    },
+    "Sharing is paused. iCloud isn't available right now. Sharing starts again by itself." : {
+      "comment" : "Under the reminder form's Send To row, shown off, when iCloud can't be reached for now."
     },
     "Show" : {
       "comment" : "Reminders tab: the hidden label of the Mine | Sent control."

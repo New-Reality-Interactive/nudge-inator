@@ -6,7 +6,8 @@ import SwiftUI
 /// swipe (DESIGN.md, Sent rows). Search, Filter, Sort and the count are #328's and #329's.
 ///
 /// With no one connected it offers Invite Someone and Manage People, and with nothing sent New
-/// Reminder (ticket 202). Neither empty state has tools (DESIGN.md, Sent's tools).
+/// Reminder (ticket 202). Neither empty state has tools (DESIGN.md, Sent's tools). While sharing
+/// is paused (ticket 210) the paused banner leads it, empty or not, and Invite Someone is off.
 struct SentList: View {
     let screen: SentScreen
     /// What Invite Someone invites through. Previews without one show the button but invite no one.
@@ -24,12 +25,14 @@ struct SentList: View {
             .inviteFlow(sharing: sharing, isPresented: $isInviting)
     }
 
+    private var pause: SharingReach.Pause? { sharing?.pause }
+
     @ViewBuilder private var content: some View {
         switch screen.emptyState {
         case .noOneToSendTo:
-            NoOneToSendToView(invite: { isInviting = true }, manageConnections: manageConnections)
+            NoOneToSendToView(pause: pause, invite: { isInviting = true }, manageConnections: manageConnections)
         case .nothingSent:
-            NothingSentView()
+            NothingSentView(pause: pause)
         case nil:
             List {
                 ForEach(screen.people) { person in
@@ -38,7 +41,16 @@ struct SentList: View {
                             SentRowView(row: row) { openDetails(row.reminderID) }
                         }
                     } header: {
-                        Text(verbatim: person.name)
+                        // Above the first person's name, as Now's first header holds its banners.
+                        VStack(alignment: .leading, spacing: Design.Spacing.s3) {
+                            if person.id == screen.people.first?.id {
+                                SharingPausedBanner(pause: pause)
+                            }
+                            Text(verbatim: person.name)
+                                // The banner beside it in the header drops the header trait,
+                                // so the name keeps it for VoiceOver's headings.
+                                .accessibilityAddTraits(.isHeader)
+                        }
                     }
                 }
             }
@@ -204,11 +216,13 @@ struct DeliveredLabel: View {
 /// Connections on Reminders, README Known differences). It scrolls, so the buttons are reached at
 /// the largest text size, on the grouped background the mockup's screens have.
 private struct NoOneToSendToView: View {
+    let pause: SharingReach.Pause?
     let invite: () -> Void
     let manageConnections: () -> Void
 
     var body: some View {
         ScrollView {
+            PausedBannerAboveEmptyState(pause: pause)
             ContentUnavailableView {
                 Label {
                     Text("No One to Send To", comment: "Reminders tab, Sent: title when this person is connected with no one.")
@@ -222,6 +236,7 @@ private struct NoOneToSendToView: View {
                     InviteSomeoneLabel()
                 }
                 .buttonStyle(.bordered)
+                .disabled(pause != nil)
                 Button(action: manageConnections) {
                     Text("Manage People", comment: "Reminders tab, Sent: under Invite Someone when no one is connected. Opens Settings › Connections.")
                 }
@@ -234,8 +249,11 @@ private struct NoOneToSendToView: View {
 /// Sent with someone connected but nothing sent to them, the mockup's "Nothing Sent": New Reminder,
 /// the toolbar's button with its title showing.
 private struct NothingSentView: View {
+    let pause: SharingReach.Pause?
+
     var body: some View {
         ScrollView {
+            PausedBannerAboveEmptyState(pause: pause)
             ContentUnavailableView {
                 Label {
                     Text("Nothing Sent", comment: "Reminders tab, Sent: title when this person has sent nothing to anyone connected.")
@@ -252,7 +270,6 @@ private struct NothingSentView: View {
         .background(Color(uiColor: .systemGroupedBackground))
     }
 }
-
 
 #if DEBUG
 private extension SentScreen {
