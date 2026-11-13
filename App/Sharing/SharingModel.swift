@@ -63,6 +63,11 @@ final class SharingModel {
     /// adapter offers it again.
     @ObservationIgnored weak var receivedReminders: (any ReceivedReminders)?
 
+    /// Where the notices to the sender are posted (ticket 208): the app model, which holds the
+    /// notification adapter. Held weakly; with none set, nothing is posted and the Sent view is
+    /// right all the same.
+    @ObservationIgnored weak var noticePoster: (any SenderNoticePosting)?
+
     /// Tells the sender how each copy this person holds is going (ticket 206).
     let statusReporter = StatusReporter()
 
@@ -435,11 +440,28 @@ extension SharingModel: SharingAdapterEvents {
             return try cancelCopy(sentThrough: change)
         }
         var applied = try currentData()
+        let notice = senderNotice(for: change, in: applied)
         if applied.apply(incoming: change) {
             try keep(applied)
+            // After the status is kept: a store that won't keep it has the change offered again,
+            // and that run posts the notice.
+            if let notice { noticePoster?.postSenderNotice(key: notice.key, title: notice.title, body: notice.body) }
         } else {
             Self.logger.info("An incoming \(String(describing: change.kind), privacy: .public) change wasn't applied")
         }
+    }
+
+    /// The notice a status record `change` makes against what `kept` holds (ticket 208), or `nil`:
+    /// no notice for another kind of change, for a connection that isn't connected or whose status
+    /// sharing is off, or for a status the sender already held.
+    private func senderNotice(for change: SharingChange, in kept: SharingData) -> SenderNotice? {
+        guard case .status(let record) = change.content,
+              let copy = kept.sentCopies.first(where: { $0.connectionID == change.connectionID && $0.reminderID == change.reminderID }),
+              let connection = kept.connections.first(where: { $0.id == change.connectionID && $0.state == .connected }), connection.theirs.sharesStatus,
+              let sent = kept.sentReminders.first(where: { $0.reminder.id == copy.reminderID }),
+              let notice = SentStatusNotice(held: copy.statusRecord, arriving: record)
+        else { return nil }
+        return SenderNotice(of: notice, reminderID: copy.reminderID, title: sent.reminder.title, from: connection.name, through: connection.id)
     }
 
     func sent(_ changeID: OutboxChange.ID) async throws {

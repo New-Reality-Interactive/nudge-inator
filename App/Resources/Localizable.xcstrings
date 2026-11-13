@@ -60,8 +60,14 @@
     "%@ is Done. Its nudges have stopped." : {
       "comment" : "VoiceOver, after Done on a nudge card or a My Day row: what the Done button's place now says. The placeholder is the reminder's title."
     },
+    "%@ marked it Done" : {
+      "comment" : "Body of the notification to the sender that the person they sent a reminder to marked it Done. 1: the person's name."
+    },
     "%@ owns this schedule." : {
       "comment" : "Reminder details: under Schedule of a received reminder, which only its sender can change. The placeholder is the sender's name."
+    },
+    "%@ removed it" : {
+      "comment" : "Body of the notification to the sender that the person they sent a reminder to removed it. 1: the person's name."
     },
     "%@ sees how the reminders they send you are going: Done, Paused, Missed or Removed, and the last 7 days of a repeating one." : {
       "comment" : "A connection's page: under Status Sharing when it's on. The argument is the other person's name, such as \"Alex Morgan\"."
@@ -1551,6 +1557,9 @@
     },
     "Missed" : {
       "comment" : "My Day: the caption of the count of occurrences missed today.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed without Done, by its give-up limit or a take-over."
+    },
+    "Missed: %@ didn't mark it Done" : {
+      "comment" : "Body of the notification to the sender that the person they sent a reminder to didn't mark it Done in time. 1: the person's name."
     },
     "Missed: gave up after the limit" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that reached its give-up limit (20 nudges or 24 hours)."
