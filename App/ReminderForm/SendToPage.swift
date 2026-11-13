@@ -13,14 +13,18 @@ struct SendToSection: View {
     var body: some View {
         Section {
             if form.showsSendToPaused {
-                LabeledContent {
-                    Text("Paused", comment: "The reminder form's Send To row while sharing is paused without iCloud.")
+                // The row's button, switched off, as the mockup's disabled cell: VoiceOver reads it
+                // as one control that is off, "Send To, Paused, Dimmed, Button" (Apple's
+                // `notEnabled` trait). Combining a plain row lost "Dimmed" (phone check).
+                Button {
                 } label: {
-                    Text("Send To", comment: "The reminder form's row that chooses who the reminder is sent to.")
+                    LabeledContent {
+                        Text("Paused", comment: "The reminder form's Send To row while sharing is paused without iCloud.")
+                    } label: {
+                        Text("Send To", comment: "The reminder form's row that chooses who the reminder is sent to.")
+                    }
                 }
                 .disabled(true)
-                // One VoiceOver stop, "Send To, Paused", as a row with a value is (phone check).
-                .accessibilityElement(children: .combine)
             } else if form.sendToChoices.isEmpty {
                 Button {
                     isInviting = true
