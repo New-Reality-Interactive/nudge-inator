@@ -6,16 +6,17 @@ import NudgeEngine
 struct MyDayScreen {
     var counts: [Count]
     var items: [Item]
-    /// One token per chosen tag, or one for No Tags, each of which removes itself when tapped.
+    /// One token per chosen tag, or one for No Tags, then one for From others, each of which
+    /// removes itself when tapped.
     let filterTokens: [FilterToken]
     /// "Due today with #home and #money", under the tokens when two or more tags are chosen.
     let filterSummary: LocalizedStringResource?
     /// What the list says when it has no rows, by the chosen count.
     let emptyMessage: LocalizedStringResource
-    /// Whether the Filter button shows: a reminder is due today and a tag exists. With no tags the
-    /// sheet would offer only No Tags, which matches every row. Read from the whole day, not the
-    /// rows the filter leaves, so a filter that empties the list keeps the button that clears it
-    /// (Decision 56).
+    /// Whether the Filter button shows: a reminder is due today, and a tag exists or someone has
+    /// sent a reminder (ticket 209). With neither the sheet would offer only No Tags, which matches
+    /// every row. Read from the whole day, not the rows the filter leaves, so a filter that empties
+    /// the list keeps the button that clears it (Decision 56).
     let offersFilter: Bool
     private let nowTime: String
     private let now: Date
@@ -89,13 +90,19 @@ struct MyDayScreen {
         enum Kind: Hashable {
             case tag(Tag.ID)
             case noTags
+            case fromOthers
         }
 
         var kind: Kind
-        /// "#home". `nil` for No Tags, whose words are the view's, so they are localized there.
+        /// "#home". `nil` for No Tags and From others, whose words are the view's, so they are
+        /// localized there.
         var tagText: String?
 
         var id: Kind { kind }
+
+        var isTag: Bool {
+            if case .tag = kind { true } else { false }
+        }
     }
 
     /// A tag as "#home". The ones the filter chose show in bold.
@@ -158,10 +165,12 @@ struct MyDayScreen {
         let filter = filter.keeping(tagsIn: Set(engine.tags.map(\.id)))
         self.now = now
         let chosenTags = filter.tagIDs.compactMap { engine.tag(withID: $0) }
+        let fromOthersToken = filter.fromOthers ? [FilterToken(kind: .fromOthers, tagText: nil)] : []
         if filter.noTags {
-            filterTokens = [FilterToken(kind: .noTags, tagText: nil)]
+            filterTokens = [FilterToken(kind: .noTags, tagText: nil)] + fromOthersToken
         } else {
             filterTokens = chosenTags.map { FilterToken(kind: .tag($0.id), tagText: $0.label) }
+                + fromOthersToken
         }
         // The tokens name the tags, so the line says only how they combine (ticket 20).
         if filter.noTags {
@@ -180,9 +189,9 @@ struct MyDayScreen {
         }
         emptyMessage = Self.emptyMessage(forCount: filter.count)
         nowTime = engine.timeOfDay(of: now)
-        let myDay = engine.myDay(tagFilter: filter.tagFilter)
+        let myDay = engine.myDay(tagFilter: filter.tagFilter, fromOthers: filter.fromOthers)
         let wholeDay = engine.myDay()
-        offersFilter = !engine.tags.isEmpty && !wholeDay.items.isEmpty
+        offersFilter = (!engine.tags.isEmpty || engine.hasReceivedReminders) && !wholeDay.items.isEmpty
         counts = MyDayCount.allCases.map { Count(kind: $0, number: myDay.count(of: $0), isChosen: filter.count == $0) }
         let reminders = Dictionary(engine.reminders.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let shown = filter.count.map(myDay.items(countedIn:)) ?? myDay.items

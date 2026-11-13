@@ -13,6 +13,10 @@ struct RemindersFilterSheet: FilterSheetSummary {
     let hasChanges: Bool
     /// Whether Reset has anything to clear.
     let canReset: Bool
+    /// Whether the From section shows: someone has sent this person a reminder, or From others is
+    /// on, so it can be turned off where it was turned on. A person with no received reminders sees
+    /// the 1.3.0 sheet (ticket 209).
+    let offersFromOthers: Bool
 
     init(engine: Engine, draft: RemindersFilterChoices, applied: RemindersFilterChoices, search: String) {
         let existing = Set(engine.tags.map(\.id))
@@ -20,6 +24,7 @@ struct RemindersFilterSheet: FilterSheetSummary {
         tags = TagChoiceRows(engine: engine, choice: draft.tags)
         hasChanges = draft.narrowing(search: "") != applied.keeping(tagsIn: existing).narrowing(search: "")
         canReset = draft != RemindersFilterChoices()
+        offersFromOthers = draft.fromOthers || engine.hasReceivedReminders
         let shown = engine.remindersList(filteredBy: draft.narrowing(search: search)).items.count
         result = LocalizedStringResource("Apply shows \(shown) reminders.", comment: "Reminders' filter sheet: above Reset. The placeholder is how many reminders the list would show with these filters and the search as it is.")
     }

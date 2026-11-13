@@ -356,39 +356,60 @@ struct MyDayScreenTests {
         #expect(screen.filterTokens.isEmpty)
     }
 
-    /// The mockup's `dayFilterSheet`: every tag by name with a check, No Tags, and a line saying
-    /// how many are due today with the filter on. Match is always shown, and can be chosen from two
+    /// The mockup's `dayFilterSheet`: every tag by name with a check, No Tags, and above Reset how
+    /// many reminders due today Apply would show. Match is always shown, and can be chosen from two
     /// tags; below that the Tags footer says why.
-    @Test func theFilterSheetListsTheTagsAndCountsWhatTheyLeave() async throws {
+    @Test func theFilterSheetListsTheTagsAndCountsWhatApplyWouldShow() async throws {
         let day = try await dayAtOnePM()
-        var filter = MyDayFilter()
-        func sheet() -> MyDayFilterSheet { MyDayFilterSheet(engine: day.model.engine, filter: filter) }
+        var draft = MyDayFilterChoices()
+        func sheet() -> MyDayFilterSheet { MyDayFilterSheet(engine: day.model.engine, draft: draft, applied: MyDayFilterChoices()) }
 
         #expect(sheet().tags.map(\.text) == ["#health", "#home", "#work"])
         #expect(sheet().tags.map(\.isChecked) == [false, false, false])
         #expect(!sheet().canChooseMatch)
         #expect(plain(sheet().tagsFooter) == "Check one or more tags. Match needs two or more.")
-        #expect(plain(sheet().result) == "Showing everything due today (9).")
+        #expect(plain(sheet().result) == "Apply shows 9 reminders due today.")
 
-        filter.toggle(day.health.id)
+        draft.toggle(day.health.id)
         #expect(sheet().tags.map(\.isChecked) == [true, false, false])
         #expect(!sheet().canChooseMatch)
         #expect(plain(sheet().tagsFooter) == "Check one or more tags. Match needs two or more.")
-        #expect(plain(sheet().result) == "2 due today with #health.")
+        #expect(plain(sheet().result) == "Apply shows 2 reminders due today.")
 
-        filter.toggle(day.work.id)
+        draft.toggle(day.work.id)
         #expect(sheet().canChooseMatch)
         #expect(plain(sheet().tagsFooter) == "All Tags shows reminders with every checked tag. Any Tag shows those with at least one.")
-        #expect(plain(sheet().result) == "1 due today with #health and #work.")
-        filter.match = .any
-        #expect(plain(sheet().result) == "4 due today with #health or #work.")
+        #expect(plain(sheet().result) == "Apply shows 1 reminder due today.")
+        draft.match = .any
+        #expect(plain(sheet().result) == "Apply shows 4 reminders due today.")
 
-        filter.toggleNoTags()
+        draft.toggleNoTags()
         #expect(sheet().isNoTagsChecked)
         #expect(sheet().tags.map(\.isChecked) == [false, false, false])
         #expect(!sheet().canChooseMatch)
         #expect(plain(sheet().tagsFooter) == "Check one or more tags. Match needs two or more.")
-        #expect(plain(sheet().result) == "2 due today without tags.")
+        #expect(plain(sheet().result) == "Apply shows 2 reminders due today.")
+    }
+
+    /// As on the Reminders and Tags sheets: the X asks before discarding only once the draft differs
+    /// from what's applied, and Reset has something to clear only while the draft chooses something.
+    @Test func theFilterSheetKnowsWhenTheDraftHasChangesAndWhenResetCanClearIt() async throws {
+        let day = try await dayAtOnePM()
+        var applied = MyDayFilterChoices()
+        applied.toggle(day.health.id)
+        func sheet(_ draft: MyDayFilterChoices) -> MyDayFilterSheet { MyDayFilterSheet(engine: day.model.engine, draft: draft, applied: applied) }
+
+        #expect(!sheet(applied).hasChanges)
+        #expect(sheet(applied).canReset)
+
+        var draft = applied
+        draft.toggle(day.work.id)
+        #expect(sheet(draft).hasChanges)
+        draft.toggle(day.work.id)
+        #expect(!sheet(draft).hasChanges)
+
+        #expect(sheet(MyDayFilterChoices()).hasChanges)
+        #expect(!sheet(MyDayFilterChoices()).canReset)
     }
 
     /// The test host and previews have no engine: My Day then shows nothing is due.
