@@ -2456,7 +2456,7 @@
     "Your reminders are still on this iPhone, and nudges already scheduled will still come. Unlock your iPhone, then open %@ again." : {
       "comment" : "Explains the unreadable store: nothing is lost, and reopening the app tries again. The placeholder is the app's name."
     },
-    "Your reminders stay on this iPhone. There's no account and no server, and nothing syncs to other devices." : {
+    "Your own reminders stay on this iPhone. Reminders you send or receive go through your iCloud. There's no account and no server of ours." : {
       "comment" : "Settings: the privacy note under Your Data."
     },
     "Z to A" : {
