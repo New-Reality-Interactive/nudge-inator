@@ -347,7 +347,7 @@ except in the tab and navigation bars. Verify names against the mockup.
 
 | Use | Symbols |
 |---|---|
-| Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `magnifyingglass` and `xmark.circle.fill` (Search, drawn by the system), `tag.filter` (custom, in the asset catalog: the Tags tab's `tag` with a three-line filter badge at the lower right: My Day's Filter, the button and its menu item), `tag.xmark` (custom, in the asset catalog: the same `tag` with a × badge at the lower right: My Day's Clear All Filters, in the Filter button's menu), `line.3.horizontal.decrease` (the Filter button of the Reminders and Tags tabs and its Filter menu item, and the no-match state's image when only the sheet's filters narrow the list; `xmark` is its Clear All Filters) |
+| Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `magnifyingglass` and `xmark.circle.fill` (Search, drawn by the system), `line.3.horizontal.decrease` (the Filter button of My Day, Reminders and Tags and its Filter menu item, and the no-match state's image when only the sheet's filters narrow the list; `xmark` is its Clear All Filters) |
 | Sort | `arrow.up.arrow.down` (the Reminders and Tags tabs' Sort buttons, which open the Sort menu) |
 | Swipe | `pencil` (the Tags tab's Edit tile) |
 | Tabs | `bell` (Now), `calendar` (My Day), `list.bullet.clipboard` (Reminders), `tag` (Tags), `gearshape` (Settings) |
@@ -401,14 +401,14 @@ except in the tab and navigation bars. Verify names against the mockup.
   today with the selected tag" for one, "…all selected tags" or "…any selected tags" from two on,
   "Due today with no tags" for No Tags. A **From others** token follows on a row of its own after the
   tags', so it never goes into +N more, and shares the row after No Tags, as the mockup's (ticket
-  209). The summary line says nothing of it. **Filter button:** `tag.filter` in the bar, a glass circle of its own with New
+  209). The summary line says nothing of it. **Filter button:** `line.3.horizontal.decrease` in the bar, as on Reminders and Tags now that it filters by more than tags (ticket 209), a glass circle of its own with New
   Reminder apart from it (a fixed toolbar spacer, as on Reminders and Tags). It shows only while a
   reminder is due today and at least one tag exists or someone has sent a reminder: with neither the
   sheet would offer only No Tags, which matches every row. When it goes, the tag filter clears (the chosen count stays), so a
   filter nobody can see doesn't narrow the list when reminders or tags come back (spec #104,
   Decision 56). While any tag (or No Tags, or From others) is chosen a tap
-  shows a menu, in the Reminders tab's words: Filter (`tag.filter`) opens the filter sheet, Clear
-  All Filters (`tag.xmark`) removes every tag, No Tags and From others at once. The button's
+  shows a menu, in the Reminders tab's words: Filter (`line.3.horizontal.decrease`) opens the filter sheet, Clear
+  All Filters (`xmark`) removes every tag, No Tags and From others at once. The button's
   VoiceOver label is Filter. With none chosen a tap opens the sheet. No long press: at the
   accessibility sizes the bar uses it for the Large Content Viewer.
   **Match control:** system segmented `Picker`, a menu at accessibility sizes. Always shown, first

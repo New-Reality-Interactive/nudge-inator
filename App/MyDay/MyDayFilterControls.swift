@@ -23,11 +23,11 @@ struct MyDayFilterButton: View {
     /// Removes every tag, No Tags and From others from the filter.
     let clear: () -> Void
 
-    /// A custom symbol in the asset catalog: the Tags tab's tag with a filter badge, so it says it
-    /// filters by tags.
-    private static let symbol = "tag.filter"
-    /// The same tag with a × badge: removes the tags.
-    private static let clearSymbol = "tag.xmark"
+    /// The Reminders and Tags tabs' filter symbol: with From others the filter is more than tags
+    /// (ticket 209), so it no longer draws the tag.
+    private static let symbol = "line.3.horizontal.decrease"
+    /// Removes every filter, as on Reminders and Tags.
+    private static let clearSymbol = "xmark"
 
     private var badgeCount: Int { showsBadge ? chosen : 0 }
 
@@ -53,22 +53,22 @@ struct MyDayFilterButton: View {
                     Label {
                         Text("Filter", comment: "My Day: the item in the Filter button's menu that opens the filter.")
                     } icon: {
-                        Image(Self.symbol)
+                        Image(systemName: Self.symbol)
                     }
                 }
                 Button(action: clear) {
                     Label {
                         Text("Clear All Filters", comment: "My Day: the item in the Filter button's menu that removes every tag, No Tags and From others from the filter.")
                     } icon: {
-                        Image(Self.clearSymbol)
+                        Image(systemName: Self.clearSymbol)
                     }
                 }
             } label: {
-                Image(Self.symbol)
+                Image(systemName: Self.symbol)
             }
         } else {
             Button(action: open) {
-                Image(Self.symbol)
+                Image(systemName: Self.symbol)
             }
         }
     }
