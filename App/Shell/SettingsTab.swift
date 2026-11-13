@@ -47,8 +47,13 @@ struct SettingsTab: View {
                     Text("Delete", comment: "Settings: confirms deleting every reminder, tag and all history.")
                 }
             } message: {
-                Text("This deletes every reminder, tag and all history from this iPhone, and cancels every nudge and alarm. It can't be undone.",
-                     comment: "Settings: under the question asked before deleting everything.")
+                if model?.sharing?.data.connections.isEmpty == false {
+                    Text("This deletes every reminder, tag and all history from this iPhone, and cancels every nudge and alarm. It also disconnects everyone and deletes the reminders you've sent and received, here and in iCloud. It can't be undone.",
+                         comment: "Settings: under the question asked before deleting everything, for a person with connections or invites.")
+                } else {
+                    Text("This deletes every reminder, tag and all history from this iPhone, and cancels every nudge and alarm. It can't be undone.",
+                         comment: "Settings: under the question asked before deleting everything.")
+                }
             }
             .alert(
                 Text("Couldn't Delete Your Data", comment: "Settings: title of the message shown when deleting everything failed."),

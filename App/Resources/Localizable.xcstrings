@@ -2304,6 +2304,9 @@
     "This Reminder Was Deleted" : {
       "comment" : "The Edit Reminder form of a reminder this person sent: title of the message shown when Save finds it was deleted while the form was open."
     },
+    "This deletes every reminder, tag and all history from this iPhone, and cancels every nudge and alarm. It also disconnects everyone and deletes the reminders you've sent and received, here and in iCloud. It can't be undone." : {
+      "comment" : "Settings: under the question asked before deleting everything, for a person with connections or invites."
+    },
     "This deletes every reminder, tag and all history from this iPhone, and cancels every nudge and alarm. It can't be undone." : {
       "comment" : "Settings: under the question asked before deleting everything."
     },

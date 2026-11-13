@@ -565,7 +565,7 @@ final class AppModel {
         await notifications.sendTestNudge()
     }
 
-    /// Settings' Delete All Data (ticket 30): the store, the Default Pace and the Reminders and Tags
+    /// Settings' Delete All Data (ticket 30, 214): the store, sharing's connections and store, the Default Pace and the Reminders and Tags
     /// tabs' sorts, then the engine, then everything the adapters hold, including the test nudge and the
     /// nudges already in Notification Center. Not through `perform`: the store goes first and a
     /// store that turns the delete down stops it, so the reminders and their nudges stay as they
@@ -576,6 +576,10 @@ final class AppModel {
     func deleteAllData() async throws {
         guard case .ready = launchState, let store else { return }
         try store.deleteAllData()
+        // Sharing goes after the reminders, so one that fails leaves a connection the person can
+        // delete again; the rest of the delete still happens and the failure is thrown last.
+        let sharingFailure: (any Error)?
+        do { try sharing?.deleteEverything(); sharingFailure = nil } catch { sharingFailure = error }
         saveError = nil
         withMutation(keyPath: \.defaultPace) { defaultPaceRecord.clear() }
         withMutation(keyPath: \.remindersSort) { remindersSortRecord.clear() }
@@ -588,6 +592,7 @@ final class AppModel {
         alarms.stopEveryRing()
         await waitUntilApplied()
         await notifications.cancelAll()
+        if let sharingFailure { throw sharingFailure }
     }
 
     /// Returns once both adapters have applied every plan handed to them so far, including the

@@ -313,6 +313,26 @@ final class SharingModel {
         adapter.submit(change)
     }
 
+    /// Delete All Data (ticket 214): ends every connection as Disconnect does, so each other person
+    /// sees Connection Ended, and revokes every open invite. Then the sharing store is emptied: the
+    /// sent reminders and their copies, the received reminders' sync states, `CKSyncEngine`'s saved
+    /// state and the outbox, so nothing resumes syncing a connection that is gone. The adapter keeps
+    /// the disconnects and revokes until iCloud has them. The account ID stays, as it is still the
+    /// account signed in. Throws, changing and sending nothing, if the store can't be emptied.
+    func deleteEverything() throws {
+        let kept = try currentData()
+        var emptied = SharingData()
+        emptied.accountID = kept.accountID
+        try keep(emptied)
+        for connection in kept.connections {
+            switch connection.state {
+            case .invited: adapter.revokeInvite(connection.id)
+            case .connected: adapter.submit(.disconnect(connection.id))
+            case .ended: break
+            }
+        }
+    }
+
     /// Changes this person's own Status sharing and Delivery mode for the connection with
     /// `connectionID` (ticket 196), and sends them to the other person, whose app shows them as
     /// theirs. Changes nothing for a connection that isn't connected, or choices already set.
