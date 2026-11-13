@@ -4,6 +4,8 @@ import SwiftUI
 /// mockup's wrapping `.tokens`. Rows align to the leading edge.
 struct FlowLayout: Layout {
     var spacing: CGFloat = Design.Spacing.controlGap
+    /// The gap between rows, or `nil` for `spacing`'s.
+    var lineSpacing: CGFloat? = nil
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         arrange(in: proposal.width ?? .infinity, subviews: subviews).size
@@ -32,7 +34,7 @@ struct FlowLayout: Layout {
             }
             if Self.startsRow(at: x, itemWidth: size.width, in: width) {
                 x = 0
-                y += rowHeight + spacing
+                y += rowHeight + (lineSpacing ?? spacing)
                 rowHeight = 0
             }
             origins.append(CGPoint(x: x, y: y))

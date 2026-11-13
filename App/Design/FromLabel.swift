@@ -5,8 +5,8 @@ import SwiftUI
 /// cards and every list row: `person`, then "From Riley Park" in the subhead and the secondary
 /// label color. Who sent it isn't a status, so it has no color of its own. On a row with no
 /// strength badge of its own (My Day, Reminders, Last 24 Hours) the badge follows it, as the
-/// mockup's `fromLabel(r)`, and Waiting to sync after them while it applies (ticket 211); when they
-/// don't fit side by side, each goes under the one before.
+/// mockup's `fromLabel(r)`, and Waiting to sync after them while it applies (ticket 211); they wrap
+/// onto the next line as words do when they don't fit.
 struct FromLabel: View {
     let from: FromLine
     /// The strength badge to follow the label, or `nil` where the row already shows one.
@@ -16,10 +16,9 @@ struct FromLabel: View {
         if strength == nil && !from.waitsToSync {
             name
         } else {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: Design.Spacing.s2) { parts }
-                VStack(alignment: .leading, spacing: Design.Spacing.line) { parts }
-            }
+            // The pieces flow and wrap as words do, as the mockup's `fromline` does: what fits on a
+            // line stays there (#211's phone check: all or nothing stacked each piece alone).
+            FlowLayout(spacing: Design.Spacing.s2, lineSpacing: Design.Spacing.line) { parts }
         }
     }
 
