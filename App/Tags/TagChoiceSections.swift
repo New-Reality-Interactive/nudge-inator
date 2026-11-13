@@ -75,26 +75,12 @@ struct TagChoiceSections<NoTagsFooter: View>: View {
     }
 
     private var noTagsRow: some View {
-        let isChecked = sheet.isNoTagsChecked
-        return Button {
+        SubtitledCheckmarkRow(
+            title: Text("No Tags", comment: "A filter sheet: the row that shows only reminders without tags."),
+            subtitle: Text("Only reminders without tags", comment: "A filter sheet: under No Tags."),
+            isChecked: sheet.isNoTagsChecked
+        ) {
             choice.toggleNoTags()
-        } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: Design.Spacing.line) {
-                    Text("No Tags", comment: "A filter sheet: the row that shows only reminders without tags.")
-                        .foregroundStyle(Color(uiColor: .label))
-                    Text("Only reminders without tags", comment: "A filter sheet: under No Tags.")
-                        .font(.subheadline)
-                        .foregroundStyle(Color(uiColor: .secondaryLabel))
-                }
-                Spacer()
-                if isChecked {
-                    Image(systemName: "checkmark")
-                        .foregroundStyle(Color.accentColor)
-                        .accessibilityHidden(true)
-                }
-            }
         }
-        .accessibilityAddTraits(isChecked ? .isSelected : [])
     }
 }

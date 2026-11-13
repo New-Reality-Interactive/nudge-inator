@@ -56,7 +56,7 @@ struct MyDayTab: View {
                             chosen: checkedCount,
                             showsBadge: !dynamicTypeSize.isAccessibilitySize,
                             open: { isFiltering = true },
-                            clear: { filter.clearTags() }
+                            clear: { filter.clear() }
                         )
                     }
                     // The Filter button is a glass group of its own and New stands apart, as on
@@ -77,7 +77,8 @@ struct MyDayTab: View {
         model?.engine ?? previewEngine
     }
 
-    /// How many tags, or No Tags, the filter has, without those that were deleted.
+    /// How many tags, or No Tags, the filter has, without those that were deleted, and one more for
+    /// From others.
     private var checkedCount: Int {
         guard let engine else { return 0 }
         return filter.keeping(tagsIn: Set(engine.tags.map(\.id))).checkedCount
@@ -91,6 +92,7 @@ struct MyDayTab: View {
         switch token.kind {
         case .tag(let tagID): filter.toggle(tagID)
         case .noTags: filter.toggleNoTags()
+        case .fromOthers: filter.toggleFromOthers()
         }
     }
 }

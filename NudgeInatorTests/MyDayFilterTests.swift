@@ -87,7 +87,7 @@ struct MyDayFilterTests {
         filter.tap(.missed)
         #expect(filter.hasTags)
 
-        filter.clearTags()
+        filter.clear()
 
         #expect(filter.tagFilter == .off)
         #expect(filter.match == .all)

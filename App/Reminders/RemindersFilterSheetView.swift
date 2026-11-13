@@ -1,9 +1,9 @@
 import NudgeEngine
 import SwiftUI
 
-/// The filter sheet, the mockup's `remFilterSheet`: Tags as on My Day, then Status, Strength and Due
-/// Date, choosing a draft of what's applied. The bar, Apply, Reset and the prompt before discarding
-/// are `FilterSheetScaffold`'s, shared with Tags.
+/// The filter sheet, the mockup's `remFilterSheet`: Tags as on My Day, then Status, Strength, From
+/// (once someone has sent a reminder) and Due Date, choosing a draft of what's applied. The bar,
+/// Apply, Reset and the prompt before discarding are `FilterSheetScaffold`'s, shared with Tags.
 struct RemindersFilterSheetView: View {
     let engine: Engine
     let applied: RemindersFilterChoices
@@ -23,6 +23,9 @@ struct RemindersFilterSheetView: View {
             }
             statusSection(draft)
             strengthSection(draft)
+            if sheet.offersFromOthers {
+                FromOthersSection(isChecked: draft.wrappedValue.fromOthers) { draft.wrappedValue.toggleFromOthers() }
+            }
             dueDateSection(draft)
         }
     }

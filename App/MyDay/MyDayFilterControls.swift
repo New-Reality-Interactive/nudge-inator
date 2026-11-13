@@ -2,24 +2,25 @@ import SwiftUI
 
 /// The Filter button, in the bar beside New Reminder in both orientations (the filter-badge
 /// mockup): an icon that turns accent-colored while the filter is on, with the system's badge
-/// showing how many tags are chosen. A count of 0 hides the badge.
+/// showing how many tags are chosen, and one more for From others. A count of 0 hides the badge.
 ///
-/// While any tag (or No Tags) is chosen a tap shows a menu, Filter by Tags and Clear All Tags; with
-/// none, it opens the filter sheet. Not a long press: at the accessibility text sizes the bar takes
-/// that for the Large Content Viewer, and lifting the finger opens the sheet (ticket 20).
+/// While any tag, No Tags or From others is chosen a tap shows a menu, Filter and Clear All
+/// Filters, the Reminders tab's words (ticket 209); with none, it opens the filter sheet. Not a
+/// long press: at the accessibility text sizes the bar takes that for the Large Content Viewer, and
+/// lifting the finger opens the sheet (ticket 20).
 ///
 /// At the accessibility text sizes there is no badge. The bar's icons stay bar-sized, but on iOS 27
 /// the system draws the badge at the text size, so it covers the icon (an iPhone on iOS 27.0.1 and
 /// the iOS 27.0 simulator; not the iOS 26.5 simulator). There the chosen-tag tokens and the
 /// VoiceOver label carry the count.
 struct MyDayFilterButton: View {
-    /// How many tags (or No Tags) are chosen.
+    /// How many tags (or No Tags) are chosen, and one more for From others.
     let chosen: Int
     /// Whether the badge shows. False at the accessibility text sizes. The caller says, since inside
     /// a toolbar the Dynamic Type size is the bar's, which stays below them.
     var showsBadge = true
     let open: () -> Void
-    /// Removes every tag and No Tags from the filter.
+    /// Removes every tag, No Tags and From others from the filter.
     let clear: () -> Void
 
     /// A custom symbol in the asset catalog: the Tags tab's tag with a filter badge, so it says it
@@ -39,7 +40,7 @@ struct MyDayFilterButton: View {
             // The bar draws its icons monochrome, so the accent is set here, and only while the filter is
             // on, when the color means something (WWDC25, "Build a SwiftUI app with the new design").
             .tint(chosen > 0 ? Color.accentColor : nil)
-            .accessibilityLabel(Text("Filter by Tags", comment: "VoiceOver label of My Day's filter button."))
+            .accessibilityLabel(Text("Filter", comment: "VoiceOver label of My Day's filter button."))
             // The count is the value, not part of the label: with it in the label, VoiceOver read it twice,
             // the badge adding its own after the label (an iPhone, iOS 27.0.1, ticket 19).
             .accessibilityValue(value)
@@ -50,14 +51,14 @@ struct MyDayFilterButton: View {
             Menu {
                 Button(action: open) {
                     Label {
-                        Text("Filter by Tags", comment: "My Day: the item in the Filter button's menu that opens the filter.")
+                        Text("Filter", comment: "My Day: the item in the Filter button's menu that opens the filter.")
                     } icon: {
                         Image(Self.symbol)
                     }
                 }
                 Button(action: clear) {
                     Label {
-                        Text("Clear All Tags", comment: "My Day: the item in the Filter button's menu that removes every tag from the filter.")
+                        Text("Clear All Filters", comment: "My Day: the item in the Filter button's menu that removes every tag, No Tags and From others from the filter.")
                     } icon: {
                         Image(Self.clearSymbol)
                     }
@@ -74,7 +75,7 @@ struct MyDayFilterButton: View {
 
     private var value: Text {
         if chosen > 0 {
-            Text("\(chosen) chosen", comment: "VoiceOver value of My Day's filter button while tags are chosen. The placeholder is how many.")
+            Text("\(chosen) chosen", comment: "VoiceOver value of My Day's filter button while tags or From others are chosen. The placeholder is how many: the tags, and one for From others.")
         } else {
             Text(verbatim: "")
         }
@@ -84,7 +85,9 @@ struct MyDayFilterButton: View {
 /// The chosen tags as DESIGN.md's filter tokens, each removing itself when tapped, wrapping to at
 /// most three rows so the counts below stay near the top, then the summary line. Tokens past the
 /// third row go into "+N more", which opens the filter sheet, where every tag is listed. Clearing
-/// them all is in the Filter button's menu (ticket 20).
+/// them all is in the Filter button's menu (ticket 20). From others follows on a row of its own
+/// after the tags, as the mockup's, so it never goes into "+N more"; after No Tags it shares the
+/// row (ticket 209).
 struct MyDayFilterTokens: View {
     let tokens: [MyDayScreen.FilterToken]
     let summary: LocalizedStringResource?
@@ -100,12 +103,23 @@ struct MyDayFilterTokens: View {
     /// The shown token VoiceOver is on, by its place in the row.
     @AccessibilityFocusState private var focusedPlace: Int?
 
+    /// From others on a row of its own, when tag tokens come before it.
+    private var ownRowToken: MyDayScreen.FilterToken? {
+        guard tokens.contains(where: \.isTag) else { return nil }
+        return tokens.first { $0.kind == .fromOthers }
+    }
+
+    /// The tokens that wrap together, with "+N more" after the third row.
+    private var flowTokens: [MyDayScreen.FilterToken] {
+        tokens.filter { $0.id != ownRowToken?.id }
+    }
+
     /// A token not measured yet, just chosen, counts as a whole row, so the row never draws more
     /// than three rows on its way to the right count.
     private var shown: Int {
-        guard let rowWidth else { return tokens.count }
+        guard let rowWidth else { return flowTokens.count }
         return FlowLayout().shownCount(
-            widths: tokens.map { widths[$0.id] ?? rowWidth }, moreWidth: moreWidth, in: rowWidth, maxRows: Self.maxRows
+            widths: flowTokens.map { widths[$0.id] ?? rowWidth }, moreWidth: moreWidth, in: rowWidth, maxRows: Self.maxRows
         )
     }
 
@@ -116,24 +130,27 @@ struct MyDayFilterTokens: View {
                     // By place, not by tag: a removed token's place goes to the token after it, so
                     // VoiceOver stays on that place and reads the new token, instead of leaving its
                     // cursor over an empty spot (ticket 20; ticket 33 found the same with Done).
-                    ForEach(Array(tokens.prefix(shown).enumerated()), id: \.offset) { place, token in
+                    ForEach(Array(flowTokens.prefix(shown).enumerated()), id: \.offset) { place, token in
                         FilterTokenView(token: token) { remove(token, at: place) }
                             .accessibilityFocused($focusedPlace, equals: place)
                     }
-                    if shown < tokens.count {
-                        MoreTokenView(count: tokens.count - shown, open: openFilter)
+                    if shown < flowTokens.count {
+                        MoreTokenView(count: flowTokens.count - shown, open: openFilter)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { rowWidth = $0 }
                 .background(alignment: .topLeading) { measured }
+                if let ownRowToken {
+                    FilterTokenView(token: ownRowToken) { remove(ownRowToken) }
+                }
                 if let summary {
                     Text(summary)
                         .subheadStyle()
                 }
             }
             .accessibilityElement(children: .contain)
-            .accessibilityLabel(Text("Filtering by", comment: "VoiceOver label of the group of tokens for the tags My Day is filtered by."))
+            .accessibilityLabel(Text("Filtering by", comment: "VoiceOver label of the group of tokens for the tags, and From others, My Day is filtered by."))
         }
     }
 
@@ -142,7 +159,7 @@ struct MyDayFilterTokens: View {
     /// removed token and was cut off. With the only token gone the row goes too, and VoiceOver
     /// finds its own place (Brian's choice).
     private func remove(_ token: MyDayScreen.FilterToken, at place: Int) {
-        if place == tokens.count - 1, place > 0, focusedPlace == place {
+        if place == flowTokens.count - 1, place > 0, focusedPlace == place {
             focusedPlace = place - 1
         }
         remove(token)
@@ -151,12 +168,12 @@ struct MyDayFilterTokens: View {
     /// Every token at its own size, drawn hidden, so `shown` knows their widths before choosing.
     private var measured: some View {
         ZStack(alignment: .topLeading) {
-            ForEach(tokens) { token in
+            ForEach(flowTokens) { token in
                 FilterTokenView(token: token) {}
                     .fixedSize()
                     .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { widths[token.id] = $0 }
             }
-            MoreTokenView(count: tokens.count, open: {})
+            MoreTokenView(count: flowTokens.count, open: {})
                 .fixedSize()
                 .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { moreWidth = $0 }
         }
@@ -178,6 +195,8 @@ private struct FilterTokenView: View {
                     Text(verbatim: token.tagText ?? "")
                 case .noTags:
                     Text("No Tags", comment: "My Day: the filter token that shows only reminders without tags.")
+                case .fromOthers:
+                    Text("From others", comment: "My Day: the filter token that shows only reminders someone sent this person.")
                 }
                 Image(systemName: "xmark")
                     .font(.caption.weight(.bold))
@@ -198,6 +217,8 @@ private struct FilterTokenView: View {
             Text("Remove \(token.tagText ?? "") from the filter", comment: "VoiceOver label of a tag's filter token on My Day. The placeholder is the tag, such as \"#home\".")
         case .noTags:
             Text("Remove No Tags from the filter", comment: "VoiceOver label of My Day's No Tags filter token.")
+        case .fromOthers:
+            Text("Remove From others from the filter", comment: "VoiceOver label of My Day's From others filter token.")
         }
     }
 }
@@ -241,7 +262,7 @@ private extension View {
             remove: { _ in },
             openFilter: {}
         )
-        MyDayFilterTokens(tokens: [.init(kind: .noTags, tagText: nil)], summary: nil, remove: { _ in }, openFilter: {})
+        MyDayFilterTokens(tokens: [.init(kind: .noTags, tagText: nil), .init(kind: .fromOthers, tagText: nil)], summary: nil, remove: { _ in }, openFilter: {})
     }
     .padding()
 }

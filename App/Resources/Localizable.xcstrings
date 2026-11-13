@@ -281,7 +281,7 @@
       }
     },
     "%lld chosen" : {
-      "comment" : "VoiceOver value of My Day's filter button while tags are chosen. The placeholder is how many.",
+      "comment" : "VoiceOver value of My Day's filter button while tags or From others are chosen. The placeholder is how many: the tags, and one for From others.",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -296,6 +296,52 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld chosen"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld due today from others." : {
+      "comment" : "My Day's filter sheet: under the lists when only From others is checked. The placeholder is how many are due today.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld due today from others."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld due today from others."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld due today with %@ from others." : {
+      "comment" : "My Day's filter sheet: under the lists when tags and From others are checked. 1: how many are due today. 2: the checked tags, such as \"#home and #money\" (Match All) or \"#home or #money\" (Match Any).",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld due today with %2$@ from others."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld due today with %2$@ from others."
                 }
               }
             }
@@ -319,6 +365,29 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%1$lld due today with %2$@."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld due today without tags from others." : {
+      "comment" : "My Day's filter sheet: under the lists when No Tags and From others are checked. The placeholder is how many are due today.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld due today without tags from others."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld due today without tags from others."
                 }
               }
             }
@@ -974,13 +1043,10 @@
       "comment" : "Under the Send To page's list of people."
     },
     "Clear" : {
-      "comment" : "My Day's filter sheet: removes every tag from the filter."
+      "comment" : "My Day's filter sheet: removes every tag, and From others, from the filter."
     },
     "Clear All Filters" : {
-      "comment" : "Reminders and Tags: the item in the Filter button's menu that removes every sheet filter, and leaves the search."
-    },
-    "Clear All Tags" : {
-      "comment" : "My Day: the item in the Filter button's menu that removes every tag from the filter."
+      "comment" : "My Day: the item in the Filter button's menu that removes every tag, No Tags and From others from the filter.\nReminders and Tags: the item in the Filter button's menu that removes every sheet filter, and leaves the search."
     },
     "Clear Filter" : {
       "comment" : "Tags tab: the no-match empty state's button when the filter is narrowing the list."
@@ -1392,7 +1458,7 @@
       "comment" : "Tags tab's Sort menu, sorted by Reminders: the tag fewest reminders have at the top."
     },
     "Filter" : {
-      "comment" : "Reminders and Tags: the item in the Filter button's menu that opens the filter sheet.\nVoiceOver label of the Filter button on Reminders and Tags."
+      "comment" : "My Day: the item in the Filter button's menu that opens the filter.\nReminders and Tags: the item in the Filter button's menu that opens the filter sheet.\nVoiceOver label of My Day's filter button.\nVoiceOver label of the Filter button on Reminders and Tags."
     },
     "Filter My Day" : {
       "comment" : "Title of My Day's tag filter sheet."
@@ -1403,11 +1469,8 @@
     "Filter Tags" : {
       "comment" : "Title of the Tags tab's filter sheet."
     },
-    "Filter by Tags" : {
-      "comment" : "My Day: the item in the Filter button's menu that opens the filter.\nVoiceOver label of My Day's filter button."
-    },
     "Filtering by" : {
-      "comment" : "VoiceOver label of the group of tokens for the tags My Day is filtered by."
+      "comment" : "VoiceOver label of the group of tokens for the tags, and From others, My Day is filtered by."
     },
     "Firm" : {
       "comment" : "Strength name, in the form and the Reminders filter sheet."
@@ -1422,13 +1485,16 @@
       "comment" : "The Custom repeat page's choice of Daily, Weekly, Monthly or Yearly."
     },
     "From" : {
-      "comment" : "Reminders' filter sheet: the switch and date picker for the first day a reminder may be due."
+      "comment" : "A filter sheet: header of the section with From others.\nReminders' filter sheet: the switch and date picker for the first day a reminder may be due."
     },
     "From %@" : {
       "comment" : "Under a received reminder's title on Now, My Day and the Reminders tab. The placeholder is the sender's name, such as \"Riley Park\"."
     },
     "From Someone" : {
       "comment" : "Under a received reminder's title on Now, My Day and the Reminders tab, when the app doesn't know who sent it."
+    },
+    "From others" : {
+      "comment" : "A filter sheet: the row that shows only reminders someone sent this person.\nMy Day: the filter token that shows only reminders someone sent this person."
     },
     "General" : {
       "comment" : "Settings: header of the first section, with the About row."
@@ -1900,6 +1966,9 @@
     "Only Done stops the nudging." : {
       "comment" : "Nudge card: under the Done button."
     },
+    "Only reminders someone sent you" : {
+      "comment" : "A filter sheet: under From others."
+    },
     "Only reminders without tags" : {
       "comment" : "A filter sheet: under No Tags."
     },
@@ -1991,6 +2060,9 @@
     },
     "Remove %@ from the filter" : {
       "comment" : "VoiceOver label of a tag's filter token on My Day. The placeholder is the tag, such as \"#home\"."
+    },
+    "Remove From others from the filter" : {
+      "comment" : "VoiceOver label of My Day's From others filter token."
     },
     "Remove No Tags from the filter" : {
       "comment" : "VoiceOver label of My Day's No Tags filter token."

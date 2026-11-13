@@ -9,10 +9,12 @@ struct RemindersFilterChoices: FilterSheetChoices {
     private(set) var strengths: Set<Strength> = []
     private(set) var dueFrom: CalendarDay?
     private(set) var dueTo: CalendarDay?
+    /// Only received reminders: the From section's From others (ticket 209).
+    private(set) var fromOthers = false
 
     /// The Filter button's badge: how many of the sheet's sections are in use, not how many choices.
     var sectionsInUse: Int {
-        [tags.isOn, !statuses.isEmpty, !strengths.isEmpty, dueFrom != nil || dueTo != nil].count { $0 }
+        [tags.isOn, !statuses.isEmpty, !strengths.isEmpty, dueFrom != nil || dueTo != nil, fromOthers].count { $0 }
     }
 
     func isChosen(_ status: RemindersFilter.Status) -> Bool { statuses.contains(status) }
@@ -27,6 +29,10 @@ struct RemindersFilterChoices: FilterSheetChoices {
         if strengths.remove(strength) == nil { strengths.insert(strength) }
     }
 
+    mutating func toggleFromOthers() {
+        fromOthers.toggle()
+    }
+
     /// The first day a reminder may be due. It can't pass the last, so it stops there.
     mutating func setDueFrom(_ day: CalendarDay?) {
         dueFrom = day.map { min($0, dueTo ?? $0) }
@@ -39,7 +45,7 @@ struct RemindersFilterChoices: FilterSheetChoices {
 
     /// What the list is narrowed by with this applied and `search` in the field.
     func narrowing(search: String) -> RemindersFilter {
-        RemindersFilter(tags: tags.tagFilter, statuses: statuses, strengths: strengths, dueFrom: dueFrom, dueTo: dueTo, search: search)
+        RemindersFilter(tags: tags.tagFilter, statuses: statuses, strengths: strengths, dueFrom: dueFrom, dueTo: dueTo, fromOthers: fromOthers, search: search)
     }
 
     /// The filter without tags that no longer exist, as My Day's.

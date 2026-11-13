@@ -234,7 +234,7 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
   uses it.
 - **Neutral (gray)** marks **Normal urgency**, tags, strength badges and counts of 0.
 - **Badge (`{colors.badge}`)** is the Now tab's nudging count, My Day's Filter button's count of
-  tags chosen, the Reminders Filter button's count of filter sheet sections in use, and the Tags
+  tags chosen (and one for From others), the Reminders Filter button's count of filter sheet sections in use, and the Tags
   Filter button's 1 while its filter is on, all as the
   system draws them (red; SwiftUI can't recolor a Filter button's, and the app doesn't bridge to
   UIKit for it). A count of 0 shows no badge, so it is never red. At the accessibility text sizes
@@ -347,7 +347,7 @@ except in the tab and navigation bars. Verify names against the mockup.
 
 | Use | Symbols |
 |---|---|
-| Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `magnifyingglass` and `xmark.circle.fill` (Search, drawn by the system), `tag.filter` (custom, in the asset catalog: the Tags tab's `tag` with a three-line filter badge at the lower right: Filter by Tags, the button and its menu item), `tag.xmark` (custom, in the asset catalog: the same `tag` with a × badge at the lower right: Clear All Tags, in the Filter button's menu), `line.3.horizontal.decrease` (the Filter button of the Reminders and Tags tabs and its Filter menu item, and the no-match state's image when only the sheet's filters narrow the list; `xmark` is its Clear All Filters) |
+| Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `magnifyingglass` and `xmark.circle.fill` (Search, drawn by the system), `tag.filter` (custom, in the asset catalog: the Tags tab's `tag` with a three-line filter badge at the lower right: My Day's Filter, the button and its menu item), `tag.xmark` (custom, in the asset catalog: the same `tag` with a × badge at the lower right: My Day's Clear All Filters, in the Filter button's menu), `line.3.horizontal.decrease` (the Filter button of the Reminders and Tags tabs and its Filter menu item, and the no-match state's image when only the sheet's filters narrow the list; `xmark` is its Clear All Filters) |
 | Sort | `arrow.up.arrow.down` (the Reminders and Tags tabs' Sort buttons, which open the Sort menu) |
 | Swipe | `pencil` (the Tags tab's Edit tile) |
 | Tabs | `bell` (Now), `calendar` (My Day), `list.bullet.clipboard` (Reminders), `tag` (Tags), `gearshape` (Settings) |
@@ -399,19 +399,25 @@ except in the tab and navigation bars. Verify names against the mockup.
   sheet. If it doesn't fit beside the third row's only token, it takes a row of its own, so three
   tags still show. Under them a summary line says how the tags combine without naming them: "Due
   today with the selected tag" for one, "…all selected tags" or "…any selected tags" from two on,
-  "Due today with no tags" for No Tags. **Filter button:** `tag.filter` in the bar, a glass circle of its own with New
+  "Due today with no tags" for No Tags. A **From others** token follows on a row of its own after the
+  tags', so it never goes into +N more, and shares the row after No Tags, as the mockup's (ticket
+  209). The summary line says nothing of it. **Filter button:** `tag.filter` in the bar, a glass circle of its own with New
   Reminder apart from it (a fixed toolbar spacer, as on Reminders and Tags). It shows only while a
-  reminder is due today and at least one tag exists: with no tags the sheet would offer only No
-  Tags, which matches every row. When it goes, the tag filter clears (the chosen count stays), so a
+  reminder is due today and at least one tag exists or someone has sent a reminder: with neither the
+  sheet would offer only No Tags, which matches every row. When it goes, the tag filter clears (the chosen count stays), so a
   filter nobody can see doesn't narrow the list when reminders or tags come back (spec #104,
-  Decision 56). While any tag (or No Tags) is chosen a tap
-  shows a menu: Filter by Tags (`tag.filter`) opens the filter sheet, Clear All Tags (`tag.xmark`)
-  removes every tag at once. With none chosen a tap opens the sheet. No long press: at the
+  Decision 56). While any tag (or No Tags, or From others) is chosen a tap
+  shows a menu, in the Reminders tab's words: Filter (`tag.filter`) opens the filter sheet, Clear
+  All Filters (`tag.xmark`) removes every tag, No Tags and From others at once. The button's
+  VoiceOver label is Filter. With none chosen a tap opens the sheet. No long press: at the
   accessibility sizes the bar uses it for the Large Content Viewer.
   **Match control:** system segmented `Picker`, a menu at accessibility sizes. Always shown, first
   in the filter sheet above Tags, so checking a tag never moves the rows. Disabled below two
   checked tags and with No Tags, keeping its current choice; the Tags footer then says "Check one
-  or more tags. Match needs two or more." While the sheet is open its list never gets shorter:
+  or more tags. Match needs two or more." Under No Tags, once someone has sent this person a
+  reminder (or while it's on), a **From** section holds **From others**, "Only reminders someone
+  sent you", which shows only received reminders; the count goes under it. A person with no
+  received reminders sees the sheet without it. While the sheet is open its list never gets shorter:
   blank space under the summary makes up for text that shortens, so a list scrolled to its end
   doesn't scroll back and move the rows.
 
@@ -455,7 +461,8 @@ except in the tab and navigation bars. Verify names against the mockup.
   confirmation dialog, "Are you sure you want to discard these changes?", as Calendar asks (#278). From the ✕ iOS draws it as a
   popover with Discard Changes alone; a tap outside it keeps the changes. A tap above the sheet does nothing either way: iOS draws a sheet's dimming
   view as noninteractive (spec #104, Decision 57).
-  Match and Tags with No Tags as on My Day, then Status, Strength and Due Date. Status and
+  Match and Tags with No Tags as on My Day, then Status, Strength, From (From others, as on My Day,
+  shown on the same terms) and Due Date. Status and
   Strength are checkmark lists. Due Date has From and To, each a switch with a date pill beside it
   while on. The footer counts what Apply would show.
 - **Empty states:** `ContentUnavailableView`. With no reminders: `list.bullet.clipboard`, "No

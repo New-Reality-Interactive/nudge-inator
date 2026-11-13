@@ -196,17 +196,17 @@ final class ShotsUITests: XCTestCase {
     }
 
     /// My Day's Filter button, and with a tag chosen its menu (ticket 20), which also has an item
-    /// named Filter by Tags: the button is the topmost.
+    /// named Filter: the button is the topmost.
     private var myDayFilterButtons: XCUIElementQuery {
-        app.buttons.matching(NSPredicate(format: "label == %@", "Filter by Tags"))
+        app.buttons.matching(NSPredicate(format: "label == %@", "Filter"))
     }
 
-    /// Opens My Day's filter sheet: with a tag chosen, through the Filter menu's Filter by Tags.
+    /// Opens My Day's filter sheet: with a tag chosen, through the Filter menu's Filter.
     private func openMyDayFilter() {
         barTap {
             scrollToTop()
             myDayFilterButtons.firstMatch.tap()
-            if app.buttons["Clear All Tags"].waitForExistence(timeout: 2) {
+            if app.buttons["Clear All Filters"].waitForExistence(timeout: 2) {
                 myDayFilterButtons.allElementsBoundByIndex.max { $0.frame.minY < $1.frame.minY }?.tap()
             }
             XCTAssert(app.navigationBars["Filter My Day"].waitForExistence(timeout: 3), "No Filter My Day sheet")
@@ -304,7 +304,7 @@ final class ShotsUITests: XCTestCase {
         launch(.app)
         tab("My Day")
         func report(_ count: Int) {
-            let button = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Filter by Tags")).firstMatch
+            let button = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Filter")).firstMatch
             print("ACCESSIBILITY \(count) tags: label=\"\(button.label)\" value=\"\(button.value as? String ?? "nil")\"")
         }
         report(0)
@@ -319,7 +319,7 @@ final class ShotsUITests: XCTestCase {
     }
 
     /// Six tags, wrapping to at most three rows with "+N more" past them, then the Filter button's
-    /// menu (ticket 20): a tap shows Filter by Tags and Clear All Tags, at every text size, and Clear
+    /// menu (ticket 20): a tap shows Filter and Clear All Filters, at every text size, and Clear
     /// All Tags removes every tag. What VoiceOver gets is in the test log (`ACCESSIBILITY` lines).
     func testMyDayClearAllTags() {
         launch(.app)
@@ -345,17 +345,17 @@ final class ShotsUITests: XCTestCase {
             barTap { tapButton(containing: "Done", inSheet: true) }
         }
         print("ACCESSIBILITY 6 tags: label=\"\(filter.label)\" value=\"\(filter.value as? String ?? "nil")\"")
-        let clear = app.buttons["Clear All Tags"]
+        let clear = app.buttons["Clear All Filters"]
         barTap {
             scrollToTop()
             filter.tap()
             XCTAssert(clear.waitForExistence(timeout: 3), "The Filter menu didn't open")
             shot("myday-filter-menu")
-            print("ACCESSIBILITY menu items: \(myDayFilterButtons.count) named Filter by Tags, clear=\"\(clear.label)\"")
+            print("ACCESSIBILITY menu items: \(myDayFilterButtons.count) named Filter, clear=\"\(clear.label)\"")
             clear.tap()
         }
         shot("myday-cleared")
-        XCTAssertFalse(app.buttons["Remove #home from the filter"].exists, "Clear All Tags left a token")
+        XCTAssertFalse(app.buttons["Remove #home from the filter"].exists, "Clear All Filters left a token")
         XCTAssertEqual(filter.value as? String ?? "", "", "The Filter button still has a count")
         // No Tags is cleared too.
         openMyDayFilter()
@@ -367,7 +367,7 @@ final class ShotsUITests: XCTestCase {
             XCTAssert(clear.waitForExistence(timeout: 3), "The Filter menu didn't open with No Tags")
             clear.tap()
         }
-        XCTAssertFalse(app.buttons["Remove No Tags from the filter"].exists, "Clear All Tags left No Tags")
+        XCTAssertFalse(app.buttons["Remove No Tags from the filter"].exists, "Clear All Filters left No Tags")
     }
 
     /// The seed's tags, as the filter sheet lists them.

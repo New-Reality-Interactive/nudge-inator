@@ -56,6 +56,8 @@ public struct RemindersFilter: Equatable, Sendable {
     public var dueFrom: CalendarDay?
     /// The last day a reminder may be due to be shown, that day included. `nil` has no last day.
     public var dueTo: CalendarDay?
+    /// Whether only received reminders are shown, the sheet's From others (spec #127, ticket 209).
+    public var fromOthers: Bool
     /// The phrase a reminder's title or notes must contain, without leading or trailing whitespace,
     /// so a space typed after a word doesn't change the filter. Empty narrows nothing.
     public var search: String {
@@ -78,6 +80,7 @@ public struct RemindersFilter: Equatable, Sendable {
         strengths: Set<Strength> = [],
         dueFrom: CalendarDay? = nil,
         dueTo: CalendarDay? = nil,
+        fromOthers: Bool = false,
         search: String = ""
     ) {
         self.tags = tags
@@ -85,17 +88,18 @@ public struct RemindersFilter: Equatable, Sendable {
         self.strengths = strengths
         self.dueFrom = dueFrom
         self.dueTo = dueTo
+        self.fromOthers = fromOthers
         self.search = Self.trimmed(search)
     }
 
     /// Whether the filter sheet is narrowing the list. Search isn't part of it.
     public var hasSheetFilters: Bool {
-        tags != .off || !statuses.isEmpty || !strengths.isEmpty || dueFrom != nil || dueTo != nil
+        tags != .off || !statuses.isEmpty || !strengths.isEmpty || dueFrom != nil || dueTo != nil || fromOthers
     }
 
     func matches(_ item: RemindersList.Item, tagIDs: Set<Tag.ID>, dueDay: CalendarDay) -> Bool {
         matches(item.status) && matchesStrength(item.reminder) && tags.includes(tagIDs)
-            && matchesDueDate(dueDay) && matchesSearch(item.reminder)
+            && matchesDueDate(dueDay) && (!fromOthers || item.reminder.isReceived) && matchesSearch(item.reminder)
     }
 
     private func matchesDueDate(_ dueDay: CalendarDay) -> Bool {
@@ -188,6 +192,12 @@ extension Engine {
             return ascending ? a < b : a > b
         }
         return RemindersList(items: ordered.map(\.element), total: reminders.count)
+    }
+
+    /// Whether any reminder the engine holds was received from someone: the filter sheets offer
+    /// From others only then (ticket 209).
+    public var hasReceivedReminders: Bool {
+        reminders.contains(where: \.isReceived)
     }
 
     /// The next due time after the open occurrence's, if any. The engine reads "at or after now",

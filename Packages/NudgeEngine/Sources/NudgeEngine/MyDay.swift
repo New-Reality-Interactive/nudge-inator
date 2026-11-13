@@ -87,16 +87,18 @@ public enum TagFilter: Equatable, Sendable {
 }
 
 extension Engine {
-    /// My Day as it stands now, for the reminders `tagFilter` lets through. The counts cover every
-    /// item the tag filter lets through, as in the mockup. "Today" is the local day, in the engine's
-    /// time zone, that holds now.
-    public func myDay(tagFilter: TagFilter = .off) -> MyDay {
+    /// My Day as it stands now, for the reminders `tagFilter` lets through, and with `fromOthers`
+    /// only received ones (ticket 209). The counts cover every item the filter lets through, as in
+    /// the mockup. "Today" is the local day, in the engine's time zone, that holds now.
+    public func myDay(tagFilter: TagFilter = .off, fromOthers: Bool = false) -> MyDay {
         let now = clock.now
         let start = calendar.startOfDay(for: now)
         guard let end = calendar.date(byAdding: .day, value: 1, to: start) else { return MyDay(items: []) }
         // The store may hand back a deleted tag's ID; it is no tag.
         let tagIDs = Set(tags.map(\.id))
-        let items = reminders.filter { tagFilter.includes(tagIDs.intersection($0.tagIDs)) }.flatMap { reminder in
+        let items = reminders.filter {
+            (!fromOthers || $0.isReceived) && tagFilter.includes(tagIDs.intersection($0.tagIDs))
+        }.flatMap { reminder in
             dueTimes(of: reminder, in: start...end.justBefore).compactMap { dueTime -> MyDay.Item? in
                 let status: MyDay.Status
                 if reminder.isCanceled {
