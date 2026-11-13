@@ -38,6 +38,18 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         return true
     }
 
+    /// Names the scene delegate that receives an iCloud invite (#217): SwiftUI apps get one only
+    /// this way. SwiftUI still builds the window.
+    func application(
+        _ application: UIApplication,
+        configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+    ) -> UISceneConfiguration {
+        let configuration = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
+        configuration.delegateClass = SharingSceneDelegate.self
+        return configuration
+    }
+
     /// The first unlock since a restart: the store, shut until now, can be read, and a Done chosen
     /// on the Lock Screen meanwhile is merged (ticket 32). Apple's docs don't say whether a
     /// suspended app gets this; App opened retries too.

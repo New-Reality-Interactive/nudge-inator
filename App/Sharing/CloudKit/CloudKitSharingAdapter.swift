@@ -12,7 +12,7 @@ import os
 /// stopped; what hasn't gone stays in the outbox until `sent(_:)` says it has.
 ///
 /// The account comes from `CKContainer.accountStatus`, and a report when an engine sends its
-/// account-change event (#215). Invites (making a share, accepting one) are #217's.
+/// account-change event (#215). Invites make the connection's share and accept one (#217).
 ///
 /// Making one asks iCloud nothing. `start()` and `signedInAccount()` do, and the app model calls
 /// them only once the person opens Connections or an invite reaches them, or sharing holds
@@ -20,9 +20,12 @@ import os
 @MainActor
 final class CloudKitSharingAdapter: SharingAdapter {
     static let containerIdentifier = "iCloud.com.newrealityinteractive.nudgeinator"
-    private static let logger = Logger(subsystem: "com.newrealityinteractive.nudgeinator", category: "CloudKit")
+    private nonisolated static let logger = Logger(subsystem: "com.newrealityinteractive.nudgeinator", category: "CloudKit")
 
     struct NotAvailableYet: Error {}
+
+    /// The adapter this build made, for the scene delegate that receives an invite (#217).
+    private(set) static weak var current: CloudKitSharingAdapter?
 
     weak var events: (any SharingAdapterEvents)?
     private let reader: CloudKitAccountReader
@@ -42,6 +45,9 @@ final class CloudKitSharingAdapter: SharingAdapter {
     private var unreported: [OutboxChange.ID] = []
     private var isReporting = false
     private let connectivity = Connectivity()
+    /// Invites that reached this person, until they are accepted (#217).
+    private var incoming: [UUID: CKShare.Metadata] = [:]
+    private var sharingObserver: CKSystemSharingUIObserver?
 
     /// A real adapter over the app's container.
     convenience init() {
@@ -53,6 +59,7 @@ final class CloudKitSharingAdapter: SharingAdapter {
         self.reader = reader
         self.container = container
         self.automaticallySync = automaticallySync
+        Self.current = self
         connectivity.onChange = { [weak self] in self?.events?.connectivityChanged() }
     }
 
@@ -79,6 +86,7 @@ final class CloudKitSharingAdapter: SharingAdapter {
             sync.attach(engine.state, for: database)
         }
         connectivity.start()
+        observeSharingSheet(container)
         keep()
         // The first request to iCloud: the device check reads it to see none came before (#216).
         Self.logger.notice("Sync engines started")
@@ -113,11 +121,110 @@ final class CloudKitSharingAdapter: SharingAdapter {
         keep()
     }
 
-    // MARK: Not yet (#217)
+    // MARK: Inviting and accepting (#217)
 
-    func invite(_ connectionID: UUID) async throws -> InvitedPerson? { throw NotAvailableYet() }
-    func accept(_ connectionID: UUID) async throws { throw NotAvailableYet() }
-    func keepOnly(_ participant: SharingParticipant, in connectionID: UUID) {}
+    /// Makes the connection's zone and its private share, shows the system sharing sheet for it,
+    /// and returns who the person invited, or `nil` when they sent it to nobody (the zone is then
+    /// deleted again). Throws if the zone or share couldn't be made, and then nothing was sent.
+    func invite(_ connectionID: UUID) async throws -> InvitedPerson? {
+        start()
+        guard let sync, let container else { throw NotAvailableYet() }
+        let zoneID = sync.ownsZone(of: connectionID) ? CKRecordZone.ID(zoneName: connectionID.uuidString, ownerName: CKCurrentUserDefaultName) : sync.makeZone(for: connectionID)
+        keep()
+        do {
+            let database = container.privateCloudDatabase
+            // The share can only be saved into a zone iCloud has. The engine saves the zone too; saving it twice does no harm.
+            _ = try await database.modifyRecordZones(saving: [CKRecordZone(zoneID: zoneID)], deleting: [])
+            let share = CloudKitSync.share(for: zoneID)
+            share[CKShare.SystemFieldKey.title] = String(localized: "Nudge-inator reminders", comment: "Invite: the title of the share the invite carries.")
+            let saved = try await database.modifyRecords(saving: [share], deleting: [])
+            guard case .success(let record)? = saved.saveResults[share.recordID], let savedShare = record as? CKShare else { throw NotAvailableYet() }
+            await InviteSheet.present(share: savedShare, container: container)
+            // What the sheet saved, as iCloud has it now.
+            let fetched = try await database.record(for: share.recordID)
+            let invitees = (fetched as? CKShare).map(InviteParticipant.invitees(of:)) ?? []
+            guard let person = InviteParticipant.invitedPerson(among: invitees) else {
+                revokeInvite(connectionID)
+                return nil
+            }
+            return person
+        } catch {
+            Self.logger.error("An invite couldn't be made: \(error, privacy: .public)")
+            revokeInvite(connectionID)
+            throw error
+        }
+    }
+
+    /// Takes an invite the scene delegate received and tells the app model, which accepts it.
+    func receive(_ metadata: CKShare.Metadata) {
+        let zoneID = metadata.share.recordID.zoneID
+        guard metadata.containerIdentifier == Self.containerIdentifier, let connectionID = UUID(uuidString: zoneID.zoneName) else { return }
+        incoming[connectionID] = metadata
+        let name = metadata.ownerIdentity.nameComponents.map { PersonNameComponentsFormatter().string(from: $0) }
+        let sender = name?.isEmpty == false ? name : metadata.ownerIdentity.lookupInfo?.emailAddress
+        let invite = IncomingInvite(
+            connectionID: connectionID,
+            senderName: sender ?? String(localized: "Someone", comment: "Invite: the sender's name when iCloud gives none.")
+        )
+        Task { await events?.invited(invite) }
+    }
+
+    func accept(_ connectionID: UUID) async throws {
+        start()
+        guard let sync, let container else { throw NotAvailableYet() }
+        // Already joined (the invite was tapped twice): accepting again does no harm.
+        if let zone = sync.cache.zones[connectionID], !zone.isOwn { return }
+        guard let metadata = incoming[connectionID], metadata.participantStatus != .removed else { throw InviteUnavailable() }
+        do {
+            _ = try await container.accept(metadata)
+        } catch let error as CKError where [.unknownItem, .permissionFailure].contains(error.code) {
+            // Taken off the share: canceled, or someone else was first.
+            Self.logger.notice("An invite is no longer available: \(error.code.rawValue)")
+            incoming[connectionID] = nil
+            throw InviteUnavailable()
+        }
+        incoming[connectionID] = nil
+        sync.joinZone(metadata.share.recordID.zoneID)
+        keep()
+        try? await engines[.shared]?.fetchChanges()
+    }
+
+    /// One person per invite: takes everyone but `participant` off the connection's share.
+    func keepOnly(_ participant: SharingParticipant, in connectionID: UUID) {
+        start()
+        Task { await removeOthers(from: connectionID, keeping: participant.id) }
+    }
+
+    private func removeOthers(from connectionID: UUID, keeping kept: String) async {
+        guard let container, sync?.ownsZone(of: connectionID) == true else { return }
+        let zoneID = CKRecordZone.ID(zoneName: connectionID.uuidString, ownerName: CKCurrentUserDefaultName)
+        let database = container.privateCloudDatabase
+        do {
+            let record = try await database.record(for: CKRecord.ID(recordName: CKRecordNameZoneWideShare, zoneID: zoneID))
+            guard let share = record as? CKShare else { return }
+            let remove = InviteParticipant.toRemove(from: InviteParticipant.invitees(of: share), keeping: kept)
+            guard !remove.isEmpty else { return }
+            for participant in share.participants where remove.contains(where: { $0.id == participant.userIdentity.userRecordID?.recordName }) {
+                share.removeParticipant(participant)
+            }
+            _ = try await database.modifyRecords(saving: [share], deleting: [])
+        } catch {
+            // The next fetch of the share tries again (`fetched`).
+            Self.logger.error("Other people couldn't be taken off a share: \(error, privacy: .public)")
+        }
+    }
+
+    /// Follows what the system sharing sheet saves, for the log of a device check.
+    private func observeSharingSheet(_ container: CKContainer) {
+        let observer = CKSystemSharingUIObserver(container: container)
+        observer.systemSharingUIDidSaveShareBlock = { _, result in
+            Self.logger.notice("The sharing sheet saved a share: \(String(describing: try? result.get().participants.count), privacy: .public) people")
+        }
+        observer.systemSharingUIDidStopSharingBlock = { _, _ in
+            Self.logger.notice("The sharing sheet stopped sharing")
+        }
+        sharingObserver = observer
+    }
 
     // MARK: Keeping and reporting
 
@@ -260,7 +367,17 @@ extension CloudKitSharingAdapter: CKSyncEngineDelegate {
         for modification in changes.modifications {
             if let share = modification.record as? CKShare {
                 guard let connectionID = UUID(uuidString: share.recordID.zoneID.zoneName) else { continue }
+                let invitees = InviteParticipant.invitees(of: share)
+                let wasJoined = sync.cache.zones[connectionID]?.participantJoined == true
                 outcome = outcome + sync.fetchedShare(in: connectionID, hasAcceptedParticipant: CloudKitSync.hasAcceptedParticipant(share))
+                if let first = InviteParticipant.firstToAccept(among: invitees), let id = first.id {
+                    if !wasJoined {
+                        Task { try? await events?.inviteAccepted(connectionID, by: SharingParticipant(id: id)) }
+                    } else {
+                        // Others added after the first to accept come off the share.
+                        Task { await removeOthers(from: connectionID, keeping: id) }
+                    }
+                }
             } else {
                 records.append(SharingRecordMapping.FetchedRecord(fetched: modification.record))
             }

@@ -1869,6 +1869,9 @@
         }
       }
     },
+    "Nudge-inator reminders" : {
+      "comment" : "Invite: the title of the share the invite carries.\nInvite: the title the system's sharing sheet shows for the connection."
+    },
     "Nudges" : {
       "comment" : "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and How It Nudges."
     },
@@ -2198,7 +2201,7 @@
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that closed because its reminder was paused."
     },
     "Someone" : {
-      "comment" : "Who owns a received reminder, on its details and form, when the app doesn't know who sent it, as in \"Someone owns this schedule.\""
+      "comment" : "Invite: the sender's name when iCloud gives none.\nWho owns a received reminder, on its details and form, when the app doesn't know who sent it, as in \"Someone owns this schedule.\""
     },
     "Someone else accepted it first, or it was canceled. Ask them to invite you again." : {
       "comment" : "Accepting an invite: under Invite Unavailable."
