@@ -211,7 +211,7 @@ What hasn't reached the other person yet because it hasn't gone through iCloud: 
 _Avoid_: Pending, offline
 
 **Sharing store**:
-The second store on the iPhone, beside the one holding the person's reminders, for what sharing needs: connections, sent reminders, how each recipient's copy is going, what each received reminder has yet to sync, the sync engine's saved state, and the changes not yet sent to iCloud. It is new and empty in 1.4.0, never synced by the system, and the reminders' own store never holds any of it.
+The second store on the iPhone, beside the one holding the person's reminders, for what sharing needs: connections, sent reminders, how each recipient's copy is going, what each received reminder has yet to sync, the sync engines' saved state and the sharing adapter's record of what it writes, and the changes not yet sent to iCloud. It is new and empty in 1.4.0, never synced by the system, and the reminders' own store never holds any of it.
 _Avoid_: Shared store
 
 **Outbox**:
@@ -219,7 +219,7 @@ The sharing store's queue of changes not yet sent to iCloud, oldest first: a sen
 _Avoid_: Pending, sync queue
 
 **Sharing adapter**:
-The one door to sharing in the app: it takes the changes to send (a send, a revision, a cancel, a receipt, a status, a settings change, a disconnect), reports the changes that arrive, and reports the iCloud account. The app model talks only to it, as it does to the alarm and notification adapters; the code behind it is the only place that talks to iCloud.
+The one door to sharing in the app: it takes the changes to send (a send, a revision, a cancel, a receipt, a status, a settings change, a disconnect), reports the changes that arrive, and reports the iCloud account. The app model talks only to it, as it does to the alarm and notification adapters; the code behind it is the only place that talks to iCloud, and it asks iCloud nothing until the person opens Connections or an invite reaches them.
 _Avoid_: Sync layer, CloudKit manager
 
 **Sharing reach**:

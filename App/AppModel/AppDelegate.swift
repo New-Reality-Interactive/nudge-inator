@@ -60,10 +60,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         doneQueue: DoneQueue = .standard
     ) -> AppModel {
         let clock = SystemClock()
-        // No sharing until the CloudKit adapter is wired in here (#216), except a Debug build's
-        // stand-in for the phone check, when the launch asks for it.
+        // A Debug build shares through iCloud (#216), or through the stand-in for the phone check
+        // when the launch asks for it. Making the adapter asks iCloud nothing (spec #127, decision
+        // 4). Release builds have no sharing until the Sharing switch turns it on (#387).
         #if DEBUG
-        let sharing = StandInSharing.modelIfAsked(clock: clock)
+        let sharing = StandInSharing.modelIfAsked(clock: clock) ?? cloudKitSharing(clock: clock)
         #else
         let sharing: SharingModel? = nil
         #endif
@@ -83,4 +84,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             sharing: sharing
         )
     }
+
+    #if DEBUG
+    private static func cloudKitSharing(clock: any EngineClock) -> SharingModel {
+        SharingModel(adapter: CloudKitSharingAdapter(), clock: clock) {
+            try SharingStore(location: .appGroup)
+        }
+    }
+    #endif
 }

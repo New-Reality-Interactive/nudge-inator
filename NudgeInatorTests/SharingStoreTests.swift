@@ -155,6 +155,17 @@ struct SharingStoreTests {
         #expect(try store().load() == saved)
     }
 
+    /// The sharing adapter's own cache (#216), and none once saved as `nil`.
+    @Test func theAdaptersSyncCacheReadsBackAndGoes() throws {
+        let saved = SharingData(syncCache: Data("the adapter's cache".utf8))
+
+        try store().save(saved)
+        #expect(try store().load() == saved)
+
+        try store().save(SharingData())
+        #expect(try store().load().syncCache == nil)
+    }
+
     /// Which Apple Account the data belongs to, and the note of what a change of account removed
     /// (ticket 212), each kept alone and together, and gone once saved as `nil`.
     @Test(arguments: [("account-1", false), (nil, true), ("account-2", true), (nil, false)] as [(String?, Bool)])

@@ -113,6 +113,10 @@ struct SharingStore {
         for (position, state) in data.engineStates.enumerated() {
             context.insert(SyncEngineStateRecord(position: position, database: state.database.storedValue, data: state.data))
         }
+        try deleteAll(SyncCacheRecord.self)
+        if let cache = data.syncCache {
+            context.insert(SyncCacheRecord(data: cache))
+        }
         try deleteAll(OutboxRecord.self)
         for (position, change) in data.outbox.enumerated() {
             context.insert(OutboxRecord(id: change.id, position: position, kind: change.kind.storedValue, connectionID: change.connectionID, reminderID: change.reminderID))
@@ -136,6 +140,7 @@ struct SharingStore {
         let engineStates = try context.fetch(FetchDescriptor<SyncEngineStateRecord>(sortBy: [SortDescriptor(\.position)]))
         let outbox = try context.fetch(FetchDescriptor<OutboxRecord>(sortBy: [SortDescriptor(\.position)]))
         let account = try context.fetch(FetchDescriptor<SharingAccountRecord>()).first
+        let syncCache = try context.fetch(FetchDescriptor<SyncCacheRecord>()).first
         return SharingData(
             connections: try connections.map {
                 SharingConnection(
@@ -153,6 +158,7 @@ struct SharingStore {
             sentCopies: try sentCopies.map { try $0.sentCopy() },
             receivedSyncStates: try receivedStates.map { try $0.receivedSyncState() },
             engineStates: try engineStates.map { SyncEngineState(database: try .init(storedValue: $0.database), data: $0.data) },
+            syncCache: syncCache?.data,
             outbox: try outbox.map {
                 OutboxChange(id: $0.id, kind: try .init(storedValue: $0.kind), connectionID: $0.connectionID, reminderID: $0.reminderID)
             },

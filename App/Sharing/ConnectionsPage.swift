@@ -77,6 +77,8 @@ struct ConnectionsPage: View {
         .navigationTitle(Text("Connections", comment: "Connections: the page's title, and the Settings row that opens it."))
         .navigationBarTitleDisplayMode(.inline)
         .inviteFlow(sharing: sharing, isPresented: $isInviting)
+        // Opening Connections is when the app may first ask iCloud (spec #127, decision 4).
+        .onAppear { sharing.allowICloud() }
         #if DEBUG
         .standInSharingControls()
         #endif

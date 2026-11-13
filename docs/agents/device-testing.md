@@ -12,6 +12,8 @@ The matrix's simulators were created by hand on that Mac, which is why `scripts/
 
 An iPhone 15 on iOS 27.2.1 (updated from 27.0.1 on 2026-11-09; "Brian's iPhone" in `xcrun devicectl list devices`). It is the only one, which is why the iOS 26 path behind `if #available` is covered only by the tests `scripts/test.sh` runs on the iOS 26.5 simulator. Since the developer retired the simulator screenshot runs (2026-11-09), nothing looks at that path on screen: a known gap, accepted. If a phone on iOS 26.x arrives, record it here and change that rule.
 
+The iPhone is the developer's personal phone, signed in to their own Apple Account: only Nudge-inator's data on it is disposable. A check that needs an iCloud sign-out, a sign-in or another account-level change runs on the iPad instead: an iPad (10th generation) on iPadOS 27.2.1 ("Brian's iPad"), signed in to the test Apple Account, with Developer Mode on and registered in the developer account (2026-11-13, #216). The iPhone-only app runs there in compatibility mode. Its first build needs `-allowProvisioningDeviceRegistration` beside `-allowProvisioningUpdates` to register a new device.
+
 ### History: the Intel Mac
 
 Until then the project built with **Xcode 26.6 and the iOS 26.5 SDK**, the newest the development Mac (Intel) could run: Apple's Xcode 27 release notes say "Xcode 27 will only install and run on Apple silicon Macs." So there was no iOS 27 SDK or simulator, and the matrix was the iOS 26.1 and 26.5 simulators. Physical-device checks still ran on an iOS 27 iPhone (Xcode 26.6 installs on one).
@@ -76,7 +78,7 @@ xcrun devicectl device process launch --terminate-existing --device <id> \
   -e '{"NUDGE_SEED":"clean"}' com.newrealityinteractive.nudgeinator       # remove what was loaded
 ```
 
-- Install the Debug build first (steps 2 and 3). Add `--console` to the launch to see the app's output; the seed logs `loaded(...)` or `cleaned` under the `DeviceSeed` category.
+- Install the Debug build first (steps 2 and 3). To see the app's log messages on the Mac, add `--console` to the launch and put `"OS_ACTIVITY_DT_MODE":"YES"` in its `-e` dictionary, beside any `NUDGE_SEED`: `--console` alone carries only what the app prints to standard output, and the app logs through `Logger` (found in #216's device check). The seed logs `loaded(...)` or `cleaned` under the `DeviceSeed` category; the sharing adapter logs `Sync engines started`, each account read and each account-change event under `CloudKit`.
 - The data goes through the model's own add and delete, so it is stored and scheduled like data made by hand, and it survives a force-quit. Loading a set again replaces its reminders, so one copy is left.
 - A seeded reminder keeps the creation date its set gives it: `createdAgo` seconds before the load, so the Created sort has different dates to sort by (#248). The app's add stamps a reminder made by hand with now and ignores the date it carries, so the seed adds through `AppModel.addKeepingCreationDate`, a Debug-only add that skips the stamp. A set that leaves `createdAgo` out gets the load time.
 - Removal reads a record the load kept in the app's `UserDefaults`, and acts only on what is in it: the reminders by their fixed IDs, and the tags the seed created. A tag the person already had under a set's tag name is used but never recorded, so removal leaves it, and so it does a tag a reminder of theirs now uses. Their own reminders are never touched, whatever their titles.

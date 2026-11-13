@@ -5,12 +5,12 @@ import os
 import SwiftUI
 import UIKit
 
-/// Sharing for the phone check of Connections (ticket 194), until the CloudKit adapter (#216) gives
-/// the app a real sharing model: a launch with `NUDGE_SHARING_STANDIN=seeded` (a connection and two
-/// invites, one 3 days old), `=sent` (those, and two reminders already delivered to Riley, ticket
-/// 207) or `=empty` gets a stand-in adapter over an in-memory sharing store. A
-/// launch without the variable gets no sharing, as the shipped app. Nothing it holds outlives the
-/// launch, so a launch without the variable is its cleanup. Debug builds only:
+/// Sharing for the phone check of Connections (ticket 194), in place of the CloudKit adapter: a
+/// launch with `NUDGE_SHARING_STANDIN=seeded` (a connection and two invites, one 3 days old),
+/// `=sent` (those, and two reminders already delivered to Riley, ticket 207) or `=empty` gets a
+/// stand-in adapter over an in-memory sharing store. A launch without the variable shares through
+/// iCloud (#216). Nothing the stand-in holds outlives the launch, so a launch without the variable
+/// is its cleanup. Debug builds only:
 /// `scripts/check-release-has-no-seed.sh` checks Release builds hold none of it.
 @MainActor
 enum StandInSharing {
@@ -179,6 +179,9 @@ extension View {
 @MainActor
 final class StandInSharingAdapter: SharingAdapter {
     weak var events: (any SharingAdapterEvents)?
+
+    /// Nothing to start: the stand-in never asks iCloud.
+    func start() {}
 
     func submit(_ change: SharingChange) {
         StandInSharing.logger.notice("Stand-in: not sending a \(String(describing: change.kind), privacy: .public) change")

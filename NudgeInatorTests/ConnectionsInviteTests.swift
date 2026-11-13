@@ -13,9 +13,12 @@ struct ConnectionsInviteTests {
 
     let jordan = InvitedPerson(name: "Jordan Lee", address: "jordan.lee@icloud.com")
 
+    /// A launched phone with Connections open, where inviting starts.
     func launchedPhone(seed: SharingData = SharingData()) async throws -> Phone {
         let phone = try Phone(seed: seed)
         await phone.launch()
+        phone.sharing.allowICloud()
+        await phone.sharing.waitUntilApplied()
         return phone
     }
 

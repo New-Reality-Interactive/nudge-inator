@@ -100,7 +100,7 @@ struct SharingRecordMapping {
         let fetchedByName = Dictionary(named.map { ($0.name.text, $0.record) }) { _, latest in latest }
         var statusesRead: Set<Reminder.ID> = []
         return named.compactMap { record, name -> SharingChange? in
-            guard name.type == .status || name.type == .occurrenceStatus else {
+            guard name.type.isStatus else {
                 return try? change(from: record, named: name)
             }
             guard let reminderID = name.reminderID, statusesRead.insert(reminderID).inserted else { return nil }
@@ -109,6 +109,26 @@ struct SharingRecordMapping {
             }
         }
     }
+
+    /// Whether this person's own app writes the record named `recordName`: it is named for their side.
+    func isOwn(recordName: String) -> Bool {
+        RecordName(recordName)?.writer == side
+    }
+
+    /// Whether the record named `recordName` is part of a status: the status or an occurrence.
+    func isStatus(recordName: String) -> Bool {
+        RecordName(recordName)?.type.isStatus ?? false
+    }
+
+    /// Where a save of the record named `recordName` goes in a batch, lowest first: a status ahead
+    /// of its occurrences, which reference it. A name that isn't a record's goes last.
+    static func sendRank(of recordName: String) -> Int {
+        guard let type = RecordName(recordName)?.type else { return sendRanks }
+        return RecordType.allCases.firstIndex(of: type) ?? sendRanks
+    }
+
+    /// How many ranks `sendRank(of:)` gives.
+    static var sendRanks: Int { RecordType.allCases.count }
 
     /// The record and its name, if it is one the other person may write and did.
     private func accepted(_ item: FetchedRecord) -> (record: CKRecord, name: RecordName)? {
@@ -297,12 +317,15 @@ extension SharingRecordMapping.FetchedRecord {
 }
 
 /// The record types. Their names go into the CloudKit production schema, which can only be added to.
-private enum RecordType: String {
+/// In the order a batch saves them (`SharingRecordMapping.sendRank`).
+private enum RecordType: String, CaseIterable {
     case connectionSettings = "ConnectionSettings"
     case sentReminder = "SentReminder"
     case receipt = "Receipt"
     case status = "Status"
     case occurrenceStatus = "OccurrenceStatus"
+
+    var isStatus: Bool { self == .status || self == .occurrenceStatus }
 }
 
 /// The record fields, as permanent as the types.
