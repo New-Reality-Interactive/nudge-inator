@@ -120,4 +120,21 @@ struct MyDayFilterTests {
 
         #expect(filter.tagFilter == .matchAny([home.id, money.id]))
     }
+
+    /// Apply puts the sheet's draft in place of the tags, No Tags and From others, and leaves the
+    /// count the person tapped on the screen.
+    @Test func applyingTheSheetsDraftKeepsTheChosenCount() {
+        var filter = MyDayFilter()
+        filter.toggle(home.id)
+        filter.tap(.missed)
+
+        var draft = filter.choices
+        draft.toggle(home.id)
+        draft.toggleFromOthers()
+        filter.choices = draft
+
+        #expect(filter.tagFilter == .off)
+        #expect(filter.fromOthers)
+        #expect(filter.count == .missed)
+    }
 }

@@ -1989,14 +1989,15 @@ function countButton(k, items) {
   const st = DAY_STATUS[k], n = items.filter((it) => st.test(it.status)).length, on = state.dayStatus === k;
   return `<button type="button" class="count ${n ? st.cls : "zero"}" data-daystatus="${k}" aria-pressed="${on}" ${n || on ? "" : "disabled"}><b>${n}</b><span class="count-label">${st.label}</span></button>`;
 }
-/* ============ My Day's tag filter ============
+/* ============ My Day's filter ============
    The Filter button opens a sheet: check one or more tags, then Match All Tags or Any Tag, as on
    the Tags tab. "No Tags" instead shows only reminders without tags, so it unchecks the tags and
-   they uncheck it. Changes apply as you make them; the chosen tags also show on My Day as tokens
-   you can remove. */
+   they uncheck it. From others shows only reminders someone sent. As on the Reminders and Tags
+   tabs (#209), the sheet chooses a draft: Apply applies it and closes, Reset clears it, and
+   Cancel discards it, asking first once it differs from what's applied. The chosen filters also
+   show on My Day as tokens you can remove. */
 const dayFilterOn = () => state.dayFilter.none || state.dayFilter.ids.length > 0 || state.dayFilter.fromOthers;
-function inDayFilter(r) {
-  const f = state.dayFilter;
+function inDayFilter(r, f = state.dayFilter) {
   if (f.fromOthers && !r.from) return false;
   if (f.none) return !r.tagIds.length;
   return !f.ids.length || matchesTags(r, f.ids, f.match);
@@ -2007,39 +2008,52 @@ const dayFilterPhrase = () => {
   const f = state.dayFilter, tagPart = f.none ? "without tags" : f.ids.length ? filterPhrase(dayFilterTags(), f.match) : "";
   return `${tagPart} ${f.fromOthers ? "from others" : ""}`.trim();
 };
-/* The Filter button, in the navigation bar in both orientations: a glass circle. While the filter
-   is on its icon is accent-colored and the system's badge shows the number of tags chosen (none
-   chosen, no badge). The badge number can be overridden to try 1, 12 and 999. */
+/* The Filter button, in the navigation bar in both orientations: a glass circle with the Reminders
+   and Tags tabs' filter symbol, since the filter is more than tags (#209). While the filter is on
+   its icon is accent-colored, the system's badge shows the number of tags chosen and one more for
+   From others (none chosen, no badge), and a tap shows the menu: Filter and Clear All Filters. The
+   badge number can be overridden to try 1, 12 and 999. */
 function dayFilterBarButton() {
   const f = state.dayFilter, n = (f.none ? 1 : f.ids.length) + (f.fromOthers ? 1 : 0);
-  const icon = I("tag.filter", 24, true);
-  if (!n) return `<button type="button" class="btn bar icon glass" data-dayfilter aria-haspopup="dialog" aria-label="Filter by Tags">${icon}</button>`;
-  return `<button type="button" class="btn bar icon glass filter-on" data-dayfilter aria-haspopup="dialog" aria-label="Filter by Tags, ${n} chosen">${icon}<span class="bar-badge" aria-hidden="true">${prefs.badgeCount || n}</span></button>`;
+  const icon = I("line.3.horizontal.decrease", 24, true);
+  if (!n) return `<button type="button" class="btn bar icon glass" data-dayfilter aria-haspopup="dialog" aria-label="Filter">${icon}</button>`;
+  return `<button type="button" class="btn bar icon glass filter-on" data-dayfilter aria-haspopup="menu" aria-label="Filter, ${n} chosen">${icon}<span class="bar-badge" aria-hidden="true">${prefs.badgeCount || n}</span></button>`;
 }
 function dayFilterTokens() {
   const f = state.dayFilter;
   const fromTok = f.fromOthers ? `<button type="button" class="token" data-dayfromoff aria-label="Remove From others from the filter">From others${I("xmark", 14)}</button>` : "";
   const wrap = (x) => `<div class="tokens" role="group" aria-label="Filtering by">${x}</div>`;
-  if (f.none) return wrap(`<button type="button" class="token" data-cleardayfilter aria-label="Remove No Tags from the filter">No Tags${I("xmark", 14)}</button>${fromTok}`);
+  if (f.none) return wrap(`<button type="button" class="token" data-daynoneoff aria-label="Remove No Tags from the filter">No Tags${I("xmark", 14)}</button>${fromTok}`);
   if (!f.ids.length) return fromTok ? wrap(fromTok) : "";
   const match = f.ids.length > 1 ? `<p class="subhead" style="margin-top:-6px">Due today ${esc(dayFilterPhrase())}</p>` : "";
   return `${filterTokens(dayFilterTags())}${fromTok ? wrap(fromTok) : ""}${match}`;
 }
-function openDayFilter() {
-  state.sheet = { kind: "dayfilter", ret: document.activeElement };
+function openDayFilter(ret = document.activeElement) {
+  state.sheet = { kind: "dayfilter", draft: structuredClone(state.dayFilter), ret };
   state.focus = "sheet"; render();
+}
+function applyDayFilter() {
+  state.dayFilter = state.sheet.draft;
+  closeSheet();
+  announce(dayNews());
+}
+/* While any filter is on, a tap on Filter shows the menu, as on the Reminders tab. */
+function showDayFilterMenu(btn) {
+  pressed = btn;
+  ask({ style: "sheet", menu: true, buttons: [
+    { label: "Filter", icon: "line.3.horizontal.decrease", run: () => openDayFilter(btn) },
+    { label: "Clear All Filters", icon: "xmark", run: () => { state.dayFilter = newDayFilter(); state.focus = "[data-dayfilter]"; announce(dayNews()); } },
+    { label: "Cancel", role: "cancel" }] });
 }
 /* Match is always drawn above the tags, disabled below two checked tags (or with No Tags), so
    checking or unchecking a tag never moves the rows under the finger (enhancement-pace ticket 23). */
 function dayFilterSheet() {
-  const f = state.dayFilter, n = todayItems().filter((it) => inDayFilter(it.r)).length;
-  const clear = `<button type="button" class="btn bar glass" data-cleardayfilter ${dayFilterOn() ? "" : "disabled"}>Clear</button>`;
-  // The app's filter sheet confirms with the word Done in a filled capsule, not the checkmark.
-  const done = `<button type="button" class="btn bar prominent" data-sheet-close>Done</button>`;
+  const f = state.sheet.draft, n = todayItems().filter((it) => inDayFilter(it.r, f)).length;
+  const reset = `<button type="button" class="btn bordered" data-dayreset ${JSON.stringify(f) === JSON.stringify(newDayFilter()) ? "disabled" : ""}>Reset</button>`;
+  const apply = confirmButton("data-dayapply", "Apply");
   const check = (attr, v, label, on, sub = "") => `<li><button type="button" class="cell" role="checkbox" aria-checked="${on}" ${attr}="${v}"><span class="main"><span class="t">${label}</span>${sub}</span>${on ? CHECK : ""}</button></li>`;
   const tagRows = sortTags(tags).map((t) => check("data-daytag", t.id, `#${esc(t.name)}`, f.ids.includes(t.id))).join("");
-  const result = dayFilterOn() ? `${n} due today ${esc(dayFilterPhrase())}.` : `Showing everything due today (${n}).`;
-  return `${sheetNav(clear, "Filter My Day", done)}
+  return `${sheetNav(cancelButton(), "Filter My Day", apply)}
   <div class="sheet-body" tabindex="-1">
     ${matchControl(f, "day", f.ids.length < 2)}
     <h3 class="sec-h">Tags</h3>
@@ -2048,7 +2062,8 @@ function dayFilterSheet() {
     <div class="sec"><ul class="list">${check("data-daynone", "1", "No Tags", f.none, `<span class="s">Only reminders without tags</span>`)}</ul></div>
     <h3 class="sec-h">From</h3>
     <div class="sec"><ul class="list">${check("data-dayfrom", "1", "From others", f.fromOthers, `<span class="s">Only reminders someone sent you</span>`)}</ul></div>
-    <p class="sec-f" style="margin:0 32px">${result}</p>
+    <p class="sec-f" style="margin:0 32px">Apply shows ${plural(n, "reminder")} due today.</p>
+    <div class="remreset">${reset}</div>
   </div>`;
 }
 /* The right side of a My Day row: Done while nudging, nothing while still to come, otherwise the
@@ -2261,7 +2276,7 @@ function showRemFilterMenu(btn) {
 function remFilterSheet() {
   const d = state.sheet.draft, n = remRows(d).length;
   const reset = `<button type="button" class="btn bordered" data-remreset ${JSON.stringify(d) === JSON.stringify(newRemFilter()) ? "disabled" : ""}>Reset</button>`;
-  const apply = `<button type="button" class="btn bar prominent" data-remapply>Apply</button>`;
+  const apply = confirmButton("data-remapply", "Apply");
   const check = (attr, v, label, on, sub = "") => `<li><button type="button" class="cell" role="checkbox" aria-checked="${on}" ${attr}="${v}"><span class="main"><span class="t">${label}</span>${sub}</span>${on ? CHECK : ""}</button></li>`;
   const tagRows = sortTags(tags).map((t) => check("data-remtag", t.id, `#${esc(t.name)}`, d.tags.ids.includes(t.id))).join("");
   const statusRows = REM_STATUSES.map((s) => check("data-remstatus", s, STATUS_LABEL[s], d.status.includes(s))).join("");
@@ -3032,7 +3047,7 @@ function sentFilterSheet() {
     const pill = d[k] ? `<label class="pill-input dtpill">${datePill(d[k])}<input type="date" id="rf-${k}" data-remdate="${k}" value="${d[k]}"${lim} aria-label="${label}"></label>` : "";
     return `<li><div class="daterow"><label for="rf-${k}-on">${label}</label>${pill}<input type="checkbox" class="switch" role="switch" id="rf-${k}-on" data-remdateon="${k}" ${d[k] ? "checked" : ""}></div></li>`;
   };
-  return `${sheetNav(cancelButton(), "Filter Sent", `<button type="button" class="btn bar prominent" data-sentapply>Apply</button>`)}
+  return `${sheetNav(cancelButton(), "Filter Sent", confirmButton("data-sentapply", "Apply"))}
   <div class="sheet-body" tabindex="-1">
     <h3 class="sec-h">People</h3>
     <div class="sec"><ul class="list">${connected().map((c) => check("data-sentperson", c.id, esc(c.name), d.people.includes(c.id))).join("")}</ul><p class="sec-f">Shows what you sent to any checked person.</p></div>
@@ -3486,6 +3501,7 @@ function cancelSheet() {
   const sh = state.sheet;
   const dirty = sh.kind === "editor" ? draftDirty() : sh.kind === "remfilter" ? JSON.stringify(sh.draft) !== JSON.stringify(state.rems.filter)
     : sh.kind === "sentfilter" ? JSON.stringify(sh.draft) !== JSON.stringify(state.sentTools.filter)
+    : sh.kind === "dayfilter" ? JSON.stringify(sh.draft) !== JSON.stringify(state.dayFilter)
     : sh.kind === "tagfilter" ? sh.draft.noReminders !== state.tagList.filter.noReminders
     : sh.kind === "tag" && sh.draft.name !== (sh.id ? tagById(sh.id).name : "");
   if (dirty) {
@@ -4162,7 +4178,7 @@ const CLICK = {
   dcchoice: (v) => { state.sheet.choice = v; refresh(`[data-dcchoice="${v}"]`); },
   dcgo: () => finishDisconnect(),
   sendpick: (v) => { const x = state.sheet.draft; x.to = toggled(x.to, v); refresh(`[data-sendpick="${v}"]`); },
-  dayfrom: () => { const f = state.dayFilter; f.fromOthers = !f.fromOthers; refresh("[data-dayfrom]"); announce(dayNews()); },
+  dayfrom: () => { const f = state.sheet.draft; f.fromOthers = !f.fromOthers; refresh("[data-dayfrom]"); },
   dayfromoff: () => { state.dayFilter.fromOthers = false; refresh("[data-dayfilter]"); announce(dayNews()); },
   remfrom: () => { const d = state.sheet.draft; d.fromOthers = !d.fromOthers; refresh("[data-remfrom]"); },
   back: () => pop(),
@@ -4193,17 +4209,19 @@ const CLICK = {
   addtag: () => addDraftTag(),
   sheetCancel: () => cancelSheet(),
   sheetClose: () => closeSheet(),
-  dayfilter: () => openDayFilter(),
+  dayfilter: (v, t) => (dayFilterOn() ? showDayFilterMenu(t) : openDayFilter(t)),
+  daynoneoff: () => { state.dayFilter.none = false; refresh(main.querySelector(".token") ? ".token" : "[data-dayfilter]"); announce(dayNews()); },
+  dayreset: () => { state.sheet.draft = newDayFilter(); refresh("sheet"); },
+  dayapply: () => applyDayFilter(),
   daystatus: (v) => { state.dayStatus = state.dayStatus === v ? null : v; refresh(`[data-daystatus="${v}"]`); announce(dayNews()); },
   daystatusclear: () => { const v = state.dayStatus; state.dayStatus = null; refresh(`[data-daystatus="${v}"]`); announce(dayNews()); },
   daytag: (v) => {
-    const f = state.dayFilter;
+    const f = state.sheet.draft;
     f.ids = f.ids.includes(v) ? f.ids.filter((id) => id !== v) : [...f.ids, v];
     f.none = false;
     refresh(`[data-daytag="${v}"]`);
-    announce(dayNews());
   },
-  daynone: () => { const f = state.dayFilter; f.none = !f.none; if (f.none) f.ids = []; refresh("[data-daynone]"); announce(dayNews()); },
+  daynone: () => { const f = state.sheet.draft; f.none = !f.none; if (f.none) f.ids = []; refresh("[data-daynone]"); },
   removedayfilter: (v) => { const f = state.dayFilter; f.ids = f.ids.filter((id) => id !== v); refresh(main.querySelector(".token") ? ".token" : "[data-dayfilter]"); announce(dayNews()); },
   cleardayfilter: () => { state.dayFilter = newDayFilter(); refresh(state.sheet ? "sheet" : "[data-dayfilter]"); announce(dayNews()); },
   // The Reminders tab (#107).
@@ -4402,10 +4420,9 @@ document.addEventListener("input", (e) => {
     // A start after the end can't be chosen: each picker's min or max is the other end.
     const d = state.sheet.draft, k = t.dataset.remdate;
     d[k] = k === "from" && d.to && t.value > d.to ? d.to : k === "to" && d.from && t.value < d.from ? d.from : t.value;
-  } else if (t.name === "day-match") {
-    state.dayFilter.match = t.value;
+  } else if (t.name === "day-match" && state.sheet) {
+    state.sheet.draft.match = t.value;
     refresh(t.tagName === "SELECT" ? `#${t.id}` : `[name="${t.name}"][value="${t.value}"]`);
-    announce(dayNews());
   }
 });
 /* Return in the New Tag field adds the tag. */

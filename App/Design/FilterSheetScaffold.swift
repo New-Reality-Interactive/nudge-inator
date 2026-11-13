@@ -15,7 +15,7 @@ protocol FilterSheetSummary {
     var canReset: Bool { get }
 }
 
-/// The filter sheet of Reminders and Tags, around each tab's own sections: a draft of what's
+/// The filter sheet of My Day, Reminders and Tags, around each tab's own sections: a draft of what's
 /// applied. Apply applies it and closes; Reset, at the bottom, clears the draft, which changes
 /// nothing until Apply. Cancel discards the draft, asking first once it differs from what's
 /// applied; a swipe down closes the sheet until then, and after that only springs back. A tap
@@ -66,7 +66,7 @@ struct FilterSheetScaffold<Choices: FilterSheetChoices, Summary: FilterSheetSumm
                         dismiss()
                     } label: {
                         Label {
-                            Text("Apply", comment: "A filter sheet's confirm button (a checkmark), on Reminders and Tags: applies the choices and closes the sheet.")
+                            Text("Apply", comment: "A filter sheet's confirm button (a checkmark), on My Day, Reminders and Tags: applies the choices and closes the sheet.")
                         } icon: {
                             Image(systemName: "checkmark")
                         }
@@ -83,7 +83,7 @@ struct FilterSheetScaffold<Choices: FilterSheetChoices, Summary: FilterSheetSumm
             Button {
                 draft = Choices()
             } label: {
-                Text("Reset", comment: "A filter sheet, on Reminders and Tags: clears the choices. Nothing changes until Apply.")
+                Text("Reset", comment: "A filter sheet, on My Day, Reminders and Tags: clears the choices. Nothing changes until Apply.")
             }
             .buttonStyle(.bordered)
             .frame(maxWidth: .infinity)

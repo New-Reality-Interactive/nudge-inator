@@ -206,13 +206,13 @@ struct FromOthersFilterSheetTests {
 
     @Test func myDaysSheetOffersFromOthersOnlyWhenSomeoneHasSentAReminder() async throws {
         let day = try await fixture.dayAtOnePM()
-        #expect(!MyDayFilterSheet(engine: day.model.engine, filter: MyDayFilter()).offersFromOthers)
-        #expect(MyDayFilterSheet(engine: day.model.engine, filter: myDayFromOthers()).offersFromOthers)
+        #expect(!MyDayFilterSheet(engine: day.model.engine, draft: MyDayFilterChoices(), applied: MyDayFilterChoices()).offersFromOthers)
+        #expect(MyDayFilterSheet(engine: day.model.engine, draft: myDayFromOthers().choices, applied: MyDayFilterChoices()).offersFromOthers)
 
         day.model.add(pills)
         await day.model.waitUntilApplied()
 
-        #expect(MyDayFilterSheet(engine: day.model.engine, filter: MyDayFilter()).offersFromOthers)
+        #expect(MyDayFilterSheet(engine: day.model.engine, draft: MyDayFilterChoices(), applied: MyDayFilterChoices()).offersFromOthers)
     }
 
     @Test func myDaysSheetCountsWhatsDueTodayFromOthers() async throws {
@@ -223,11 +223,11 @@ struct FromOthersFilterSheetTests {
         noTags.tags.toggleNoTags()
 
         func result(_ filter: MyDayFilter) -> String {
-            String(localized: MyDayFilterSheet(engine: day.model.engine, filter: filter).result)
+            String(localized: MyDayFilterSheet(engine: day.model.engine, draft: filter.choices, applied: MyDayFilterChoices()).result)
         }
 
-        #expect(result(myDayFromOthers()) == "2 due today from others.")
-        #expect(result(noTags) == "2 due today without tags from others.")
-        #expect(result(tagged) == "0 due today with #home from others.")
+        #expect(result(myDayFromOthers()) == "Apply shows 2 reminders due today.")
+        #expect(result(noTags) == "Apply shows 2 reminders due today.")
+        #expect(result(tagged) == "Apply shows 0 reminders due today.")
     }
 }

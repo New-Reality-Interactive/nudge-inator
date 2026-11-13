@@ -416,10 +416,14 @@ except in the tab and navigation bars. Verify names against the mockup.
   checked tags and with No Tags, keeping its current choice; the Tags footer then says "Check one
   or more tags. Match needs two or more." Under No Tags, once someone has sent this person a
   reminder (or while it's on), a **From** section holds **From others**, "Only reminders someone
-  sent you", which shows only received reminders; the count goes under it. A person with no
-  received reminders sees the sheet without it. While the sheet is open its list never gets shorter:
-  blank space under the summary makes up for text that shortens, so a list scrolled to its end
-  doesn't scroll back and move the rows.
+  sent you", which shows only received reminders. A person with no received reminders sees the
+  sheet without it. **The sheet** is the Reminders and Tags tabs' filter sheet (ticket 209, the
+  2026-11-12-history-nothing-due mockup): it chooses a draft, and My Day doesn't change until
+  Apply, the checkmark, which applies it and closes. Above **Reset**, at the bottom, "Apply shows N
+  reminders due today."; Reset clears the draft. The X discards the draft, asking first once it
+  differs from what's applied, and a swipe down then springs back. While the sheet is open its list
+  never gets shorter: blank space under Reset makes up for text that shortens, so a list scrolled to
+  its end doesn't scroll back and move the rows.
 
 ### Reminders tab
 - **Search:** the system's search field (`searchable`), always shown under the navigation bar while

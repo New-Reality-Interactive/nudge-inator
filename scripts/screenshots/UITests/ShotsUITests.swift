@@ -257,7 +257,7 @@ final class ShotsUITests: XCTestCase {
         shot("myday-filter")
         // The Filter button with a tag chosen: its badge shows the count.
         tapText("#health", inSheet: true)
-        barTap { tapButton(containing: "Done", inSheet: true) }
+        barTap { tapButton(containing: "Apply", inSheet: true) }
         shot("myday-filtered")
     }
 
@@ -290,7 +290,7 @@ final class ShotsUITests: XCTestCase {
         openMyDayFilter()
         tapText("#health", inSheet: true)
         tapText("#work", inSheet: true)
-        barTap { tapButton(containing: "Done", inSheet: true) }
+        barTap { tapButton(containing: "Apply", inSheet: true) }
         shot("myday-badge-2-tags")
         tapButton(containing: "Remove #work")
         shot("myday-badge-1-tag-after-remove")
@@ -310,11 +310,11 @@ final class ShotsUITests: XCTestCase {
         report(0)
         openMyDayFilter()
         tapText("#health", inSheet: true)
-        barTap { tapButton(containing: "Done", inSheet: true) }
+        barTap { tapButton(containing: "Apply", inSheet: true) }
         report(1)
         openMyDayFilter()
         tapText("#work", inSheet: true)
-        barTap { tapButton(containing: "Done", inSheet: true) }
+        barTap { tapButton(containing: "Apply", inSheet: true) }
         report(2)
     }
 
@@ -332,7 +332,7 @@ final class ShotsUITests: XCTestCase {
         for tag in ["#appointments", "#home", "#health", "#work", "#money", "#morning"] {
             tapText(tag, inSheet: true)
         }
-        barTap { tapButton(containing: "Done", inSheet: true) }
+        barTap { tapButton(containing: "Apply", inSheet: true) }
         XCTAssertEqual(filter.value as? String, "6 chosen", "A tag wasn't chosen")
         shot("myday-tokens-6")
         // The tokens' hidden measuring copies aren't elements.
@@ -342,7 +342,7 @@ final class ShotsUITests: XCTestCase {
             print("ACCESSIBILITY more token: label=\"\(more.label)\"")
             more.tap()
             XCTAssert(app.navigationBars["Filter My Day"].waitForExistence(timeout: 3), "+N more didn't open the sheet")
-            barTap { tapButton(containing: "Done", inSheet: true) }
+            barTap { tapButton(containing: "Apply", inSheet: true) }
         }
         print("ACCESSIBILITY 6 tags: label=\"\(filter.label)\" value=\"\(filter.value as? String ?? "nil")\"")
         let clear = app.buttons["Clear All Filters"]
@@ -360,7 +360,7 @@ final class ShotsUITests: XCTestCase {
         // No Tags is cleared too.
         openMyDayFilter()
         tapText("No Tags", inSheet: true)
-        barTap { tapButton(containing: "Done", inSheet: true) }
+        barTap { tapButton(containing: "Apply", inSheet: true) }
         barTap {
             scrollToTop()
             filter.tap()
@@ -415,15 +415,15 @@ final class ShotsUITests: XCTestCase {
             tapKeepingTagRows("#home")
             tapKeepingTagRows("No Tags")
             tapKeepingTagRows("No Tags")
-            barTap { tapButton(containing: "Done", inSheet: true) }
+            barTap { tapButton(containing: "Apply", inSheet: true) }
             openMyDayFilter()
             start.forEach(tapKeepingTagRows)
             barTap {
-                keepingTagRows("Clear") {
-                    app.navigationBars["Filter My Day"].buttons["Clear"].tap()
+                keepingTagRows("Reset") {
+                    tapText("Reset", inSheet: true)
                     pause(0.8)
                 }
-                tapButton(containing: "Done", inSheet: true)
+                tapButton(containing: "Apply", inSheet: true)
             }
         }
     }

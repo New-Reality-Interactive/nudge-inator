@@ -2,57 +2,28 @@ import NudgeEngine
 import SwiftUI
 
 /// The filter sheet, the mockup's `dayFilterSheet`: check tags, choose Match All or Any (from two
-/// tags), or No Tags, then From others once someone has sent a reminder. Changes apply as they are
-/// made, so My Day behind it follows, and Clear is the bar's leading button.
+/// tags), or No Tags, then From others once someone has sent a reminder, choosing a draft of
+/// what's applied. The bar, Apply, Reset and the prompt before discarding are
+/// `FilterSheetScaffold`'s, shared with Reminders and Tags (ticket 209).
 struct MyDayFilterSheetView: View {
     let engine: Engine
     @Binding var filter: MyDayFilter
 
-    @Environment(\.dismiss) private var dismiss
-    @State private var listHeight = NeverShorter()
-
     var body: some View {
-        let sheet = MyDayFilterSheet(engine: engine, filter: filter)
-        NavigationStack {
-            List {
-                // The count goes under the last section, as the mockup's.
-                TagChoiceSections(choice: $filter.tags, sheet: sheet.choice) {
-                    if !sheet.offersFromOthers { result(sheet) }
-                }
-                if sheet.offersFromOthers {
-                    FromOthersSection(isChecked: filter.fromOthers) { filter.toggleFromOthers() } footer: { result(sheet) }
-                }
+        let applied = filter.keeping(tagsIn: Set(engine.tags.map(\.id))).choices
+        FilterSheetScaffold(
+            title: Text("Filter My Day", comment: "Title of My Day's filter sheet."),
+            applied: applied,
+            summary: { MyDayFilterSheet(engine: engine, draft: $0, applied: applied) },
+            apply: { filter.choices = $0 }
+        ) { draft, sheet in
+            TagChoiceSections(choice: draft.tags, sheet: sheet.choice) {
+                EmptyView()
             }
-            .neverShorter($listHeight)
-            .navigationTitle(Text("Filter My Day", comment: "Title of My Day's tag filter sheet."))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        filter.clear()
-                    } label: {
-                        Text("Clear", comment: "My Day's filter sheet: removes every tag, and From others, from the filter.")
-                    }
-                    .disabled(!filter.isOn)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(role: .confirm) {
-                        dismiss()
-                    } label: {
-                        Label {
-                            Text("Done", comment: "My Day's filter sheet's confirm button (a checkmark): closes the sheet.")
-                        } icon: {
-                            Image(systemName: "checkmark")
-                        }
-                    }
-                }
+            if sheet.offersFromOthers {
+                FromOthersSection(isChecked: draft.wrappedValue.fromOthers) { draft.wrappedValue.toggleFromOthers() }
             }
         }
-    }
-
-    private func result(_ sheet: MyDayFilterSheet) -> some View {
-        Text(sheet.result)
-            .padding(.bottom, listHeight.extra)
     }
 }
 

@@ -22,3 +22,11 @@ Open [`index.html`](index.html) in a browser, then Reminders › Sent.
   check already was: Missed's ✕ in a circle, Skipped's dashed circle, Paused's pause, Coming up's clock,
   Nudging's bell, and "Nothing due" with the slashed circle, in the secondary label color. The Sent
   To rows' labels are unchanged.
+- **My Day's filter** (#209), found on the phone check: the Filter button uses the Reminders and
+  Tags tabs' `line.3.horizontal.decrease`, since with From others it filters by more than tags, and
+  while a filter is on it shows their menu, Filter and Clear All Filters (`xmark`). Its sheet works
+  as theirs does: it chooses a draft that My Day doesn't follow until Apply; Reset, at the bottom,
+  clears the draft; the X discards it, asking first once it differs from what's applied. The count
+  above Reset reads "Apply shows N reminders due today."
+- **Apply is a checkmark** on the My Day, Reminders and Sent filter sheets, as on the Tags sheet and in
+  the app (`Button(role: .confirm)`); it was the word Apply in a capsule.
