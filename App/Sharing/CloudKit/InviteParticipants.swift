@@ -28,7 +28,7 @@ struct InviteParticipant: Equatable {
 
     init(_ participant: CKShare.Participant) {
         let identity = participant.userIdentity
-        let name = identity.nameComponents.map { PersonNameComponentsFormatter().string(from: $0) }
+        let name = Self.displayName(identity.nameComponents)
         let status: Status = switch participant.acceptanceStatus {
         case .accepted: .accepted
         case .pending: .pending
@@ -38,9 +38,16 @@ struct InviteParticipant: Equatable {
             id: identity.userRecordID?.recordName,
             isOwner: participant.role == .owner,
             status: status,
-            name: name?.isEmpty == false ? name : nil,
+            name: name,
             address: identity.lookupInfo?.emailAddress ?? identity.lookupInfo?.phoneNumber
         )
+    }
+
+    /// The name as the person's iCloud gives it, or `nil` when it has none.
+    static func displayName(_ components: PersonNameComponents?) -> String? {
+        guard let components else { return nil }
+        let name = PersonNameComponentsFormatter().string(from: components)
+        return name.isEmpty ? nil : name
     }
 
     /// The people on a share other than its owner.

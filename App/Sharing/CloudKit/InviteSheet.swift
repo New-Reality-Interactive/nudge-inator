@@ -8,18 +8,23 @@ import UIKit
 final class InviteSheet: NSObject, UICloudSharingControllerDelegate {
     private var continuation: CheckedContinuation<Void, Never>?
 
+    /// No screen in the foreground to show the sheet on.
+    struct NoScreen: Error {}
+
     /// Presents the sheet over the frontmost screen and returns once it has closed.
-    static func present(share: CKShare, container: CKContainer) async {
-        guard let presenter = frontmostViewController() else { return }
+    static func present(share: CKShare, container: CKContainer) async throws {
+        guard let presenter = frontmostViewController() else { throw NoScreen() }
         let sheet = InviteSheet()
         let controller = InviteSharingController(share: share, container: container)
         controller.availablePermissions = [.allowPrivate, .allowReadWrite]
         controller.delegate = sheet
+        // The controller holds its delegate weakly, so the sheet is kept alive until it closes.
         await withCheckedContinuation { continuation in
             sheet.continuation = continuation
             controller.onClose = { [weak sheet] in sheet?.finish() }
             presenter.present(controller, animated: true)
         }
+        withExtendedLifetime(sheet) {}
     }
 
     private func finish() {
@@ -38,7 +43,11 @@ final class InviteSheet: NSObject, UICloudSharingControllerDelegate {
 
     // MARK: UICloudSharingControllerDelegate
 
-    func cloudSharingController(_ csc: UICloudSharingController, failedToSaveShareWithError error: any Error) {}
+    /// Only logged: the invite flow reads the share back when the sheet closes, and sends nobody
+    /// when the save failed.
+    func cloudSharingController(_ csc: UICloudSharingController, failedToSaveShareWithError error: any Error) {
+        CloudKitSharingAdapter.logger.error("The sharing sheet couldn't save the share: \(error, privacy: .public)")
+    }
 
     func itemTitle(for csc: UICloudSharingController) -> String? {
         String(localized: "Nudge-inator reminders", comment: "Invite: the title the system's sharing sheet shows for the connection.")

@@ -20,7 +20,7 @@ import os
 @MainActor
 final class CloudKitSharingAdapter: SharingAdapter {
     static let containerIdentifier = "iCloud.com.newrealityinteractive.nudgeinator"
-    private nonisolated static let logger = Logger(subsystem: "com.newrealityinteractive.nudgeinator", category: "CloudKit")
+    nonisolated static let logger = Logger(subsystem: "com.newrealityinteractive.nudgeinator", category: "CloudKit")
 
     struct NotAvailableYet: Error {}
 
@@ -29,7 +29,7 @@ final class CloudKitSharingAdapter: SharingAdapter {
 
     weak var events: (any SharingAdapterEvents)?
     private let reader: CloudKitAccountReader
-    private let container: CKContainer?
+    let container: CKContainer?
     /// Off in tests, which send and fetch by hand (WWDC23 "Sync to iCloud with CKSyncEngine").
     private let automaticallySync: Bool
     private(set) var sync: CloudKitSync?
@@ -46,8 +46,9 @@ final class CloudKitSharingAdapter: SharingAdapter {
     private var isReporting = false
     private let connectivity = Connectivity()
     /// Invites that reached this person, until they are accepted (#217).
-    private var incoming: [UUID: CKShare.Metadata] = [:]
-    private var sharingObserver: CKSystemSharingUIObserver?
+    var removing: Set<UUID> = []
+    var incoming: [UUID: CKShare.Metadata] = [:]
+    var sharingObserver: CKSystemSharingUIObserver?
 
     /// A real adapter over the app's container.
     convenience init() {
@@ -121,115 +122,10 @@ final class CloudKitSharingAdapter: SharingAdapter {
         keep()
     }
 
-    // MARK: Inviting and accepting (#217)
-
-    /// Makes the connection's zone and its private share, shows the system sharing sheet for it,
-    /// and returns who the person invited, or `nil` when they sent it to nobody (the zone is then
-    /// deleted again). Throws if the zone or share couldn't be made, and then nothing was sent.
-    func invite(_ connectionID: UUID) async throws -> InvitedPerson? {
-        start()
-        guard let sync, let container else { throw NotAvailableYet() }
-        let zoneID = sync.ownsZone(of: connectionID) ? CKRecordZone.ID(zoneName: connectionID.uuidString, ownerName: CKCurrentUserDefaultName) : sync.makeZone(for: connectionID)
-        keep()
-        do {
-            let database = container.privateCloudDatabase
-            // The share can only be saved into a zone iCloud has. The engine saves the zone too; saving it twice does no harm.
-            _ = try await database.modifyRecordZones(saving: [CKRecordZone(zoneID: zoneID)], deleting: [])
-            let share = CloudKitSync.share(for: zoneID)
-            share[CKShare.SystemFieldKey.title] = String(localized: "Nudge-inator reminders", comment: "Invite: the title of the share the invite carries.")
-            let saved = try await database.modifyRecords(saving: [share], deleting: [])
-            guard case .success(let record)? = saved.saveResults[share.recordID], let savedShare = record as? CKShare else { throw NotAvailableYet() }
-            await InviteSheet.present(share: savedShare, container: container)
-            // What the sheet saved, as iCloud has it now.
-            let fetched = try await database.record(for: share.recordID)
-            let invitees = (fetched as? CKShare).map(InviteParticipant.invitees(of:)) ?? []
-            guard let person = InviteParticipant.invitedPerson(among: invitees) else {
-                revokeInvite(connectionID)
-                return nil
-            }
-            return person
-        } catch {
-            Self.logger.error("An invite couldn't be made: \(error, privacy: .public)")
-            revokeInvite(connectionID)
-            throw error
-        }
-    }
-
-    /// Takes an invite the scene delegate received and tells the app model, which accepts it.
-    func receive(_ metadata: CKShare.Metadata) {
-        let zoneID = metadata.share.recordID.zoneID
-        guard metadata.containerIdentifier == Self.containerIdentifier, let connectionID = UUID(uuidString: zoneID.zoneName) else { return }
-        incoming[connectionID] = metadata
-        let name = metadata.ownerIdentity.nameComponents.map { PersonNameComponentsFormatter().string(from: $0) }
-        let sender = name?.isEmpty == false ? name : metadata.ownerIdentity.lookupInfo?.emailAddress
-        let invite = IncomingInvite(
-            connectionID: connectionID,
-            senderName: sender ?? String(localized: "Someone", comment: "Invite: the sender's name when iCloud gives none.")
-        )
-        Task { await events?.invited(invite) }
-    }
-
-    func accept(_ connectionID: UUID) async throws {
-        start()
-        guard let sync, let container else { throw NotAvailableYet() }
-        // Already joined (the invite was tapped twice): accepting again does no harm.
-        if let zone = sync.cache.zones[connectionID], !zone.isOwn { return }
-        guard let metadata = incoming[connectionID], metadata.participantStatus != .removed else { throw InviteUnavailable() }
-        do {
-            _ = try await container.accept(metadata)
-        } catch let error as CKError where [.unknownItem, .permissionFailure].contains(error.code) {
-            // Taken off the share: canceled, or someone else was first.
-            Self.logger.notice("An invite is no longer available: \(error.code.rawValue)")
-            incoming[connectionID] = nil
-            throw InviteUnavailable()
-        }
-        incoming[connectionID] = nil
-        sync.joinZone(metadata.share.recordID.zoneID)
-        keep()
-        try? await engines[.shared]?.fetchChanges()
-    }
-
-    /// One person per invite: takes everyone but `participant` off the connection's share.
-    func keepOnly(_ participant: SharingParticipant, in connectionID: UUID) {
-        start()
-        Task { await removeOthers(from: connectionID, keeping: participant.id) }
-    }
-
-    private func removeOthers(from connectionID: UUID, keeping kept: String) async {
-        guard let container, sync?.ownsZone(of: connectionID) == true else { return }
-        let zoneID = CKRecordZone.ID(zoneName: connectionID.uuidString, ownerName: CKCurrentUserDefaultName)
-        let database = container.privateCloudDatabase
-        do {
-            let record = try await database.record(for: CKRecord.ID(recordName: CKRecordNameZoneWideShare, zoneID: zoneID))
-            guard let share = record as? CKShare else { return }
-            let remove = InviteParticipant.toRemove(from: InviteParticipant.invitees(of: share), keeping: kept)
-            guard !remove.isEmpty else { return }
-            for participant in share.participants where remove.contains(where: { $0.id == participant.userIdentity.userRecordID?.recordName }) {
-                share.removeParticipant(participant)
-            }
-            _ = try await database.modifyRecords(saving: [share], deleting: [])
-        } catch {
-            // The next fetch of the share tries again (`fetched`).
-            Self.logger.error("Other people couldn't be taken off a share: \(error, privacy: .public)")
-        }
-    }
-
-    /// Follows what the system sharing sheet saves, for the log of a device check.
-    private func observeSharingSheet(_ container: CKContainer) {
-        let observer = CKSystemSharingUIObserver(container: container)
-        observer.systemSharingUIDidSaveShareBlock = { _, result in
-            Self.logger.notice("The sharing sheet saved a share: \(String(describing: try? result.get().participants.count), privacy: .public) people")
-        }
-        observer.systemSharingUIDidStopSharingBlock = { _, _ in
-            Self.logger.notice("The sharing sheet stopped sharing")
-        }
-        sharingObserver = observer
-    }
-
     // MARK: Keeping and reporting
 
     /// Has the store keep the engines' states and the sync's cache.
-    private func keep() {
+    func keep() {
         guard let sync, let events else { return }
         if undelivered.isEmpty { keptEngineStates = engineStates }
         do {
@@ -368,14 +264,14 @@ extension CloudKitSharingAdapter: CKSyncEngineDelegate {
             if let share = modification.record as? CKShare {
                 guard let connectionID = UUID(uuidString: share.recordID.zoneID.zoneName) else { continue }
                 let invitees = InviteParticipant.invitees(of: share)
-                let wasJoined = sync.cache.zones[connectionID]?.participantJoined == true
+                let wasJoined = sync.participantJoined(connectionID)
                 outcome = outcome + sync.fetchedShare(in: connectionID, hasAcceptedParticipant: CloudKitSync.hasAcceptedParticipant(share))
                 if let first = InviteParticipant.firstToAccept(among: invitees), let id = first.id {
                     if !wasJoined {
                         Task { try? await events?.inviteAccepted(connectionID, by: SharingParticipant(id: id)) }
                     } else {
                         // Others added after the first to accept come off the share.
-                        Task { await removeOthers(from: connectionID, keeping: id) }
+                        removeOthersOnce(from: connectionID, keeping: id)
                     }
                 }
             } else {
