@@ -153,6 +153,13 @@ SCREENS = {
   "notification-done": ("showSharedNotification('Book the vet','Maya Torres marked it Done')", 1),
   "notification-removed": ("showSharedNotification('Pick up the groceries','Maya Torres removed it')", 1),
   "notification-missed": ("showSharedNotification('Sign the lease renewal','Missed: Maya Torres didn\\'t mark it Done')", 1),
+  # The Sharing switch (#386). Only a mockup with it draws these.
+  "settings-sharing-off": ("startSharing(false);state.tab='settings';nav()", 1),
+  "sharing-off-confirm": ("state.sheet={kind:'sharingoff',choice:'remove'};render()", 1),
+  "sharing-off-invite": ("startSharing(false);openInviteLink()", 1),
+  "reminders-sharing-off": ("startSharing(false);state.tab='rems';nav()", 3),
+  "now-sharing-off": ("startSharing(false);state.tab='now';nav()", 3),
+  "form-sharing-off": ("startSharing(false);openEditor()", 4),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}
