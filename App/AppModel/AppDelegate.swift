@@ -77,11 +77,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         // launch that asks for the stand-in for the phone check has Sharing on with it, for that
         // launch only, whatever the switch says.
         #if DEBUG
-        let standIn = StandInSharing.modelIfAsked(clock: clock)
+        let standIn = StandInSharing.launchesWithSharingOff() ? nil : StandInSharing.modelIfAsked(clock: clock)
         let makeSharing = { StandInSharing.modelIfAsked(clock: clock) ?? cloudKitSharing(clock: clock) }
+        let sharingSwitch = StandInSharing.switchRecordResetIfOff()
         #else
         let standIn: SharingModel? = nil
         let makeSharing = { cloudKitSharing(clock: clock) }
+        let sharingSwitch = SharingSwitchRecord.standard
         #endif
         return AppModel(
             clock: clock,
@@ -97,6 +99,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             ),
             doneQueue: doneQueue,
             sharing: standIn,
+            sharingSwitch: sharingSwitch,
             makeSharing: makeSharing
         )
     }

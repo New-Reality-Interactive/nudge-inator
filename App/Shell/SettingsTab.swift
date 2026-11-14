@@ -63,6 +63,9 @@ struct SettingsTab: View {
                 Text("Nothing has changed. Try again.", comment: "Settings and Turn Off Sharing's sheet: under Couldn't Turn Off Sharing.")
             }
             .navigationTitle(Text(AppTab.settings.title))
+            #if DEBUG
+            .standInInviteWhileSharingOff(model: model)
+            #endif
             .alert(
                 Text("Delete All Data?", comment: "Settings: title of the question that asks before deleting everything."),
                 isPresented: $isConfirmingDelete

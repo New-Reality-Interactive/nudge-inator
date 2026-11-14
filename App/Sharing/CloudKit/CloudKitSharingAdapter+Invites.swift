@@ -70,16 +70,21 @@ extension CloudKitSharingAdapter {
         return names.reversed().lazy.compactMap { UIImage(named: $0)?.pngData() }.first
     }
 
-    /// Takes an invite the scene delegate received and tells the app model, which accepts it.
-    func receive(_ metadata: CKShare.Metadata) {
+    /// The invite a share's metadata carries, or `nil` when it isn't one for this app.
+    static func incomingInvite(from metadata: CKShare.Metadata) -> IncomingInvite? {
         let zoneID = metadata.share.recordID.zoneID
-        guard metadata.containerIdentifier == Self.containerIdentifier, let connectionID = UUID(uuidString: zoneID.zoneName) else { return }
-        incoming[connectionID] = metadata
+        guard metadata.containerIdentifier == containerIdentifier, let connectionID = UUID(uuidString: zoneID.zoneName) else { return nil }
         let sender = InviteParticipant.displayName(metadata.ownerIdentity.nameComponents) ?? metadata.ownerIdentity.lookupInfo?.emailAddress
-        let invite = IncomingInvite(
+        return IncomingInvite(
             connectionID: connectionID,
             senderName: sender ?? String(localized: "Someone", comment: "Invite: the sender's name when iCloud gives none.")
         )
+    }
+
+    /// Takes an invite the scene delegate received and tells the app model, which accepts it.
+    func receive(_ metadata: CKShare.Metadata) {
+        guard let invite = Self.incomingInvite(from: metadata) else { return }
+        incoming[invite.connectionID] = metadata
         Task { await events?.invited(invite) }
     }
 

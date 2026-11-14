@@ -40,6 +40,7 @@ struct RootView: View {
         // does in portrait and landscape.
         .tabBarMinimizeBehavior(.onScrollDown)
         .inviteAcceptance(sharing: model?.sharing) { navigation.openConnection($0) }
+        .inviteWhileSharingOff(model: model)
         .connectionEnded(model: model)
         .accountChanged(sharing: model?.sharing)
         .task { await tickEveryMinute() }

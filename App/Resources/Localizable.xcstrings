@@ -60,6 +60,9 @@
     "%@ has more than one address. Use the one that is their Apple Account." : {
       "comment" : "Invite Someone: under the choice between a contact's addresses. The argument is the contact's name."
     },
+    "%@ invited you to send each other reminders through iCloud. Sharing is off on this iPhone." : {
+      "comment" : "Opening an invite while Sharing is off: under the title. The argument is the name of the person who sent the invite, such as \"Alex Morgan\"."
+    },
     "%@ is Done. Its nudges have stopped." : {
       "comment" : "VoiceOver, after Done on a nudge card or a My Day row: what the Done button's place now says. The placeholder is the reminder's title."
     },
@@ -1831,6 +1834,9 @@
     "Normal nudges arrive as ordinary notifications, which a Focus can hold." : {
       "comment" : "Settings: footer under the Nudges rows."
     },
+    "Not Now" : {
+      "comment" : "Opening an invite while Sharing is off: leaves Sharing off and the invite unanswered."
+    },
     "Not Set" : {
       "comment" : "Settings: status of the Alarms row before the person has been asked about alarms.\nSettings: status of the Badges row before the person has been asked about badges, or just after an update while the app turns them on."
     },
@@ -2614,6 +2620,12 @@
     },
     "Turn Off Sharing" : {
       "comment" : "Turn Off Sharing's sheet: its title, and the button that disconnects everyone and turns Sharing off."
+    },
+    "Turn On Sharing" : {
+      "comment" : "Opening an invite while Sharing is off: turns Sharing on and accepts the invite."
+    },
+    "Turn on sharing to connect with %@?" : {
+      "comment" : "Opening an invite while Sharing is off: title of the question. The argument is the name of the person who sent the invite, such as \"Alex Morgan\"."
     },
     "Unknown" : {
       "comment" : "About page: shown for the version or build number when the app can't read it."

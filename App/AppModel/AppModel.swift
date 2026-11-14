@@ -134,6 +134,41 @@ final class AppModel {
         }
     }
 
+    /// An invite the person opened while Sharing is off (#389), held with what hands it to the
+    /// adapter until they answer.
+    private struct HeldInvite {
+        var invite: PendingInvite
+        /// Gives the invite to the adapter, which Turn On Sharing has made by then.
+        var handOver: @MainActor () -> Void
+    }
+
+    private var heldInvite: HeldInvite?
+
+    /// The invite waiting for the prompt "Turn on sharing to connect with <name>?" (#389), or `nil`.
+    var pendingInvite: PendingInvite? { heldInvite?.invite }
+
+    /// An invite the system handed over (#217, #389): from `senderName`, and `handOver` gives it to
+    /// the sharing adapter. With Sharing on it goes straight on. With Sharing off there's no model
+    /// and no adapter to take it, so it is held and the person is asked; a newer invite replaces an
+    /// unanswered one. A model winding down (#388) counts as off.
+    func receiveInvite(from senderName: String, handOver: @escaping @MainActor () -> Void) {
+        guard sharing == nil else { return handOver() }
+        heldInvite = HeldInvite(invite: PendingInvite(senderName: senderName), handOver: handOver)
+    }
+
+    /// The person's answer to the prompt (#389). Turn On Sharing turns Sharing on, which makes the
+    /// adapter, and then hands it the invite, so the usual accept runs and ends in Connected. Not
+    /// Now drops the invite unanswered: Sharing stays off, no connection is made, and the sender's
+    /// invite is still open, so opening it again asks again. Sharing turned on meanwhile, from
+    /// Settings, takes the invite whichever the answer.
+    func answerPendingInvite(turnOnSharing: Bool) {
+        let held = heldInvite
+        heldInvite = nil
+        guard turnOnSharing || sharing != nil else { return }
+        sharingSwitch.turnOn()
+        held?.handOver()
+    }
+
     /// Whether the Sharing switch can turn off yet (#387): its reminders and its store have been
     /// read. Cheap, for a view's body; true while it's off.
     var canTurnSharingOff: Bool {
