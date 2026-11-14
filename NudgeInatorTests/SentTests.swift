@@ -136,6 +136,18 @@ struct SentTests {
         #expect(mine.rows.map(\.title) == ["Call the clinic"])
     }
 
+    /// A group's header says, after the name, whether the person shares status (DESIGN.md, Sent rows;
+    /// ticket 328).
+    @Test func eachGroupSaysWhetherThePersonSharesStatus() async throws {
+        let (alex, riley, sam) = try await phones(rileySharesStatus: false)
+        try alex.model.send(pills, to: [rileyID, samID])
+        await settle(alex, riley, sam)
+
+        let headers = sent(on: alex).people.map { "\($0.name): \(String(localized: $0.statusSharingText))" }
+
+        #expect(headers == ["Riley Park: Not sharing status", "Sam Rivera: Sharing status"])
+    }
+
     /// Someone the sender is no longer connected with, or only invited, has no group.
     @Test func onlyConnectedPeopleHaveAGroup() async throws {
         let (alex, riley, sam) = try await phones()

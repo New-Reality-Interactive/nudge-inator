@@ -12,9 +12,17 @@ expect() {
     echo "FAIL: $1" >&2; printf '  expected:\n%s\n  got:\n%s\n' "$2" "$3" >&2; failures=$((failures + 1)); fi
 }
 
-# xcrun writes $FAKE_DEVICES to the --json-output path; gh records its arguments.
+# xcrun writes $FAKE_DEVICES to the --json-output path; asked for a device's details, it records the
+# device and, when $FAKE_WOKEN names a file, the listing becomes that file's (the phone woke). gh
+# records its arguments.
 cat > "$work/bin/xcrun" <<'SH'
 #!/bin/sh
+case " $* " in
+  *" info details "*)
+    while [ $# -gt 0 ]; do [ "$1" = --device ] && echo "$2" >> "$FAKE_WAKE_LOG"; shift; done
+    [ -n "${FAKE_WOKEN:-}" ] && cp "$FAKE_WOKEN" "$FAKE_DEVICES"
+    exit 0 ;;
+esac
 while [ $# -gt 0 ]; do [ "$1" = --json-output ] && cp "$FAKE_DEVICES" "$2"; shift; done
 SH
 cat > "$work/bin/gh" <<'SH'
@@ -22,11 +30,13 @@ cat > "$work/bin/gh" <<'SH'
 printf '%s\n' "$@" > "$FAKE_GH_LOG"
 SH
 chmod +x "$work/bin/"*
-export PATH="$work/bin:$PATH" FAKE_GH_LOG="$work/gh.log"
+export PATH="$work/bin:$PATH" FAKE_GH_LOG="$work/gh.log" FAKE_WAKE_LOG="$work/wake.log"
 
 phone='{"hardwareProperties":{"reality":"physical","marketingName":"iPhone 15","productType":"iPhone15,4"},"deviceProperties":{"osVersionNumber":"27.2.1"},"connectionProperties":{"tunnelState":"connected"}}'
 ipad='{"hardwareProperties":{"reality":"physical","marketingName":"iPad Pro","productType":"iPad16,3"},"deviceProperties":{"osVersionNumber":"27.2"},"connectionProperties":{"tunnelState":"connected"}}'
 sim='{"hardwareProperties":{"reality":"simulated","marketingName":"iPhone 18 Pro","productType":"iPhone19,2"},"deviceProperties":{"osVersionNumber":"27.2"},"connectionProperties":{"tunnelState":"disconnected"}}'
+# Paired over Wi-Fi with no tunnel until a command reaches it (#328's phone check).
+asleep='{"identifier":"PHONE-1","hardwareProperties":{"reality":"physical","marketingName":"iPhone 15","productType":"iPhone15,4"},"deviceProperties":{"osVersionNumber":"27.2.1"},"connectionProperties":{"pairingState":"paired","tunnelState":"disconnected"}}'
 away='{"hardwareProperties":{"reality":"physical","marketingName":"iPhone 15","productType":"iPhone15,4"},"deviceProperties":{"osVersionNumber":"27.2.1"},"connectionProperties":{"tunnelState":"disconnected"}}'
 devices() { echo "{\"result\":{\"devices\":[$1]}}" > "$work/devices.json"; export FAKE_DEVICES="$work/devices.json"; rm -f "$FAKE_GH_LOG"; }
 
@@ -55,6 +65,17 @@ for scenario in "$sim" "$away" "$ipad" ""; do
   expect "no connected iPhone: says so" "1" "$(echo "$out" | grep -c 'No iPhone is connected')"
   expect "no connected iPhone: posts nothing" "no" "$([ -e "$FAKE_GH_LOG" ] && echo yes || echo no)"
 done
+
+devices "$ipad,$asleep"; rm -f "$FAKE_WAKE_LOG"
+echo "{\"result\":{\"devices\":[$ipad,$phone]}}" > "$work/woken.json"
+FAKE_WOKEN="$work/woken.json" scripts/phone-check.sh 352 installed
+expect "a paired iPhone with no tunnel is woken once" "PHONE-1" "$(cat "$FAKE_WAKE_LOG")"
+expect "once woken, its comment is posted" "Phone check: installed, checklist sent (iPhone 15, iOS 27.2.1)" "$(tail -1 "$FAKE_GH_LOG")"
+
+devices "$asleep"; rm -f "$FAKE_WAKE_LOG"
+out="$(scripts/phone-check.sh 352 installed 2>&1)"; code=$?
+expect "a paired iPhone that doesn't wake: exit 1" "1" "$code"
+expect "a paired iPhone that doesn't wake: posts nothing" "no" "$([ -e "$FAKE_GH_LOG" ] && echo yes || echo no)"
 
 rm -f "$work/devices.json"; export FAKE_DEVICES="$work/none.json"
 scripts/phone-check.sh 352 installed > /dev/null 2>&1

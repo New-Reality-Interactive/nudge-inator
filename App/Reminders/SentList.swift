@@ -3,7 +3,8 @@ import SwiftUI
 
 /// The Reminders tab's Sent view (ticket 201, the mockup's `viewSentTab`): what this person sent,
 /// grouped under each person it went to, each row opening the sent reminder's details. Rows have no
-/// swipe (DESIGN.md, Sent rows). Search, Filter, Sort and the count are #328's and #329's.
+/// swipe (DESIGN.md, Sent rows). The count header leads the groups (ticket 328); the search field
+/// and Sort are the tab's, and Filter is #329's.
 ///
 /// With no one connected it offers Invite Someone and Manage People, and with nothing sent New
 /// Reminder (ticket 202). Neither empty state has tools (DESIGN.md, Sent's tools). While sharing
@@ -15,6 +16,8 @@ struct SentList: View {
     /// Manage People: Settings › Connections.
     let manageConnections: () -> Void
     let openDetails: (Reminder.ID) -> Void
+    /// The no-match state's Clear Search.
+    let clearSearch: () -> Void
 
     /// Invite Someone's flow, kept here above the empty states, so an invite under way isn't lost
     /// when someone connects and No One to Send To goes.
@@ -33,28 +36,72 @@ struct SentList: View {
             NoOneToSendToView(banner: banner, invite: { isInviting = true }, manageConnections: manageConnections)
         case .nothingSent:
             NothingSentView(banner: banner)
-        case nil:
+        case .noMatch, nil:
+            SentGroups(screen: screen, banner: banner, clearSearch: clearSearch, openDetails: openDetails)
+        }
+    }
+}
+
+/// Sent's groups under the count header (ticket 328), or Mine's no-match state when the search
+/// leaves none. Cancel and Clear Search put VoiceOver on the count, as on Mine.
+private struct SentGroups: View {
+    let screen: SentScreen
+    let banner: SharingBanner?
+    let clearSearch: () -> Void
+    let openDetails: (Reminder.ID) -> Void
+
+    @AccessibilityFocusState private var countFocused: Bool
+
+    var body: some View {
+        SearchResultsContainer(countFocus: $countFocused) { didClear in
             List {
+                Section {
+                    if screen.emptyState == .noMatch {
+                        RemindersNoMatchView(filter: RemindersFilter(search: screen.search)) {
+                            clearSearch()
+                            didClear()
+                        }
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                    }
+                } header: {
+                    // The banner, then the count, above the groups, as the mockup's `viewSentTab`.
+                    VStack(alignment: .leading, spacing: Design.Spacing.s3) {
+                        SharingBannerView(banner: banner)
+                        CountHeaderRow(count: screen.countText, countFocus: $countFocused)
+                    }
+                    .textCase(nil)
+                }
                 ForEach(screen.people) { person in
                     Section {
                         ForEach(person.rows) { row in
                             SentRowView(row: row) { openDetails(row.reminderID) }
                         }
                     } header: {
-                        // Above the first person's name, as Now's first header holds its banners.
-                        VStack(alignment: .leading, spacing: Design.Spacing.s3) {
-                            if person.id == screen.people.first?.id {
-                                SharingBannerView(banner: banner)
-                            }
-                            Text(verbatim: person.name)
-                                // The banner beside it in the header drops the header trait,
-                                // so the name keeps it for VoiceOver's headings.
-                                .accessibilityAddTraits(.isHeader)
-                        }
+                        SentGroupHeader(person: person)
                     }
                 }
             }
         }
+    }
+}
+
+/// A person's group header, the mockup's `sec-h` in `viewSentTab`: the name, and trailing it whether
+/// they share status (DESIGN.md, Sent rows). Stacked at the accessibility sizes, so neither is
+/// truncated. One heading for VoiceOver, the name then the sharing. A section's header gets the
+/// header trait (WWDC21, "SwiftUI Accessibility: Beyond the basics"); the docs don't say it survives
+/// combining the two texts, so it is set here in case that drops it.
+private struct SentGroupHeader: View {
+    let person: SentScreen.Person
+
+    var body: some View {
+        SizeAdaptiveStack(rowAlignment: .firstTextBaseline, rowSpacing: Design.Spacing.s2, stackedSpacing: Design.Spacing.line) {
+            Text(verbatim: person.name)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(person.statusSharingText)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
     }
 }
 
@@ -215,7 +262,9 @@ struct DeliveredLabel: View {
 /// Sent with no one connected, the mockup's "No One to Send To": Invite Someone, as Connections
 /// offers it, and Manage People, which goes to Settings › Connections (the spec; the mockup pushes
 /// Connections on Reminders, README Known differences). It scrolls, so the buttons are reached at
-/// the largest text size, on the grouped background the mockup's screens have.
+/// the largest text size, and is centered while it fits. On the plain background, as Mine's No Reminders and every other tab's
+/// empty state, so switching Mine | Sent doesn't change it (#399; the developer's call, 2026-11-14,
+/// over the mockup's grouped background).
 private struct NoOneToSendToView: View {
     let banner: SharingBanner?
     let invite: () -> Void
@@ -243,7 +292,7 @@ private struct NoOneToSendToView: View {
                 }
             }
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .centeredWhenShort()
     }
 }
 
@@ -268,14 +317,17 @@ private struct NothingSentView: View {
                     .buttonStyle(.bordered)
             }
         }
-        .background(Color(uiColor: .systemGroupedBackground))
+        .centeredWhenShort()
     }
 }
+
 
 #if DEBUG
 private extension SentScreen {
     /// The pills sent to Riley and Sam, delivered to Riley; a call sent to Sam alone.
-    static var preview: SentScreen {
+    static var preview: SentScreen { preview() }
+
+    static func preview(sort: RemindersSort = .createdOldestFirst, search: String = "") -> SentScreen {
         let pills = Reminder(title: "Take the pills", dueTime: .now.addingTimeInterval(3600), repeatRule: .everyDay, strength: .firm)
         let call = Reminder(title: "Call the clinic", dueTime: .now.addingTimeInterval(7200), strength: .gentle)
         let riley = SharingConnection(id: UUID(), name: "Riley Park", state: .connected)
@@ -287,13 +339,13 @@ private extension SentScreen {
             SentCopy(connectionID: sam.id, reminderID: pills.id, createdAt: .now, receipt: .started, statusRecord: nil),
             SentCopy(connectionID: sam.id, reminderID: call.id, createdAt: .now.addingTimeInterval(60), receipt: .notDelivered, statusRecord: nil),
         ]
-        return SentScreen(engine: .myDayPreview(), sharing: sharing)
+        return SentScreen(engine: .myDayPreview(), sharing: sharing, sort: sort, search: search)
     }
 }
 
 private extension SentList {
     init(preview screen: SentScreen) {
-        self.init(screen: screen, sharing: nil, manageConnections: {}, openDetails: { _ in })
+        self.init(screen: screen, sharing: nil, manageConnections: {}, openDetails: { _ in }, clearSearch: {})
     }
 }
 
@@ -320,6 +372,14 @@ private extension SentScreen {
 #Preview("Largest text") {
     SentList(preview: .preview)
         .environment(\.dynamicTypeSize, .accessibility5)
+}
+
+#Preview("No match, search") {
+    SentList(preview: .preview(search: "zebra"))
+}
+
+#Preview("Sorted by Due Date, Latest First") {
+    SentList(preview: .preview(sort: RemindersSort(field: .dueDate, order: .descending)))
 }
 
 #Preview("No one to send to") {

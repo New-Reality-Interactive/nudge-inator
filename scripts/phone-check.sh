@@ -9,7 +9,8 @@
 #       No findings at all posts "Nothing found" so the ticket still shows its check.
 #
 # Both comments name the connected iPhone's model and iOS version, read from `xcrun devicectl`, never
-# typed. With no iPhone connected the script says so and posts nothing. The phone time is the gap
+# typed. A paired iPhone with no tunnel (on Wi-Fi) is woken once first. With no iPhone connected the
+# script says so and posts nothing. The phone time is the gap
 # between the two comments' timestamps, so post each as soon as its moment arrives.
 # NUDGE_PHONE_CHECK_DRY_RUN=1 prints the comment instead of posting it.
 set -euo pipefail
@@ -23,22 +24,40 @@ case "$action" in installed|report) ;; *) usage ;; esac
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
-# The model and iOS version of the first connected physical iPhone (an iPad or Watch is skipped), as "<model>, iOS <version>".
-xcrun devicectl list devices --json-output "$work/devices.json" > /dev/null 2>&1 || true
-phone="$(python3 -I - "$work/devices.json" 2> /dev/null <<'PY' || true
+# Reads the device list into $work/devices.json, then prints, for the first physical iPhone (an iPad or
+# Watch is skipped), "connected<TAB><model>, iOS <version>" when its tunnel is up, or else "paired<TAB><id>"
+# for one paired with no tunnel. Prints nothing when there is neither.
+find_phone() {
+  xcrun devicectl list devices --json-output "$work/devices.json" > /dev/null 2>&1 || true
+  python3 -I - "$work/devices.json" 2> /dev/null <<'PY' || true
 import json, sys
 try:
     devices = json.load(open(sys.argv[1]))["result"]["devices"]
 except Exception:
     sys.exit(0)
-for d in devices:
-    hw, dev, conn = d.get("hardwareProperties", {}), d.get("deviceProperties", {}), d.get("connectionProperties", {})
-    model, version = hw.get("marketingName"), dev.get("osVersionNumber")
-    if hw.get("reality") == "physical" and str(hw.get("productType", "")).startswith("iPhone") and conn.get("tunnelState") == "connected" and model and version:
-        print(f"{model}, iOS {version}")
-        break
+phones = [d for d in devices if d.get("hardwareProperties", {}).get("reality") == "physical"
+          and str(d.get("hardwareProperties", {}).get("productType", "")).startswith("iPhone")]
+for d in phones:
+    model, version = d["hardwareProperties"].get("marketingName"), d.get("deviceProperties", {}).get("osVersionNumber")
+    if d.get("connectionProperties", {}).get("tunnelState") == "connected" and model and version:
+        print(f"connected\t{model}, iOS {version}")
+        sys.exit(0)
+for d in phones:
+    if d.get("connectionProperties", {}).get("pairingState") == "paired" and d.get("identifier"):
+        print(f"paired\t{d['identifier']}")
+        sys.exit(0)
 PY
-)"
+}
+
+# A phone paired over Wi-Fi shows "available (paired)" with no tunnel until a command reaches it (#328's
+# phone check), so asking for its details once wakes it; the list is then read again.
+found="$(find_phone)"
+if [ "${found%%$'\t'*}" = paired ]; then
+  xcrun devicectl device info details --device "${found#*$'\t'}" > /dev/null 2>&1 || true
+  found="$(find_phone)"
+fi
+phone=""
+[ "${found%%$'\t'*}" = connected ] && phone="${found#*$'\t'}"
 if [ -z "$phone" ]; then
   echo "No iPhone is connected (xcrun devicectl list devices shows none connected): nothing posted." >&2
   exit 1

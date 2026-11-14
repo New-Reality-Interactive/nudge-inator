@@ -438,7 +438,7 @@
       }
     },
     "%lld reminders out of %lld" : {
-      "comment" : "Reminders tab: the header row's count, in every case, even with nothing narrowing the list. 1: the reminders shown. 2: every reminder.",
+      "comment" : "Reminders tab, Mine and Sent: the header row's count, in every case, even with nothing narrowing the list. 1: the reminders shown. 2: every reminder (on Sent, every reminder sent, one sent to two people counting once).",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1794,7 +1794,7 @@
       "comment" : "Under a sent reminder's title on the Sent view, and under a person's name on its details: their copy hasn't reached their iPhone yet."
     },
     "Not sharing status" : {
-      "comment" : "Under a sent reminder's title on the Sent view, and under a person's name on its details: the person keeps how their reminders are going from the sender, so the sender sees only that it was delivered."
+      "comment" : "Under a sent reminder's title on the Sent view, under a person's name on its details, and trailing their name in the header of their group on the Sent view: the person keeps how their reminders are going from the sender, so the sender sees only that it was delivered."
     },
     "Not sharing this one" : {
       "comment" : "Under a sent reminder's title on the Sent view, and under a person's name on its details: the person keeps how this one reminder is going from the sender, so the sender sees only that it was delivered."
@@ -2217,6 +2217,9 @@
     },
     "Sharing is paused. iCloud isn't available right now. Sharing starts again by itself." : {
       "comment" : "Under the reminder form's Send To row, shown off, when iCloud can't be reached for now."
+    },
+    "Sharing status" : {
+      "comment" : "Reminders tab, Sent: trailing a person's name in the header of their group: they share how their reminders are going with the sender."
     },
     "Show" : {
       "comment" : "Reminders tab: the hidden label of the Mine | Sent control."
