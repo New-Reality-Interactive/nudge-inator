@@ -68,7 +68,7 @@ struct RemindersTab: View {
         NavigationStack(path: $path) {
             TabScreen(state: state) {
                 TimelineView(.everyMinute) { _ in
-                    if mineOrSentChoice == .sent, let model, let sharing = model.sharing {
+                    if shown == .sent, let model, let sharing = model.sharing {
                         SentList(
                             screen: SentScreen(engine: model.engine, sharing: sharing.data, tools: sentTools),
                             sharing: sharing,
@@ -83,7 +83,7 @@ struct RemindersTab: View {
                 }
             }
             .modifier(ListSearchField(
-                isShown: mineOrSentChoice == .mine ? hasReminders : sentHasTools,
+                isShown: shown == .mine ? hasReminders : sentHasTools,
                 text: searchField,
                 prompt: Text("Search titles and notes", comment: "Reminders tab: the search field's prompt.")
             ))
@@ -98,6 +98,10 @@ struct RemindersTab: View {
             .onChange(of: hasReminders) {
                 if !hasReminders { clearSearchAndFilter() }
             }
+            // Sharing switched on again starts on Mine, as a launch does (#387).
+            .onChange(of: offersSent) {
+                if !offersSent { mineOrSentChoice = .mine }
+            }
             // Sent's field and Filter go with its last reminder too.
             .onChange(of: sentHasTools) {
                 if !sentHasTools { sentTools.clearSearchAndFilter() }
@@ -106,7 +110,7 @@ struct RemindersTab: View {
             .reminderDetailsDestination()
             .navigationDestination(for: OpenedSentReminder.self) { SentReminderDetailsView(id: $0.id) }
             .toolbar {
-                if hasReminders, mineOrSentChoice == .mine {
+                if hasReminders, shown == .mine {
                     ToolbarItem(placement: .topBarTrailing) {
                         FilterButton(
                             sectionsInUse: appliedChoices.sectionsInUse,
@@ -124,7 +128,7 @@ struct RemindersTab: View {
                     // Filter and Sort share a glass group, and New stands apart (Brian, #113).
                     ToolbarSpacer(.fixed, placement: .topBarTrailing)
                 }
-                if mineOrSentChoice == .sent, sentHasTools, let sharing = model?.sharing {
+                if shown == .sent, sentHasTools, let sharing = model?.sharing {
                     SentToolbarItems(
                         tools: $sentTools,
                         sharing: sharing.data,
@@ -199,6 +203,12 @@ struct RemindersTab: View {
         model?.sharing != nil
     }
 
+    /// Mine or Sent, as shown: Mine whenever Sent isn't offered, so Sharing switched off while Sent
+    /// was chosen leaves Mine with its search, Filter and Sort (#387).
+    private var shown: MineOrSent {
+        offersSent ? mineOrSentChoice : .mine
+    }
+
     /// The Mine | Sent control: the system's segmented picker, filling the content width. Two short
     /// words, so it stays segmented at the accessibility sizes (DESIGN.md). Its label is hidden, as a
     /// segmented control shows none; VoiceOver reads the choices and which one is chosen.
@@ -257,7 +267,7 @@ struct RemindersTab: View {
 
     /// Typing redraws the list at once. Mine's text or Sent's, whichever is chosen.
     private var searchField: Binding<String> {
-        (mineOrSentChoice == .mine ? $searchText : $sentTools.search).transaction(Self.noAnimation)
+        (shown == .mine ? $searchText : $sentTools.search).transaction(Self.noAnimation)
     }
 
     /// The model's, which outlives a relaunch, or the previews' own.
