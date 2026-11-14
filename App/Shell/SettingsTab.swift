@@ -22,6 +22,9 @@ struct SettingsTab: View {
     @State private var previewDefaultPace = DefaultPace.shipped
     /// The Sharing switch previews show and change, since they have no app model.
     @State private var previewSharingOn = false
+    /// Whether the Turn Off Sharing sheet (#388) is up.
+    @State private var isTurningSharingOff = false
+    @State private var turnOffFailed = false
 
     var body: some View {
         NavigationStack(path: path) {
@@ -34,6 +37,31 @@ struct SettingsTab: View {
                 }
             }
             .settingsPages(sharing: model?.sharing)
+            .sheet(isPresented: $isTurningSharingOff) {
+                // Read live, so the sheet always says what confirming does: someone accepting an
+                // invite meanwhile is counted.
+                if case .confirm(let summary) = model?.sharingOff {
+                    TurnOffSharingSheet(summary: summary) { choice in
+                        try model?.turnSharingOff(choosing: choice)
+                        isTurningSharingOff = false
+                    }
+                }
+            }
+            .onChange(of: model?.sharingOff) { _, off in
+                // Nothing left to ask about, or Sharing is off: no sheet.
+                if case .confirm = off {} else { isTurningSharingOff = false }
+            }
+            .alert(
+                Text("Couldn't Turn Off Sharing", comment: "Settings and Turn Off Sharing's sheet: title of the message shown when turning Sharing off couldn't be saved."),
+                isPresented: $turnOffFailed
+            ) {
+                Button {
+                } label: {
+                    Text("OK", comment: "Settings and Turn Off Sharing's sheet: dismisses Couldn't Turn Off Sharing.")
+                }
+            } message: {
+                Text("Nothing has changed. Try again.", comment: "Settings and Turn Off Sharing's sheet: under Couldn't Turn Off Sharing.")
+            }
             .navigationTitle(Text(AppTab.settings.title))
             .alert(
                 Text("Delete All Data?", comment: "Settings: title of the question that asks before deleting everything."),
@@ -115,8 +143,10 @@ struct SettingsTab: View {
                     title: Text("Sharing", comment: "Settings: the switch that turns sharing reminders with other people on or off, and the header of its section.")
                 )
             }
-            // Turning off with anything shared needs the confirmation of #388; until then it stays on.
-            .disabled(model?.canTurnSharingOffAtOnce == false)
+            // Until sharing's store has been read, or while it won't open, it may hold connections
+            // the other people would never hear were ended, so it can't turn off (#387). It says
+            // nothing, as that's a moment after launch, or rare (#388's review).
+            .disabled(model.map { !$0.canTurnSharingOff } ?? false)
             if let sharing = model?.sharing {
                 NavigationLink(value: SharingPage.connections) {
                     let count = sharing.data.connections.count { $0.state == .connected }
@@ -139,7 +169,19 @@ struct SettingsTab: View {
     /// The model's Sharing switch. Without a model, the previews'.
     private var sharingOn: Binding<Bool> {
         guard let model else { return $previewSharingOn }
-        return Binding { model.isSharingOn } set: { model.setSharing(on: $0) }
+        return Binding { model.isSharingOn } set: { on in
+            guard !on else { return model.setSharing(on: true) }
+            // Anything it would delete is asked about first, as every destructive action is, and the
+            // switch stays on until the person confirms (#388).
+            switch model.sharingOff {
+            case .confirm:
+                isTurningSharingOff = true
+            case .atOnce:
+                do { try model.turnSharingOff(choosing: .remove) } catch { turnOffFailed = true }
+            case .notYet, nil:
+                break
+            }
+        }
     }
 
     private var nudgesSection: some View {

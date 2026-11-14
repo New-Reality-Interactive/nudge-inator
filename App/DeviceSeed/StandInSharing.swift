@@ -184,6 +184,9 @@ final class StandInSharingAdapter: SharingAdapter {
 
     func stop() {}
 
+    /// The stand-in sends nothing, so nothing waits.
+    var hasUnsentDisconnects: Bool { false }
+
     func submit(_ change: SharingChange) {
         StandInSharing.logger.notice("Stand-in: not sending a \(String(describing: change.kind), privacy: .public) change")
         if change.kind == .send, let reminderID = change.reminderID {

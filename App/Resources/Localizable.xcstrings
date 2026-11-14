@@ -266,6 +266,29 @@
         }
       }
     },
+    "%lld Reminders You've Received" : {
+      "comment" : "Turn Off Sharing's sheet: header of the Remove or Keep choice. The argument is how many reminders this person has received from everyone.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Reminder You've Received"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Reminders You've Received"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld Reminders from %@" : {
       "comment" : "Disconnect's sheet: header of the choice. 1: how many reminders received from the person Keep would keep. 2: their name, such as \"Alex Morgan\".",
       "localizations" : {
@@ -1146,6 +1169,9 @@
     "Couldn't Send the Reminder" : {
       "comment" : "The reminder form: title of the message shown when Add couldn't send the reminder to the people chosen in Send To, or Save couldn't keep a change to a reminder already sent."
     },
+    "Couldn't Turn Off Sharing" : {
+      "comment" : "Settings and Turn Off Sharing's sheet: title of the message shown when turning Sharing off couldn't be saved."
+    },
     "Created" : {
       "comment" : "Reminders tab's Sort menu: the header of the section that sorts by when each reminder was made."
     },
@@ -1186,7 +1212,7 @@
       "comment" : "Asked before deleting a reminder, from its details, a Reminders tab row, or a sent reminder's details. The placeholder is its title."
     },
     "Deletes them and cancels their nudges and alarms." : {
-      "comment" : "Disconnect's sheet: under Remove."
+      "comment" : "Disconnect's and Turn Off Sharing's sheets: under Remove."
     },
     "Delivered" : {
       "comment" : "A sent reminder's label on the Sent view and its details: the person's copy has reached their iPhone."
@@ -1486,6 +1512,9 @@
     "Every nudge rings as an alarm." : {
       "comment" : "Under the reminder form's strength, when every nudge rings, as Relentless's do."
     },
+    "Everyone you're connected with gets a note that the connection ended, and chooses what happens to the reminders you sent them." : {
+      "comment" : "Turn Off Sharing's sheet: under the choice, while someone is connected."
+    },
     "Fewest First" : {
       "comment" : "Tags tab's Sort menu, sorted by Reminders: the tag fewest reminders have at the top."
     },
@@ -1630,7 +1659,7 @@
       "comment" : "The question before canceling an invite: keeps it."
     },
     "Keep as My Own Reminders" : {
-      "comment" : "Disconnect's sheet: the choice that keeps the reminders received from the person as this person's own."
+      "comment" : "Disconnect's and Turn Off Sharing's sheets: the choice that keeps the reminders received as this person's own."
     },
     "Last 24 Hours" : {
       "comment" : "Now: section header for occurrences closed in the last 24 hours."
@@ -1836,7 +1865,7 @@
       "comment" : "A sent reminder's details, under \"<name>, Last 7 Days\": the person's copy had nothing due that day."
     },
     "Nothing has changed. Try again." : {
-      "comment" : "Disconnect's sheet and Connection Ended: under Couldn't Disconnect."
+      "comment" : "Disconnect's sheet and Connection Ended: under Couldn't Disconnect.\nSettings and Turn Off Sharing's sheet: under Couldn't Turn Off Sharing."
     },
     "Nothing is done yet today." : {
       "comment" : "My Day: the list when Done is chosen and nothing is done yet today."
@@ -2008,7 +2037,7 @@
       }
     },
     "OK" : {
-      "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nA sent reminder's details: dismisses the message that the reminder couldn't be deleted.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nDisconnect's sheet and Connection Ended: dismisses Couldn't Disconnect.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the Link Copied message and closes the sheet.\nInvite: dismisses the message that the invite couldn't be made.\nSettings: dismisses the message that deleting failed.\nThe Apple Account Changed sheet: closes it.\nThe Edit Reminder form: closes the form of a sent reminder that was deleted while it was open.\nThe reminder form: dismisses the message that the reminder couldn't be sent."
+      "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nA sent reminder's details: dismisses the message that the reminder couldn't be deleted.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nDisconnect's sheet and Connection Ended: dismisses Couldn't Disconnect.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the Link Copied message and closes the sheet.\nInvite: dismisses the message that the invite couldn't be made.\nSettings and Turn Off Sharing's sheet: dismisses Couldn't Turn Off Sharing.\nSettings: dismisses the message that deleting failed.\nThe Apple Account Changed sheet: closes it.\nThe Edit Reminder form: closes the form of a sent reminder that was deleted while it was open.\nThe reminder form: dismisses the message that the reminder couldn't be sent."
     },
     "Off" : {
       "comment" : "A connection's page and the Connected sheet: Status Sharing is off.\nReminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off."
@@ -2136,7 +2165,7 @@
       "comment" : "VoiceOver value of the Tags tab's Sort button: sorted by Reminders, Most First."
     },
     "Remove" : {
-      "comment" : "Disconnect's sheet: the choice that deletes the reminders received from the person.\nNow, Waiting for You: opens the question that asks before removing a reminder someone sent, which waits to be accepted.\nReminder details: on a reminder someone sent that waits to be accepted, opens the question that asks before removing it.\nReminders tab: a received reminder's swipe action and VoiceOver action that asks before removing the person's copy."
+      "comment" : "Disconnect's and Turn Off Sharing's sheets: the choice that deletes the reminders received.\nNow, Waiting for You: opens the question that asks before removing a reminder someone sent, which waits to be accepted.\nReminder details: on a reminder someone sent that waits to be accepted, opens the question that asks before removing it.\nReminders tab: a received reminder's swipe action and VoiceOver action that asks before removing the person's copy."
     },
     "Remove %@" : {
       "comment" : "Invite Someone: removes the chosen person from the field. The argument is their name."
@@ -2393,6 +2422,9 @@
     "These won't nudge you until you accept them." : {
       "comment" : "Now: under the Waiting for You section."
     },
+    "They stay with the same schedule, history and tags, from no one." : {
+      "comment" : "Turn Off Sharing's sheet: under Keep as My Own Reminders."
+    },
     "They stay with the same schedule, history and tags, no longer from %@." : {
       "comment" : "Disconnect's sheet: under Keep as My Own Reminders. The argument is the other person's name, such as \"Alex Morgan\"."
     },
@@ -2402,6 +2434,39 @@
     "This Reminder Was Deleted" : {
       "comment" : "The Edit Reminder form of a reminder this person sent: title of the message shown when Save finds it was deleted while the form was open."
     },
+    "This cancels %lld invites. You won't be able to send or receive reminders, and your Sent list and its history are deleted." : {
+      "comment" : "Turn Off Sharing's sheet: its first line, with no one connected. The argument is how many open invites it cancels.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This cancels %#@invites@. You won't be able to send or receive reminders, and your Sent list and its history are deleted."
+          },
+          "substitutions" : {
+            "invites" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg invite"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg invites"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "This deletes every reminder, tag and all history from this iPhone, and cancels every nudge and alarm. It also disconnects everyone and deletes the reminders you've sent and received, here and in iCloud. It can't be undone." : {
       "comment" : "Settings: under the question asked before deleting everything, for a person with connections or invites."
     },
@@ -2410,6 +2475,92 @@
     },
     "This deletes its history too, and cancels any nudges and alarms." : {
       "comment" : "Under the question asked before deleting a reminder."
+    },
+    "This disconnects you from %lld people and cancels %lld invites. You won't be able to send or receive reminders, and your Sent list and its history are deleted." : {
+      "comment" : "Turn Off Sharing's sheet: its first line. 1: how many people it disconnects you from. 2: how many open invites it cancels.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This disconnects you from %#@people@ and cancels %#@invites@. You won't be able to send or receive reminders, and your Sent list and its history are deleted."
+          },
+          "substitutions" : {
+            "invites" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg invite"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg invites"
+                    }
+                  }
+                }
+              }
+            },
+            "people" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg person"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg people"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "This disconnects you from %lld people. You won't be able to send or receive reminders, and your Sent list and its history are deleted." : {
+      "comment" : "Turn Off Sharing's sheet: its first line, with no open invites. The argument is how many people it disconnects you from.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This disconnects you from %#@people@. You won't be able to send or receive reminders, and your Sent list and its history are deleted."
+          },
+          "substitutions" : {
+            "people" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg person"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg people"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "This doesn't nudge you. Deleting cancels it on everyone's iPhone, with a note." : {
       "comment" : "A sent reminder's details: under Delete Reminder."
@@ -2460,6 +2611,9 @@
     },
     "Tomorrow" : {
       "comment" : "The Custom repeat page's Next Times: a due time tomorrow."
+    },
+    "Turn Off Sharing" : {
+      "comment" : "Turn Off Sharing's sheet: its title, and the button that disconnects everyone and turns Sharing off."
     },
     "Unknown" : {
       "comment" : "About page: shown for the version or build number when the app can't read it."
@@ -2538,6 +2692,9 @@
     },
     "You choose what breaks through" : {
       "comment" : "Onboarding and How It Nudges: the title of the point about Break Through Focus."
+    },
+    "You won't be able to send or receive reminders, and your Sent list and its history are deleted." : {
+      "comment" : "Turn Off Sharing's sheet: its first line, with no one connected or invited, only reminders sent or received."
     },
     "You're Connected with %@" : {
       "comment" : "Accepting an invite: title of the sheet once connected. The argument is the name of the person who sent the invite, such as \"Alex Morgan\"."

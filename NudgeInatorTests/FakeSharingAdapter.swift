@@ -203,6 +203,9 @@ final class FakeSharingAdapter: SharingAdapter {
             let kept = unsent
             unsent = []
             kept.forEach(upload)
+            let revokes = unsentRevokes
+            unsentRevokes = []
+            revokes.forEach(revokeNow)
             network?.deliverAll()
         }
     }
@@ -302,7 +305,26 @@ final class FakeSharingAdapter: SharingAdapter {
 
     func revokeInvite(_ connectionID: UUID) {
         revoked.append(connectionID)
+        if isOnline {
+            revokeNow(connectionID)
+        } else {
+            unsentRevokes.append(connectionID)
+        }
+    }
+
+    /// Revoked while this iPhone was offline: kept, and revoked when it comes back.
+    private(set) var unsentRevokes: [UUID] = []
+
+    /// The revoke goes through iCloud, and the app model hears of it as the real adapter's
+    /// report of the zone delete, under an ID of no outbox entry.
+    private func revokeNow(_ connectionID: UUID) {
         network?.revoke(connectionID)
+        let events = events
+        network?.run { try? await events?.sent(UUID()) }
+    }
+
+    var hasUnsentDisconnects: Bool {
+        !unsentRevokes.isEmpty || unsent.contains { $0.kind == .disconnect }
     }
 
     /// iCloud's ID for this iPhone's account.

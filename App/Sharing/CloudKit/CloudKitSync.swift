@@ -112,6 +112,14 @@ final class CloudKitSync {
         share.participants.contains { $0.role != .owner && $0.acceptanceStatus == .accepted }
     }
 
+    /// Whether a disconnect or a revoked invite is still waiting for iCloud: a zone of this person's
+    /// to delete, or a share of the other person's to leave (#388).
+    var hasUnsentDisconnects: Bool {
+        !cache.zoneDeletes.isEmpty || cache.records.contains { key, record in
+            key.recordName == CKRecordNameZoneWideShare && record.pending?.isDelete == true
+        }
+    }
+
     // MARK: Sending
 
     /// Takes a change to send. Returns the outbox IDs of changes that went already: those that

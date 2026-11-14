@@ -4,12 +4,12 @@ import Testing
 @testable import NudgeInator
 
 /// Delete All Data covers sharing (ticket 214, spec #127 Privacy and compliance): Alex and Riley,
-/// connected through the fake network, and Riley deleting all data. What a test asserts is what
-/// Riley's app model, both stores and alarms keep, and what reaches Alex. Wording, layout and the
-/// largest text size are the phone check.
+/// connected through the fake network, and Riley deleting all data, which turns Sharing off (#388).
+/// What a test asserts is what Riley's app model, both stores and alarms keep, and what reaches
+/// Alex. Wording, layout and the largest text size are the phone check.
 @MainActor
 struct DeleteAllDataSharingTests {
-    typealias Phone = SharingAdapterTests.Phone
+    typealias Phone = TurnOffSharingTests.Phone
 
     let network = FakeSharingNetwork()
     let connectionID = UUID()
@@ -67,9 +67,11 @@ struct DeleteAllDataSharingTests {
         await settle(alex, riley)
 
         // The account ID stays: it is still the account signed in. The disconnect went, so the
-        // outbox is empty again.
-        #expect(riley.sharing.data == SharingData(accountID: account))
-        #expect(try riley.sharing.currentData() == SharingData(accountID: account))
+        // outbox is empty again, and sharing has stopped.
+        #expect(try riley.keptSharing() == SharingData(accountID: account))
+        #expect(!riley.model.isSharingOn)
+        #expect(!riley.record.isOn)
+        #expect(riley.adapter.stops == 1)
         #expect(riley.model.engine.reminders.isEmpty)
         #expect(riley.manager.scheduled.isEmpty)
         #expect(riley.center.pending.isEmpty)
@@ -91,7 +93,8 @@ struct DeleteAllDataSharingTests {
         riley.relaunch()
         await riley.launch()
 
-        let kept = try riley.sharing.currentData()
+        #expect(!riley.model.isSharingOn)
+        let kept = try riley.keptSharing()
         #expect(kept.connections.isEmpty)
         #expect(kept.sentReminders.isEmpty)
         #expect(kept.sentCopies.isEmpty)
@@ -105,7 +108,7 @@ struct DeleteAllDataSharingTests {
         await settle(alex, riley)
 
         #expect(alex.sharing.data.connections.first?.state == .ended)
-        #expect(try riley.sharing.currentData().outbox.isEmpty)
+        #expect(try riley.keptSharing().outbox.isEmpty)
     }
 
     @Test func deleteAllDataRevokesAnOpenInvite() async throws {
@@ -117,7 +120,7 @@ struct DeleteAllDataSharingTests {
         try await riley.model.deleteAllData()
 
         #expect(riley.adapter.revoked.count == 1)
-        #expect(riley.sharing.data.connections.isEmpty)
+        #expect(try riley.keptSharing().connections.isEmpty)
     }
 
     @Test func aPersonWithNoConnectionsSeesNothingNew() async throws {
@@ -129,7 +132,7 @@ struct DeleteAllDataSharingTests {
 
         try await riley.model.deleteAllData()
 
-        #expect(riley.sharing.data == SharingData(accountID: account))
+        #expect(try riley.keptSharing() == SharingData(accountID: account))
         #expect(riley.adapter.submitted.isEmpty)
         #expect(riley.model.engine.reminders.isEmpty)
     }

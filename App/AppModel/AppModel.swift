@@ -62,13 +62,14 @@ final class AppModel {
     private let tagsSortRecord: TagsSortRecord
     /// Where a Done waits while the store can't be read (ticket 32).
     private let doneQueue: DoneQueue
+    /// Settings' Sharing switch (#387, #388), which makes the sharing model and lets it go.
+    private let sharingSwitch: SharingSwitch
+
     /// What sharing keeps and does (ticket 192), or `nil` while Settings' Sharing switch is off
-    /// (#387). Every sharing screen shows only with one, and with none no sharing work runs. It reads
-    /// its own store and reports to no one but itself, so nothing here waits for it or changes with it.
-    private(set) var sharing: SharingModel?
-    /// Makes the sharing model when the switch turns on, or `nil` where the app has none to make.
-    private let makeSharing: () -> SharingModel?
-    private let sharingSwitch: SharingSwitchRecord
+    /// (#387). Every sharing screen shows only with one, and with none no sharing work the person
+    /// sees runs. It reads its own store and reports to no one but itself, so nothing here waits for
+    /// it or changes with it.
+    var sharing: SharingModel? { sharingSwitch.model }
 
     /// Settings' Sharing switch (#387).
     var isSharingOn: Bool { sharing != nil }
@@ -109,8 +110,7 @@ final class AppModel {
         self.remindersSortRecord = remindersSortRecord
         self.tagsSortRecord = tagsSortRecord
         self.doneQueue = doneQueue
-        self.makeSharing = makeSharing
-        self.sharingSwitch = sharingSwitch
+        self.sharingSwitch = SharingSwitch(model: sharing, record: sharingSwitch, make: makeSharing)
         onboarding = onboardingRecord.isFinished ? nil : .welcome
         scheduler = CombinedSchedulerAdapter(adapters: [notifications, alarms])
         // Never handed an event before `launch()` replaces it, so it never applies a plan.
@@ -118,61 +118,67 @@ final class AppModel {
         // Here rather than after launch, so no report is missed: each one waits for launch.
         notifications.events = self
         alarms.events = self
-        if let sharing {
-            adopt(sharing)
-        } else {
-            makeSharingIfOn()
-        }
-    }
-
-    /// Makes the sharing model, if the switch's record is on and none is made yet: at init, and
-    /// again once the store opens, since the record reads off before the first unlock. The switch
-    /// being on lets the app ask iCloud (#387), and launch's account read follows.
-    private func makeSharingIfOn() {
-        guard sharingSwitch.isOn else { return }
-        makeSharingFromSwitch()?.allowICloud(refreshing: false)
-    }
-
-    /// The switch's sharing model, made and adopted, or `nil` if there's one already or none to make.
-    private func makeSharingFromSwitch() -> SharingModel? {
-        guard sharing == nil, let made = makeSharing() else { return nil }
-        adopt(made)
-        return made
+        self.sharingSwitch.start(reportingTo: self)
     }
 
     /// Settings' Sharing switch (#387). On makes sharing at once and asks iCloud, so without it the
-    /// paused messages (#210) say why. Off stops sharing and lets it go at once, so no sync, account
-    /// read or status report runs, but only when `canTurnSharingOffAtOnce`; otherwise it stays on,
-    /// as turning off then needs #388's confirmation. Either way the record keeps the choice, even
-    /// in a launch the Debug stand-in turned on.
+    /// paused messages (#210) say why. Off happens here only when `sharingOff` is `atOnce`, and a
+    /// failure is silent: Settings asks and reports a failure itself, and calls
+    /// `turnSharingOff(choosing:)` (#388). Either way the record keeps the choice, even in a launch
+    /// the Debug stand-in turned on.
     func setSharing(on: Bool) {
         if on {
-            guard let made = makeSharingFromSwitch() else { return }
-            sharingSwitch.isOn = true
-            made.allowICloud()
-        } else {
-            guard let sharing, canTurnSharingOffAtOnce else { return }
-            sharingSwitch.isOn = false
-            sharing.stop()
-            sharing.receivedReminders = nil
-            sharing.noticePoster = nil
-            self.sharing = nil
+            sharingSwitch.turnOn()
+        } else if sharingOff == .atOnce {
+            try? turnSharingOff(choosing: .remove)
         }
     }
 
-    /// Whether the Sharing switch can turn off with no confirmation (#387): its store has been read
-    /// and holds no connection, invite, sent reminder or change waiting to sync, and no reminder was
-    /// received. Otherwise turning off is #388's. True while it's off.
-    var canTurnSharingOffAtOnce: Bool {
+    /// Whether the Sharing switch can turn off yet (#387): its reminders and its store have been
+    /// read. Cheap, for a view's body; true while it's off.
+    var canTurnSharingOff: Bool {
         guard let sharing else { return true }
-        return sharing.hasReadStore && !sharing.data.holdsSharing && !engine.hasReceivedReminders
+        guard sharing.hasReadStore, case .ready = launchState, store != nil else { return false }
+        return true
     }
 
-    /// Hands sharing what it reports to, and keeps it.
-    private func adopt(_ sharing: SharingModel) {
-        sharing.receivedReminders = self
-        sharing.noticePoster = self
-        self.sharing = sharing
+    /// What turning Sharing off takes (#388), or `nil` while it's off. Anything it would delete is
+    /// asked about first, as every destructive action is: a connection, an invite, a reminder sent
+    /// or received.
+    var sharingOff: SharingOff? {
+        guard let sharing else { return nil }
+        guard canTurnSharingOff else { return .notYet }
+        let connections = sharing.data.connections
+        let received = engine.reminders.count(where: \.isReceived)
+        guard !connections.isEmpty || !sharing.data.sentReminders.isEmpty || received > 0 else { return .atOnce }
+        return .confirm(SharingOffSummary(
+            connected: connections.count { $0.state == .connected },
+            invited: connections.count { $0.state == .invited },
+            received: received
+        ))
+    }
+
+    /// The Turn Off Sharing sheet's confirmation (#388), and Settings' switch with nothing to
+    /// delete: Disconnect for everyone at once. Every connection ends as Disconnect ends it, so each
+    /// other person sees Connection Ended; every open invite is revoked; the Sent list, its history
+    /// and the connection settings go (`SharingModel.deleteEverything`). `choice` is done to every
+    /// reminder received, as Disconnect does it. The sharing store goes first, so one that won't
+    /// keep it changes nothing. Then the switch turns off, and sharing winds down until the
+    /// disconnects have reached iCloud (`SharingSwitch`). Throws if the reminders haven't been read,
+    /// or the sharing store won't keep it.
+    func turnSharingOff(choosing choice: DisconnectChoice) throws {
+        guard sharing != nil else { return }
+        guard case .ready = launchState, store != nil else { throw RemindersNotLoaded() }
+        let connectionIDs = Set(engine.reminders.compactMap(\.receivedThrough))
+        try disconnectEveryoneAndTurnSharingOff()
+        endReceiving(through: connectionIDs, choosing: choice)
+    }
+
+    /// Ends every connection and turns the switch off, so no status report goes out for a copy that
+    /// is going. Turn Off Sharing's and Delete All Data's.
+    private func disconnectEveryoneAndTurnSharingOff() throws {
+        try sharing?.deleteEverything()
+        sharingSwitch.turnOff()
     }
 
     /// Launch, after setting aside a launch that couldn't read the store. Before the first unlock
@@ -237,7 +243,7 @@ final class AppModel {
         self.engine = engine
         launchState = .ready
         // The switch's record read off before the first unlock, as onboarding's did.
-        makeSharingIfOn()
+        sharingSwitch.makeAsRecorded()
         // Not awaited: sharing's store and iCloud account must never hold up personal reminders.
         sharing?.refreshAccountState()
         // The file goes only once its Dones are saved; until then the next launch merges them
@@ -660,9 +666,11 @@ final class AppModel {
         if let sharingFailure { throw sharingFailure }
     }
 
-    /// Delete All Data's sharing step: `nil` when it worked or there is no sharing, else why not.
+    /// Delete All Data's sharing step: disconnects everyone and turns Sharing off (#388), with the
+    /// received reminders already gone. `nil` when it worked or there is no sharing, else why not,
+    /// and then Sharing stays on.
     private func deleteSharing() -> (any Error)? {
-        do { try sharing?.deleteEverything(); return nil } catch { return error }
+        do { try disconnectEveryoneAndTurnSharingOff(); return nil } catch { return error }
     }
 
     /// Returns once both adapters have applied every plan handed to them so far, including the

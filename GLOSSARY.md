@@ -137,7 +137,7 @@ The number on the app's home-screen icon: how many reminders have an occurrence 
 The number on the Now tab: how many reminders have an occurrence that is Nudging. The Icon badge shows the same count.
 
 **Sharing**:
-The whole feature of sending reminders to people and receiving theirs: Connections, Invites, Sent reminders and Received reminders. A person turns it on or off with one switch, and while it's off none of it exists for them. It starts off.
+The whole feature of sending reminders to people and receiving theirs: Connections, Invites, Sent reminders and Received reminders. A person turns it on or off with one switch, and while it's off none of it exists for them. It starts off. Turning it off asks first whenever it would delete anything (a Connection, an Invite, a reminder sent or received), then ends every Connection as a Disconnect does, cancels every Invite and deletes the Sent list; turning it on again starts fresh.
 _Avoid_: Shared reminders (for the feature), social, family sharing
 
 **Connection**:
