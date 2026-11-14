@@ -21,57 +21,93 @@ struct RemindersFilterSheetView: View {
             TagChoiceSections(choice: draft.tags, sheet: sheet.tags) {
                 EmptyView()
             }
-            statusSection(draft)
-            strengthSection(draft)
+            StatusFilterSection(
+                statuses: RemindersFilter.Status.allCases,
+                title: \.title,
+                isChosen: draft.wrappedValue.isChosen,
+                toggle: { draft.wrappedValue.toggle($0) },
+                footer: Text("Shows reminders with any checked status.", comment: "Reminders' filter sheet: under the list of statuses.")
+            )
+            StrengthFilterSection(isChosen: draft.wrappedValue.isChosen) { draft.wrappedValue.toggle($0) }
             if sheet.offersFromOthers {
                 FromOthersSection(isChecked: draft.wrappedValue.fromOthers) { draft.wrappedValue.toggleFromOthers() }
             }
-            dueDateSection(draft)
+            DueDateFilterSection(
+                engine: engine,
+                from: Binding { draft.wrappedValue.dueFrom } set: { draft.wrappedValue.setDueFrom($0) },
+                to: Binding { draft.wrappedValue.dueTo } set: { draft.wrappedValue.setDueTo($0) },
+                footer: Text("Both days are included. A reminder with nothing more coming is found by its last due date.", comment: "Reminders' filter sheet: under the first and last day a reminder may be due.")
+            )
         }
     }
+}
 
-    private func statusSection(_ draft: Binding<RemindersFilterChoices>) -> some View {
+/// The Status section of the Reminders and Filter Sent sheets: a checkmark row for each status the
+/// sheet offers. `footer` says what a checked status matches on each.
+struct StatusFilterSection<Status: Hashable>: View {
+    let statuses: [Status]
+    let title: (Status) -> LocalizedStringResource
+    let isChosen: (Status) -> Bool
+    let toggle: (Status) -> Void
+    let footer: Text
+
+    var body: some View {
         Section {
-            ForEach(RemindersFilter.Status.allCases, id: \.self) { status in
-                CheckmarkRow(title: Text(status.title), isChecked: draft.wrappedValue.isChosen(status)) { draft.wrappedValue.toggle(status) }
+            ForEach(statuses, id: \.self) { status in
+                CheckmarkRow(title: Text(title(status)), isChecked: isChosen(status)) { toggle(status) }
             }
         } header: {
-            Text("Status", comment: "Reminders' filter sheet: header of the list of statuses.")
+            Text("Status", comment: "The Reminders and Filter Sent sheets: header of the list of statuses.")
         } footer: {
-            Text("Shows reminders with any checked status.", comment: "Reminders' filter sheet: under the list of statuses.")
+            footer
         }
     }
+}
 
-    private func strengthSection(_ draft: Binding<RemindersFilterChoices>) -> some View {
+/// The Strength section of the Reminders and Filter Sent sheets: a checkmark row for each strength.
+struct StrengthFilterSection: View {
+    let isChosen: (Strength) -> Bool
+    let toggle: (Strength) -> Void
+
+    var body: some View {
         Section {
             ForEach(Strength.formOrder, id: \.self) { strength in
-                CheckmarkRow(title: Text(strength.title), isChecked: draft.wrappedValue.isChosen(strength)) { draft.wrappedValue.toggle(strength) }
+                CheckmarkRow(title: Text(strength.title), isChecked: isChosen(strength)) { toggle(strength) }
             }
         } header: {
-            Text("Strength", comment: "Reminders' filter sheet: header of the list of strengths.")
+            Text("Strength", comment: "The Reminders and Filter Sent sheets: header of the list of strengths.")
         } footer: {
-            Text("Shows reminders with any checked strength.", comment: "Reminders' filter sheet: under the list of strengths.")
+            Text("Shows reminders with any checked strength.", comment: "The Reminders and Filter Sent sheets: under the list of strengths.")
         }
     }
+}
 
-    private func dueDateSection(_ draft: Binding<RemindersFilterChoices>) -> some View {
+/// The Due Date section of the Reminders and Filter Sent sheets: From and To, each a switch with a
+/// date picker, neither passing the other. `footer` says how each sheet finds a reminder's day.
+struct DueDateFilterSection: View {
+    let engine: Engine
+    @Binding var from: CalendarDay?
+    @Binding var to: CalendarDay?
+    let footer: Text
+
+    var body: some View {
         Section {
             DueDateRow(
-                title: Text("From", comment: "Reminders' filter sheet: the switch and date picker for the first day a reminder may be due."),
+                title: Text("From", comment: "The Reminders and Filter Sent sheets: the switch and date picker for the first day a reminder may be due."),
                 engine: engine,
-                day: Binding { draft.wrappedValue.dueFrom } set: { draft.wrappedValue.setDueFrom($0) },
-                range: .distantPast...(draft.wrappedValue.dueTo.map(engine.startOfDay) ?? .distantFuture)
+                day: $from,
+                range: .distantPast...(to.map(engine.startOfDay) ?? .distantFuture)
             )
             DueDateRow(
-                title: Text("To", comment: "Reminders' filter sheet: the switch and date picker for the last day a reminder may be due."),
+                title: Text("To", comment: "The Reminders and Filter Sent sheets: the switch and date picker for the last day a reminder may be due."),
                 engine: engine,
-                day: Binding { draft.wrappedValue.dueTo } set: { draft.wrappedValue.setDueTo($0) },
-                range: (draft.wrappedValue.dueFrom.map(engine.startOfDay) ?? .distantPast)...(.distantFuture)
+                day: $to,
+                range: (from.map(engine.startOfDay) ?? .distantPast)...(.distantFuture)
             )
         } header: {
-            Text("Due Date", comment: "Reminders' filter sheet: header of the first and last day a reminder may be due.")
+            Text("Due Date", comment: "The Reminders and Filter Sent sheets: header of the first and last day a reminder may be due.")
         } footer: {
-            Text("Both days are included. A reminder with nothing more coming is found by its last due date.", comment: "Reminders' filter sheet: under the first and last day a reminder may be due.")
+            footer
         }
     }
 }

@@ -31,7 +31,9 @@ struct RemindersTab: View {
     @State private var keptOrder = RemindersKeptOrder()
     /// What's applied from the filter sheet.
     @State private var choices = RemindersFilterChoices()
-    @State private var isFiltering = false
+    /// The filter sheet open, Mine's or Sent's: the side chosen when it opened, so the sheet can't
+    /// turn into the other side's under the person.
+    @State private var openFilterSheet: MineOrSent?
     /// Apply was tapped, so the count takes VoiceOver when the sheet has closed.
     @State private var wasApplied = false
     /// Each one puts VoiceOver on the count.
@@ -44,15 +46,15 @@ struct RemindersTab: View {
     @State private var previewSort = RemindersSort.createdOldestFirst
     /// Mine or Sent (ticket 201).
     @State private var mineOrSentChoice = MineOrSent.mine
-    /// Sent's own search and Sort (ticket 328), apart from Mine's, as the mockup's `sentTools` keeps
-    /// them. Screen state, both: a launch starts Sent on Created, Oldest First, with no search.
-    @State private var sentSearchText = ""
-    @State private var sentSort = RemindersSort.createdOldestFirst
+    /// Sent's own search, Sort and Filter (tickets 328 and 329), apart from Mine's.
+    @State private var sentTools = SentTools()
 
     /// The Mine | Sent control's choices.
-    enum MineOrSent: Hashable, CaseIterable {
+    enum MineOrSent: Hashable, CaseIterable, Identifiable {
         case mine
         case sent
+
+        var id: Self { self }
 
         var title: Text {
             switch self {
@@ -68,11 +70,12 @@ struct RemindersTab: View {
                 TimelineView(.everyMinute) { _ in
                     if mineOrSentChoice == .sent, let model, let sharing = model.sharing {
                         SentList(
-                            screen: SentScreen(engine: model.engine, sharing: sharing.data, sort: sentSort, search: sentSearchText),
+                            screen: SentScreen(engine: model.engine, sharing: sharing.data, tools: sentTools),
                             sharing: sharing,
                             manageConnections: manageConnections,
+                            countFocusRequests: countFocusRequests,
                             openDetails: { path.append(OpenedSentReminder(id: $0)) },
-                            clearSearch: { sentSearchText = "" }
+                            clearSearchAndFilters: { sentTools.clearSearchAndFilter() }
                         )
                     } else {
                         mine
@@ -95,9 +98,9 @@ struct RemindersTab: View {
             .onChange(of: hasReminders) {
                 if !hasReminders { clearSearchAndFilter() }
             }
-            // Sent's field goes with its last reminder too.
+            // Sent's field and Filter go with its last reminder too.
             .onChange(of: sentHasTools) {
-                if !sentHasTools { sentSearchText = "" }
+                if !sentHasTools { sentTools.clearSearchAndFilter() }
             }
             .navigationTitle(Text(AppTab.reminders.title))
             .reminderDetailsDestination()
@@ -108,7 +111,7 @@ struct RemindersTab: View {
                         FilterButton(
                             sectionsInUse: appliedChoices.sectionsInUse,
                             showsBadge: !dynamicTypeSize.isAccessibilitySize,
-                            open: { isFiltering = true },
+                            open: { openFilterSheet = .mine },
                             clear: {
                                 apply(RemindersFilterChoices())
                                 countFocusRequests += 1
@@ -121,25 +124,38 @@ struct RemindersTab: View {
                     // Filter and Sort share a glass group, and New stands apart (Brian, #113).
                     ToolbarSpacer(.fixed, placement: .topBarTrailing)
                 }
-                // Sent's Sort, where Mine's is. Its Filter, before it, is #329's.
-                if mineOrSentChoice == .sent, sentHasTools {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        RemindersSortButton(sort: $sentSort.transaction(Self.noAnimation))
-                    }
-                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
+                if mineOrSentChoice == .sent, sentHasTools, let sharing = model?.sharing {
+                    SentToolbarItems(
+                        tools: $sentTools,
+                        sharing: sharing.data,
+                        showsBadge: !dynamicTypeSize.isAccessibilitySize,
+                        openFilter: { openFilterSheet = .sent },
+                        didClearFilters: { countFocusRequests += 1 }
+                    )
                 }
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
             }
             // Closing the sheet moves VoiceOver to the bar's New button, which cut an announcement of
             // the count off (seen on the iPhone), so it goes to the count, as Clear Filters does.
-            .sheet(isPresented: $isFiltering, onDismiss: {
+            .sheet(item: $openFilterSheet, onDismiss: {
                 if wasApplied { countFocusRequests += 1 }
                 wasApplied = false
-            }) {
-                if let engine {
-                    RemindersFilterSheetView(engine: engine, applied: appliedChoices, search: searchText) {
-                        apply($0)
-                        wasApplied = true
+            }) { side in
+                switch side {
+                case .mine:
+                    if let engine {
+                        RemindersFilterSheetView(engine: engine, applied: appliedChoices, search: searchText) {
+                            apply($0)
+                            wasApplied = true
+                        }
+                    }
+                case .sent:
+                    if let model, let sharing = model.sharing {
+                        SentFilterSheetView(engine: model.engine, sharing: sharing.data, applied: sentTools.filter, search: sentTools.search) {
+                            let applied = $0
+                            withTransaction(Self.noAnimation) { sentTools.filter = applied }
+                            wasApplied = true
+                        }
                     }
                 }
             }
@@ -232,8 +248,8 @@ struct RemindersTab: View {
     }
 
     /// A filter or a Sort choice redraws the list at once, as the mockup does. Only a row a state
-    /// change takes out animates.
-    private static let noAnimation = {
+    /// change takes out animates. Sent's toolbar items use it too.
+    static let noAnimation = {
         var transaction = Transaction()
         transaction.disablesAnimations = true
         return transaction
@@ -241,7 +257,7 @@ struct RemindersTab: View {
 
     /// Typing redraws the list at once. Mine's text or Sent's, whichever is chosen.
     private var searchField: Binding<String> {
-        (mineOrSentChoice == .mine ? $searchText : $sentSearchText).transaction(Self.noAnimation)
+        (mineOrSentChoice == .mine ? $searchText : $sentTools.search).transaction(Self.noAnimation)
     }
 
     /// The model's, which outlives a relaunch, or the previews' own.
@@ -313,7 +329,7 @@ private struct RemindersListView: View {
                         )
                     }
                     if screen.emptyState == .noMatch {
-                        RemindersNoMatchView(filter: filter) {
+                        RemindersNoMatchView(wording: filter) {
                             clearFilters()
                             // Asks VoiceOver to go to the count; iOS picks where it lands (SearchResultsContainer).
                             didClear()
@@ -337,25 +353,25 @@ private struct RemindersListView: View {
 }
 
 /// Says nothing matches, never that there are no reminders, and names what's narrowing the list.
-/// Sent shows it too, for its search (ticket 328).
-struct RemindersNoMatchView: View {
-    let filter: RemindersFilter
+/// Sent shows it too, with its own wording for its filters (tickets 328 and 329).
+struct RemindersNoMatchView<Wording: NoMatchWording>: View {
+    let wording: Wording
     let clear: () -> Void
 
     var body: some View {
         ContentUnavailableView {
             Label {
-                Text(filter.noMatchTitle)
+                Text(wording.noMatchTitle)
             } icon: {
-                Image(systemName: filter.noMatchSystemImage)
+                Image(systemName: wording.noMatchSystemImage)
             }
         } description: {
-            if let text = filter.noMatchText {
+            if let text = wording.noMatchText {
                 Text(text)
             }
         } actions: {
             Button(action: clear) {
-                Text(filter.noMatchClearTitle)
+                Text(wording.noMatchClearTitle)
             }
             .buttonStyle(.bordered)
         }
@@ -463,21 +479,21 @@ private struct RemindersRowView: View {
 
 #Preview("No match, filters") {
     List {
-        RemindersNoMatchView(filter: RemindersFilter(statuses: [.nudging, .paused])) {}
+        RemindersNoMatchView(wording: RemindersFilter(statuses: [.nudging, .paused])) {}
             .listRowBackground(Color.clear)
     }
 }
 
 #Preview("No match, search") {
     List {
-        RemindersNoMatchView(filter: RemindersFilter(search: "zebra")) {}
+        RemindersNoMatchView(wording: RemindersFilter(search: "zebra")) {}
             .listRowBackground(Color.clear)
     }
 }
 
 #Preview("No match, search and filters") {
     List {
-        RemindersNoMatchView(filter: RemindersFilter(statuses: [.missed], search: "zebra")) {}
+        RemindersNoMatchView(wording: RemindersFilter(statuses: [.missed], search: "zebra")) {}
             .listRowBackground(Color.clear)
     }
 }

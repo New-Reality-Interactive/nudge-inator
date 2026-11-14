@@ -3,8 +3,8 @@ import SwiftUI
 
 /// The Reminders tab's Sent view (ticket 201, the mockup's `viewSentTab`): what this person sent,
 /// grouped under each person it went to, each row opening the sent reminder's details. Rows have no
-/// swipe (DESIGN.md, Sent rows). The count header leads the groups (ticket 328); the search field
-/// and Sort are the tab's, and Filter is #329's.
+/// swipe (DESIGN.md, Sent rows). The count header leads the groups (ticket 328); the search field,
+/// Filter and Sort are the tab's (tickets 328 and 329).
 ///
 /// With no one connected it offers Invite Someone and Manage People, and with nothing sent New
 /// Reminder (ticket 202). Neither empty state has tools (DESIGN.md, Sent's tools). While sharing
@@ -15,9 +15,12 @@ struct SentList: View {
     let sharing: SharingModel?
     /// Manage People: Settings › Connections.
     let manageConnections: () -> Void
+    /// Each new value puts VoiceOver on the count, which reads the result itself: Apply and Clear
+    /// All Filters, as on Mine.
+    let countFocusRequests: Int
     let openDetails: (Reminder.ID) -> Void
-    /// The no-match state's Clear Search.
-    let clearSearch: () -> Void
+    /// The no-match state's button: Clear Search, Clear Filters, or both.
+    let clearSearchAndFilters: () -> Void
 
     /// Invite Someone's flow, kept here above the empty states, so an invite under way isn't lost
     /// when someone connects and No One to Send To goes.
@@ -37,17 +40,18 @@ struct SentList: View {
         case .nothingSent:
             NothingSentView(banner: banner)
         case .noMatch, nil:
-            SentGroups(screen: screen, banner: banner, clearSearch: clearSearch, openDetails: openDetails)
+            SentGroups(screen: screen, banner: banner, countFocusRequests: countFocusRequests, clearSearchAndFilters: clearSearchAndFilters, openDetails: openDetails)
         }
     }
 }
 
-/// Sent's groups under the count header (ticket 328), or Mine's no-match state when the search
-/// leaves none. Cancel and Clear Search put VoiceOver on the count, as on Mine.
+/// Sent's groups under the count header (ticket 328), or the no-match state when the search and
+/// filters leave none. Cancel and the no-match state's button put VoiceOver on the count, as on Mine.
 private struct SentGroups: View {
     let screen: SentScreen
     let banner: SharingBanner?
-    let clearSearch: () -> Void
+    let countFocusRequests: Int
+    let clearSearchAndFilters: () -> Void
     let openDetails: (Reminder.ID) -> Void
 
     @AccessibilityFocusState private var countFocused: Bool
@@ -57,8 +61,8 @@ private struct SentGroups: View {
             List {
                 Section {
                     if screen.emptyState == .noMatch {
-                        RemindersNoMatchView(filter: RemindersFilter(search: screen.search)) {
-                            clearSearch()
+                        RemindersNoMatchView(wording: screen.noMatch) {
+                            clearSearchAndFilters()
                             didClear()
                         }
                         .listRowBackground(Color.clear)
@@ -83,6 +87,7 @@ private struct SentGroups: View {
                 }
             }
         }
+        .onChange(of: countFocusRequests) { countFocused = true }
     }
 }
 
@@ -327,7 +332,7 @@ private extension SentScreen {
     /// The pills sent to Riley and Sam, delivered to Riley; a call sent to Sam alone.
     static var preview: SentScreen { preview() }
 
-    static func preview(sort: RemindersSort = .createdOldestFirst, search: String = "") -> SentScreen {
+    static func preview(sort: RemindersSort = .createdOldestFirst, search: String = "", filter: SentFilterChoices = SentFilterChoices()) -> SentScreen {
         let pills = Reminder(title: "Take the pills", dueTime: .now.addingTimeInterval(3600), repeatRule: .everyDay, strength: .firm)
         let call = Reminder(title: "Call the clinic", dueTime: .now.addingTimeInterval(7200), strength: .gentle)
         let riley = SharingConnection(id: UUID(), name: "Riley Park", state: .connected)
@@ -339,13 +344,13 @@ private extension SentScreen {
             SentCopy(connectionID: sam.id, reminderID: pills.id, createdAt: .now, receipt: .started, statusRecord: nil),
             SentCopy(connectionID: sam.id, reminderID: call.id, createdAt: .now.addingTimeInterval(60), receipt: .notDelivered, statusRecord: nil),
         ]
-        return SentScreen(engine: .myDayPreview(), sharing: sharing, sort: sort, search: search)
+        return SentScreen(engine: .myDayPreview(), sharing: sharing, tools: SentTools(search: search, sort: sort, filter: filter))
     }
 }
 
 private extension SentList {
     init(preview screen: SentScreen) {
-        self.init(screen: screen, sharing: nil, manageConnections: {}, openDetails: { _ in }, clearSearch: {})
+        self.init(screen: screen, sharing: nil, manageConnections: {}, countFocusRequests: 0, openDetails: { _ in }, clearSearchAndFilters: {})
     }
 }
 
@@ -376,6 +381,12 @@ private extension SentScreen {
 
 #Preview("No match, search") {
     SentList(preview: .preview(search: "zebra"))
+}
+
+#Preview("No match, filters") {
+    var relentless = SentFilterChoices()
+    relentless.toggle(.relentless)
+    return SentList(preview: .preview(filter: relentless))
 }
 
 #Preview("Sorted by Due Date, Latest First") {

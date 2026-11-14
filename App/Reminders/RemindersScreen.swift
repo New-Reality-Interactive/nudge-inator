@@ -108,33 +108,43 @@ struct RemindersScreen {
     }
 }
 
-/// The no-match empty state's wording, which names what's narrowing the list. Each case is a whole
-/// string, as the mockup's `noMatch()` draws them.
-extension RemindersFilter {
+/// The no-match empty state's wording, which names what's narrowing the list: Mine's, and Sent's
+/// (ticket 329). Each case is a whole string, as the mockup draws them.
+protocol NoMatchWording {
+    /// "No Matches", or "No Results for “…”" with a search.
+    var noMatchTitle: LocalizedStringResource { get }
+    /// The line under the title, or `nil` when nothing names what's narrowing the list.
+    var noMatchText: LocalizedStringResource? { get }
+    /// The label of the button that turns off whatever's narrowing the list.
+    var noMatchClearTitle: LocalizedStringResource { get }
+    /// The SF Symbol above the title: a magnifying glass with a search, the filter's lines without.
+    var noMatchSystemImage: String { get }
+}
+
+/// Mine's wording, the mockup's `noMatch()`.
+extension RemindersFilter: NoMatchWording {
     var noMatchTitle: LocalizedStringResource {
         if search.isEmpty {
-            LocalizedStringResource("No Matches", comment: "Reminders tab: title when reminders exist but what's narrowing the list leaves none.")
+            LocalizedStringResource("No Matches", comment: "Reminders tab, Mine and Sent: title when reminders exist but what's narrowing the list leaves none.")
         } else {
-            LocalizedStringResource("No Results for “\(search)”", comment: "Reminders tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces.")
+            LocalizedStringResource("No Results for “\(search)”", comment: "Reminders tab, Mine and Sent: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces.")
         }
     }
 
-    /// The line under the title, or `nil` when nothing names what's narrowing the list.
     var noMatchText: LocalizedStringResource? {
         switch (hasSheetFilters, search.isEmpty) {
         case (true, true): LocalizedStringResource("No reminders with these filters.", comment: "Reminders tab: under the title when the filter sheet's filters leave nothing.")
         case (true, false): LocalizedStringResource("No reminders with these filters match this search.", comment: "Reminders tab: under the title when a search finds nothing under the filter sheet's filters.")
-        case (false, false): LocalizedStringResource("Check the spelling or try a new search.", comment: "Reminders tab: under the title when a search alone finds nothing.")
+        case (false, false): LocalizedStringResource("Check the spelling or try a new search.", comment: "Reminders tab, Mine and Sent: under the title when a search alone finds nothing.")
         case (false, true): nil
         }
     }
 
-    /// The label of the button that turns off whatever's narrowing the list.
     var noMatchClearTitle: LocalizedStringResource {
         switch (hasSheetFilters, search.isEmpty) {
-        case (false, false): LocalizedStringResource("Clear Search", comment: "Reminders tab: the no-match empty state's button when only a search is narrowing the list.")
-        case (true, false): LocalizedStringResource("Clear Search and Filters", comment: "Reminders tab: the no-match empty state's button when a search and filters are narrowing the list.")
-        default: LocalizedStringResource("Clear Filters", comment: "Reminders tab: the no-match empty state's button that turns off what's narrowing the list.")
+        case (false, false): LocalizedStringResource("Clear Search", comment: "Reminders tab, Mine and Sent: the no-match empty state's button when only a search is narrowing the list.")
+        case (true, false): LocalizedStringResource("Clear Search and Filters", comment: "Reminders tab, Mine and Sent: the no-match empty state's button when a search and filters are narrowing the list.")
+        default: LocalizedStringResource("Clear Filters", comment: "Reminders tab, Mine and Sent: the no-match empty state's button that turns off what's narrowing the list.")
         }
     }
 

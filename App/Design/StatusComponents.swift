@@ -103,13 +103,13 @@ extension OccurrenceState {
     var statusName: LocalizedStringResource {
         switch self {
         case .done:
-            LocalizedStringResource("Done", comment: "Status label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.")
+            LocalizedStringResource("Done", comment: "Status label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed as Done.")
         case .nudging:
-            LocalizedStringResource("Nudging", comment: "Status label, and a Status row in the Reminders filter sheet: an occurrence that has come due and isn't Done yet.")
+            LocalizedStringResource("Nudging", comment: "Status label, and a Status row in the Reminders and Filter Sent sheets: an occurrence that has come due and isn't Done yet.")
         case .missed:
-            LocalizedStringResource("Missed", comment: "Status label, and a Status row in the Reminders filter sheet: an occurrence closed without Done, by its give-up limit or a take-over.")
+            LocalizedStringResource("Missed", comment: "Status label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed without Done, by its give-up limit or a take-over.")
         case .skipped:
-            LocalizedStringResource("Skipped", comment: "Status label, and a Status row in the Reminders filter sheet: an occurrence closed because its reminder was paused.")
+            LocalizedStringResource("Skipped", comment: "Status label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed because its reminder was paused.")
         }
     }
 }
@@ -286,7 +286,7 @@ extension ReportedStatus {
         case .done: OccurrenceState.done.statusName
         case .missed: OccurrenceState.missed(reason: .giveUpLimit).statusName
         case .skipped: OccurrenceState.skipped(reason: .paused).statusName
-        case .removed: LocalizedStringResource("Removed", comment: "Status label on a Sent row: the person removed their copy of the reminder.")
+        case .removed: LocalizedStringResource("Removed", comment: "Status label on a Sent row, and a Status row in the Filter Sent sheet: the person removed their copy of the reminder.")
         }
     }
 }
@@ -297,8 +297,8 @@ extension ReminderStatus {
         switch self {
         case .nudging: OccurrenceState.nudging(nudgeNumber: 0).statusName
         case .closed(let state): state.statusName
-        case .paused: LocalizedStringResource("Paused", comment: "Status label, and a Status row in the Reminders filter sheet: the reminder is paused.")
-        case .comingUp: LocalizedStringResource("Coming up", comment: "Status label, and a Status row in the Reminders filter sheet: the reminder isn't due yet.")
+        case .paused: LocalizedStringResource("Paused", comment: "Status label, and a Status row in the Reminders and Filter Sent sheets: the reminder is paused.")
+        case .comingUp: LocalizedStringResource("Coming up", comment: "Status label, and a Status row in the Reminders and Filter Sent sheets: the reminder isn't due yet.")
         case .waiting: LocalizedStringResource("Waiting", comment: "Status label: a reminder someone sent is waiting for the person to accept it, so it doesn't nudge yet.")
         case .canceled: LocalizedStringResource("Canceled", comment: "Status label: the person who sent a reminder deleted it, so it no longer nudges.")
         }

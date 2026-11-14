@@ -11,8 +11,9 @@ struct SentScreen {
     let emptyState: EmptyState?
     /// Every reminder Sent lists with nothing narrowing it, each once: the count's "out of" number.
     let total: Int
-    /// The search the rows were narrowed by, trimmed: what the no-match state names.
-    let search: String
+    /// What the no-match state says: the search the rows were narrowed by, and whether the sheet's
+    /// filters narrowed them too.
+    let noMatch: NoMatch
 
     /// What Sent shows in place of its groups: its two empty states, the mockup's `viewSentTab`, and
     /// the no-match state, its `sentNoMatch` (ticket 328).
@@ -83,6 +84,37 @@ struct SentScreen {
         static let notDeliveredText = LocalizedStringResource("Not delivered yet", comment: "Under a sent reminder's title on the Sent view, and under a person's name on its details: their copy hasn't reached their iPhone yet.")
     }
 
+    /// Sent's no-match wording, the mockup's `sentNoMatch` (ticket 329): a search alone reads as on
+    /// Mine, and the sheet's filters name sent reminders.
+    struct NoMatch: NoMatchWording {
+        /// Trimmed.
+        let search: String
+        let isFiltered: Bool
+
+        /// Mine's wording for this search alone: the title and image name only the search, and with
+        /// no filter on, the line and Clear Search read as on Mine.
+        private var searchOnlyWording: RemindersFilter { RemindersFilter(search: search) }
+
+        var noMatchTitle: LocalizedStringResource { searchOnlyWording.noMatchTitle }
+        var noMatchSystemImage: String { searchOnlyWording.noMatchSystemImage }
+
+        var noMatchText: LocalizedStringResource? {
+            switch (isFiltered, search.isEmpty) {
+            case (true, true): LocalizedStringResource("No sent reminders with these filters.", comment: "Reminders tab, Sent: under the title when the Filter Sent sheet's filters leave nothing.")
+            case (true, false): LocalizedStringResource("No sent reminders with these filters match this search.", comment: "Reminders tab, Sent: under the title when a search finds nothing under the Filter Sent sheet's filters.")
+            case (false, _): searchOnlyWording.noMatchText
+            }
+        }
+
+        var noMatchClearTitle: LocalizedStringResource {
+            switch (isFiltered, search.isEmpty) {
+            case (true, true): LocalizedStringResource("Clear Filters", comment: "Reminders tab, Mine and Sent: the no-match empty state's button that turns off what's narrowing the list.")
+            case (true, false): LocalizedStringResource("Clear Search and Filters", comment: "Reminders tab, Mine and Sent: the no-match empty state's button when a search and filters are narrowing the list.")
+            case (false, _): searchOnlyWording.noMatchClearTitle
+            }
+        }
+    }
+
     /// The people the reminder with `reminderID` went to, in the screen's order, each with their row.
     func recipients(of reminderID: Reminder.ID) -> [(person: Person, row: Row)] {
         people.compactMap { person in
@@ -95,19 +127,22 @@ struct SentScreen {
     ///
     /// `search` keeps the rows whose title or notes hold it, as Mine's does (ticket 328), and a
     /// person left with none drops out.
-    init(engine: Engine, sharing: SharingData, sort: RemindersSort = .createdOldestFirst, search: String = "") {
-        let matcher = RemindersFilter(search: search)
-        self.search = matcher.search
-        let connections = Self.connections(in: sharing)
+    init(engine: Engine, sharing: SharingData, tools: SentTools = SentTools()) {
+        let filter = tools.kept(in: sharing).filter
+        let matcher = RemindersFilter(search: tools.search)
+        noMatch = NoMatch(search: matcher.search, isFiltered: !filter.isEmpty)
+        let connections = sharing.sentConnections
         let readOut = Self.readOut(of: sharing, connections: connections)
         let reminders = Self.sentReminders(in: sharing)
         total = Self.countingEachOnce(Self.listedReminderIDs(in: readOut, holding: reminders))
         let sharesStatus = Dictionary(connections.map { ($0.id, $0.sharesStatus) }, uniquingKeysWith: { first, _ in first })
-        people = readOut.people.map { person in
+        people = readOut.people.filter { filter.matches(person: $0.connectionID) }.map { person in
             let rows = person.rows.compactMap { row -> (row: Row, due: Date)? in
                 guard let reminder = reminders[row.reminderID], matcher.matchesSearch(reminder) else { return nil }
                 let due = engine.upcomingDueTimes(of: reminder, count: 1).first ?? reminder.dueTime
+                guard filter.matches(reminder, dueDay: engine.calendarDay(of: due)) else { return nil }
                 let state = SentCopyState(delivery: row.delivery, status: row.status, waitingToSync: row.waitingToSync)
+                guard filter.matches(state) else { return nil }
                 return (Row(
                     reminderID: reminder.id,
                     title: reminder.title,
@@ -122,7 +157,7 @@ struct SentScreen {
                 connectionID: person.connectionID,
                 name: person.name,
                 sharesStatus: sharesStatus[person.connectionID] ?? false,
-                rows: Self.sorted(rows, by: sort)
+                rows: Self.sorted(rows, by: tools.sort)
             )
         }
         .filter { !$0.rows.isEmpty }
@@ -132,7 +167,7 @@ struct SentScreen {
     /// Whether Sent has anything to search and sort: neither of its empty states has its tools
     /// (DESIGN.md, Sent's tools). It builds no rows or due times, so the tab can ask in `body`.
     static func hasTools(in sharing: SharingData) -> Bool {
-        let readOut = readOut(of: sharing, connections: connections(in: sharing))
+        let readOut = readOut(of: sharing, connections: sharing.sentConnections)
         return !listedReminderIDs(in: readOut, holding: sentReminders(in: sharing)).isEmpty
     }
 
@@ -143,12 +178,6 @@ struct SentScreen {
 
     /// The header row's count, worded as Mine's: "3 reminders out of 14" (DESIGN.md, Sent's tools).
     var countText: LocalizedStringResource { RemindersScreen.countText(shown: shownCount, of: total) }
-
-    private static func connections(in sharing: SharingData) -> [SentConnection] {
-        sharing.connections
-            .filter { $0.state == .connected }
-            .map { SentConnection(id: $0.id, name: $0.name, sharesStatus: $0.theirs.sharesStatus) }
-    }
 
     /// Waiting to sync is read from the outbox: the send or a revision not yet through iCloud.
     private static func readOut(of sharing: SharingData, connections: [SentConnection]) -> SentReadOut {
@@ -181,6 +210,18 @@ struct SentScreen {
         }
         let inOrder = ordered.map(\.row)
         return sort.order == .ascending ? inOrder : inOrder.reversed()
+    }
+}
+
+extension SharingData {
+    /// Everyone connected, in the order Sent's groups list them: whom Sent shows and whom the Filter
+    /// Sent sheet's People lists (ticket 329).
+    var sentConnections: [SentConnection] {
+        SentReadOut.inOrder(
+            connections
+                .filter { $0.state == .connected }
+                .map { SentConnection(id: $0.id, name: $0.name, sharesStatus: $0.theirs.sharesStatus) }
+        )
     }
 }
 
