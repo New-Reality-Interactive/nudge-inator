@@ -120,8 +120,8 @@ struct AccountChangeTests {
         riley.model.add(received())
         riley.model.add(received("Feed the cat"))
         try riley.model.send(pills, to: [connectionID])
-        riley.adapter.inviteAnswer = .names(InvitedPerson(name: "Sam Rivera", address: "sam@example.com"))
-        _ = try await riley.sharing.invite()
+        riley.adapter.inviteAnswer = .sent
+        _ = try await riley.sharing.invite(to: InvitedPerson(name: "Sam Rivera", address: "sam@example.com"), via: .copyLink)
         await settle(alex, riley)
 
         riley.adapter.signIn(as: "another-account")
@@ -177,8 +177,8 @@ struct AccountChangeTests {
         riley.model.add(received())
         riley.adapter.signIn(as: "second-account")
         await settle(alex, riley)
-        riley.adapter.inviteAnswer = .names(InvitedPerson(name: "Sam Rivera", address: "sam@example.com"))
-        _ = try await riley.sharing.invite()
+        riley.adapter.inviteAnswer = .sent
+        _ = try await riley.sharing.invite(to: InvitedPerson(name: "Sam Rivera", address: "sam@example.com"), via: .copyLink)
 
         riley.adapter.signIn(as: "third-account")
         await settle(alex, riley)

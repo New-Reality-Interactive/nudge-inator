@@ -1,92 +1,81 @@
 import CloudKit
 import Foundation
+import NudgeEngine
 import UIKit
 
 /// Inviting and accepting (#217), apart from the sync the adapter runs: the connection's zone and
-/// private share, the system sharing sheet, the invite that reaches the other person, and keeping
-/// one person on a share.
+/// private share, the invite that reaches the other person, and keeping one person on a share.
 extension CloudKitSharingAdapter {
-    /// Makes the connection's zone and its private share (or reuses them), shows the system sharing
-    /// sheet for it, and returns who the person invited, or `nil` when they sent it to nobody (the
-    /// zone is then deleted again). Throws if the zone or share couldn't be made or shown, and then
-    /// nothing was sent.
-    func invite(_ connectionID: UUID) async throws -> InvitedPerson? {
+    /// Makes the connection's zone and a private share, adds `person` to it with read-write
+    /// permission, and has `delivery` hand the share's link to the person by `route`. Returns
+    /// `false`, with the zone deleted again, when the delivery was canceled. Throws if the zone or
+    /// share couldn't be made or the address has no Apple Account, and then nothing was sent.
+    func invite(_ connectionID: UUID, to person: InvitedPerson, via route: InviteRoute) async throws -> Bool {
         start()
         guard let sync, let container else { throw NotAvailableYet() }
-        let createdZone = !sync.ownsZone(of: connectionID)
-        let zoneID = createdZone ? sync.makeZone(for: connectionID) : CloudKitSync.ownZoneID(of: connectionID)
+        let zoneID = sync.makeZone(for: connectionID)
         keep()
         do {
             let started = ContinuousClock.now
-            let share = try await zoneShare(in: zoneID, container: container, isNewZone: createdZone)
-            Self.logger.notice("Share ready for the sheet after \(started.duration(to: .now), privacy: .public)")
-            try await InviteSheet.present(share: share, container: container)
-            // What the sheet saved, as iCloud has it. A person invited through Messages can join the
-            // share a few seconds after the sheet closes, so it is read again for a while before the
-            // invite counts as sent to nobody.
-            let invitees = try await inviteesAfterSheet(share.recordID, in: container.privateCloudDatabase)
-            guard let person = InviteParticipant.invitedPerson(among: invitees) else {
-                if createdZone { revokeInvite(connectionID) }
-                return nil
+            let link = try await shareLink(in: zoneID, for: person, container: container)
+            Self.logger.notice("Invite ready after \(started.duration(to: .now), privacy: .public)")
+            guard await delivery.deliver(link, to: person, via: route) else {
+                revokeInvite(connectionID)
+                return false
             }
-            // One person per invite: a second person added in the sheet comes off the share.
-            if let first = invitees.first(where: { $0.status != .other }), let id = first.id {
-                removeOthersOnce(from: connectionID, keeping: id)
-            }
-            return person
+            return true
         } catch {
             Self.logger.error("An invite couldn't be made: \(error, privacy: .public)")
-            if createdZone { revokeInvite(connectionID) }
+            revokeInvite(connectionID)
             throw error
         }
     }
 
-    private func inviteesAfterSheet(_ shareID: CKRecord.ID, in database: CKDatabase) async throws -> [InviteParticipant] {
-        let attempts = 6
-        for attempt in 1...attempts {
-            if attempt > 1 { try await Task.sleep(for: .seconds(2)) }
-            guard let share = try await database.record(for: shareID) as? CKShare else { return [] }
-            // Never public, whatever the sheet's Copy Link offers.
-            if share.publicPermission != .none {
-                Self.logger.notice("A share was public after the sheet; making it private again")
-                share.publicPermission = .none
-                _ = try? await database.modifyRecords(saving: [share], deleting: [])
-            }
-            let invitees = InviteParticipant.invitees(of: share)
-            Self.logger.notice("Share read \(attempt) of \(attempts) after the sheet: \(invitees.count) people")
-            if InviteParticipant.invitedPerson(among: invitees) != nil { return invitees }
-        }
-        return []
-    }
-
-    /// The zone's share: the one it has already, or a new private one. The zone is saved first,
+    /// The link of a new private share of the zone with `person` on it. The zone is saved first,
     /// since a share can only be saved into a zone iCloud has (the engine saves it too; saving it
-    /// twice does no harm).
-    private func zoneShare(in zoneID: CKRecordZone.ID, container: CKContainer, isNewZone: Bool) async throws -> CKShare {
+    /// twice does no harm). Only the person added can open the link.
+    private func shareLink(in zoneID: CKRecordZone.ID, for person: InvitedPerson, container: CKContainer) async throws -> URL {
         let database = container.privateCloudDatabase
         let clock = ContinuousClock()
         let zoneTime = try await clock.measure {
             _ = try await database.modifyRecordZones(saving: [CKRecordZone(zoneID: zoneID)], deleting: [])
         }
         Self.logger.notice("Zone saved in \(zoneTime, privacy: .public)")
-        // A zone made just now has no share to look for.
-        let shareID = CKRecord.ID(recordName: CKRecordNameZoneWideShare, zoneID: zoneID)
-        if !isNewZone, let existing = try? await database.record(for: shareID) as? CKShare { return existing }
+        let participant = try await shareParticipant(for: person, container: container)
+        participant.permission = .readWrite
         let share = CloudKitSync.share(for: zoneID)
-        share[CKShare.SystemFieldKey.title] = String(localized: "Nudge-inator Reminders", comment: "Invite: the title of the share the invite carries, which the sharing sheet and the invitation show.")
-        // The sheet and the invitation show this picture, which for a share made beforehand comes
-        // from the share, not from the sheet's delegate.
+        share[CKShare.SystemFieldKey.title] = String(localized: "Nudge-inator Reminders", comment: "Invite: the title of the share the invite carries, which the invitation shows.")
         share[CKShare.SystemFieldKey.thumbnailImageData] = Self.appIconData()
+        share.addParticipant(participant)
         let shareStart = clock.now
         let saved = try await database.modifyRecords(saving: [share], deleting: [])
         Self.logger.notice("Share saved in \(shareStart.duration(to: .now), privacy: .public)")
         guard let result = saved.saveResults[share.recordID] else { throw NotAvailableYet() }
-        guard let record = try result.get() as? CKShare else { throw NotAvailableYet() }
-        return record
+        guard let record = try result.get() as? CKShare, let url = record.url else { throw NotAvailableYet() }
+        return url
+    }
+
+    /// iCloud's participant for the person's Apple Account, looked up by the address. Throws when
+    /// the address has none, or iCloud can't be reached.
+    private func shareParticipant(for person: InvitedPerson, container: CKContainer) async throws -> CKShare.Participant {
+        let results: [String: Result<CKShare.Participant, any Error>]
+        let key: String
+        switch InviteAddressKind(address: person.address) {
+        case .phone:
+            // A phone number as iCloud takes it: digits, with a leading + kept.
+            let trimmed = person.address.trimmingCharacters(in: .whitespaces)
+            key = (trimmed.hasPrefix("+") ? "+" : "") + trimmed.filter(\.isNumber)
+            results = try await container.shareParticipants(forPhoneNumbers: [key])
+        case .email, nil:
+            key = person.address.trimmingCharacters(in: .whitespaces)
+            results = try await container.shareParticipants(forEmailAddresses: [key])
+        }
+        guard let result = results[key] ?? results.values.first else { throw NotAvailableYet() }
+        return try result.get()
     }
 
     /// The app icon as PNG data, from the icon files the build puts in the bundle, or `nil` when
-    /// there are none: the sheet then shows its generic picture.
+    /// there are none: the invitation then shows a generic picture.
     private static func appIconData() -> Data? {
         let icons = Bundle.main.infoDictionary?["CFBundleIcons"] as? [String: Any]
         let primary = icons?["CFBundlePrimaryIcon"] as? [String: Any]
@@ -161,18 +150,5 @@ extension CloudKitSharingAdapter {
             // The next fetch of the share tries again.
             Self.logger.error("Other people couldn't be taken off a share: \(error, privacy: .public)")
         }
-    }
-
-    /// Follows what the system sharing sheet saves, for the log of a device check. What the sheet
-    /// saved is read back from iCloud when it closes (`invite`), so this drives nothing.
-    func observeSharingSheet(_ container: CKContainer) {
-        let observer = CKSystemSharingUIObserver(container: container)
-        observer.systemSharingUIDidSaveShareBlock = { _, result in
-            Self.logger.notice("The sharing sheet saved a share: \(String(describing: try? result.get().participants.count), privacy: .public) people")
-        }
-        observer.systemSharingUIDidStopSharingBlock = { _, _ in
-            Self.logger.notice("The sharing sheet stopped sharing")
-        }
-        sharingObserver = observer
     }
 }

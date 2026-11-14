@@ -26,6 +26,8 @@
 	<false/>
 	<key>NSAlarmKitUsageDescription</key>
 	<string>Nudge-inator rings an alarm to keep nudging you about a reminder until you mark it done.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Nudge-inator suggests the people you type the first letters of, so you can invite them without typing their whole address.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

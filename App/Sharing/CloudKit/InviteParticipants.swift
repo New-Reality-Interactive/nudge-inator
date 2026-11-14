@@ -55,14 +55,6 @@ struct InviteParticipant: Equatable {
         share.participants.map(InviteParticipant.init).filter { !$0.isOwner }
     }
 
-    /// Who an invite went to: the one person on the share, or `nil` when the sheet sent it to
-    /// nobody. With several, the first: the app invites one person.
-    static func invitedPerson(among participants: [InviteParticipant]) -> InvitedPerson? {
-        guard let first = participants.first(where: { !$0.isOwner && $0.status != .other }) else { return nil }
-        guard let label = first.name ?? first.address else { return nil }
-        return InvitedPerson(name: label, address: first.address ?? label)
-    }
-
     /// The person to keep on the share, one person per invite (spec #127, A6): the first to accept.
     static func firstToAccept(among participants: [InviteParticipant]) -> InviteParticipant? {
         participants.first { !$0.isOwner && $0.status == .accepted && $0.id != nil }

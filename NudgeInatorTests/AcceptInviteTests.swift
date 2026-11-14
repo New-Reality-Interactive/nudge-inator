@@ -29,8 +29,8 @@ struct AcceptInviteTests {
     /// can add more than one), from "Alex Morgan" as iCloud names the sender. Nobody has tapped it
     /// yet. Returns the sender's Invited connection.
     func invite(from sender: Phone, to recipients: [Phone]) async throws -> SharingConnection {
-        sender.adapter.inviteAnswer = .names(riley)
-        guard case .invited(let invited) = try await sender.sharing.invite() else {
+        sender.adapter.inviteAnswer = .sent
+        guard case .invited(let invited) = try await sender.sharing.invite(to: riley, via: .copyLink) else {
             throw InviteNotSent()
         }
         network.share(invited.id, from: sender.adapter, senderName: "Alex Morgan", with: recipients.map(\.adapter))

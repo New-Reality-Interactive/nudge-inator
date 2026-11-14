@@ -3,10 +3,10 @@ import NudgeEngine
 import Testing
 @testable import NudgeInator
 
-/// Inviting someone, through the app model and the sharing adapter's fake (ticket 194, spec #127
-/// seam 1). The fake stands for the system sharing sheet: it names whoever the test says, or is
-/// canceled, or fails. What a test asserts is what the sharing store keeps and what the adapter
-/// was asked to do.
+/// Inviting someone, through the app model and the sharing adapter's fake (ticket 194, #217, spec
+/// #127 seam 1). The fake stands for the delivery of the invite (the compose screen, the
+/// clipboard): it is sent, or canceled, or fails. What a test asserts is what the sharing store
+/// keeps and what the adapter was asked to do.
 @MainActor
 struct ConnectionsInviteTests {
     typealias Phone = SharingAdapterTests.Phone
@@ -22,11 +22,11 @@ struct ConnectionsInviteTests {
         return phone
     }
 
-    @Test func aSentInviteIsListedAsInvitedWithThePersonAsTheSheetNamedThem() async throws {
+    @Test func aSentInviteIsListedAsInvitedWithThePersonItWasFor() async throws {
         let phone = try await launchedPhone()
-        phone.adapter.inviteAnswer = .names(jordan)
+        phone.adapter.inviteAnswer = .sent
 
-        let outcome = try await phone.sharing.invite()
+        let outcome = try await phone.sharing.invite(to: jordan, via: .copyLink)
 
         let kept = try #require(phone.sharing.data.connections.first)
         #expect(outcome == .invited(kept))
@@ -34,19 +34,21 @@ struct ConnectionsInviteTests {
         #expect(kept.address == "jordan.lee@icloud.com")
         #expect(kept.state == .invited)
         #expect(kept.invitedAt == phone.clock.now)
-        // The sheet was asked for this connection's invite.
+        // The adapter was asked for this connection's invite, to this person, by this route.
         #expect(phone.adapter.invites == [kept.id])
+        #expect(phone.adapter.invited.map(\.person) == [jordan])
+        #expect(phone.adapter.invited.map(\.route) == [.copyLink])
 
         phone.relaunch()
         await phone.launch()
         #expect(phone.sharing.data.connections == [kept])
     }
 
-    @Test func closingTheSheetSendsAndKeepsNothing() async throws {
+    @Test func cancelingTheDeliverySendsAndKeepsNothing() async throws {
         let phone = try await launchedPhone()
         phone.adapter.inviteAnswer = .canceled
 
-        #expect(try await phone.sharing.invite() == .canceled)
+        #expect(try await phone.sharing.invite(to: jordan, via: .copyLink) == .canceled)
 
         // Only the account the launch recorded (ticket 212).
         #expect(phone.sharing.data == SharingData(accountID: phone.adapter.accountID))
@@ -58,22 +60,22 @@ struct ConnectionsInviteTests {
         phone.adapter.inviteAnswer = .fails
 
         await #expect(throws: FakeSharingAdapter.InviteFailed.self) {
-            try await phone.sharing.invite()
+            try await phone.sharing.invite(to: jordan, via: .copyLink)
         }
 
         // Only the account the launch recorded (ticket 212).
         #expect(phone.sharing.data == SharingData(accountID: phone.adapter.accountID))
     }
 
-    @Test func aSharingStoreThatWontOpenShowsNoSheet() async throws {
+    @Test func aSharingStoreThatWontOpenMakesNoInvite() async throws {
         let phone = try await launchedPhone()
         phone.sharingStoreOpens = false
         phone.relaunch()
         await phone.launch()
-        phone.adapter.inviteAnswer = .names(jordan)
+        phone.adapter.inviteAnswer = .sent
 
         await #expect(throws: Phone.StoreWouldNotOpen.self) {
-            try await phone.sharing.invite()
+            try await phone.sharing.invite(to: jordan, via: .copyLink)
         }
 
         #expect(phone.adapter.invites.isEmpty)
@@ -81,8 +83,8 @@ struct ConnectionsInviteTests {
 
     @Test func cancelingAnInviteRevokesItAndTakesItOffTheList() async throws {
         let phone = try await launchedPhone()
-        phone.adapter.inviteAnswer = .names(jordan)
-        guard case .invited(let invited) = try await phone.sharing.invite() else {
+        phone.adapter.inviteAnswer = .sent
+        guard case .invited(let invited) = try await phone.sharing.invite(to: jordan, via: .copyLink) else {
             Issue.record("The invite should have been sent")
             return
         }
@@ -99,26 +101,27 @@ struct ConnectionsInviteTests {
     // MARK: Someone already connected, or already invited
 
     @Test(arguments: ["jordan.lee@icloud.com", "  Jordan.Lee@iCloud.com "])
-    func invitingSomeoneAlreadyConnectedSaysSoAndMakesNoSecondConnection(sheetAddress: String) async throws {
+    func invitingSomeoneAlreadyConnectedSaysSoAndMakesNoSecondConnection(address: String) async throws {
         let connected = SharingConnection(id: UUID(), name: "Jordan", state: .connected, address: "jordan.lee@icloud.com")
         let phone = try await launchedPhone(seed: SharingData(connections: [connected]))
-        phone.adapter.inviteAnswer = .names(InvitedPerson(name: "Jordan Lee", address: sheetAddress))
+        phone.adapter.inviteAnswer = .sent
 
-        let outcome = try await phone.sharing.invite()
+        let outcome = try await phone.sharing.invite(to: InvitedPerson(name: "Jordan Lee", address: address), via: .copyLink)
 
         #expect(outcome == .alreadyConnected(connected))
         #expect(phone.sharing.data.connections == [connected])
-        // The sheet had already made the invite, so it is revoked.
-        #expect(phone.adapter.revoked == phone.adapter.invites)
+        // Said before any iCloud work: no invite was made, so none needs revoking.
+        #expect(phone.adapter.invites.isEmpty)
+        #expect(phone.adapter.revoked.isEmpty)
     }
 
     @Test(arguments: ["+1 (555) 010-4477", "+15550104477"])
-    func aPhoneNumberMatchesHoweverItIsWritten(sheetAddress: String) async throws {
+    func aPhoneNumberMatchesHoweverItIsWritten(address: String) async throws {
         let connected = SharingConnection(id: UUID(), name: "Priya Shah", state: .connected, address: "+1 555 010 4477")
         let phone = try await launchedPhone(seed: SharingData(connections: [connected]))
-        phone.adapter.inviteAnswer = .names(InvitedPerson(name: "Priya", address: sheetAddress))
+        phone.adapter.inviteAnswer = .sent
 
-        #expect(try await phone.sharing.invite() == .alreadyConnected(connected))
+        #expect(try await phone.sharing.invite(to: InvitedPerson(name: "Priya", address: address), via: .copyLink) == .alreadyConnected(connected))
     }
 
     /// Two people can share a name, so only the address says it's the same person (the developer's
@@ -130,9 +133,9 @@ struct ConnectionsInviteTests {
     ])
     func theSameNameAtAnotherAddressIsSomeoneNew(connected: SharingConnection) async throws {
         let phone = try await launchedPhone(seed: SharingData(connections: [connected]))
-        phone.adapter.inviteAnswer = .names(InvitedPerson(name: "sam ortiz", address: "sam.work@icloud.com"))
+        phone.adapter.inviteAnswer = .sent
 
-        guard case .invited = try await phone.sharing.invite() else {
+        guard case .invited = try await phone.sharing.invite(to: InvitedPerson(name: "sam ortiz", address: "sam.work@icloud.com"), via: .copyLink) else {
             Issue.record("A name alone doesn't make someone connected")
             return
         }
@@ -142,9 +145,9 @@ struct ConnectionsInviteTests {
     @Test func theSameNameAtAnotherAddressDoesntReplaceTheirInvite() async throws {
         let first = SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, address: "jordan@icloud.com", invitedAt: NewYork.local(2026, 10, 12, 9))
         let phone = try await launchedPhone(seed: SharingData(connections: [first]))
-        phone.adapter.inviteAnswer = .names(jordan)
+        phone.adapter.inviteAnswer = .sent
 
-        _ = try await phone.sharing.invite()
+        _ = try await phone.sharing.invite(to: jordan, via: .copyLink)
 
         #expect(phone.sharing.data.connections.count == 2)
         #expect(phone.adapter.revoked.isEmpty)
@@ -153,9 +156,9 @@ struct ConnectionsInviteTests {
     @Test func someoneWithAnotherNameAndAddressIsInvited() async throws {
         let connected = SharingConnection(id: UUID(), name: "Sam Ortiz", state: .connected, address: "sam@icloud.com")
         let phone = try await launchedPhone(seed: SharingData(connections: [connected]))
-        phone.adapter.inviteAnswer = .names(jordan)
+        phone.adapter.inviteAnswer = .sent
 
-        guard case .invited = try await phone.sharing.invite() else {
+        guard case .invited = try await phone.sharing.invite(to: jordan, via: .copyLink) else {
             Issue.record("Jordan isn't connected")
             return
         }
@@ -167,9 +170,9 @@ struct ConnectionsInviteTests {
         let wrong = SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, address: "jordan@icloud.com", invitedAt: NewYork.local(2026, 10, 12, 9))
         let later = SharingConnection(id: UUID(), name: "Priya", state: .invited, address: "priya@icloud.com", invitedAt: NewYork.local(2026, 10, 14, 9))
         let phone = try await launchedPhone(seed: SharingData(connections: [older, wrong, later]))
-        phone.adapter.inviteAnswer = .names(jordan)
+        phone.adapter.inviteAnswer = .sent
 
-        let outcome = try await phone.sharing.invite(replacing: wrong.id)
+        let outcome = try await phone.sharing.invite(to: jordan, via: .copyLink, replacing: wrong.id)
 
         let again = phone.sharing.data.connections[1]
         #expect(outcome == .invited(again))
@@ -183,9 +186,9 @@ struct ConnectionsInviteTests {
     @Test func invitingSomeoneAlreadyInvitedReplacesTheirInvite() async throws {
         let first = SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, address: "jordan.lee@icloud.com", invitedAt: NewYork.local(2026, 10, 12, 9))
         let phone = try await launchedPhone(seed: SharingData(connections: [first]))
-        phone.adapter.inviteAnswer = .names(jordan)
+        phone.adapter.inviteAnswer = .sent
 
-        _ = try await phone.sharing.invite()
+        _ = try await phone.sharing.invite(to: jordan, via: .copyLink)
 
         #expect(phone.sharing.data.connections.count == 1)
         #expect(phone.sharing.data.connections.first?.invitedAt == phone.clock.now)
@@ -197,7 +200,7 @@ struct ConnectionsInviteTests {
         let phone = try await launchedPhone(seed: SharingData(connections: [wrong]))
         phone.adapter.inviteAnswer = .canceled
 
-        #expect(try await phone.sharing.invite(replacing: wrong.id) == .canceled)
+        #expect(try await phone.sharing.invite(to: jordan, via: .copyLink, replacing: wrong.id) == .canceled)
 
         #expect(phone.sharing.data.connections == [wrong])
         #expect(phone.adapter.revoked.isEmpty)
@@ -211,5 +214,26 @@ struct ConnectionsInviteTests {
 
         #expect(phone.adapter.revoked.isEmpty)
         #expect(phone.sharing.data.connections == [connected])
+    }
+
+    @Test(arguments: InviteRoute.allCases)
+    func theInviteIsDeliveredByTheRouteChosen(route: InviteRoute) async throws {
+        let phone = try await launchedPhone()
+        phone.adapter.inviteAnswer = .sent
+
+        _ = try await phone.sharing.invite(to: jordan, via: route)
+
+        #expect(phone.adapter.invited.map(\.route) == [route])
+    }
+
+    @Test func anInviteWaitingToBeAcceptedIsFoundByTheAddressHoweverItIsWritten() async throws {
+        let waiting = SharingConnection(id: UUID(), name: "Jordan", state: .invited, address: "jordan.lee@icloud.com", invitedAt: NewYork.local(2026, 10, 12, 9))
+        let connected = SharingConnection(id: UUID(), name: "Sam Ortiz", state: .connected, address: "sam@icloud.com")
+        let phone = try await launchedPhone(seed: SharingData(connections: [waiting, connected]))
+
+        #expect(phone.sharing.invitedConnection(for: InvitedPerson(name: "Jordan Lee", address: " Jordan.Lee@iCloud.com ")) == waiting)
+        // Connected is a different answer (the sheet says "Already Connected"), and the same name alone is someone new.
+        #expect(phone.sharing.invitedConnection(for: InvitedPerson(name: "Sam Ortiz", address: "sam@icloud.com")) == nil)
+        #expect(phone.sharing.invitedConnection(for: InvitedPerson(name: "Jordan Lee", address: "jordan@work.com")) == nil)
     }
 }

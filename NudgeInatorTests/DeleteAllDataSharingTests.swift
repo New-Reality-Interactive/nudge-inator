@@ -55,8 +55,8 @@ struct DeleteAllDataSharingTests {
         riley.model.add(received())
         riley.model.add(received("Feed the cat"))
         try riley.model.send(pills, to: [connectionID])
-        riley.adapter.inviteAnswer = .names(InvitedPerson(name: "Sam Rivera", address: "sam@example.com"))
-        _ = try await riley.sharing.invite()
+        riley.adapter.inviteAnswer = .sent
+        _ = try await riley.sharing.invite(to: InvitedPerson(name: "Sam Rivera", address: "sam@example.com"), via: .copyLink)
         await settle(alex, riley)
         #expect(alex.sharing.data.sentCopies.isEmpty)
         #expect(riley.sharing.data.sentCopies.count == 1)
@@ -110,8 +110,8 @@ struct DeleteAllDataSharingTests {
 
     @Test func deleteAllDataRevokesAnOpenInvite() async throws {
         let (alex, riley) = try await phones()
-        riley.adapter.inviteAnswer = .names(InvitedPerson(name: "Sam Rivera", address: "sam@example.com"))
-        _ = try await riley.sharing.invite()
+        riley.adapter.inviteAnswer = .sent
+        _ = try await riley.sharing.invite(to: InvitedPerson(name: "Sam Rivera", address: "sam@example.com"), via: .copyLink)
         await settle(alex, riley)
 
         try await riley.model.deleteAllData()

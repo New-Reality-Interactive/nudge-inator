@@ -858,6 +858,9 @@
     "Already Connected" : {
       "comment" : "Invite: title of the message shown when the person invited is already connected."
     },
+    "Already Invited" : {
+      "comment" : "Invite: title of the question shown when the person invited has an invite waiting."
+    },
     "An invite opens only for the Apple Account it was sent to. Check the email address or phone number of their Apple Account, then invite them again." : {
       "comment" : "An invited person's page: the help under \"Didn't open for them?\"."
     },
@@ -1009,7 +1012,7 @@
       "comment" : "Title shown when the app can't read its stored reminders, for example before the first unlock after a restart."
     },
     "Cancel" : {
-      "comment" : "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, the Reminders and Tags filters', the invite hint's, and Disconnect's.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nSettings: keeps your data instead of deleting it."
+      "comment" : "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, the Reminders and Tags filters', the invite hint's, and Disconnect's.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nInvite: leaves the Already Invited question without sending.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nSettings: keeps your data instead of deleting it."
     },
     "Cancel Invite" : {
       "comment" : "An invited person's page: opens the question that asks before canceling the invite.\nThe question before canceling an invite: cancels it."
@@ -1043,6 +1046,12 @@
     },
     "Choose a New Time" : {
       "comment" : "Alert title: Resume was turned down because the reminder has no time left."
+    },
+    "Choose an address" : {
+      "comment" : "Invite Someone: title of the choice between a contact's email addresses and phone numbers."
+    },
+    "Choose from Contacts" : {
+      "comment" : "Invite Someone: the plus beside the address field, which opens the contact picker."
     },
     "Choose one or more days." : {
       "comment" : "Under the Custom repeat page's weekdays."
@@ -1096,7 +1105,13 @@
       "comment" : "A Consistent pace with its wait, as reminder details show it. The placeholder is the wait between nudges, such as \"30 min\"."
     },
     "Continue" : {
-      "comment" : "Invite hint: opens the system's sharing sheet to send the invite.\nOnboarding: the only button, which goes on to the system's permission prompts.\nThe Connection Ended sheet: does the chosen Remove or Keep and closes the sheet."
+      "comment" : "Onboarding: the only button, which goes on to the system's permission prompts.\nThe Connection Ended sheet: does the chosen Remove or Keep and closes the sheet."
+    },
+    "Copies the invite link, for you to send anywhere. Nothing is sent until you do." : {
+
+    },
+    "Copy Link" : {
+
     },
     "Couldn't Accept the Invite" : {
       "comment" : "Accepting an invite: title of the message shown when the invite couldn't be accepted now."
@@ -1310,6 +1325,9 @@
     },
     "Edit tags of %@" : {
       "comment" : "VoiceOver label of a received reminder's Edit button on its details, whose form changes only its tags. The placeholder is the reminder's title."
+    },
+    "Email or phone" : {
+      "comment" : "Invite Someone: placeholder of the field for the address of the person to invite."
     },
     "End Date" : {
       "comment" : "The reminder form's row under End Repeat: the last day the repeat can fall due."
@@ -1542,14 +1560,20 @@
     "How It Nudges" : {
       "comment" : "Section header on reminder details and the reminder form: the nudges a reminder sends, when, and how they arrive.\nSettings: row that opens the page explaining how each strength nudges, and what onboarding said.\nTitle of the page in Settings that explains how each strength nudges."
     },
-    "Invite Again" : {
-      "comment" : "An invited person's page: sends a new invite in place of this one."
+    "I'd like us to send each other reminders in Nudge-inator. Open this on your iPhone to connect: %@" : {
+      "comment" : "Invite message and email: the body. The argument is the invite's link."
     },
-    "Invite One Person" : {
-      "comment" : "Invite hint: the title."
+    "Invitation to Nudge-inator" : {
+      "comment" : "Invite email: the subject."
+    },
+    "Invite" : {
+      "comment" : "Invite Someone: sends the invite to the person chosen."
+    },
+    "Invite Again" : {
+      "comment" : "An invited person's page: sends a new invite in place of this one.\nInvite Again: the sheet's title, opened from an invited person's page.\nInvite: sends a new invite in place of the one waiting."
     },
     "Invite Someone" : {
-      "comment" : "Connections, and the Reminders tab's Sent when no one is connected: starts an invite to one person.\nInvite hint: the sheet's title."
+      "comment" : "Connections, and the Reminders tab's Sent when no one is connected: starts an invite to one person.\nInvite Someone: the sheet's title."
     },
     "Invite Someone New" : {
       "comment" : "The Send To page's last row: invites someone to connect.\nThe reminder form's Send To row when no one is connected: invites someone."
@@ -1614,6 +1638,12 @@
     "Locked while it's nudging. Mark it Done or pause it to change it." : {
       "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging."
     },
+    "Mail" : {
+
+    },
+    "Mail opens its own screen with the invite ready, and you tap Send there. Nothing is sent until you do." : {
+
+    },
     "Make a reminder and choose who to send it to." : {
       "comment" : "Reminders tab, Sent: under \"Nothing Sent\", when someone is connected."
     },
@@ -1622,6 +1652,12 @@
     },
     "Match" : {
       "comment" : "A filter sheet: label of the choice between All Tags and Any Tag."
+    },
+    "Messages" : {
+
+    },
+    "Messages opens its own screen with the invite ready, and you tap Send there. Nothing is sent until you do." : {
+
     },
     "Mine" : {
       "comment" : "Reminders tab: the Mine | Sent control's choice that shows the person's own reminders, received ones included."
@@ -1870,7 +1906,7 @@
       }
     },
     "Nudge-inator Reminders" : {
-      "comment" : "Invite: the title of the share the invite carries, which the sharing sheet and the invitation show.\nInvite: the title the system's sharing sheet shows for the connection."
+      "comment" : "Invite: the title of the share the invite carries, which the invitation shows."
     },
     "Nudges" : {
       "comment" : "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and How It Nudges."
@@ -2072,6 +2108,9 @@
     "Remove" : {
       "comment" : "Disconnect's sheet: the choice that deletes the reminders received from the person.\nNow, Waiting for You: opens the question that asks before removing a reminder someone sent, which waits to be accepted.\nReminder details: on a reminder someone sent that waits to be accepted, opens the question that asks before removing it.\nReminders tab: a received reminder's swipe action and VoiceOver action that asks before removing the person's copy."
     },
+    "Remove %@" : {
+      "comment" : "Invite Someone: removes the chosen person from the field. The argument is their name."
+    },
     "Remove %@ from the filter" : {
       "comment" : "VoiceOver label of a tag's filter token on My Day. The placeholder is the tag, such as \"#home\"."
     },
@@ -2142,6 +2181,9 @@
     },
     "Send To" : {
       "comment" : "The reminder form's row that chooses who the reminder is sent to.\nTitle of the reminder form's Send To page."
+    },
+    "Send With" : {
+      "comment" : "Invite Someone: heading of the list of ways to send the invite."
     },
     "Send a Test Nudge" : {
       "comment" : "Settings: row that sends a notification in a few seconds, to see how a nudge looks."
@@ -2271,6 +2313,17 @@
     "That was the last nudge. It closes as Missed at %@." : {
       "comment" : "Nudge card: after the occurrence's last nudge. The placeholder is when it gives up or the next occurrence takes over, such as \"11:17 AM\"."
     },
+    "The invite opens only for %@ at %@." : {
+      "comment" : "Invite Someone: under the field once a person is chosen. The first argument is their name, the second their email address or phone number.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The invite opens only for %1$@ at %2$@."
+          }
+        }
+      }
+    },
     "The invite still works. Try again." : {
       "comment" : "An invited person's page: under Couldn't Cancel the Invite."
     },
@@ -2379,7 +2432,10 @@
       "comment" : "Settings: footer under the Nudges rows, when alarms are allowed."
     },
     "Use the email address or phone number of their Apple Account, or the invite won't open for them." : {
-      "comment" : "Invite hint: under \"Invite One Person\", before the system's sharing sheet."
+      "comment" : "Invite Someone: under the address field before a person is chosen."
+    },
+    "Use the one that is their Apple Account." : {
+      "comment" : "Invite Someone: under the choice between a contact's addresses."
     },
     "Version" : {
       "comment" : "About page: row showing the app's version, such as \"1.1.0\"."
@@ -2417,6 +2473,9 @@
     "When you send feedback, include the version and build." : {
       "comment" : "About page: under the version and build number, for beta testers sending feedback."
     },
+    "Who to Invite" : {
+      "comment" : "Invite Someone: heading of the field for the person to invite."
+    },
     "Yearly" : {
       "comment" : "The Custom repeat page's frequency."
     },
@@ -2440,6 +2499,9 @@
     },
     "You're Connected with %@" : {
       "comment" : "Accepting an invite: title of the sheet once connected. The argument is the name of the person who sent the invite, such as \"Alex Morgan\"."
+    },
+    "You've already invited %@. Inviting again sends a new invite, and the earlier one stops working." : {
+      "comment" : "Invite: under Already Invited. The argument is the person's name, such as \"Riley Park\"."
     },
     "Your Data" : {
       "comment" : "Settings: header of the section with Delete All Data."

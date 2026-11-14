@@ -71,11 +71,11 @@ struct SharingPausedTests {
     @Test(arguments: pausedAccounts)
     func anInviteWhilePausedIsTurnedDownBeforeTheSharingSheet(account: SharingAccountState) async throws {
         let (alex, _) = try await phones()
-        alex.adapter.inviteAnswer = .names(InvitedPerson(name: "Sam Rivera", address: "sam@example.com"))
+        alex.adapter.inviteAnswer = .sent
         await setAccount(account, on: alex)
 
         await #expect(throws: SharingModel.SharingPaused.self) {
-            _ = try await alex.sharing.invite()
+            _ = try await alex.sharing.invite(to: InvitedPerson(name: "Sam Rivera", address: "sam@example.com"), via: .copyLink)
         }
 
         #expect(alex.adapter.invites.isEmpty)

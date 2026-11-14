@@ -45,18 +45,20 @@ final class CloudKitSharingAdapter: SharingAdapter {
     private var unreported: [OutboxChange.ID] = []
     private var isReporting = false
     private let connectivity = Connectivity()
+    /// Hands an invite's link to the person (#217): iOS's compose screens, or the clipboard.
+    let delivery: any InviteDelivering
     /// Invites that reached this person, until they are accepted (#217).
     var removing: Set<UUID> = []
     var incoming: [UUID: CKShare.Metadata] = [:]
-    var sharingObserver: CKSystemSharingUIObserver?
 
     /// A real adapter over the app's container.
     convenience init() {
         let container = CKContainer(identifier: Self.containerIdentifier)
-        self.init(reader: CloudKitAccountReader(source: container), container: container)
+        self.init(reader: CloudKitAccountReader(source: container), container: container, delivery: SystemInviteDelivery())
     }
 
-    init(reader: CloudKitAccountReader, container: CKContainer? = nil, automaticallySync: Bool = true) {
+    init(reader: CloudKitAccountReader, container: CKContainer? = nil, automaticallySync: Bool = true, delivery: any InviteDelivering = NoInviteDelivery()) {
+        self.delivery = delivery
         self.reader = reader
         self.container = container
         self.automaticallySync = automaticallySync
@@ -87,7 +89,6 @@ final class CloudKitSharingAdapter: SharingAdapter {
             sync.attach(engine.state, for: database)
         }
         connectivity.start()
-        observeSharingSheet(container)
         keep()
         // The first request to iCloud: the device check reads it to see none came before (#216).
         Self.logger.notice("Sync engines started")

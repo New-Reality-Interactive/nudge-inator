@@ -141,7 +141,7 @@ Two people who have agreed to send each other reminders, set up by one accepted 
 _Avoid_: Friend, contact, share, follower
 
 **Invite**:
-A personal request to connect, sent to the Apple Account of one person. Until they accept it, the sender sees that person as Invited.
+A personal request to connect, sent to the Apple Account of one person. Until they accept it, the sender sees that person as Invited. The sender says who it is for (a contact, or an email address or phone number) and how to send it (**Send With**: Messages, Mail or Copy Link, only the ways that fit the address), and the invite's link opens only for that Apple Account. Inviting someone already Invited replaces the earlier invite.
 _Avoid_: Share (for a connection), request
 
 **Disconnect**:
