@@ -50,7 +50,7 @@ final class InviteSheet: NSObject, UICloudSharingControllerDelegate {
     }
 
     func itemTitle(for csc: UICloudSharingController) -> String? {
-        String(localized: "Nudge-inator reminders", comment: "Invite: the title the system's sharing sheet shows for the connection.")
+        String(localized: "Nudge-inator Reminders", comment: "Invite: the title the system's sharing sheet shows for the connection.")
     }
 }
 

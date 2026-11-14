@@ -1869,8 +1869,8 @@
         }
       }
     },
-    "Nudge-inator reminders" : {
-      "comment" : "Invite: the title of the share the invite carries.\nInvite: the title the system's sharing sheet shows for the connection."
+    "Nudge-inator Reminders" : {
+      "comment" : "Invite: the title of the share the invite carries, which the sharing sheet and the invitation show.\nInvite: the title the system's sharing sheet shows for the connection."
     },
     "Nudges" : {
       "comment" : "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and How It Nudges."

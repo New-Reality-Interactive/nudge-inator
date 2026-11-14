@@ -27,25 +27,24 @@ private struct InviteFlow: ViewModifier {
     let replacing: UUID?
     let onInvited: (SharingConnection) -> Void
 
-    /// Set by Continue, so the sharing sheet starts once the hint has gone: one sheet can't be
-    /// shown while another is still leaving.
-    @State private var continues = false
+    /// Set while the invite is being made and shown, which takes a few seconds of iCloud work. The
+    /// hint stays up with a spinner until the sharing sheet has come and gone.
+    @State private var preparing = false
     @State private var alreadyConnected: SharingConnection?
     @State private var failed = false
 
     func body(content: Content) -> some View {
         content
-            .sheet(isPresented: showsHint, onDismiss: startIfContinued) {
-                InviteHintSheet {
-                    continues = true
-                    isPresented = false
+            .sheet(isPresented: showsHint) {
+                InviteHintSheet(isPreparing: preparing) {
+                    Task { await start() }
                 }
+                .interactiveDismissDisabled(preparing)
             }
             .onChange(of: isPresented) { _, presented in
                 guard presented, replacing != nil else { return }
                 isPresented = false
-                continues = true
-                startIfContinued()
+                Task { await start() }
             }
             .alert(
                 Text("Already Connected", comment: "Invite: title of the message shown when the person invited is already connected."),
@@ -76,26 +75,27 @@ private struct InviteFlow: ViewModifier {
         Binding { isPresented && replacing == nil } set: { isPresented = $0 }
     }
 
-    private func startIfContinued() {
-        guard continues else { return }
-        continues = false
-        Task {
-            do {
-                switch try await sharing.invite(replacing: replacing) {
-                case .invited(let connection): onInvited(connection)
-                case .alreadyConnected(let connection): alreadyConnected = connection
-                case .canceled: break
-                }
-            } catch {
-                failed = true
+    private func start() async {
+        guard !preparing else { return }
+        preparing = true
+        defer { preparing = false }
+        do {
+            switch try await sharing.invite(replacing: replacing) {
+            case .invited(let connection): onInvited(connection)
+            case .alreadyConnected(let connection): alreadyConnected = connection
+            case .canceled: break
             }
+        } catch {
+            failed = true
         }
+        isPresented = false
     }
 }
 
 /// The hint before the sharing sheet: invite one person, at their Apple Account. The mockup's
 /// `inviteSheet`, hint step.
 private struct InviteHintSheet: View {
+    let isPreparing: Bool
     let onContinue: () -> Void
 
     var body: some View {
@@ -113,11 +113,15 @@ private struct InviteHintSheet: View {
             }
             .safeAreaInset(edge: .bottom) {
                 Button(action: onContinue) {
-                    Text("Continue", comment: "Invite hint: opens the system's sharing sheet to send the invite.")
-                        .frame(maxWidth: .infinity)
+                    HStack(spacing: Design.Spacing.s2) {
+                        if isPreparing { ProgressView() }
+                        Text("Continue", comment: "Invite hint: opens the system's sharing sheet to send the invite.")
+                    }
+                    .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
+                .disabled(isPreparing)
                 .padding(Design.Spacing.s4)
             }
             .navigationTitle(Text("Invite Someone", comment: "Invite hint: the sheet's title."))
@@ -125,6 +129,7 @@ private struct InviteHintSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     DiscardingCancelButton(hasChanges: false)
+                        .disabled(isPreparing)
                 }
             }
         }
@@ -132,10 +137,10 @@ private struct InviteHintSheet: View {
 }
 
 #Preview("Invite hint") {
-    InviteHintSheet {}
+    InviteHintSheet(isPreparing: false) {}
 }
 
 #Preview("Invite hint, largest text") {
-    InviteHintSheet {}
+    InviteHintSheet(isPreparing: false) {}
         .environment(\.dynamicTypeSize, .accessibility5)
 }

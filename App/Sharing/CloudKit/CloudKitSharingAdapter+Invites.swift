@@ -1,5 +1,6 @@
 import CloudKit
 import Foundation
+import UIKit
 
 /// Inviting and accepting (#217), apart from the sync the adapter runs: the connection's zone and
 /// private share, the system sharing sheet, the invite that reaches the other person, and keeping
@@ -16,7 +17,9 @@ extension CloudKitSharingAdapter {
         let zoneID = createdZone ? sync.makeZone(for: connectionID) : CloudKitSync.ownZoneID(of: connectionID)
         keep()
         do {
-            let share = try await zoneShare(in: zoneID, container: container)
+            let started = ContinuousClock.now
+            let share = try await zoneShare(in: zoneID, container: container, isNewZone: createdZone)
+            Self.logger.notice("Share ready for the sheet after \(started.duration(to: .now), privacy: .public)")
             try await InviteSheet.present(share: share, container: container)
             // What the sheet saved, as iCloud has it. A person invited through Messages can join the
             // share a few seconds after the sheet closes, so it is read again for a while before the
@@ -59,17 +62,36 @@ extension CloudKitSharingAdapter {
     /// The zone's share: the one it has already, or a new private one. The zone is saved first,
     /// since a share can only be saved into a zone iCloud has (the engine saves it too; saving it
     /// twice does no harm).
-    private func zoneShare(in zoneID: CKRecordZone.ID, container: CKContainer) async throws -> CKShare {
+    private func zoneShare(in zoneID: CKRecordZone.ID, container: CKContainer, isNewZone: Bool) async throws -> CKShare {
         let database = container.privateCloudDatabase
-        _ = try await database.modifyRecordZones(saving: [CKRecordZone(zoneID: zoneID)], deleting: [])
+        let clock = ContinuousClock()
+        let zoneTime = try await clock.measure {
+            _ = try await database.modifyRecordZones(saving: [CKRecordZone(zoneID: zoneID)], deleting: [])
+        }
+        Self.logger.notice("Zone saved in \(zoneTime, privacy: .public)")
+        // A zone made just now has no share to look for.
         let shareID = CKRecord.ID(recordName: CKRecordNameZoneWideShare, zoneID: zoneID)
-        if let existing = try? await database.record(for: shareID) as? CKShare { return existing }
+        if !isNewZone, let existing = try? await database.record(for: shareID) as? CKShare { return existing }
         let share = CloudKitSync.share(for: zoneID)
-        share[CKShare.SystemFieldKey.title] = String(localized: "Nudge-inator reminders", comment: "Invite: the title of the share the invite carries.")
+        share[CKShare.SystemFieldKey.title] = String(localized: "Nudge-inator Reminders", comment: "Invite: the title of the share the invite carries, which the sharing sheet and the invitation show.")
+        // The sheet and the invitation show this picture, which for a share made beforehand comes
+        // from the share, not from the sheet's delegate.
+        share[CKShare.SystemFieldKey.thumbnailImageData] = Self.appIconData()
+        let shareStart = clock.now
         let saved = try await database.modifyRecords(saving: [share], deleting: [])
+        Self.logger.notice("Share saved in \(shareStart.duration(to: .now), privacy: .public)")
         guard let result = saved.saveResults[share.recordID] else { throw NotAvailableYet() }
         guard let record = try result.get() as? CKShare else { throw NotAvailableYet() }
         return record
+    }
+
+    /// The app icon as PNG data, from the icon files the build puts in the bundle, or `nil` when
+    /// there are none: the sheet then shows its generic picture.
+    private static func appIconData() -> Data? {
+        let icons = Bundle.main.infoDictionary?["CFBundleIcons"] as? [String: Any]
+        let primary = icons?["CFBundlePrimaryIcon"] as? [String: Any]
+        let names = primary?["CFBundleIconFiles"] as? [String] ?? []
+        return names.reversed().lazy.compactMap { UIImage(named: $0)?.pngData() }.first
     }
 
     /// Takes an invite the scene delegate received and tells the app model, which accepts it.
