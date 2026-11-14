@@ -7,7 +7,9 @@ import SwiftUI
 /// Sharing for the phone check of Connections (ticket 194), in place of the CloudKit adapter: a
 /// launch with `NUDGE_SHARING_STANDIN=seeded` (a connection and two invites, one 3 days old),
 /// `=sent` (those, and two reminders already delivered to Riley, ticket 207) or `=empty` gets a
-/// stand-in adapter over an in-memory sharing store. A launch without the variable shares through
+/// stand-in adapter over an in-memory sharing store. `=off` (#389) is `empty` with Sharing off
+/// until the person turns it on; each such launch first sets the Sharing switch off, so a launch with
+/// `=off` is also the cleanup of a check that turned it on. A launch without the variable shares through
 /// iCloud (#216). Nothing the stand-in holds outlives the launch, so a launch without the variable
 /// is its cleanup. Debug builds only:
 /// `scripts/check-release-has-no-seed.sh` checks Release builds hold none of it.
@@ -18,6 +20,19 @@ enum StandInSharing {
     /// The model holds it; this doesn't.
     private(set) static weak var current: StandInSharingAdapter?
 
+    /// Whether this launch has Sharing off, with the stand-in standing by to be turned on (#389).
+    static func launchesWithSharingOff(environment: [String: String] = ProcessInfo.processInfo.environment) -> Bool {
+        environment[variable] == "off"
+    }
+
+    /// The phone's Sharing switch record, set off first when `=off` asks for it, so such a launch
+    /// starts with Sharing off whatever an earlier check left, and is also that check's cleanup.
+    static func switchRecordResetIfOff(environment: [String: String] = ProcessInfo.processInfo.environment) -> SharingSwitchRecord {
+        let record = SharingSwitchRecord.standard
+        if launchesWithSharingOff(environment: environment) { record.reset() }
+        return record
+    }
+
     static func modelIfAsked(clock: any EngineClock, environment: [String: String] = ProcessInfo.processInfo.environment) -> SharingModel? {
         var seed: SharingData
         switch environment[variable] {
@@ -27,10 +42,10 @@ enum StandInSharing {
             let (reminders, copies) = sentToRiley(now: clock.now)
             seed.sentReminders = reminders
             seed.sentCopies = copies
-        case "empty": seed = SharingData()
+        case "empty", "off": seed = SharingData()
         case .none: return nil
         case .some(let other):
-            logger.error("No stand-in sharing called \(other, privacy: .public): use seeded, sent or empty")
+            logger.error("No stand-in sharing called \(other, privacy: .public): use seeded, sent, empty or off")
             return nil
         }
         var opened: SharingStore?
@@ -89,6 +104,27 @@ enum StandInSharing {
 }
 
 extension View {
+    /// A Stand-in menu in Settings' toolbar for the phone check of opening an invite while Sharing is
+    /// off (#389), only under `NUDGE_SHARING_STANDIN=off`: it hands the app an invite as the system
+    /// does, wherever the switch is.
+    func standInInviteWhileSharingOff(model: AppModel?) -> some View {
+        toolbar {
+            if StandInSharing.launchesWithSharingOff(), let model {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button {
+                            model.receiveInvite(from: "Sam Rivera") { StandInSharing.current?.receiveInvite(from: "Sam Rivera") }
+                        } label: {
+                            Text(verbatim: "Open an Invite from Sam Rivera")
+                        }
+                    } label: {
+                        Label { Text(verbatim: "Stand-in") } icon: { Image(systemName: "hammer") }
+                    }
+                }
+            }
+        }
+    }
+
     /// A Stand-in menu in the toolbar for the phone check (ticket 195), only under the stand-in:
     /// receiving an invite, one that's unavailable, with `invited`, that person accepting, and with
     /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196), sending

@@ -24,9 +24,9 @@ final class TurnOffSharingTests {
         private(set) var made = 0
         private(set) var model: AppModel!
 
-        init(seed: SharingData = SharingData()) throws {
+        init(seed: SharingData = SharingData(), sharingOn: Bool = true) throws {
             try SharingStore(location: .file(sharingFile.url)).save(seed)
-            record.isOn = true
+            record.isOn = sharingOn
             model = makeModel()
         }
 

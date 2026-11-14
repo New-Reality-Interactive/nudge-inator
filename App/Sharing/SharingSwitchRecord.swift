@@ -24,4 +24,10 @@ struct SharingSwitchRecord {
         get { defaults.bool(forKey: Self.windingDownKey) }
         nonmutating set { defaults.set(newValue, forKey: Self.windingDownKey) }
     }
+
+    /// Off, with nothing winding down: the starting state.
+    func reset() {
+        isOn = false
+        isWindingDown = false
+    }
 }
