@@ -86,12 +86,14 @@ final class SystemInviteDelivery: NSObject, InviteDelivering {
 }
 
 extension SystemInviteDelivery: MFMessageComposeViewControllerDelegate {
+    // MessageUI calls its delegates on the main thread, which is why assuming main-actor isolation holds.
     nonisolated func messageComposeViewController(_ controller: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
         MainActor.assumeIsolated { close(controller, sent: result == .sent) }
     }
 }
 
 extension SystemInviteDelivery: MFMailComposeViewControllerDelegate {
+    // Likewise on the main thread.
     nonisolated func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: (any Error)?) {
         // A saved draft isn't an invite: the link would sit in Drafts and be sent by nobody.
         MainActor.assumeIsolated { close(controller, sent: result == .sent) }

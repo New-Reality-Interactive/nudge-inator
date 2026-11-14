@@ -16,9 +16,7 @@ extension CloudKitSharingAdapter {
         let zoneID = sync.makeZone(for: connectionID)
         keep()
         do {
-            let started = ContinuousClock.now
             let link = try await shareLink(in: zoneID, for: person, container: container)
-            Self.logger.notice("Invite ready after \(started.duration(to: .now), privacy: .public)")
             guard await delivery.deliver(link, to: person, via: route) else {
                 revokeInvite(connectionID)
                 return false
@@ -36,20 +34,14 @@ extension CloudKitSharingAdapter {
     /// twice does no harm). Only the person added can open the link.
     private func shareLink(in zoneID: CKRecordZone.ID, for person: InvitedPerson, container: CKContainer) async throws -> URL {
         let database = container.privateCloudDatabase
-        let clock = ContinuousClock()
-        let zoneTime = try await clock.measure {
-            _ = try await database.modifyRecordZones(saving: [CKRecordZone(zoneID: zoneID)], deleting: [])
-        }
-        Self.logger.notice("Zone saved in \(zoneTime, privacy: .public)")
+        _ = try await database.modifyRecordZones(saving: [CKRecordZone(zoneID: zoneID)], deleting: [])
         let participant = try await shareParticipant(for: person, container: container)
         participant.permission = .readWrite
         let share = CloudKitSync.share(for: zoneID)
         share[CKShare.SystemFieldKey.title] = String(localized: "Nudge-inator Reminders", comment: "Invite: the title of the share the invite carries, which the invitation shows.")
         share[CKShare.SystemFieldKey.thumbnailImageData] = Self.appIconData()
         share.addParticipant(participant)
-        let shareStart = clock.now
         let saved = try await database.modifyRecords(saving: [share], deleting: [])
-        Self.logger.notice("Share saved in \(shareStart.duration(to: .now), privacy: .public)")
         guard let result = saved.saveResults[share.recordID] else { throw NotAvailableYet() }
         guard let record = try result.get() as? CKShare, let url = record.url else { throw NotAvailableYet() }
         return url
@@ -58,17 +50,12 @@ extension CloudKitSharingAdapter {
     /// iCloud's participant for the person's Apple Account, looked up by the address. Throws when
     /// the address has none, or iCloud can't be reached.
     private func shareParticipant(for person: InvitedPerson, container: CKContainer) async throws -> CKShare.Participant {
-        let results: [String: Result<CKShare.Participant, any Error>]
-        let key: String
-        switch InviteAddressKind(address: person.address) {
-        case .phone:
-            // A phone number as iCloud takes it: digits, with a leading + kept.
-            let trimmed = person.address.trimmingCharacters(in: .whitespaces)
-            key = (trimmed.hasPrefix("+") ? "+" : "") + trimmed.filter(\.isNumber)
-            results = try await container.shareParticipants(forPhoneNumbers: [key])
-        case .email, nil:
-            key = person.address.trimmingCharacters(in: .whitespaces)
-            results = try await container.shareParticipants(forEmailAddresses: [key])
+        // The sheet only sends an address of a known kind, so anything else is a bug, not a typo.
+        guard let kind = InviteAddressKind(address: person.address) else { throw NotAvailableYet() }
+        let key = kind.lookupKey(for: person.address)
+        let results = switch kind {
+        case .phone: try await container.shareParticipants(forPhoneNumbers: [key])
+        case .email: try await container.shareParticipants(forEmailAddresses: [key])
         }
         guard let result = results[key] ?? results.values.first else { throw NotAvailableYet() }
         return try result.get()

@@ -1108,10 +1108,10 @@
       "comment" : "Onboarding: the only button, which goes on to the system's permission prompts.\nThe Connection Ended sheet: does the chosen Remove or Keep and closes the sheet."
     },
     "Copies the invite link, for you to send anywhere. Nothing is sent until you do." : {
-
+      "comment" : "Invite Someone: under Send With while Copy Link is selected."
     },
     "Copy Link" : {
-
+      "comment" : "Invite Someone: Send With, the way that copies the invite's link."
     },
     "Couldn't Accept the Invite" : {
       "comment" : "Accepting an invite: title of the message shown when the invite couldn't be accepted now."
@@ -1635,14 +1635,17 @@
     "Left" : {
       "comment" : "My Day: the caption of the count of occurrences still to come today."
     },
+    "Link Copied" : {
+      "comment" : "Invite: title of the message shown after Copy Link, once the invite's link is on the clipboard."
+    },
     "Locked while it's nudging. Mark it Done or pause it to change it." : {
       "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging."
     },
     "Mail" : {
-
+      "comment" : "Invite Someone: Send With, the way that opens the mail screen."
     },
     "Mail opens its own screen with the invite ready, and you tap Send there. Nothing is sent until you do." : {
-
+      "comment" : "Invite Someone: under Send With while Mail is selected."
     },
     "Make a reminder and choose who to send it to." : {
       "comment" : "Reminders tab, Sent: under \"Nothing Sent\", when someone is connected."
@@ -1654,10 +1657,10 @@
       "comment" : "A filter sheet: label of the choice between All Tags and Any Tag."
     },
     "Messages" : {
-
+      "comment" : "Invite Someone: Send With, the way that opens the message screen."
     },
     "Messages opens its own screen with the invite ready, and you tap Send there. Nothing is sent until you do." : {
-
+      "comment" : "Invite Someone: under Send With while Messages is selected."
     },
     "Mine" : {
       "comment" : "Reminders tab: the Mine | Sent control's choice that shows the person's own reminders, received ones included."
@@ -1984,7 +1987,7 @@
       }
     },
     "OK" : {
-      "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nA sent reminder's details: dismisses the message that the reminder couldn't be deleted.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nDisconnect's sheet and Connection Ended: dismisses Couldn't Disconnect.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the message that the invite couldn't be made.\nSettings: dismisses the message that deleting failed.\nThe Apple Account Changed sheet: closes it.\nThe Edit Reminder form: closes the form of a sent reminder that was deleted while it was open.\nThe reminder form: dismisses the message that the reminder couldn't be sent."
+      "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nA sent reminder's details: dismisses the message that the reminder couldn't be deleted.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nDisconnect's sheet and Connection Ended: dismisses Couldn't Disconnect.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the Link Copied message and closes the sheet.\nInvite: dismisses the message that the invite couldn't be made.\nSettings: dismisses the message that deleting failed.\nThe Apple Account Changed sheet: closes it.\nThe Edit Reminder form: closes the form of a sent reminder that was deleted while it was open.\nThe reminder form: dismisses the message that the reminder couldn't be sent."
     },
     "Off" : {
       "comment" : "A connection's page and the Connected sheet: Status Sharing is off.\nReminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off."
@@ -2059,6 +2062,9 @@
           }
         }
       }
+    },
+    "Paste it into a message or email to %@." : {
+      "comment" : "Invite: under Link Copied. The argument is the invited person's name, such as \"Riley Park\"."
     },
     "Pause Reminder" : {
       "comment" : "Reminder details: stops the reminder's nudging until it is resumed."

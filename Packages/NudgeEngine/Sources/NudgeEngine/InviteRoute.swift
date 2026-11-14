@@ -50,4 +50,14 @@ public enum InviteAddressKind: Equatable, Sendable {
         guard let pick, routes.contains(pick) else { return naturalRoute }
         return pick
     }
+
+    /// `address` as iCloud looks an Apple Account up by it: an email address as written, a phone
+    /// number as its digits with a leading + kept, both without surrounding spaces.
+    public func lookupKey(for address: String) -> String {
+        let trimmed = address.trimmingCharacters(in: .whitespacesAndNewlines)
+        switch self {
+        case .email: return trimmed
+        case .phone: return (trimmed.hasPrefix("+") ? "+" : "") + trimmed.filter(\.isNumber)
+        }
+    }
 }

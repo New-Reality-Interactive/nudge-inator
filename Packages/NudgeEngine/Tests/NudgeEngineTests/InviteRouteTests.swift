@@ -43,4 +43,21 @@ struct InviteRouteTests {
         #expect(InviteAddressKind.email.route(preferring: nil) == .mail)
         #expect(InviteAddressKind.phone.route(preferring: nil) == .messages)
     }
+
+    @Test(arguments: [
+        ("  Casey@iCloud.com ", "Casey@iCloud.com"),
+        ("casey.morgan@icloud.com", "casey.morgan@icloud.com"),
+    ])
+    func anEmailIsLookedUpAsWrittenOnceTrimmed(address: String, key: String) {
+        #expect(InviteAddressKind.email.lookupKey(for: address) == key)
+    }
+
+    @Test(arguments: [
+        ("+1 (555) 010-0134", "+15550100134"),
+        (" (555) 010-0134 ", "5550100134"),
+        ("555-0100", "5550100"),
+    ])
+    func aPhoneNumberIsLookedUpAsItsDigitsWithALeadingPlusKept(address: String, key: String) {
+        #expect(InviteAddressKind.phone.lookupKey(for: address) == key)
+    }
 }

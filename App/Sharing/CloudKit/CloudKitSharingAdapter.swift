@@ -24,7 +24,9 @@ final class CloudKitSharingAdapter: SharingAdapter {
 
     struct NotAvailableYet: Error {}
 
-    /// The adapter this build made, for the scene delegate that receives an invite (#217).
+    /// The adapter this build made, for the scene delegate that receives an invite (#217). A global
+    /// because the scene delegate is made by UIKit, not by us; each new adapter replaces it, which in
+    /// the app is only ever one.
     private(set) static weak var current: CloudKitSharingAdapter?
 
     weak var events: (any SharingAdapterEvents)?

@@ -1,3 +1,4 @@
+import Contacts
 import ContactsUI
 import NudgeEngine
 import SwiftUI
@@ -41,18 +42,18 @@ extension InviteRoute {
     /// What the person taps in Send With.
     fileprivate var title: LocalizedStringResource {
         switch self {
-        case .messages: "Messages"
-        case .mail: "Mail"
-        case .copyLink: "Copy Link"
+        case .messages: LocalizedStringResource("Messages", comment: "Invite Someone: Send With, the way that opens the message screen.")
+        case .mail: LocalizedStringResource("Mail", comment: "Invite Someone: Send With, the way that opens the mail screen.")
+        case .copyLink: LocalizedStringResource("Copy Link", comment: "Invite Someone: Send With, the way that copies the invite's link.")
         }
     }
 
     /// Under Send With, for the way that is selected.
     fileprivate var explanation: LocalizedStringResource {
         switch self {
-        case .messages: "Messages opens its own screen with the invite ready, and you tap Send there. Nothing is sent until you do."
-        case .mail: "Mail opens its own screen with the invite ready, and you tap Send there. Nothing is sent until you do."
-        case .copyLink: "Copies the invite link, for you to send anywhere. Nothing is sent until you do."
+        case .messages: LocalizedStringResource("Messages opens its own screen with the invite ready, and you tap Send there. Nothing is sent until you do.", comment: "Invite Someone: under Send With while Messages is selected.")
+        case .mail: LocalizedStringResource("Mail opens its own screen with the invite ready, and you tap Send there. Nothing is sent until you do.", comment: "Invite Someone: under Send With while Mail is selected.")
+        case .copyLink: LocalizedStringResource("Copies the invite link, for you to send anywhere. Nothing is sent until you do.", comment: "Invite Someone: under Send With while Copy Link is selected.")
         }
     }
 }
@@ -77,6 +78,8 @@ private struct InviteSheet: View {
     @State private var alreadyConnected: SharingConnection?
     @State private var alreadyInvited: SharingConnection?
     @State private var failed = false
+    /// Set after Copy Link, so the person is told the link is on the clipboard before the sheet closes.
+    @State private var copiedFor: SharingConnection?
 
     /// Who the invite is for, once there is a contact or an address to go on.
     private var person: InvitedPerson? {
@@ -100,11 +103,17 @@ private struct InviteSheet: View {
 
     private var isChosen: Bool { contact != nil || locked != nil }
 
+    /// Apple: the contact access button is for an app with limited access, or not asked yet. With
+    /// full access it shows nothing, and when access was denied it only offers a prompt that can't help.
+    private var contactAccessButtonApplies: Bool {
+        [.limited, .notDetermined].contains(CNContactStore.authorizationStatus(for: .contacts))
+    }
+
     var body: some View {
         NavigationStack {
             Form {
                 whoSection
-                if locked == nil, contact == nil, !text.isEmpty {
+                if locked == nil, contact == nil, !text.isEmpty, contactAccessButtonApplies {
                     Section {
                         ContactAccessButton(queryString: text) { identifiers in
                             Task { await choose(from: identifiers) }
@@ -120,7 +129,7 @@ private struct InviteSheet: View {
                                 HStack {
                                     Text(candidate.title)
                                     Spacer()
-                                    if candidate == route { Image(systemName: "checkmark") }
+                                    if candidate == route { Image(systemName: "checkmark").accessibilityHidden(true) }
                                 }
                             }
                             .foregroundStyle(.primary)
@@ -208,6 +217,19 @@ private struct InviteSheet: View {
             Text("You've already invited \(waiting.name). Inviting again sends a new invite, and the earlier one stops working.", comment: "Invite: under Already Invited. The argument is the person's name, such as \"Riley Park\".")
         }
         .alert(
+            Text("Link Copied", comment: "Invite: title of the message shown after Copy Link, once the invite's link is on the clipboard."),
+            isPresented: Binding { copiedFor != nil } set: { if !$0 { copiedFor = nil } },
+            presenting: copiedFor
+        ) { _ in
+            Button {
+                dismiss()
+            } label: {
+                Text("OK", comment: "Invite: dismisses the Link Copied message and closes the sheet.")
+            }
+        } message: { connection in
+            Text("Paste it into a message or email to \(connection.name).", comment: "Invite: under Link Copied. The argument is the invited person's name, such as \"Riley Park\".")
+        }
+        .alert(
             Text("Couldn't Send the Invite", comment: "Invite: title of the message shown when the invite couldn't be made."),
             isPresented: $failed
         ) {
@@ -242,6 +264,8 @@ private struct InviteSheet: View {
                         Image(systemName: "plus")
                             .frame(width: Design.Spacing.s5 + Design.Spacing.s1, height: Design.Spacing.s5 + Design.Spacing.s1)
                             .background(.fill.tertiary, in: Circle())
+                            .frame(minWidth: Design.Spacing.rowMin, minHeight: Design.Spacing.rowMin)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.borderless)
                     .accessibilityLabel(Text("Choose from Contacts", comment: "Invite Someone: the plus beside the address field, which opens the contact picker."))
@@ -308,7 +332,11 @@ private struct InviteSheet: View {
             switch try await sharing.invite(to: person, via: route, replacing: replacedID) {
             case .invited(let connection):
                 onInvited(connection)
-                dismiss()
+                if route == .copyLink {
+                    copiedFor = connection
+                } else {
+                    dismiss()
+                }
             case .alreadyConnected(let connection): alreadyConnected = connection
             case .canceled: break
             }
@@ -316,8 +344,4 @@ private struct InviteSheet: View {
             failed = true
         }
     }
-}
-
-#Preview("Invite Someone") {
-    Color.clear.inviteFlow(sharing: nil, isPresented: .constant(true))
 }
