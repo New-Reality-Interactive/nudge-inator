@@ -51,6 +51,9 @@ protocol SharingAdapter: AnyObject {
     /// once the person opens Connections or an invite reaches them, or the sharing store holds
     /// sharing already (spec #127, decision 4). Calling it again does nothing.
     func start()
+    /// Stops syncing for good, as Settings' Sharing switch turning off does (#387): the real adapter
+    /// lets its engines go and stops watching the network. The model lets the adapter go after it.
+    func stop()
     /// Takes a change to send, which the adapter keeps until it has gone through iCloud, however
     /// long that takes, and then reports with `sent(_:)`. The model keeps the change in the outbox
     /// until then.

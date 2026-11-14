@@ -136,6 +136,10 @@ The number on the app's home-screen icon: how many reminders have an occurrence 
 **Now badge**:
 The number on the Now tab: how many reminders have an occurrence that is Nudging. The Icon badge shows the same count.
 
+**Sharing**:
+The whole feature of sending reminders to people and receiving theirs: Connections, Invites, Sent reminders and Received reminders. A person turns it on or off with one switch, and while it's off none of it exists for them. It starts off.
+_Avoid_: Shared reminders (for the feature), social, family sharing
+
 **Connection**:
 Two people who have agreed to send each other reminders, set up by one accepted Invite. It works both ways, and either person can end it.
 _Avoid_: Friend, contact, share, follower

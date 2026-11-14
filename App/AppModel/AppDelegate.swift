@@ -72,13 +72,16 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         doneQueue: DoneQueue = .standard
     ) -> AppModel {
         let clock = SystemClock()
-        // A Debug build shares through iCloud (#216), or through the stand-in for the phone check
-        // when the launch asks for it. Making the adapter asks iCloud nothing (spec #127, decision
-        // 4). Release builds have no sharing until the Sharing switch turns it on (#387).
+        // Sharing exists only while Settings' Sharing switch is on (#387): then it goes through
+        // iCloud (#216). Making the adapter asks iCloud nothing (spec #127, decision 4). A Debug
+        // launch that asks for the stand-in for the phone check has Sharing on with it, for that
+        // launch only, whatever the switch says.
         #if DEBUG
-        let sharing = StandInSharing.modelIfAsked(clock: clock) ?? cloudKitSharing(clock: clock)
+        let standIn = StandInSharing.modelIfAsked(clock: clock)
+        let makeSharing = { StandInSharing.modelIfAsked(clock: clock) ?? cloudKitSharing(clock: clock) }
         #else
-        let sharing: SharingModel? = nil
+        let standIn: SharingModel? = nil
+        let makeSharing = { cloudKitSharing(clock: clock) }
         #endif
         return AppModel(
             clock: clock,
@@ -93,15 +96,14 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
                 stopIntent: { RefreshBadgeIntent() }
             ),
             doneQueue: doneQueue,
-            sharing: sharing
+            sharing: standIn,
+            makeSharing: makeSharing
         )
     }
 
-    #if DEBUG
     private static func cloudKitSharing(clock: any EngineClock) -> SharingModel {
         SharingModel(adapter: CloudKitSharingAdapter(), clock: clock) {
             try SharingStore(location: .appGroup)
         }
     }
-    #endif
 }

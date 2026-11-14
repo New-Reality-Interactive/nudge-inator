@@ -10,7 +10,7 @@ struct Senders {
     /// What the sharing store holds, for whether a copy is Waiting to sync (ticket 211).
     private let sharing: SharingData
 
-    /// No connections: a received reminder reads "From Someone". The shipped app until #216, and
+    /// No connections: a received reminder reads "From Someone". Sharing switched off (#387), and
     /// screens built with no app model.
     init() {
         names = [:]

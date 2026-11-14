@@ -100,6 +100,10 @@ final class SharingModel {
     /// again by whatever needs it next: the account read on App opened, a change coming or going.
     private let openStore: () throws -> SharingStore
     @ObservationIgnored private var store: SharingStore?
+    /// Whether the store has been read, so `data` is what it holds. Until then an empty `data`
+    /// says nothing, and the Sharing switch can't turn off (#387): not even while the store won't
+    /// open, as it may hold connections the other people would never hear were ended.
+    private(set) var hasReadStore = false
     /// Whether `allowICloud()` was called this launch.
     @ObservationIgnored private var iCloudAllowedThisLaunch = false
     /// The latest read of the account. Each waits for the one before, so reads that overlap can't
@@ -123,6 +127,7 @@ final class SharingModel {
             let store = try openStore()
             data = try store.load()
             self.store = store
+            hasReadStore = true
             return store
         } catch {
             Self.logger.error("The sharing store couldn't be read: \(error, privacy: .public)")
@@ -138,30 +143,45 @@ final class SharingModel {
         let previous = accountRefresh
         accountRefresh = Task {
             await previous?.value
+            guard !isStopped else { return }
             _ = try? openedStore()
             isOnline = adapter.isOnline
             guard mayAskICloud else { return }
             adapter.start()
             let account = await adapter.signedInAccount()
+            // Sharing was switched off while iCloud answered (#387).
+            guard !isStopped else { return }
             accountState = account.state
             record(account)
         }
     }
 
-    /// Whether the app may ask iCloud (spec #127, decision 4): only once the person has opened
-    /// Connections or an invite has reached them, this launch (`allowICloud()`), or the sharing
-    /// store holds sharing from before. Until then the adapter isn't started and the account isn't
-    /// read, so a person who never shares is never asked about iCloud.
+    /// Whether the app may ask iCloud (spec #127, decision 4): only while Settings' Sharing switch
+    /// is on (#387), once this launch the person has opened Connections or an invite has reached
+    /// them (`allowICloud()`), or the sharing store holds sharing from before; and never once
+    /// stopped. Until then the adapter isn't started and the account isn't read, so a person who
+    /// never shares is never asked about iCloud.
     var mayAskICloud: Bool {
-        iCloudAllowedThisLaunch || data.holdsSharing
+        !isStopped && (iCloudAllowedThisLaunch || data.holdsSharing)
     }
 
-    /// The person opened Connections or an invite reached them: from now on, the app may ask iCloud.
-    func allowICloud() {
+    /// The person opened Connections, an invite reached them, or Settings' Sharing switch is on
+    /// (#387): from now on, the app may ask iCloud. `refreshing` false leaves the account read to a
+    /// caller that starts one next, as launch does.
+    func allowICloud(refreshing: Bool = true) {
         guard !iCloudAllowedThisLaunch else { return }
         iCloudAllowedThisLaunch = true
-        refreshAccountState()
+        if refreshing { refreshAccountState() }
     }
+
+    /// Sharing was switched off (#387): the account read in flight is dropped and the adapter stops.
+    func stop() {
+        isStopped = true
+        adapter.stop()
+    }
+
+    /// Set by `stop()`. Each queued account read checks it, before asking and once iCloud answers.
+    @ObservationIgnored private var isStopped = false
 
     /// Returns once the account read started so far has finished.
     func waitUntilApplied() async {

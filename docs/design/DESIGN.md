@@ -243,7 +243,7 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
   actions are `{colors.tile-green}` (Done), `{colors.tile-red}` (Delete) and `{colors.tile-blue}` (Edit). Settings rows: red (Notifications, Badges, Delete All Data), orange
   (Alarms), gray (About, Open iOS Settings, Default Pace, How It Nudges, and About's Privacy Policy
-  and Support), blue (Send a Test Nudge). Tiles are icons for rows, not
+  and Support), blue (Send a Test Nudge, Sharing). Tiles are icons for rows, not
   statuses, so "one color, one meaning" does not apply to them.
 
 Rules:
@@ -567,8 +567,10 @@ The Reminders tab's tools, in its layout, so they're learned once.
   value under the label in `{typography.body}` `{colors.secondary-label}`, with the chevron
   (Default Pace: "Consistent · 10 min"), so it never shares the line with the label. A row that
   opens a web page (About's Privacy Policy and Support) has its label in the accent color and
-  `arrow.up.forward` in place of the chevron, and VoiceOver reads it as a link. Tile colors are
-  listed under Colors.
+  `arrow.up.forward` in place of the chevron, and VoiceOver reads it as a link. A row that turns
+  something on or off (Sharing) ends in the system switch in place of a status or chevron, and
+  VoiceOver reads the label and the switch's state as one element. Tile colors are listed under
+  Colors.
 
 ### Swipe actions
 - **Token:** `swipe-done`, `swipe-delete`, `swipe-edit`. Trailing swipe shows Done: green tile, white
@@ -623,7 +625,10 @@ sharing paused and offline banner.
 - **Connection rows:** a round `{colors.tile-gray}` tile with `person`, the name in `{typography.body}`,
   a detail line in `{typography.subhead}` `{colors.secondary-label}` ("Connected", "Invited · Waiting
   for them to accept") and a chevron, under Connected and Invited headers. Settings' Connections row
-  is a `{colors.tile-gray}` tile with `person.2`, in a section headed Sharing.
+  is a `{colors.tile-gray}` tile with `person.2`, in a section headed Sharing, under the Sharing
+  switch: a `{colors.tile-blue}` tile with `square.and.arrow.up` and a switch, with the footer
+  "Connect with people through iCloud to send each other reminders." The Connections row shows only
+  while the switch is on (#387).
 - **Sync states:** "Waiting to sync" with `clock`, in `{colors.secondary-label}`, on a Sent row's
   trailing label and on a received reminder's "From" line. It's a state, so it's never accent, warning
   or negative.
