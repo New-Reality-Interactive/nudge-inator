@@ -910,7 +910,7 @@
       }
     },
     "Apply shows %lld reminders." : {
-      "comment" : "Reminders' filter sheet: above Reset. The placeholder is how many reminders the list would show with these filters and the search as it is.",
+      "comment" : "Reminders' filter sheet: above Reset. The placeholder is how many reminders the list would show with these filters and the search as it is.\nSent's filter sheet: above Reset. The placeholder is how many reminders Sent would show with these filters and the search as it is, one sent to two people counting once.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -987,6 +987,9 @@
     "Below is how each strength nudges a new reminder at your Default Pace, %@, with Break Through Focus on." : {
       "comment" : "How It Nudges page: under the points at the top, before the three strengths' schedules. The placeholder is the Default Pace, such as \"Consistent · 10 min\" or \"Escalating\"."
     },
+    "Both days are included." : {
+      "comment" : "Sent's filter sheet: under the first and last day a sent reminder may be due, by the next due time its row shows."
+    },
     "Both days are included. A reminder with nothing more coming is found by its last due date." : {
       "comment" : "Reminders' filter sheet: under the first and last day a reminder may be due."
     },
@@ -1042,7 +1045,7 @@
       "comment" : "Accepting an invite: under Couldn't Accept the Invite."
     },
     "Check the spelling or try a new search." : {
-      "comment" : "Reminders tab: under the title when a search alone finds nothing.\nTags tab: under the title when a search finds nothing."
+      "comment" : "Reminders tab, Mine and Sent: under the title when a search alone finds nothing.\nTags tab: under the title when a search finds nothing."
     },
     "Choose Time" : {
       "comment" : "Opens the Edit Reminder form to choose a new time, so the reminder can resume."
@@ -1069,22 +1072,22 @@
       "comment" : "Tags tab: the no-match empty state's button when the filter is narrowing the list."
     },
     "Clear Filters" : {
-      "comment" : "Reminders tab: the no-match empty state's button that turns off what's narrowing the list."
+      "comment" : "Reminders tab, Mine and Sent: the no-match empty state's button that turns off what's narrowing the list."
     },
     "Clear Search" : {
-      "comment" : "Reminders tab: the no-match empty state's button when only a search is narrowing the list.\nTags tab: the no-match empty state's button when a search is narrowing the list."
+      "comment" : "Reminders tab, Mine and Sent: the no-match empty state's button when only a search is narrowing the list.\nTags tab: the no-match empty state's button when a search is narrowing the list."
     },
     "Clear Search and Filter" : {
       "comment" : "Tags tab: the no-match empty state's button when a search and the filter are narrowing the list."
     },
     "Clear Search and Filters" : {
-      "comment" : "Reminders tab: the no-match empty state's button when a search and filters are narrowing the list."
+      "comment" : "Reminders tab, Mine and Sent: the no-match empty state's button when a search and filters are narrowing the list."
     },
     "Coming Up" : {
       "comment" : "Now: section header for reminders due soon."
     },
     "Coming up" : {
-      "comment" : "Status label, and a Status row in the Reminders filter sheet: the reminder isn't due yet."
+      "comment" : "Status label, and a Status row in the Reminders and Filter Sent sheets: the reminder isn't due yet."
     },
     "Completed" : {
       "comment" : "A tag's screen: header of the reminders with nothing more to come."
@@ -1213,7 +1216,7 @@
       "comment" : "Reminder details: on a received reminder, the switch that keeps its status from its sender."
     },
     "Done" : {
-      "comment" : "Accepting an invite: closes the Connected sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
+      "comment" : "Accepting an invite: closes the Connected sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
     },
     "Done after %lld nudges" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence closed as Done. The placeholder is how many nudges it sent.",
@@ -1271,7 +1274,7 @@
       "comment" : "Nudge card: under the title of a reminder with no tags. The placeholder is its due time, such as \"9:00 AM\"."
     },
     "Due Date" : {
-      "comment" : "Reminders tab's Sort menu: the header of the section that sorts by the due time each row shows.\nReminders' filter sheet: header of the first and last day a reminder may be due."
+      "comment" : "Reminders tab's Sort menu: the header of the section that sorts by the due time each row shows.\nThe Reminders and Filter Sent sheets: header of the first and last day a reminder may be due."
     },
     "Due Date, Earliest First" : {
       "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Earliest First."
@@ -1492,6 +1495,9 @@
     "Filter Reminders" : {
       "comment" : "Title of the Reminders tab's filter sheet."
     },
+    "Filter Sent" : {
+      "comment" : "Title of the filter sheet on the Reminders tab's Sent view."
+    },
     "Filter Tags" : {
       "comment" : "Title of the Tags tab's filter sheet."
     },
@@ -1499,7 +1505,7 @@
       "comment" : "VoiceOver label of the group of tokens for the tags, and From others, My Day is filtered by."
     },
     "Firm" : {
-      "comment" : "Strength name, in the form and the Reminders filter sheet."
+      "comment" : "Strength name, in the form and the Reminders and Filter Sent sheets."
     },
     "For a reminder with Break Through Focus on, High nudges are Time Sensitive, so they get through a Focus." : {
       "comment" : "Settings: footer under the Nudges rows, when Time Sensitive is on."
@@ -1511,7 +1517,7 @@
       "comment" : "The Custom repeat page's choice of Daily, Weekly, Monthly or Yearly."
     },
     "From" : {
-      "comment" : "A filter sheet: header of the section with From others.\nReminders' filter sheet: the switch and date picker for the first day a reminder may be due."
+      "comment" : "A filter sheet: header of the section with From others.\nThe Reminders and Filter Sent sheets: the switch and date picker for the first day a reminder may be due."
     },
     "From %@" : {
       "comment" : "Under a received reminder's title on Now, My Day and the Reminders tab. The placeholder is the sender's name, such as \"Riley Park\"."
@@ -1526,7 +1532,7 @@
       "comment" : "Settings: header of the first section, with the About row."
     },
     "Gentle" : {
-      "comment" : "Strength name, in the form and the Reminders filter sheet: the reminder nudges gently."
+      "comment" : "Strength name, in the form and the Reminders and Filter Sent sheets: the reminder nudges gently."
     },
     "Gives up after %lld nudges or %@, whichever comes first." : {
       "comment" : "Under the reminder form's strength. 1: the give-up limit's nudge count. 2: its span, such as \"24 hours\".",
@@ -1669,7 +1675,7 @@
       "comment" : "Reminders tab: the Mine | Sent control's choice that shows the person's own reminders, received ones included."
     },
     "Missed" : {
-      "comment" : "My Day: the caption of the count of occurrences missed today.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence closed without Done, by its give-up limit or a take-over."
+      "comment" : "My Day: the caption of the count of occurrences missed today.\nStatus label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed without Done, by its give-up limit or a take-over."
     },
     "Missed: %@ didn't mark it Done" : {
       "comment" : "Body of the notification to the sender that the person they sent a reminder to didn't mark it Done in time. 1: the person's name."
@@ -1743,7 +1749,7 @@
       "comment" : "Connections: title of the empty state, with no one connected or invited."
     },
     "No Matches" : {
-      "comment" : "Reminders tab: title when reminders exist but what's narrowing the list leaves none.\nTags tab: title when tags exist but the filter leaves none."
+      "comment" : "Reminders tab, Mine and Sent: title when reminders exist but what's narrowing the list leaves none.\nTags tab: title when tags exist but the filter leaves none."
     },
     "No One to Send To" : {
       "comment" : "Reminders tab, Sent: title when this person is connected with no one."
@@ -1752,7 +1758,7 @@
       "comment" : "A tag's screen when no reminder has the tag.\nReminders tab: title when there are no reminders at all."
     },
     "No Results for “%@”" : {
-      "comment" : "Reminders tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces.\nTags tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces."
+      "comment" : "Reminders tab, Mine and Sent: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces.\nTags tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces."
     },
     "No Tags" : {
       "comment" : "A filter sheet: the row that shows only reminders without tags.\nMy Day: the filter token that shows only reminders without tags.\nTags: title when there are no tags yet."
@@ -1768,6 +1774,12 @@
     },
     "No reminders with these filters." : {
       "comment" : "Reminders tab: under the title when the filter sheet's filters leave nothing."
+    },
+    "No sent reminders with these filters match this search." : {
+      "comment" : "Reminders tab, Sent: under the title when a search finds nothing under the Filter Sent sheet's filters."
+    },
+    "No sent reminders with these filters." : {
+      "comment" : "Reminders tab, Sent: under the title when the Filter Sent sheet's filters leave nothing."
     },
     "No tags with this filter match this search." : {
       "comment" : "Tags tab: under the title when a search finds nothing under the filter sheet's filter."
@@ -1792,6 +1804,9 @@
     },
     "Not delivered yet" : {
       "comment" : "Under a sent reminder's title on the Sent view, and under a person's name on its details: their copy hasn't reached their iPhone yet."
+    },
+    "Not sharing" : {
+      "comment" : "Sent's filter sheet: the status choice for copies whose status the person keeps from the sender: their status sharing is off, or they chose not to share this one."
     },
     "Not sharing status" : {
       "comment" : "Under a sent reminder's title on the Sent view, under a person's name on its details, and trailing their name in the header of their group on the Sent view: the person keeps how their reminders are going from the sender, so the sender sees only that it was delivered."
@@ -1935,7 +1950,7 @@
       "comment" : "Body of the notification that Settings' Send a Test Nudge sends."
     },
     "Nudging" : {
-      "comment" : "My Day: the caption of the count of occurrences nudging now.\nNow: section header for the reminders nudging you now.\nStatus label, and a Status row in the Reminders filter sheet: an occurrence that has come due and isn't Done yet."
+      "comment" : "My Day: the caption of the count of occurrences nudging now.\nNow: section header for the reminders nudging you now.\nStatus label, and a Status row in the Reminders and Filter Sent sheets: an occurrence that has come due and isn't Done yet."
     },
     "Nudging Now" : {
       "comment" : "Reminder details: section header above the card of a reminder that is nudging."
@@ -2073,7 +2088,7 @@
       "comment" : "Reminder details: stops the reminder's nudging until it is resumed."
     },
     "Paused" : {
-      "comment" : "A tag's screen: header of the paused reminders.\nReminder details, Schedule: the reminder is paused, so nothing is next.\nStatus label, and a Status row in the Reminders filter sheet: the reminder is paused.\nThe reminder form's Send To row while sharing is paused without iCloud."
+      "comment" : "A tag's screen: header of the paused reminders.\nReminder details, Schedule: the reminder is paused, so nothing is next.\nStatus label, and a Status row in the Reminders and Filter Sent sheets: the reminder is paused.\nThe reminder form's Send To row while sharing is paused without iCloud."
     },
     "Paused: this one will be skipped" : {
       "comment" : "My Day: under the title of an occurrence due later today whose reminder is paused."
@@ -2081,11 +2096,14 @@
     "Pausing stops the nudging. Anything due while it's paused is skipped, not missed." : {
       "comment" : "Reminder details: under Pause Reminder."
     },
+    "People" : {
+      "comment" : "Sent's filter sheet: header of the list of connected people."
+    },
     "Privacy Policy" : {
       "comment" : "About page: row that opens the app's privacy policy on the website, in the web browser."
     },
     "Relentless" : {
-      "comment" : "Strength name, in the form and the Reminders filter sheet: the reminder nudges hardest."
+      "comment" : "Strength name, in the form and the Reminders and Filter Sent sheets: the reminder nudges hardest."
     },
     "Relentless always rings, so it always breaks through a Focus." : {
       "comment" : "Under Break Through Focus when the strength is Relentless, which shows the switch on and dimmed."
@@ -2139,7 +2157,7 @@
       "comment" : "VoiceOver label of Remove on a Waiting for You row on Now. The placeholder is the reminder's title."
     },
     "Removed" : {
-      "comment" : "Status label on a Sent row: the person removed their copy of the reminder."
+      "comment" : "Status label on a Sent row, and a Status row in the Filter Sent sheet: the person removed their copy of the reminder."
     },
     "Removed from This iPhone" : {
       "comment" : "The Apple Account Changed sheet: header of what was removed."
@@ -2239,6 +2257,9 @@
     "Showing only Nudging" : {
       "comment" : "My Day: under the counts while Nudging is chosen."
     },
+    "Shows each person's copy with any checked status." : {
+      "comment" : "Sent's filter sheet: under the list of statuses. Each person has their own copy of a sent reminder, with its own status."
+    },
     "Shows only tags that no reminder uses." : {
       "comment" : "Tags' filter sheet: under the Has no reminders condition."
     },
@@ -2246,10 +2267,13 @@
       "comment" : "Reminders' filter sheet: under the list of statuses."
     },
     "Shows reminders with any checked strength." : {
-      "comment" : "Reminders' filter sheet: under the list of strengths."
+      "comment" : "The Reminders and Filter Sent sheets: under the list of strengths."
+    },
+    "Shows what you sent to any checked person." : {
+      "comment" : "Sent's filter sheet: under the list of connected people."
     },
     "Skipped" : {
-      "comment" : "Status label, and a Status row in the Reminders filter sheet: an occurrence closed because its reminder was paused."
+      "comment" : "Status label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed because its reminder was paused."
     },
     "Skipped: the reminder was paused" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that closed because its reminder was paused."
@@ -2273,7 +2297,7 @@
       "comment" : "The reminder form's start date and time."
     },
     "Status" : {
-      "comment" : "Reminders' filter sheet: header of the list of statuses."
+      "comment" : "The Reminders and Filter Sent sheets: header of the list of statuses."
     },
     "Status Sharing" : {
       "comment" : "A connection's page: the switch for whether the person sees how the reminders they send are going. Also the row on the Connected sheet and under \"What <name> Chose\".\nReminder details: section header above a received reminder's Don't share this one."
@@ -2282,7 +2306,7 @@
       "comment" : "Onboarding and How It Nudges: the title of the point about privacy."
     },
     "Strength" : {
-      "comment" : "Reminders' filter sheet: header of the list of strengths.\nThe reminder form's strength choice: Gentle, Firm or Relentless."
+      "comment" : "The Reminders and Filter Sent sheets: header of the list of strengths.\nThe reminder form's strength choice: Gentle, Firm or Relentless."
     },
     "Strength changed from %@ to %@" : {
       "comment" : "Change note line: the sender changed a reminder's strength. 1: the old strength, such as \"Gentle\". 2: the new one.",
@@ -2420,7 +2444,7 @@
       }
     },
     "To" : {
-      "comment" : "An invited person's page: the email address or phone number the invite was sent to.\nReminders' filter sheet: the switch and date picker for the last day a reminder may be due."
+      "comment" : "An invited person's page: the email address or phone number the invite was sent to.\nThe Reminders and Filter Sent sheets: the switch and date picker for the last day a reminder may be due."
     },
     "To get every nudge during a Focus, allow %@ in that Focus. Nudges vibrate when your iPhone's settings allow it." : {
       "comment" : "Settings: footer under the Nudges rows. The placeholder is the app's name."
@@ -2464,8 +2488,11 @@
     "Waiting for you to accept" : {
       "comment" : "My Day: under the title of a reminder someone sent that waits for the person to accept it before it nudges.\nReminder details: the note on a reminder someone sent that waits for the person to accept it (Ask me first)."
     },
+    "Waiting to accept" : {
+      "comment" : "Sent's filter sheet: the status choice for copies that wait on the person's iPhone for them to accept (Ask me first)."
+    },
     "Waiting to sync" : {
-      "comment" : "Trailing a sent reminder's row on the Sent view and a person on its details, and on a received reminder's From line: what was sent or changed hasn't gone through iCloud yet."
+      "comment" : "Trailing a sent reminder's row on the Sent view and a person on its details, and on a received reminder's From line, and a Status row in the Filter Sent sheet: what was sent or changed hasn't gone through iCloud yet."
     },
     "Waiting to sync, %@" : {
       "comment" : "VoiceOver, on a Sent row and a recipient on a sent reminder's details: the send or a change to it hasn't gone through iCloud yet. The placeholder is the line under the title, such as \"Not delivered yet\" or \"Delivered\"."

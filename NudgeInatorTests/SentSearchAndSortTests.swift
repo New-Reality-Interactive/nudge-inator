@@ -45,7 +45,7 @@ struct SentSearchAndSortTests {
     }
 
     func sent(on alex: Phone, sort: RemindersSort = .createdOldestFirst, search: String = "") -> SentScreen {
-        SentScreen(engine: alex.model.engine, sharing: alex.model.sharing?.data ?? SharingData(), sort: sort, search: search)
+        SentScreen(engine: alex.model.engine, sharing: alex.model.sharing?.data ?? SharingData(), tools: SentTools(search: search, sort: sort))
     }
 
     func titles(_ screen: SentScreen) -> [String: [String]] {

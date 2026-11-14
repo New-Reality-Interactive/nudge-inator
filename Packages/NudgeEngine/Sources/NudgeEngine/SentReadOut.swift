@@ -121,8 +121,7 @@ public struct SentReadOut: Equatable, Sendable {
     /// Waiting to sync): the sender's app knows from its outbox, which the engine doesn't hold.
     public init(connections: [SentConnection], copies: [SentCopy], isWaitingToSync: (SentCopy) -> Bool = { _ in false }) {
         let copiesByConnection = Dictionary(grouping: copies, by: \.connectionID)
-        people = connections
-            .sorted { Self.isOrdered($0, before: $1) }
+        people = Self.inOrder(connections)
             .compactMap { connection in
                 guard let sent = copiesByConnection[connection.id], !sent.isEmpty else { return nil }
                 let rows = sent
@@ -130,6 +129,12 @@ public struct SentReadOut: Equatable, Sendable {
                     .map { Row($0, sharesStatus: connection.sharesStatus, waitingToSync: isWaitingToSync($0)) }
                 return Person(connectionID: connection.id, name: connection.name, rows: rows)
             }
+    }
+
+    /// `connections` in the order the read-out lists its people: by name without regard to case,
+    /// then by connection ID. What lists the people beside the read-out, such as a filter, uses it.
+    public static func inOrder(_ connections: [SentConnection]) -> [SentConnection] {
+        connections.sorted { isOrdered($0, before: $1) }
     }
 
     private static func isOrdered(_ a: SentCopy, before b: SentCopy) -> Bool {

@@ -2,7 +2,7 @@ import SwiftUI
 
 extension LocalizedStringResource {
     /// DESIGN.md's sync state (ticket 211): what was sent or changed hasn't gone through iCloud yet.
-    static let waitingToSync = LocalizedStringResource("Waiting to sync", comment: "Trailing a sent reminder's row on the Sent view and a person on its details, and on a received reminder's From line: what was sent or changed hasn't gone through iCloud yet.")
+    static let waitingToSync = LocalizedStringResource("Waiting to sync", comment: "Trailing a sent reminder's row on the Sent view and a person on its details, and on a received reminder's From line, and a Status row in the Filter Sent sheet: what was sent or changed hasn't gone through iCloud yet.")
 }
 
 /// DESIGN.md's sync state: "Waiting to sync" with `clock`, in the secondary label color (ticket
