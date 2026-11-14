@@ -66,11 +66,13 @@ protocol SharingAdapter: AnyObject {
     /// The iCloud account now, read again at launch, on App opened and when `accountStateChanged()`
     /// says so. Async: asking iCloud may take a while, and it mustn't hold up the app.
     func signedInAccount() async -> SharingAccount
-    /// Starts an invite to one person, for a new connection with this ID (ticket 194): the real
-    /// adapter makes the connection's share and shows the system sharing sheet for it (#217).
-    /// Returns who the sheet sent it to once it has, or `nil` if the person canceled the sheet.
-    /// Throws if the invite couldn't be made, and then nothing was sent.
-    func invite(_ connectionID: UUID) async throws -> InvitedPerson?
+    /// Makes the invite to `person`, for a new connection with this ID (ticket 194), and delivers it
+    /// by `route` (#217): the real adapter makes the connection's private share, adds the person to
+    /// it and hands the share's link to iOS's compose screen or the clipboard. Returns `true` once
+    /// the invite is delivered, or `false` if the person canceled the delivery, and then nothing was
+    /// sent and the adapter has revoked the invite. Throws if the invite couldn't be made, and then
+    /// nothing was sent either.
+    func invite(_ connectionID: UUID, to person: InvitedPerson, via route: InviteRoute) async throws -> Bool
     /// Stops the connection's invite working, even for someone who already has it. The adapter
     /// keeps the revoke until it has gone through iCloud, as it keeps a change.
     func revokeInvite(_ connectionID: UUID)
@@ -133,9 +135,9 @@ struct SharingParticipant: Hashable {
 /// The invite no longer includes this person: canceled, or someone else accepted it first.
 struct InviteUnavailable: Error {}
 
-/// Who an invite went to, as the system sharing sheet named them (ticket 194).
+/// Who an invite is for (ticket 194): a contact the person chose, or an address they typed.
 struct InvitedPerson: Equatable {
-    /// Their name, or their address when the sheet had no name for them.
+    /// Their name, or their address when the app has no name for them.
     var name: String
     /// The email address or phone number of the Apple Account the invite was sent to.
     var address: String

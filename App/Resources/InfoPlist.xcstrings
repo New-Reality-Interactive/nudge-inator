@@ -37,6 +37,18 @@
           }
         }
       }
+    },
+    "NSContactsUsageDescription" : {
+      "comment" : "The reason in the system prompt that asks to share a contact with the app, when the person types in Invite Someone. A brief, complete sentence.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nudge-inator suggests the people you type the first letters of, so you can invite them without typing their whole address."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

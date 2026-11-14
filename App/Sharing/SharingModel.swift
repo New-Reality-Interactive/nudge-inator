@@ -47,6 +47,12 @@ final class SharingModel {
         data.connections.first { $0.id == connectionID && $0.state == .connected }
     }
 
+    /// The connection with this ID in any state: a person invited, or connected, or `nil` if it was
+    /// never made or has gone. Invite Again locks the sheet to the person this finds.
+    func listedConnection(_ connectionID: UUID) -> SharingConnection? {
+        data.connections.first { $0.id == connectionID }
+    }
+
     /// The people a reminder can be sent to (Send To, ticket 198): every connection that is
     /// connected, in the order Connections lists them. Never an invite, nor one the other person ended.
     var connected: [SharingConnection] {
@@ -257,24 +263,32 @@ final class SharingModel {
         case invited(SharingConnection)
         /// The person is already connected, so no second connection was made.
         case alreadyConnected(SharingConnection)
-        /// The person closed the sharing sheet: nothing was sent.
+        /// The person canceled the delivery (the compose screen): nothing was sent.
         case canceled
     }
 
-    /// Invites one person through the adapter's sharing sheet (ticket 194) and lists them as
-    /// Invited. Someone already connected is not connected twice: the sheet's new invite is
-    /// revoked and the outcome names them. An invite to someone already Invited, or Invite Again
-    /// from the invite with `replacedID`, takes the old invite's place and revokes it. Throws,
-    /// keeping nothing, if the store can't be opened or sharing is paused (ticket 210), both
-    /// checked before the sheet shows, or the store can't keep the invite, or the invite couldn't
-    /// be made.
-    func invite(replacing replacedID: UUID? = nil) async throws -> InviteOutcome {
+    /// The invite to `person` that is waiting to be accepted, if there is one: inviting them again
+    /// replaces it, so the sheet asks first.
+    func invitedConnection(for person: InvitedPerson) -> SharingConnection? {
+        data.connections.first { $0.state == .invited && $0.isSamePerson(as: person) }
+    }
+
+    /// Invites `person`, delivering the invite by `route` through the adapter (ticket 194, #217),
+    /// and lists them as Invited. Someone already connected is not connected twice: nothing is
+    /// made and the outcome names them. An invite to someone already Invited, or Invite Again from
+    /// the invite with `replacedID`, takes the old invite's place and revokes it. Throws, keeping
+    /// nothing, if the store can't be opened or sharing is paused (ticket 210), both checked before
+    /// any iCloud work, or the store can't keep the invite, or the invite couldn't be made.
+    func invite(to person: InvitedPerson, via route: InviteRoute, replacing replacedID: UUID? = nil) async throws -> InviteOutcome {
         _ = try openedStore()
         guard pause == nil else { throw SharingPaused() }
+        if let already = try currentData().connections.first(where: { $0.state == .connected && $0.isSamePerson(as: person) }) {
+            return .alreadyConnected(already)
+        }
         let connectionID = UUID()
-        guard let person = try await adapter.invite(connectionID) else { return .canceled }
+        guard try await adapter.invite(connectionID, to: person, via: route) else { return .canceled }
         do {
-            // Read after the sheet: the data may have changed while it was up.
+            // Read after the delivery: the data may have changed while its screen was up.
             var kept = try currentData()
             if let already = kept.connections.first(where: { $0.state == .connected && $0.isSamePerson(as: person) }) {
                 adapter.revokeInvite(connectionID)
@@ -287,7 +301,7 @@ final class SharingModel {
             replaced.forEach { adapter.revokeInvite($0.id) }
             return .invited(connection)
         } catch {
-            // The sheet sent an invite the app can't list, so it mustn't stay working.
+            // The invite went out but the app can't list it, so it mustn't stay working.
             adapter.revokeInvite(connectionID)
             throw error
         }
@@ -437,7 +451,7 @@ private extension SharingData {
 }
 
 private extension SharingConnection {
-    /// Whether the sharing sheet's `person` is this connection's person: the same address, however
+    /// Whether `person` is this connection's person: the same address, however
     /// it's written. Never the name alone, which two people can share (the developer's call at
     /// #194's phone check, over the mockup's `sendInvite`, which matches either).
     func isSamePerson(as person: InvitedPerson) -> Bool {

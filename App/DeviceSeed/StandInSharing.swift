@@ -3,7 +3,6 @@ import Foundation
 import NudgeEngine
 import os
 import SwiftUI
-import UIKit
 
 /// Sharing for the phone check of Connections (ticket 194), in place of the CloudKit adapter: a
 /// launch with `NUDGE_SHARING_STANDIN=seeded` (a connection and two invites, one 3 days old),
@@ -344,30 +343,11 @@ final class StandInSharingAdapter: SharingAdapter {
         SharingAccount(state: account, idWhenAvailable: accountID)
     }
 
-    func invite(_ connectionID: UUID) async throws -> InvitedPerson? {
-        // `present` reports no failure, and the alert's buttons are what resume the wait, so it
-        // presents only where it surely shows: otherwise the invite would wait for good.
-        guard let presenter = Self.topViewController(), !presenter.isBeingDismissed, presenter.presentedViewController == nil else {
-            StandInSharing.logger.error("Stand-in: nowhere to show the sharing sheet")
-            return nil
-        }
-        return await withCheckedContinuation { continuation in
-            let alert = UIAlertController(title: "Add People (stand-in)", message: "iOS draws this sheet with the real adapter.", preferredStyle: .alert)
-            alert.addTextField { $0.placeholder = "Name (optional)" }
-            alert.addTextField {
-                $0.placeholder = "Email or phone"
-                $0.keyboardType = .emailAddress
-                $0.autocapitalizationType = .none
-            }
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in continuation.resume(returning: nil) })
-            alert.addAction(UIAlertAction(title: "Send", style: .default) { [weak alert] _ in
-                let name = alert?.textFields?[0].text?.trimmingCharacters(in: .whitespaces) ?? ""
-                let address = alert?.textFields?[1].text?.trimmingCharacters(in: .whitespaces) ?? ""
-                guard !address.isEmpty else { return continuation.resume(returning: nil) }
-                continuation.resume(returning: InvitedPerson(name: name.isEmpty ? address : name, address: address))
-            })
-            presenter.present(alert, animated: true)
-        }
+    /// The stand-in delivers nothing: the invite counts as sent, so the phone check can follow the
+    /// screens that come after it.
+    func invite(_ connectionID: UUID, to person: InvitedPerson, via route: InviteRoute) async throws -> Bool {
+        StandInSharing.logger.notice("Stand-in: invited someone by \(String(describing: route), privacy: .public)")
+        return true
     }
 
     func revokeInvite(_ connectionID: UUID) {
@@ -447,13 +427,6 @@ final class StandInSharingAdapter: SharingAdapter {
     private static func startOfMinute(minutesFromNow minutes: Double) -> Date {
         let soon = Date.now.addingTimeInterval(minutes * 60)
         return Calendar.autoupdatingCurrent.dateInterval(of: .minute, for: soon)?.start ?? soon
-    }
-
-    private static func topViewController() -> UIViewController? {
-        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first { $0.activationState == .foregroundActive }
-        var top = scene?.keyWindow?.rootViewController
-        while let presented = top?.presentedViewController { top = presented }
-        return top
     }
 }
 #endif

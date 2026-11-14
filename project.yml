@@ -72,6 +72,7 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         NSAlarmKitUsageDescription: "Nudge-inator rings an alarm to keep nudging you about a reminder until you mark it done."
+        NSContactsUsageDescription: "Nudge-inator suggests the people you type the first letters of, so you can invite them without typing their whole address."
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.newrealityinteractive.nudgeinator

@@ -77,6 +77,21 @@ final class CloudKitSync {
         cache.zones[connectionID] = CloudKitSyncCache.Zone(ownerName: zoneID.ownerName)
     }
 
+    /// Whether this person accepted an invite to the connection, so its zone is in their shared database.
+    func hasJoinedZone(of connectionID: UUID) -> Bool {
+        cache.zones[connectionID].map { !$0.isOwn } ?? false
+    }
+
+    /// Whether the inviter has seen someone accept the connection's share.
+    func participantJoined(_ connectionID: UUID) -> Bool {
+        cache.zones[connectionID]?.participantJoined == true
+    }
+
+    /// The ID of the zone the inviter made for the connection.
+    static func ownZoneID(of connectionID: UUID) -> CKRecordZone.ID {
+        CKRecordZone.ID(zoneName: connectionID.uuidString, ownerName: CKCurrentUserDefaultName)
+    }
+
     /// Whether this person invited the other to the connection, so its zone is in their private
     /// database.
     func ownsZone(of connectionID: UUID) -> Bool {

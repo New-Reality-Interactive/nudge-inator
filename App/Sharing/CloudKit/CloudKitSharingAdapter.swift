@@ -12,7 +12,7 @@ import os
 /// stopped; what hasn't gone stays in the outbox until `sent(_:)` says it has.
 ///
 /// The account comes from `CKContainer.accountStatus`, and a report when an engine sends its
-/// account-change event (#215). Invites (making a share, accepting one) are #217's.
+/// account-change event (#215). Invites make the connection's share and accept one (#217).
 ///
 /// Making one asks iCloud nothing. `start()` and `signedInAccount()` do, and the app model calls
 /// them only once the person opens Connections or an invite reaches them, or sharing holds
@@ -20,13 +20,18 @@ import os
 @MainActor
 final class CloudKitSharingAdapter: SharingAdapter {
     static let containerIdentifier = "iCloud.com.newrealityinteractive.nudgeinator"
-    private static let logger = Logger(subsystem: "com.newrealityinteractive.nudgeinator", category: "CloudKit")
+    nonisolated static let logger = Logger(subsystem: "com.newrealityinteractive.nudgeinator", category: "CloudKit")
 
     struct NotAvailableYet: Error {}
 
+    /// The adapter this build made, for the scene delegate that receives an invite (#217). A global
+    /// because the scene delegate is made by UIKit, not by us; each new adapter replaces it, which in
+    /// the app is only ever one.
+    private(set) static weak var current: CloudKitSharingAdapter?
+
     weak var events: (any SharingAdapterEvents)?
     private let reader: CloudKitAccountReader
-    private let container: CKContainer?
+    let container: CKContainer?
     /// Off in tests, which send and fetch by hand (WWDC23 "Sync to iCloud with CKSyncEngine").
     private let automaticallySync: Bool
     private(set) var sync: CloudKitSync?
@@ -42,17 +47,24 @@ final class CloudKitSharingAdapter: SharingAdapter {
     private var unreported: [OutboxChange.ID] = []
     private var isReporting = false
     private let connectivity = Connectivity()
+    /// Hands an invite's link to the person (#217): iOS's compose screens, or the clipboard.
+    let delivery: any InviteDelivering
+    /// Invites that reached this person, until they are accepted (#217).
+    var removing: Set<UUID> = []
+    var incoming: [UUID: CKShare.Metadata] = [:]
 
     /// A real adapter over the app's container.
     convenience init() {
         let container = CKContainer(identifier: Self.containerIdentifier)
-        self.init(reader: CloudKitAccountReader(source: container), container: container)
+        self.init(reader: CloudKitAccountReader(source: container), container: container, delivery: SystemInviteDelivery())
     }
 
-    init(reader: CloudKitAccountReader, container: CKContainer? = nil, automaticallySync: Bool = true) {
+    init(reader: CloudKitAccountReader, container: CKContainer? = nil, automaticallySync: Bool = true, delivery: any InviteDelivering = NoInviteDelivery()) {
+        self.delivery = delivery
         self.reader = reader
         self.container = container
         self.automaticallySync = automaticallySync
+        Self.current = self
         connectivity.onChange = { [weak self] in self?.events?.connectivityChanged() }
     }
 
@@ -113,16 +125,10 @@ final class CloudKitSharingAdapter: SharingAdapter {
         keep()
     }
 
-    // MARK: Not yet (#217)
-
-    func invite(_ connectionID: UUID) async throws -> InvitedPerson? { throw NotAvailableYet() }
-    func accept(_ connectionID: UUID) async throws { throw NotAvailableYet() }
-    func keepOnly(_ participant: SharingParticipant, in connectionID: UUID) {}
-
     // MARK: Keeping and reporting
 
     /// Has the store keep the engines' states and the sync's cache.
-    private func keep() {
+    func keep() {
         guard let sync, let events else { return }
         if undelivered.isEmpty { keptEngineStates = engineStates }
         do {
@@ -260,7 +266,17 @@ extension CloudKitSharingAdapter: CKSyncEngineDelegate {
         for modification in changes.modifications {
             if let share = modification.record as? CKShare {
                 guard let connectionID = UUID(uuidString: share.recordID.zoneID.zoneName) else { continue }
+                let invitees = InviteParticipant.invitees(of: share)
+                let wasJoined = sync.participantJoined(connectionID)
                 outcome = outcome + sync.fetchedShare(in: connectionID, hasAcceptedParticipant: CloudKitSync.hasAcceptedParticipant(share))
+                if let first = InviteParticipant.firstToAccept(among: invitees), let id = first.id {
+                    if !wasJoined {
+                        Task { try? await events?.inviteAccepted(connectionID, by: SharingParticipant(id: id)) }
+                    } else {
+                        // Others added after the first to accept come off the share.
+                        removeOthersOnce(from: connectionID, keeping: id)
+                    }
+                }
             } else {
                 records.append(SharingRecordMapping.FetchedRecord(fetched: modification.record))
             }

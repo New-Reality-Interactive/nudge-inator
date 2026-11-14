@@ -27,8 +27,8 @@ struct DisconnectTests {
 
     /// `alex` invites Riley at her address, and she accepts. Returns the connection's ID.
     func invite(_ riley: Phone, from alex: Phone) async throws -> UUID {
-        alex.adapter.inviteAnswer = .names(InvitedPerson(name: "Riley Park", address: "riley.park@icloud.com"))
-        guard case .invited(let invited) = try await alex.sharing.invite() else { throw InviteNotSent() }
+        alex.adapter.inviteAnswer = .sent
+        guard case .invited(let invited) = try await alex.sharing.invite(to: InvitedPerson(name: "Riley Park", address: "riley.park@icloud.com"), via: .copyLink) else { throw InviteNotSent() }
         network.share(invited.id, from: alex.adapter, senderName: "Alex Morgan", with: [riley.adapter])
         network.tapInvite(invited.id, on: riley.adapter)
         await network.settle()

@@ -262,11 +262,11 @@ final class FakeSharingAdapter: SharingAdapter {
         return SharingAccount(state: account, idWhenAvailable: accountID)
     }
 
-    /// What the system sharing sheet does when the app starts an invite.
+    /// What the delivery of an invite comes to.
     enum InviteAnswer {
-        /// The person sent the invite to someone.
-        case names(InvitedPerson)
-        /// The person closed the sheet.
+        /// The invite was delivered.
+        case sent
+        /// The person canceled the compose screen.
         case canceled
         /// The invite couldn't be made.
         case fails
@@ -281,11 +281,15 @@ final class FakeSharingAdapter: SharingAdapter {
     /// The connection of every invite the app revoked, in order.
     private(set) var revoked: [UUID] = []
 
-    func invite(_ connectionID: UUID) async throws -> InvitedPerson? {
+    /// Who each invite was for, and by which route, in order.
+    private(set) var invited: [(person: InvitedPerson, route: InviteRoute)] = []
+
+    func invite(_ connectionID: UUID, to person: InvitedPerson, via route: InviteRoute) async throws -> Bool {
         invites.append(connectionID)
+        invited.append((person, route))
         switch inviteAnswer {
-        case .names(let person): return person
-        case .canceled: return nil
+        case .sent: return true
+        case .canceled: return false
         case .fails: throw InviteFailed()
         }
     }
