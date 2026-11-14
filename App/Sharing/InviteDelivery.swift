@@ -41,14 +41,14 @@ final class SystemInviteDelivery: NSObject, InviteDelivering {
             UIPasteboard.general.url = link
             return true
         case .messages:
-            guard MFMessageComposeViewController.canSendText(), let presenter = Self.frontmostViewController() else { return false }
+            guard MFMessageComposeViewController.canSendText(), let presenter = UIViewController.frontmost() else { return false }
             let controller = MFMessageComposeViewController()
             controller.messageComposeDelegate = self
             controller.recipients = [person.address]
             controller.body = Self.message(with: link)
             return await present(controller, over: presenter)
         case .mail:
-            guard MFMailComposeViewController.canSendMail(), let presenter = Self.frontmostViewController() else { return false }
+            guard MFMailComposeViewController.canSendMail(), let presenter = UIViewController.frontmost() else { return false }
             let controller = MFMailComposeViewController()
             controller.mailComposeDelegate = self
             controller.setToRecipients([person.address])
@@ -67,15 +67,6 @@ final class SystemInviteDelivery: NSObject, InviteDelivering {
             finish = { sent in continuation.resume(returning: sent) }
             presenter.present(controller, animated: true)
         }
-    }
-
-    private static func frontmostViewController() -> UIViewController? {
-        let scene = UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .first { $0.activationState == .foregroundActive }
-        var top = scene?.keyWindow?.rootViewController
-        while let presented = top?.presentedViewController, !presented.isBeingDismissed { top = presented }
-        return top
     }
 
     fileprivate func close(_ controller: UIViewController, sent: Bool) {

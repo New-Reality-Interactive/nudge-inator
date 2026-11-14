@@ -1,6 +1,7 @@
 import Contacts
 import ContactsUI
 import NudgeEngine
+import Observation
 import SwiftUI
 
 extension View {
@@ -33,7 +34,7 @@ private struct InviteFlow: ViewModifier {
     func body(content: Content) -> some View {
         content
             .sheet(isPresented: $isPresented) {
-                InviteSheet(sharing: sharing, locked: replacing.flatMap(sharing.connection), onInvited: onInvited)
+                InviteSheet(sharing: sharing, locked: replacing.flatMap(sharing.listedConnection), onInvited: onInvited)
             }
     }
 }
@@ -48,12 +49,36 @@ extension InviteRoute {
         }
     }
 
+    /// The symbol before the way's name (the approved `send-with-icons` mockup).
+    fileprivate var symbol: String {
+        switch self {
+        case .messages: "message"
+        case .mail: "envelope"
+        case .copyLink: "link"
+        }
+    }
+
     /// Under Send With, for the way that is selected.
     fileprivate var explanation: LocalizedStringResource {
         switch self {
         case .messages: LocalizedStringResource("Messages opens its own screen with the invite ready, and you tap Send there. Nothing is sent until you do.", comment: "Invite Someone: under Send With while Messages is selected.")
         case .mail: LocalizedStringResource("Mail opens its own screen with the invite ready, and you tap Send there. Nothing is sent until you do.", comment: "Invite Someone: under Send With while Mail is selected.")
         case .copyLink: LocalizedStringResource("Copies the invite link, for you to send anywhere. Nothing is sent until you do.", comment: "Invite Someone: under Send With while Copy Link is selected.")
+        }
+    }
+}
+
+/// Receives the contact access button's approval. iOS calls that callback on a background thread, so a
+/// callback written inside a view body, which Swift ties to the main thread, stops the app (found at
+/// #217's phone check). This one is made outside the main actor and hands the identifiers over to it.
+@MainActor
+@Observable
+private final class ContactApproval {
+    var identifiers: [String] = []
+
+    nonisolated var callback: ([String]) -> Void {
+        { [self] approved in
+            Task { @MainActor in identifiers = approved }
         }
     }
 }
@@ -67,17 +92,25 @@ private struct InviteSheet: View {
     let onInvited: (SharingConnection) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+    /// The width of a way's symbol and the circle behind the plus, which grow with the text so the
+    /// symbols never overlap it.
+    @ScaledMetric(relativeTo: .body) private var symbolWidth = Design.Spacing.s5
+    @ScaledMetric(relativeTo: .body) private var plusCircle = Design.Spacing.s5 + Design.Spacing.s1
     @State private var text = ""
     /// A contact the person chose, which shows as a name pill.
     @State private var contact: InvitedPerson?
     /// The way to send the person picked, kept while it still fits the address.
     @State private var pick: InviteRoute?
     @State private var isPreparing = false
-    @State private var isPickingContact = false
     @State private var addressChoices: [InvitedPerson] = []
+    /// Contacts the app can already read whose name matches what is typed.
+    @State private var suggestions: [InvitedPerson] = []
     @State private var alreadyConnected: SharingConnection?
     @State private var alreadyInvited: SharingConnection?
     @State private var failed = false
+    @State private var approval = ContactApproval()
     /// Set after Copy Link, so the person is told the link is on the clipboard before the sheet closes.
     @State private var copiedFor: SharingConnection?
 
@@ -103,6 +136,25 @@ private struct InviteSheet: View {
 
     private var isChosen: Bool { contact != nil || locked != nil }
 
+    /// Invite is the form's last row, not a bar pinned under it, where the screen is too short or the
+    /// text too large for a bar and the keyboard to leave the field room (found at the phone check).
+    private var invitesInForm: Bool { verticalSizeClass == .compact || dynamicTypeSize.isAccessibilitySize }
+
+    private var inviteButton: some View {
+        Button {
+            Task { await invite() }
+        } label: {
+            HStack(spacing: Design.Spacing.s2) {
+                if isPreparing { ProgressView() }
+                Text("Invite", comment: "Invite Someone: sends the invite to the person chosen.")
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
+        .disabled(person == nil || route == nil || isPreparing)
+    }
+
     /// Apple: the contact access button is for an app with limited access, or not asked yet. With
     /// full access it shows nothing, and when access was denied it only offers a prompt that can't help.
     private var contactAccessButtonApplies: Bool {
@@ -113,11 +165,25 @@ private struct InviteSheet: View {
         NavigationStack {
             Form {
                 whoSection
+                if locked == nil, contact == nil, !suggestions.isEmpty {
+                    Section {
+                        ForEach(suggestions, id: \.address) { suggestion in
+                            Button {
+                                contact = suggestion
+                            } label: {
+                                VStack(alignment: .leading, spacing: Design.Spacing.line) {
+                                    Text(suggestion.name)
+                                    Text(suggestion.address).font(.footnote).foregroundStyle(.secondary)
+                                }
+                            }
+                            .foregroundStyle(.primary)
+                            .accessibilityElement(children: .combine)
+                        }
+                    }
+                }
                 if locked == nil, contact == nil, !text.isEmpty, contactAccessButtonApplies {
                     Section {
-                        ContactAccessButton(queryString: text) { identifiers in
-                            Task { await choose(from: identifiers) }
-                        }
+                        ContactAccessButton(queryString: text, approvalCallback: approval.callback)
                     }
                 }
                 if let route {
@@ -126,7 +192,11 @@ private struct InviteSheet: View {
                             Button {
                                 pick = candidate
                             } label: {
-                                HStack {
+                                HStack(spacing: Design.Spacing.s3) {
+                                    Image(systemName: candidate.symbol)
+                                        .foregroundStyle(.tint)
+                                        .frame(width: symbolWidth)
+                                        .accessibilityHidden(true)
                                     Text(candidate.title)
                                     Spacer()
                                     if candidate == route { Image(systemName: "checkmark").accessibilityHidden(true) }
@@ -141,21 +211,25 @@ private struct InviteSheet: View {
                         Text(route.explanation)
                     }
                 }
+                if invitesInForm {
+                    Section {
+                        inviteButton
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets()) // the button fills the row on a clear background; no text in the row
+                }
+            }
+            .task(id: text) { suggestions = await InviteContacts.people(matching: text) }
+            .onChange(of: approval.identifiers) { _, identifiers in
+                Task { await choose(from: identifiers) }
             }
             .safeAreaInset(edge: .bottom) {
-                Button {
-                    Task { await invite() }
-                } label: {
-                    HStack(spacing: Design.Spacing.s2) {
-                        if isPreparing { ProgressView() }
-                        Text("Invite", comment: "Invite Someone: sends the invite to the person chosen.")
-                    }
-                    .frame(maxWidth: .infinity)
+                if !invitesInForm {
+                    inviteButton
+                        .padding(Design.Spacing.s4)
+                        .frame(maxWidth: .infinity)
+                        .background(Color(uiColor: .systemGroupedBackground))
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .disabled(person == nil || route == nil || isPreparing)
-                .padding(Design.Spacing.s4)
             }
             .navigationTitle(locked == nil
                 ? Text("Invite Someone", comment: "Invite Someone: the sheet's title.")
@@ -169,13 +243,6 @@ private struct InviteSheet: View {
             }
         }
         .interactiveDismissDisabled(isPreparing)
-        .sheet(isPresented: $isPickingContact) {
-            ContactPicker { picked in
-                contact = picked
-                isPickingContact = false
-            }
-            .ignoresSafeArea()
-        }
         .confirmationDialog(
             Text("Choose an address", comment: "Invite Someone: title of the choice between a contact's email addresses and phone numbers."),
             isPresented: Binding { !addressChoices.isEmpty } set: { if !$0 { addressChoices = [] } },
@@ -185,7 +252,9 @@ private struct InviteSheet: View {
                 Button(choice.address) { contact = choice }
             }
         } message: {
-            Text("Use the one that is their Apple Account.", comment: "Invite Someone: under the choice between a contact's addresses.")
+            if let name = addressChoices.first?.name {
+                Text("\(name) has more than one address. Use the one that is their Apple Account.", comment: "Invite Someone: under the choice between a contact's addresses. The argument is the contact's name.")
+            }
         }
         .alert(
             Text("Already Connected", comment: "Invite: title of the message shown when the person invited is already connected."),
@@ -244,7 +313,10 @@ private struct InviteSheet: View {
 
     private var whoSection: some View {
         Section {
-            HStack(spacing: Design.Spacing.s3) {
+            let layout = dynamicTypeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: Design.Spacing.s3))
+                : AnyLayout(HStackLayout(spacing: Design.Spacing.s3))
+            layout {
                 if isChosen, let person {
                     namePill(person)
                 } else {
@@ -256,18 +328,21 @@ private struct InviteSheet: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                 }
-                Spacer(minLength: 0)
+                if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
                 if locked == nil {
                     Button {
-                        isPickingContact = true
+                        Task {
+                            if let picked = await ContactPickerPresenter.pick() { contact = picked }
+                        }
                     } label: {
                         Image(systemName: "plus")
-                            .frame(width: Design.Spacing.s5 + Design.Spacing.s1, height: Design.Spacing.s5 + Design.Spacing.s1)
+                            .frame(width: plusCircle, height: plusCircle)
                             .background(.fill.tertiary, in: Circle())
                             .frame(minWidth: Design.Spacing.rowMin, minHeight: Design.Spacing.rowMin)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.borderless)
+                    .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : nil, alignment: .trailing)
                     .accessibilityLabel(Text("Choose from Contacts", comment: "Invite Someone: the plus beside the address field, which opens the contact picker."))
                 }
             }
@@ -275,7 +350,11 @@ private struct InviteSheet: View {
             Text("Who to Invite", comment: "Invite Someone: heading of the field for the person to invite.")
         } footer: {
             if isChosen, let person {
-                Text("The invite opens only for \(person.name) at \(person.address).", comment: "Invite Someone: under the field once a person is chosen. The first argument is their name, the second their email address or phone number.")
+                if person.name == person.address {
+                    Text("The invite opens only for \(person.address).", comment: "Invite Someone: under the field once an address typed by hand is used, which has no name. The argument is the email address or phone number.")
+                } else {
+                    Text("The invite opens only for \(person.name) at \(person.address).", comment: "Invite Someone: under the field once a contact is chosen. The first argument is their name, the second their email address or phone number.")
+                }
             } else {
                 Text("Use the email address or phone number of their Apple Account, or the invite won't open for them.", comment: "Invite Someone: under the address field before a person is chosen.")
             }
@@ -286,7 +365,7 @@ private struct InviteSheet: View {
     private func namePill(_ person: InvitedPerson) -> some View {
         HStack(spacing: Design.Spacing.s2) {
             Text(person.name)
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
             if locked == nil {
                 Button {
                     contact = nil
@@ -301,7 +380,7 @@ private struct InviteSheet: View {
         .foregroundStyle(.tint)
         .padding(.horizontal, Design.Spacing.s3)
         .padding(.vertical, Design.Spacing.s1)
-        .background(.fill.tertiary, in: Capsule())
+        .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: Design.Spacing.s4))
     }
 
     /// The contact the contact access button shared: the one address, or a choice between several.

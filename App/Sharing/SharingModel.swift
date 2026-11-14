@@ -47,6 +47,12 @@ final class SharingModel {
         data.connections.first { $0.id == connectionID && $0.state == .connected }
     }
 
+    /// The connection with this ID in any state: a person invited, or connected, or `nil` if it was
+    /// never made or has gone. Invite Again locks the sheet to the person this finds.
+    func listedConnection(_ connectionID: UUID) -> SharingConnection? {
+        data.connections.first { $0.id == connectionID }
+    }
+
     /// The people a reminder can be sent to (Send To, ticket 198): every connection that is
     /// connected, in the order Connections lists them. Never an invite, nor one the other person ended.
     var connected: [SharingConnection] {

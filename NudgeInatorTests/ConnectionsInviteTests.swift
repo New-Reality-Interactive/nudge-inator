@@ -236,4 +236,14 @@ struct ConnectionsInviteTests {
         #expect(phone.sharing.invitedConnection(for: InvitedPerson(name: "Sam Ortiz", address: "sam@icloud.com")) == nil)
         #expect(phone.sharing.invitedConnection(for: InvitedPerson(name: "Jordan Lee", address: "jordan@work.com")) == nil)
     }
+
+    @Test func aListedConnectionIsFoundInAnyState() async throws {
+        let waiting = SharingConnection(id: UUID(), name: "Jordan", state: .invited, address: "jordan@icloud.com", invitedAt: NewYork.local(2026, 10, 12, 9))
+        let connected = SharingConnection(id: UUID(), name: "Sam Ortiz", state: .connected, address: "sam@icloud.com")
+        let phone = try await launchedPhone(seed: SharingData(connections: [waiting, connected]))
+
+        #expect(phone.sharing.listedConnection(waiting.id) == waiting)
+        #expect(phone.sharing.listedConnection(connected.id) == connected)
+        #expect(phone.sharing.listedConnection(UUID()) == nil)
+    }
 }

@@ -57,6 +57,9 @@
     "%@ gets a note that the connection ended, and chooses what happens to the reminders you sent." : {
       "comment" : "Disconnect's sheet: under the choice. The argument is the other person's name, such as \"Alex Morgan\"."
     },
+    "%@ has more than one address. Use the one that is their Apple Account." : {
+      "comment" : "Invite Someone: under the choice between a contact's addresses. The argument is the contact's name."
+    },
     "%@ is Done. Its nudges have stopped." : {
       "comment" : "VoiceOver, after Done on a nudge card or a My Day row: what the Done button's place now says. The placeholder is the reminder's title."
     },
@@ -2320,7 +2323,7 @@
       "comment" : "Nudge card: after the occurrence's last nudge. The placeholder is when it gives up or the next occurrence takes over, such as \"11:17 AM\"."
     },
     "The invite opens only for %@ at %@." : {
-      "comment" : "Invite Someone: under the field once a person is chosen. The first argument is their name, the second their email address or phone number.",
+      "comment" : "Invite Someone: under the field once a contact is chosen. The first argument is their name, the second their email address or phone number.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2329,6 +2332,9 @@
           }
         }
       }
+    },
+    "The invite opens only for %@." : {
+      "comment" : "Invite Someone: under the field once an address typed by hand is used, which has no name. The argument is the email address or phone number."
     },
     "The invite still works. Try again." : {
       "comment" : "An invited person's page: under Couldn't Cancel the Invite."
@@ -2439,9 +2445,6 @@
     },
     "Use the email address or phone number of their Apple Account, or the invite won't open for them." : {
       "comment" : "Invite Someone: under the address field before a person is chosen."
-    },
-    "Use the one that is their Apple Account." : {
-      "comment" : "Invite Someone: under the choice between a contact's addresses."
     },
     "Version" : {
       "comment" : "About page: row showing the app's version, such as \"1.1.0\"."
