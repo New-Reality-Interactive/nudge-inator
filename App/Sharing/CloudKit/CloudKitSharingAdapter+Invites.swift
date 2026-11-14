@@ -18,9 +18,10 @@ extension CloudKitSharingAdapter {
         do {
             let share = try await zoneShare(in: zoneID, container: container)
             try await InviteSheet.present(share: share, container: container)
-            // What the sheet saved, as iCloud has it now.
-            let fetched = try await container.privateCloudDatabase.record(for: share.recordID)
-            let invitees = (fetched as? CKShare).map(InviteParticipant.invitees(of:)) ?? []
+            // What the sheet saved, as iCloud has it. A person invited through Messages can join the
+            // share a few seconds after the sheet closes, so it is read again for a while before the
+            // invite counts as sent to nobody.
+            let invitees = try await inviteesAfterSheet(share.recordID, in: container.privateCloudDatabase)
             guard let person = InviteParticipant.invitedPerson(among: invitees) else {
                 if createdZone { revokeInvite(connectionID) }
                 return nil
@@ -35,6 +36,24 @@ extension CloudKitSharingAdapter {
             if createdZone { revokeInvite(connectionID) }
             throw error
         }
+    }
+
+    private func inviteesAfterSheet(_ shareID: CKRecord.ID, in database: CKDatabase) async throws -> [InviteParticipant] {
+        let attempts = 6
+        for attempt in 1...attempts {
+            if attempt > 1 { try await Task.sleep(for: .seconds(2)) }
+            guard let share = try await database.record(for: shareID) as? CKShare else { return [] }
+            // Never public, whatever the sheet's Copy Link offers.
+            if share.publicPermission != .none {
+                Self.logger.notice("A share was public after the sheet; making it private again")
+                share.publicPermission = .none
+                _ = try? await database.modifyRecords(saving: [share], deleting: [])
+            }
+            let invitees = InviteParticipant.invitees(of: share)
+            Self.logger.notice("Share read \(attempt) of \(attempts) after the sheet: \(invitees.count) people")
+            if InviteParticipant.invitedPerson(among: invitees) != nil { return invitees }
+        }
+        return []
     }
 
     /// The zone's share: the one it has already, or a new private one. The zone is saved first,
