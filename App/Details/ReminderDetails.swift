@@ -98,7 +98,7 @@ struct ReminderDetails {
     /// that was deleted while its details were open. The screen then says it wasn't found.
     ///
     /// `sharing` names a received reminder's sender and holds its "Don't share this one"; with none
-    /// (previews, the shipped app until #216) it reads "From Someone", with no switch.
+    /// (previews, Sharing switched off, #387) it reads "From Someone", with no switch.
     init?(engine: Engine, id: Reminder.ID, sharing: SharingData = SharingData()) {
         guard let reminder = engine.reminders.first(where: { $0.id == id }), let status = engine.status(of: id) else { return nil }
         self.reminder = reminder

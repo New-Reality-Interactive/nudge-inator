@@ -257,6 +257,12 @@ final class FakeSharingAdapter: SharingAdapter {
         starts += 1
     }
 
+    private(set) var stops = 0
+
+    func stop() {
+        stops += 1
+    }
+
     func signedInAccount() async -> SharingAccount {
         accountReads += 1
         return SharingAccount(state: account, idWhenAvailable: accountID)

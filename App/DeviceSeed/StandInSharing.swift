@@ -182,6 +182,8 @@ final class StandInSharingAdapter: SharingAdapter {
     /// Nothing to start: the stand-in never asks iCloud.
     func start() {}
 
+    func stop() {}
+
     func submit(_ change: SharingChange) {
         StandInSharing.logger.notice("Stand-in: not sending a \(String(describing: change.kind), privacy: .public) change")
         if change.kind == .send, let reminderID = change.reminderID {

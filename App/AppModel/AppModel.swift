@@ -62,10 +62,16 @@ final class AppModel {
     private let tagsSortRecord: TagsSortRecord
     /// Where a Done waits while the store can't be read (ticket 32).
     private let doneQueue: DoneQueue
-    /// What sharing keeps and does (ticket 192), or `nil` with no sharing adapter, as the shipped app
-    /// has until the CloudKit adapter (#216) is wired in `AppDelegate.makeModel`. It reads its own
-    /// store and reports to no one but itself, so nothing here waits for it or changes with it.
-    let sharing: SharingModel?
+    /// What sharing keeps and does (ticket 192), or `nil` while Settings' Sharing switch is off
+    /// (#387). Every sharing screen shows only with one, and with none no sharing work runs. It reads
+    /// its own store and reports to no one but itself, so nothing here waits for it or changes with it.
+    private(set) var sharing: SharingModel?
+    /// Makes the sharing model when the switch turns on, or `nil` where the app has none to make.
+    private let makeSharing: () -> SharingModel?
+    private let sharingSwitch: SharingSwitchRecord
+
+    /// Settings' Sharing switch (#387).
+    var isSharingOn: Bool { sharing != nil }
 
     /// Who sent each received reminder, for its "From <name>" label (ticket 199). Read from the
     /// sharing store's data, so a screen that reads it changes when a connection does.
@@ -73,7 +79,9 @@ final class AppModel {
         sharing.map { Senders(sharing: $0.data) } ?? Senders()
     }
 
-    /// `giveUpLimit` is the shipped one; only tests pass another, to reach a take-over.
+    /// `giveUpLimit` is the shipped one; only tests pass another, to reach a take-over. `sharing`
+    /// turns Sharing on for this launch with that model whatever the switch's record says (the Debug
+    /// stand-in, and tests); otherwise `makeSharing` makes it while the record says on.
     init(
         clock: any EngineClock,
         openStore: @escaping () throws -> ReminderStore,
@@ -85,6 +93,8 @@ final class AppModel {
         tagsSortRecord: TagsSortRecord = .standard,
         doneQueue: DoneQueue,
         sharing: SharingModel? = nil,
+        sharingSwitch: SharingSwitchRecord = .standard,
+        makeSharing: @escaping () -> SharingModel? = { nil },
         timeZone: TimeZone = .autoupdatingCurrent,
         giveUpLimit: GiveUpLimit = .shipped
     ) {
@@ -99,7 +109,8 @@ final class AppModel {
         self.remindersSortRecord = remindersSortRecord
         self.tagsSortRecord = tagsSortRecord
         self.doneQueue = doneQueue
-        self.sharing = sharing
+        self.makeSharing = makeSharing
+        self.sharingSwitch = sharingSwitch
         onboarding = onboardingRecord.isFinished ? nil : .welcome
         scheduler = CombinedSchedulerAdapter(adapters: [notifications, alarms])
         // Never handed an event before `launch()` replaces it, so it never applies a plan.
@@ -107,8 +118,61 @@ final class AppModel {
         // Here rather than after launch, so no report is missed: each one waits for launch.
         notifications.events = self
         alarms.events = self
-        sharing?.receivedReminders = self
-        sharing?.noticePoster = self
+        if let sharing {
+            adopt(sharing)
+        } else {
+            makeSharingIfOn()
+        }
+    }
+
+    /// Makes the sharing model, if the switch's record is on and none is made yet: at init, and
+    /// again once the store opens, since the record reads off before the first unlock. The switch
+    /// being on lets the app ask iCloud (#387), and launch's account read follows.
+    private func makeSharingIfOn() {
+        guard sharingSwitch.isOn else { return }
+        makeSharingFromSwitch()?.allowICloud(refreshing: false)
+    }
+
+    /// The switch's sharing model, made and adopted, or `nil` if there's one already or none to make.
+    private func makeSharingFromSwitch() -> SharingModel? {
+        guard sharing == nil, let made = makeSharing() else { return nil }
+        adopt(made)
+        return made
+    }
+
+    /// Settings' Sharing switch (#387). On makes sharing at once and asks iCloud, so without it the
+    /// paused messages (#210) say why. Off stops sharing and lets it go at once, so no sync, account
+    /// read or status report runs, but only when `canTurnSharingOffAtOnce`; otherwise it stays on,
+    /// as turning off then needs #388's confirmation. Either way the record keeps the choice, even
+    /// in a launch the Debug stand-in turned on.
+    func setSharing(on: Bool) {
+        if on {
+            guard let made = makeSharingFromSwitch() else { return }
+            sharingSwitch.isOn = true
+            made.allowICloud()
+        } else {
+            guard let sharing, canTurnSharingOffAtOnce else { return }
+            sharingSwitch.isOn = false
+            sharing.stop()
+            sharing.receivedReminders = nil
+            sharing.noticePoster = nil
+            self.sharing = nil
+        }
+    }
+
+    /// Whether the Sharing switch can turn off with no confirmation (#387): its store has been read
+    /// and holds no connection, invite, sent reminder or change waiting to sync, and no reminder was
+    /// received. Otherwise turning off is #388's. True while it's off.
+    var canTurnSharingOffAtOnce: Bool {
+        guard let sharing else { return true }
+        return sharing.hasReadStore && !sharing.data.holdsSharing && !engine.hasReceivedReminders
+    }
+
+    /// Hands sharing what it reports to, and keeps it.
+    private func adopt(_ sharing: SharingModel) {
+        sharing.receivedReminders = self
+        sharing.noticePoster = self
+        self.sharing = sharing
     }
 
     /// Launch, after setting aside a launch that couldn't read the store. Before the first unlock
@@ -172,6 +236,8 @@ final class AppModel {
         }
         self.engine = engine
         launchState = .ready
+        // The switch's record read off before the first unlock, as onboarding's did.
+        makeSharingIfOn()
         // Not awaited: sharing's store and iCloud account must never hold up personal reminders.
         sharing?.refreshAccountState()
         // The file goes only once its Dones are saved; until then the next launch merges them
@@ -519,7 +585,7 @@ final class AppModel {
         try sharing.setNotSharingThisOne(notSharing, for: reminderID)
     }
 
-    /// The app has no sharing (the shipped app until #216), so nothing can be sent.
+    /// Sharing is switched off (#387), so nothing can be sent.
     struct NoSharing: Error {}
 
     /// Settings' Default Pace (ticket 09), what a new reminder starts with. Read from the record

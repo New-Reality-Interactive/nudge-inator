@@ -37,6 +37,28 @@ struct CloudKitSharingAdapterTests {
         #expect(adapter.engines[.shared]?.database.databaseScope == .shared)
     }
 
+    /// Sharing switched off (#387): `CKSyncEngine` has no stop, so the adapter lets its engines go.
+    @Test func stoppingLetsTheEnginesGo() throws {
+        let adapter = startedAdapter()
+        weak let engine = adapter.engines[.private]
+        #expect(engine != nil)
+
+        adapter.stop()
+
+        #expect(adapter.engines.isEmpty)
+        #expect(adapter.sync == nil)
+        #expect(engine == nil)
+    }
+
+    @Test func aStoppedAdapterDoesntStartAgain() throws {
+        let adapter = startedAdapter()
+        adapter.stop()
+
+        adapter.start()
+
+        #expect(adapter.engines.isEmpty)
+    }
+
     @Test func aChangeBecomesTheEnginesPendingSaveInTheConnectionsZone() throws {
         let adapter = startedAdapter()
         let zoneID = try #require(adapter.sync).makeZone(for: connectionID)

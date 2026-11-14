@@ -1092,6 +1092,9 @@
     "Completed" : {
       "comment" : "A tag's screen: header of the reminders with nothing more to come."
     },
+    "Connect with people through iCloud to send each other reminders." : {
+      "comment" : "Settings: under the Sharing switch."
+    },
     "Connected" : {
       "comment" : "Accepting an invite: title of the sheet once connected.\nConnections: header of the people connected.\nConnections: under a connected person's name."
     },
@@ -2225,7 +2228,7 @@
       "comment" : "Tab bar: the app's settings tab"
     },
     "Sharing" : {
-      "comment" : "Settings: header of the section with Connections."
+      "comment" : "Settings: the switch that turns sharing reminders with other people on or off, and the header of its section."
     },
     "Sharing is paused. Sign in to iCloud in iOS Settings to send and receive reminders." : {
       "comment" : "Under the reminder form's Send To row, shown off, when no iCloud account is signed in."

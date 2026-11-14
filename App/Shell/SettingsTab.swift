@@ -20,15 +20,15 @@ struct SettingsTab: View {
     @State private var testNudgeSentAt: Date?
     /// The Default Pace previews show and change, since they have no app model.
     @State private var previewDefaultPace = DefaultPace.shipped
+    /// The Sharing switch previews show and change, since they have no app model.
+    @State private var previewSharingOn = false
 
     var body: some View {
         NavigationStack(path: path) {
             TabScreen(state: state) {
                 List {
                     generalSection
-                    if let sharing = model?.sharing {
-                        sharingSection(sharing)
-                    }
+                    sharingSection
                     nudgesSection
                     dataSection
                 }
@@ -104,22 +104,42 @@ struct SettingsTab: View {
         }
     }
 
-    /// Connections (ticket 194). Only with a sharing model: Debug builds have one (#216), and
-    /// Release builds none until the Sharing switch (#387); without one Settings is as before.
-    private func sharingSection(_ sharing: SharingModel) -> some View {
+    /// The Sharing switch (#387), and Connections (ticket 194) only while it's on. Off, none of
+    /// sharing exists (the Sharing-switch mockup).
+    private var sharingSection: some View {
         Section {
-            NavigationLink(value: SharingPage.connections) {
-                let count = sharing.data.connections.count { $0.state == .connected }
+            Toggle(isOn: sharingOn) {
                 SettingsRow(
-                    tile: .tileGray,
-                    symbol: "person.2",
-                    title: Text("Connections", comment: "Connections: the page's title, and the Settings row that opens it."),
-                    status: count == 0 ? nil : Text(count, format: .number)
+                    tile: .tileBlue,
+                    symbol: "square.and.arrow.up",
+                    title: Text("Sharing", comment: "Settings: the switch that turns sharing reminders with other people on or off, and the header of its section.")
                 )
             }
+            // Turning off with anything shared needs the confirmation of #388; until then it stays on.
+            .disabled(model?.canTurnSharingOffAtOnce == false)
+            if let sharing = model?.sharing {
+                NavigationLink(value: SharingPage.connections) {
+                    let count = sharing.data.connections.count { $0.state == .connected }
+                    SettingsRow(
+                        tile: .tileGray,
+                        symbol: "person.2",
+                        title: Text("Connections", comment: "Connections: the page's title, and the Settings row that opens it."),
+                        status: count == 0 ? nil : Text(count, format: .number)
+                    )
+                }
+            }
         } header: {
-            Text("Sharing", comment: "Settings: header of the section with Connections.")
+            Text("Sharing", comment: "Settings: the switch that turns sharing reminders with other people on or off, and the header of its section.")
+        } footer: {
+            Text("Connect with people through iCloud to send each other reminders.",
+                 comment: "Settings: under the Sharing switch.")
         }
+    }
+
+    /// The model's Sharing switch. Without a model, the previews'.
+    private var sharingOn: Binding<Bool> {
+        guard let model else { return $previewSharingOn }
+        return Binding { model.isSharingOn } set: { model.setSharing(on: $0) }
     }
 
     private var nudgesSection: some View {

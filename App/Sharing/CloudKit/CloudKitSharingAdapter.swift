@@ -72,7 +72,7 @@ final class CloudKitSharingAdapter: SharingAdapter {
     /// Idempotent. Waits for a sharing store that won't open, rather than starting over and then
     /// writing an empty state over what it holds: the next call tries again.
     func start() {
-        guard sync == nil, let container, let saved = events?.savedSyncState() else { return }
+        guard !isStopped, sync == nil, let container, let saved = events?.savedSyncState() else { return }
         let cache = saved.cache.flatMap { try? JSONDecoder().decode(CloudKitSyncCache.self, from: $0) } ?? CloudKitSyncCache()
         let sync = CloudKitSync(cache: cache)
         self.sync = sync
@@ -94,6 +94,19 @@ final class CloudKitSharingAdapter: SharingAdapter {
         keep()
         // The first request to iCloud: the device check reads it to see none came before (#216).
         Self.logger.notice("Sync engines started")
+    }
+
+    /// Set by `stop()`, after which `start()` does nothing: its path monitor can't start again.
+    private var isStopped = false
+
+    /// `CKSyncEngine` has no stop of its own: letting the engines go ends their work.
+    func stop() {
+        isStopped = true
+        engines.removeAll()
+        sync = nil
+        connectivity.stop()
+        if Self.current === self { Self.current = nil }
+        Self.logger.notice("Sync engines stopped")
     }
 
     /// Also offers the app model again what it couldn't keep before (at launch, before its
@@ -301,6 +314,11 @@ private final class Connectivity {
             Task { @MainActor in self?.update(online) }
         }
         monitor.start(queue: DispatchQueue(label: "com.newrealityinteractive.nudgeinator.connectivity"))
+    }
+
+    /// Apple's `cancel()` "stops receiving network path updates"; a cancelled monitor can't start again.
+    func stop() {
+        monitor.cancel()
     }
 
     private func update(_ online: Bool) {
