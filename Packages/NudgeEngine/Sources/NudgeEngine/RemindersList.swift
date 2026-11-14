@@ -117,8 +117,8 @@ public struct RemindersFilter: Equatable, Sendable {
         strengths.isEmpty || strengths.contains(reminder.strength)
     }
 
-    /// Ignores case and diacritics. A tag's name isn't searched.
-    private func matchesSearch(_ reminder: Reminder) -> Bool {
+    /// Ignores case and diacritics. A tag's name isn't searched. Sent's search uses it too (ticket 328).
+    public func matchesSearch(_ reminder: Reminder) -> Bool {
         search.isEmpty || reminder.title.localizedStandardContains(search) || reminder.notes.localizedStandardContains(search)
     }
 

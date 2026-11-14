@@ -44,6 +44,10 @@ struct RemindersTab: View {
     @State private var previewSort = RemindersSort.createdOldestFirst
     /// Mine or Sent (ticket 201).
     @State private var mineOrSentChoice = MineOrSent.mine
+    /// Sent's own search and Sort (ticket 328), apart from Mine's, as the mockup's `sentTools` keeps
+    /// them. Screen state, both: a launch starts Sent on Created, Oldest First, with no search.
+    @State private var sentSearchText = ""
+    @State private var sentSort = RemindersSort.createdOldestFirst
 
     /// The Mine | Sent control's choices.
     enum MineOrSent: Hashable, CaseIterable {
@@ -64,10 +68,11 @@ struct RemindersTab: View {
                 TimelineView(.everyMinute) { _ in
                     if mineOrSentChoice == .sent, let model, let sharing = model.sharing {
                         SentList(
-                            screen: SentScreen(engine: model.engine, sharing: sharing.data),
+                            screen: SentScreen(engine: model.engine, sharing: sharing.data, sort: sentSort, search: sentSearchText),
                             sharing: sharing,
                             manageConnections: manageConnections,
-                            openDetails: { path.append(OpenedSentReminder(id: $0)) }
+                            openDetails: { path.append(OpenedSentReminder(id: $0)) },
+                            clearSearch: { sentSearchText = "" }
                         )
                     } else {
                         mine
@@ -75,7 +80,7 @@ struct RemindersTab: View {
                 }
             }
             .modifier(ListSearchField(
-                isShown: hasReminders && mineOrSentChoice == .mine,
+                isShown: mineOrSentChoice == .mine ? hasReminders : sentHasTools,
                 text: searchField,
                 prompt: Text("Search titles and notes", comment: "Reminders tab: the search field's prompt.")
             ))
@@ -90,11 +95,14 @@ struct RemindersTab: View {
             .onChange(of: hasReminders) {
                 if !hasReminders { clearSearchAndFilter() }
             }
+            // Sent's field goes with its last reminder too.
+            .onChange(of: sentHasTools) {
+                if !sentHasTools { sentSearchText = "" }
+            }
             .navigationTitle(Text(AppTab.reminders.title))
             .reminderDetailsDestination()
             .navigationDestination(for: OpenedSentReminder.self) { SentReminderDetailsView(id: $0.id) }
             .toolbar {
-                // Sent's search, Filter and Sort are #328's and #329's.
                 if hasReminders, mineOrSentChoice == .mine {
                     ToolbarItem(placement: .topBarTrailing) {
                         FilterButton(
@@ -111,6 +119,13 @@ struct RemindersTab: View {
                         RemindersSortButton(sort: sort.transaction(Self.noAnimation))
                     }
                     // Filter and Sort share a glass group, and New stands apart (Brian, #113).
+                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
+                }
+                // Sent's Sort, where Mine's is. Its Filter, before it, is #329's.
+                if mineOrSentChoice == .sent, sentHasTools {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        RemindersSortButton(sort: $sentSort.transaction(Self.noAnimation))
+                    }
                     ToolbarSpacer(.fixed, placement: .topBarTrailing)
                 }
                 ToolbarItem(placement: .primaryAction) { NewReminderButton() }
@@ -187,6 +202,11 @@ struct RemindersTab: View {
         engine?.reminders.isEmpty == false
     }
 
+    /// Whether Sent has anything to search and sort (`SentScreen.hasTools(in:)`).
+    private var sentHasTools: Bool {
+        model?.sharing.map { SentScreen.hasTools(in: $0.data) } ?? false
+    }
+
     /// What's applied, without tags deleted since.
     private var appliedChoices: RemindersFilterChoices {
         keepingExistingTags(choices)
@@ -219,9 +239,9 @@ struct RemindersTab: View {
         return transaction
     }()
 
-    /// Typing redraws the list at once.
+    /// Typing redraws the list at once. Mine's text or Sent's, whichever is chosen.
     private var searchField: Binding<String> {
-        $searchText.transaction(Self.noAnimation)
+        (mineOrSentChoice == .mine ? $searchText : $sentSearchText).transaction(Self.noAnimation)
     }
 
     /// The model's, which outlives a relaunch, or the previews' own.
@@ -308,7 +328,8 @@ private struct RemindersListView: View {
 }
 
 /// Says nothing matches, never that there are no reminders, and names what's narrowing the list.
-private struct RemindersNoMatchView: View {
+/// Sent shows it too, for its search (ticket 328).
+struct RemindersNoMatchView: View {
     let filter: RemindersFilter
     let clear: () -> Void
 

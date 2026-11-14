@@ -62,7 +62,7 @@ struct RemindersScreen {
     var countText: LocalizedStringResource { Self.countText(shown: shownCount, of: total) }
 
     static func countText(shown: Int, of total: Int) -> LocalizedStringResource {
-        LocalizedStringResource("\(shown) reminders out of \(total)", comment: "Reminders tab: the header row's count, in every case, even with nothing narrowing the list. 1: the reminders shown. 2: every reminder.")
+        LocalizedStringResource("\(shown) reminders out of \(total)", comment: "Reminders tab, Mine and Sent: the header row's count, in every case, even with nothing narrowing the list. 1: the reminders shown. 2: every reminder (on Sent, every reminder sent, one sent to two people counting once).")
     }
 
     /// `keptOrder` is the rows' order when the list's inputs (the sort and the filter) last changed.

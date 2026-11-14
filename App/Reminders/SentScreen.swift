@@ -9,22 +9,37 @@ struct SentScreen {
     let people: [Person]
     /// What Sent shows instead of groups, or `nil` when it has some (ticket 202).
     let emptyState: EmptyState?
+    /// Every reminder Sent lists with nothing narrowing it, each once: the count's "out of" number.
+    let total: Int
+    /// The search the rows were narrowed by, trimmed: what the no-match state names.
+    let search: String
 
-    /// Sent's two empty states, the mockup's `viewSentTab`.
+    /// What Sent shows in place of its groups: its two empty states, the mockup's `viewSentTab`, and
+    /// the no-match state, its `sentNoMatch` (ticket 328).
     enum EmptyState: Equatable {
         /// No one connected, so nothing can be sent yet: Invite Someone and Manage People.
         case noOneToSendTo
         /// Someone connected, but nothing sent to anyone connected: New Reminder.
         case nothingSent
+        /// Something sent, and the search leaves none of it: Mine's no-match state, with its tools.
+        case noMatch
     }
 
     struct Person: Identifiable {
         var connectionID: UUID
         /// The person's whole name, as Connections lists them.
         var name: String
+        /// Whether the person shares status with the sender, which the group's header says.
+        var sharesStatus: Bool
         var rows: [Row]
 
         var id: UUID { connectionID }
+
+        /// Trailing the name in the group's header (DESIGN.md, Sent rows; ticket 328).
+        var statusSharingText: LocalizedStringResource {
+            sharesStatus ? Row.sharingStatusText : Row.notSharingStatusText
+        }
+
     }
 
     /// One sent reminder as one person has it.
@@ -62,7 +77,8 @@ struct SentScreen {
 
         static let waitingText = LocalizedStringResource("Waiting for them to accept", comment: "Under a sent reminder's title on the Sent view, and under a person's name on its details: their copy has reached their iPhone, which asks them first (Ask me first), and they haven't accepted it yet.")
         static let deliveredText = LocalizedStringResource("Delivered", comment: "A sent reminder's label on the Sent view and its details: the person's copy has reached their iPhone.")
-        static let notSharingStatusText = LocalizedStringResource("Not sharing status", comment: "Under a sent reminder's title on the Sent view, and under a person's name on its details: the person keeps how their reminders are going from the sender, so the sender sees only that it was delivered.")
+        static let sharingStatusText = LocalizedStringResource("Sharing status", comment: "Reminders tab, Sent: trailing a person's name in the header of their group: they share how their reminders are going with the sender.")
+        static let notSharingStatusText = LocalizedStringResource("Not sharing status", comment: "Under a sent reminder's title on the Sent view, under a person's name on its details, and trailing their name in the header of their group on the Sent view: the person keeps how their reminders are going from the sender, so the sender sees only that it was delivered.")
         static let notSharingThisOneText = LocalizedStringResource("Not sharing this one", comment: "Under a sent reminder's title on the Sent view, and under a person's name on its details: the person keeps how this one reminder is going from the sender, so the sender sees only that it was delivered.")
         static let notDeliveredText = LocalizedStringResource("Not delivered yet", comment: "Under a sent reminder's title on the Sent view, and under a person's name on its details: their copy hasn't reached their iPhone yet.")
     }
@@ -76,35 +92,95 @@ struct SentScreen {
 
     /// Only connected people are listed, as Send To offers them. A row's due time is the sent
     /// reminder's next at or after the engine's now, or its start when none is left.
-    init(engine: Engine, sharing: SharingData) {
-        let connections = sharing.connections
-            .filter { $0.state == .connected }
-            .map { SentConnection(id: $0.id, name: $0.name, sharesStatus: $0.theirs.sharesStatus) }
-        // Waiting to sync is read from the outbox: the send or a revision not yet through iCloud.
-        let readOut = SentReadOut(connections: connections, copies: sharing.sentCopies, isWaitingToSync: sharing.waitsToSync)
-        let reminders = Dictionary(sharing.sentReminders.map { ($0.reminder.id, $0.reminder) }, uniquingKeysWith: { first, _ in first })
+    ///
+    /// `search` keeps the rows whose title or notes hold it, as Mine's does (ticket 328), and a
+    /// person left with none drops out.
+    init(engine: Engine, sharing: SharingData, sort: RemindersSort = .createdOldestFirst, search: String = "") {
+        let matcher = RemindersFilter(search: search)
+        self.search = matcher.search
+        let connections = Self.connections(in: sharing)
+        let readOut = Self.readOut(of: sharing, connections: connections)
+        let reminders = Self.sentReminders(in: sharing)
+        total = Self.countingEachOnce(Self.listedReminderIDs(in: readOut, holding: reminders))
+        let sharesStatus = Dictionary(connections.map { ($0.id, $0.sharesStatus) }, uniquingKeysWith: { first, _ in first })
         people = readOut.people.map { person in
-            Person(
+            let rows = person.rows.compactMap { row -> (row: Row, due: Date)? in
+                guard let reminder = reminders[row.reminderID], matcher.matchesSearch(reminder) else { return nil }
+                let due = engine.upcomingDueTimes(of: reminder, count: 1).first ?? reminder.dueTime
+                let state = SentCopyState(delivery: row.delivery, status: row.status, waitingToSync: row.waitingToSync)
+                return (Row(
+                    reminderID: reminder.id,
+                    title: reminder.title,
+                    personName: person.name,
+                    time: engine.timeOfDay(of: due),
+                    day: engine.dayLabel(of: due),
+                    state: state,
+                    history: reminder.repeatRule == nil ? nil : state.historyOccurrences.map { SentHistory(engine: engine, occurrences: $0) }
+                ), due)
+            }
+            return Person(
                 connectionID: person.connectionID,
                 name: person.name,
-                rows: person.rows.compactMap { row in
-                    guard let reminder = reminders[row.reminderID] else { return nil }
-                    let due = engine.upcomingDueTimes(of: reminder, count: 1).first ?? reminder.dueTime
-                    let state = SentCopyState(delivery: row.delivery, status: row.status, waitingToSync: row.waitingToSync)
-                    return Row(
-                        reminderID: reminder.id,
-                        title: reminder.title,
-                        personName: person.name,
-                        time: engine.timeOfDay(of: due),
-                        day: engine.dayLabel(of: due),
-                        state: state,
-                        history: reminder.repeatRule == nil ? nil : state.historyOccurrences.map { SentHistory(engine: engine, occurrences: $0) }
-                    )
-                }
+                sharesStatus: sharesStatus[person.connectionID] ?? false,
+                rows: Self.sorted(rows, by: sort)
             )
         }
         .filter { !$0.rows.isEmpty }
-        emptyState = connections.isEmpty ? .noOneToSendTo : people.isEmpty ? .nothingSent : nil
+        emptyState = if connections.isEmpty { .noOneToSendTo } else if total == 0 { .nothingSent } else if people.isEmpty { .noMatch } else { nil }
+    }
+
+    /// Whether Sent has anything to search and sort: neither of its empty states has its tools
+    /// (DESIGN.md, Sent's tools). It builds no rows or due times, so the tab can ask in `body`.
+    static func hasTools(in sharing: SharingData) -> Bool {
+        let readOut = readOut(of: sharing, connections: connections(in: sharing))
+        return !listedReminderIDs(in: readOut, holding: sentReminders(in: sharing)).isEmpty
+    }
+
+    /// The reminders shown, each once however many people it went to: the count's first number.
+    var shownCount: Int {
+        Self.countingEachOnce(people.flatMap(\.rows).map(\.reminderID))
+    }
+
+    /// The header row's count, worded as Mine's: "3 reminders out of 14" (DESIGN.md, Sent's tools).
+    var countText: LocalizedStringResource { RemindersScreen.countText(shown: shownCount, of: total) }
+
+    private static func connections(in sharing: SharingData) -> [SentConnection] {
+        sharing.connections
+            .filter { $0.state == .connected }
+            .map { SentConnection(id: $0.id, name: $0.name, sharesStatus: $0.theirs.sharesStatus) }
+    }
+
+    /// Waiting to sync is read from the outbox: the send or a revision not yet through iCloud.
+    private static func readOut(of sharing: SharingData, connections: [SentConnection]) -> SentReadOut {
+        SentReadOut(connections: connections, copies: sharing.sentCopies, isWaitingToSync: sharing.waitsToSync)
+    }
+
+    private static func sentReminders(in sharing: SharingData) -> [Reminder.ID: Reminder] {
+        Dictionary(sharing.sentReminders.map { ($0.reminder.id, $0.reminder) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    /// Every row's reminder that the store holds, once per person it went to.
+    private static func listedReminderIDs(in readOut: SentReadOut, holding reminders: [Reminder.ID: Reminder]) -> [Reminder.ID] {
+        readOut.people.flatMap(\.rows).map(\.reminderID).filter { reminders[$0] != nil }
+    }
+
+    /// A reminder sent to two people is one reminder (DESIGN.md, Sent's tools).
+    private static func countingEachOnce(_ ids: [Reminder.ID]) -> Int {
+        Set(ids).count
+    }
+
+    /// One person's rows in `sort`'s order. The read-out's order is the order sent, so it is Created,
+    /// Oldest First. Rows due at one time keep it under Earliest First, and Newest First and Latest
+    /// First are those orders exactly reversed, ties included, as Mine's are (spec #104, Decision 54).
+    private static func sorted(_ rows: [(row: Row, due: Date)], by sort: RemindersSort) -> [Row] {
+        let ordered = switch sort.field {
+        case .created: rows
+        case .dueDate: rows.enumerated().sorted { a, b in
+            a.element.due != b.element.due ? a.element.due < b.element.due : a.offset < b.offset
+        }.map(\.element)
+        }
+        let inOrder = ordered.map(\.row)
+        return sort.order == .ascending ? inOrder : inOrder.reversed()
     }
 }
 
