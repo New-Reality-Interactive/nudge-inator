@@ -264,8 +264,17 @@ struct RemindersTab: View {
         }
     }
 
-    /// As Tags': the text points to the toolbar's +, with no button of its own.
+    /// As Tags': the text points to the toolbar's +, with no button of its own. It scrolls, so the
+    /// text clears the tab bar at the largest text size in landscape (#328's phone check), and is
+    /// centered while it fits, as Sent's empty states are.
     private var noReminders: some View {
+        ScrollView {
+            noRemindersContent
+        }
+        .centeredWhenShort()
+    }
+
+    private var noRemindersContent: some View {
         ContentUnavailableView {
             Label {
                 Text("No Reminders", comment: "Reminders tab: title when there are no reminders at all.")

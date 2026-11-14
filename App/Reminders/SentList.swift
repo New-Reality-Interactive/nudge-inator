@@ -262,7 +262,7 @@ struct DeliveredLabel: View {
 /// Sent with no one connected, the mockup's "No One to Send To": Invite Someone, as Connections
 /// offers it, and Manage People, which goes to Settings › Connections (the spec; the mockup pushes
 /// Connections on Reminders, README Known differences). It scrolls, so the buttons are reached at
-/// the largest text size. On the plain background, as Mine's No Reminders and every other tab's
+/// the largest text size, and is centered while it fits. On the plain background, as Mine's No Reminders and every other tab's
 /// empty state, so switching Mine | Sent doesn't change it (#399; the developer's call, 2026-11-14,
 /// over the mockup's grouped background).
 private struct NoOneToSendToView: View {
@@ -292,6 +292,7 @@ private struct NoOneToSendToView: View {
                 }
             }
         }
+        .centeredWhenShort()
     }
 }
 
@@ -316,8 +317,10 @@ private struct NothingSentView: View {
                     .buttonStyle(.bordered)
             }
         }
+        .centeredWhenShort()
     }
 }
+
 
 #if DEBUG
 private extension SentScreen {
