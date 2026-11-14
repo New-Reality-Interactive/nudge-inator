@@ -109,6 +109,12 @@ final class CloudKitSharingAdapter: SharingAdapter {
         Self.logger.notice("Sync engines stopped")
     }
 
+    /// Unknown until `start()` has read what the store keeps, so it says there may be: a model
+    /// winding down (#388) then keeps going until the sync has started and says.
+    var hasUnsentDisconnects: Bool {
+        sync?.hasUnsentDisconnects ?? !isStopped
+    }
+
     /// Also offers the app model again what it couldn't keep before (at launch, before its
     /// reminders were read, say): read at launch and on App opened.
     func signedInAccount() async -> SharingAccount {

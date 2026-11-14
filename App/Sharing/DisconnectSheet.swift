@@ -29,13 +29,13 @@ struct DisconnectSheet: View {
                         .listRowBackground(Color.clear)
                 }
                 Section {
-                    option(.remove) {
-                        Text("Remove", comment: "Disconnect's sheet: the choice that deletes the reminders received from the person.")
+                    DisconnectChoiceOption(value: .remove, choice: $choice) {
+                        Text("Remove", comment: "Disconnect's and Turn Off Sharing's sheets: the choice that deletes the reminders received.")
                     } detail: {
-                        Text("Deletes them and cancels their nudges and alarms.", comment: "Disconnect's sheet: under Remove.")
+                        Text("Deletes them and cancels their nudges and alarms.", comment: "Disconnect's and Turn Off Sharing's sheets: under Remove.")
                     }
-                    option(.keepAsMyOwnReminders) {
-                        Text("Keep as My Own Reminders", comment: "Disconnect's sheet: the choice that keeps the reminders received from the person as this person's own.")
+                    DisconnectChoiceOption(value: .keepAsMyOwnReminders, choice: $choice) {
+                        Text("Keep as My Own Reminders", comment: "Disconnect's and Turn Off Sharing's sheets: the choice that keeps the reminders received as this person's own.")
                     } detail: {
                         Text("They stay with the same schedule, history and tags, no longer from \(name).", comment: "Disconnect's sheet: under Keep as My Own Reminders. The argument is the other person's name, such as \"Alex Morgan\".")
                     }
@@ -119,17 +119,32 @@ struct DisconnectSheet: View {
         }
     }
 
-    /// One of the two choices, with a checkmark when it's chosen. VoiceOver reads it as selected,
-    /// so the checkmark isn't the only signal.
-    private func option(_ value: DisconnectChoice, @ViewBuilder title: () -> Text, @ViewBuilder detail: () -> Text) -> some View {
+}
+
+/// One of Disconnect's two choices, with a checkmark when it's chosen: Disconnect's sheet and Turn
+/// Off Sharing's (#388). VoiceOver reads it as selected, so the checkmark isn't the only signal.
+struct DisconnectChoiceOption: View {
+    let value: DisconnectChoice
+    @Binding var choice: DisconnectChoice
+    let title: Text
+    let detail: Text
+
+    init(value: DisconnectChoice, choice: Binding<DisconnectChoice>, @ViewBuilder title: () -> Text, @ViewBuilder detail: () -> Text) {
+        self.value = value
+        _choice = choice
+        self.title = title()
+        self.detail = detail()
+    }
+
+    var body: some View {
         Button {
             choice = value
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: Design.Spacing.s1) {
-                    title()
+                    title
                         .foregroundStyle(Color(uiColor: .label))
-                    detail()
+                    detail
                         .font(.subheadline)
                         .foregroundStyle(Color(uiColor: .secondaryLabel))
                 }

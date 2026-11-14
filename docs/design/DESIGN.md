@@ -330,6 +330,17 @@ Each item gives, only where they apply: **Token** (frontmatter `components` key,
 Container · Type · Color · Glyphs · Notes. System controls not listed (`Toggle`, `Picker`, `Stepper`,
 text fields, confirmation dialogs, alerts) are used as the system draws them.
 
+**Success is shown by its result, never by a message** (#388's review, 2026-11-14). An action that
+works shows what it did on the screen, such as a row gone or a status changed, and says nothing:
+no toast, banner or other success message. The person assumes success unless shown an error. Only a
+failure says anything, as an alert (Couldn't Disconnect, Couldn't Turn Off Sharing). The mockups
+before `2026-11-14-turn-off-sharing` drew a message at the top of the screen after some actions; the
+app never built one, and the mockup template no longer has it.
+
+**Every destructive action asks first** (#388's review, 2026-11-14): deleting, removing,
+disconnecting, canceling an invite, turning off something that deletes data. One that would delete
+nothing, such as turning Sharing off with nothing shared, needs no question.
+
 A question that confirms an action the person just tapped (discarding changes, deleting) is the
 system's confirmation dialog with its title showing, as Apple's own apps ask (Calendar, seen on an
 iPhone 15 with iOS 27.0.1). That includes the delete questions (#286): Delete Reminder, asked in
@@ -666,6 +677,13 @@ sharing paused and offline banner.
   bordered Disconnect in destructive text, with the form's Cancel. When the other person ended the
   connection the sheet has a prominent Continue and no Cancel, because the connection is already over
   and the choice has to be made: the one question without a way to close it that changes nothing.
+- **Turn Off Sharing** (#388, the Turn Off Sharing mockup, `docs/mockups/2026-11-14-turn-off-sharing/`):
+  Disconnect's sheet for everyone at once, under the same exception, asked whenever turning Sharing
+  off would delete anything: a connection, an invite, a reminder sent or received. A first line
+  saying what goes, the two options under "<n> Reminders You've Received" only when something was
+  received, the note footer only while someone is connected (under the options, or under the first
+  line when there are none), then a bordered Turn Off Sharing in destructive text, with the ✕ to
+  cancel. The switch stays on until it's confirmed, and shows no message when it's off.
 - **Apple Account Changed** (#212's change mockup, `docs/mockups/2026-11-13-account-change/`): a
   sheet over whatever screen is up, once, when a different Apple Account signs in. Connection Ended's
   shape with no choice: a lead line, a list headed "Removed from This iPhone" (received reminders,

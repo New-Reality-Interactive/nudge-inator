@@ -40,7 +40,7 @@
   --on-tile: #ffffff;
   --bar: rgba(249, 249, 249, 0.8); --bar-solid: #f9f9f9; --alert: rgba(242, 242, 247, 0.98); --alert-solid: #f2f2f7;
   --material: rgba(245, 245, 250, 0.9); --material-solid: #f5f5fa; --material-text: #000000; --material-text2: #3a3a3c;
-  --material-sep: rgba(60, 60, 67, 0.36); --material-red: #b00012; --hud: #ffffff;
+  --material-sep: rgba(60, 60, 67, 0.36); --material-red: #b00012;
   --blur: blur(20px) saturate(180%); --scrim: rgba(0, 0, 0, 0.4); --shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
   --glass: rgba(255, 255, 255, 0.72); --glass-solid: #ffffff; --glass-edge: rgba(0, 0, 0, 0.06);
   --glass-shadow: 0 2px 14px rgba(0, 0, 0, 0.12); --glass-selected: rgba(120, 120, 128, 0.16);
@@ -60,7 +60,7 @@
       --badge-fill: #e9152d; --on-badge: #ffffff;
       --bar: rgba(22, 22, 24, 0.8); --bar-solid: #161618; --alert: rgba(44, 44, 46, 0.88); --alert-solid: #2c2c2e;
       --material: rgba(30, 30, 32, 0.78); --material-solid: #1e1e20; --material-text: #ffffff; --material-text2: #aeaeb2;
-      --material-sep: rgba(84, 84, 88, 0.65); --material-red: #ff6961; --hud: #2c2c2e;
+      --material-sep: rgba(84, 84, 88, 0.65); --material-red: #ff6961;
       --blur: blur(20px) saturate(180%); --scrim: rgba(0, 0, 0, 0.6); --shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
       --glass: rgba(44, 44, 46, 0.72); --glass-solid: #2c2c2e; --glass-edge: rgba(255, 255, 255, 0.12);
       --glass-shadow: 0 2px 14px rgba(0, 0, 0, 0.5); --glass-selected: rgba(120, 120, 128, 0.32); --token-fill: #1c1c1e;
@@ -79,7 +79,7 @@
     --badge-fill: #e9152d; --on-badge: #ffffff;
     --bar: rgba(22, 22, 24, 0.8); --bar-solid: #161618; --alert: rgba(44, 44, 46, 0.88); --alert-solid: #2c2c2e;
     --material: rgba(30, 30, 32, 0.78); --material-solid: #1e1e20; --material-text: #ffffff; --material-text2: #aeaeb2;
-    --material-sep: rgba(84, 84, 88, 0.65); --material-red: #ff6961; --hud: #2c2c2e;
+    --material-sep: rgba(84, 84, 88, 0.65); --material-red: #ff6961;
     --blur: blur(20px) saturate(180%); --scrim: rgba(0, 0, 0, 0.6); --shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
     --glass: rgba(44, 44, 46, 0.72); --glass-solid: #2c2c2e; --glass-edge: rgba(255, 255, 255, 0.12);
     --glass-shadow: 0 2px 14px rgba(0, 0, 0, 0.5); --glass-selected: rgba(120, 120, 128, 0.32); --token-fill: #1c1c1e;
@@ -295,7 +295,7 @@
 :root[data-bold] { --regular: 600; --medium: 600; --semibold: 700; --bold: 800; }
 
 /* Foreground layers use the elevated backgrounds. */
-.sheet, .alert, .asheet, .hud { --system-grouped-background: var(--system-grouped-background-elevated); --secondary-system-grouped-background: var(--secondary-system-grouped-background-elevated); --tertiary-system-fill: var(--tertiary-system-fill-elevated); }
+.sheet, .alert, .asheet { --system-grouped-background: var(--system-grouped-background-elevated); --secondary-system-grouped-background: var(--secondary-system-grouped-background-elevated); --tertiary-system-fill: var(--tertiary-system-fill-elevated); }
 
 * { box-sizing: border-box; }
 html { font-size: calc(16px * min(var(--type-scale), 2)); }
@@ -336,6 +336,8 @@ svg { flex: none; }
 .controls { font-size: 15px; width: 320px; flex: none; background: var(--stage-card); border-radius: 16px; padding: 18px 18px 8px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12); line-height: 1.4; }
 .controls h2 { font-size: 17px; margin: 0 0 4px; }
 .controls p { margin: 0 0 12px; color: var(--stage-muted); }
+.controls .c-note:empty { display: none; }
+.controls .c-note { color: var(--stage-text, inherit); font-weight: 600; }
 /* Beside the phone, the controls scroll on their own, so the phone stays in view while they're used. */
 @media (min-width: 761px) {
   .controls { position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; overscroll-behavior: contain; }
@@ -626,7 +628,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .events time { flex: none; width: 5em; color: var(--label); font-variant-numeric: tabular-nums; }
 .events li > span { min-width: 0; overflow-wrap: anywhere; }
 
-/* ============ Sheets, alerts, HUD ============ */
+/* ============ Sheets and alerts ============ */
 .overlay { position: absolute; inset: 0; z-index: 40; }
 .scrim { position: absolute; inset: 0; background: var(--scrim); }
 .sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 48px; background: var(--system-grouped-background); border-radius: 38px 38px 0 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow); }
@@ -672,8 +674,6 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 /* A banner flicked away (mockup only): the iPhone hides it, and the app isn't told. */
 .btn.flick { font: var(--subhead); letter-spacing: var(--subhead-track); justify-self: center; background: rgba(0, 0, 0, 0.8); color: #fff; border-radius: 99px; padding: 6px 16px; }
 
-.hud { font: var(--subhead); letter-spacing: var(--subhead-track); position: absolute; top: 56px; left: 50%; transform: translate(-50%, -12px); z-index: 99; width: max-content; max-width: calc(100% - 32px); background: var(--hud); color: var(--label); border-radius: 22px; padding: 10px 18px; font-weight: var(--medium); box-shadow: var(--shadow); opacity: 0; pointer-events: none; text-align: center; }
-.hud.show { opacity: 1; transform: translate(-50%, 0); }
 
 /* Onboarding */
 .welcome { padding: 28px 28px 20px; }
@@ -793,7 +793,6 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .device[data-orient="landscape"] .sheet-body { padding: 12px var(--gut-r) 32px var(--gut-l); }
 .device[data-orient="landscape"] .alert { max-height: calc(100% - 24px); overflow-y: auto; scrollbar-width: none; }
 .device[data-orient="landscape"] .asheet:not(.anchored) { left: 50%; right: auto; bottom: 21px; width: calc(var(--sh) - 16px); max-height: calc(100% - 33px); overflow-y: auto; scrollbar-width: none; transform: translateX(-50%); }
-.device[data-orient="landscape"] .hud { top: 12px; }
 .device[data-orient="landscape"] .unavailable { padding-top: 24px; }
 .device[data-orient="landscape"] .welcome { padding-top: 8px; }
 /* The tab bar, shrunk while scrolling down (landscape): only the current tab, as a glass circle at
@@ -884,7 +883,6 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 @media (prefers-reduced-motion: no-preference) {
   .switch { transition: background 0.2s; }
   .switch::after { transition: left 0.2s; }
-  .hud { transition: opacity 0.2s, transform 0.2s; }
   .inline-title, #main .navrow::before { transition: opacity 0.15s; }
   .swipe:not(.dragging) .swipe-row { transition: transform 0.25s; }
 }
@@ -912,7 +910,6 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <div id="sheet"></div>
       <div id="system"></div>
       <div id="alert"></div>
-      <output class="hud" id="hud" aria-live="polite"></output>
       <p class="sr-only" id="announce" aria-live="polite"></p>
       <div class="home-ind" aria-hidden="true"></div>
     </div>
@@ -924,6 +921,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
   <aside class="controls" aria-labelledby="c-h">
     <h2 id="c-h">Mockup controls</h2>
     <p>Not part of the app. The clock is fixed at Mon, Sep 28, 8:20 AM and the data is made up.</p>
+    <p class="c-note" id="c-note" role="status" aria-live="polite"></p>
     <fieldset>
       <legend>Show what the iPhone does</legend>
       <button type="button" class="cbtn" id="c-notif">Next early nudge: notification</button>
@@ -2350,7 +2348,7 @@ function updateReminder(r, fields) {
   }
   // A paused reminder has no next time until Resume.
   if (r.status === "PAUSED") r.nextOccurrenceAt = null;
-  hud("Changes saved");
+  
   return r;
 }
 const lockedFields = (r) => ({ dtstart: r.dtstart, rrule: r.rrule, repeatCustom: !!r.repeatCustom, strength: r.strength, pace: r.pace, wait: r.wait, breakThrough: btOf(r) });
@@ -2359,7 +2357,7 @@ function createReminder(fields) {
   const n = nextOccurrence(r);
   r.nextOccurrenceAt = n ? iso(n) : null;
   reminders.push(r);
-  hud(`Added “${r.title}”`);
+  
   return r;
 }
 function saveEditor() {
@@ -2405,8 +2403,8 @@ function tagSheet(sh) {
 }
 function saveTag() {
   const sh = state.sheet, name = cleanTag(sh.draft.name);
-  if (sh.id) { tagById(sh.id).name = name; hud(`Renamed to #${name}`); }
-  else { tags.push({ id: `t${Date.now()}`, name }); hud(`Added #${name}`); }
+  if (sh.id) { tagById(sh.id).name = name; }
+  else { tags.push({ id: `t${Date.now()}`, name }); }
   closeSheet();
 }
 
@@ -2568,7 +2566,7 @@ function ack(id, from) {
   logEvent(o, "ACKED", iso(NOW), from ? { from } : {});
   if (!r.rrule) r.status = "COMPLETED";
   const alarms = simulate(r.strength, capOf(r), paceOf(r)).nudges.some((n) => viaFor(n.urgency, btActs(r)) === "alarm");
-  hud(`Done: ${r.title}. ${alarms ? "Its alarms are cancelled." : "Nudging stopped."}`);
+  
 }
 function pause(rid) {
   const r = remById(rid);
@@ -2576,7 +2574,7 @@ function pause(rid) {
   r.nextOccurrenceAt = null;
   r.pausedAt = iso(NOW);
   for (const o of openOccs().filter((x) => x.reminderId === rid)) closeSkipped(o, "paused");
-  hud(`Paused “${r.title}”`);
+  
 }
 /* Closing an occurrence cancels its pending nudges and alarms and removes its notifications. */
 function closeSkipped(o, reason) {
@@ -2596,13 +2594,13 @@ function resume(rid) {
   r.status = "ACTIVE";
   const n = nextOccurrence(r);
   r.nextOccurrenceAt = n ? iso(n) : null;
-  hud(n ? `Resumed. Next: ${when(n)}` : "Resumed");
+  
 }
 function deleteReminder(rid, title) {
   reminders = reminders.filter((x) => x.id !== rid);
   occurrences = occurrences.filter((o) => o.reminderId !== rid);
   for (const k of Object.keys(state.stacks)) state.stacks[k] = state.stacks[k].filter((e) => !(e.kind === "rem" && e.id === rid));
-  hud(`Deleted “${title}”`);
+  
   nav();
 }
 function del(rid) {
@@ -2616,7 +2614,7 @@ function deleteTag(t) {
   for (const k of Object.keys(state.stacks)) state.stacks[k] = state.stacks[k].filter((e) => !(e.kind === "tag" && e.id === t.id));
   state.dayFilter.ids = state.dayFilter.ids.filter((id) => id !== t.id);
   if (!tags.length) state.tagEdit = false;
-  hud(`Deleted #${t.name}`);
+  
   nav();
 }
 function confirmDeleteTag(t) {
@@ -2632,7 +2630,7 @@ function wipeAll() {
   state.tagEdit = false;
   state.dayFilter = newDayFilter();
   for (const k of Object.keys(state.stacks)) state.stacks[k] = [];
-  hud("All data deleted");
+  
   nav();
 }
 /* First launch: the system's notification prompt, then the alarm prompt. The two permissions are
@@ -2719,14 +2717,13 @@ function answerAlert(i) {
   render();
 }
 
-/* A short confirmation at the top of the screen. It stays until the next tap or key press rather
-   than vanishing on a timer, so no one has to read it in a hurry (HIG, Accessibility > Cognitive).
-   What it says is also shown on the screen itself, such as a status label. */
-function hud(msg) {
-  const h = document.getElementById("hud");
-  h.textContent = "";
-  // Status messages belong to the app, so none appear over the Lock Screen or the alarm.
-  setTimeout(() => { if (state.system) return; h.textContent = msg; h.classList.add("show"); }, 30);
+/* What a mockup control did, or why it did nothing, in the controls panel: never on the iPhone.
+   The app shows no success message (DESIGN.md): an action that worked shows its result, and only
+   a failure says anything. */
+function controlNote(msg) {
+  const n = document.getElementById("c-note");
+  n.textContent = "";
+  setTimeout(() => { n.textContent = msg; }, 30);
 }
 /* Spoken status for VoiceOver. The views re-render whole, and text that's replaced isn't reliably
    read, so filter and search results are announced here: one region that stays put. */
@@ -2740,9 +2737,6 @@ function dayNews() {
   const st = DAY_STATUS[state.dayStatus], n = st ? items.filter((it) => st.test(it.status)).length : items.length;
   return `${st ? `Showing only ${st.label}: ${n}` : `Showing all: ${n}`} due today${dayFilterOn() ? ` ${dayFilterPhrase()}` : ""}`;
 }
-function hideHud() { document.getElementById("hud").classList.remove("show"); }
-document.addEventListener("pointerdown", hideHud, true);
-document.addEventListener("keydown", hideHud, true);
 
 /* ================= Rendering ================= */
 const VIEWS = { now: viewNow, day: viewDay, tags: viewTags, settings: viewSettings };
@@ -3020,7 +3014,7 @@ const CLICK = {
   hin: () => push({ kind: "hin" }),
   defpace: () => push({ kind: "defpace" }),
   about: () => push({ kind: "about" }),
-  weblink: (v) => hud(`Opens ${ABOUT_LINKS.find(([k]) => k === v)[3].replace("https://", "")} in the web browser`),
+  weblink: (v) => controlNote(`Opens ${ABOUT_LINKS.find(([k]) => k === v)[3].replace("https://", "")} in the web browser`),
   ack: (v, el) => { const focus = nextFocusAfterAck(v, el); ack(v, el?.dataset.src); refresh(focus); },
   pause: (v) => { pause(v); refresh(`[data-resume="${v}"]`); },
   resume: (v) => { resume(v); if (!state.alert && !state.sheet) refresh(`[data-pause="${v}"]`); },
@@ -3080,14 +3074,14 @@ const CLICK = {
     if (v === "open") { state.tab = "now"; state.stacks.now = [{ kind: "rem", id: o.reminderId }]; nav(); return; }
     // Stop quiets this ring. The next nudge was already scheduled, so it still comes on time.
     nav();
-    hud(`Stopped. Still nudging: next nudge ${hm(L(o.nextNudgeAt))}.`);
+    
   },
   lockClose: () => {
     state.system = null;
     if (!state.stacks[state.tab].length) state.tab = "now";
     nav();
   },
-  iosSettings: () => hud("Opens Nudge-inator in iOS Settings"),
+  iosSettings: () => controlNote("Opens Nudge-inator in iOS Settings"),
   test: () => showNotification("test"),
   wipe: () => ask({ title: "Delete All Data?", message: `This deletes every reminder, tag and all history from this iPhone, and cancels every ${hasAlarmKit() ? "nudge and alarm" : "nudge"}. It can't be undone.`,
     buttons: [{ label: "Cancel", role: "cancel" }, { label: "Delete", role: "destructive", run: wipeAll }] }),
@@ -3292,7 +3286,7 @@ document.getElementById("c-reset").addEventListener("click", () => {
   document.getElementById("c-perm-t").checked = true;
   Object.assign(state, { tab: "now", stacks: { now: [], day: [], tags: [], settings: [] }, dayFilter: newDayFilter(), dayStatus: null, tagEdit: false, tabMin: false, sheet: null, system: null, alert: null });
   nav();
-  hud("Mockup reset");
+  controlNote("Mockup reset");
 });
 
 /* Increase Contrast and Reduce Transparency: start from the system setting and follow it,

@@ -56,6 +56,7 @@ struct SharingAdapterTests {
                     guard opens() else { throw StoreWouldNotOpen() }
                     return try SharingStore(location: .file(sharingFile.url))
                 },
+                sharingSwitch: .temporary,
                 timeZone: NewYork.timeZone
             )
         }

@@ -136,7 +136,7 @@ final class SharingSwitchTests {
 
         #expect(model.isSharingOn)
         await sharing.waitUntilApplied()
-        #expect(model.canTurnSharingOffAtOnce)
+        #expect(model.sharingOff == .atOnce)
     }
 
     /// An account read already queued when the switch goes off asks nothing once it runs.
@@ -176,7 +176,7 @@ final class SharingSwitchTests {
         record.isOn = true
         let model = await launched()
 
-        #expect(!model.canTurnSharingOffAtOnce)
+        #expect(model.sharingOff != .atOnce)
         model.setSharing(on: false)
 
         #expect(model.isSharingOn)

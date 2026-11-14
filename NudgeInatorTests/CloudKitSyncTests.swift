@@ -243,6 +243,25 @@ extension CloudKitSyncTests {
     }
 
     /// The share went with the zone, so the connection is over: the inviter invites again.
+    /// A model winding down after Sharing turned off (#388) stops its adapter only once every end has
+    /// gone: the inviter's zone delete, and the invitee leaving the share.
+    @Test func aDisconnectIsUnsentUntilICloudHasIt() {
+        #expect(!alex.sync.hasUnsentDisconnects)
+        #expect(!sam.sync.hasUnsentDisconnects)
+
+        alex.submit(.disconnect(connectionID))
+        sam.submit(.disconnect(connectionID))
+
+        #expect(alex.sync.hasUnsentDisconnects)
+        #expect(sam.sync.hasUnsentDisconnects)
+
+        alex.send()
+        sam.send()
+
+        #expect(!alex.sync.hasUnsentDisconnects)
+        #expect(!sam.sync.hasUnsentDisconnects)
+    }
+
     @Test func aZoneICloudLostEndsTheConnection() {
         alex.submit(.send(sent(), to: connectionID))
         alex.send()

@@ -54,6 +54,11 @@ protocol SharingAdapter: AnyObject {
     /// Stops syncing for good, as Settings' Sharing switch turning off does (#387): the real adapter
     /// lets its engines go and stops watching the network. The model lets the adapter go after it.
     func stop()
+    /// Whether a disconnect or a revoked invite is still waiting to reach iCloud, however long ago
+    /// it was submitted, a relaunch included: a model winding down after Settings' Sharing switch
+    /// turned off (#388) stops the adapter only once there's none. A synchronous read of what the
+    /// adapter already holds, asking iCloud nothing.
+    var hasUnsentDisconnects: Bool { get }
     /// Takes a change to send, which the adapter keeps until it has gone through iCloud, however
     /// long that takes, and then reports with `sent(_:)`. The model keeps the change in the outbox
     /// until then.

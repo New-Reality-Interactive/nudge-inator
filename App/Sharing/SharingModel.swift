@@ -153,6 +153,7 @@ final class SharingModel {
             guard !isStopped else { return }
             accountState = account.state
             record(account)
+            finishWindingDownIfDone()
         }
     }
 
@@ -174,7 +175,8 @@ final class SharingModel {
         if refreshing { refreshAccountState() }
     }
 
-    /// Sharing was switched off (#387): the account read in flight is dropped and the adapter stops.
+    /// Sharing was switched off (#387) and nothing is left to send (#388): the account read in
+    /// flight is dropped and the adapter stops.
     func stop() {
         isStopped = true
         adapter.stop()
@@ -182,6 +184,42 @@ final class SharingModel {
 
     /// Set by `stop()`. Each queued account read checks it, before asking and once iCloud answers.
     @ObservationIgnored private var isStopped = false
+
+    /// Settings' Sharing switch turned off (#388), with the model already emptied: it keeps
+    /// sending until the disconnects and revoked invites have reached iCloud, then stops and calls
+    /// `done`. Meanwhile it takes in no invite and shows nowhere. With nothing left to send it stops
+    /// at once; otherwise it opens the store and starts the adapter, which sends what it holds,
+    /// from before a relaunch too.
+    func windDown(then done: @escaping () -> Void) {
+        isWindingDown = true
+        onWoundDown = done
+        finishWindingDownIfDone()
+        guard isWindingDown else { return }
+        iCloudAllowedThisLaunch = true
+        refreshAccountState()
+    }
+
+    /// The switch turned on again while winding down: the model is on show again, as empty as
+    /// turning off left it.
+    func stopWindingDown() {
+        isWindingDown = false
+        onWoundDown = nil
+    }
+
+    /// Whether the switch turned off and this model still has something to send (`windDown`).
+    @ObservationIgnored private var isWindingDown = false
+    @ObservationIgnored private var onWoundDown: (() -> Void)?
+
+    /// Stops a model winding down once the store has been read and neither its outbox nor the
+    /// adapter holds anything still to go.
+    private func finishWindingDownIfDone() {
+        guard isWindingDown, hasReadStore, data.outbox.isEmpty, !adapter.hasUnsentDisconnects else { return }
+        isWindingDown = false
+        stop()
+        let done = onWoundDown
+        onWoundDown = nil
+        done?()
+    }
 
     /// Returns once the account read started so far has finished.
     func waitUntilApplied() async {
@@ -382,7 +420,8 @@ final class SharingModel {
         let kept = try currentData()
         var emptied = SharingData(accountID: kept.accountID)
         let disconnects = kept.connections.filter { $0.state == .connected }.map { SharingChange.disconnect($0.id) }
-        emptied.outbox = disconnects.map(\.entry)
+        // An earlier Disconnect still on its way stays, so it still shows as waiting to go.
+        emptied.outbox = kept.outbox.filter { $0.kind == .disconnect } + disconnects.map(\.entry)
         try keep(emptied)
         for connection in kept.connections where connection.state == .invited {
             adapter.revokeInvite(connection.id)
@@ -515,6 +554,7 @@ extension SharingModel: SharingAdapterEvents {
         var remaining = try currentData()
         remaining.outbox.removeAll { $0.id == changeID }
         try keep(remaining)
+        finishWindingDownIfDone()
     }
 
     func accountStateChanged() {
@@ -526,6 +566,8 @@ extension SharingModel: SharingAdapterEvents {
     }
 
     func invited(_ invite: IncomingInvite) async {
+        // Sharing is off (#388): nothing connects through a model on its way out.
+        guard !isWindingDown else { return }
         let id = invite.connectionID
         allowICloud()
         do {

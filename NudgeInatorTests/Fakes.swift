@@ -366,6 +366,11 @@ extension TagsSortRecord {
     static var temporary: TagsSortRecord { TagsSortRecord(defaults: UserDefaults(suiteName: "NudgeInatorTests.TagsSort")!) }
 }
 
+extension SharingSwitchRecord {
+    /// A suite of the tests' own, so a test turning Sharing off never writes the app's record.
+    static var temporary: SharingSwitchRecord { SharingSwitchRecord(defaults: UserDefaults(suiteName: "NudgeInatorTests.SharingSwitch")!) }
+}
+
 extension Collection {
     /// The one element, or `nil` if there are none or several.
     var only: Element? { count == 1 ? first : nil }
