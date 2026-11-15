@@ -472,4 +472,12 @@ final class RecordingSharingEvents: SharingAdapterEvents {
     func keepSyncState(_ state: SharingSyncState) throws {
         syncState = state
     }
+
+    /// The connections the sharing store lists (#400), or `nil`, the default, for a test that
+    /// doesn't say: then no invite counts as left over.
+    var listedConnections: Set<UUID>?
+
+    func listedConnectionIDs() -> Set<UUID>? {
+        storeOpens ? listedConnections : nil
+    }
 }

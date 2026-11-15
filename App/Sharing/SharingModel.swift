@@ -159,11 +159,12 @@ final class SharingModel {
 
     /// Whether the app may ask iCloud (spec #127, decision 4): only while Settings' Sharing switch
     /// is on (#387), once this launch the person has opened Connections or an invite has reached
-    /// them (`allowICloud()`), or the sharing store holds sharing from before; and never once
+    /// them (`allowICloud()`), or the sharing store holds sharing from before, an invite the app
+    /// was closed during included (#400), which starting the adapter revokes; and never once
     /// stopped. Until then the adapter isn't started and the account isn't read, so a person who
     /// never shares is never asked about iCloud.
     var mayAskICloud: Bool {
-        !isStopped && (iCloudAllowedThisLaunch || data.holdsSharing)
+        !isStopped && (iCloudAllowedThisLaunch || data.holdsSharing || adapter.holdsLeftoverInvite)
     }
 
     /// The person opened Connections, an invite reached them, or Settings' Sharing switch is on
@@ -641,6 +642,10 @@ extension SharingModel: SharingAdapterEvents {
     func savedSyncState() -> SharingSyncState? {
         guard let kept = try? currentData() else { return nil }
         return SharingSyncState(engines: kept.engineStates, cache: kept.syncCache)
+    }
+
+    func listedConnectionIDs() -> Set<UUID>? {
+        (try? currentData()).map { Set($0.connections.map(\.id)) }
     }
 
     func keepSyncState(_ state: SharingSyncState) throws {
