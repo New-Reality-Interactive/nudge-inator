@@ -111,14 +111,7 @@ struct DisconnectSheet: View {
             }
             .buttonStyle(.borderedProminent)
         } else {
-            Button(role: .destructive, action: choose) {
-                Text("Disconnect", comment: "Disconnect's sheet: ends the connection, doing the chosen Remove or Keep.")
-                    .foregroundStyle(Color.onAccent)
-                    .frame(maxWidth: .infinity)
-            }
-            // DESIGN.md's `button-destructive`: filled, as red text on gray read as dimmed (#402).
-            .buttonStyle(.borderedProminent)
-            .tint(Color.negative)
+            DestructiveSheetButton(action: choose, title: Text("Disconnect", comment: "Disconnect's sheet: ends the connection, doing the chosen Remove or Keep."))
         }
     }
 

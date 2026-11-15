@@ -26,15 +26,8 @@ struct TurnOffSharingSheet: View {
                     choiceSection
                 }
                 Section {
-                    Button(role: .destructive, action: confirm) {
-                        Text("Turn Off Sharing", comment: "Turn Off Sharing's sheet: its title, and the button that disconnects everyone and turns Sharing off.")
-                            .foregroundStyle(Color.onAccent)
-                            .frame(maxWidth: .infinity)
-                    }
-                    // DESIGN.md's `button-destructive`: filled, as red text on gray read as dimmed (#402).
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color.negative)
-                    .controlSize(.large)
+                    DestructiveSheetButton(action: confirm, title: Text("Turn Off Sharing", comment: "Turn Off Sharing's sheet: its title, and the button that disconnects everyone and turns Sharing off."))
+                        .controlSize(.large)
                 }
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets()) // the button fills the row on a clear background; no text in the row

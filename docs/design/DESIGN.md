@@ -276,6 +276,7 @@ Targets are 4.5:1, or 7:1 with Increase Contrast; large text 3:1, or 4.5:1.
 | Positive | 4.78 | 8.42 / 6.89 | 7.48 | 10.06 |
 | Secondary label | 4.69 | 7.69 / 6.30 | 9.80 | 11.18 |
 | On-accent on accent fill | 6.74 | 12.49 | 10.47 | 17.71 |
+| On-accent on negative fill | 5.38 | 7.45 | 8.53 | 10.97 |
 
 Device checks (not verifiable in a simulator): the selected tab's title on iOS 26's glass pill, in
 all four appearances.
@@ -561,11 +562,15 @@ The Reminders tab's tools, in its layout, so they're learned once.
 ### Buttons
 - Every button is at least 44 pt tall.
 - `button-prominent` (accent fill, semibold) for one primary action per context; `button-bordered` for
-  secondary; plain accent text for tertiary (honors Button Shapes); destructive text in `{colors.negative}`.
+  secondary; plain accent text for tertiary (honors Button Shapes). A destructive action in a list
+  row or a system dialog is text in `{colors.negative}`.
 - `button-destructive` (negative fill, on-accent text, semibold) for a destructive action that is a
   screen's own button rather than a list row or a dialog's: Disconnect's and Turn Off Sharing's
   confirmation, and Waiting for You's Remove. Red text on the tertiary fill read as a dimmed control
   (#217's phone check, #402), so a destructive button is never `button-bordered`.
+- Waiting for You's rows are the exception to one primary action per context: each row's Accept
+  (`button-prominent`) and Remove (`button-destructive`) are an even pair, both filled, as small
+  capsules (#402).
 - Disabled uses `{colors.secondary-label}`; a disabled prominent button becomes a hairline outline.
 
 ### Sheet bar buttons

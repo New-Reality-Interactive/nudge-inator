@@ -177,13 +177,32 @@ struct SmallBorderedButtonStyle: ButtonStyle {
 
 /// DESIGN.md's `button-prominent` in SmallBorderedButtonStyle's shape, or `button-destructive` for
 /// a destructive one: on-accent text on the accent or the negative fill. Waiting for You's Accept
-/// and Remove (#402), filled so Remove doesn't read as dimmed, as red text on gray did.
+/// and Remove, filled as a pair so neither outweighs the other.
 struct SmallProminentButtonStyle: ButtonStyle {
     /// As SmallBorderedButtonStyle's.
     var fillsWidth = false
 
     func makeBody(configuration: Configuration) -> some View {
         SmallButtonBody(configuration: configuration, fillsWidth: fillsWidth, text: Color.onAccent, fill: configuration.role == .destructive ? Color.negative : Color.accentColor)
+    }
+}
+
+/// DESIGN.md's `button-destructive` filling a sheet's width: the destructive confirmation that is
+/// the sheet's own button, Disconnect's and Turn Off Sharing's. Filled, since red text on the gray
+/// fill read as a dimmed control (#402). The sheet sets its control size.
+struct DestructiveSheetButton: View {
+    let action: () -> Void
+    let title: Text
+
+    var body: some View {
+        Button(role: .destructive, action: action) {
+            title
+                // The prominent style's own label color isn't documented against an explicit tint.
+                .foregroundStyle(Color.onAccent)
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(Color.negative)
     }
 }
 
