@@ -231,7 +231,8 @@ struct SharingAdapterTests {
         try recipient.sharing.submit(change)
         await network.settle()
 
-        #expect(recipient.sharing.data.outbox.map(\.id) == [change.entry.id])
+        #expect(recipient.sharing.data.outbox.map { [$0.id, $0.connectionID] } == [[change.entry.id, change.entry.connectionID]])
+        #expect(recipient.sharing.data.outbox.map(\.kind) == [change.entry.kind])
         #expect(sender.sharing.data.connections.first?.theirs.deliveryMode == .startRightAway)
 
         // Closing the app doesn't lose the entry: the next launch reads the outbox from the store. (The
@@ -239,7 +240,8 @@ struct SharingAdapterTests {
         // in its saved state; this fake keeps it in the same instance across the relaunch.)
         recipient.relaunch()
         await recipient.launch()
-        #expect(recipient.sharing.data.outbox.map(\.id) == [change.entry.id])
+        #expect(recipient.sharing.data.outbox.map { [$0.id, $0.connectionID] } == [[change.entry.id, change.entry.connectionID]])
+        #expect(recipient.sharing.data.outbox.map(\.kind) == [change.entry.kind])
 
         recipient.adapter.isOnline = true
         await network.settle()

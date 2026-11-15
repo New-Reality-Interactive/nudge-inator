@@ -647,7 +647,8 @@ sharing paused and offline banner.
   an entry as one element. The list's footer is "Kept on this iPhone only. Turning off Sharing
   clears it." With nothing recorded, the empty state is `checkmark.circle.fill`, "No Share
   Activity" and "Nothing has gone wrong with sharing. If iCloud refuses a change or a connection
-  ends, it shows here.
+  ends, it shows here." An entry with no name to show (a store from before names were kept) shows its
+  sentence and time alone.
 - **Sync states:** "Waiting to sync" with `clock`, in `{colors.secondary-label}`, on a Sent row's
   trailing label and on a received reminder's "From" line. It's a state, so it's never accent, warning
   or negative.

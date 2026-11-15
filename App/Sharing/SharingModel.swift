@@ -232,7 +232,7 @@ final class SharingModel {
     /// change the person can't see as Waiting to sync.
     func submit(_ change: SharingChange) throws {
         var kept = try currentData()
-        kept.queue([change.entry])
+        kept.addToOutbox([change.entry])
         try keep(kept)
         adapter.submit(change)
     }
@@ -259,7 +259,7 @@ final class SharingModel {
         for connectionID in connectionIDs {
             kept.sentCopies.append(SentCopy(connectionID: connectionID, reminderID: stripped.id, createdAt: clock.now, receipt: .notDelivered, statusRecord: nil))
         }
-        kept.queue(changes.map(\.entry))
+        kept.addToOutbox(changes.map(\.entry))
         try keep(kept)
         changes.forEach(adapter.submit)
     }
@@ -310,7 +310,7 @@ final class SharingModel {
     private func keep(_ kept: SharingData, sending connectionIDs: [UUID], _ change: (UUID) -> SharingChange) throws {
         var kept = kept
         let changes = connectionIDs.filter { connection($0) != nil }.map(change)
-        kept.queue(changes.map(\.entry))
+        kept.addToOutbox(changes.map(\.entry))
         try keep(kept)
         changes.forEach(adapter.submit)
     }
@@ -399,7 +399,7 @@ final class SharingModel {
         guard let ended = kept.removeConnection(connectionID, received: receivedIDs) else { return }
         guard ended.state == .connected else { return try keep(kept) }
         let change = SharingChange.disconnect(connectionID)
-        kept.queue([change.entry], knownAs: ended.name)
+        kept.addToOutbox([change.entry], knownAs: ended.name)
         try keep(kept)
         adapter.submit(change)
     }
@@ -421,7 +421,11 @@ final class SharingModel {
         var emptied = SharingData(accountID: kept.accountID)
         let disconnects = kept.connections.filter { $0.state == .connected }.map { SharingChange.disconnect($0.id) }
         // An earlier Disconnect still on its way stays, so it still shows as waiting to go.
-        emptied.outbox = kept.outbox.filter { $0.kind == .disconnect } + disconnects.map(\.entry)
+        emptied.outbox = kept.outbox.filter { $0.kind == .disconnect }
+        // Named as the connections are known now: `emptied` no longer holds them.
+        for (connection, change) in zip(kept.connections.filter { $0.state == .connected }, disconnects) {
+            emptied.addToOutbox([change.entry], knownAs: connection.name)
+        }
         try keep(emptied)
         for connection in kept.connections where connection.state == .invited {
             adapter.revokeInvite(connection.id)
@@ -441,7 +445,7 @@ final class SharingModel {
         let wasSharing = kept.connections[index].mine.sharesStatus
         kept.connections[index].mine = choices
         let change = SharingChange.settings(.init(choices), for: connectionID)
-        kept.queue([change.entry])
+        kept.addToOutbox([change.entry])
         try keep(kept)
         adapter.submit(change)
         // Turning Status sharing off deletes what the sender was sent, whether or not this launch
@@ -692,7 +696,7 @@ extension SharingModel: SharingAdapterEvents {
         guard !kept.receivedSyncStates.contains(where: { $0.reminderID == copy.id }) else { return }
         kept.receivedSyncStates.append(ReceivedSyncState(reminderID: copy.id, notSharingThisOne: false))
         let receipt = SharingChange.receipt(copy.isWaiting ? .waitingForAcceptance : .started, for: sent.reminder.id, from: connectionID)
-        kept.queue([receipt.entry])
+        kept.addToOutbox([receipt.entry])
         try keep(kept)
         adapter.submit(receipt)
         // The copy's status as it arrives, if status sharing is on (ticket 206).

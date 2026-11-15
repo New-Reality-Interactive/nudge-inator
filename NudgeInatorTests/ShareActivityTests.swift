@@ -83,6 +83,20 @@ struct ShareActivityTests {
         #expect(riley.sharing.data.activity.map(\.event) == [.changeGivenUp(.send)])
     }
 
+    @Test func aChangeRefusedWhileStillConnectedNamesTheConnectionAsItIsKnownNow() async throws {
+        let (_, riley) = try await phones()
+        riley.adapter.isOnline = false
+        try riley.model.send(reminder(), to: [connectionID])
+        let send = try #require(riley.adapter.submitted.last)
+        var data = try riley.sharing.currentData()
+        data.connections[0].name = "Alex M."
+        try riley.sharing.keep(data)
+
+        try await riley.sharing.gaveUp(send.entry.id)
+
+        #expect(riley.sharing.data.activity.map(\.connectionNames) == [["Alex M."]])
+    }
+
     @Test func aConnectionICloudLostAddsAnEntryAndEndsTheConnection() async throws {
         let (_, riley) = try await phones()
         riley.clock.now = NewYork.local(2026, 10, 15, 9, 15)

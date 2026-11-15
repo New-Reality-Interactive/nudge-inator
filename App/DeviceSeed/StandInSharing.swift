@@ -85,7 +85,7 @@ enum StandInSharing {
     }
 
     /// The Share Activity record for the phone check of its page (#397), oldest first: an entry of
-    /// each event, from a change of Apple Account 30 days ago, naming three people, to a refused
+    /// each event and each refused change, from a change of Apple Account 30 days ago, naming three people, to a refused
     /// send 20 minutes ago.
     private static func activity(now: Date) -> [ShareActivityEntry] {
         let day: TimeInterval = 24 * 60 * 60
@@ -93,6 +93,8 @@ enum StandInSharing {
             ShareActivityEntry(at: now.addingTimeInterval(-30 * day), connectionNames: ["Chris Nolan", "Pat Rivera", "Dana Kim"], event: .accountChanged),
             ShareActivityEntry(at: now.addingTimeInterval(-14 * day), connectionNames: ["Alex Morgan"], event: .otherPersonLeft),
             ShareActivityEntry(at: now.addingTimeInterval(-7 * day), connectionNames: ["Robin Vega"], event: .connectionLost),
+            ShareActivityEntry(at: now.addingTimeInterval(-4 * day), connectionNames: ["Riley Park"], event: .changeGivenUp(.revise)),
+            ShareActivityEntry(at: now.addingTimeInterval(-3 * day), connectionNames: ["Alex Morgan"], event: .changeGivenUp(.disconnect)),
             ShareActivityEntry(at: now.addingTimeInterval(-2 * day), connectionNames: ["Riley Park"], event: .changeGivenUp(.settings)),
             ShareActivityEntry(at: now.addingTimeInterval(-day - 3 * 60 * 60), connectionNames: ["Alex Morgan"], event: .changeGivenUp(.cancel)),
             ShareActivityEntry(at: now.addingTimeInterval(-day), connectionNames: ["Riley Park"], event: .changeGivenUp(.status)),

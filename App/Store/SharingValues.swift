@@ -195,7 +195,7 @@ extension SharingData {
 
     /// Adds `changes` to the outbox, newest last, each keeping its connection's name: `name` for
     /// a connection already taken off (a disconnect's), else as the connection is known now.
-    mutating func queue(_ changes: [OutboxChange], knownAs name: String? = nil) {
+    mutating func addToOutbox(_ changes: [OutboxChange], knownAs name: String? = nil) {
         outbox.append(contentsOf: changes.map { change in
             var change = change
             change.connectionName = name ?? connections.first { $0.id == change.connectionID }?.name
