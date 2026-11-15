@@ -113,9 +113,12 @@ struct DisconnectSheet: View {
         } else {
             Button(role: .destructive, action: choose) {
                 Text("Disconnect", comment: "Disconnect's sheet: ends the connection, doing the chosen Remove or Keep.")
+                    .foregroundStyle(Color.onAccent)
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
+            // DESIGN.md's `button-destructive`: filled, as red text on gray read as dimmed (#402).
+            .buttonStyle(.borderedProminent)
+            .tint(Color.negative)
         }
     }
 

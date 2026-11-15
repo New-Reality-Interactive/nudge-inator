@@ -171,17 +171,40 @@ struct SmallBorderedButtonStyle: ButtonStyle {
     var fillsWidth = false
 
     func makeBody(configuration: Configuration) -> some View {
+        SmallButtonBody(configuration: configuration, fillsWidth: fillsWidth, text: Color.accentColor, fill: Color(uiColor: .tertiarySystemFill))
+    }
+}
+
+/// DESIGN.md's `button-prominent` in SmallBorderedButtonStyle's shape, or `button-destructive` for
+/// a destructive one: on-accent text on the accent or the negative fill. Waiting for You's Accept
+/// and Remove (#402), filled so Remove doesn't read as dimmed, as red text on gray did.
+struct SmallProminentButtonStyle: ButtonStyle {
+    /// As SmallBorderedButtonStyle's.
+    var fillsWidth = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        SmallButtonBody(configuration: configuration, fillsWidth: fillsWidth, text: Color.onAccent, fill: configuration.role == .destructive ? Color.negative : Color.accentColor)
+    }
+}
+
+/// The small button's shape, size and pressed look, shared by the bordered and prominent styles.
+private struct SmallButtonBody: View {
+    let configuration: ButtonStyleConfiguration
+    let fillsWidth: Bool
+    let text: Color
+    let fill: Color
+
+    var body: some View {
         let shape = fillsWidth
             ? AnyShape(RoundedRectangle(cornerRadius: Design.Radius.control))
             : AnyShape(Capsule())
         configuration.label
             .font(.subheadline.weight(.semibold))
-            // A destructive one, such as Waiting for You's Remove, in destructive text (DESIGN.md).
-            .foregroundStyle(configuration.role == .destructive ? Color.negative : Color.accentColor)
+            .foregroundStyle(text)
             .padding(.horizontal, Design.Spacing.s4)
             .padding(.vertical, fillsWidth ? Design.Spacing.s2 : 0)
             .frame(maxWidth: fillsWidth ? .infinity : nil, minHeight: Design.Spacing.rowMin)
-            .background(shape.fill(Color(uiColor: .tertiarySystemFill)))
+            .background(shape.fill(fill))
             .contentShape(shape)
             .opacity(configuration.isPressed ? 0.6 : 1)
     }
