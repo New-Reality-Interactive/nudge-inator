@@ -81,7 +81,25 @@ enum StandInSharing {
             SharingConnection(id: SeedSet.standInConnectionID, name: "Riley Park", state: .connected, address: "riley.park@icloud.com", connectedAt: now.addingTimeInterval(-44 * 24 * 60 * 60)),
             SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, address: "jordan.lee@icloud.com", invitedAt: now.addingTimeInterval(-20 * 60)),
             SharingConnection(id: UUID(), name: "Priya Shah", state: .invited, address: "+1 (555) 010-4477", invitedAt: now.addingTimeInterval(-3 * 24 * 60 * 60)),
-        ])
+        ], activity: activity(now: now))
+    }
+
+    /// The Share Activity record for the phone check of its page (#397), oldest first: an entry of
+    /// each event and each refused change, from a change of Apple Account 30 days ago, naming three people, to a refused
+    /// send 20 minutes ago.
+    private static func activity(now: Date) -> [ShareActivityEntry] {
+        let day: TimeInterval = 24 * 60 * 60
+        return [
+            ShareActivityEntry(at: now.addingTimeInterval(-30 * day), connectionNames: ["Chris Nolan", "Pat Rivera", "Dana Kim"], event: .accountChanged),
+            ShareActivityEntry(at: now.addingTimeInterval(-14 * day), connectionNames: ["Alex Morgan"], event: .otherPersonLeft),
+            ShareActivityEntry(at: now.addingTimeInterval(-7 * day), connectionNames: ["Robin Vega"], event: .connectionLost),
+            ShareActivityEntry(at: now.addingTimeInterval(-4 * day), connectionNames: ["Riley Park"], event: .changeGivenUp(.revise)),
+            ShareActivityEntry(at: now.addingTimeInterval(-3 * day), connectionNames: ["Alex Morgan"], event: .changeGivenUp(.disconnect)),
+            ShareActivityEntry(at: now.addingTimeInterval(-2 * day), connectionNames: ["Riley Park"], event: .changeGivenUp(.settings)),
+            ShareActivityEntry(at: now.addingTimeInterval(-day - 3 * 60 * 60), connectionNames: ["Alex Morgan"], event: .changeGivenUp(.cancel)),
+            ShareActivityEntry(at: now.addingTimeInterval(-day), connectionNames: ["Riley Park"], event: .changeGivenUp(.status)),
+            ShareActivityEntry(at: now.addingTimeInterval(-20 * 60), connectionNames: ["Riley Park"], event: .changeGivenUp(.send)),
+        ]
     }
 
     /// Two reminders Riley already has, started (ticket 207): "Take the pills" every day at 9:00

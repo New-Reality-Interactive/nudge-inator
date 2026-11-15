@@ -179,13 +179,16 @@ final class OutboxRecord {
     var kind: String
     var connectionID: UUID
     var reminderID: UUID?
+    /// The connection's name when the change joined the outbox (#397).
+    var connectionName: String?
 
-    init(id: UUID, position: Int, kind: String, connectionID: UUID, reminderID: UUID?) {
+    init(id: UUID, position: Int, kind: String, connectionID: UUID, reminderID: UUID?, connectionName: String?) {
         self.id = id
         self.position = position
         self.kind = kind
         self.connectionID = connectionID
         self.reminderID = reminderID
+        self.connectionName = connectionName
     }
 }
 

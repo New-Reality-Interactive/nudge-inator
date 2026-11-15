@@ -639,7 +639,16 @@ sharing paused and offline banner.
   is a `{colors.tile-gray}` tile with `person.2`, in a section headed Sharing, under the Sharing
   switch: a `{colors.tile-blue}` tile with `square.and.arrow.up` and a switch, with the footer
   "Connect with people through iCloud to send each other reminders." The Connections row shows only
-  while the switch is on (#387).
+  while the switch is on (#387). Below it, also only while the switch is on, the Share Activity row
+  is a `{colors.tile-gray}` tile with `list.bullet.rectangle` and a chevron, with no status (#397).
+- **Share Activity entries:** plain rows with nothing to tap, newest first, in one inset list: who
+  it concerns in `{typography.body}` (several names joined as a list), then what happened and when
+  ("Today at 7:58 AM"), each in `{typography.subhead}` `{colors.secondary-label}`. VoiceOver reads
+  an entry as one element. The list's footer is "Kept on this iPhone only. Turning off Sharing
+  clears it." With nothing recorded, the empty state is `checkmark.circle.fill`, "No Share
+  Activity" and "Nothing has gone wrong with sharing. If iCloud refuses a change or a connection
+  ends, it shows here." An entry with no name to show (a store from before names were kept) shows its
+  sentence and time alone.
 - **Sync states:** "Waiting to sync" with `clock`, in `{colors.secondary-label}`, on a Sent row's
   trailing label and on a received reminder's "From" line. It's a state, so it's never accent, warning
   or negative.

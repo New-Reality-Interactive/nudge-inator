@@ -160,6 +160,9 @@ SCREENS = {
   "reminders-sharing-off": ("startSharing(false);state.tab='rems';nav()", 3),
   "now-sharing-off": ("startSharing(false);state.tab='now';nav()", 3),
   "form-sharing-off": ("startSharing(false);openEditor()", 4),
+  # Share Activity (#397). Only a mockup with it draws these.
+  "share-activity": ("state.tab='settings';nav();push({kind:'activity'})", 3),
+  "share-activity-empty": ("activity=[];state.tab='settings';nav();push({kind:'activity'})", 1),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}

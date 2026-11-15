@@ -223,7 +223,7 @@ The sharing store's queue of changes not yet sent to iCloud, oldest first: a sen
 _Avoid_: Pending, sync queue
 
 **Share Activity**:
-The record, kept in the sharing store on this iPhone only, of what happened to a person's sharing that they would otherwise never see: a change iCloud refused for good and gave up on, a connection iCloud lost, the other person leaving, and a change of Apple Account removing sharing. Each entry has when it happened, which connection it concerns and what happened. The newest 300 are kept, oldest dropped first; Delete All Data and a change of Apple Account clear it. The Share Activity page in Settings shows it (#397).
+The record, kept in the sharing store on this iPhone only, of what happened to a person's sharing that they would otherwise never see: a change iCloud refused for good and gave up on, a connection iCloud lost, the other person leaving, and a change of Apple Account removing sharing. Each entry has when it happened, which connection it concerns and what happened. A change waiting to sync keeps its connection's name, so an entry for one refused after the connection ended still names it (#397). The newest 300 are kept, oldest dropped first; Delete All Data and a change of Apple Account clear it. The Share Activity page in Settings shows it (#397).
 _Avoid_: Sharing log, Sync log
 
 **Sharing adapter**:

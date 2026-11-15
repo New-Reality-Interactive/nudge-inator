@@ -16,7 +16,7 @@
       }
     },
     "%@ at %@" : {
-      "comment" : "A day and a time of day, such as \"Today at 8:02 AM\". 1: the day, such as \"Today\" or \"Tue, Oct 20\". 2: the time.\nAn invited person's page: when the invite was sent. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"7:40 AM\".\nReminder details, Schedule: the next due time. 1: \"Today\", \"Tomorrow\" or a short date. 2: the time, such as \"8:00 AM\".",
+      "comment" : "A day and a time of day, such as \"Today at 8:02 AM\". 1: the day, such as \"Today\" or \"Tue, Oct 20\". 2: the time.\nAn invited person's page: when the invite was sent. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"7:40 AM\".\nReminder details, Schedule: the next due time. 1: \"Today\", \"Tomorrow\" or a short date. 2: the time, such as \"8:00 AM\".\nShare Activity: when an entry happened. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"7:58 AM\".",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1667,6 +1667,9 @@
     "Keep as My Own Reminders" : {
       "comment" : "Disconnect's and Turn Off Sharing's sheets: the choice that keeps the reminders received as this person's own."
     },
+    "Kept on this iPhone only. Turning off Sharing clears it." : {
+      "comment" : "Share Activity: under the list of entries."
+    },
     "Last 24 Hours" : {
       "comment" : "Now: section header for occurrences closed in the last 24 hours."
     },
@@ -1798,6 +1801,9 @@
     "No Results for “%@”" : {
       "comment" : "Reminders tab, Mine and Sent: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces.\nTags tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces."
     },
+    "No Share Activity" : {
+      "comment" : "Share Activity: title of the empty state, with nothing recorded."
+    },
     "No Tags" : {
       "comment" : "A filter sheet: the row that shows only reminders without tags.\nMy Day: the filter token that shows only reminders without tags.\nTags: title when there are no tags yet."
     },
@@ -1875,6 +1881,9 @@
     },
     "Nothing has changed. Try again." : {
       "comment" : "Disconnect's sheet and Connection Ended: under Couldn't Disconnect.\nSettings and Turn Off Sharing's sheet: under Couldn't Turn Off Sharing."
+    },
+    "Nothing has gone wrong with sharing. If iCloud refuses a change or a connection ends, it shows here." : {
+      "comment" : "Share Activity: under \"No Share Activity\"."
     },
     "Nothing is done yet today." : {
       "comment" : "My Day: the list when Done is chosen and nothing is done yet today."
@@ -2264,6 +2273,9 @@
     },
     "Settings" : {
       "comment" : "Tab bar: the app's settings tab"
+    },
+    "Share Activity" : {
+      "comment" : "Share Activity: the page's title, and the Settings row that opens it."
     },
     "Sharing" : {
       "comment" : "Settings: the switch that turns sharing reminders with other people on or off, and the header of its section."

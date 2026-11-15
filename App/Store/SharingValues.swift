@@ -98,6 +98,9 @@ struct OutboxChange: Equatable, Identifiable {
     var kind: Kind
     var connectionID: UUID
     var reminderID: Reminder.ID?
+    /// The connection's name when the change joined the outbox (#397), so a change iCloud refuses
+    /// after the connection ended still says who it was for. `nil` until it joins the outbox.
+    var connectionName: String?
 
     enum Kind: Hashable {
         case send
@@ -188,6 +191,16 @@ extension SharingData {
         case .none, .lost, .reminder:
             return false
         }
+    }
+
+    /// Adds `changes` to the outbox, newest last, each keeping its connection's name: `name` for
+    /// a connection already taken off (a disconnect's), else as the connection is known now.
+    mutating func addToOutbox(_ changes: [OutboxChange], knownAs name: String? = nil) {
+        outbox.append(contentsOf: changes.map { change in
+            var change = change
+            change.connectionName = name ?? connections.first { $0.id == change.connectionID }?.name
+            return change
+        })
     }
 
     /// Takes off the connection with `connectionID`, connected or ended by the other person, with

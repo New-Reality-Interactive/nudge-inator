@@ -135,8 +135,8 @@ struct SettingsTab: View {
         }
     }
 
-    /// The Sharing switch (#387), and Connections (ticket 194) only while it's on. Off, none of
-    /// sharing exists (the Sharing-switch mockup).
+    /// The Sharing switch (#387), and Connections (ticket 194) and Share Activity (#397) only while
+    /// it's on. Off, none of sharing exists (the Sharing-switch mockup).
     private var sharingSection: some View {
         Section {
             Toggle(isOn: sharingOn) {
@@ -158,6 +158,13 @@ struct SettingsTab: View {
                         symbol: "person.2",
                         title: Text("Connections", comment: "Connections: the page's title, and the Settings row that opens it."),
                         status: count == 0 ? nil : Text(count, format: .number)
+                    )
+                }
+                NavigationLink(value: SharingPage.activity) {
+                    SettingsRow(
+                        tile: .tileGray,
+                        symbol: "list.bullet.rectangle",
+                        title: Text("Share Activity", comment: "Share Activity: the page's title, and the Settings row that opens it.")
                     )
                 }
             }
