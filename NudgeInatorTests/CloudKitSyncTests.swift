@@ -491,15 +491,42 @@ extension CloudKitSyncTests {
         expectReceived(.disconnect(connectionID), by: sam)
     }
 
+    static let sam = InviteParticipant(id: "_sam", status: .accepted)
+
+    @Test func theFirstToAcceptIsReportedOnceAndThenOthersAreToGo() {
+        let late = InviteParticipant(id: "_late", status: .accepted)
+
+        let first = alex.sync.fetchedShare(in: connectionID, invitees: [Self.sam, late])
+        let again = alex.sync.fetchedShare(in: connectionID, invitees: [Self.sam, late])
+
+        #expect(first.accepted == [CloudKitSync.Acceptance(connectionID: connectionID, participantID: "_sam", isNew: true)])
+        #expect(again.accepted == [CloudKitSync.Acceptance(connectionID: connectionID, participantID: "_sam", isNew: false)])
+    }
+
+    @Test func aShareOfAConnectionThisPersonDidNotInviteToReportsNoAcceptance() {
+        let unknown = UUID()
+
+        #expect(alex.sync.fetchedShare(in: unknown, invitees: [Self.sam]).accepted.isEmpty)
+    }
+
+    @Test func anAcceptanceWithoutAnIDCountsAsJoinedButNamesNoOne() {
+        let unknownYet = InviteParticipant(id: nil, status: .accepted)
+
+        let heard = alex.sync.fetchedShare(in: connectionID, invitees: [unknownYet])
+
+        #expect(heard.accepted.isEmpty)
+        #expect(alex.sync.cache.zones[connectionID]?.participantJoined == true)
+    }
+
     @Test func theInviteeDisconnectingLeavesTheShareAndTheInviterHearsIt() {
-        _ = alex.sync.fetchedShare(in: connectionID, hasAcceptedParticipant: true)
+        _ = alex.sync.fetchedShare(in: connectionID, invitees: [Self.sam])
         let moot = SharingChange.send(sent(), to: connectionID)
         alex.submit(moot)
         let disconnect = SharingChange.disconnect(connectionID)
 
         sam.submit(disconnect)
         sam.send()
-        let heard = alex.sync.fetchedShare(in: connectionID, hasAcceptedParticipant: false)
+        let heard = alex.sync.fetchedShare(in: connectionID, invitees: [])
 
         #expect(sam.sentIDs == [disconnect.entry.id])
         #expect(sam.sync.cache.zones[connectionID] == nil)
@@ -511,7 +538,7 @@ extension CloudKitSyncTests {
     }
 
     @Test func aShareNoOneHasAcceptedYetIsNoDisconnect() {
-        #expect(alex.sync.fetchedShare(in: connectionID, hasAcceptedParticipant: false).received.isEmpty)
+        #expect(alex.sync.fetchedShare(in: connectionID, invitees: []).received.isEmpty)
     }
 
     @Test func theShareIsPrivate() {
