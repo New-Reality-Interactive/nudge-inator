@@ -258,7 +258,12 @@ final class FakeSharingAdapter: SharingAdapter {
 
     func start() {
         starts += 1
+        holdsLeftoverInvite = false
     }
+
+    /// Whether the store kept an invite the app was closed during (#400), which the real adapter
+    /// revokes as it starts: set by a test, and cleared by `start()` as the real one's is.
+    var holdsLeftoverInvite = false
 
     private(set) var stops = 0
 

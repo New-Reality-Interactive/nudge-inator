@@ -78,6 +78,16 @@ struct CloudKitSyncCache: Codable, Equatable {
     }
 }
 
+extension CloudKitSyncCache {
+    /// The invites this person made that the sharing store doesn't list, by connection: each one's
+    /// share has the person on it, but the app was closed while its compose screen was up, so the
+    /// link was never sent and Connections has no Invited row for it (#400). `listed` is every
+    /// connection the store lists, in any state. An invite already being deleted isn't one.
+    func leftoverInvites(listed: Set<UUID>) -> [UUID] {
+        zones.filter { id, zone in zone.isOwn && !listed.contains(id) && zoneDeletes[id] == nil }.map(\.key)
+    }
+}
+
 extension CloudKitSyncCache.StoredField {
     /// Every field the mapping writes is encrypted except a reference (`SharingRecordMapping`).
     static func fields(of record: CKRecord) -> [String: Self] {

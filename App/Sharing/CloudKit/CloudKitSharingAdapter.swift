@@ -71,8 +71,7 @@ final class CloudKitSharingAdapter: SharingAdapter {
     /// writing an empty state over what it holds: the next call tries again.
     func start() {
         guard !isStopped, sync == nil, let container, let saved = events?.savedSyncState() else { return }
-        let cache = saved.cache.flatMap { try? JSONDecoder().decode(CloudKitSyncCache.self, from: $0) } ?? CloudKitSyncCache()
-        let sync = CloudKitSync(cache: cache)
+        let sync = CloudKitSync(cache: Self.cache(in: saved))
         self.sync = sync
         for state in saved.engines { engineStates[state.database] = state.data }
         keptEngineStates = engineStates
@@ -88,12 +87,48 @@ final class CloudKitSharingAdapter: SharingAdapter {
             engines[database] = engine
             sync.attach(engine.state, for: database)
         }
+        revokeLeftoverInvites(sync: sync)
         connectivity.start()
         keep()
         // What had gone before a relaunch, and the app model never heard of.
         if !sync.unreported.isEmpty { report(CloudKitSync.Outcome()) }
         // The first request to iCloud: the device check reads it to see none came before (#216).
         Self.logger.notice("Sync engines started")
+    }
+
+    /// The sync's cache as the store kept it, or an empty one if there's none or it doesn't read.
+    private static func cache(in saved: SharingSyncState) -> CloudKitSyncCache {
+        saved.cache.flatMap { try? JSONDecoder().decode(CloudKitSyncCache.self, from: $0) } ?? CloudKitSyncCache()
+    }
+
+    /// The invites left over from before this launch (#400): made, with the person on their share,
+    /// but not listed, because the app was closed while their compose screen was up. Read once from
+    /// what the store kept, by whichever comes first, the app model's launch check or `start()`,
+    /// and emptied by `start()`, which revokes them. Read before anything this launch can make a
+    /// zone, so an invite whose compose screen is up now is never one of them. `nil` until read.
+    private var leftovers: [UUID]?
+
+    /// `leftovers`, read from `kept`, the sync's cache, the first time. Unread, and none, while
+    /// the store won't open.
+    private func readLeftovers(in kept: @autoclosure () -> CloudKitSyncCache?) -> [UUID] {
+        if let leftovers { return leftovers }
+        guard let listed = events?.listedConnectionIDs(), let cache = kept() else { return [] }
+        let read = cache.leftoverInvites(listed: listed)
+        leftovers = read
+        return read
+    }
+
+    private func revokeLeftoverInvites(sync: CloudKitSync) {
+        for connectionID in readLeftovers(in: sync.cache) where sync.ownsZone(of: connectionID) {
+            Self.logger.notice("An invite the app was closed during is revoked")
+            _ = sync.submit(.disconnect(connectionID))
+        }
+        leftovers = []
+    }
+
+    var holdsLeftoverInvite: Bool {
+        guard !isStopped else { return false }
+        return !readLeftovers(in: events?.savedSyncState().map(Self.cache(in:))).isEmpty
     }
 
     /// Set by `stop()`, after which `start()` does nothing: its path monitor can't start again.

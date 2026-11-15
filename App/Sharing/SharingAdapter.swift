@@ -40,6 +40,9 @@ protocol SharingAdapterEvents: AnyObject {
     /// it left off. Throws if the store couldn't keep it, and the adapter then asks again on its
     /// next change.
     func keepSyncState(_ state: SharingSyncState) throws
+    /// The ID of every connection the sharing store lists, in any state, or `nil` while the store
+    /// won't open. An invite of this person's that isn't among them was left over (#400).
+    func listedConnectionIDs() -> Set<UUID>?
 }
 
 /// The one door to sharing, in the shape of the alarm and notification adapters: the app model
@@ -64,6 +67,12 @@ protocol SharingAdapter: AnyObject {
     /// turned off (#388) stops the adapter only once there's none. A synchronous read of what the
     /// adapter already holds, asking iCloud nothing.
     var hasUnsentDisconnects: Bool { get }
+    /// Whether the adapter holds an invite whose share is in iCloud with the person on it, though
+    /// the app model doesn't list it: the app was closed while its compose screen was up, so the
+    /// link was never sent (#400). `start()` revokes it, so the model starts the adapter at launch
+    /// while there's one. A synchronous read of what the sharing store kept, asking iCloud nothing.
+    /// An invite made after the start is one under way, never a leftover.
+    var holdsLeftoverInvite: Bool { get }
     /// Takes a change to send, which the adapter keeps until it has gone through iCloud, however
     /// long that takes, and then reports with `sent(_:)`. The model keeps the change in the outbox
     /// until then.
