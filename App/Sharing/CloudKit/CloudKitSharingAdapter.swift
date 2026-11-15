@@ -259,6 +259,10 @@ extension CloudKitSharingAdapter: InviteHosting {
         return sync
     }
 
+    func ownsZone(of connectionID: UUID) -> Bool {
+        sync?.ownsZone(of: connectionID) == true
+    }
+
     func fetchSharedChanges() async {
         try? await engines[.shared]?.fetchChanges()
     }

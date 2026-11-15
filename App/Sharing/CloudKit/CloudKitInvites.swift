@@ -12,6 +12,8 @@ protocol InviteHosting: AnyObject {
     func startedSync() -> CloudKitSync?
     /// Has the store keep the sync's state.
     func keep()
+    /// Whether this person invited someone to the connection. Asks the sync without starting it.
+    func ownsZone(of connectionID: UUID) -> Bool
     func revokeInvite(_ connectionID: UUID)
     /// Fetches what changed in the shared database.
     func fetchSharedChanges() async
@@ -22,6 +24,7 @@ protocol InviteHosting: AnyObject {
 /// person on a share.
 @MainActor
 final class CloudKitInvites {
+    private typealias NotAvailableYet = CloudKitSharingAdapter.NotAvailableYet
     private static let logger = CloudKitSharingAdapter.logger
 
     private weak var host: (any InviteHosting)?
@@ -46,7 +49,7 @@ final class CloudKitInvites {
     /// `false`, with the zone deleted again, when the delivery was canceled. Throws if the zone or
     /// share couldn't be made or the address has no Apple Account, and then nothing was sent.
     func invite(_ connectionID: UUID, to person: InvitedPerson, via route: InviteRoute) async throws -> Bool {
-        guard let host, let sync = host.startedSync(), let container else { throw CloudKitSharingAdapter.NotAvailableYet() }
+        guard let host, let sync = host.startedSync(), let container else { throw NotAvailableYet() }
         let zoneID = sync.makeZone(for: connectionID)
         host.keep()
         do {
@@ -76,8 +79,8 @@ final class CloudKitInvites {
         share[CKShare.SystemFieldKey.thumbnailImageData] = Self.appIconData()
         share.addParticipant(participant)
         let saved = try await database.modifyRecords(saving: [share], deleting: [])
-        guard let result = saved.saveResults[share.recordID] else { throw CloudKitSharingAdapter.NotAvailableYet() }
-        guard let record = try result.get() as? CKShare, let url = record.url else { throw CloudKitSharingAdapter.NotAvailableYet() }
+        guard let result = saved.saveResults[share.recordID] else { throw NotAvailableYet() }
+        guard let record = try result.get() as? CKShare, let url = record.url else { throw NotAvailableYet() }
         return url
     }
 
@@ -85,13 +88,13 @@ final class CloudKitInvites {
     /// the address has none, or iCloud can't be reached.
     private func shareParticipant(for person: InvitedPerson, container: CKContainer) async throws -> CKShare.Participant {
         // The sheet only sends an address of a known kind, so anything else is a bug, not a typo.
-        guard let kind = InviteAddressKind(address: person.address) else { throw CloudKitSharingAdapter.NotAvailableYet() }
+        guard let kind = InviteAddressKind(address: person.address) else { throw NotAvailableYet() }
         let key = kind.lookupKey(for: person.address)
         let results = switch kind {
         case .phone: try await container.shareParticipants(forPhoneNumbers: [key])
         case .email: try await container.shareParticipants(forEmailAddresses: [key])
         }
-        guard let result = results[key] ?? results.values.first else { throw CloudKitSharingAdapter.NotAvailableYet() }
+        guard let result = results[key] ?? results.values.first else { throw NotAvailableYet() }
         return try result.get()
     }
 
@@ -123,7 +126,7 @@ final class CloudKitInvites {
     }
 
     func accept(_ connectionID: UUID) async throws {
-        guard let host, let sync = host.startedSync(), let container else { throw CloudKitSharingAdapter.NotAvailableYet() }
+        guard let host, let sync = host.startedSync(), let container else { throw NotAvailableYet() }
         // Already joined (the invite was tapped twice): accepting again does no harm.
         if sync.hasJoinedZone(of: connectionID) { return }
         guard let metadata = incoming[connectionID], metadata.participantStatus != .removed else { throw InviteUnavailable() }
@@ -172,7 +175,7 @@ final class CloudKitInvites {
     }
 
     private func removeOthers(from connectionID: UUID, keeping kept: String) async {
-        guard let container, host?.startedSync()?.ownsZone(of: connectionID) == true else { return }
+        guard let container, host?.ownsZone(of: connectionID) == true else { return }
         let database = container.privateCloudDatabase
         do {
             let record = try await database.record(for: CKRecord.ID(recordName: CKRecordNameZoneWideShare, zoneID: CloudKitSync.ownZoneID(of: connectionID)))

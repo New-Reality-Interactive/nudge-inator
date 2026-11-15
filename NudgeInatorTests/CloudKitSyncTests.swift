@@ -503,6 +503,21 @@ extension CloudKitSyncTests {
         #expect(again.accepted == [CloudKitSync.Acceptance(connectionID: connectionID, participantID: "_sam", isNew: false)])
     }
 
+    @Test func aShareOfAConnectionThisPersonDidNotInviteToReportsNoAcceptance() {
+        let unknown = UUID()
+
+        #expect(alex.sync.fetchedShare(in: unknown, invitees: [Self.sam]).accepted.isEmpty)
+    }
+
+    @Test func anAcceptanceWithoutAnIDCountsAsJoinedButNamesNoOne() {
+        let unknownYet = InviteParticipant(id: nil, status: .accepted)
+
+        let heard = alex.sync.fetchedShare(in: connectionID, invitees: [unknownYet])
+
+        #expect(heard.accepted.isEmpty)
+        #expect(alex.sync.cache.zones[connectionID]?.participantJoined == true)
+    }
+
     @Test func theInviteeDisconnectingLeavesTheShareAndTheInviterHearsIt() {
         _ = alex.sync.fetchedShare(in: connectionID, invitees: [Self.sam])
         let moot = SharingChange.send(sent(), to: connectionID)
