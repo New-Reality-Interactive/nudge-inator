@@ -120,7 +120,7 @@ struct SharingStore {
         }
         try deleteAll(OutboxRecord.self)
         for (position, change) in data.outbox.enumerated() {
-            context.insert(OutboxRecord(id: change.id, position: position, kind: change.kind.storedValue, connectionID: change.connectionID, reminderID: change.reminderID))
+            context.insert(OutboxRecord(id: change.id, position: position, kind: change.kind.storedValue, connectionID: change.connectionID, reminderID: change.reminderID, connectionName: change.connectionName))
         }
         try deleteAll(ShareActivityRecord.self)
         for (position, entry) in data.activity.enumerated() {
@@ -166,7 +166,7 @@ struct SharingStore {
             engineStates: try engineStates.map { SyncEngineState(database: try .init(storedValue: $0.database), data: $0.data) },
             syncCache: syncCache?.data,
             outbox: try outbox.map {
-                OutboxChange(id: $0.id, kind: try .init(storedValue: $0.kind), connectionID: $0.connectionID, reminderID: $0.reminderID)
+                OutboxChange(id: $0.id, kind: try .init(storedValue: $0.kind), connectionID: $0.connectionID, reminderID: $0.reminderID, connectionName: $0.connectionName)
             },
             accountID: account?.accountID.map(AppleAccountID.init),
             accountChangeNote: try account?.changeNote.map { try JSONDecoder().decode(AccountChangeNote.self, from: $0) },

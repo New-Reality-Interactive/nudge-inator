@@ -68,6 +68,21 @@ struct ShareActivityTests {
         #expect(riley.sharing.data.outbox.isEmpty)
     }
 
+    /// A waiting change keeps its connection's name (#397), so the page always says who it was for.
+    @Test func aChangeRefusedAfterItsConnectionEndedStillNamesTheConnection() async throws {
+        let (_, riley) = try await phones()
+        riley.adapter.isOnline = false
+        try riley.model.send(reminder(), to: [connectionID])
+        let send = try #require(riley.adapter.submitted.last)
+        try riley.sharing.disconnect(connectionID, received: [])
+        #expect(riley.sharing.data.connections.isEmpty)
+
+        try await riley.sharing.gaveUp(send.entry.id)
+
+        #expect(riley.sharing.data.activity.map(\.connectionNames) == [["Alex Morgan"]])
+        #expect(riley.sharing.data.activity.map(\.event) == [.changeGivenUp(.send)])
+    }
+
     @Test func aConnectionICloudLostAddsAnEntryAndEndsTheConnection() async throws {
         let (_, riley) = try await phones()
         riley.clock.now = NewYork.local(2026, 10, 15, 9, 15)

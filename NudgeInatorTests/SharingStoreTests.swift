@@ -38,6 +38,18 @@ struct SharingStoreTests {
         #expect(try store().load() == saved)
     }
 
+    /// A waiting change keeps its connection's name (#397), with or without one.
+    @Test func aWaitingChangeKeepsItsConnectionNameAfterARelaunch() throws {
+        let saved = SharingData(outbox: [
+            OutboxChange(id: UUID(), kind: .send, connectionID: UUID(), reminderID: UUID(), connectionName: "Alex Morgan"),
+            OutboxChange(id: UUID(), kind: .disconnect, connectionID: UUID(), reminderID: nil),
+        ])
+
+        try store().save(saved)
+
+        #expect(try store().load().outbox.map(\.connectionName) == ["Alex Morgan", nil])
+    }
+
     /// The Debug stand-in and a model winding down open the store in memory (#388, #389): the record works there too.
     @Test func theShareActivityRecordWorksInAnInMemoryStore() throws {
         let store = try SharingStore(location: .inMemory)

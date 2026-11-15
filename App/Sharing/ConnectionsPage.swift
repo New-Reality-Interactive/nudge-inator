@@ -94,7 +94,8 @@ struct ConnectionsPage: View {
 }
 
 extension View {
-    /// Where Settings' sharing pages go (ticket 196): Connections, and a connected person's page.
+    /// Where Settings' sharing pages go (ticket 196): Connections, a connected person's page, and
+    /// Share Activity (#397).
     /// Nothing without a sharing model, which has no links to them either.
     func settingsPages(sharing: SharingModel?) -> some View {
         navigationDestination(for: SharingPage.self) { page in
@@ -102,6 +103,7 @@ extension View {
                 switch page {
                 case .connections: ConnectionsPage(sharing: sharing)
                 case .connection(let id): ConnectionPage(sharing: sharing, connectionID: id)
+                case .activity: ShareActivityPage(sharing: sharing)
                 }
             }
         }

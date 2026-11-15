@@ -20,11 +20,13 @@ struct OpenedTag: Hashable {
     var id: Tag.ID
 }
 
-/// A sharing page pushed on Settings (ticket 196): Connections, then a connected person's page.
-/// Values, so Change These on the "Connected" sheet can push them from outside Settings.
+/// A sharing page pushed on Settings (ticket 196): Connections, then a connected person's page,
+/// or Share Activity (#397). Values, so Change These on the "Connected" sheet can push them from
+/// outside Settings.
 enum SharingPage: Hashable {
     case connections
     case connection(UUID)
+    case activity
 }
 
 /// Where the tab shell is: the selected tab, and the reminders pushed on Now, My Day and
