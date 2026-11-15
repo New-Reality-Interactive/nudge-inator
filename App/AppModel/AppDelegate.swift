@@ -10,6 +10,16 @@ import UIKit
 /// `init` sets it.
 @MainActor
 final class AppDelegate: NSObject, UIApplicationDelegate {
+    /// The app's delegate. `UIApplication.shared.delegate` can't be cast to `AppDelegate`: SwiftUI
+    /// hands it its own wrapper, so a scene delegate that read it found no model and dropped an
+    /// invite a person opened, with no sign (the iPad on iOS 27.2).
+    private(set) static weak var current: AppDelegate?
+
+    override init() {
+        super.init()
+        Self.current = self
+    }
+
     /// `nil` when the app is only hosting tests (see `isHostingTests`). Lazy, so it is built by
     /// whichever comes first, `didFinishLaunching` or the scene reading it.
     private(set) lazy var model: AppModel? = Self.isHostingTests ? nil : Self.makeModel()
