@@ -111,11 +111,7 @@ struct DisconnectSheet: View {
             }
             .buttonStyle(.borderedProminent)
         } else {
-            Button(role: .destructive, action: choose) {
-                Text("Disconnect", comment: "Disconnect's sheet: ends the connection, doing the chosen Remove or Keep.")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
+            DestructiveSheetButton(action: choose, title: Text("Disconnect", comment: "Disconnect's sheet: ends the connection, doing the chosen Remove or Keep."))
         }
     }
 

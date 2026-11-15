@@ -71,8 +71,9 @@ struct WaitingRowView: View {
                 // On the button, so a popover points at it.
                 .deleteReminderConfirmation(title: row.title, kind: .received, isPresented: $isConfirmingRemove, confirm: remove)
             }
-            // Full width when stacked, where a capsule's ends would grow with a wrapped label.
-            .buttonStyle(SmallBorderedButtonStyle(fillsWidth: isStacked))
+            // Filled, so Remove doesn't read as dimmed (#402). Full width when stacked, where a
+            // capsule's ends would grow with a wrapped label.
+            .buttonStyle(SmallProminentButtonStyle(fillsWidth: isStacked))
             .padding(.leading, isStacked ? 0 : timeWidth + Design.Spacing.s3)
         }
     }

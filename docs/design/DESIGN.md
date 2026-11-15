@@ -110,6 +110,11 @@ components:
     text: '{colors.on-accent}'
     rounded: '{rounded.control}'
     minHeight: '{spacing.row-min}'
+  button-destructive:
+    background: '{colors.negative}'
+    text: '{colors.on-accent}'
+    rounded: '{rounded.control}'
+    minHeight: '{spacing.row-min}'
   button-bordered:
     background: '{colors.tertiary-fill}'
     text: '{colors.accent}'
@@ -271,6 +276,7 @@ Targets are 4.5:1, or 7:1 with Increase Contrast; large text 3:1, or 4.5:1.
 | Positive | 4.78 | 8.42 / 6.89 | 7.48 | 10.06 |
 | Secondary label | 4.69 | 7.69 / 6.30 | 9.80 | 11.18 |
 | On-accent on accent fill | 6.74 | 12.49 | 10.47 | 17.71 |
+| On-accent on negative fill | 5.38 | 7.45 | 8.53 | 10.97 |
 
 Device checks (not verifiable in a simulator): the selected tab's title on iOS 26's glass pill, in
 all four appearances.
@@ -556,7 +562,18 @@ The Reminders tab's tools, in its layout, so they're learned once.
 ### Buttons
 - Every button is at least 44 pt tall.
 - `button-prominent` (accent fill, semibold) for one primary action per context; `button-bordered` for
-  secondary; plain accent text for tertiary (honors Button Shapes); destructive text in `{colors.negative}`.
+  secondary; plain accent text for tertiary (honors Button Shapes). A destructive action in a list
+  row or a system dialog is text in `{colors.negative}`.
+- `button-destructive` (negative fill, on-accent text, semibold) for a destructive action that is a
+  screen's own button rather than a list row or a dialog's: Disconnect's and Turn Off Sharing's
+  confirmation, and Waiting for You's Remove. Red text on the tertiary fill read as a dimmed control
+  (#217's phone check, #402), so a destructive button is never `button-bordered`. On a sheet it is
+  the system's prominent button, as Continue is: its capsule and its own weight, so Bold Text applies
+  (the developer, 2026-11-15, #402: standard iOS visuals). The #402 mockup draws a semibold rounded
+  rectangle; the app follows iOS.
+- Waiting for You's rows are the exception to one primary action per context: each row's Accept
+  (`button-prominent`) and Remove (`button-destructive`) are an even pair, both filled, as small
+  capsules (#402).
 - Disabled uses `{colors.secondary-label}`; a disabled prominent button becomes a hairline outline.
 
 ### Sheet bar buttons
@@ -675,15 +692,16 @@ sharing paused and offline banner.
   "<first name>, Last 7 Days", each with its glyph beside its status word, as Done's status label has
   its check, or "Nothing due". It's hidden with status sharing off, "Not sharing this one", Waiting to
   sync and Waiting for them to accept. The status labels on the row and on Sent To keep their own look.
-- **Waiting for You:** a section on Now between Nudging and Coming Up, each row with bordered small
-  Accept and Remove (destructive text) buttons. It doesn't count toward the Now badge.
+- **Waiting for You:** a section on Now between Nudging and Coming Up, each row with small filled
+  Accept (`button-prominent`) and Remove (`button-destructive`) capsules, side by side as an even
+  pair, full width when the row stacks (#402, `docs/mockups/2026-11-15-disconnect-button/`). It doesn't count toward the Now badge.
 - **Notes on a received reminder:** a `{colors.cell}` card with `{rounded.control}` corners, `info.circle`
   or `clock` in `{colors.secondary-label}`, a semibold line and a detail line, which for a sender's change is one line per changed field ("Due
   time changed from 8:00 AM to 9:00 AM"; a notes change reads "Notes changed", with no text). No color:
   a change or a cancellation isn't "needs you now".
 - **Disconnect's choice is a sheet, an exception to confirmation dialogs (Components):** a dialog can
   only list buttons, so it can't show Remove as the default. A checked list of the two options, then a
-  bordered Disconnect in destructive text, with the form's Cancel. When the other person ended the
+  `button-destructive` Disconnect (#402), with the form's Cancel. When the other person ended the
   connection the sheet has a prominent Continue and no Cancel, because the connection is already over
   and the choice has to be made: the one question without a way to close it that changes nothing.
 - **Turn Off Sharing** (#388, the Turn Off Sharing mockup, `docs/mockups/2026-11-14-turn-off-sharing/`):
@@ -691,7 +709,7 @@ sharing paused and offline banner.
   off would delete anything: a connection, an invite, a reminder sent or received. A first line
   saying what goes, the two options under "<n> Reminders You've Received" only when something was
   received, the note footer only while someone is connected (under the options, or under the first
-  line when there are none), then a bordered Turn Off Sharing in destructive text, with the ✕ to
+  line when there are none), then a `button-destructive` Turn Off Sharing (#402), with the ✕ to
   cancel. The switch stays on until it's confirmed, and shows no message when it's off.
 - **Apple Account Changed** (#212's change mockup, `docs/mockups/2026-11-13-account-change/`): a
   sheet over whatever screen is up, once, when a different Apple Account signs in. Connection Ended's
