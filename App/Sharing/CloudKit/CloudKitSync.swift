@@ -41,16 +41,36 @@ final class CloudKitSync {
         }
     }
 
-    /// Changes iCloud refused for good, until they are reported as gone: a change of several
-    /// records is gone only once all of them are settled. Not kept: a relaunch before the report
-    /// reports it as gone, with no entry.
-    private var refusedChanges: Set<OutboxChange.ID> = []
-
-    /// An outcome whose `gone` changes include those `giveUp` refused.
+    /// An outcome whose `gone` changes say which of them `giveUp` refused.
     private func outcome(received: [SharingChange] = [], gone: [OutboxChange.ID]) -> Outcome {
-        let refused = Set(gone).intersection(refusedChanges)
-        refusedChanges.subtract(refused)
-        return Outcome(received: received, gone: gone, refused: refused)
+        Outcome(received: received, gone: gone, refused: Set(gone).intersection(cache.refused ?? []))
+    }
+
+    // MARK: Reports the app model hasn't kept yet
+
+    /// The changes that are gone and still to be reported to the app model, oldest first. Kept in
+    /// the cache, so a relaunch before a report still makes it.
+    var unreported: [OutboxChange.ID] { cache.unreported ?? [] }
+
+    /// Whether iCloud refused the change for good, so its report is a give-up, not a send.
+    func wasRefused(_ changeID: OutboxChange.ID) -> Bool {
+        cache.refused?.contains(changeID) ?? false
+    }
+
+    /// `gone` wait to be reported, each once.
+    func awaitReport(of gone: [OutboxChange.ID]) {
+        let waiting = unreported
+        let new = gone.filter { !waiting.contains($0) }
+        guard !new.isEmpty else { return }
+        cache.unreported = waiting + new
+    }
+
+    /// The app model has kept the change as gone.
+    func reported(_ changeID: OutboxChange.ID) {
+        cache.unreported?.removeAll { $0 == changeID }
+        if cache.unreported?.isEmpty == true { cache.unreported = nil }
+        cache.refused?.remove(changeID)
+        if cache.refused?.isEmpty == true { cache.refused = nil }
     }
 
     private(set) var cache: CloudKitSyncCache
@@ -359,7 +379,7 @@ final class CloudKitSync {
         guard !Self.engineRetries(error.code), error.code != .quotaExceeded else { return [] }
         Self.logger.error("iCloud refused a change to \(recordID.recordName, privacy: .public) for good: \(error, privacy: .public)")
         guard let key = RecordKey(recordID), var record = cache.records[key], let pending = record.pending else { return [] }
-        refusedChanges.formUnion(pending.changeIDs)
+        cache.refused = (cache.refused ?? []).union(pending.changeIDs)
         batched[key] = nil
         if record.systemFields == nil || pending.isDelete {
             cache.records[key] = nil
@@ -518,7 +538,6 @@ final class CloudKitSync {
         case .switchAccounts:
             cache = CloudKitSyncCache()
             batched = [:]
-            refusedChanges = []
         }
     }
 

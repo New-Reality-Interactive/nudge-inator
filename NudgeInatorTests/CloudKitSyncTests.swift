@@ -304,6 +304,23 @@ extension CloudKitSyncTests {
         #expect(alex.refusedIDs == [refused.entry.id])
     }
 
+    /// The refusal is in what the sync keeps, so a relaunch before its report still knows of it.
+    @Test func aRefusalStillToBeReportedSurvivesARelaunch() {
+        let change = SharingChange.send(sent(), to: connectionID)
+        icloud.refusals["SentReminder.owner.\(reminderID.uuidString)"] = .permissionFailure
+        alex.submit(change)
+        alex.send()
+        alex.sync.awaitReport(of: alex.sentIDs)
+
+        alex.relaunch()
+
+        #expect(alex.sync.unreported == [change.entry.id])
+        #expect(alex.sync.wasRefused(change.entry.id))
+        alex.sync.reported(change.entry.id)
+        #expect(alex.sync.unreported.isEmpty)
+        #expect(!alex.sync.wasRefused(change.entry.id))
+    }
+
     @Test func aFullICloudAndAnEngineRetryAreNotReportedAsRefused() {
         let change = SharingChange.send(sent(), to: connectionID)
         icloud.refusals["SentReminder.owner.\(reminderID.uuidString)"] = .networkFailure

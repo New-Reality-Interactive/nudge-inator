@@ -430,11 +430,19 @@ final class RecordingSharingEvents: SharingAdapterEvents {
         received.append(change)
     }
 
+    /// Whether a report of a change gone is kept; while it isn't, the adapter is turned down, as
+    /// by a sharing store that won't save.
+    var keepsReports = true
+
+    struct ReportNotKept: Error {}
+
     func sent(_ changeID: OutboxChange.ID) async throws {
+        guard keepsReports else { throw ReportNotKept() }
         sent.append(changeID)
     }
 
     func gaveUp(_ changeID: OutboxChange.ID) async throws {
+        guard keepsReports else { throw ReportNotKept() }
         gaveUp.append(changeID)
     }
 

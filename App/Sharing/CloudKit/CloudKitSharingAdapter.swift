@@ -43,10 +43,6 @@ final class CloudKitSharingAdapter: SharingAdapter {
     private var keptEngineStates: [SyncEngineState.Database: Data] = [:]
     /// The other person's changes the app model hasn't kept yet, offered again on the next event.
     private var undelivered: [SharingChange] = []
-    /// Changes that went, which the app model hasn't kept as gone yet.
-    private var unreported: [OutboxChange.ID] = []
-    /// Of `unreported`, the changes iCloud refused for good, which the model records (#396).
-    private var refused: Set<OutboxChange.ID> = []
     private var isReporting = false
     private let connectivity = Connectivity()
     /// Hands an invite's link to the person (#217): iOS's compose screens, or the clipboard.
@@ -94,6 +90,8 @@ final class CloudKitSharingAdapter: SharingAdapter {
         }
         connectivity.start()
         keep()
+        // What had gone before a relaunch, and the app model never heard of.
+        if !sync.unreported.isEmpty { report(CloudKitSync.Outcome()) }
         // The first request to iCloud: the device check reads it to see none came before (#216).
         Self.logger.notice("Sync engines started")
     }
@@ -120,7 +118,7 @@ final class CloudKitSharingAdapter: SharingAdapter {
     /// Also offers the app model again what it couldn't keep before (at launch, before its
     /// reminders were read, say): read at launch and on App opened.
     func signedInAccount() async -> SharingAccount {
-        if !undelivered.isEmpty || !unreported.isEmpty { report(CloudKitSync.Outcome()) }
+        if !undelivered.isEmpty || sync?.unreported.isEmpty == false { report(CloudKitSync.Outcome()) }
         let account = await reader.read()
         Self.logger.notice("iCloud account read: \(String(describing: account.state), privacy: .public)")
         return account
@@ -162,8 +160,11 @@ final class CloudKitSharingAdapter: SharingAdapter {
     }
 
     private func report(_ outcome: CloudKitSync.Outcome) {
-        unreported += outcome.gone
-        refused.formUnion(outcome.refused)
+        if !outcome.gone.isEmpty {
+            // Kept before the app model hears, so a relaunch in between still reports them.
+            sync?.awaitReport(of: outcome.gone)
+            keep()
+        }
         undelivered += outcome.received
         Task { await reportWaiting() }
     }
@@ -171,11 +172,11 @@ final class CloudKitSharingAdapter: SharingAdapter {
     /// Tells the app model what arrived and what went, oldest first, until nothing waits or the
     /// model can't keep one, which then waits for the next event or account read.
     private func reportWaiting() async {
-        guard !isReporting, let events else { return }
+        guard !isReporting, let events, let sync else { return }
         isReporting = true
         defer { isReporting = false }
         var stuck = false
-        while !stuck, !undelivered.isEmpty || !unreported.isEmpty {
+        while !stuck, !undelivered.isEmpty || !sync.unreported.isEmpty {
             if let change = undelivered.first {
                 do {
                     try await events.received(change)
@@ -184,15 +185,14 @@ final class CloudKitSharingAdapter: SharingAdapter {
                     Self.logger.error("An incoming change couldn't be kept: \(error, privacy: .public)")
                     stuck = true
                 }
-            } else if let changeID = unreported.first {
+            } else if let changeID = sync.unreported.first {
                 do {
-                    if refused.contains(changeID) {
+                    if sync.wasRefused(changeID) {
                         try await events.gaveUp(changeID)
-                        refused.remove(changeID)
                     } else {
                         try await events.sent(changeID)
                     }
-                    unreported.removeFirst()
+                    sync.reported(changeID)
                 } catch {
                     Self.logger.error("A change sent couldn't be kept as sent: \(error, privacy: .public)")
                     stuck = true
@@ -281,8 +281,6 @@ extension CloudKitSharingAdapter: CKSyncEngineDelegate {
         sync.accountChanged(kind)
         if kind == .switchAccounts {
             undelivered = []
-            unreported = []
-            refused = []
         }
         keep()
         events?.accountStateChanged()
