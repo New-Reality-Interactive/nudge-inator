@@ -19,6 +19,12 @@ struct CloudKitSyncCache: Codable, Equatable {
     /// This person's own Status sharing per connection, as their latest settings said. On by
     /// default, as `ConnectionChoices`.
     var sharesStatus: [UUID: Bool] = [:]
+    /// The outbox changes that have gone, or never will, which the app model hasn't kept as gone
+    /// yet, oldest first. Kept so a relaunch before the report still makes it: the outbox entry
+    /// would otherwise wait for good. Optional, as `refused` is, so a cache kept before #396 reads.
+    var unreported: [UUID]?
+    /// The changes iCloud refused for good (#396), until the app model has kept them as given up.
+    var refused: Set<UUID>?
 
     /// A connection's record zone: named with the connection's ID, owned by whoever invited.
     struct Zone: Codable, Equatable {

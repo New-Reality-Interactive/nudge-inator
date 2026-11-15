@@ -29,14 +29,48 @@ final class CloudKitSync {
     private static let logger = Logger(subsystem: "com.newrealityinteractive.nudgeinator", category: "CloudKit")
 
     /// What an event comes to for the app: the other person's changes, and the outbox IDs of this
-    /// person's changes that have gone, or never will and so count as gone.
+    /// person's changes that have gone, or never will and so count as gone. Of those, `refused` are
+    /// the ones iCloud refused for good (#396), which the person's Share Activity says.
     struct Outcome: Equatable {
         var received: [SharingChange] = []
         var gone: [OutboxChange.ID] = []
+        var refused: Set<OutboxChange.ID> = []
 
         static func + (lhs: Outcome, rhs: Outcome) -> Outcome {
-            Outcome(received: lhs.received + rhs.received, gone: lhs.gone + rhs.gone)
+            Outcome(received: lhs.received + rhs.received, gone: lhs.gone + rhs.gone, refused: lhs.refused.union(rhs.refused))
         }
+    }
+
+    /// An outcome whose `gone` changes say which of them `giveUp` refused.
+    private func outcome(received: [SharingChange] = [], gone: [OutboxChange.ID]) -> Outcome {
+        Outcome(received: received, gone: gone, refused: Set(gone).intersection(cache.refused ?? []))
+    }
+
+    // MARK: Reports the app model hasn't kept yet
+
+    /// The changes that are gone and still to be reported to the app model, oldest first. Kept in
+    /// the cache, so a relaunch before a report still makes it.
+    var unreported: [OutboxChange.ID] { cache.unreported ?? [] }
+
+    /// Whether iCloud refused the change for good, so its report is a give-up, not a send.
+    func wasRefused(_ changeID: OutboxChange.ID) -> Bool {
+        cache.refused?.contains(changeID) ?? false
+    }
+
+    /// `gone` wait to be reported, each once.
+    func awaitReport(of gone: [OutboxChange.ID]) {
+        let waiting = unreported
+        let new = gone.filter { !waiting.contains($0) }
+        guard !new.isEmpty else { return }
+        cache.unreported = waiting + new
+    }
+
+    /// The app model has kept the change as gone.
+    func reported(_ changeID: OutboxChange.ID) {
+        cache.unreported?.removeAll { $0 == changeID }
+        if cache.unreported?.isEmpty == true { cache.unreported = nil }
+        cache.refused?.remove(changeID)
+        if cache.refused?.isEmpty == true { cache.refused = nil }
     }
 
     private(set) var cache: CloudKitSyncCache
@@ -263,18 +297,20 @@ final class CloudKitSync {
             switch error.code {
             // Already gone, as most of a status's unused occurrence slots always are.
             case .unknownItem: settled += settle(recordID, systemFields: nil)
-            case .zoneNotFound: ended = ended + zoneLost(recordID.zoneID)
+            case .zoneNotFound: ended = ended + zoneLost(recordID.zoneID, byICloud: Self.resetEncryptedData(error))
+            // The person deleted the app's data from iCloud in Settings (Apple's "Encrypting User Data").
+            case .userDeletedZone: ended = ended + zoneLost(recordID.zoneID, byICloud: true)
             default: settled += giveUp(recordID, error)
             }
         }
         for failure in failedSaves {
-            if failure.error.code == .zoneNotFound {
-                ended = ended + zoneLost(failure.record.recordID.zoneID)
+            if failure.error.code == .zoneNotFound || failure.error.code == .userDeletedZone {
+                ended = ended + zoneLost(failure.record.recordID.zoneID, byICloud: failure.error.code == .userDeletedZone || Self.resetEncryptedData(failure.error))
             } else {
                 settled += retry(failure)
             }
         }
-        return Outcome(received: ended.received, gone: done(among: settled + ended.gone))
+        return outcome(received: ended.received, gone: done(among: settled + ended.gone))
     }
 
     /// The write to `recordID` reached iCloud. If it was the latest, its changes are through; if
@@ -343,6 +379,7 @@ final class CloudKitSync {
         guard !Self.engineRetries(error.code), error.code != .quotaExceeded else { return [] }
         Self.logger.error("iCloud refused a change to \(recordID.recordName, privacy: .public) for good: \(error, privacy: .public)")
         guard let key = RecordKey(recordID), var record = cache.records[key], let pending = record.pending else { return [] }
+        cache.refused = (cache.refused ?? []).union(pending.changeIDs)
         batched[key] = nil
         if record.systemFields == nil || pending.isDelete {
             cache.records[key] = nil
@@ -378,7 +415,7 @@ final class CloudKitSync {
             guard let connectionID = UUID(uuidString: zoneID.zoneName) else { continue }
             settled += forgetZone(connectionID)
         }
-        return Outcome(gone: done(among: settled))
+        return outcome(gone: done(among: settled))
     }
 
     // MARK: What was fetched
@@ -443,22 +480,23 @@ final class CloudKitSync {
         cache.zoneDeletes[connectionID] = cache.zoneDeletes[connectionID] ?? []
         queues[.private]?.add(pendingDatabaseChanges: [.deleteZone(zoneID(of: connectionID, ownerName: zone.ownerName))])
         cache.zones[connectionID]?.participantJoined = false
-        return Outcome(received: [.disconnect(connectionID)], gone: done(among: moot))
+        return outcome(received: [.disconnect(connectionID)], gone: done(among: moot))
     }
 
     /// Zones a database fetch found deleted. One this person deleted is forgotten; any other means
-    /// the connection is over.
-    func fetchedZoneDeletions(_ zoneIDs: [CKRecordZone.ID]) -> Outcome {
+    /// the connection is over: the other person's doing, unless it is one of `lostByICloud`, which
+    /// iCloud purged or lost to an iCloud Keychain reset (#396).
+    func fetchedZoneDeletions(_ zoneIDs: [CKRecordZone.ID], lostByICloud: Set<CKRecordZone.ID>) -> Outcome {
         var ended = Outcome()
         for zoneID in zoneIDs {
             guard let connectionID = UUID(uuidString: zoneID.zoneName), cache.zones[connectionID] != nil else { continue }
             if cache.zoneDeletes[connectionID] != nil {
                 ended.gone += forgetZone(connectionID)
             } else {
-                ended = ended + zoneLost(zoneID)
+                ended = ended + zoneLost(zoneID, byICloud: lostByICloud.contains(zoneID))
             }
         }
-        return Outcome(received: ended.received, gone: done(among: ended.gone))
+        return outcome(received: ended.received, gone: done(among: ended.gone))
     }
 
     /// A connection's zone is gone from iCloud though this person didn't delete it: the inviter
@@ -466,10 +504,16 @@ final class CloudKitSync {
     /// Keychain reset, or the person deleting the app's data in iCloud). The share went with it, so
     /// the connection is over either way: the app hears it ended, and the inviter invites again.
     /// Apple's `CKSyncEngine` docs say not to upload a reset zone's data again.
-    private func zoneLost(_ zoneID: CKRecordZone.ID) -> Outcome {
+    private func zoneLost(_ zoneID: CKRecordZone.ID, byICloud: Bool) -> Outcome {
         guard let connectionID = UUID(uuidString: zoneID.zoneName), cache.zones[connectionID] != nil else { return Outcome() }
         Self.logger.notice("A connection's zone is gone from iCloud, so the connection ended")
-        return Outcome(received: [.disconnect(connectionID)], gone: forgetZone(connectionID))
+        let ended = byICloud ? SharingChange.connectionLost(connectionID) : .disconnect(connectionID)
+        return Outcome(received: [ended], gone: forgetZone(connectionID))
+    }
+
+    /// Whether a zone-not-found error says the person's iCloud Keychain was reset, so iCloud lost the zone.
+    private static func resetEncryptedData(_ error: CKError) -> Bool {
+        (error.userInfo[CKErrorUserDidResetEncryptedDataKey] as? NSNumber)?.boolValue == true
     }
 
     // MARK: Accounts

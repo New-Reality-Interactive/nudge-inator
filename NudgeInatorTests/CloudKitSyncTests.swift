@@ -273,7 +273,7 @@ extension CloudKitSyncTests {
         alex.send()
 
         #expect(alex.lastFailures == [.zoneNotFound])
-        expectReceived(.disconnect(connectionID), by: alex)
+        expectReceived(.connectionLost(connectionID), by: alex)
         #expect(alex.sentIDs.last == revision.entry.id)
         #expect(alex.sync.cache.zones[connectionID] == nil)
         #expect(icloud.stored(connectionID, "SentReminder.owner.\(reminderID.uuidString)") == nil)
@@ -288,6 +288,91 @@ extension CloudKitSyncTests {
 
         #expect(alex.sentIDs == [change.entry.id])
         #expect(alex.sync.cache.records.isEmpty)
+    }
+
+    /// #396: the model records the refusal, so the sync says it was one, and says it of nothing else.
+    @Test func aChangeRefusedForGoodIsReportedAsRefusedAndASentOneIsNot() {
+        let refused = SharingChange.send(sent(), to: connectionID)
+        icloud.refusals["SentReminder.owner.\(reminderID.uuidString)"] = .permissionFailure
+        alex.submit(refused)
+        alex.send()
+        let settings = SharingChange.settings(.init(ConnectionChoices()), for: connectionID)
+        alex.submit(settings)
+        alex.send()
+
+        #expect(alex.sentIDs == [refused.entry.id, settings.entry.id])
+        #expect(alex.refusedIDs == [refused.entry.id])
+    }
+
+    /// The refusal is in what the sync keeps, so a relaunch before its report still knows of it.
+    @Test func aRefusalStillToBeReportedSurvivesARelaunch() {
+        let change = SharingChange.send(sent(), to: connectionID)
+        icloud.refusals["SentReminder.owner.\(reminderID.uuidString)"] = .permissionFailure
+        alex.submit(change)
+        alex.send()
+        alex.sync.awaitReport(of: alex.sentIDs)
+
+        alex.relaunch()
+
+        #expect(alex.sync.unreported == [change.entry.id])
+        #expect(alex.sync.wasRefused(change.entry.id))
+        alex.sync.reported(change.entry.id)
+        #expect(alex.sync.unreported.isEmpty)
+        #expect(!alex.sync.wasRefused(change.entry.id))
+    }
+
+    @Test func aFullICloudAndAnEngineRetryAreNotReportedAsRefused() {
+        let change = SharingChange.send(sent(), to: connectionID)
+        icloud.refusals["SentReminder.owner.\(reminderID.uuidString)"] = .networkFailure
+        alex.submit(change)
+        alex.send()
+        alex.send()
+        icloud.refusals["SentReminder.owner.\(reminderID.uuidString)"] = .quotaExceeded
+        let later = SharingChange.revise(sent(revision: 1), for: connectionID)
+        alex.submit(later)
+        alex.send()
+
+        #expect(alex.sentIDs == [change.entry.id])
+        #expect(alex.refusedIDs.isEmpty)
+    }
+
+    /// Not the other person's doing (#396); the inviter's own disconnect stays an ordinary disconnect, as above.
+    /// Found through a failed send: the person deleted the app's data from iCloud in Settings.
+    @Test func aSendThatFindsTheZoneDeletedByThePersonEndsTheConnectionAsLost() {
+        alex.submit(.send(sent(), to: connectionID))
+        alex.send()
+        icloud.loseZone(connectionID)
+        icloud.userDeletedZone.insert(connectionID.uuidString)
+        let revision = SharingChange.revise(sent(revision: 1), for: connectionID)
+
+        alex.submit(revision)
+        alex.send()
+
+        #expect(alex.lastFailures == [.userDeletedZone])
+        expectReceived(.connectionLost(connectionID), by: alex)
+        #expect(alex.sentIDs.last == revision.entry.id)
+        #expect(alex.refusedIDs.isEmpty)
+    }
+
+    /// A zone not found with no reset of encrypted data is the other person's doing.
+    @Test func aSendThatFindsTheZoneGoneWithNoResetIsTheOtherPersonLeaving() {
+        alex.submit(.send(sent(), to: connectionID))
+        alex.send()
+        icloud.loseZone(connectionID)
+
+        alex.submit(.revise(sent(revision: 1), for: connectionID))
+        alex.send()
+
+        expectReceived(.disconnect(connectionID), by: alex)
+    }
+
+    @Test func aZoneICloudPurgedEndsTheConnectionAsLostWhenFetched() {
+        icloud.loseZone(connectionID)
+
+        sam.fetch()
+
+        expectReceived(.connectionLost(connectionID), by: sam)
+        #expect(sam.sync.cache.zones[connectionID] == nil)
     }
 
     /// Waiting to sync is true while iCloud is full; the next launch tries again.

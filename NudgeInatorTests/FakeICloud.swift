@@ -66,6 +66,8 @@ final class FakeICloud {
     enum Entry {
         case record(zone: String, name: String)
         case zoneDeleted(String)
+        /// iCloud deleted the zone itself: purged, or lost to an iCloud Keychain reset.
+        case zoneLost(String)
     }
 
     /// The zones that exist, by name, each with its inviter and the invitee it's shared with.
@@ -75,6 +77,8 @@ final class FakeICloud {
     fileprivate var log: [Entry] = []
     /// The next zone save fails as an iCloud Keychain reset leaves it.
     var resetsEncryptedData: Set<String> = []
+    /// The next zone save fails as the person deleting the app's data from iCloud in Settings leaves it.
+    var userDeletedZone: Set<String> = []
     /// The next save of each record named here is refused with its error.
     var refusals: [String: CKError.Code] = [:]
 
@@ -97,6 +101,7 @@ final class FakeICloud {
     func loseZone(_ connectionID: UUID) {
         zones[connectionID.uuidString] = nil
         records[connectionID.uuidString] = nil
+        log.append(.zoneLost(connectionID.uuidString))
     }
 }
 
@@ -113,6 +118,8 @@ final class FakeSyncDevice {
     private(set) var received: [SharingChange] = []
     /// The outbox IDs reported as gone, in order.
     private(set) var sentIDs: [UUID] = []
+    /// Of `sentIDs`, those iCloud refused for good.
+    private(set) var refusedIDs: Set<UUID> = []
     /// Which version of each record this device last saw, as a change tag says.
     private var seen: [String: Int] = [:]
     private var cursor = 0
@@ -152,6 +159,7 @@ final class FakeSyncDevice {
     private func take(_ outcome: CloudKitSync.Outcome) {
         received += outcome.received
         sentIDs += outcome.gone
+        refusedIDs.formUnion(outcome.refused)
     }
 
     func submit(_ change: SharingChange) {
@@ -220,6 +228,7 @@ final class FakeSyncDevice {
         guard canReach(zone) else {
             var info: [String: Any] = [:]
             if icloud.resetsEncryptedData.remove(zone) != nil { info[CKErrorUserDidResetEncryptedDataKey] = true }
+            if icloud.userDeletedZone.remove(zone) != nil { return CKError(.userDeletedZone) }
             return CKError(.zoneNotFound, userInfo: info)
         }
         if let code = icloud.refusals.removeValue(forKey: name) {
@@ -275,12 +284,15 @@ final class FakeSyncDevice {
         var order: [String] = []
         var deletions: [CKRecord.ID] = []
         var zonesDeleted: [CKRecordZone.ID] = []
+        var zonesLost: Set<CKRecordZone.ID> = []
         for entry in entries {
             switch entry {
-            case .zoneDeleted(let zone):
+            case .zoneDeleted(let zone), .zoneLost(let zone):
                 guard let connectionID = UUID(uuidString: zone), sync.cache.zones[connectionID] != nil else { continue }
                 let ownerName = sync.cache.zones[connectionID]!.ownerName
-                zonesDeleted.append(CKRecordZone.ID(zoneName: zone, ownerName: ownerName))
+                let zoneID = CKRecordZone.ID(zoneName: zone, ownerName: ownerName)
+                zonesDeleted.append(zoneID)
+                if case .zoneLost = entry { zonesLost.insert(zoneID) }
             case .record(let zone, let name):
                 guard canReach(zone) else { continue }
                 let key = "\(zone)/\(name)"
@@ -296,7 +308,7 @@ final class FakeSyncDevice {
                 }
             }
         }
-        take(sync.fetchedZoneDeletions(zonesDeleted))
+        take(sync.fetchedZoneDeletions(zonesDeleted, lostByICloud: zonesLost))
         take(sync.fetched(order.compactMap { modified[$0] }, deleted: deletions))
     }
 }

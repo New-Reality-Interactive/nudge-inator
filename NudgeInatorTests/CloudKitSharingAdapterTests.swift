@@ -108,5 +108,61 @@ struct CloudKitSharingAdapterTests {
         let engine = try #require(relaunched.engines[.private])
         #expect(engine.state.pendingRecordZoneChanges.contains(.saveRecord(CKRecord.ID(recordName: recordName("SentReminder"), zoneID: zoneID))))
     }
-}
 
+    // MARK: Reports across a relaunch (#396)
+
+    /// Lets the adapter's reporting task run.
+    func settle() async {
+        for _ in 0..<50 { await Task.yield() }
+    }
+
+    func keptCache() throws -> CloudKitSyncCache {
+        try JSONDecoder().decode(CloudKitSyncCache.self, from: try #require(events.syncState.cache))
+    }
+
+    /// The app stopped after a change had gone, or been refused for good, and before the app model
+    /// had kept that: the next launch still reports it, so its outbox entry doesn't wait for good.
+    @Test func aChangeGoneButNotReportedIsReportedAfterARelaunch() async throws {
+        let went = UUID(), refused = UUID()
+        events.syncState.cache = try JSONEncoder().encode(CloudKitSyncCache(unreported: [went, refused], refused: [refused]))
+
+        _ = startedAdapter()
+        await settle()
+
+        #expect(events.sent == [went])
+        #expect(events.gaveUp == [refused])
+        #expect(try keptCache().unreported == nil)
+        #expect(try keptCache().refused == nil)
+    }
+
+    /// A report the app model couldn't keep stays in what the store keeps, and is made once it can.
+    @Test func aReportTheModelCouldNotKeepWaitsInTheStoreAndIsMadeOnce() async throws {
+        let went = UUID()
+        events.syncState.cache = try JSONEncoder().encode(CloudKitSyncCache(unreported: [went]))
+        events.keepsReports = false
+        let adapter = startedAdapter()
+        await settle()
+        #expect(events.sent.isEmpty)
+        #expect(try keptCache().unreported == [went])
+
+        events.keepsReports = true
+        _ = await adapter.signedInAccount()
+        await settle()
+        _ = startedAdapter()
+        await settle()
+
+        #expect(events.sent == [went])
+    }
+
+    /// A cache kept before #396 has neither list, and still reads.
+    @Test func aCacheKeptBeforeReportsWereKeptStillReads() throws {
+        var old = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(CloudKitSyncCache(sharesStatus: [connectionID: false]))) as? [String: Any])
+        old["unreported"] = nil
+        old["refused"] = nil
+
+        let read = try JSONDecoder().decode(CloudKitSyncCache.self, from: JSONSerialization.data(withJSONObject: old))
+
+        #expect(read.sharesStatus == [connectionID: false])
+        #expect(read.unreported == nil)
+    }
+}

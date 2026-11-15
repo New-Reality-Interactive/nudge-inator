@@ -46,6 +46,7 @@ struct SharingStore {
         try Self.checkUniqueCopies(data.sentCopies)
         try Self.checkUnique(data.receivedSyncStates.map(\.reminderID))
         try Self.checkUnique(data.outbox.map(\.id))
+        try Self.checkUnique(data.activity.map(\.id))
         guard Set(data.engineStates.map(\.database)).count == data.engineStates.count else {
             throw StoreError.duplicateDatabase
         }
@@ -121,6 +122,10 @@ struct SharingStore {
         for (position, change) in data.outbox.enumerated() {
             context.insert(OutboxRecord(id: change.id, position: position, kind: change.kind.storedValue, connectionID: change.connectionID, reminderID: change.reminderID))
         }
+        try deleteAll(ShareActivityRecord.self)
+        for (position, entry) in data.activity.enumerated() {
+            context.insert(ShareActivityRecord(entry: entry, position: position))
+        }
         try deleteAll(SharingAccountRecord.self)
         if data.accountID != nil || data.accountChangeNote != nil {
             context.insert(SharingAccountRecord(accountID: data.accountID?.rawValue, changeNote: try data.accountChangeNote.map { try JSONEncoder().encode($0) }))
@@ -141,6 +146,7 @@ struct SharingStore {
         let outbox = try context.fetch(FetchDescriptor<OutboxRecord>(sortBy: [SortDescriptor(\.position)]))
         let account = try context.fetch(FetchDescriptor<SharingAccountRecord>()).first
         let syncCache = try context.fetch(FetchDescriptor<SyncCacheRecord>()).first
+        let activity = try context.fetch(FetchDescriptor<ShareActivityRecord>(sortBy: [SortDescriptor(\.position)]))
         return SharingData(
             connections: try connections.map {
                 SharingConnection(
@@ -163,7 +169,8 @@ struct SharingStore {
                 OutboxChange(id: $0.id, kind: try .init(storedValue: $0.kind), connectionID: $0.connectionID, reminderID: $0.reminderID)
             },
             accountID: account?.accountID.map(AppleAccountID.init),
-            accountChangeNote: try account?.changeNote.map { try JSONDecoder().decode(AccountChangeNote.self, from: $0) }
+            accountChangeNote: try account?.changeNote.map { try JSONDecoder().decode(AccountChangeNote.self, from: $0) },
+            activity: try activity.map { try $0.entry() }
         )
     }
 
@@ -223,6 +230,32 @@ private extension SentReminderRecord {
             revision: revision,
             changeNote: try [ReceivedChange](storedData: changeNote)
         )
+    }
+}
+
+private extension ShareActivityRecord {
+    convenience init(entry: ShareActivityEntry, position: Int) {
+        let spelled: (event: String, changeKind: String?) = switch entry.event {
+        case .changeGivenUp(let kind): ("changeGivenUp", kind.storedValue)
+        case .connectionLost: ("connectionLost", nil)
+        case .otherPersonLeft: ("otherPersonLeft", nil)
+        case .accountChanged: ("accountChanged", nil)
+        }
+        self.init(id: entry.id, position: position, at: entry.at, connectionNames: entry.connectionNames, event: spelled.event, changeKind: spelled.changeKind)
+    }
+
+    func entry() throws -> ShareActivityEntry {
+        let spelled: ShareActivityEntry.Event
+        switch event {
+        case "changeGivenUp":
+            guard let changeKind else { throw StoreError.unreadable(field: .activityEvent, value: event) }
+            spelled = .changeGivenUp(try .init(storedValue: changeKind))
+        case "connectionLost": spelled = .connectionLost
+        case "otherPersonLeft": spelled = .otherPersonLeft
+        case "accountChanged": spelled = .accountChanged
+        default: throw StoreError.unreadable(field: .activityEvent, value: event)
+        }
+        return ShareActivityEntry(id: id, at: at, connectionNames: connectionNames, event: spelled)
     }
 }
 

@@ -24,6 +24,32 @@ struct SharingStoreTests {
         #expect(try store().load() == saved)
     }
 
+    @Test func theShareActivityRecordReadsBackEqualAfterARelaunchOldestFirst() throws {
+        let saved = SharingData(activity: [
+            ShareActivityEntry(at: Date(timeIntervalSince1970: 1_790_900_000), connectionNames: ["Alex Morgan"], event: .changeGivenUp(.revise)),
+            ShareActivityEntry(at: Date(timeIntervalSince1970: 1_790_900_100), connectionNames: [], event: .changeGivenUp(.disconnect)),
+            ShareActivityEntry(at: Date(timeIntervalSince1970: 1_790_900_200), connectionNames: ["Riley Park"], event: .connectionLost),
+            ShareActivityEntry(at: Date(timeIntervalSince1970: 1_790_900_300), connectionNames: ["Riley Park"], event: .otherPersonLeft),
+            ShareActivityEntry(at: Date(timeIntervalSince1970: 1_790_900_400), connectionNames: ["Alex Morgan", "Riley Park"], event: .accountChanged),
+        ])
+
+        try store().save(saved)
+
+        #expect(try store().load() == saved)
+    }
+
+    /// The Debug stand-in and a model winding down open the store in memory (#388, #389): the record works there too.
+    @Test func theShareActivityRecordWorksInAnInMemoryStore() throws {
+        let store = try SharingStore(location: .inMemory)
+        let saved = SharingData(activity: [
+            ShareActivityEntry(at: Date(timeIntervalSince1970: 1_790_900_000), connectionNames: ["Alex Morgan"], event: .otherPersonLeft),
+        ])
+
+        try store.save(saved)
+
+        #expect(try store.load() == saved)
+    }
+
     @Test func aConnectionReadsBackEqualAfterARelaunch() throws {
         let saved = SharingData(connections: [
             SharingConnection(id: UUID(), name: "Sam", state: .connected, connectedAt: Date(timeIntervalSince1970: 1_790_900_000)),

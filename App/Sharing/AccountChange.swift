@@ -50,7 +50,12 @@ extension SharingModel {
         let received = try receivedReminders.everyReceived()
         let removed = AccountChangeNote(old: kept, received: received)
         let note = kept.accountChangeNote.map { unseen in removed.map(unseen.adding) ?? unseen } ?? removed
-        try keep(SharingData(accountID: id, accountChangeNote: note))
+        // The old account's Share Activity goes with the rest; what's left is one entry for the change.
+        var replaced = SharingData(accountID: id, accountChangeNote: note)
+        if let removed {
+            replaced.record(activityEntry(.accountChanged, concerning: removed.connections))
+        }
+        try keep(replaced)
         receivedReminders.removeEveryReceived()
     }
 }

@@ -49,6 +49,20 @@ struct DeleteAllDataSharingTests {
         for phone in phones { await phone.model.waitUntilApplied() }
     }
 
+    /// #396: what happened to sharing is part of what Delete All Data removes.
+    @Test func deleteAllDataClearsTheShareActivityRecord() async throws {
+        let (alex, riley) = try await phones()
+        try await riley.sharing.received(.connectionLost(connectionID))
+        #expect(riley.sharing.data.activity.count == 1)
+        await settle(alex, riley)
+
+        try await riley.model.deleteAllData()
+        await settle(alex, riley)
+
+        // Sharing is off now, so no model shows it: the store is read from its file.
+        #expect(try riley.keptSharing().activity.isEmpty)
+    }
+
     @Test func deleteAllDataDisconnectsEveryoneAndEmptiesTheSharingStore() async throws {
         let (alex, riley) = try await phones()
         riley.model.add(pills)

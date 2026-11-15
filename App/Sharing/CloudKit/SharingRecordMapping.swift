@@ -73,7 +73,7 @@ struct SharingRecordMapping {
                 // The occurrences go with it: their references to it are `deleteSelf`.
                 writes.delete.append(recordID(RecordName(type: .status, writer: side, reminderID: reminderID)))
             }
-        case .none:
+        case .none, .lost:
             guard change.kind == .cancel, let reminderID = change.reminderID else { break }
             // The sender's content is gone by now, so only the flag is written, onto the record
             // the adapter holds, whose change tag lets iCloud take the save.
