@@ -57,13 +57,13 @@ struct SharingRecordMapping {
         case .receipt(let receipt):
             guard let reminderID = change.reminderID else { break }
             let record = record(RecordName(type: .receipt, writer: side, reminderID: reminderID), existing: existing)
-            record.encryptedValues[Field.receipt] = receipt.storedValue
+            record.encryptedValues[Field.receipt.rawValue] = receipt.storedValue
             writes.save.append(record)
         case .settings(let settings):
             let record = record(RecordName(type: .connectionSettings, writer: side), existing: existing)
-            record.encryptedValues[Field.name] = settings.name
-            record.encryptedValues[Field.sharesStatus] = settings.choices.sharesStatus.recordValue
-            record.encryptedValues[Field.deliveryMode] = settings.choices.deliveryMode.storedValue
+            record.encryptedValues[Field.name.rawValue] = settings.name
+            record.encryptedValues[Field.sharesStatus.rawValue] = settings.choices.sharesStatus.recordValue
+            record.encryptedValues[Field.deliveryMode.rawValue] = settings.choices.deliveryMode.storedValue
             writes.save.append(record)
         case .status(let status):
             guard let reminderID = change.reminderID else { break }
@@ -78,7 +78,7 @@ struct SharingRecordMapping {
             // The sender's content is gone by now, so only the flag is written, onto the record
             // the adapter holds, whose change tag lets iCloud take the save.
             let record = record(RecordName(type: .sentReminder, writer: side, reminderID: reminderID), existing: existing)
-            record.encryptedValues[Field.canceled] = true.recordValue
+            record.encryptedValues[Field.canceled.rawValue] = true.recordValue
             writes.save.append(record)
         }
         return writes
@@ -157,10 +157,10 @@ struct SharingRecordMapping {
                 deliveryMode: try DeliveryMode(storedValue: try record.required(Field.deliveryMode))
             )
             // The name is optional: the app model sends none (ticket 196).
-            return .settings(.init(name: record.encryptedValues[Field.name] as? String, choices), for: connectionID)
+            return .settings(.init(name: record.encryptedValues[Field.name.rawValue] as? String, choices), for: connectionID)
         case .sentReminder:
             let reminderID = try name.requiredReminderID()
-            if (record.encryptedValues[Field.canceled] as? Int64) == true.recordValue {
+            if (record.encryptedValues[Field.canceled.rawValue] as? Int64) == true.recordValue {
                 return .cancel(reminderID, for: connectionID)
             }
             let sent = try sentReminder(from: record, id: reminderID)
@@ -199,22 +199,22 @@ struct SharingRecordMapping {
     private func statusWrites(_ status: SentCopy.StatusRecord, reminderID: Reminder.ID, existing: (CKRecord.ID) -> CKRecord?) -> Writes {
         let record = record(RecordName(type: .status, writer: side, reminderID: reminderID), existing: existing)
         let occurrences = status.notSharingThisOne ? [] : status.report.occurrences
-        record.encryptedValues[Field.label] = status.notSharingThisOne ? nil : status.report.label.storedValue
-        record.encryptedValues[Field.notSharingThisOne] = status.notSharingThisOne.recordValue
-        record.encryptedValues[Field.occurrenceCount] = Int64(occurrences.count)
+        record.encryptedValues[Field.label.rawValue] = status.notSharingThisOne ? nil : status.report.label.storedValue
+        record.encryptedValues[Field.notSharingThisOne.rawValue] = status.notSharingThisOne.recordValue
+        record.encryptedValues[Field.occurrenceCount.rawValue] = Int64(occurrences.count)
         let reportID = UUID().uuidString
-        record.encryptedValues[Field.reportID] = reportID
+        record.encryptedValues[Field.reportID.rawValue] = reportID
         var writes = Writes(save: [record])
         for (slot, occurrence) in occurrences.enumerated() {
             let occurrenceRecord = self.record(RecordName(type: .occurrenceStatus, writer: side, reminderID: reminderID, slot: slot), existing: existing)
-            occurrenceRecord[Field.status] = CKRecord.Reference(recordID: record.recordID, action: .deleteSelf)
+            occurrenceRecord[Field.status.rawValue] = CKRecord.Reference(recordID: record.recordID, action: .deleteSelf)
             let values = occurrenceRecord.encryptedValues
-            values[Field.dueTime] = occurrence.dueTime.timeIntervalSinceReferenceDate
-            values[Field.year] = Int64(occurrence.day.year)
-            values[Field.month] = Int64(occurrence.day.month)
-            values[Field.day] = Int64(occurrence.day.day)
-            values[Field.label] = occurrence.label.storedValue
-            values[Field.reportID] = reportID
+            values[Field.dueTime.rawValue] = occurrence.dueTime.timeIntervalSinceReferenceDate
+            values[Field.year.rawValue] = Int64(occurrence.day.year)
+            values[Field.month.rawValue] = Int64(occurrence.day.month)
+            values[Field.day.rawValue] = Int64(occurrence.day.day)
+            values[Field.label.rawValue] = occurrence.label.storedValue
+            values[Field.reportID.rawValue] = reportID
             writes.save.append(occurrenceRecord)
         }
         for slot in occurrences.count..<max(occurrences.count, Self.occurrenceSlots) {
@@ -237,7 +237,7 @@ struct SharingRecordMapping {
         let reportID: String = try record.required(Field.reportID)
         var records: [CKRecord] = []
         for slot in 0..<Int(count) {
-            guard let held = occurrence(slot), held.encryptedValues[Field.reportID] as? String == reportID else { return nil }
+            guard let held = occurrence(slot), held.encryptedValues[Field.reportID.rawValue] as? String == reportID else { return nil }
             records.append(held)
         }
         let report = StatusReport(
@@ -262,30 +262,30 @@ struct SharingRecordMapping {
         let record = record(RecordName(type: .sentReminder, writer: side, reminderID: sent.reminder.id), existing: existing)
         let reminder = sent.reminder
         let values = record.encryptedValues
-        values[Field.title] = reminder.title
-        values[Field.notes] = reminder.notes
-        values[Field.dueTime] = reminder.dueTime.timeIntervalSinceReferenceDate
+        values[Field.title.rawValue] = reminder.title
+        values[Field.notes.rawValue] = reminder.notes
+        values[Field.dueTime.rawValue] = reminder.dueTime.timeIntervalSinceReferenceDate
         let repeating = reminder.repeatRule?.storedValue
-        values[Field.repeatRule] = repeating?.rrule
-        values[Field.repeatMissingDay] = repeating?.missingDay
-        values[Field.repeatUntilTime] = repeating?.untilTime?.timeIntervalSinceReferenceDate
-        values[Field.strength] = reminder.strength.storedValue
+        values[Field.repeatRule.rawValue] = repeating?.rrule
+        values[Field.repeatMissingDay.rawValue] = repeating?.missingDay
+        values[Field.repeatUntilTime.rawValue] = repeating?.untilTime?.timeIntervalSinceReferenceDate
+        values[Field.strength.rawValue] = reminder.strength.storedValue
         let pace = reminder.pace.storedValue
-        values[Field.paceKind] = pace.kind
-        values[Field.paceWait] = pace.wait
-        values[Field.breakThroughFocus] = reminder.breakThroughFocus.recordValue
-        values[Field.createdAt] = reminder.createdAt.timeIntervalSinceReferenceDate
-        values[Field.revision] = Int64(sent.revision)
-        values[Field.changeNote] = try sent.changeNote.storedData()
-        values[Field.canceled] = false.recordValue
+        values[Field.paceKind.rawValue] = pace.kind
+        values[Field.paceWait.rawValue] = pace.wait
+        values[Field.breakThroughFocus.rawValue] = reminder.breakThroughFocus.recordValue
+        values[Field.createdAt.rawValue] = reminder.createdAt.timeIntervalSinceReferenceDate
+        values[Field.revision.rawValue] = Int64(sent.revision)
+        values[Field.changeNote.rawValue] = try sent.changeNote.storedData()
+        values[Field.canceled.rawValue] = false.recordValue
         return record
     }
 
     private func sentReminder(from record: CKRecord, id: Reminder.ID) throws -> SentReminder {
         let values = record.encryptedValues
-        let untilTime = (values[Field.repeatUntilTime] as? Double).map(Date.init(timeIntervalSinceReferenceDate:))
-        let repeatRule = try (values[Field.repeatRule] as? String).map {
-            try RepeatRule(storedRRULE: $0, missingDay: values[Field.repeatMissingDay] as? String, untilTime: untilTime)
+        let untilTime = (values[Field.repeatUntilTime.rawValue] as? Double).map(Date.init(timeIntervalSinceReferenceDate:))
+        let repeatRule = try (values[Field.repeatRule.rawValue] as? String).map {
+            try RepeatRule(storedRRULE: $0, missingDay: values[Field.repeatMissingDay.rawValue] as? String, untilTime: untilTime)
         }
         let reminder = Reminder(
             id: id,
@@ -294,12 +294,12 @@ struct SharingRecordMapping {
             dueTime: try record.date(Field.dueTime),
             repeatRule: repeatRule,
             strength: try Strength(storedValue: try record.required(Field.strength)),
-            pace: try Pace(storedKind: try record.required(Field.paceKind), wait: values[Field.paceWait] as? Double),
+            pace: try Pace(storedKind: try record.required(Field.paceKind), wait: values[Field.paceWait.rawValue] as? Double),
             breakThroughFocus: try record.flag(Field.breakThroughFocus),
             createdAt: try record.date(Field.createdAt)
         )
         let revision: Int64 = try record.required(Field.revision)
-        return SentReminder(reminder: reminder, revision: Int(revision), changeNote: try [ReceivedChange](storedData: values[Field.changeNote] as? Data))
+        return SentReminder(reminder: reminder, revision: Int(revision), changeNote: try [ReceivedChange](storedData: values[Field.changeNote.rawValue] as? Data))
     }
 }
 
@@ -328,35 +328,46 @@ private enum RecordType: String, CaseIterable {
     var isStatus: Bool { self == .status || self == .occurrenceStatus }
 }
 
-/// The record fields, as permanent as the types.
-private enum Field {
-    static let name = "name"
-    static let sharesStatus = "sharesStatus"
-    static let deliveryMode = "deliveryMode"
-    static let title = "title"
-    static let notes = "notes"
-    static let dueTime = "dueTime"
-    static let repeatRule = "repeatRule"
-    static let repeatMissingDay = "repeatMissingDay"
-    static let repeatUntilTime = "repeatUntilTime"
-    static let strength = "strength"
-    static let paceKind = "paceKind"
-    static let paceWait = "paceWait"
-    static let breakThroughFocus = "breakThroughFocus"
-    static let createdAt = "createdAt"
-    static let revision = "revision"
-    static let changeNote = "changeNote"
-    static let canceled = "canceled"
-    static let receipt = "receipt"
-    static let label = "label"
-    static let notSharingThisOne = "notSharingThisOne"
-    static let occurrenceCount = "occurrenceCount"
-    static let reportID = "reportID"
-    static let status = "status"
-    static let year = "year"
-    static let month = "month"
-    static let day = "day"
+/// The record fields, as permanent as the types: each name is its field's key in iCloud.
+private enum Field: String, CaseIterable {
+    case name
+    case sharesStatus
+    case deliveryMode
+    case title
+    case notes
+    case dueTime
+    case repeatRule
+    case repeatMissingDay
+    case repeatUntilTime
+    case strength
+    case paceKind
+    case paceWait
+    case breakThroughFocus
+    case createdAt
+    case revision
+    case changeNote
+    case canceled
+    case receipt
+    case label
+    case notSharingThisOne
+    case occurrenceCount
+    case reportID
+    case status
+    case year
+    case month
+    case day
 }
+
+#if DEBUG
+extension SharingRecordMapping {
+    /// The names of every record type, for the schema device check (#327).
+    static var recordTypeNames: [String] { RecordType.allCases.map(\.rawValue) }
+
+    /// The names of every field the records use, for the schema device check (#327): the
+    /// development schema gets only the fields a save has used.
+    static var fieldNames: [String] { Field.allCases.map(\.rawValue) }
+}
+#endif
 
 /// A record's name says what it is, whose app may write it, and which reminder it is about:
 /// `SentReminder.owner.<reminder ID>`, or `ConnectionSettings.owner`, which is about no reminder.
@@ -416,17 +427,17 @@ private extension Bool {
 /// private and a field can't be made encrypted after it is in the schema. A time is a `Double` of
 /// seconds, not a date field, so it reads back exactly.
 private extension CKRecord {
-    func required<Value>(_ field: String) throws -> Value {
-        guard let value = encryptedValues[field] as? Value else { throw UnreadableRecord() }
+    func required<Value>(_ field: Field) throws -> Value {
+        guard let value = encryptedValues[field.rawValue] as? Value else { throw UnreadableRecord() }
         return value
     }
 
-    func flag(_ field: String) throws -> Bool {
+    func flag(_ field: Field) throws -> Bool {
         let value: Int64 = try required(field)
         return value == true.recordValue
     }
 
-    func date(_ field: String) throws -> Date {
+    func date(_ field: Field) throws -> Date {
         Date(timeIntervalSinceReferenceDate: try required(field))
     }
 }
