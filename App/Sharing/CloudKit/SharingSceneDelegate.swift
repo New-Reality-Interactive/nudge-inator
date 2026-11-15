@@ -20,7 +20,7 @@ final class SharingSceneDelegate: NSObject, UIWindowSceneDelegate {
 
     private func receive(_ metadata: CKShare.Metadata) {
         // Building the model makes the adapter, if this build has one and Sharing is on.
-        guard let invite = CloudKitSharingAdapter.incomingInvite(from: metadata) else { return }
+        guard let invite = CloudKitInvites.incomingInvite(from: metadata) else { return }
         guard let model = AppDelegate.current?.model else {
             Self.logger.error("An invite arrived and the app has no model to take it")
             return

@@ -31,7 +31,7 @@ final class CloudKitSharingAdapter: SharingAdapter {
 
     weak var events: (any SharingAdapterEvents)?
     private let reader: CloudKitAccountReader
-    let container: CKContainer?
+    private let container: CKContainer?
     /// Off in tests, which send and fetch by hand (WWDC23 "Sync to iCloud with CKSyncEngine").
     private let automaticallySync: Bool
     private(set) var sync: CloudKitSync?
@@ -45,11 +45,8 @@ final class CloudKitSharingAdapter: SharingAdapter {
     private var undelivered: [SharingChange] = []
     private var isReporting = false
     private let connectivity = Connectivity()
-    /// Hands an invite's link to the person (#217): iOS's compose screens, or the clipboard.
-    let delivery: any InviteDelivering
-    /// Invites that reached this person, until they are accepted (#217).
-    var removing: Set<UUID> = []
-    var incoming: [UUID: CKShare.Metadata] = [:]
+    /// Inviting and accepting (#217), which the adapter only passes on to (#401).
+    private let invites: CloudKitInvites
 
     /// A real adapter over the app's container.
     convenience init() {
@@ -58,12 +55,30 @@ final class CloudKitSharingAdapter: SharingAdapter {
     }
 
     init(reader: CloudKitAccountReader, container: CKContainer? = nil, automaticallySync: Bool = true, delivery: any InviteDelivering = NoInviteDelivery()) {
-        self.delivery = delivery
+        self.invites = CloudKitInvites(container: container, delivery: delivery)
         self.reader = reader
         self.container = container
         self.automaticallySync = automaticallySync
         Self.current = self
         connectivity.onChange = { [weak self] in self?.events?.connectivityChanged() }
+        invites.attach(to: self)
+    }
+
+    func invite(_ connectionID: UUID, to person: InvitedPerson, via route: InviteRoute) async throws -> Bool {
+        try await invites.invite(connectionID, to: person, via: route)
+    }
+
+    func accept(_ connectionID: UUID) async throws {
+        try await invites.accept(connectionID)
+    }
+
+    func keepOnly(_ participant: SharingParticipant, in connectionID: UUID) {
+        invites.keepOnly(participant, in: connectionID)
+    }
+
+    /// Takes an invite the scene delegate received and tells the app model, which accepts it.
+    func receive(_ metadata: CKShare.Metadata) {
+        invites.receive(metadata)
     }
 
     /// Makes the engines over what the store kept, and hands them everything still unsent.
@@ -238,6 +253,17 @@ final class CloudKitSharingAdapter: SharingAdapter {
     }
 }
 
+extension CloudKitSharingAdapter: InviteHosting {
+    func startedSync() -> CloudKitSync? {
+        start()
+        return sync
+    }
+
+    func fetchSharedChanges() async {
+        try? await engines[.shared]?.fetchChanges()
+    }
+}
+
 extension CloudKitSharingAdapter: CKSyncEngineDelegate {
     func handleEvent(_ event: CKSyncEngine.Event, syncEngine: CKSyncEngine) async {
         guard let sync else { return }
@@ -329,22 +355,14 @@ extension CloudKitSharingAdapter: CKSyncEngineDelegate {
         for modification in changes.modifications {
             if let share = modification.record as? CKShare {
                 guard let connectionID = UUID(uuidString: share.recordID.zoneID.zoneName) else { continue }
-                let invitees = InviteParticipant.invitees(of: share)
-                let wasJoined = sync.participantJoined(connectionID)
-                outcome = outcome + sync.fetchedShare(in: connectionID, hasAcceptedParticipant: CloudKitSync.hasAcceptedParticipant(share))
-                if let first = InviteParticipant.firstToAccept(among: invitees), let id = first.id {
-                    if !wasJoined {
-                        Task { try? await events?.inviteAccepted(connectionID, by: SharingParticipant(id: id)) }
-                    } else {
-                        // Others added after the first to accept come off the share.
-                        removeOthersOnce(from: connectionID, keeping: id)
-                    }
-                }
+                outcome = outcome + sync.fetchedShare(in: connectionID, invitees: InviteParticipant.invitees(of: share))
             } else {
                 records.append(SharingRecordMapping.FetchedRecord(fetched: modification.record))
             }
         }
-        return outcome + sync.fetched(records, deleted: changes.deletions.map(\.recordID))
+        outcome = outcome + sync.fetched(records, deleted: changes.deletions.map(\.recordID))
+        invites.handle(outcome.accepted)
+        return outcome
     }
 }
 

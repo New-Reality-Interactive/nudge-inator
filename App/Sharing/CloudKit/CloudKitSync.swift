@@ -35,10 +35,20 @@ final class CloudKitSync {
         var received: [SharingChange] = []
         var gone: [OutboxChange.ID] = []
         var refused: Set<OutboxChange.ID> = []
+        var accepted: [Acceptance] = []
 
         static func + (lhs: Outcome, rhs: Outcome) -> Outcome {
-            Outcome(received: lhs.received + rhs.received, gone: lhs.gone + rhs.gone, refused: lhs.refused.union(rhs.refused))
+            Outcome(received: lhs.received + rhs.received, gone: lhs.gone + rhs.gone, refused: lhs.refused.union(rhs.refused), accepted: lhs.accepted + rhs.accepted)
         }
+    }
+
+    /// The first person to accept a connection's share (spec #127, A6), found in a fetch of it.
+    /// `isNew` when the inviter hasn't heard of them yet; otherwise the share may hold others added
+    /// since, who come off it (#401).
+    struct Acceptance: Equatable {
+        var connectionID: UUID
+        var participantID: String
+        var isNew: Bool
     }
 
     /// An outcome whose `gone` changes say which of them `giveUp` refused.
@@ -116,11 +126,6 @@ final class CloudKitSync {
         cache.zones[connectionID].map { !$0.isOwn } ?? false
     }
 
-    /// Whether the inviter has seen someone accept the connection's share.
-    func participantJoined(_ connectionID: UUID) -> Bool {
-        cache.zones[connectionID]?.participantJoined == true
-    }
-
     /// The ID of the zone the inviter made for the connection.
     static func ownZoneID(of connectionID: UUID) -> CKRecordZone.ID {
         CKRecordZone.ID(zoneName: connectionID.uuidString, ownerName: CKCurrentUserDefaultName)
@@ -139,11 +144,6 @@ final class CloudKitSync {
         let share = CKShare(recordZoneID: zoneID)
         share.publicPermission = .none
         return share
-    }
-
-    /// Whether someone other than the owner has accepted `share`.
-    static func hasAcceptedParticipant(_ share: CKShare) -> Bool {
-        share.participants.contains { $0.role != .owner && $0.acceptanceStatus == .accepted }
     }
 
     /// Whether a disconnect or a revoked invite is still waiting for iCloud: a zone of this person's
@@ -469,11 +469,12 @@ final class CloudKitSync {
 
     /// The inviter fetched their zone's share: whether anyone has accepted it now. Someone who had
     /// and no longer has left it, which ends the connection: the zone, of no more use, is deleted.
-    func fetchedShare(in connectionID: UUID, hasAcceptedParticipant: Bool) -> Outcome {
+    func fetchedShare(in connectionID: UUID, invitees: [InviteParticipant]) -> Outcome {
         guard let zone = cache.zones[connectionID], zone.isOwn else { return Outcome() }
-        if hasAcceptedParticipant {
+        if invitees.contains(where: { $0.status == .accepted }) {
             cache.zones[connectionID]?.participantJoined = true
-            return Outcome()
+            guard let id = InviteParticipant.firstToAccept(among: invitees)?.id else { return Outcome() }
+            return Outcome(accepted: [Acceptance(connectionID: connectionID, participantID: id, isNew: !zone.participantJoined)])
         }
         guard zone.participantJoined else { return Outcome() }
         let moot = forgetRecords(of: connectionID)

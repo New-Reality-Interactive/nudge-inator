@@ -3,28 +3,62 @@ import Foundation
 import NudgeEngine
 import UIKit
 
-/// Inviting and accepting (#217), apart from the sync the adapter runs: the connection's zone and
-/// private share, the invite that reaches the other person, and keeping one person on a share.
-extension CloudKitSharingAdapter {
+/// What the invites need of the adapter that owns them: the sync to work through, the app model's
+/// events, and the few things only the adapter does. Nothing else of the adapter is open to them.
+@MainActor
+protocol InviteHosting: AnyObject {
+    var events: (any SharingAdapterEvents)? { get }
+    /// Starts the adapter (idempotent) and returns its sync, or `nil` while it can't start.
+    func startedSync() -> CloudKitSync?
+    /// Has the store keep the sync's state.
+    func keep()
+    func revokeInvite(_ connectionID: UUID)
+    /// Fetches what changed in the shared database.
+    func fetchSharedChanges() async
+}
+
+/// Inviting and accepting (#217, split out in #401), apart from the sync the adapter runs: the
+/// connection's zone and private share, the invite that reaches the other person, and keeping one
+/// person on a share.
+@MainActor
+final class CloudKitInvites {
+    private static let logger = CloudKitSharingAdapter.logger
+
+    private weak var host: (any InviteHosting)?
+    private let container: CKContainer?
+    /// Hands an invite's link to the person: iOS's compose screens, or the clipboard.
+    private let delivery: any InviteDelivering
+    /// Invites that reached this person, until they are accepted.
+    private var incoming: [UUID: CKShare.Metadata] = [:]
+    private var removing: Set<UUID> = []
+
+    init(container: CKContainer?, delivery: any InviteDelivering) {
+        self.container = container
+        self.delivery = delivery
+    }
+
+    func attach(to host: any InviteHosting) {
+        self.host = host
+    }
+
     /// Makes the connection's zone and a private share, adds `person` to it with read-write
     /// permission, and has `delivery` hand the share's link to the person by `route`. Returns
     /// `false`, with the zone deleted again, when the delivery was canceled. Throws if the zone or
     /// share couldn't be made or the address has no Apple Account, and then nothing was sent.
     func invite(_ connectionID: UUID, to person: InvitedPerson, via route: InviteRoute) async throws -> Bool {
-        start()
-        guard let sync, let container else { throw NotAvailableYet() }
+        guard let host, let sync = host.startedSync(), let container else { throw CloudKitSharingAdapter.NotAvailableYet() }
         let zoneID = sync.makeZone(for: connectionID)
-        keep()
+        host.keep()
         do {
             let link = try await shareLink(in: zoneID, for: person, container: container)
             guard await delivery.deliver(link, to: person, via: route) else {
-                revokeInvite(connectionID)
+                host.revokeInvite(connectionID)
                 return false
             }
             return true
         } catch {
             Self.logger.error("An invite couldn't be made: \(error, privacy: .public)")
-            revokeInvite(connectionID)
+            host.revokeInvite(connectionID)
             throw error
         }
     }
@@ -42,8 +76,8 @@ extension CloudKitSharingAdapter {
         share[CKShare.SystemFieldKey.thumbnailImageData] = Self.appIconData()
         share.addParticipant(participant)
         let saved = try await database.modifyRecords(saving: [share], deleting: [])
-        guard let result = saved.saveResults[share.recordID] else { throw NotAvailableYet() }
-        guard let record = try result.get() as? CKShare, let url = record.url else { throw NotAvailableYet() }
+        guard let result = saved.saveResults[share.recordID] else { throw CloudKitSharingAdapter.NotAvailableYet() }
+        guard let record = try result.get() as? CKShare, let url = record.url else { throw CloudKitSharingAdapter.NotAvailableYet() }
         return url
     }
 
@@ -51,13 +85,13 @@ extension CloudKitSharingAdapter {
     /// the address has none, or iCloud can't be reached.
     private func shareParticipant(for person: InvitedPerson, container: CKContainer) async throws -> CKShare.Participant {
         // The sheet only sends an address of a known kind, so anything else is a bug, not a typo.
-        guard let kind = InviteAddressKind(address: person.address) else { throw NotAvailableYet() }
+        guard let kind = InviteAddressKind(address: person.address) else { throw CloudKitSharingAdapter.NotAvailableYet() }
         let key = kind.lookupKey(for: person.address)
         let results = switch kind {
         case .phone: try await container.shareParticipants(forPhoneNumbers: [key])
         case .email: try await container.shareParticipants(forEmailAddresses: [key])
         }
-        guard let result = results[key] ?? results.values.first else { throw NotAvailableYet() }
+        guard let result = results[key] ?? results.values.first else { throw CloudKitSharingAdapter.NotAvailableYet() }
         return try result.get()
     }
 
@@ -73,7 +107,7 @@ extension CloudKitSharingAdapter {
     /// The invite a share's metadata carries, or `nil` when it isn't one for this app.
     static func incomingInvite(from metadata: CKShare.Metadata) -> IncomingInvite? {
         let zoneID = metadata.share.recordID.zoneID
-        guard metadata.containerIdentifier == containerIdentifier, let connectionID = UUID(uuidString: zoneID.zoneName) else { return nil }
+        guard metadata.containerIdentifier == CloudKitSharingAdapter.containerIdentifier, let connectionID = UUID(uuidString: zoneID.zoneName) else { return nil }
         let sender = InviteParticipant.displayName(metadata.ownerIdentity.nameComponents) ?? metadata.ownerIdentity.lookupInfo?.emailAddress
         return IncomingInvite(
             connectionID: connectionID,
@@ -85,12 +119,11 @@ extension CloudKitSharingAdapter {
     func receive(_ metadata: CKShare.Metadata) {
         guard let invite = Self.incomingInvite(from: metadata) else { return }
         incoming[invite.connectionID] = metadata
-        Task { await events?.invited(invite) }
+        Task { await host?.events?.invited(invite) }
     }
 
     func accept(_ connectionID: UUID) async throws {
-        start()
-        guard let sync, let container else { throw NotAvailableYet() }
+        guard let host, let sync = host.startedSync(), let container else { throw CloudKitSharingAdapter.NotAvailableYet() }
         // Already joined (the invite was tapped twice): accepting again does no harm.
         if sync.hasJoinedZone(of: connectionID) { return }
         guard let metadata = incoming[connectionID], metadata.participantStatus != .removed else { throw InviteUnavailable() }
@@ -106,19 +139,31 @@ extension CloudKitSharingAdapter {
         }
         incoming[connectionID] = nil
         sync.joinZone(metadata.share.recordID.zoneID)
-        keep()
-        try? await engines[.shared]?.fetchChanges()
+        host.keep()
+        await host.fetchSharedChanges()
+    }
+
+    /// What a fetch of a share found about who accepted: the first to accept is told to the app
+    /// model, and once told, anyone added after them comes off the share.
+    func handle(_ acceptances: [CloudKitSync.Acceptance]) {
+        for acceptance in acceptances {
+            if acceptance.isNew {
+                Task { try? await host?.events?.inviteAccepted(acceptance.connectionID, by: SharingParticipant(id: acceptance.participantID)) }
+            } else {
+                removeOthersOnce(from: acceptance.connectionID, keeping: acceptance.participantID)
+            }
+        }
     }
 
     /// One person per invite: takes everyone but `participant` off the connection's share.
     func keepOnly(_ participant: SharingParticipant, in connectionID: UUID) {
-        start()
+        guard host?.startedSync() != nil else { return }
         removeOthersOnce(from: connectionID, keeping: participant.id)
     }
 
     /// Starts taking the others off the share, unless that is under way: the edit is the same
     /// either way, and two saves at once could conflict.
-    func removeOthersOnce(from connectionID: UUID, keeping kept: String) {
+    private func removeOthersOnce(from connectionID: UUID, keeping kept: String) {
         guard removing.insert(connectionID).inserted else { return }
         Task {
             await removeOthers(from: connectionID, keeping: kept)
@@ -127,7 +172,7 @@ extension CloudKitSharingAdapter {
     }
 
     private func removeOthers(from connectionID: UUID, keeping kept: String) async {
-        guard let container, sync?.ownsZone(of: connectionID) == true else { return }
+        guard let container, host?.startedSync()?.ownsZone(of: connectionID) == true else { return }
         let database = container.privateCloudDatabase
         do {
             let record = try await database.record(for: CKRecord.ID(recordName: CKRecordNameZoneWideShare, zoneID: CloudKitSync.ownZoneID(of: connectionID)))
