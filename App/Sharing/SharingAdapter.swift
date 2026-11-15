@@ -13,6 +13,11 @@ protocol SharingAdapterEvents: AnyObject {
     /// outbox entry (`OutboxChange.id`). Throws if the store couldn't keep that, and the adapter
     /// then reports it again.
     func sent(_ changeID: OutboxChange.ID) async throws
+    /// iCloud refused a change for good, so it never goes and counts as gone (#396): the model
+    /// takes it out of the outbox as `sent(_:)` does, and records it in the Share Activity record.
+    /// Names the outbox entry. Throws if the store couldn't keep that, and the adapter then reports
+    /// it again.
+    func gaveUp(_ changeID: OutboxChange.ID) async throws
     /// The iCloud account changed or came back. Read `signedInAccount()` again.
     func accountStateChanged()
     /// The iPhone went offline or came back (ticket 211). Read `isOnline` again.
@@ -162,6 +167,9 @@ struct SharingChange: Equatable {
     enum Content: Equatable {
         /// A cancel or a disconnect: the entry says it all.
         case none
+        /// A disconnect that is not the other person's doing: the connection's zone is gone from
+        /// iCloud, which lost it (#396). Only ever incoming.
+        case lost
         /// A send or a revision: the sender's reminder as it now stands.
         case reminder(SentReminder)
         /// The recipient's receipt for the copy.
@@ -225,5 +233,11 @@ struct SharingChange: Equatable {
 
     static func disconnect(_ connectionID: UUID, id: UUID = UUID()) -> SharingChange {
         SharingChange(id: id, kind: .disconnect, connectionID: connectionID)
+    }
+
+    /// The connection ended because iCloud lost it, not because the other person disconnected
+    /// (#396). Only the adapter makes it, for the model to apply as a disconnect and say so.
+    static func connectionLost(_ connectionID: UUID, id: UUID = UUID()) -> SharingChange {
+        SharingChange(id: id, kind: .disconnect, connectionID: connectionID, content: .lost)
     }
 }

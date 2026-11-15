@@ -206,6 +206,35 @@ final class TurnOffSharingTests {
         _ = alex
     }
 
+    // MARK: Share Activity (#396)
+
+    /// Turning Sharing off empties the sharing store, the Share Activity record with it.
+    @Test func turningOffClearsTheShareActivityRecord() async throws {
+        let (alex, riley) = try await phones()
+        try await riley.sharing.received(.connectionLost(connectionID))
+        #expect(riley.sharing.data.activity.count == 1)
+
+        try riley.model.turnSharingOff(choosing: .remove)
+        await settle(alex, riley)
+
+        #expect(try riley.keptSharing().activity.isEmpty)
+    }
+
+    /// A disconnect still on its way, refused for good while the model winds down, records nothing
+    /// into the record that Turn Off Sharing, or Delete All Data, just cleared.
+    @Test func aDisconnectRefusedWhileWindingDownRecordsNothing() async throws {
+        let (alex, riley) = try await phones()
+        riley.adapter.isOnline = false
+        try riley.model.turnSharingOff(choosing: .remove)
+        let disconnect = try #require(riley.adapter.submitted.last)
+        #expect(disconnect.kind == .disconnect)
+
+        try await riley.adapter.events?.gaveUp(disconnect.entry.id)
+
+        #expect(try riley.keptSharing().activity.isEmpty)
+        _ = alex
+    }
+
     // MARK: Confirming
 
     /// Remove deletes every received reminder, stops its ring and takes it out of Notification

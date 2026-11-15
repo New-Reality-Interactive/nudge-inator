@@ -28,6 +28,7 @@ enum StoreError: Error, Equatable {
         case reportedStatus
         case syncDatabase
         case outboxKind
+        case activityEvent
         case changeNote
     }
 

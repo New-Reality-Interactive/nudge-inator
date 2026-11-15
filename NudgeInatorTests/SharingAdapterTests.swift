@@ -423,6 +423,7 @@ struct SharingAdapterTests {
 final class RecordingSharingEvents: SharingAdapterEvents {
     private(set) var received: [SharingChange] = []
     private(set) var sent: [OutboxChange.ID] = []
+    private(set) var gaveUp: [OutboxChange.ID] = []
     private(set) var accountChanges = 0
 
     func received(_ change: SharingChange) async throws {
@@ -431,6 +432,10 @@ final class RecordingSharingEvents: SharingAdapterEvents {
 
     func sent(_ changeID: OutboxChange.ID) async throws {
         sent.append(changeID)
+    }
+
+    func gaveUp(_ changeID: OutboxChange.ID) async throws {
+        gaveUp.append(changeID)
     }
 
     func accountStateChanged() {

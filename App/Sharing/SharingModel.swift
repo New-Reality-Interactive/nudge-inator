@@ -479,6 +479,11 @@ final class SharingModel {
     }
 
     /// What the store holds, opening it first if it isn't open.
+    /// A Share Activity entry made now, by the model's clock.
+    func activityEntry(_ event: ShareActivityEntry.Event, concerning connectionNames: [String]) -> ShareActivityEntry {
+        ShareActivityEntry(at: clock.now, connectionNames: connectionNames, event: event)
+    }
+
     func currentData() throws -> SharingData {
         _ = try openedStore()
         return data
@@ -540,7 +545,11 @@ extension SharingModel: SharingAdapterEvents {
         }
         var applied = try currentData()
         let notice = SenderNotice(for: change, in: applied)
+        let ending = applied.connections.first { $0.id == change.connectionID && $0.state == .connected }
         if applied.apply(incoming: change) {
+            if change.kind == .disconnect {
+                applied.record(activityEntry(change.content == .lost ? .connectionLost : .otherPersonLeft, concerning: ending.map(\.name).map { [$0] } ?? []))
+            }
             try keep(applied)
             // After the status is kept: a store that won't keep it has the change offered again,
             // and that run posts the notice.
@@ -552,6 +561,19 @@ extension SharingModel: SharingAdapterEvents {
 
     func sent(_ changeID: OutboxChange.ID) async throws {
         var remaining = try currentData()
+        remaining.outbox.removeAll { $0.id == changeID }
+        try keep(remaining)
+        finishWindingDownIfDone()
+    }
+
+    func gaveUp(_ changeID: OutboxChange.ID) async throws {
+        var remaining = try currentData()
+        // A model winding down has been emptied, by Delete All Data or Turn Off Sharing: nothing
+        // more is recorded into what they cleared.
+        if !isWindingDown, let change = remaining.outbox.first(where: { $0.id == changeID }) {
+            let connection = remaining.connections.first { $0.id == change.connectionID }
+            remaining.record(activityEntry(.changeGivenUp(change.kind), concerning: connection.map { [$0.name] } ?? []))
+        }
         remaining.outbox.removeAll { $0.id == changeID }
         try keep(remaining)
         finishWindingDownIfDone()

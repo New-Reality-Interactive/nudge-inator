@@ -214,3 +214,26 @@ final class SyncCacheRecord {
         self.data = data
     }
 }
+
+/// One entry of the Share Activity record (#396). Its ID names it.
+@Model
+final class ShareActivityRecord {
+    var id: UUID
+    /// Its place in the record, oldest first.
+    var position: Int
+    var at: Date
+    var connectionNames: [String]
+    /// `ShareActivityEntry.Event` as the store spells it.
+    var event: String
+    /// For a change given up, `OutboxChange.Kind` as the store spells it.
+    var changeKind: String?
+
+    init(id: UUID, position: Int, at: Date, connectionNames: [String], event: String, changeKind: String?) {
+        self.id = id
+        self.position = position
+        self.at = at
+        self.connectionNames = connectionNames
+        self.event = event
+        self.changeKind = changeKind
+    }
+}

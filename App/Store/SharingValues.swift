@@ -127,6 +127,9 @@ struct SharingData: Equatable {
     /// What a different Apple Account signing in removed from this iPhone, kept until the person has
     /// seen the note, or `nil` when there's nothing to tell them.
     var accountChangeNote: AccountChangeNote?
+    /// What happened to this person's sharing that they would otherwise never see (#396), oldest
+    /// first, at most `ShareActivityEntry.limit`. Kept on this iPhone only.
+    var activity: [ShareActivityEntry] = []
 }
 
 /// What the Apple Account Changed note says was removed from this iPhone when a different account
@@ -182,7 +185,7 @@ extension SharingData {
             guard let index = copyIndex(of: change) else { return false }
             sentCopies[index].statusRecord = record
             return true
-        case .none, .reminder:
+        case .none, .lost, .reminder:
             return false
         }
     }

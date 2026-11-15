@@ -45,6 +45,8 @@ final class CloudKitSharingAdapter: SharingAdapter {
     private var undelivered: [SharingChange] = []
     /// Changes that went, which the app model hasn't kept as gone yet.
     private var unreported: [OutboxChange.ID] = []
+    /// Of `unreported`, the changes iCloud refused for good, which the model records (#396).
+    private var refused: Set<OutboxChange.ID> = []
     private var isReporting = false
     private let connectivity = Connectivity()
     /// Hands an invite's link to the person (#217): iOS's compose screens, or the clipboard.
@@ -161,6 +163,7 @@ final class CloudKitSharingAdapter: SharingAdapter {
 
     private func report(_ outcome: CloudKitSync.Outcome) {
         unreported += outcome.gone
+        refused.formUnion(outcome.refused)
         undelivered += outcome.received
         Task { await reportWaiting() }
     }
@@ -183,7 +186,12 @@ final class CloudKitSharingAdapter: SharingAdapter {
                 }
             } else if let changeID = unreported.first {
                 do {
-                    try await events.sent(changeID)
+                    if refused.contains(changeID) {
+                        try await events.gaveUp(changeID)
+                        refused.remove(changeID)
+                    } else {
+                        try await events.sent(changeID)
+                    }
                     unreported.removeFirst()
                 } catch {
                     Self.logger.error("A change sent couldn't be kept as sent: \(error, privacy: .public)")
@@ -211,7 +219,9 @@ extension CloudKitSharingAdapter: CKSyncEngineDelegate {
             if changes.deletions.contains(where: { $0.reason == .encryptedDataReset }) {
                 Self.logger.notice("iCloud Keychain was reset: a connection's zone is gone")
             }
-            report(sync.fetchedZoneDeletions(changes.deletions.map(\.zoneID)))
+            // Deleted by this app is the other person's doing; purged and a reset of encrypted data are iCloud's.
+            let lost = Set(changes.deletions.filter { $0.reason != .deleted }.map(\.zoneID))
+            report(sync.fetchedZoneDeletions(changes.deletions.map(\.zoneID), lostByICloud: lost))
         case .fetchedRecordZoneChanges(let changes):
             report(fetched(changes, sync: sync))
         case .sentDatabaseChanges(let sent):
@@ -272,6 +282,7 @@ extension CloudKitSharingAdapter: CKSyncEngineDelegate {
         if kind == .switchAccounts {
             undelivered = []
             unreported = []
+            refused = []
         }
         keep()
         events?.accountStateChanged()
