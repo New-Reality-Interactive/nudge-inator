@@ -69,7 +69,7 @@ struct SharingTutorialTests {
         } == pieces)
     }
 
-    @Test func continueMovesForwardToDoneOnTheLastPage() {
+    @Test func nextMovesForwardAPageAndStopsAtTheLast() {
         var paging = SharingTutorialPaging()
         #expect(paging.page == .sendEachOtherReminders)
         #expect(!paging.canGoBack)
@@ -87,7 +87,7 @@ struct SharingTutorialTests {
         #expect(paging.isLastPage)
         #expect(String(localized: paging.position) == "Page 4 of 4")
 
-        // Past the last page there's nowhere to go: its button is Done, which closes the sheet.
+        // Past the last page there's nowhere to go: Next is the confirm checkmark there, which closes the sheet.
         paging.goForward()
         #expect(paging.page == .whoSeesWhat)
     }
@@ -100,7 +100,27 @@ struct SharingTutorialTests {
         #expect(paging.page == .connect)
         paging.goBack()
         #expect(paging.page == .sendEachOtherReminders)
+        #expect(!paging.canGoBack)
         paging.goBack()
         #expect(paging.page == .sendEachOtherReminders)
+    }
+
+    /// A swipe settles on a page, which the paged view sets: Back, the last page and the dots follow it.
+    @Test func aSwipeLandsOnAPageAndTheBarAndDotsFollow() {
+        var paging = SharingTutorialPaging()
+        paging.page = .sendAReminder
+        #expect(paging.canGoBack)
+        #expect(!paging.isLastPage)
+        #expect(String(localized: paging.position) == "Page 3 of 4")
+
+        paging.page = .whoSeesWhat
+        #expect(paging.isLastPage)
+        paging.goBack()
+        #expect(paging.page == .sendAReminder)
+
+        paging.page = .sendEachOtherReminders
+        #expect(!paging.canGoBack)
+        paging.goForward()
+        #expect(paging.page == .connect)
     }
 }

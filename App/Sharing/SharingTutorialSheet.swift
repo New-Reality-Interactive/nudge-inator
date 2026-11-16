@@ -1,11 +1,11 @@
 import SwiftUI
 
-/// How Sharing Works (#423, the mockup `2026-11-15-sharing-tutorial`'s `tutorialSheet`): four pages
-/// on what sharing is, connecting, sending and who sees what. Continue moves forward and the last
-/// page's button is Done; Back is top left from page 2, and Close is top right on every page. The
-/// last page so shows Close, Back and Done together, which the HIG's Sheets page says to avoid: the
-/// developer chose a Close on every page, for consistency. It takes no model, so opening and closing
-/// it changes nothing.
+/// How Sharing Works (#423; #430, the mockup `2026-11-16-tutorial-swipe-top-bar`): four pages on
+/// what sharing is, connecting, sending and who sees what. A swipe moves between them, and so do Back
+/// and Next, together top right, which the HIG's Gestures page asks for: a gesture is a shortcut,
+/// not the only way. On the last page Next becomes the system's confirm checkmark, which closes the
+/// sheet, and Close is top left on every page. It takes no model, so opening and closing it changes
+/// nothing.
 struct SharingTutorialSheet: View {
     @State private var paging = SharingTutorialPaging()
 
@@ -13,58 +13,96 @@ struct SharingTutorialSheet: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    PageTop(page: paging.page)
-                }
-                .listRowBackground(Color.clear)
-                pageContent
-                Section {
-                    PageDots(paging: paging)
-                    Button(action: forward) {
-                        (paging.isLastPage
-                            ? Text("Done", comment: "How Sharing Works: the last page's button, which closes the sheet.")
-                            : Text("Continue", comment: "How Sharing Works: the button that goes on to the next page."))
-                            .frame(maxWidth: .infinity)
+            VStack(spacing: 0) {
+                // A paged TabView: the pages sit side by side and settle one at a time, and it mirrors
+                // for right to left. Its own dots are off: the page's dots stay under it, pinned.
+                TabView(selection: $paging.page) {
+                    ForEach(SharingTutorialPage.allCases, id: \.self) { page in
+                        TutorialPage(page: page)
+                            .tag(page)
+                            // Only the page on screen is reachable with VoiceOver.
+                            .accessibilityHidden(page != paging.page)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
                 }
-                .listRowBackground(Color.clear)
-                // No divider between the dots and the button, as the mockup has none (#423's phone check).
-                .listRowSeparator(.hidden)
-                .listSectionSpacing(Design.Spacing.s2)
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                PageDots(paging: paging)
+                    .padding(.vertical, Design.Spacing.s3)
             }
-            // A new page starts at its top, not where the last one was scrolled to.
-            .id(paging.page)
+            .background(Color(uiColor: .systemGroupedBackground))
+            // The new page's heading is spoken, as an announcement: VoiceOver's focus is never moved
+            // by hand (#276, #221).
+            .onChange(of: paging.page) { _, page in
+                VoiceOverAnnouncement.post(page.heading)
+            }
             .navigationTitle(Text("How Sharing Works", comment: "How Sharing Works: the sheet's title, and the Settings row under Sharing that opens it."))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                if paging.canGoBack {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button {
-                            paging.goBack()
-                        } label: {
-                            Label {
-                                Text("Back", comment: "How Sharing Works: the button, top left from the second page, that goes back a page.")
-                            } icon: {
-                                Image(systemName: "chevron.backward")
-                            }
-                        }
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .topBarLeading) {
                     // The system draws it (`xmark`) and names it Close, as Apple's docs show.
                     Button(role: .close) {
                         dismiss()
                     }
                 }
+                // Image buttons share one glass capsule (WWDC25, "Build a UIKit app with the new
+                // design"); the confirm checkmark gets its own.
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    Button {
+                        withAnimation { paging.goBack() }
+                    } label: {
+                        Label {
+                            Text("Back", comment: "How Sharing Works: the top bar's button (a back arrow) that goes back a page. Dimmed on the first page.")
+                        } icon: {
+                            Image(systemName: "chevron.backward")
+                        }
+                    }
+                    .disabled(!paging.canGoBack)
+                    if !paging.isLastPage {
+                        Button {
+                            // Animated, so the page slides as a swipe moves it.
+                            withAnimation { paging.goForward() }
+                        } label: {
+                            Label {
+                                Text("Next", comment: "How Sharing Works: the top bar's button (a forward arrow) that goes on to the next page.")
+                            } icon: {
+                                Image(systemName: "chevron.forward")
+                            }
+                        }
+                    }
+                }
+                if paging.isLastPage {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(role: .confirm) {
+                            dismiss()
+                        } label: {
+                            Label {
+                                Text("Done", comment: "How Sharing Works: the last page's confirm button (a checkmark), in place of Next, which closes the sheet.")
+                            } icon: {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
             }
         }
     }
+}
 
-    @ViewBuilder private var pageContent: some View {
-        switch paging.page.content {
+/// One page: its picture, heading and rows, in an inset grouped list that scrolls on its own.
+private struct TutorialPage: View {
+    let page: SharingTutorialPage
+
+    var body: some View {
+        List {
+            Section {
+                PageTop(page: page)
+            }
+            .listRowBackground(Color.clear)
+            content
+        }
+    }
+
+    @ViewBuilder private var content: some View {
+        switch page.content {
         case .points(_, let points):
             Section {
                 ForEach(points.indices, id: \.self) { PointRow(point: points[$0]) }
@@ -76,10 +114,6 @@ struct SharingTutorialSheet: View {
                 Text(footnote)
             }
         }
-    }
-
-    private func forward() {
-        if paging.isLastPage { dismiss() } else { paging.goForward() }
     }
 }
 

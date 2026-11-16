@@ -678,11 +678,13 @@ sharing paused and offline banner.
   line under it in `{typography.subhead}` `{colors.secondary-label}`, or, on Connect, three numbered
   steps in accent circles (Accent's one exception; capped at 44 pt, dividers from the circle's
   edge) and a footer. Rows stack at the accessibility
-  sizes, as Settings rows do. Below them, with no divider between, page dots (accent for this page, separator for
-  the others; VoiceOver reads "Page 2 of 4") and the prominent Continue, Done on the last page.
-  Back (`chevron.backward`) is top left from page 2 and Close (the system's close role, drawn `xmark`) top
-  right on every page, so the last page shows Close, Back and Done together, which the HIG's Sheets
-  page says to avoid: the developer chose it for consistency.
+  sizes, as Settings rows do. The pages swipe, a paged `TabView` that settles one page at a time
+  (#430, mockup `2026-11-16-tutorial-swipe-top-bar`); each page scrolls on its own. Under them,
+  pinned and centred, page dots (accent for this page, separator for the others; VoiceOver reads
+  "Page 2 of 4"), with no button under the pages. Close (the system's close role, drawn `xmark`) is
+  top left on every page. Back (`chevron.backward`) and Next (`chevron.forward`) share one capsule
+  top right, Back dimmed on page 1; on the last page Next becomes the system's confirm checkmark,
+  named Done, which closes the sheet. A page change speaks the new page's heading.
 - **Share Activity entries:** plain rows with nothing to tap, newest first, in one inset list: who
   it concerns in `{typography.body}` (several names joined as a list), then what happened and when
   ("Today at 7:58 AM"), each in `{typography.subhead}` `{colors.secondary-label}`. VoiceOver reads
