@@ -29,10 +29,8 @@ struct TagRemindersView: View {
                     .toolbar { ToolbarItem(placement: .primaryAction) { NewReminderButton(tagIDs: [tagID]) } }
             } else {
                 ContentUnavailableView {
-                    Label {
+                    EmptyStateLabel(systemImage: "tag.slash") {
                         Text("Tag Deleted", comment: "A tag's screen after the tag was deleted.")
-                    } icon: {
-                        Image(systemName: "tag.slash")
                     }
                 } description: {
                     Text("This tag was deleted. Its reminders are still there.", comment: "A tag's screen after the tag was deleted.")
@@ -46,10 +44,8 @@ struct TagRemindersView: View {
     private func list(_ screen: TagRemindersScreen) -> some View {
         if screen.sections.isEmpty {
             ContentUnavailableView {
-                Label {
+                EmptyStateLabel(systemImage: "tag") {
                     Text("No Reminders", comment: "A tag's screen when no reminder has the tag.")
-                } icon: {
-                    Image(systemName: "tag")
                 }
             } description: {
                 Text("No reminder has this tag yet. Tap + to make one, or add the tag to a reminder you already have.", comment: "A tag's screen when no reminder has the tag.")
@@ -61,6 +57,7 @@ struct TagRemindersView: View {
                     Text("\(screen.reminderCount) reminders with \(screen.tag.label)", comment: "A tag's screen: under the title. 1: how many reminders have the tag. 2: the tag, such as \"#home\".")
                         .subheadStyle()
                         .textCase(nil)
+                        .notAHeading()
                 }
                 ForEach(screen.sections) { section in
                     Section {

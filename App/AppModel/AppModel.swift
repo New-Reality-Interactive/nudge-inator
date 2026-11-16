@@ -581,8 +581,11 @@ final class AppModel {
     /// alarm stops if it is ringing (#124), and its nudges already in Notification Center go (#156).
     /// The due times are read first: Delete forgets them. A received reminder's Remove (ticket 200)
     /// is the same, and its sync state goes from the sharing store; a sharing store that won't keep
-    /// that leaves a sync state with no reminder, which nothing reads.
-    func delete(_ reminderID: Reminder.ID) {
+    /// that leaves a sync state with no reminder, which nothing reads. Returns whether the reminder
+    /// was there and is gone, so VoiceOver confirms only a Remove that took (#221).
+    @discardableResult
+    func delete(_ reminderID: Reminder.ID) -> Bool {
+        guard engine.reminders.contains(where: { $0.id == reminderID }) else { return false }
         if let copy = engine.reminders.first(where: { $0.id == reminderID && $0.isReceived }) {
             // Before the sync state goes: it holds "Don't share this one" (ticket 206).
             sharing?.statusReporter.removing(copy)
@@ -598,21 +601,25 @@ final class AppModel {
             alarms.stopRinging(of: reminderID, dueAt: dueTimes)
             notifications.removeDeliveredNotifications(of: reminderID)
         }, storeChange: { try $0.delete(reminderID) })
+        return !engine.reminders.contains { $0.id == reminderID }
     }
 
     /// Accept on a received reminder waiting to be accepted (Ask me first, ticket 203): it starts as
     /// the engine's `accept(_:)` says, and the sender is told it started. Accepting anything else is
     /// ignored and tells no one. A sharing store that won't keep the receipt leaves the copy started
-    /// and the sender seeing it waiting; that is logged.
-    func accept(_ reminderID: Reminder.ID) {
-        guard let waiting = engine.reminders.first(where: { $0.id == reminderID && $0.isWaiting }) else { return }
+    /// and the sender seeing it waiting; that is logged. Returns whether it started, so VoiceOver
+    /// confirms only an Accept that took (#221).
+    @discardableResult
+    func accept(_ reminderID: Reminder.ID) -> Bool {
+        guard let waiting = engine.reminders.first(where: { $0.id == reminderID && $0.isWaiting }) else { return false }
         perform { $0.accept(reminderID) }
-        guard engine.reminders.contains(where: { $0.id == reminderID && !$0.isWaiting }) else { return }
+        guard engine.reminders.contains(where: { $0.id == reminderID && !$0.isWaiting }) else { return false }
         do {
             try sharing?.accepted(waiting)
         } catch {
             Self.logger.error("An accepted reminder's receipt couldn't be sent: \(error, privacy: .public)")
         }
+        return true
     }
 
     /// Disconnect, and the other person's Continue on Connection Ended (ticket 197): ends the

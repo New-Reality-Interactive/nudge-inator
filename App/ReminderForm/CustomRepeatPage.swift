@@ -25,6 +25,7 @@ struct CustomRepeatPage: View {
                     .font(.subheadline.bold())
                     .foregroundStyle(Color(uiColor: .label))
                     .textCase(nil)
+                    .notAHeading()
             }
             // The reminder may start nudging while the page is open (ticket 13). Each control
             // takes the lock itself, so the headings stay headings (ticket 16).
@@ -271,6 +272,7 @@ struct CustomRepeatLockSection: View {
             .font(.footnote)
             .foregroundStyle(Color(uiColor: .secondaryLabel))
             .textCase(nil)
+            .notAHeading()
         }
     }
 }

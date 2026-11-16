@@ -28,6 +28,6 @@ struct SentFilterSheet: FilterSheetSummary {
         hasChanges = draft != applied.keepingConnectedPeople(in: sharing)
         canReset = !draft.isEmpty
         let shown = SentScreen(engine: engine, sharing: sharing, tools: SentTools(search: search, filter: draft)).shownCount
-        result = LocalizedStringResource("Apply shows \(shown) reminders.", comment: "Sent's filter sheet: above Reset. The placeholder is how many reminders Sent would show with these filters and the search as it is, one sent to two people counting once.")
+        result = LocalizedStringResource("Apply shows \(shown) reminders.", comment: "Sent's filter sheet: above Reset. The placeholder is how many reminders Sent would show with these filters and the search as it is, one sent to two people counting once. VoiceOver also speaks it when a choice changes it.")
     }
 }

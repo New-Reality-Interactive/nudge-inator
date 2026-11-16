@@ -104,10 +104,14 @@ struct ReminderDetailsView: View {
     private func togglePause(_ details: ReminderDetails) {
         guard let model else { return }
         switch details.pauseAction {
-        case .pause: model.pause(id)
+        // The button stays where it is, its label now the other action, so the change is spoken.
+        case .pause:
+            model.pause(id)
+            VoiceOverAnnouncement.post(VoiceOverAnnouncement.paused(details.title))
         case .resume:
             do {
                 try model.resume(id)
+                VoiceOverAnnouncement.post(VoiceOverAnnouncement.resumed(details.title))
             } catch {
                 isAskingForNewTime = true
             }
@@ -539,10 +543,8 @@ private struct LastOccurrenceRow: View {
 struct NotFoundView: View {
     var body: some View {
         ContentUnavailableView {
-            Label {
+            EmptyStateLabel(systemImage: "questionmark.circle") {
                 Text("Reminder Not Found", comment: "Reminder details: title when the reminder isn't there.")
-            } icon: {
-                Image(systemName: "questionmark.circle")
             }
         } description: {
             Text("It may have been deleted.", comment: "Reminder details: under \"Reminder Not Found\".")

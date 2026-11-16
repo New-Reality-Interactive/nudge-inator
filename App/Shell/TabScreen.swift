@@ -26,10 +26,8 @@ struct TabScreen<Content: View>: View {
 struct StoreUnreadableView: View {
     var body: some View {
         ContentUnavailableView {
-            Label {
+            EmptyStateLabel(systemImage: "exclamationmark.triangle") {
                 Text("Can't Open Your Reminders", comment: "Title shown when the app can't read its stored reminders, for example before the first unlock after a restart.")
-            } icon: {
-                Image(systemName: "exclamationmark.triangle")
             }
         } description: {
             Text("Your reminders are still on this iPhone, and nudges already scheduled will still come. Unlock your iPhone, then open \(Bundle.appDisplayName) again.",

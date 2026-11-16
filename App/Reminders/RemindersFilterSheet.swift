@@ -26,6 +26,6 @@ struct RemindersFilterSheet: FilterSheetSummary {
         canReset = draft != RemindersFilterChoices()
         offersFromOthers = draft.fromOthers || engine.hasReceivedReminders
         let shown = engine.remindersList(filteredBy: draft.narrowing(search: search)).items.count
-        result = LocalizedStringResource("Apply shows \(shown) reminders.", comment: "Reminders' filter sheet: above Reset. The placeholder is how many reminders the list would show with these filters and the search as it is.")
+        result = LocalizedStringResource("Apply shows \(shown) reminders.", comment: "Reminders' filter sheet: above Reset. The placeholder is how many reminders the list would show with these filters and the search as it is. VoiceOver also speaks it when a choice changes it.")
     }
 }

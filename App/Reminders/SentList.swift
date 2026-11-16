@@ -279,10 +279,8 @@ private struct NoOneToSendToView: View {
         ScrollView {
             BannerAboveEmptyState(banner: banner)
             ContentUnavailableView {
-                Label {
+                EmptyStateLabel(systemImage: "person.2") {
                     Text("No One to Send To", comment: "Reminders tab, Sent: title when this person is connected with no one.")
-                } icon: {
-                    Image(systemName: "person.2")
                 }
             } description: {
                 Text("Invite someone you trust, and what you send them shows here.", comment: "Reminders tab, Sent: under \"No One to Send To\".")
@@ -310,10 +308,8 @@ private struct NothingSentView: View {
         ScrollView {
             BannerAboveEmptyState(banner: banner)
             ContentUnavailableView {
-                Label {
+                EmptyStateLabel(systemImage: "list.bullet.clipboard") {
                     Text("Nothing Sent", comment: "Reminders tab, Sent: title when this person has sent nothing to anyone connected.")
-                } icon: {
-                    Image(systemName: "list.bullet.clipboard")
                 }
             } description: {
                 Text("Make a reminder and choose who to send it to.", comment: "Reminders tab, Sent: under \"Nothing Sent\", when someone is connected.")

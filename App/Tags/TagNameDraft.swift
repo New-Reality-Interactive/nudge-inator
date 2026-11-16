@@ -1,3 +1,4 @@
+import Foundation
 import NudgeEngine
 
 /// The name typed in the New Tag and Rename Tag sheet, checked with the engine's own rules (on a
@@ -13,6 +14,17 @@ struct TagNameDraft {
             switch error {
             case .empty: self = .empty
             case .taken(by: let existing): self = .taken(existing)
+            }
+        }
+
+        /// What the sheet shows by the field, what VoiceOver speaks when it appears, and the hint
+        /// on the dimmed Done (#221).
+        var message: LocalizedStringResource {
+            switch self {
+            case .empty:
+                LocalizedStringResource("Enter a name for the tag.", comment: "Tag sheet: shown when what was typed leaves no name, such as only a #. VoiceOver also speaks it when it appears, and as the hint of the dimmed Done.")
+            case .taken(let existing):
+                LocalizedStringResource("You already have the tag \(existing.label).", comment: "Tag sheet: shown when another tag has the name, ignoring case. VoiceOver also speaks it when it appears, and as the hint of the dimmed Done. The placeholder is that tag, such as \"#home\".")
             }
         }
     }

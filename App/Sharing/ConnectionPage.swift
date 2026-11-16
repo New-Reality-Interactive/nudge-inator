@@ -30,10 +30,8 @@ struct ConnectionPage: View {
                 page(connection)
             } else {
                 ContentUnavailableView {
-                    Label {
+                    EmptyStateLabel(systemImage: "info.circle") {
                         Text("Connection Ended", comment: "A connection's page: shown in place of the page once the connection no longer exists.")
-                    } icon: {
-                        Image(systemName: "info.circle")
                     }
                 }
             }
@@ -48,6 +46,8 @@ struct ConnectionPage: View {
                 try model?.disconnect(connection.id, choosing: choice)
                 isClosingDisconnect = true
                 disconnecting = nil
+                // The sheet and this page close, so VoiceOver lands on Connections.
+                VoiceOverAnnouncement.post(VoiceOverAnnouncement.disconnected(from: connection.name))
             }
         }
         .onChange(of: isInStore) { _, inStore in

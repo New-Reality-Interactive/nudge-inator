@@ -415,6 +415,8 @@ private struct InviteSheet: View {
                     copiedFor = connection
                 } else {
                     dismiss()
+                    // The sheet's gone, and with it what VoiceOver was on; the person is now Invited.
+                    VoiceOverAnnouncement.post(VoiceOverAnnouncement.inviteSent(to: connection.name))
                 }
             case .alreadyConnected(let connection): alreadyConnected = connection
             case .canceled: break

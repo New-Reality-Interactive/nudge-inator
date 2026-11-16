@@ -154,10 +154,8 @@ struct TagsTab: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label {
+            EmptyStateLabel(systemImage: "tag") {
                 Text("No Tags", comment: "Tags: title when there are no tags yet.")
-            } icon: {
-                Image(systemName: "tag")
             }
         } description: {
             Text("Tags are labels, like #home or #errands, that you add to reminders so you can find them together. Tap + to make one, or add one when you create or edit a reminder.", comment: "Tags: under the title when there are no tags yet: what a tag is and how to make one.")

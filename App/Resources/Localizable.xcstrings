@@ -15,6 +15,9 @@
         }
       }
     },
+    "%@ accepted. It nudges you as your own reminders do." : {
+      "comment" : "VoiceOver: spoken after Accept on a Waiting for You row on Now, as the row leaves the section. The placeholder is the reminder's title."
+    },
     "%@ at %@" : {
       "comment" : "A day and a time of day, such as \"Today at 8:02 AM\". 1: the day, such as \"Today\" or \"Tue, Oct 20\". 2: the time.\nAn invited person's page: when the invite was sent. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"7:40 AM\".\nReminder details, Schedule: the next due time. 1: \"Today\", \"Tomorrow\" or a short date. 2: the time, such as \"8:00 AM\".\nShare Activity: when an entry happened. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"7:58 AM\".",
       "localizations" : {
@@ -64,7 +67,7 @@
       "comment" : "Opening an invite while Sharing is off: under the title. The argument is the name of the person who sent the invite, such as \"Alex Morgan\"."
     },
     "%@ is Done. Its nudges have stopped." : {
-      "comment" : "VoiceOver, after Done on a nudge card or a My Day row: what the Done button's place now says. The placeholder is the reminder's title."
+      "comment" : "VoiceOver: spoken after Done on a Reminders row's action, and what a nudge card's or My Day row's Done button place says after Done. The placeholder is the reminder's title."
     },
     "%@ marked it Done" : {
       "comment" : "Body of the notification to the sender that the person they sent a reminder to marked it Done. 1: the person's name."
@@ -72,8 +75,17 @@
     "%@ owns this schedule." : {
       "comment" : "Reminder details: under Schedule of a received reminder, which only its sender can change. The placeholder is the sender's name."
     },
+    "%@ paused. It won't nudge you until you resume it." : {
+      "comment" : "VoiceOver: spoken after Pause Reminder on a reminder's details. The placeholder is the reminder's title."
+    },
     "%@ removed it" : {
       "comment" : "Body of the notification to the sender that the person they sent a reminder to removed it. 1: the person's name."
+    },
+    "%@ removed." : {
+      "comment" : "VoiceOver: spoken after Remove on a Waiting for You row on Now is confirmed, as the row goes. The placeholder is the reminder's title."
+    },
+    "%@ resumed. It nudges you when it's next due." : {
+      "comment" : "VoiceOver: spoken after Resume Reminder on a reminder's details. The placeholder is the reminder's title."
     },
     "%@ sees how the reminders they send you are going: Done, Paused, Missed or Removed, and the last 7 days of a repeating one." : {
       "comment" : "A connection's page: under Status Sharing when it's on. The argument is the other person's name, such as \"Alex Morgan\"."
@@ -789,7 +801,7 @@
       "comment" : "The New Reminder form's confirm button (a checkmark).\nThe Tags page's button that adds the typed tag to the reminder."
     },
     "Add a title to save." : {
-      "comment" : "Under the reminder form's title when it is empty, so Save is disabled."
+      "comment" : "Under the reminder form's title when it is empty, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add."
     },
     "After" : {
       "comment" : "The reminder form's End Repeat choice: the repeat ends after a number of times."
@@ -909,7 +921,7 @@
       "comment" : "A filter sheet's confirm button (a checkmark), on My Day, Reminders and Tags: applies the choices and closes the sheet.\nThe Custom repeat sheet's only button (a checkmark): it closes the sheet. Its choices are already the reminder form's repeat."
     },
     "Apply shows %lld reminders due today." : {
-      "comment" : "My Day's filter sheet: above Reset. The placeholder is how many reminders due today My Day would show with these filters.",
+      "comment" : "My Day's filter sheet: above Reset. The placeholder is how many reminders due today My Day would show with these filters. VoiceOver also speaks it when a choice changes it.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -942,7 +954,7 @@
       }
     },
     "Apply shows %lld reminders." : {
-      "comment" : "Reminders' filter sheet: above Reset. The placeholder is how many reminders the list would show with these filters and the search as it is.\nSent's filter sheet: above Reset. The placeholder is how many reminders Sent would show with these filters and the search as it is, one sent to two people counting once.",
+      "comment" : "Reminders' filter sheet: above Reset. The placeholder is how many reminders the list would show with these filters and the search as it is. VoiceOver also speaks it when a choice changes it.\nSent's filter sheet: above Reset. The placeholder is how many reminders Sent would show with these filters and the search as it is, one sent to two people counting once. VoiceOver also speaks it when a choice changes it.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -975,7 +987,7 @@
       }
     },
     "Apply shows %lld tags." : {
-      "comment" : "Tags' filter sheet: above Reset. The placeholder is how many tags the list would show with this filter and the search as it is.",
+      "comment" : "Tags' filter sheet: above Reset. The placeholder is how many tags the list would show with this filter and the search as it is. VoiceOver also speaks it when a choice changes it.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1262,6 +1274,9 @@
     "Disconnect from %@" : {
       "comment" : "Disconnect's sheet title. The argument is the other person's name, such as \"Alex Morgan\"."
     },
+    "Disconnected from %@." : {
+      "comment" : "VoiceOver: spoken after Disconnect's sheet ends a connection, as the connection's page closes. The placeholder is the other person's name, such as \"Alex Morgan\"."
+    },
     "Don't share this one" : {
       "comment" : "Reminder details: on a received reminder, the switch that keeps its status from its sender."
     },
@@ -1395,7 +1410,7 @@
       "comment" : "The reminder form's row under Repeat, which opens a menu of when the repeat ends."
     },
     "Enter a name for the tag." : {
-      "comment" : "Tag sheet: shown when what was typed leaves no name, such as only a #."
+      "comment" : "Tag sheet: shown when what was typed leaves no name, such as only a #. VoiceOver also speaks it when it appears, and as the hint of the dimmed Done."
     },
     "Escalating" : {
       "comment" : "Pace name: the waits between nudges come from the strength and shrink as the nudging goes on."
@@ -1648,6 +1663,9 @@
     },
     "Invite Unavailable" : {
       "comment" : "Accepting an invite: title of the message shown when the invite no longer works for this person."
+    },
+    "Invite sent to %@." : {
+      "comment" : "VoiceOver: spoken as Invite Someone or Invite Again closes after the invite went by Messages or Mail. The placeholder is the invited person's name, such as \"Riley Park\"."
     },
     "Invite someone you trust, and what you send them shows here." : {
       "comment" : "Reminders tab, Sent: under \"No One to Send To\"."
@@ -2494,10 +2512,10 @@
       "comment" : "An invited person's page: under Couldn't Cancel the Invite."
     },
     "The repeat ends before it starts. Change its end date." : {
-      "comment" : "Under the reminder form's start when End Repeat's end date is before the start, so Save is disabled."
+      "comment" : "Under the reminder form's start when End Repeat's end date is before the start, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add."
     },
     "The repeat has already ended. Change when it ends." : {
-      "comment" : "Under the reminder form's start when the repeat has no times left, so Save is disabled."
+      "comment" : "Under the reminder form's start when the repeat has no times left, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add."
     },
     "Their Delivery Mode" : {
       "comment" : "How Sharing Works, Send a Reminder: the row about the recipient's Delivery Mode, the connection's setting."
@@ -2685,7 +2703,7 @@
       "comment" : "A tag's screen after the tag was deleted."
     },
     "This time has passed. Choose a later time." : {
-      "comment" : "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled."
+      "comment" : "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add."
     },
     "Through Messages, Mail or Copy Link. Nothing is sent until you tap Send." : {
       "comment" : "How Sharing Works, Connect: under \"Send the Invite\". Messages, Mail and Copy Link are the ways the invite can be sent."
@@ -2801,7 +2819,7 @@
       "comment" : "How Sharing Works, Send Each Other Reminders: the picture's pill for the person reading, beside an iPhone."
     },
     "You already have the tag %@." : {
-      "comment" : "Tag sheet: shown when another tag has the name, ignoring case. The placeholder is that tag, such as \"#home\"."
+      "comment" : "Tag sheet: shown when another tag has the name, ignoring case. VoiceOver also speaks it when it appears, and as the hint of the dimmed Done. The placeholder is that tag, such as \"#home\"."
     },
     "You and %@ are already connected." : {
       "comment" : "Invite: under Already Connected. The argument is the person's name, such as \"Riley Park\"."

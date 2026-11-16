@@ -82,6 +82,21 @@ final class ReminderForm: Identifiable {
         /// A repeat that has already ended, so it would never fall due again. A saved reminder
         /// that keeps its start and repeat is fine, so it can still be renamed.
         case noTimesLeft
+
+        /// What the footer shows under the field it's about, what VoiceOver speaks when it
+        /// appears, and the hint on the dimmed Save or Add (#221).
+        var message: LocalizedStringResource {
+            switch self {
+            case .noTitle:
+                LocalizedStringResource("Add a title to save.", comment: "Under the reminder form's title when it is empty, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add.")
+            case .pastTime:
+                LocalizedStringResource("This time has passed. Choose a later time.", comment: "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add.")
+            case .endsBeforeStart:
+                LocalizedStringResource("The repeat ends before it starts. Change its end date.", comment: "Under the reminder form's start when End Repeat's end date is before the start, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add.")
+            case .noTimesLeft:
+                LocalizedStringResource("The repeat has already ended. Change when it ends.", comment: "Under the reminder form's start when the repeat has no times left, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add.")
+            }
+        }
     }
 
     /// The app's engine as it is now, so the lock follows the model (a Done from a notification

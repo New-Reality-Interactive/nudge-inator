@@ -156,6 +156,17 @@ struct AskMeFirstTests {
         #expect(riley.adapter.submitted.count == sentBefore)
     }
 
+    /// Whether Accept started it, so VoiceOver confirms only an Accept that did (#221).
+    @Test func acceptSaysWhetherTheReminderStarted() async throws {
+        let (alex, riley) = try await phones()
+        try await send(pills, from: alex, to: riley)
+        let copy = try copy(on: riley)
+
+        #expect(riley.model.accept(copy.id))
+        #expect(!riley.model.accept(copy.id))
+        #expect(!riley.model.accept(walk.id))
+    }
+
     // MARK: Remove
 
     /// The same Remove as a started copy's (#200), so the sender learns of it as of that one (#189's
@@ -171,6 +182,16 @@ struct AskMeFirstTests {
         #expect(now(on: riley).waiting.isEmpty)
         #expect(!riley.model.engine.reminders.contains { $0.id == copy.id })
         #expect(riley.sharing.data.receivedSyncStates.isEmpty)
+    }
+
+    /// Whether Remove removed it, so VoiceOver confirms only a Remove that did (#221).
+    @Test func removeSaysWhetherTheReminderWent() async throws {
+        let (alex, riley) = try await phones()
+        try await send(pills, from: alex, to: riley)
+        let copy = try copy(on: riley)
+
+        #expect(riley.model.delete(copy.id))
+        #expect(!riley.model.delete(copy.id))
     }
 
     // MARK: The details

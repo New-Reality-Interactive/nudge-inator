@@ -21,9 +21,9 @@ struct NowTab: View {
                     NowList(screen: screen, reach: model?.engine.reach, now: context.date) { reminderID in
                         model?.markDone(reminderID)
                     } accept: { reminderID in
-                        model?.accept(reminderID)
+                        model?.accept(reminderID) ?? false
                     } remove: { reminderID in
-                        model?.delete(reminderID)
+                        model?.delete(reminderID) ?? false
                     } openDetails: { reminderID in
                         path.append(OpenedReminder(id: reminderID))
                     }
@@ -49,10 +49,10 @@ private struct NowList: View {
     let reach: Reach?
     let now: Date
     let markDone: (Reminder.ID) -> Void
-    /// Starts a waiting copy, which nudges from then on.
-    let accept: (Reminder.ID) -> Void
-    /// Remove on a Waiting for You row, once the person confirmed it.
-    let remove: (Reminder.ID) -> Void
+    /// Starts a waiting copy, which nudges from then on. Returns whether it started.
+    let accept: (Reminder.ID) -> Bool
+    /// Remove on a Waiting for You row, once the person confirmed it. Returns whether it went.
+    let remove: (Reminder.ID) -> Bool
     let openDetails: (Reminder.ID) -> Void
 
     /// A card Done was chosen on with VoiceOver, kept until VoiceOver moves on.
@@ -156,6 +156,7 @@ private struct NowHeader: View {
         VStack(alignment: .leading, spacing: Design.Spacing.s3) {
             Text(Self.styled(subhead))
                 .subheadStyle()
+                .notAHeading()
             // Between the subhead and Nudging, as the mockup's `viewNow` puts it.
             if let reach {
                 PermissionBanners(reach: reach)
