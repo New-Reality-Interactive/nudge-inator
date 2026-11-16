@@ -605,10 +605,13 @@ The Reminders tab's tools, in its layout, so they're learned once.
 
 ### Swipe actions
 - **Token:** `swipe-done`, `swipe-delete`, `swipe-edit`. Trailing swipe shows Done: green tile, white
-  `checkmark` and the word "Done". On the Reminders tab, Delete sits beside it: red tile, white
+  `checkmark` and the word "Done". On the Reminders tab's Mine, Edit sits beside it: blue tile, white
+  `pencil` and the word "Edit", which opens the Edit Reminder form; then Delete: red tile, white
   `trash` and the word "Delete". Done is offered only while Nudging, at the edge; a row that isn't
-  Nudging shows Delete alone. On the Tags tab, Edit is at the edge with Delete beside it: blue tile,
-  white `pencil` and the word "Edit", which opens the rename sheet. Delete asks first. Nothing is on
+  Nudging shows Edit at the edge with Delete beside it. Edit is on the person's own rows only: a
+  received copy's row shows Remove (and Done while Nudging), since its sender owns what it says
+  (#429). On Sent and on the Tags tab, Edit is at the edge with Delete beside it; a tag's Edit opens
+  the rename sheet, a sent reminder's its Edit Reminder form. Delete asks first. Nothing is on
   the leading edge, there's no full swipe (ADR 0001), and each tile always shows its glyph and its
   word. There is no Snooze.
 - **Shape:** a tile is the same 50 pt circle on every screen, holding the white glyph, with the word
@@ -619,15 +622,16 @@ The Reminders tab's tools, in its layout, so they're learned once.
   least 48 pt tall (`Design.Size.swipeRowContentHeight`), which makes 78 pt with the list's padding.
   This is why Reminders rows are taller than the 44 pt `{spacing.row-min}`.
 - **Where each swipe appears:** a Nudging row offers Done as a trailing swipe on every screen it
-  appears on (Now, My Day and Reminders), and Done means the same on each. Delete's swipe is on
-  the Reminders and Tags tabs, where reminders and tags are managed, and Edit's is on Tags. Now and
+  appears on (Now, My Day and Reminders), and Done means the same on each. Delete's and Edit's
+  swipes are on the Reminders and Tags tabs, where reminders and tags are managed. Now and
   My Day are for acting on the day, so a destructive swipe never sits beside Done there. On those
   two screens a row that isn't Nudging (Coming up, Last 24 Hours, closed) has no swipe.
 - **A swipe is a shortcut,** never the only way: Done is also the Done button on Now and My Day and
-  on the details page, Delete is also on the details page, and VoiceOver gets both as the row's own
-  actions. A new screen that adds swipes follows this section. **The exception is a tag:** its Edit
-  and Delete are reachable by the swipe and by VoiceOver actions only, since the Tags tab has no Edit
-  mode (spec #104, Decision 50).
+  on the details page, Edit and Delete are also on the details page, and VoiceOver gets each as the
+  row's own actions. A new screen that adds swipes follows this section, and on the Reminders and
+  Tags tabs gets its tiles and VoiceOver actions from one list (`rowActions`, #429). **The exception
+  is a tag:** its Edit and Delete are reachable by the swipe and by VoiceOver actions only, since
+  the Tags tab has no Edit mode (spec #104, Decision 50).
 - **VoiceOver after a delete:** iOS decides where it lands, and the app doesn't move it. After a tag's
   Delete it landed on a nearby row, the heading, New Tag or a row further away, and after the last tag
   on the bar's title, an empty-looking box one swipe from the visible title. Moving focus from code
@@ -694,8 +698,11 @@ sharing paused and offline banner.
   `{colors.secondary-label}`, as Skipped and Paused are.
 - **Sent rows:** as Reminders tab rows, due time then title, with a detail line ("Delivered", "Not
   sharing status", "Not sharing this one", "Waiting for them to accept", "Not delivered yet") and the
-  status label trailing. There's no swipe. Group headers name the person and, trailing, whether they
-  share status.
+  status label trailing. A row swipes to Edit at the edge and Delete beside it, as a tag does
+  (Swipe actions, #429): Edit opens the sent reminder's Edit Reminder form, and Delete asks the
+  details' question first. There's no Done: a sent reminder doesn't nudge the sender. Its content is
+  at least 48 pt tall, as every row with a swipe. Group headers name the person and, trailing,
+  whether they share status.
 - **Sent's tools:** the Reminders tab's search field, count header, Filter and Sort in the same places.
   The filter sheet ("Filter Sent") has People, Status, Strength and Due Date, and Sort orders the
   reminders inside each person's group. Sent has no tags, and no tools in its empty states. The count

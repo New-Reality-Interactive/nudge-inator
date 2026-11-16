@@ -79,7 +79,6 @@ private struct TagRow: View {
     let rename: () -> Void
     let delete: () -> Void
 
-    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
     @State private var isConfirmingDelete = false
 
     var body: some View {
@@ -87,18 +86,10 @@ private struct TagRow: View {
             TagRowContent(summary: summary)
                 .frame(minHeight: Design.Size.swipeRowContentHeight)
         }
-        .accessibilityActions {
-            Button(action: rename) { editLabel }
-            Button { isConfirmingDelete = true } label: { deleteLabel }
-        }
-        // Not while VoiceOver is running: it lists a row's swipe actions among its actions, so
-        // each would be offered twice.
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            if !voiceOverEnabled {
-                SwipeEditTile(label: editLabel, action: rename)
-                SwipeDeleteTile(label: deleteLabel) { isConfirmingDelete = true }
-            }
-        }
+        .rowActions([
+            RowAction(kind: .edit, label: editLabel, action: rename),
+            RowAction(kind: .delete, label: deleteLabel, action: { isConfirmingDelete = true }),
+        ])
         // The system's confirmation dialog with its title showing, as Apple's own apps ask (#286).
         // From a tile, iOS 27.0 (simulator) draws a popover with Delete alone: a tap outside it, or
         // VoiceOver's "Dismiss popup", closes it with nothing deleted. As an action sheet, its Cancel does.

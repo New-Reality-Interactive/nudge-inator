@@ -34,6 +34,9 @@ struct RemindersScreen {
         var title: String { reminder.title }
         /// Done is offered only while Nudging (DESIGN.md, Swipe actions). Every row offers Delete.
         var offersDone: Bool { status == .nudging }
+        /// Edit is offered on the person's own rows (#429). A received copy's sender owns what it
+        /// says, so its row offers Remove alone.
+        var offersEdit: Bool { !reminder.isReceived }
 
         /// What VoiceOver reads for the row: the title first, then who sent it and its strength
         /// (which only a received row shows), the status, the due time and the tags.

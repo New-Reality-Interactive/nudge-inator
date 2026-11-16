@@ -48,6 +48,8 @@ struct RemindersTab: View {
     @State private var mineOrSentChoice = MineOrSent.mine
     /// Sent's own search, Sort and Filter (tickets 328 and 329), apart from Mine's.
     @State private var sentTools = SentTools()
+    /// The edit form a row's Edit opened (#429): a Mine row's, or a Sent row's.
+    @State private var editForm: ReminderForm?
 
     /// The Mine | Sent control's choices.
     enum MineOrSent: Hashable, CaseIterable, Identifiable {
@@ -75,7 +77,9 @@ struct RemindersTab: View {
                             manageConnections: manageConnections,
                             countFocusRequests: countFocusRequests,
                             openDetails: { path.append(OpenedSentReminder(id: $0)) },
-                            clearSearchAndFilters: { sentTools.clearSearchAndFilter() }
+                            clearSearchAndFilters: { sentTools.clearSearchAndFilter() },
+                            edit: { editForm = ReminderForm(editingSent: $0, in: model) },
+                            delete: { model.deleteSentLoggingFailure($0) }
                         )
                     } else {
                         mine
@@ -107,6 +111,7 @@ struct RemindersTab: View {
                 if !sentHasTools { sentTools.clearSearchAndFilter() }
             }
             .navigationTitle(Text(AppTab.reminders.title))
+            .sheet(item: $editForm) { ReminderFormSheet(form: $0) }
             .reminderDetailsDestination()
             .navigationDestination(for: OpenedSentReminder.self) { SentReminderDetailsView(id: $0.id) }
             .toolbar {
@@ -191,6 +196,9 @@ struct RemindersTab: View {
                 clearFilters: clearSearchAndFilter,
                 openDetails: { path.append(OpenedReminder(id: $0)) },
                 markDone: { model?.markDone($0) },
+                edit: { id in
+                    if let model { editForm = ReminderForm(editing: id, in: model) }
+                },
                 delete: { model?.delete($0) }
             )
         } else {
@@ -319,6 +327,7 @@ private struct RemindersListView: View {
     let clearFilters: () -> Void
     let openDetails: (Reminder.ID) -> Void
     let markDone: (Reminder.ID) -> Void
+    let edit: (Reminder.ID) -> Void
     let delete: (Reminder.ID) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -333,6 +342,7 @@ private struct RemindersListView: View {
                             row: row,
                             openDetails: { openDetails(row.id) },
                             markDone: { markDone(row.id) },
+                            edit: { edit(row.id) },
                             delete: { delete(row.id) }
                         )
                     }
@@ -388,16 +398,17 @@ struct RemindersNoMatchView<Wording: NoMatchWording>: View {
 /// who sent a received one with its strength, and the status label. It opens the reminder's
 /// details. VoiceOver reads `Row.voiceOverLabel`.
 ///
-/// The trailing swipe offers Done while Nudging, at the edge, and Delete on every row, which asks
-/// first. Nothing is on the leading edge and there's no full swipe (ADR 0001). VoiceOver gets
-/// the same as the row's own actions, since the row has no Done button.
+/// The trailing swipe offers Done while Nudging, at the edge, then Edit on the person's own rows
+/// (#429), and Delete on every row, which asks first. Nothing is on the leading edge and there's no
+/// full swipe (ADR 0001). VoiceOver gets the same as the row's own actions, since the row has no
+/// Done or Edit button.
 private struct RemindersRowView: View {
     let row: RemindersScreen.Row
     let openDetails: () -> Void
     let markDone: () -> Void
+    let edit: () -> Void
     let delete: () -> Void
 
-    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOverEnabled
     @State private var isConfirmingDelete = false
 
     var body: some View {
@@ -418,27 +429,25 @@ private struct RemindersRowView: View {
             ReminderStatusLabel(status: row.status)
         }
         .accessibilityLabel(Text(row.voiceOverLabel))
-        .accessibilityActions {
-            if row.offersDone {
-                // The row stays, its status now Done, and VoiceOver on it doesn't read it again.
-                Button {
-                    markDone()
-                    VoiceOverAnnouncement.post(VoiceOverAnnouncement.done(row.title))
-                } label: { doneLabel }
-            }
-            Button { isConfirmingDelete = true } label: { deleteLabel }
-        }
-        // Not while VoiceOver is running: it lists a row's swipe actions among its actions
-        // (My Day's rows showed it on the phone), so each would be offered twice.
-        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            if !voiceOverEnabled {
-                if row.offersDone {
-                    SwipeDoneTile(label: doneLabel, action: markDone)
-                }
-                SwipeDeleteTile(label: deleteLabel) { isConfirmingDelete = true }
-            }
-        }
+        .rowActions(actions)
         .deleteReminderConfirmation(title: row.title, kind: DeletedReminderKind(isReceived: row.reminder.isReceived), isPresented: $isConfirmingDelete, confirm: delete)
+    }
+
+    /// Done while Nudging, at the edge, then Edit on the person's own rows, then Delete.
+    private var actions: [RowAction] {
+        var actions: [RowAction] = []
+        if row.offersDone {
+            // The row stays, its status now Done, and VoiceOver on it doesn't read it again.
+            actions.append(RowAction(kind: .done, label: doneLabel, action: markDone, voiceOverAction: {
+                markDone()
+                VoiceOverAnnouncement.post(VoiceOverAnnouncement.done(row.title))
+            }))
+        }
+        if row.offersEdit {
+            actions.append(RowAction(kind: .edit, label: editLabel, action: edit))
+        }
+        actions.append(RowAction(kind: .delete, label: deleteLabel, action: { isConfirmingDelete = true }))
+        return actions
     }
 
     /// Tokens, joined by spaces: they are not a sentence. The filter's are bold (DESIGN.md).
@@ -454,6 +463,10 @@ private struct RemindersRowView: View {
 
     private var doneLabel: Text {
         Text("Done", comment: "Reminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.")
+    }
+
+    private var editLabel: Text {
+        Text("Edit", comment: "Reminders tab: a row's swipe action and VoiceOver action that opens the Edit Reminder form.")
     }
 
     /// Remove on a received reminder's row (ticket 200), as the mockup's swipe says it.

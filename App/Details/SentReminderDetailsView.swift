@@ -30,17 +30,7 @@ struct SentReminderDetailsView: View {
         .sheet(item: $form) { form in
             ReminderFormSheet(form: form)
         }
-        .alert(
-            Text("Couldn't Delete the Reminder", comment: "A sent reminder's details: title of the message shown when Delete couldn't be kept, so nothing was canceled."),
-            isPresented: $isShowingCouldntDelete
-        ) {
-            Button {
-            } label: {
-                Text("OK", comment: "A sent reminder's details: dismisses the message that the reminder couldn't be deleted.")
-            }
-        } message: {
-            Text("Nothing was canceled. Try again.", comment: "A sent reminder's details: under Couldn't Delete the Reminder.")
-        }
+        .couldntDeleteSentAlert(isPresented: $isShowingCouldntDelete)
     }
 
     private var current: SentReminderDetails? {
@@ -71,21 +61,36 @@ struct SentReminderDetailsView: View {
 
     private func openEdit(_ details: SentReminderDetails) {
         guard let model else { return }
-        form = ReminderForm(engine: { model.engine }, editingSent: details.reminder, now: { .now })
+        form = ReminderForm(editingSent: id, in: model)
     }
 
     /// A store that won't keep the delete leaves the reminder as it was, on screen and on every
     /// copy, so the screen stays and says so.
     private func delete(_ details: SentReminderDetails) {
-        do {
-            try model?.deleteSent(id)
-        } catch {
-            AppModel.logger.error("A sent reminder couldn't be deleted: \(error, privacy: .public)")
+        if let model, !model.deleteSentLoggingFailure(id) {
             isShowingCouldntDelete = true
             return
         }
         deleted = details
         dismiss()
+    }
+}
+
+extension View {
+    /// Said when a sent reminder's Delete couldn't be kept, from its details or a Sent row's swipe
+    /// (#429): the reminder stays, on screen and on every copy.
+    func couldntDeleteSentAlert(isPresented: Binding<Bool>) -> some View {
+        alert(
+            Text("Couldn't Delete the Reminder", comment: "A sent reminder's details or Sent row: title of the message shown when Delete couldn't be kept, so nothing was canceled."),
+            isPresented: isPresented
+        ) {
+            Button {
+            } label: {
+                Text("OK", comment: "A sent reminder's details or Sent row: dismisses the message that the reminder couldn't be deleted.")
+            }
+        } message: {
+            Text("Nothing was canceled. Try again.", comment: "A sent reminder's details or Sent row: under Couldn't Delete the Reminder.")
+        }
     }
 }
 

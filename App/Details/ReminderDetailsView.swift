@@ -97,7 +97,7 @@ struct ReminderDetailsView: View {
 
     private func openEdit() {
         guard let model else { return }
-        form = ReminderForm(engine: { model.engine }, editing: id, now: { .now }, senders: model.senders)
+        form = ReminderForm(editing: id, in: model)
     }
 
     /// Pause, or Resume, which asks for a new time when there is none left to resume at.

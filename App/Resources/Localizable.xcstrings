@@ -1196,7 +1196,7 @@
       "comment" : "Settings: title of the message shown when deleting everything failed."
     },
     "Couldn't Delete the Reminder" : {
-      "comment" : "A sent reminder's details: title of the message shown when Delete couldn't be kept, so nothing was canceled."
+      "comment" : "A sent reminder's details or Sent row: title of the message shown when Delete couldn't be kept, so nothing was canceled."
     },
     "Couldn't Disconnect" : {
       "comment" : "Disconnect's sheet and Connection Ended: title of the message shown when the disconnect couldn't be saved."
@@ -1232,7 +1232,7 @@
       "comment" : "Settings: row that opens the page setting the pace every new reminder starts with. Under it, that pace, such as \"Consistent · 10 min\".\nTitle of the page in Settings that sets the pace every new reminder starts with."
     },
     "Delete" : {
-      "comment" : "Reminders tab: a row's swipe action and VoiceOver action that asks before deleting the reminder.\nSettings: confirms deleting every reminder, tag and all history.\nTags: a row's swipe action and VoiceOver action that asks before deleting the tag."
+      "comment" : "Reminders tab, Sent: a row's swipe action and VoiceOver action that asks before deleting the sent reminder from everyone's iPhone.\nReminders tab: a row's swipe action and VoiceOver action that asks before deleting the reminder.\nSettings: confirms deleting every reminder, tag and all history.\nTags: a row's swipe action and VoiceOver action that asks before deleting the tag."
     },
     "Delete %@?" : {
       "comment" : "Tags: title of the question that asks before deleting a tag. The placeholder is the tag, such as \"#home\"."
@@ -1250,7 +1250,7 @@
       "comment" : "Tags: confirms deleting the tag, as Delete Reminder does for a reminder. The reminders that have it are kept."
     },
     "Delete “%@”?" : {
-      "comment" : "Asked before deleting a reminder, from its details, a Reminders tab row, or a sent reminder's details. The placeholder is its title."
+      "comment" : "Asked before deleting a reminder, from its details, a Reminders tab row, or a sent reminder's details or Sent row. The placeholder is its title."
     },
     "Deletes them and cancels their nudges and alarms." : {
       "comment" : "Disconnect's and Turn Off Sharing's sheets: under Remove."
@@ -1400,7 +1400,7 @@
       "comment" : "Reminders tab's Sort menu, sorted by Due Date: the earliest due time at the top."
     },
     "Edit" : {
-      "comment" : "Reminder details: the toolbar button that opens the Edit Reminder form.\nTags: a row's swipe action and VoiceOver action that opens the sheet that renames the tag."
+      "comment" : "Reminder details: the toolbar button that opens the Edit Reminder form.\nReminders tab, Sent: a row's swipe action and VoiceOver action that opens the sent reminder's Edit Reminder form.\nReminders tab: a row's swipe action and VoiceOver action that opens the Edit Reminder form.\nTags: a row's swipe action and VoiceOver action that opens the sheet that renames the tag."
     },
     "Edit %@" : {
       "comment" : "VoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title."
@@ -1960,7 +1960,7 @@
       "comment" : "Now: the Coming Up section when nothing is due in the next 7 days."
     },
     "Nothing was canceled. Try again." : {
-      "comment" : "A sent reminder's details: under Couldn't Delete the Reminder."
+      "comment" : "A sent reminder's details or Sent row: under Couldn't Delete the Reminder."
     },
     "Nothing was deleted. Your reminders and their nudges are as they were. Try again." : {
       "comment" : "Settings: under the message shown when deleting everything failed."
@@ -2114,7 +2114,7 @@
       }
     },
     "OK" : {
-      "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nA sent reminder's details: dismisses the message that the reminder couldn't be deleted.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nDisconnect's sheet and Connection Ended: dismisses Couldn't Disconnect.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the Link Copied message and closes the sheet.\nInvite: dismisses the message that the invite couldn't be made.\nSettings and Turn Off Sharing's sheet: dismisses Couldn't Turn Off Sharing.\nSettings: dismisses the message that deleting failed.\nThe Apple Account Changed sheet: closes it.\nThe Edit Reminder form: closes the form of a sent reminder that was deleted while it was open.\nThe reminder form: dismisses the message that the reminder couldn't be sent."
+      "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nA sent reminder's details or Sent row: dismisses the message that the reminder couldn't be deleted.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nDisconnect's sheet and Connection Ended: dismisses Couldn't Disconnect.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the Link Copied message and closes the sheet.\nInvite: dismisses the message that the invite couldn't be made.\nSettings and Turn Off Sharing's sheet: dismisses Couldn't Turn Off Sharing.\nSettings: dismisses the message that deleting failed.\nThe Apple Account Changed sheet: closes it.\nThe Edit Reminder form: closes the form of a sent reminder that was deleted while it was open.\nThe reminder form: dismisses the message that the reminder couldn't be sent."
     },
     "Off" : {
       "comment" : "A connection's page and the Connected sheet: Status Sharing is off.\nReminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off."
