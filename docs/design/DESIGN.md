@@ -666,12 +666,14 @@ sharing paused and offline banner.
   the How Sharing Works sheet (#423).
 - **How Sharing Works sheet** (mockup `2026-11-15-sharing-tutorial`, #423): four pages in an inset
   grouped list, inline title How Sharing Works. Each page has decorative pills (an SF Symbol and a
-  word on `tertiary-system-fill`, `arrow.right` between them in `{colors.secondary-label}`), hidden
+  word in `{colors.label}`, 8 pt apart, on `tertiary-system-fill`, `arrow.right` between them in
+  `{colors.secondary-label}`; stacked with `arrow.down` where they don't fit on one line), hidden
   from VoiceOver; a centered heading in `{typography.title2}` bold; then a lead in
   `{typography.body}` and rows with a `{colors.tile-blue}` tile, a title in `{typography.body}` and a
   line under it in `{typography.subhead}` `{colors.secondary-label}`, or, on Connect, three numbered
-  steps in accent circles (Accent's one exception) and a footer. Rows stack at the accessibility
-  sizes, as Settings rows do. Below them, page dots (accent for this page, separator for
+  steps in accent circles (Accent's one exception; capped at 44 pt, dividers from the circle's
+  edge) and a footer. Rows stack at the accessibility
+  sizes, as Settings rows do. Below them, with no divider between, page dots (accent for this page, separator for
   the others; VoiceOver reads "Page 2 of 4") and the prominent Continue, Done on the last page.
   Back (`chevron.backward`) is top left from page 2 and Close (the system's close role, drawn `xmark`) top
   right on every page, so the last page shows Close, Back and Done together, which the HIG's Sheets

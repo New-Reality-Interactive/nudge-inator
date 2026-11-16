@@ -31,6 +31,8 @@ struct SharingTutorialSheet: View {
                     .controlSize(.large)
                 }
                 .listRowBackground(Color.clear)
+                // No divider between the dots and the button, as the mockup has none (#423's phone check).
+                .listRowSeparator(.hidden)
                 .listSectionSpacing(Design.Spacing.s2)
             }
             // A new page starts at its top, not where the last one was scrolled to.
@@ -87,10 +89,11 @@ private struct PageTop: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Design.Spacing.s3) {
-            // Pills side by side where they fit, else stacked, as at the largest text sizes.
+            // Pills side by side where they fit on one line each, else stacked, with a down arrow,
+            // as at the largest text sizes in portrait (#423's phone check).
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: Design.Spacing.s3) { art }
-                VStack(spacing: Design.Spacing.s2) { art }
+                HStack(spacing: Design.Spacing.s3) { art(arrow: "arrow.right") }
+                VStack(spacing: Design.Spacing.s2) { art(arrow: "arrow.down") }
             }
             .frame(maxWidth: .infinity)
             .accessibilityHidden(true)
@@ -107,21 +110,24 @@ private struct PageTop: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    @ViewBuilder private var art: some View {
+    /// Drawn by hand, not as a `Label`: in a list a label tints its icon with the accent, and at
+    /// the largest sizes stacks and clips inside the pill (#423's phone check). In the label color
+    /// with an 8 pt gap, as the mockup's `.pill`.
+    @ViewBuilder private func art(arrow: String) -> some View {
         ForEach(page.art.indices, id: \.self) { index in
             switch page.art[index] {
             case .pill(let symbol, let text):
-                Label {
-                    Text(text)
-                } icon: {
+                HStack(spacing: Design.Spacing.s2) {
                     Image(systemName: symbol)
+                    Text(text)
                 }
                 .font(.subheadline)
+                .foregroundStyle(Color(uiColor: .label))
                 .padding(.horizontal, Design.Spacing.s4)
                 .padding(.vertical, Design.Spacing.s2)
                 .background(Capsule().fill(Color(uiColor: .tertiarySystemFill)))
             case .arrow:
-                Image(systemName: "arrow.right")
+                Image(systemName: arrow)
                     .font(.title3)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
@@ -168,14 +174,26 @@ private struct StepRow: View {
 
     @ScaledMetric(relativeTo: .footnote) private var circle: CGFloat = Design.Size.stepNumber
 
+    /// Not past the least tap height, as a row's tile (#423's phone check: it grew to twice that).
+    private var cappedCircle: CGFloat {
+        min(circle, Design.Spacing.rowMin)
+    }
+
     var body: some View {
         SizeAdaptiveStack(rowAlignment: .top, rowSpacing: Design.Spacing.s3, stackedSpacing: Design.Spacing.s2) {
             Text(number, format: .number)
                 .font(.footnote.bold())
+                // The number shrinks to stay inside the capped circle at the largest sizes.
+                .minimumScaleFactor(0.5)
+                .lineLimit(1)
                 .foregroundStyle(Color.white)
-                .frame(width: circle, height: circle)
+                .frame(width: cappedCircle, height: cappedCircle)
                 .background(Circle().fill(Color.accentColor))
             RowText(title: step.title, text: step.text)
+        }
+        // Dividers start at the circle's edge, as the mockup's step list draws them.
+        .alignmentGuide(.listRowSeparatorLeading) { dimensions in
+            dimensions[.leading]
         }
         .accessibilityElement(children: .combine)
     }
