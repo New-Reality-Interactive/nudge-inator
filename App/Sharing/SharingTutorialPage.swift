@@ -115,13 +115,18 @@ enum SharingTutorialPage: CaseIterable {
     }
 }
 
-/// Where the How Sharing Works sheet is: Continue moves forward, Back (from page 2) moves back,
-/// and the last page's button is Done, which closes the sheet instead.
+/// Where the How Sharing Works sheet is: Next moves forward, Back moves back, and a swipe lands on
+/// a page directly (#430). On the last page Next is the confirm checkmark, which closes the sheet.
 struct SharingTutorialPaging {
     private static let pages = SharingTutorialPage.allCases
     private var index = 0
 
-    var page: SharingTutorialPage { Self.pages[index] }
+    /// The page on screen; the paged view sets it when a swipe settles.
+    var page: SharingTutorialPage {
+        get { Self.pages[index] }
+        set { index = Self.pages.firstIndex(of: newValue) ?? index }
+    }
+
     var canGoBack: Bool { index > 0 }
     var isLastPage: Bool { index == Self.pages.count - 1 }
 

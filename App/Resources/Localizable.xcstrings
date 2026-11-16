@@ -1037,7 +1037,7 @@
       "comment" : "Delivery Mode: a reminder from this person waits to be accepted before it nudges."
     },
     "Back" : {
-      "comment" : "How Sharing Works: the button, top left from the second page, that goes back a page."
+      "comment" : "How Sharing Works: the top bar's button (a back arrow) that goes back a page. Dimmed on the first page."
     },
     "Badges" : {
       "comment" : "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging."
@@ -1178,7 +1178,7 @@
       "comment" : "A Consistent pace with its wait, as reminder details show it. The placeholder is the wait between nudges, such as \"30 min\"."
     },
     "Continue" : {
-      "comment" : "How Sharing Works: the button that goes on to the next page.\nOnboarding: the only button, which goes on to the system's permission prompts.\nThe Connection Ended sheet: does the chosen Remove or Keep and closes the sheet."
+      "comment" : "Onboarding: the only button, which goes on to the system's permission prompts.\nThe Connection Ended sheet: does the chosen Remove or Keep and closes the sheet."
     },
     "Copies the invite link, for you to send anywhere. Nothing is sent until you do." : {
       "comment" : "Invite Someone: under Send With while Copy Link is selected."
@@ -1292,7 +1292,7 @@
       "comment" : "Reminder details: on a received reminder, the switch that keeps its status from its sender."
     },
     "Done" : {
-      "comment" : "Accepting an invite: closes the Connected sheet.\nHow Sharing Works: the last page's button, which closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
+      "comment" : "Accepting an invite: closes the Connected sheet.\nHow Sharing Works: the last page's confirm button (a checkmark), in place of Next, which closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
     },
     "Done after %lld nudges" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence closed as Done. The placeholder is how many nudges it sent.",
@@ -1826,7 +1826,7 @@
       "comment" : "Reminders tab's Sort menu, sorted by Created: the reminder made last at the top."
     },
     "Next" : {
-      "comment" : "Reminder details, Schedule: when the reminder is next due."
+      "comment" : "How Sharing Works: the top bar's button (a forward arrow) that goes on to the next page.\nReminder details, Schedule: when the reminder is next due."
     },
     "Next 7 days" : {
       "comment" : "Now: how far ahead the Coming Up section looks."

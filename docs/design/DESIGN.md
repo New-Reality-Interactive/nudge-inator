@@ -671,18 +671,20 @@ sharing paused and offline banner.
   the HIG keeps the disclosure indicator for drilling in (#423).
 - **How Sharing Works sheet** (mockup `2026-11-15-sharing-tutorial`, #423): four pages in an inset
   grouped list, inline title How Sharing Works. Each page has decorative pills (an SF Symbol and a
-  word in `{colors.label}`, 8 pt apart, on `tertiary-system-fill`, `arrow.right` between them in
+  word in `{colors.label}`, 8 pt apart, on `tertiary-system-fill`, `arrow.forward` between them in
   `{colors.secondary-label}`; stacked with `arrow.down` where they don't fit on one line), hidden
   from VoiceOver; a centered heading in `{typography.title2}` bold; then a lead in
   `{typography.body}` and rows with a `{colors.tile-blue}` tile, a title in `{typography.body}` and a
   line under it in `{typography.subhead}` `{colors.secondary-label}`, or, on Connect, three numbered
   steps in accent circles (Accent's one exception; capped at 44 pt, dividers from the circle's
   edge) and a footer. Rows stack at the accessibility
-  sizes, as Settings rows do. Below them, with no divider between, page dots (accent for this page, separator for
-  the others; VoiceOver reads "Page 2 of 4") and the prominent Continue, Done on the last page.
-  Back (`chevron.backward`) is top left from page 2 and Close (the system's close role, drawn `xmark`) top
-  right on every page, so the last page shows Close, Back and Done together, which the HIG's Sheets
-  page says to avoid: the developer chose it for consistency.
+  sizes, as Settings rows do. The pages swipe, a paged `TabView` that settles one page at a time
+  (#430, mockup `2026-11-16-tutorial-swipe-top-bar`); each page scrolls on its own. Under them,
+  pinned and centred, page dots (accent for this page, separator for the others; VoiceOver reads
+  "Page 2 of 4"), with no button under the pages. Close (the system's close role, drawn `xmark`) is
+  top left on every page. Back (`chevron.backward`) and Next (`chevron.forward`) share one capsule
+  top right, Back dimmed on page 1; on the last page Next becomes the system's confirm checkmark,
+  named Done, which closes the sheet. A page change speaks the new page's heading.
 - **Share Activity entries:** plain rows with nothing to tap, newest first, in one inset list: who
   it concerns in `{typography.body}` (several names joined as a list), then what happened and when
   ("Today at 7:58 AM"), each in `{typography.subhead}` `{colors.secondary-label}`. VoiceOver reads
@@ -753,7 +755,7 @@ sharing paused and offline banner.
   reminder"), as a locked row does, though these fields aren't Locked in the glossary's sense.
 - **Symbols added:** `person`, `person.2`, `person.badge.plus` (invites), `person.slash` (Disconnect),
   `icloud.slash`, `wifi.slash`, `minus`. Also used here: `pause` and `info.circle`. How Sharing Works
-  uses `iphone`, `arrow.right`, `icloud`, `paperplane`, `eye`, `hand.raised`, `lock`, `clock`, `person.2`,
+  uses `iphone`, `arrow.forward` (it flips in right to left), `icloud`, `paperplane`, `eye`, `hand.raised`, `lock`, `clock`, `person.2`,
   `person.badge.plus`, `list.bullet.rectangle`, `checkmark.circle.fill`, `bell` and `info.circle`.
 
 ## Mapping to code
