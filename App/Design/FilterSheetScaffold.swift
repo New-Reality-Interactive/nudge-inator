@@ -60,7 +60,7 @@ struct FilterSheetScaffold<Choices: FilterSheetChoices, Summary: FilterSheetSumm
                 let before = summary(old).result
                 let after = summary(new).result
                 if VoiceOverAnnouncement.spoken(from: String(localized: before), to: String(localized: after)) != nil {
-                    VoiceOverAnnouncement.mention(after)
+                    VoiceOverAnnouncement.post(after)
                 }
             }
             .navigationTitle(title)

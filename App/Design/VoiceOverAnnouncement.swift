@@ -5,17 +5,17 @@ import SwiftUI
 /// list. With VoiceOver off, posting it does nothing.
 ///
 /// Two priorities (`accessibilitySpeechAnnouncementPriority`; the compiler marks the older
-/// queued-announcement attribute deprecated, renamed to it, in iOS 27's SDK). A confirmation of
-/// what the person just did is the only feedback they get, so it has the default priority, which
-/// Apple documents as interrupting what VoiceOver is saying, and never dropped for a later one. An
-/// error or a filter sheet's count, which can change again at once, has the low priority: queued
-/// until other speech has finished, and dropped if a newer one starts first (WWDC23, "Build
-/// accessible apps with SwiftUI and UIKit"). Whether either cuts off something the person needs
-/// is a phone check.
+/// queued-announcement attribute deprecated, renamed to it, in iOS 27's SDK). What answers the
+/// person's own action, a confirmation or a filter sheet's count, has the high priority, which
+/// Apple documents as interrupting other speech and not interruptible once started (WWDC23, "Build
+/// accessible apps with SwiftUI and UIKit"). At the default priority, VoiceOver's move to the next
+/// row, the focus iOS places as an alert closes, or a relabeled button cut it off; at the low
+/// priority, a filter sheet's count was dropped (#221's phone check). An error under a field has
+/// the low priority: queued until other speech has finished, so it doesn't cut off the typing.
 enum VoiceOverAnnouncement {
-    /// A confirmation of what the person just did, at the default priority.
+    /// What answers the person's own action, at the high priority.
     static func post(_ sentence: LocalizedStringResource) {
-        post(AttributedString(localized: sentence), priority: .default)
+        post(AttributedString(localized: sentence), priority: .high)
     }
 
     /// News beside VoiceOver's focus, as an error or a count, at the low priority.

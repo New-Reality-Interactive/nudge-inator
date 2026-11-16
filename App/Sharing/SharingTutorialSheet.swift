@@ -8,9 +8,6 @@ import SwiftUI
 /// it changes nothing.
 struct SharingTutorialSheet: View {
     @State private var paging = SharingTutorialPaging()
-    /// On the page's heading after Continue or Back, which give way to a new page: left to iOS,
-    /// VoiceOver landed on Back (#423's phone check), above what the page says (#221).
-    @AccessibilityFocusState private var isHeadingFocused: Bool
 
     @Environment(\.dismiss) private var dismiss
 
@@ -18,7 +15,7 @@ struct SharingTutorialSheet: View {
         NavigationStack {
             List {
                 Section {
-                    PageTop(page: paging.page, isHeadingFocused: $isHeadingFocused)
+                    PageTop(page: paging.page)
                 }
                 .listRowBackground(Color.clear)
                 pageContent
@@ -40,7 +37,6 @@ struct SharingTutorialSheet: View {
             }
             // A new page starts at its top, not where the last one was scrolled to.
             .id(paging.page)
-            .onChange(of: paging.page) { isHeadingFocused = true }
             .navigationTitle(Text("How Sharing Works", comment: "How Sharing Works: the sheet's title, and the Settings row under Sharing that opens it."))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -90,7 +86,6 @@ struct SharingTutorialSheet: View {
 /// The page's picture, its heading and, on a page of points, the lead under it.
 private struct PageTop: View {
     let page: SharingTutorialPage
-    let isHeadingFocused: AccessibilityFocusState<Bool>.Binding
 
     /// A pill's gap between its icon and word: the mockup's 8 pt, growing with the text, or at the
     /// largest sizes `person.badge.plus`'s badge touches the word (#423's phone check).
@@ -111,7 +106,6 @@ private struct PageTop: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 .accessibilityAddTraits(.isHeader)
-                .accessibilityFocused(isHeadingFocused)
             if case .points(let lead?, _) = page.content {
                 Text(lead)
                     .font(.body)
