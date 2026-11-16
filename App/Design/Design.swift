@@ -78,5 +78,9 @@ enum Design {
         static let tagTileLarge: CGFloat = 84
         /// The rounded icon tile in a Settings row (the mockup's `.ico`), at the default text size.
         static let settingsTile: CGFloat = 29
+        /// How Sharing Works: a numbered step's circle and a page dot (the mockup's `.tut-steps` and
+        /// `.tut-dots`), at the default text size.
+        static let stepNumber: CGFloat = 26
+        static let pageDot: CGFloat = 8
     }
 }

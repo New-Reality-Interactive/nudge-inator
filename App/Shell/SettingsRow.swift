@@ -45,14 +45,7 @@ struct SettingsRow: View {
 
     var body: some View {
         SizeAdaptiveStack(rowSpacing: Design.Spacing.s3, stackedSpacing: Design.Spacing.s2) {
-            Image(systemName: symbol)
-                .resizable()
-                .scaledToFit()
-                .foregroundStyle(Color.white)
-                .padding(scaledTile * 0.2)
-                .frame(width: scaledTile, height: scaledTile)
-                .background(RoundedRectangle(cornerRadius: Design.Radius.token).fill(tile))
-                .accessibilityHidden(true)
+            SquareTile(symbol: symbol, color: tile, size: scaledTile)
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                 title
                     .font(.body)

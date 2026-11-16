@@ -229,6 +229,9 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
   links, menus, checkmarks, the selected tab, tag and filter tokens, the chosen count's ring, the filled confirm button in each
   sheet and the Custom repeat sheet's Apply, and **Done** on nudge cards.
   - **Never** a status, decoration or background wash.
+  - **The one exception:** How Sharing Works' numbered step circles and its current page dot are
+    accent though nothing there is tapped, as the approved mockup draws them, and as iOS's own page
+    dots mark the current page (the developer's call, 2026-11-15, #423).
   - **The alarm** sits on a dark Lock Screen, so its tint pins `{colors.accent-dark}`. This is the
     only place a component pins a variant.
 - **Negative (red)** means **danger, or needs you now**: Nudging, Urgent, Missed, errors, "Off",
@@ -247,7 +250,7 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
   the icon. My Day's chosen-tag tokens and each button's VoiceOver label carry the count there.
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
   actions are `{colors.tile-green}` (Done), `{colors.tile-red}` (Delete) and `{colors.tile-blue}` (Edit). Settings rows: red (Notifications, Badges, Delete All Data), orange
-  (Alarms), gray (About, Open iOS Settings, Default Pace, How It Nudges, and About's Privacy Policy
+  (Alarms), gray (About, Open iOS Settings, Default Pace, How It Nudges, How Sharing Works, and About's Privacy Policy
   and Support), blue (Send a Test Nudge, Sharing). Tiles are icons for rows, not
   statuses, so "one color, one meaning" does not apply to them.
 
@@ -658,6 +661,21 @@ sharing paused and offline banner.
   "Connect with people through iCloud to send each other reminders." The Connections row shows only
   while the switch is on (#387). Below it, also only while the switch is on, the Share Activity row
   is a `{colors.tile-gray}` tile with `list.bullet.rectangle` and a chevron, with no status (#397).
+  Last in the section, with Sharing on or off (under Share Activity while on, under the switch while
+  off), How Sharing Works is a `{colors.tile-gray}` tile with `info.circle` and a chevron; it opens
+  the How Sharing Works sheet (#423).
+- **How Sharing Works sheet** (mockup `2026-11-15-sharing-tutorial`, #423): four pages in an inset
+  grouped list, inline title How Sharing Works. Each page has decorative pills (an SF Symbol and a
+  word on `tertiary-system-fill`, `arrow.right` between them in `{colors.secondary-label}`), hidden
+  from VoiceOver; a centered heading in `{typography.title2}` bold; then a lead in
+  `{typography.body}` and rows with a `{colors.tile-blue}` tile, a title in `{typography.body}` and a
+  line under it in `{typography.subhead}` `{colors.secondary-label}`, or, on Connect, three numbered
+  steps in accent circles (Accent's one exception) and a footer. Rows stack at the accessibility
+  sizes, as Settings rows do. Below them, page dots (accent for this page, separator for
+  the others; VoiceOver reads "Page 2 of 4") and the prominent Continue, Done on the last page.
+  Back (`chevron.backward`) is top left from page 2 and Close (the system's close role, drawn `xmark`) top
+  right on every page, so the last page shows Close, Back and Done together, which the HIG's Sheets
+  page says to avoid: the developer chose it for consistency.
 - **Share Activity entries:** plain rows with nothing to tap, newest first, in one inset list: who
   it concerns in `{typography.body}` (several names joined as a list), then what happened and when
   ("Today at 7:58 AM"), each in `{typography.subhead}` `{colors.secondary-label}`. VoiceOver reads
@@ -724,7 +742,9 @@ sharing paused and offline banner.
 - **Sender-owned fields:** a received reminder's form shows the `lock` beside its reason ("Maya owns this
   reminder"), as a locked row does, though these fields aren't Locked in the glossary's sense.
 - **Symbols added:** `person`, `person.2`, `person.badge.plus` (invites), `person.slash` (Disconnect),
-  `icloud.slash`, `wifi.slash`, `minus`. Also used here: `pause` and `info.circle`.
+  `icloud.slash`, `wifi.slash`, `minus`. Also used here: `pause` and `info.circle`. How Sharing Works
+  uses `iphone`, `arrow.right`, `icloud`, `paperplane`, `eye`, `hand.raised`, `lock`, `clock`, `person.2`,
+  `person.badge.plus`, `list.bullet.rectangle`, `checkmark.circle.fill`, `bell` and `info.circle`.
 
 ## Mapping to code
 

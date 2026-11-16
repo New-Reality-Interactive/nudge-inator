@@ -19,7 +19,8 @@ the largest text size from iPhone settings' Text Size.
 - **It opens by itself once:** the first time Sharing is turned on in Settings. Closing it or Done
   ends it, and it doesn't open by itself again (HIG, Onboarding).
 - **It can be replayed any time:** a **How Sharing Works** row in Settings › Sharing, shown with
-  Sharing on or off.
+  Sharing on or off, always the section's last row: under Share Activity while Sharing is on, under
+  the switch while it's off (the developer moved it there on 2026-11-15, editing this mockup in place).
 - **An invite opened while Sharing is off** asks "Turn on sharing to connect with Riley Park?"
   first. Turn On Sharing turns it on and accepts the invite, so this is also the first time: the
   Connected sheet shows, and the tutorial opens when it closes with Done (a sheet closes before the
