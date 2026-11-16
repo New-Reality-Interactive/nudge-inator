@@ -40,7 +40,7 @@ struct RootView: View {
         // does in portrait and landscape.
         .tabBarMinimizeBehavior(.onScrollDown)
         .inviteAcceptance(sharing: model?.sharing) {
-            model?.connectedSheetClosed()
+            model?.inviteOutcomeClosed()
         } changeThese: {
             model?.changeTheseChosen()
             navigation.openConnection($0)

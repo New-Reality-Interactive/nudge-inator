@@ -74,14 +74,26 @@ final class AppModel {
     /// Settings' Sharing switch (#387).
     var isSharingOn: Bool { sharing != nil }
 
+    /// Where How Sharing Works' opening by itself has got to (#424).
+    private enum FirstSharingTutorial {
+        /// Sharing hasn't just been turned on for the first time with the tutorial unseen, or it
+        /// has been closed, or Change These counted it as seen.
+        case notPending
+        /// Turn On Sharing on an invite's prompt: the tutorial waits for the Connected sheet, or the
+        /// message that the invite couldn't be accepted, to close, since one closes before the next
+        /// opens.
+        case waitingForInviteOutcome
+        /// The shell opens it now.
+        case due
+    }
+
+    private var firstSharingTutorial = FirstSharingTutorial.notPending
+    private let sharingTutorial: SharingTutorialRecord
+
     /// Whether How Sharing Works should open by itself now (#424): Sharing has just been turned on
     /// for the first time, and the tutorial hasn't been seen. The shell opens it while this is true,
     /// and closing it calls `sharingTutorialClosed()`.
-    private(set) var isSharingTutorialDue = false
-    /// Turn On Sharing on an invite's prompt, the first time: the tutorial waits for the Connected
-    /// sheet to close, since a sheet closes before the next opens.
-    private var sharingTutorialWaitsForConnected = false
-    private let sharingTutorial: SharingTutorialRecord
+    var isSharingTutorialDue: Bool { firstSharingTutorial == .due }
 
     /// Who sent each received reminder, for its "From <name>" label (ticket 199). Read from the
     /// sharing store's data, so a screen that reads it changes when a connection does.
@@ -139,9 +151,7 @@ final class AppModel {
     /// the Debug stand-in turned on.
     func setSharing(on: Bool) {
         if on {
-            let wasOff = !isSharingOn
-            sharingSwitch.turnOn()
-            if wasOff, isSharingOn, !sharingTutorial.isSeen { isSharingTutorialDue = true }
+            turnSharingOn(thenTutorial: .due)
         } else if sharingOff == .atOnce {
             try? turnSharingOff(choosing: .remove)
         }
@@ -149,8 +159,15 @@ final class AppModel {
 
     /// How Sharing Works closed, by Close, Done or a swipe (#424): it never opens by itself again.
     func sharingTutorialClosed() {
-        isSharingTutorialDue = false
+        firstSharingTutorial = .notPending
         sharingTutorial.isSeen = true
+    }
+
+    /// Turns the switch on, and the first time, with the tutorial unseen, moves it on to `next`.
+    private func turnSharingOn(thenTutorial next: FirstSharingTutorial) {
+        let wasOff = !isSharingOn
+        sharingSwitch.turnOn()
+        if wasOff, isSharingOn, !sharingTutorial.isSeen { firstSharingTutorial = next }
     }
 
     /// An invite the person opened while Sharing is off (#389), held with what hands it to the
@@ -184,24 +201,23 @@ final class AppModel {
         let held = heldInvite
         heldInvite = nil
         guard turnOnSharing || sharing != nil else { return }
-        let wasOff = !isSharingOn
-        sharingSwitch.turnOn()
-        if wasOff, isSharingOn, !sharingTutorial.isSeen { sharingTutorialWaitsForConnected = true }
+        turnSharingOn(thenTutorial: .waitingForInviteOutcome)
         held?.handOver()
     }
 
-    /// The Connected sheet has gone, after Done or a swipe (#424). The first time Sharing was turned
-    /// on through an invite, the tutorial opens now, as the sheet before it has closed.
-    func connectedSheetClosed() {
-        guard sharingTutorialWaitsForConnected else { return }
-        sharingTutorialWaitsForConnected = false
-        if !sharingTutorial.isSeen { isSharingTutorialDue = true }
+    /// What came of an invite has closed (#424): the Connected sheet, after Done or a swipe (the
+    /// developer's call, 2026-11-15), or the message that it was unavailable or couldn't be accepted.
+    /// The first time Sharing was turned on through an invite, the tutorial opens now, as what was
+    /// showing has gone; Sharing is on whether or not the accept worked.
+    func inviteOutcomeClosed() {
+        guard firstSharingTutorial == .waitingForInviteOutcome else { return }
+        firstSharingTutorial = sharingTutorial.isSeen ? .notPending : .due
     }
 
     /// Change These on the Connected sheet, which opens the connection's page (#424): that counts
     /// as having seen the tutorial, so none follows the sheet, now or later.
     func changeTheseChosen() {
-        sharingTutorialWaitsForConnected = false
+        if firstSharingTutorial == .waitingForInviteOutcome { firstSharingTutorial = .notPending }
         sharingTutorial.isSeen = true
     }
 

@@ -6,7 +6,8 @@ extension View {
     /// `acceptedSheet`, or a message that it's unavailable or couldn't be accepted. Nothing without
     /// a sharing model.
     /// `changeThese` opens the connection's page, for Change These (ticket 196). `closed` runs once
-    /// the Connected sheet has gone, however it closed (#424), after `changeThese` if that closed it.
+    /// the Connected sheet has gone, however it closed, after `changeThese` if that closed it, and
+    /// when either message is dismissed (#424).
     func inviteAcceptance(sharing: SharingModel?, closed: @escaping () -> Void, changeThese: @escaping (UUID) -> Void) -> some View {
         modifier(InviteAcceptancePresenter(sharing: sharing, closed: closed, changeThese: changeThese))
     }
@@ -53,7 +54,11 @@ private struct InviteAcceptancePresenter: ViewModifier {
     }
 
     private func isShowing(_ shown: SharingModel.InviteAcceptance) -> Binding<Bool> {
-        Binding { sharing?.acceptance == shown } set: { if !$0 { sharing?.dismissAcceptance() } }
+        Binding { sharing?.acceptance == shown } set: {
+            guard !$0 else { return }
+            sharing?.dismissAcceptance()
+            closed()
+        }
     }
 }
 

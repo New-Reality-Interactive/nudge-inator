@@ -6,8 +6,9 @@ import Testing
 /// How Sharing Works opening by itself the first time Sharing is turned on (#424, spec #127 seam 1):
 /// through the app model over the fake sharing adapter and network, with the tutorial's seen-flag
 /// in the phone's own defaults suite, as the Sharing switch's record is. What a test asserts is
-/// whether the tutorial is due, and what the flag keeps. That the sheet opens over Settings, only
-/// once the Connected sheet has gone, is the phone check.
+/// whether the tutorial is due, and what the flag keeps. That the sheet opens over Settings, and
+/// only once the Connected sheet, or the message that the invite couldn't be accepted, has gone, is
+/// the phone check. Both messages close through the same call, so `.failed` stands for both.
 @MainActor
 struct SharingTutorialFirstTimeTests {
     typealias Phone = TurnOffSharingTests.Phone
@@ -61,16 +62,34 @@ struct SharingTutorialFirstTimeTests {
 
         await turnOnSharingAndConnect(on: riley)
 
-        guard case .connected = riley.sharing.acceptance else {
-            Issue.record("Connected isn't shown")
-            return
-        }
+        let connected = if case .connected = riley.sharing.acceptance { true } else { false }
+        try #require(connected, "Connected isn't shown")
         #expect(!riley.model.isSharingTutorialDue)
 
         riley.sharing.dismissAcceptance()
-        riley.model.connectedSheetClosed()
+        riley.model.inviteOutcomeClosed()
 
         #expect(riley.model.isSharingTutorialDue)
+    }
+
+    /// Sharing turned on for the first time even when the accept fails, so the tutorial follows the
+    /// message's OK instead (the developer's call, 2026-11-15), and no later Connected sheet opens it
+    /// out of context.
+    @Test func anAcceptThatFailsOpensTheTutorialAfterItsMessage() async throws {
+        let riley = try await rileyOpensAnInvite()
+        riley.adapter.acceptFails = true
+
+        await turnOnSharingAndConnect(on: riley)
+
+        #expect(riley.sharing.acceptance == .failed)
+        #expect(!riley.model.isSharingTutorialDue)
+        riley.sharing.dismissAcceptance()
+        riley.model.inviteOutcomeClosed()
+        #expect(riley.model.isSharingTutorialDue)
+
+        riley.model.sharingTutorialClosed()
+        riley.model.inviteOutcomeClosed()
+        #expect(!riley.model.isSharingTutorialDue)
     }
 
     /// Change These opens the connection's page: that counts as having seen the tutorial, so none
@@ -81,7 +100,7 @@ struct SharingTutorialFirstTimeTests {
 
         riley.model.changeTheseChosen()
         riley.sharing.dismissAcceptance()
-        riley.model.connectedSheetClosed()
+        riley.model.inviteOutcomeClosed()
 
         #expect(!riley.model.isSharingTutorialDue)
         #expect(riley.tutorial.isSeen)
@@ -96,7 +115,7 @@ struct SharingTutorialFirstTimeTests {
         let riley = try await rileyOpensAnInvite()
 
         riley.model.answerPendingInvite(turnOnSharing: false)
-        riley.model.connectedSheetClosed()
+        riley.model.inviteOutcomeClosed()
 
         #expect(!riley.model.isSharingOn)
         #expect(!riley.model.isSharingTutorialDue)
