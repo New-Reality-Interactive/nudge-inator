@@ -1,11 +1,9 @@
 import SwiftUI
 
 /// How Sharing Works (#423; #430, the mockup `2026-11-16-tutorial-swipe-top-bar`): four pages on
-/// what sharing is, connecting, sending and who sees what. A swipe moves between them, and so do Back
-/// and Next, together top right, which the HIG's Gestures page asks for: a gesture is a shortcut,
-/// not the only way. On the last page Next becomes the system's confirm checkmark, which closes the
-/// sheet, and Close is top left on every page. It takes no model, so opening and closing it changes
-/// nothing.
+/// what sharing is, connecting, sending and who sees what. A swipe moves between them, and so do the
+/// Back and Next buttons, as the HIG's Gestures page asks: a gesture is a shortcut, not the only way.
+/// It takes no model, so opening and closing it changes nothing.
 struct SharingTutorialSheet: View {
     @State private var paging = SharingTutorialPaging()
 
@@ -36,50 +34,52 @@ struct SharingTutorialSheet: View {
             }
             .navigationTitle(Text("How Sharing Works", comment: "How Sharing Works: the sheet's title, and the Settings row under Sharing that opens it."))
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    // The system draws it (`xmark`) and names it Close, as Apple's docs show.
-                    Button(role: .close) {
-                        dismiss()
+            .toolbar { toolbar }
+        }
+    }
+
+    @ToolbarContentBuilder private var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            // The system draws it (`xmark`) and names it Close, as Apple's docs show.
+            Button(role: .close) {
+                dismiss()
+            }
+        }
+        // Image buttons share one glass capsule (WWDC25, "Build a UIKit app with the new design");
+        // the confirm checkmark gets its own. Both moves are animated, so the page slides as a swipe
+        // moves it.
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            Button {
+                withAnimation { paging.goBack() }
+            } label: {
+                Label {
+                    Text("Back", comment: "How Sharing Works: the top bar's button (a back arrow) that goes back a page. Dimmed on the first page.")
+                } icon: {
+                    Image(systemName: "chevron.backward")
+                }
+            }
+            .disabled(!paging.canGoBack)
+            if !paging.isLastPage {
+                Button {
+                    withAnimation { paging.goForward() }
+                } label: {
+                    Label {
+                        Text("Next", comment: "How Sharing Works: the top bar's button (a forward arrow) that goes on to the next page.")
+                    } icon: {
+                        Image(systemName: "chevron.forward")
                     }
                 }
-                // Image buttons share one glass capsule (WWDC25, "Build a UIKit app with the new
-                // design"); the confirm checkmark gets its own.
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button {
-                        withAnimation { paging.goBack() }
-                    } label: {
-                        Label {
-                            Text("Back", comment: "How Sharing Works: the top bar's button (a back arrow) that goes back a page. Dimmed on the first page.")
-                        } icon: {
-                            Image(systemName: "chevron.backward")
-                        }
-                    }
-                    .disabled(!paging.canGoBack)
-                    if !paging.isLastPage {
-                        Button {
-                            // Animated, so the page slides as a swipe moves it.
-                            withAnimation { paging.goForward() }
-                        } label: {
-                            Label {
-                                Text("Next", comment: "How Sharing Works: the top bar's button (a forward arrow) that goes on to the next page.")
-                            } icon: {
-                                Image(systemName: "chevron.forward")
-                            }
-                        }
-                    }
-                }
-                if paging.isLastPage {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(role: .confirm) {
-                            dismiss()
-                        } label: {
-                            Label {
-                                Text("Done", comment: "How Sharing Works: the last page's confirm button (a checkmark), in place of Next, which closes the sheet.")
-                            } icon: {
-                                Image(systemName: "checkmark")
-                            }
-                        }
+            }
+        }
+        if paging.isLastPage {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(role: .confirm) {
+                    dismiss()
+                } label: {
+                    Label {
+                        Text("Done", comment: "How Sharing Works: the last page's confirm button (a checkmark), in place of Next, which closes the sheet.")
+                    } icon: {
+                        Image(systemName: "checkmark")
                     }
                 }
             }
