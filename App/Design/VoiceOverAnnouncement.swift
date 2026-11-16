@@ -91,9 +91,10 @@ extension View {
         accessibilityRemoveTraits(.isHeader)
     }
 
-    /// The hint of a dimmed confirm button: why it is dimmed. Always set, empty while it isn't, so
-    /// the button keeps its identity, and VoiceOver its place, as it dims and brightens.
-    func dimmedBecause(_ reason: LocalizedStringResource?) -> some View {
-        accessibilityHint(reason.map { Text($0) } ?? Text(verbatim: ""))
+    /// What VoiceOver reads for a confirm button in the top bar, `label`, followed by why it's
+    /// dimmed while it is. The reason is part of the label, not a hint, because a button in the top
+    /// bar drops its hint (#221's phone check), though hints elsewhere are spoken.
+    func dimmedBecause(_ reason: LocalizedStringResource?, label: Text) -> some View {
+        accessibilityLabel(reason.map { Text("\(label). \(Text($0))", comment: "VoiceOver label of a dimmed confirm button in a sheet's top bar (Add, Save, Done). 1: the button's name, such as \"Add\". 2: why it is dimmed, such as \"Add a title to save.\"") } ?? label)
     }
 }

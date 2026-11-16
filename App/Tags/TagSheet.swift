@@ -134,15 +134,16 @@ struct TagSheet: View {
                     DiscardingCancelButton(hasChanges: hasChanges)
                 }
                 ToolbarItem(placement: .confirmationAction) {
+                    let name = Text("Done", comment: "The tag sheet's confirm button (a checkmark).")
                     Button(role: .confirm, action: save) {
                         Label {
-                            Text("Done", comment: "The tag sheet's confirm button (a checkmark).")
+                            name
                         } icon: {
                             Image(systemName: "checkmark")
                         }
                     }
                     .disabled(model == nil || draft.problem != nil)
-                    .dimmedBecause(draft.problem?.message)
+                    .dimmedBecause(draft.problem?.message, label: name)
                 }
             }
             .speaksAsItChanges(shownProblem, sentence: \.message)

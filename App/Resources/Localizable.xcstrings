@@ -250,6 +250,17 @@
     "%@." : {
       "comment" : "A repeat summary as a sentence, under the reminder form's Starts. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".\nTop of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\"."
     },
+    "%@. %@" : {
+      "comment" : "VoiceOver label of a dimmed confirm button in a sheet's top bar (Add, Save, Done). 1: the button's name, such as \"Add\". 2: why it is dimmed, such as \"Add a title to save.\"",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@. %2$@"
+          }
+        }
+      }
+    },
     "%@: %@" : {
       "comment" : "VoiceOver, a repeating sent reminder's last 7 days on the Sent view: one day and how the person's copy went. 1: the weekday, such as \"Thursday\", or \"Today\". 2: the status, such as \"Done\" or \"Missed\".",
       "localizations" : {
@@ -801,7 +812,7 @@
       "comment" : "The New Reminder form's confirm button (a checkmark).\nThe Tags page's button that adds the typed tag to the reminder."
     },
     "Add a title to save." : {
-      "comment" : "Under the reminder form's title when it is empty, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add."
+      "comment" : "Under the reminder form's title when it is empty, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name."
     },
     "After" : {
       "comment" : "The reminder form's End Repeat choice: the repeat ends after a number of times."
@@ -1410,7 +1421,7 @@
       "comment" : "The reminder form's row under Repeat, which opens a menu of when the repeat ends."
     },
     "Enter a name for the tag." : {
-      "comment" : "Tag sheet: shown when what was typed leaves no name, such as only a #. VoiceOver also speaks it when it appears, and as the hint of the dimmed Done."
+      "comment" : "Tag sheet: shown when what was typed leaves no name, such as only a #. VoiceOver also speaks it when it appears, and after the dimmed Done's name."
     },
     "Escalating" : {
       "comment" : "Pace name: the waits between nudges come from the strength and shrink as the nudging goes on."
@@ -2512,10 +2523,10 @@
       "comment" : "An invited person's page: under Couldn't Cancel the Invite."
     },
     "The repeat ends before it starts. Change its end date." : {
-      "comment" : "Under the reminder form's start when End Repeat's end date is before the start, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add."
+      "comment" : "Under the reminder form's start when End Repeat's end date is before the start, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name."
     },
     "The repeat has already ended. Change when it ends." : {
-      "comment" : "Under the reminder form's start when the repeat has no times left, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add."
+      "comment" : "Under the reminder form's start when the repeat has no times left, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name."
     },
     "Their Delivery Mode" : {
       "comment" : "How Sharing Works, Send a Reminder: the row about the recipient's Delivery Mode, the connection's setting."
@@ -2703,7 +2714,7 @@
       "comment" : "A tag's screen after the tag was deleted."
     },
     "This time has passed. Choose a later time." : {
-      "comment" : "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add."
+      "comment" : "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name."
     },
     "Through Messages, Mail or Copy Link. Nothing is sent until you tap Send." : {
       "comment" : "How Sharing Works, Connect: under \"Send the Invite\". Messages, Mail and Copy Link are the ways the invite can be sent."
@@ -2819,7 +2830,7 @@
       "comment" : "How Sharing Works, Send Each Other Reminders: the picture's pill for the person reading, beside an iPhone."
     },
     "You already have the tag %@." : {
-      "comment" : "Tag sheet: shown when another tag has the name, ignoring case. VoiceOver also speaks it when it appears, and as the hint of the dimmed Done. The placeholder is that tag, such as \"#home\"."
+      "comment" : "Tag sheet: shown when another tag has the name, ignoring case. VoiceOver also speaks it when it appears, and after the dimmed Done's name. The placeholder is that tag, such as \"#home\"."
     },
     "You and %@ are already connected." : {
       "comment" : "Invite: under Already Connected. The argument is the person's name, such as \"Riley Park\"."

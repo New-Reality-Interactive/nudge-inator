@@ -94,19 +94,20 @@ struct ReminderFormSheet: View {
             DiscardingCancelButton(hasChanges: form.hasChanges)
         }
         ToolbarItem(placement: .confirmationAction) {
+            let name = form.isEditing
+                ? Text("Save", comment: "The Edit Reminder form's confirm button (a checkmark).")
+                : Text("Add", comment: "The New Reminder form's confirm button (a checkmark).")
             Button(role: .confirm) {
                 if let model, form.save(to: model) { dismiss() }
             } label: {
                 Label {
-                    form.isEditing
-                        ? Text("Save", comment: "The Edit Reminder form's confirm button (a checkmark).")
-                        : Text("Add", comment: "The New Reminder form's confirm button (a checkmark).")
+                    name
                 } icon: {
                     Image(systemName: "checkmark")
                 }
             }
             .disabled(model == nil || form.saveBlock != nil)
-            .dimmedBecause(form.saveBlock?.message)
+            .dimmedBecause(form.saveBlock?.message, label: name)
         }
     }
 }

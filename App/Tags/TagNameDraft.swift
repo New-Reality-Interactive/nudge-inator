@@ -22,9 +22,9 @@ struct TagNameDraft {
         var message: LocalizedStringResource {
             switch self {
             case .empty:
-                LocalizedStringResource("Enter a name for the tag.", comment: "Tag sheet: shown when what was typed leaves no name, such as only a #. VoiceOver also speaks it when it appears, and as the hint of the dimmed Done.")
+                LocalizedStringResource("Enter a name for the tag.", comment: "Tag sheet: shown when what was typed leaves no name, such as only a #. VoiceOver also speaks it when it appears, and after the dimmed Done's name.")
             case .taken(let existing):
-                LocalizedStringResource("You already have the tag \(existing.label).", comment: "Tag sheet: shown when another tag has the name, ignoring case. VoiceOver also speaks it when it appears, and as the hint of the dimmed Done. The placeholder is that tag, such as \"#home\".")
+                LocalizedStringResource("You already have the tag \(existing.label).", comment: "Tag sheet: shown when another tag has the name, ignoring case. VoiceOver also speaks it when it appears, and after the dimmed Done's name. The placeholder is that tag, such as \"#home\".")
             }
         }
     }

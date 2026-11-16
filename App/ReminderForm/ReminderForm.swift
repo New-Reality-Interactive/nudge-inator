@@ -88,13 +88,13 @@ final class ReminderForm: Identifiable {
         var message: LocalizedStringResource {
             switch self {
             case .noTitle:
-                LocalizedStringResource("Add a title to save.", comment: "Under the reminder form's title when it is empty, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add.")
+                LocalizedStringResource("Add a title to save.", comment: "Under the reminder form's title when it is empty, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name.")
             case .pastTime:
-                LocalizedStringResource("This time has passed. Choose a later time.", comment: "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add.")
+                LocalizedStringResource("This time has passed. Choose a later time.", comment: "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name.")
             case .endsBeforeStart:
-                LocalizedStringResource("The repeat ends before it starts. Change its end date.", comment: "Under the reminder form's start when End Repeat's end date is before the start, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add.")
+                LocalizedStringResource("The repeat ends before it starts. Change its end date.", comment: "Under the reminder form's start when End Repeat's end date is before the start, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name.")
             case .noTimesLeft:
-                LocalizedStringResource("The repeat has already ended. Change when it ends.", comment: "Under the reminder form's start when the repeat has no times left, so Save is disabled. VoiceOver also speaks it when it appears, and as the hint of the dimmed Save or Add.")
+                LocalizedStringResource("The repeat has already ended. Change when it ends.", comment: "Under the reminder form's start when the repeat has no times left, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name.")
             }
         }
     }
