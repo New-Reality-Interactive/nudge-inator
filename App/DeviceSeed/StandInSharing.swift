@@ -33,6 +33,15 @@ enum StandInSharing {
         return record
     }
 
+    /// How Sharing Works' seen-flag (#424), set unseen first when `=off` asks for it, so such a
+    /// launch opens the tutorial the first time Sharing is turned on, and is also that check's
+    /// cleanup.
+    static func tutorialRecordResetIfOff(environment: [String: String] = ProcessInfo.processInfo.environment) -> SharingTutorialRecord {
+        let record = SharingTutorialRecord.standard
+        if launchesWithSharingOff(environment: environment) { record.reset() }
+        return record
+    }
+
     static func modelIfAsked(clock: any EngineClock, environment: [String: String] = ProcessInfo.processInfo.environment) -> SharingModel? {
         var seed: SharingData
         switch environment[variable] {

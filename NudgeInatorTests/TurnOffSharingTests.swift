@@ -38,6 +38,11 @@ final class TurnOffSharingTests {
             SharingSwitchRecord(defaults: UserDefaults(suiteName: suiteName)!)
         }
 
+        /// How Sharing Works' seen-flag (#424), in the same suite, so `deinit` removes it too.
+        var tutorial: SharingTutorialRecord {
+            SharingTutorialRecord(defaults: UserDefaults(suiteName: suiteName)!)
+        }
+
         /// A new app model over the same files, record and adapter, as a relaunch is.
         func relaunch() {
             model = makeModel()
@@ -57,6 +62,7 @@ final class TurnOffSharingTests {
                 tagsSortRecord: .temporary,
                 doneQueue: .temporary,
                 sharingSwitch: record,
+                sharingTutorial: tutorial,
                 makeSharing: { [unowned self] in
                     made += 1
                     return SharingModel(adapter: adapter, clock: clock) {
