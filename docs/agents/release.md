@@ -35,4 +35,12 @@ When a feature's last ticket is resolved and merged, it's released, in this orde
      Once the reminder arrives, compare How Sharing Works' pages 3 and 4 (Send a Reminder, Who Sees What)
      with what the send showed on both phones; copy the app contradicts is fixed before the external group
      gets the build (#423's criterion, moved here 2026-11-15, since sending had no device test yet).
+     Then, with the iPhone on a fresh TestFlight install (Sharing off, How Sharing Works unseen), two
+     checks of the tutorial opening by itself (#424's, moved here 2026-11-15, as the Debug stand-in
+     can't drive them): the iPad invites the iPhone and cancels it; the iPhone opens the invite and
+     taps Turn On Sharing, and after Invite Unavailable's OK the tutorial opens. Then, with Sharing
+     off again and the tutorial unseen (reinstall), open How Sharing Works from its Settings row, open
+     a new invite from the iPad and tap Turn On Sharing: report whether the tutorial opens once the
+     open sheet and Connected have closed, or never; a bug either finds is fixed before the external
+     group gets the build.
    - **Review notes:** while the app isn't on the App Store, the Beta App Review notes and the What to Test note say that sharing needs two Apple Accounts, and how to try it; the What to Test note also tells testers to install the build from TestFlight before opening an invite, since an invite can't lead to an App Store page yet (Brian, 2026-11-15).
