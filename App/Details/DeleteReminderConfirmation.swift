@@ -34,7 +34,7 @@ extension View {
         return confirmationDialog(
             isReceived
                 ? Text("Remove “\(title)”?", comment: "Asked before removing a received reminder, from its details or a Reminders tab row. The placeholder is its title.")
-                : Text("Delete “\(title)”?", comment: "Asked before deleting a reminder, from its details, a Reminders tab row, or a sent reminder's details. The placeholder is its title."),
+                : Text("Delete “\(title)”?", comment: "Asked before deleting a reminder, from its details, a Reminders tab row, or a sent reminder's details or Sent row. The placeholder is its title."),
             isPresented: isPresented,
             titleVisibility: .visible
         ) {

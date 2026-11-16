@@ -671,6 +671,19 @@ final class AppModel {
         try sharing.reviseSent(edited)
     }
 
+    /// `deleteSent`, for a sent reminder's details and its Sent row (#429): false, with the error
+    /// logged, when it wasn't kept. The reminder then stays on screen and on every copy, and the
+    /// screen says so (`couldntDeleteSentAlert`).
+    func deleteSentLoggingFailure(_ reminderID: Reminder.ID) -> Bool {
+        do {
+            try deleteSent(reminderID)
+            return true
+        } catch {
+            Self.logger.error("A sent reminder couldn't be deleted: \(error, privacy: .public)")
+            return false
+        }
+    }
+
     /// The sender's Delete on a sent reminder's details (ticket 201). Throws, changing and sending
     /// nothing, with no sharing, or if the sharing store won't keep it.
     func deleteSent(_ reminderID: Reminder.ID) throws {

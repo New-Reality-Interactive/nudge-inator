@@ -666,3 +666,18 @@ final class ReminderForm: Identifiable {
         }
     }
 }
+
+extension ReminderForm {
+    /// The Edit form a reminder's details and its Reminders row open (#429), or `nil` if the engine
+    /// doesn't hold it.
+    convenience init?(editing reminderID: Reminder.ID, in model: AppModel) {
+        self.init(engine: { model.engine }, editing: reminderID, now: { .now }, senders: model.senders)
+    }
+
+    /// The sender's Edit form a sent reminder's details and its Sent row open (#429), whose Save goes
+    /// to every copy, or `nil` with no sharing or once it's deleted.
+    convenience init?(editingSent reminderID: Reminder.ID, in model: AppModel) {
+        guard let sent = model.sharing?.data.sentReminders.first(where: { $0.reminder.id == reminderID }) else { return nil }
+        self.init(engine: { model.engine }, editingSent: sent.reminder, now: { .now })
+    }
+}

@@ -2,9 +2,10 @@ import NudgeEngine
 import SwiftUI
 
 /// The Reminders tab's Sent view (ticket 201, the mockup's `viewSentTab`): what this person sent,
-/// grouped under each person it went to, each row opening the sent reminder's details. Rows have no
-/// swipe (DESIGN.md, Sent rows). The count header leads the groups (ticket 328); the search field,
-/// Filter and Sort are the tab's (tickets 328 and 329).
+/// grouped under each person it went to, each row opening the sent reminder's details. A row swipes
+/// to Edit and Delete, as its details offer them (#429, DESIGN.md, Sent rows). The count header
+/// leads the groups (ticket 328); the search field, Filter and Sort are the tab's (tickets 328 and
+/// 329).
 ///
 /// With no one connected it offers Invite Someone and Manage People, and with nothing sent New
 /// Reminder (ticket 202). Neither empty state has tools (DESIGN.md, Sent's tools). While sharing
@@ -21,6 +22,10 @@ struct SentList: View {
     let openDetails: (Reminder.ID) -> Void
     /// The no-match state's button: Clear Search, Clear Filters, or both.
     let clearSearchAndFilters: () -> Void
+    /// A row's Edit: the sent reminder's edit form.
+    let edit: (Reminder.ID) -> Void
+    /// A row's Delete, once confirmed: false when the store won't keep it.
+    let delete: (Reminder.ID) -> Bool
 
     /// Invite Someone's flow, kept here above the empty states, so an invite under way isn't lost
     /// when someone connects and No One to Send To goes.
@@ -40,7 +45,7 @@ struct SentList: View {
         case .nothingSent:
             NothingSentView(banner: banner)
         case .noMatch, nil:
-            SentGroups(screen: screen, banner: banner, countFocusRequests: countFocusRequests, clearSearchAndFilters: clearSearchAndFilters, openDetails: openDetails)
+            SentGroups(screen: screen, banner: banner, countFocusRequests: countFocusRequests, clearSearchAndFilters: clearSearchAndFilters, openDetails: openDetails, edit: edit, delete: delete)
         }
     }
 }
@@ -53,8 +58,13 @@ private struct SentGroups: View {
     let countFocusRequests: Int
     let clearSearchAndFilters: () -> Void
     let openDetails: (Reminder.ID) -> Void
+    let edit: (Reminder.ID) -> Void
+    let delete: (Reminder.ID) -> Bool
 
     @AccessibilityFocusState private var countFocused: Bool
+    /// Set when the store wouldn't keep a row's Delete: the reminder stays, and the screen says so,
+    /// as its details do.
+    @State private var isShowingCouldntDelete = false
 
     var body: some View {
         SearchResultsContainer(countFocus: $countFocused) { didClear in
@@ -79,7 +89,12 @@ private struct SentGroups: View {
                 ForEach(screen.people) { person in
                     Section {
                         ForEach(person.rows) { row in
-                            SentRowView(row: row) { openDetails(row.reminderID) }
+                            SentRowView(
+                                row: row,
+                                openDetails: { openDetails(row.reminderID) },
+                                edit: { edit(row.reminderID) },
+                                delete: { isShowingCouldntDelete = !delete(row.reminderID) }
+                            )
                         }
                     } header: {
                         SentGroupHeader(person: person)
@@ -88,6 +103,7 @@ private struct SentGroups: View {
             }
         }
         .onChange(of: countFocusRequests) { countFocused = true }
+        .couldntDeleteSentAlert(isPresented: $isShowingCouldntDelete)
     }
 }
 
@@ -115,12 +131,20 @@ private struct SentGroupHeader: View {
 /// reports how the copy is going, the status label takes Delivered's place (ticket 206), and a
 /// repeating reminder's 7-day history runs under the row (ticket 207). VoiceOver reads
 /// `Row.voiceOverLabel`, then the history as the row's value.
+///
+/// The trailing swipe offers Edit at the edge and Delete beside it, as a tag's does (#429). Delete
+/// asks the details' question first. Nothing is on the leading edge and there's no full swipe
+/// (ADR 0001). VoiceOver gets the two as the row's own actions instead.
 private struct SentRowView: View {
     let row: SentScreen.Row
     let openDetails: () -> Void
+    let edit: () -> Void
+    let delete: () -> Void
+
+    @State private var isConfirmingDelete = false
 
     var body: some View {
-        ReminderRowLayout(openDetails: openDetails) {
+        ReminderRowLayout(openDetails: openDetails, minHeight: Design.Size.swipeRowContentHeight) {
             TimeColumn(time: row.time, day: row.day)
         } main: {
             Text(verbatim: row.title)
@@ -140,6 +164,19 @@ private struct SentRowView: View {
         }
         .accessibilityLabel(Text(row.voiceOverLabel))
         .accessibilityValue(spoken: row.history?.voiceOverValue)
+        .rowActions([
+            RowAction(kind: .edit, label: editLabel, action: edit),
+            RowAction(kind: .delete, label: deleteLabel, action: { isConfirmingDelete = true }),
+        ])
+        .deleteReminderConfirmation(title: row.title, kind: .sent, isPresented: $isConfirmingDelete, confirm: delete)
+    }
+
+    private var editLabel: Text {
+        Text("Edit", comment: "Reminders tab, Sent: a row's swipe action and VoiceOver action that opens the sent reminder's Edit Reminder form.")
+    }
+
+    private var deleteLabel: Text {
+        Text("Delete", comment: "Reminders tab, Sent: a row's swipe action and VoiceOver action that asks before deleting the sent reminder from everyone's iPhone.")
     }
 }
 
@@ -346,7 +383,7 @@ private extension SentScreen {
 
 private extension SentList {
     init(preview screen: SentScreen) {
-        self.init(screen: screen, sharing: nil, manageConnections: {}, countFocusRequests: 0, openDetails: { _ in }, clearSearchAndFilters: {})
+        self.init(screen: screen, sharing: nil, manageConnections: {}, countFocusRequests: 0, openDetails: { _ in }, clearSearchAndFilters: {}, edit: { _ in }, delete: { _ in true })
     }
 }
 

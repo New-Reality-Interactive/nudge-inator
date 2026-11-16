@@ -176,6 +176,19 @@ struct ReceivedRowsTests {
         #expect(pills.offersDone)
     }
 
+    /// The swipe's Edit and the row's Edit VoiceOver action (#429): on Riley's own rows only. A
+    /// received copy's sender owns what it says, so its row keeps Remove alone.
+    @Test func onlyARowOfThePersonsOwnOffersEdit() async throws {
+        let riley = try await rileysPhone(at: 8, 40)
+
+        let screen = remindersScreen(on: riley)
+
+        let pills = try #require(screen.rows.first { $0.title == "Take the pills" })
+        let walk = try #require(screen.rows.first { $0.title == "Walk the dog" })
+        #expect(!pills.offersEdit)
+        #expect(walk.offersEdit)
+    }
+
     /// The pills (Alex's, Firm, due 8:30) and the walk (Riley's own, Gentle, due 8:15), both Nudging.
     @Test(arguments: [
         (RemindersSort.createdOldestFirst, RemindersFilter(search: "pills"), ["Take the pills"]),

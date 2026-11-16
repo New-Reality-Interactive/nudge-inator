@@ -273,7 +273,8 @@ extension SentTests {
         try alex.model.send(call, to: [rileyID])
         await settle(alex, riley, sam)
 
-        try alex.model.deleteSent(pills.id)
+        // What the details' Delete and a Sent row's call (#429).
+        #expect(alex.model.deleteSentLoggingFailure(pills.id))
         await settle(alex, riley, sam)
 
         #expect(sent(on: alex).people.map { $0.rows.map(\.title) } == [["Call the clinic"]])
@@ -293,6 +294,7 @@ extension SentTests {
         alex.relaunch()
 
         #expect(throws: (any Error).self) { try alex.model.deleteSent(pills.id) }
+        #expect(!alex.model.deleteSentLoggingFailure(pills.id))
 
         #expect(alex.adapter.submitted.count == submitted)
         alex.sharingStoreOpens = true
@@ -308,6 +310,22 @@ extension SentTests {
     func editForm(of reminderID: Reminder.ID, on alex: Phone) throws -> ReminderForm {
         let sent = try #require(alex.sharing.data.sentReminders.first { $0.reminder.id == reminderID })
         return ReminderForm(engine: { alex.model.engine }, editingSent: sent.reminder, now: { alex.clock.now })
+    }
+
+    /// The form the details' Edit and a Sent row's Edit open (#429): the reminder as the sender keeps
+    /// it, and none for a reminder of their own or one not sent.
+    @Test func aSentRemindersEditOpensItsFormFromItsID() async throws {
+        let (alex, riley, sam) = try await phones()
+        try alex.model.send(pills, to: [rileyID])
+        alex.model.add(call)
+        await settle(alex, riley, sam)
+
+        let form = try #require(ReminderForm(editingSent: pills.id, in: alex.model))
+
+        #expect(form.isSent)
+        #expect(form.title == "Take the pills")
+        #expect(ReminderForm(editingSent: call.id, in: alex.model) == nil)
+        #expect(ReminderForm(editingSent: UUID(), in: alex.model) == nil)
     }
 
     /// A sent reminder has no tags, goes to the people it went to, and isn't nudging the sender,

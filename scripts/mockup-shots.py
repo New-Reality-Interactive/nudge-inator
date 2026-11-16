@@ -142,6 +142,9 @@ SCREENS = {
   "sent-filter-badge": ("state.tab='rems';state.remsView='sent';state.sentTools.filter.people=['maya'];state.sentTools.filter.strength=['firm'];nav()", 1),
   "sent-sort-menu": ("state.tab='rems';state.remsView='sent';nav();showSortMenu(document.querySelector('[data-sentsort]'),state.sentTools,'[data-sentsort]')", 1),
   "sent-no-match": ("state.tab='rems';state.remsView='sent';state.sentTools.q='zebra';nav()", 1),
+  # Swipe to Edit on Sent (#429). Only a mockup with it draws these.
+  "sent-swipe": ("state.tab='rems';state.remsView='sent';nav();setTimeout(()=>revealRow('[data-sid]'),10)", 1),
+  "sent-delete": ("state.tab='rems';state.remsView='sent';nav();setTimeout(()=>{revealRow('[data-sid]');document.querySelector('[data-sid] .swipe-act.del').click()},10)", 1),
   "reminders-filter-from-others": ("state.tab='rems';state.rems.filter.fromOthers=true;nav()", 1),
   "myday-filter-from-others": ("state.tab='day';state.dayFilter.fromOthers=true;nav()", 1),
   "sharing-paused": ("sharing.icloud='none';state.tab='settings';nav();push({kind:'conns'})", 1),
