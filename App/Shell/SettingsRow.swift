@@ -44,15 +44,28 @@ struct SettingsRow: View {
     }
 
     var body: some View {
+        // The accessory stays at the trailing edge at every size, beside what stacks, as the
+        // system's chevron on a navigation row does (#423's phone check: it dropped onto its own line).
+        HStack(spacing: Design.Spacing.s3) {
+            content
+                .frame(maxWidth: .infinity, alignment: .leading)
+            if let accessory {
+                Image(systemName: accessory.symbol)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color(uiColor: .tertiaryLabel))
+                    .accessibilityHidden(true)
+            }
+        }
+        // Separators start at the text, past the tile: 60 pt at the default size (DESIGN.md).
+        .alignmentGuide(.listRowSeparatorLeading) { [separatorInset] dimensions in
+            dimensions[.leading] + separatorInset
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var content: some View {
         SizeAdaptiveStack(rowSpacing: Design.Spacing.s3, stackedSpacing: Design.Spacing.s2) {
-            Image(systemName: symbol)
-                .resizable()
-                .scaledToFit()
-                .foregroundStyle(Color.white)
-                .padding(scaledTile * 0.2)
-                .frame(width: scaledTile, height: scaledTile)
-                .background(RoundedRectangle(cornerRadius: Design.Radius.token).fill(tile))
-                .accessibilityHidden(true)
+            SquareTile(symbol: symbol, color: tile, size: scaledTile)
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                 title
                     .font(.body)
@@ -69,18 +82,7 @@ struct SettingsRow: View {
                     .font(.body)
                     .foregroundStyle(statusIsNegative ? Color.negative : Color(uiColor: .secondaryLabel))
             }
-            if let accessory {
-                Image(systemName: accessory.symbol)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(Color(uiColor: .tertiaryLabel))
-                    .accessibilityHidden(true)
-            }
         }
-        // Separators start at the text, past the tile: 60 pt at the default size (DESIGN.md).
-        .alignmentGuide(.listRowSeparatorLeading) { [separatorInset] dimensions in
-            dimensions[.leading] + separatorInset
-        }
-        .accessibilityElement(children: .combine)
     }
 }
 

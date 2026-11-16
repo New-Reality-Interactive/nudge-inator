@@ -893,6 +893,9 @@
     "Already Invited" : {
       "comment" : "Invite: title of the question shown when the person invited has an invite waiting."
     },
+    "An invite opens only for the Apple Account it was sent to." : {
+      "comment" : "How Sharing Works, Connect: the note under the steps."
+    },
     "An invite opens only for the Apple Account it was sent to. Check the email address or phone number of their Apple Account, then invite them again." : {
       "comment" : "An invited person's page: the help under \"Didn't open for them?\"."
     },
@@ -1010,6 +1013,9 @@
     "Ask me first" : {
       "comment" : "Delivery Mode: a reminder from this person waits to be accepted before it nudges."
     },
+    "Back" : {
+      "comment" : "How Sharing Works: the button, top left from the second page, that goes back a page."
+    },
     "Badges" : {
       "comment" : "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging."
     },
@@ -1121,11 +1127,17 @@
     "Completed" : {
       "comment" : "A tag's screen: header of the reminders with nothing more to come."
     },
+    "Connect" : {
+      "comment" : "How Sharing Works: the second page's heading, about inviting someone and their accepting."
+    },
     "Connect with people through iCloud to send each other reminders." : {
       "comment" : "Settings: under the Sharing switch."
     },
+    "Connect with someone you trust, and the reminders you send them nudge on their iPhone like their own." : {
+      "comment" : "How Sharing Works, Send Each Other Reminders: the line under the heading."
+    },
     "Connected" : {
-      "comment" : "Accepting an invite: title of the sheet once connected.\nConnections: header of the people connected.\nConnections: under a connected person's name."
+      "comment" : "Accepting an invite: title of the sheet once connected.\nConnections: header of the people connected.\nConnections: under a connected person's name.\nHow Sharing Works, Connect: the picture's second pill, the connection made once the invite is accepted."
     },
     "Connected since %@" : {
       "comment" : "A connection's page: under the person's name. The argument is the day they connected, such as \"Sep 12\"."
@@ -1143,7 +1155,7 @@
       "comment" : "A Consistent pace with its wait, as reminder details show it. The placeholder is the wait between nudges, such as \"30 min\"."
     },
     "Continue" : {
-      "comment" : "Onboarding: the only button, which goes on to the system's permission prompts.\nThe Connection Ended sheet: does the chosen Remove or Keep and closes the sheet."
+      "comment" : "How Sharing Works: the button that goes on to the next page.\nOnboarding: the only button, which goes on to the system's permission prompts.\nThe Connection Ended sheet: does the chosen Remove or Keep and closes the sheet."
     },
     "Copies the invite link, for you to send anywhere. Nothing is sent until you do." : {
       "comment" : "Invite Someone: under Send With while Copy Link is selected."
@@ -1244,6 +1256,9 @@
     "Disconnect" : {
       "comment" : "A connection's page: ends the connection, after asking what happens to the reminders received from the person.\nDisconnect's sheet: ends the connection, doing the chosen Remove or Keep."
     },
+    "Disconnect any time" : {
+      "comment" : "How Sharing Works, Who Sees What: the row about disconnecting."
+    },
     "Disconnect from %@" : {
       "comment" : "Disconnect's sheet title. The argument is the other person's name, such as \"Alex Morgan\"."
     },
@@ -1251,7 +1266,7 @@
       "comment" : "Reminder details: on a received reminder, the switch that keeps its status from its sender."
     },
     "Done" : {
-      "comment" : "Accepting an invite: closes the Connected sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
+      "comment" : "Accepting an invite: closes the Connected sheet.\nHow Sharing Works: the last page's button, which closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
     },
     "Done after %lld nudges" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence closed as Done. The placeholder is how many nudges it sent.",
@@ -1348,6 +1363,9 @@
     },
     "Each Gentle or Firm reminder has a Break Through Focus switch. Turn it off and a Focus can hold its nudges, and nothing rings. Relentless always breaks through." : {
       "comment" : "Onboarding and How It Nudges: under \"You choose what breaks through\"."
+    },
+    "Each person chooses, for each connection, whether reminders start right away or wait for them to accept first." : {
+      "comment" : "How Sharing Works, Send a Reminder: under \"Their Delivery Mode\"."
     },
     "Each reminder from %@ waits for you to accept it, and sends no nudge until you do. Applies to reminders sent from now on." : {
       "comment" : "A connection's page: under Delivery Mode when it's Ask me first. The argument is the other person's name, such as \"Alex Morgan\"."
@@ -1607,6 +1625,9 @@
     "How It Nudges" : {
       "comment" : "Section header on reminder details and the reminder form: the nudges a reminder sends, when, and how they arrive.\nSettings: row that opens the page explaining how each strength nudges, and what onboarding said.\nTitle of the page in Settings that explains how each strength nudges."
     },
+    "How Sharing Works" : {
+      "comment" : "How Sharing Works: the sheet's title, and the Settings row under Sharing that opens it."
+    },
     "I'd like us to send each other reminders in Nudge-inator. Open this on your iPhone to connect: %@" : {
       "comment" : "Invite message and email: the body. The argument is the invite's link."
     },
@@ -1614,13 +1635,13 @@
       "comment" : "Invite email: the subject."
     },
     "Invite" : {
-      "comment" : "Invite Someone: sends the invite to the person chosen."
+      "comment" : "How Sharing Works, Connect: the picture's first pill, an invite.\nInvite Someone: sends the invite to the person chosen."
     },
     "Invite Again" : {
       "comment" : "An invited person's page: sends a new invite in place of this one.\nInvite Again: the sheet's title, opened from an invited person's page.\nInvite: sends a new invite in place of the one waiting."
     },
     "Invite Someone" : {
-      "comment" : "Connections, and the Reminders tab's Sent when no one is connected: starts an invite to one person.\nInvite Someone: the sheet's title."
+      "comment" : "Connections, and the Reminders tab's Sent when no one is connected: starts an invite to one person.\nHow Sharing Works, Connect: the first numbered step. Invite Someone is the Connections page's button.\nInvite Someone: the sheet's title."
     },
     "Invite Someone New" : {
       "comment" : "The Send To page's last row: invites someone to connect.\nThe reminder form's Send To row when no one is connected: invites someone."
@@ -1640,11 +1661,17 @@
     "Invited · Waiting for them to accept" : {
       "comment" : "Connections and an invited person's page: under the name of someone invited who hasn't accepted yet."
     },
+    "It appears among their reminders, labeled From you. They can mark it Done, pause it, remove it and tag it." : {
+      "comment" : "How Sharing Works, Send a Reminder: under \"It shows your name\". \"From you\" stands for the From label with the sender's name."
+    },
     "It may have been deleted." : {
       "comment" : "Reminder details: under \"Reminder Not Found\"."
     },
     "It nudges %@, not you, and you'll find it under Sent." : {
       "comment" : "Under the reminder form's Send To row once someone is chosen. The argument is the chosen people's whole names as a list, such as \"Riley Park and Sam Rivera\"."
+    },
+    "It shows your name" : {
+      "comment" : "How Sharing Works, Send a Reminder: the row about how a sent reminder is labeled."
     },
     "It stops working, even if they've already got it." : {
       "comment" : "The question before canceling an invite: under its title."
@@ -1705,6 +1732,9 @@
     },
     "Match" : {
       "comment" : "A filter sheet: label of the choice between All Tags and Any Tag."
+    },
+    "Maya Torres" : {
+      "comment" : "How Sharing Works: an example person's full name in the pictures, the one a reminder is sent to and from. Translate as a common full name."
     },
     "Messages" : {
       "comment" : "Invite Someone: Send With, the way that opens the message screen."
@@ -2087,11 +2117,17 @@
     "Only Done stops the nudging." : {
       "comment" : "Nudge card: under the Done button."
     },
+    "Only people you agree to" : {
+      "comment" : "How Sharing Works, Send Each Other Reminders: the row about connecting only through an accepted invite."
+    },
     "Only reminders someone sent you" : {
       "comment" : "A filter sheet: under From others."
     },
     "Only reminders without tags" : {
       "comment" : "A filter sheet: under No Tags."
+    },
+    "Only you can change what it says or when it's due. They can't edit it." : {
+      "comment" : "How Sharing Works, Who Sees What: under \"You own what you send\"."
     },
     "Open" : {
       "comment" : "Alarm button: opens the app on the reminder, where Done is. Shown on the Lock Screen; keep it short."
@@ -2131,6 +2167,17 @@
         }
       }
     },
+    "Page %lld of %lld" : {
+      "comment" : "How Sharing Works: VoiceOver's reading of the page dots. 1: this page's number. 2: how many pages there are.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Page %1$lld of %2$lld"
+          }
+        }
+      }
+    },
     "Paste it into a message or email to %@." : {
       "comment" : "Invite: under Link Copied. The argument is the invited person's name, such as \"Riley Park\"."
     },
@@ -2148,6 +2195,9 @@
     },
     "People" : {
       "comment" : "Sent's filter sheet: header of the list of connected people."
+    },
+    "Pick Send To when you make a reminder, and choose who gets it. It nudges them at the strength you chose." : {
+      "comment" : "How Sharing Works, Send a Reminder: the line under the heading. Send To is the reminder form's row."
     },
     "Privacy Policy" : {
       "comment" : "About page: row that opens the app's privacy policy on the website, in the web browser."
@@ -2256,14 +2306,23 @@
     "Search titles and notes" : {
       "comment" : "Reminders tab: the search field's prompt."
     },
+    "Send Each Other Reminders" : {
+      "comment" : "How Sharing Works: the first page's heading, about what sharing is."
+    },
     "Send To" : {
       "comment" : "The reminder form's row that chooses who the reminder is sent to.\nTitle of the reminder form's Send To page."
     },
     "Send With" : {
       "comment" : "Invite Someone: heading of the list of ways to send the invite."
     },
+    "Send a Reminder" : {
+      "comment" : "How Sharing Works: the third page's heading, about sending a reminder to a connection."
+    },
     "Send a Test Nudge" : {
       "comment" : "Settings: row that sends a notification in a few seconds, to see how a nudge looks."
+    },
+    "Send the Invite" : {
+      "comment" : "How Sharing Works, Connect: the second numbered step."
     },
     "Sent" : {
       "comment" : "An invited person's page: when the invite was sent.\nReminders tab: the Mine | Sent control's choice that shows the reminders the person sent to others.\nSettings: shown beside Send a Test Nudge for a few seconds after it was tapped, while the test nudge is on its way."
@@ -2274,11 +2333,23 @@
     "Settings" : {
       "comment" : "Tab bar: the app's settings tab"
     },
+    "Settings › Connections. Enter the email address or phone number of their Apple Account." : {
+      "comment" : "How Sharing Works, Connect: under \"Invite Someone\". Settings › Connections is where the button is."
+    },
+    "Settings › Connections. They choose to keep or remove the reminders you sent." : {
+      "comment" : "How Sharing Works, Who Sees What: under \"Disconnect any time\". Settings › Connections is where Disconnect is."
+    },
+    "Settings › Share Activity shows what happened to sharing that you'd otherwise never see." : {
+      "comment" : "How Sharing Works, Who Sees What: under \"Share Activity\"."
+    },
     "Share Activity" : {
-      "comment" : "Share Activity: the page's title, and the Settings row that opens it."
+      "comment" : "How Sharing Works, Who Sees What: the row about the Share Activity page.\nShare Activity: the page's title, and the Settings row that opens it."
     },
     "Sharing" : {
       "comment" : "Settings: the switch that turns sharing reminders with other people on or off, and the header of its section."
+    },
+    "Sharing goes through iCloud, so each of you signs in to iCloud on your iPhone." : {
+      "comment" : "How Sharing Works, Send Each Other Reminders: under \"You both need iCloud\"."
     },
     "Sharing is paused. Sign in to iCloud in iOS Settings to send and receive reminders." : {
       "comment" : "Under the reminder form's Send To row, shown off, when no iCloud account is signed in."
@@ -2350,10 +2421,13 @@
       "comment" : "The reminder form's start date and time."
     },
     "Status" : {
-      "comment" : "The Reminders and Filter Sent sheets: header of the list of statuses."
+      "comment" : "How Sharing Works, Who Sees What: the picture's second pill, the status the recipient chooses to share.\nThe Reminders and Filter Sent sheets: header of the list of statuses."
     },
     "Status Sharing" : {
       "comment" : "A connection's page: the switch for whether the person sees how the reminders they send are going. Also the row on the Connected sheet and under \"What <name> Chose\".\nReminder details: section header above a received reminder's Don't share this one."
+    },
+    "Status is their choice" : {
+      "comment" : "How Sharing Works, Who Sees What: the row about the recipient's Status Sharing."
     },
     "Stays on your iPhone" : {
       "comment" : "Onboarding and How It Nudges: the title of the point about privacy."
@@ -2425,6 +2499,9 @@
     "The repeat has already ended. Change when it ends." : {
       "comment" : "Under the reminder form's start when the repeat has no times left, so Save is disabled."
     },
+    "Their Delivery Mode" : {
+      "comment" : "How Sharing Works, Send a Reminder: the row about the recipient's Delivery Mode, the connection's setting."
+    },
     "Their nudges and alarms are canceled." : {
       "comment" : "The Apple Account Changed sheet: under the received reminders removed."
     },
@@ -2443,8 +2520,14 @@
     "These won't nudge you until you accept them." : {
       "comment" : "Now: under the Waiting for You section."
     },
+    "They Accept" : {
+      "comment" : "How Sharing Works, Connect: the third numbered step."
+    },
     "They disconnected, so the connection ended." : {
       "comment" : "Share Activity: an entry for a connection the other person ended by disconnecting."
+    },
+    "They open the invite on their iPhone, and you're both connected." : {
+      "comment" : "How Sharing Works, Connect: under \"They Accept\"."
     },
     "They stay with the same schedule, history and tags, from no one." : {
       "comment" : "Turn Off Sharing's sheet: under Keep as My Own Reminders."
@@ -2604,6 +2687,9 @@
     "This time has passed. Choose a later time." : {
       "comment" : "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled."
     },
+    "Through Messages, Mail or Copy Link. Nothing is sent until you tap Send." : {
+      "comment" : "How Sharing Works, Connect: under \"Send the Invite\". Messages, Mail and Copy Link are the ways the invite can be sent."
+    },
     "Time Sensitive is off, so during a Focus every notification waits, unless you allow %@ in that Focus." : {
       "comment" : "How It Nudges footer, when the app's Time Sensitive notifications are off. The placeholder is the app's name."
     },
@@ -2699,11 +2785,20 @@
     "When you send feedback, include the version and build." : {
       "comment" : "About page: under the version and build number, for beta testers sending feedback."
     },
+    "Who Sees What" : {
+      "comment" : "How Sharing Works: the last page's heading, about who owns and sees what."
+    },
     "Who to Invite" : {
       "comment" : "Invite Someone: heading of the field for the person to invite."
     },
+    "With Status Sharing on, you see whether it's Done, Paused, Missed or Removed. With it off, you see only that it was Delivered." : {
+      "comment" : "How Sharing Works, Who Sees What: under \"Status is their choice\". Done, Paused, Missed, Removed and Delivered are a sent reminder's statuses."
+    },
     "Yearly" : {
       "comment" : "The Custom repeat page's frequency."
+    },
+    "You" : {
+      "comment" : "How Sharing Works, Send Each Other Reminders: the picture's pill for the person reading, beside an iPhone."
     },
     "You already have the tag %@." : {
       "comment" : "Tag sheet: shown when another tag has the name, ignoring case. The placeholder is that tag, such as \"#home\"."
@@ -2714,6 +2809,9 @@
     "You and %@ won't be able to send each other reminders until one of you invites the other again." : {
       "comment" : "Disconnect's sheet: its first line. The argument is the other person's name, such as \"Alex Morgan\"."
     },
+    "You both need iCloud" : {
+      "comment" : "How Sharing Works, Send Each Other Reminders: the row about iCloud."
+    },
     "You can each send the other reminders now." : {
       "comment" : "Accepting an invite: under \"You're Connected with\"."
     },
@@ -2723,11 +2821,17 @@
     "You choose what breaks through" : {
       "comment" : "Onboarding and How It Nudges: the title of the point about Break Through Focus."
     },
+    "You own what you send" : {
+      "comment" : "How Sharing Works, Who Sees What: the row about the sender owning a sent reminder."
+    },
     "You won't be able to send or receive reminders, and your Sent list and its history are deleted." : {
       "comment" : "Turn Off Sharing's sheet: its first line, with no one connected or invited, only reminders sent or received."
     },
     "You're Connected with %@" : {
       "comment" : "Accepting an invite: title of the sheet once connected. The argument is the name of the person who sent the invite, such as \"Alex Morgan\"."
+    },
+    "You're connected only after one of you accepts the other's invite. Until then, nobody can send you a reminder." : {
+      "comment" : "How Sharing Works, Send Each Other Reminders: under \"Only people you agree to\"."
     },
     "You've already invited %@. Inviting again sends a new invite, and the earlier one stops working." : {
       "comment" : "Invite: under Already Invited. The argument is the person's name, such as \"Riley Park\"."
@@ -2752,6 +2856,9 @@
     },
     "Your reminders are still on this iPhone, and nudges already scheduled will still come. Unlock your iPhone, then open %@ again." : {
       "comment" : "Explains the unreadable store: nothing is lost, and reopening the app tries again. The placeholder is the app's name."
+    },
+    "Yours" : {
+      "comment" : "How Sharing Works, Who Sees What: the picture's first pill, what the sender owns."
     },
     "Z to A" : {
       "comment" : "Tags tab's Sort menu, sorted by Name: reverse alphabetical order."

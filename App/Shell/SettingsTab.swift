@@ -25,6 +25,8 @@ struct SettingsTab: View {
     /// Whether the Turn Off Sharing sheet (#388) is up.
     @State private var isTurningSharingOff = false
     @State private var turnOffFailed = false
+    /// Whether How Sharing Works (#423) is up. Local, so opening it changes no setting.
+    @State private var isShowingSharingTutorial = false
 
     var body: some View {
         NavigationStack(path: path) {
@@ -61,6 +63,9 @@ struct SettingsTab: View {
                 }
             } message: {
                 Text("Nothing has changed. Try again.", comment: "Settings and Turn Off Sharing's sheet: under Couldn't Turn Off Sharing.")
+            }
+            .sheet(isPresented: $isShowingSharingTutorial) {
+                SharingTutorialSheet()
             }
             .navigationTitle(Text(AppTab.settings.title))
             #if DEBUG
@@ -135,8 +140,9 @@ struct SettingsTab: View {
         }
     }
 
-    /// The Sharing switch (#387), and Connections (ticket 194) and Share Activity (#397) only while
-    /// it's on. Off, none of sharing exists (the Sharing-switch mockup).
+    /// The Sharing switch (#387), Connections (ticket 194) and Share Activity (#397) only while it's
+    /// on, and last, on or off, How Sharing Works (#423). Off, none of sharing exists (the
+    /// Sharing-switch mockup), but how it works can still be read.
     private var sharingSection: some View {
         Section {
             Toggle(isOn: sharingOn) {
@@ -167,6 +173,19 @@ struct SettingsTab: View {
                         title: Text("Share Activity", comment: "Share Activity: the page's title, and the Settings row that opens it.")
                     )
                 }
+            }
+            // Always the section's last row, with Sharing on or off (the mockup, 2026-11-15).
+            Button {
+                isShowingSharingTutorial = true
+            } label: {
+                SettingsRow(
+                    tile: .tileGray,
+                    symbol: "info.circle",
+                    title: Text("How Sharing Works", comment: "How Sharing Works: the sheet's title, and the Settings row under Sharing that opens it."),
+                    // It opens a sheet, not a page, so no chevron (the HIG keeps that for drilling in):
+                    // the accent says it can be tapped, as Send a Test Nudge's does (#423's phone check).
+                    titleColor: .accentColor
+                )
             }
         } header: {
             Text("Sharing", comment: "Settings: the switch that turns sharing reminders with other people on or off, and the header of its section.")
