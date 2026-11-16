@@ -130,7 +130,9 @@ private struct PageTop: View {
             // Pills side by side where they fit on one line each, else stacked, with a down arrow,
             // as at the largest text sizes in portrait (#423's phone check).
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: Design.Spacing.s3) { art(arrow: "arrow.right") }
+                // `arrow.forward`, not `arrow.right`: it flips with the pills in right to left (#430's
+                // phone check).
+                HStack(spacing: Design.Spacing.s3) { art(arrow: "arrow.forward") }
                 VStack(spacing: Design.Spacing.s2) { art(arrow: "arrow.down") }
             }
             .frame(maxWidth: .infinity)

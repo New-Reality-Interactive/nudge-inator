@@ -671,7 +671,7 @@ sharing paused and offline banner.
   the HIG keeps the disclosure indicator for drilling in (#423).
 - **How Sharing Works sheet** (mockup `2026-11-15-sharing-tutorial`, #423): four pages in an inset
   grouped list, inline title How Sharing Works. Each page has decorative pills (an SF Symbol and a
-  word in `{colors.label}`, 8 pt apart, on `tertiary-system-fill`, `arrow.right` between them in
+  word in `{colors.label}`, 8 pt apart, on `tertiary-system-fill`, `arrow.forward` between them in
   `{colors.secondary-label}`; stacked with `arrow.down` where they don't fit on one line), hidden
   from VoiceOver; a centered heading in `{typography.title2}` bold; then a lead in
   `{typography.body}` and rows with a `{colors.tile-blue}` tile, a title in `{typography.body}` and a
@@ -755,7 +755,7 @@ sharing paused and offline banner.
   reminder"), as a locked row does, though these fields aren't Locked in the glossary's sense.
 - **Symbols added:** `person`, `person.2`, `person.badge.plus` (invites), `person.slash` (Disconnect),
   `icloud.slash`, `wifi.slash`, `minus`. Also used here: `pause` and `info.circle`. How Sharing Works
-  uses `iphone`, `arrow.right`, `icloud`, `paperplane`, `eye`, `hand.raised`, `lock`, `clock`, `person.2`,
+  uses `iphone`, `arrow.forward` (it flips in right to left), `icloud`, `paperplane`, `eye`, `hand.raised`, `lock`, `clock`, `person.2`,
   `person.badge.plus`, `list.bullet.rectangle`, `checkmark.circle.fill`, `bell` and `info.circle`.
 
 ## Mapping to code
