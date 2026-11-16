@@ -15,10 +15,8 @@ struct ConnectionsPage: View {
                 ScrollView {
                     BannerAboveEmptyState(banner: sharing.banner)
                     ContentUnavailableView {
-                        Label {
+                        EmptyStateLabel(systemImage: "person.2") {
                             Text("No Connections", comment: "Connections: title of the empty state, with no one connected or invited.")
-                        } icon: {
-                            Image(systemName: "person.2")
                         }
                     } description: {
                         Text("Invite someone you trust, and you can send each other reminders.", comment: "Connections: under \"No Connections\".")

@@ -11,6 +11,7 @@ struct CountHeaderRow: View {
     var body: some View {
         countText
             .frame(maxWidth: .infinity, alignment: .leading)
+            .notAHeading()
     }
 
     @ViewBuilder

@@ -54,6 +54,15 @@ struct FilterSheetScaffold<Choices: FilterSheetChoices, Summary: FilterSheetSumm
                 resetSection(sheet)
             }
             .neverShorter($listHeight)
+            // The count is far from the choice VoiceOver is on, so a choice that changes it has it
+            // spoken (#221); a reminder changing while the sheet is open doesn't.
+            .onChange(of: draft) { old, new in
+                let before = summary(old).result
+                let after = summary(new).result
+                if VoiceOverAnnouncement.spoken(from: String(localized: before), to: String(localized: after)) != nil {
+                    VoiceOverAnnouncement.post(after)
+                }
+            }
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -96,6 +105,7 @@ struct FilterSheetScaffold<Choices: FilterSheetChoices, Summary: FilterSheetSumm
                 .font(.footnote)
                 .fontWeight(.regular)
                 .textCase(nil)
+                .notAHeading()
         }
     }
 }

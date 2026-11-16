@@ -302,10 +302,8 @@ struct RemindersTab: View {
 
     private var noRemindersContent: some View {
         ContentUnavailableView {
-            Label {
+            EmptyStateLabel(systemImage: AppTab.reminders.systemImage) {
                 Text("No Reminders", comment: "Reminders tab: title when there are no reminders at all.")
-            } icon: {
-                Image(systemName: AppTab.reminders.systemImage)
             }
         } description: {
             Text("Tap + to make one. Every reminder you make shows here, whatever its state.", comment: "Reminders tab: under the title when there are no reminders at all.")
@@ -370,10 +368,8 @@ struct RemindersNoMatchView<Wording: NoMatchWording>: View {
 
     var body: some View {
         ContentUnavailableView {
-            Label {
+            EmptyStateLabel(systemImage: wording.noMatchSystemImage) {
                 Text(wording.noMatchTitle)
-            } icon: {
-                Image(systemName: wording.noMatchSystemImage)
             }
         } description: {
             if let text = wording.noMatchText {
@@ -424,7 +420,11 @@ private struct RemindersRowView: View {
         .accessibilityLabel(Text(row.voiceOverLabel))
         .accessibilityActions {
             if row.offersDone {
-                Button(action: markDone) { doneLabel }
+                // The row stays, its status now Done, and VoiceOver on it doesn't read it again.
+                Button {
+                    markDone()
+                    VoiceOverAnnouncement.post(VoiceOverAnnouncement.done(row.title))
+                } label: { doneLabel }
             }
             Button { isConfirmingDelete = true } label: { deleteLabel }
         }

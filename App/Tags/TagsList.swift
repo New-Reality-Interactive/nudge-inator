@@ -56,10 +56,8 @@ private struct TagsNoMatchView: View {
 
     var body: some View {
         ContentUnavailableView {
-            Label {
+            EmptyStateLabel(systemImage: filter.noMatchSystemImage) {
                 Text(filter.noMatchTitle)
-            } icon: {
-                Image(systemName: filter.noMatchSystemImage)
             }
         } description: {
             Text(filter.noMatchText)

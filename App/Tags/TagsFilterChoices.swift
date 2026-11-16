@@ -29,6 +29,6 @@ struct TagsFilterSheet: FilterSheetSummary {
         hasChanges = draft != applied
         canReset = draft != TagsFilterChoices()
         let shown = engine.tagList(filteredBy: draft.narrowing(search: search)).visibleCount
-        result = LocalizedStringResource("Apply shows \(shown) tags.", comment: "Tags' filter sheet: above Reset. The placeholder is how many tags the list would show with this filter and the search as it is.")
+        result = LocalizedStringResource("Apply shows \(shown) tags.", comment: "Tags' filter sheet: above Reset. The placeholder is how many tags the list would show with this filter and the search as it is. VoiceOver also speaks it when a choice changes it.")
     }
 }

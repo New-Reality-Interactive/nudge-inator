@@ -82,6 +82,8 @@ struct ReminderFormSheet: View {
         // On the stack, not its root: the root is covered by the Tags page and the Custom sheet,
         // which lock too when the reminder falls due while they're open.
         .task { await form.keepTheLockCurrent() }
+        // The footer's message, spoken as it appears: VoiceOver is on the field that caused it.
+        .speaksAsItChanges(form.saveBlock, sentence: \.message)
         // A swipe down mustn't lose changes; Cancel asks first instead.
         .interactiveDismissDisabled(form.hasChanges)
     }
@@ -92,18 +94,20 @@ struct ReminderFormSheet: View {
             DiscardingCancelButton(hasChanges: form.hasChanges)
         }
         ToolbarItem(placement: .confirmationAction) {
+            let name = form.isEditing
+                ? Text("Save", comment: "The Edit Reminder form's confirm button (a checkmark).")
+                : Text("Add", comment: "The New Reminder form's confirm button (a checkmark).")
             Button(role: .confirm) {
                 if let model, form.save(to: model) { dismiss() }
             } label: {
                 Label {
-                    form.isEditing
-                        ? Text("Save", comment: "The Edit Reminder form's confirm button (a checkmark).")
-                        : Text("Add", comment: "The New Reminder form's confirm button (a checkmark).")
+                    name
                 } icon: {
                     Image(systemName: "checkmark")
                 }
             }
             .disabled(model == nil || form.saveBlock != nil)
+            .dimmedBecause(form.saveBlock?.message, label: name)
         }
     }
 }
@@ -147,6 +151,7 @@ private struct EditNoteSection: View {
             .font(.footnote)
             .foregroundStyle(Color(uiColor: .secondaryLabel))
             .textCase(nil)
+            .notAHeading()
         }
     }
 }
@@ -171,7 +176,7 @@ private struct WhatSection: View {
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                 if form.saveBlock == .noTitle {
-                    Text("Add a title to save.", comment: "Under the reminder form's title when it is empty, so Save is disabled.")
+                    Text(ReminderForm.SaveBlock.noTitle.message)
                         .foregroundStyle(Color.negative)
                 }
                 Text("Notes and tags stay in the app. Notifications and alarms show the title, not these.",
@@ -260,21 +265,13 @@ private struct ScheduleSection: View {
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                 if form.saveBlock == .pastTime {
-                    Text("This time has passed. Choose a later time.",
-                         comment: "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled.")
+                    Text(ReminderForm.SaveBlock.pastTime.message)
                         .foregroundStyle(Color.negative)
                 }
-                switch form.repeatBlock {
-                case .endsBeforeStart:
-                    Text("The repeat ends before it starts. Change its end date.",
-                         comment: "Under the reminder form's start when End Repeat's end date is before the start, so Save is disabled.")
+                // Only ever ends before it starts, or no times left.
+                if let block = form.repeatBlock {
+                    Text(block.message)
                         .foregroundStyle(Color.negative)
-                case .noTimesLeft:
-                    Text("The repeat has already ended. Change when it ends.",
-                         comment: "Under the reminder form's start when the repeat has no times left, so Save is disabled.")
-                        .foregroundStyle(Color.negative)
-                case .noTitle, .pastTime, nil:
-                    EmptyView()
                 }
                 // Always, end included, even with the Custom row, which leaves the end out (#287).
                 RepeatSummarySentence(summary: form.repeatSummary)

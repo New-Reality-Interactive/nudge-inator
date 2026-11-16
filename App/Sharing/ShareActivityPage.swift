@@ -16,10 +16,8 @@ struct ShareActivityPage: View {
             if list.isEmpty {
                 ScrollView {
                     ContentUnavailableView {
-                        Label {
+                        EmptyStateLabel(systemImage: "checkmark.circle.fill") {
                             Text("No Share Activity", comment: "Share Activity: title of the empty state, with nothing recorded.")
-                        } icon: {
-                            Image(systemName: "checkmark.circle.fill")
                         }
                     } description: {
                         Text("Nothing has gone wrong with sharing. If iCloud refuses a change or a connection ends, it shows here.", comment: "Share Activity: under \"No Share Activity\".")

@@ -138,6 +138,7 @@ private struct MyDayList: View {
                         todayText(now)
                             .subheadStyle()
                             .textCase(nil)
+                            .notAHeading()
                     }
                     if let reach {
                         PermissionBanners(reach: reach)

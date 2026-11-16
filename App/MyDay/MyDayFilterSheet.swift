@@ -28,6 +28,6 @@ struct MyDayFilterSheet: FilterSheetSummary {
         canReset = draft != MyDayFilterChoices()
         offersFromOthers = draft.fromOthers || engine.hasReceivedReminders
         let due = engine.myDay(tagFilter: draft.tagFilter, fromOthers: draft.fromOthers).items.count
-        result = LocalizedStringResource("Apply shows \(due) reminders due today.", comment: "My Day's filter sheet: above Reset. The placeholder is how many reminders due today My Day would show with these filters.")
+        result = LocalizedStringResource("Apply shows \(due) reminders due today.", comment: "My Day's filter sheet: above Reset. The placeholder is how many reminders due today My Day would show with these filters. VoiceOver also speaks it when a choice changes it.")
     }
 }

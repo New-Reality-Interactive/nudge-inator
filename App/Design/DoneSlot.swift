@@ -30,7 +30,7 @@ struct DoneSlot<DoneButton: View>: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(isHeld
-            ? Text("\(title) is Done. Its nudges have stopped.", comment: "VoiceOver, after Done on a nudge card or a My Day row: what the Done button's place now says. The placeholder is the reminder's title.")
+            ? Text(VoiceOverAnnouncement.done(title))
             : Text("Done, stop nudging: \(title)", comment: "VoiceOver label of the Done button on a nudge card or a My Day row. The placeholder is the reminder's title."))
         .accessibilityAddTraits(isHeld ? [] : .isButton)
         .accessibilityAction {

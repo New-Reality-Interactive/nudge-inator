@@ -31,8 +31,10 @@ struct ComingUpRowView: View {
 /// asks first as Remove does everywhere (#200). At accessibility sizes the pieces stack.
 struct WaitingRowView: View {
     let row: WaitingRow
-    let accept: () -> Void
-    let remove: () -> Void
+    /// Returns whether the reminder started, which VoiceOver then confirms.
+    let accept: () -> Bool
+    /// Returns whether the reminder went, which VoiceOver then confirms.
+    let remove: () -> Bool
     let openDetails: () -> Void
 
     @State private var isConfirmingRemove = false
@@ -58,7 +60,11 @@ struct WaitingRowView: View {
             .opensDetails(openDetails)
             .accessibilityElement(children: .combine)
             SizeAdaptiveStack(rowSpacing: Design.Spacing.s2, stackedSpacing: Design.Spacing.s2) {
-                Button(action: accept) {
+                Button {
+                    if accept() {
+                        VoiceOverAnnouncement.post(VoiceOverAnnouncement.accepted(row.title))
+                    }
+                } label: {
                     Text("Accept", comment: "Now, Waiting for You: starts a reminder someone sent, which waited for the person to accept it.")
                 }
                 .accessibilityLabel(Text(row.acceptVoiceOverLabel))
@@ -69,7 +75,11 @@ struct WaitingRowView: View {
                 }
                 .accessibilityLabel(Text(row.removeVoiceOverLabel))
                 // On the button, so a popover points at it.
-                .deleteReminderConfirmation(title: row.title, kind: .received, isPresented: $isConfirmingRemove, confirm: remove)
+                .deleteReminderConfirmation(title: row.title, kind: .received, isPresented: $isConfirmingRemove) {
+                    if remove() {
+                        VoiceOverAnnouncement.post(VoiceOverAnnouncement.removed(row.title))
+                    }
+                }
             }
             // Filled, so Remove doesn't read as dimmed (#402). Full width when stacked, where a
             // capsule's ends would grow with a wrapped label.

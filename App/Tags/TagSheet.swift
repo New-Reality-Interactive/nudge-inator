@@ -134,16 +134,19 @@ struct TagSheet: View {
                     DiscardingCancelButton(hasChanges: hasChanges)
                 }
                 ToolbarItem(placement: .confirmationAction) {
+                    let name = Text("Done", comment: "The tag sheet's confirm button (a checkmark).")
                     Button(role: .confirm, action: save) {
                         Label {
-                            Text("Done", comment: "The tag sheet's confirm button (a checkmark).")
+                            name
                         } icon: {
                             Image(systemName: "checkmark")
                         }
                     }
                     .disabled(model == nil || draft.problem != nil)
+                    .dimmedBecause(draft.problem?.message, label: name)
                 }
             }
+            .speaksAsItChanges(shownProblem, sentence: \.message)
         }
         .onAppear { isFocused = true }
         // A swipe down mustn't lose a typed name; Cancel asks first instead.
@@ -151,14 +154,7 @@ struct TagSheet: View {
     }
 
     private func problemText(_ problem: TagNameDraft.Problem) -> some View {
-        Group {
-            switch problem {
-            case .empty:
-                Text("Enter a name for the tag.", comment: "Tag sheet: shown when what was typed leaves no name, such as only a #.")
-            case .taken(let existing):
-                Text("You already have the tag \(existing.label).", comment: "Tag sheet: shown when another tag has the name, ignoring case. The placeholder is that tag, such as \"#home\".")
-            }
-        }
+        Text(problem.message)
         .font(.footnote)
         .textCase(nil)
         .foregroundStyle(Color.negative)
