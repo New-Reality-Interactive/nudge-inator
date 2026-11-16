@@ -2660,7 +2660,7 @@ function settingsSections() {
     <li><div class="cell"><span class="ico" style="background:var(--tile-blue)">${I("square.and.arrow.up", 19)}</span><label class="main" for="set-sharing">Sharing</label><input type="checkbox" class="switch" role="switch" id="set-sharing" data-sharing ${sharingOn() ? "checked" : ""}></div></li>
     ${sharingOn() ? `<li><button type="button" class="cell" data-conns><span class="ico" style="background:var(--tile-gray)">${I("person.2", 19)}</span><span class="main">Connections</span><span class="trail">${connected().length || ""}</span>${chev}</button></li>
     <li><button type="button" class="cell" data-activity><span class="ico" style="background:var(--tile-gray)">${I("list.bullet.rectangle", 19)}</span><span class="main">Share Activity</span>${chev}</button></li>` : ""}
-    <li><button type="button" class="cell" data-tutorial><span class="ico" style="background:var(--tile-gray)">${I("info.circle", 19)}</span><span class="main">How Sharing Works</span>${chev}</button></li>
+    <li><button type="button" class="cell tint" data-tutorial><span class="ico" style="background:var(--tile-gray)">${I("info.circle", 19)}</span><span class="main">How Sharing Works</span></button></li>
   </ul>
   <p class="sec-f">Connect with people through iCloud to send each other reminders.</p></div>` },
     { title: "Nudges", body: `<div class="sec"><ul class="list icons">

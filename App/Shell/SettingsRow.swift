@@ -51,9 +51,7 @@ struct SettingsRow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             if let accessory {
                 Image(systemName: accessory.symbol)
-                    // Matched by eye to the system's navigation chevron (#423's phone check).
-                    .font(.body.weight(.semibold))
-                    .imageScale(.small)
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(Color(uiColor: .tertiaryLabel))
                     .accessibilityHidden(true)
             }

@@ -182,7 +182,9 @@ struct SettingsTab: View {
                     tile: .tileGray,
                     symbol: "info.circle",
                     title: Text("How Sharing Works", comment: "How Sharing Works: the sheet's title, and the Settings row under Sharing that opens it."),
-                    accessory: .chevron
+                    // It opens a sheet, not a page, so no chevron (the HIG keeps that for drilling in):
+                    // the accent says it can be tapped, as Send a Test Nudge's does (#423's phone check).
+                    titleColor: .accentColor
                 )
             }
         } header: {

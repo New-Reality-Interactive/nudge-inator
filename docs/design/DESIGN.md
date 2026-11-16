@@ -662,8 +662,9 @@ sharing paused and offline banner.
   while the switch is on (#387). Below it, also only while the switch is on, the Share Activity row
   is a `{colors.tile-gray}` tile with `list.bullet.rectangle` and a chevron, with no status (#397).
   Last in the section, with Sharing on or off (under Share Activity while on, under the switch while
-  off), How Sharing Works is a `{colors.tile-gray}` tile with `info.circle` and a chevron; it opens
-  the How Sharing Works sheet (#423).
+  off), How Sharing Works is a `{colors.tile-gray}` tile with `info.circle` and its title in the
+  accent, with no chevron, as Send a Test Nudge: it opens the How Sharing Works sheet, not a page, and
+  the HIG keeps the disclosure indicator for drilling in (#423).
 - **How Sharing Works sheet** (mockup `2026-11-15-sharing-tutorial`, #423): four pages in an inset
   grouped list, inline title How Sharing Works. Each page has decorative pills (an SF Symbol and a
   word in `{colors.label}`, 8 pt apart, on `tertiary-system-fill`, `arrow.right` between them in
