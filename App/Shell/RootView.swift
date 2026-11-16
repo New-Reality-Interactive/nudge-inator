@@ -39,8 +39,14 @@ struct RootView: View {
         // The mockup shrinks the tab bar while scrolling down (iOS 26). Ticket 23 records what it
         // does in portrait and landscape.
         .tabBarMinimizeBehavior(.onScrollDown)
-        .inviteAcceptance(sharing: model?.sharing) { navigation.openConnection($0) }
+        .inviteAcceptance(sharing: model?.sharing) {
+            model?.connectedSheetClosed()
+        } changeThese: {
+            model?.changeTheseChosen()
+            navigation.openConnection($0)
+        }
         .inviteWhileSharingOff(model: model)
+        .sharingTutorialFirstTime(model: model)
         .connectionEnded(model: model)
         .accountChanged(sharing: model?.sharing)
         .task { await tickEveryMinute() }

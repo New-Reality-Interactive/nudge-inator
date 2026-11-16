@@ -74,6 +74,15 @@ final class AppModel {
     /// Settings' Sharing switch (#387).
     var isSharingOn: Bool { sharing != nil }
 
+    /// Whether How Sharing Works should open by itself now (#424): Sharing has just been turned on
+    /// for the first time, and the tutorial hasn't been seen. The shell opens it while this is true,
+    /// and closing it calls `sharingTutorialClosed()`.
+    private(set) var isSharingTutorialDue = false
+    /// Turn On Sharing on an invite's prompt, the first time: the tutorial waits for the Connected
+    /// sheet to close, since a sheet closes before the next opens.
+    private var sharingTutorialWaitsForConnected = false
+    private let sharingTutorial: SharingTutorialRecord
+
     /// Who sent each received reminder, for its "From <name>" label (ticket 199). Read from the
     /// sharing store's data, so a screen that reads it changes when a connection does.
     var senders: Senders {
@@ -95,6 +104,7 @@ final class AppModel {
         doneQueue: DoneQueue,
         sharing: SharingModel? = nil,
         sharingSwitch: SharingSwitchRecord = .standard,
+        sharingTutorial: SharingTutorialRecord = .standard,
         makeSharing: @escaping () -> SharingModel? = { nil },
         timeZone: TimeZone = .autoupdatingCurrent,
         giveUpLimit: GiveUpLimit = .shipped
@@ -111,6 +121,7 @@ final class AppModel {
         self.tagsSortRecord = tagsSortRecord
         self.doneQueue = doneQueue
         self.sharingSwitch = SharingSwitch(model: sharing, record: sharingSwitch, make: makeSharing)
+        self.sharingTutorial = sharingTutorial
         onboarding = onboardingRecord.isFinished ? nil : .welcome
         scheduler = CombinedSchedulerAdapter(adapters: [notifications, alarms])
         // Never handed an event before `launch()` replaces it, so it never applies a plan.
@@ -128,10 +139,18 @@ final class AppModel {
     /// the Debug stand-in turned on.
     func setSharing(on: Bool) {
         if on {
+            let wasOff = !isSharingOn
             sharingSwitch.turnOn()
+            if wasOff, isSharingOn, !sharingTutorial.isSeen { isSharingTutorialDue = true }
         } else if sharingOff == .atOnce {
             try? turnSharingOff(choosing: .remove)
         }
+    }
+
+    /// How Sharing Works closed, by Close, Done or a swipe (#424): it never opens by itself again.
+    func sharingTutorialClosed() {
+        isSharingTutorialDue = false
+        sharingTutorial.isSeen = true
     }
 
     /// An invite the person opened while Sharing is off (#389), held with what hands it to the
@@ -165,8 +184,25 @@ final class AppModel {
         let held = heldInvite
         heldInvite = nil
         guard turnOnSharing || sharing != nil else { return }
+        let wasOff = !isSharingOn
         sharingSwitch.turnOn()
+        if wasOff, isSharingOn, !sharingTutorial.isSeen { sharingTutorialWaitsForConnected = true }
         held?.handOver()
+    }
+
+    /// The Connected sheet has gone, after Done or a swipe (#424). The first time Sharing was turned
+    /// on through an invite, the tutorial opens now, as the sheet before it has closed.
+    func connectedSheetClosed() {
+        guard sharingTutorialWaitsForConnected else { return }
+        sharingTutorialWaitsForConnected = false
+        if !sharingTutorial.isSeen { isSharingTutorialDue = true }
+    }
+
+    /// Change These on the Connected sheet, which opens the connection's page (#424): that counts
+    /// as having seen the tutorial, so none follows the sheet, now or later.
+    func changeTheseChosen() {
+        sharingTutorialWaitsForConnected = false
+        sharingTutorial.isSeen = true
     }
 
     /// Whether the Sharing switch can turn off yet (#387): its reminders and its store have been

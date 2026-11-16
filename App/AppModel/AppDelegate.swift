@@ -90,10 +90,12 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         let standIn = StandInSharing.launchesWithSharingOff() ? nil : StandInSharing.modelIfAsked(clock: clock)
         let makeSharing = { StandInSharing.modelIfAsked(clock: clock) ?? cloudKitSharing(clock: clock) }
         let sharingSwitch = StandInSharing.switchRecordResetIfOff()
+        let sharingTutorial = StandInSharing.tutorialRecordResetIfOff()
         #else
         let standIn: SharingModel? = nil
         let makeSharing = { cloudKitSharing(clock: clock) }
         let sharingSwitch = SharingSwitchRecord.standard
+        let sharingTutorial = SharingTutorialRecord.standard
         #endif
         return AppModel(
             clock: clock,
@@ -110,6 +112,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             doneQueue: doneQueue,
             sharing: standIn,
             sharingSwitch: sharingSwitch,
+            sharingTutorial: sharingTutorial,
             makeSharing: makeSharing
         )
     }
