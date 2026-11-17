@@ -435,7 +435,7 @@ struct SharingRecordMappingTests {
         #expect(sentRecord.recordType == "SentReminder")
         #expect(Set(sentRecord.encryptedValues.allKeys()) == ["title", "notes", "dueTime", "repeatRule", "repeatMissingDay", "repeatUntilTime", "strength", "paceKind", "paceWait", "breakThroughFocus", "createdAt", "revision", "changeNote", "canceled"])
         #expect(settings.recordType == "ConnectionSettings")
-        #expect(Set(settings.encryptedValues.allKeys()) == ["name", "sharesStatus", "deliveryMode"])
+        #expect(Set(settings.encryptedValues.allKeys()) == ["name", "sharesStatus", "deliveryMode", "heartbeat"])
         #expect(receipt.recordType == "Receipt")
         #expect(Set(receipt.encryptedValues.allKeys()) == ["receipt"])
         #expect(Set(status.encryptedValues.allKeys()) == ["label", "notSharingThisOne", "occurrenceCount", "reportID"])

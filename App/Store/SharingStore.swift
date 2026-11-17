@@ -72,6 +72,7 @@ struct SharingStore {
             record.myDeliveryMode = connection.mine.deliveryMode.storedValue
             record.theirSharesStatus = connection.theirs.sharesStatus
             record.theirDeliveryMode = connection.theirs.deliveryMode.storedValue
+            record.theirLastSynced = connection.theirLastSynced
             record.address = connection.address
             record.invitedAt = connection.invitedAt
             record.connectedAt = connection.connectedAt
@@ -155,6 +156,7 @@ struct SharingStore {
                     state: try .init(storedValue: $0.state),
                     mine: ConnectionChoices(sharesStatus: $0.mySharesStatus, deliveryMode: try .init(storedValue: $0.myDeliveryMode)),
                     theirs: ConnectionChoices(sharesStatus: $0.theirSharesStatus, deliveryMode: try .init(storedValue: $0.theirDeliveryMode)),
+                    theirLastSynced: $0.theirLastSynced,
                     address: $0.address,
                     invitedAt: $0.invitedAt,
                     connectedAt: $0.connectedAt

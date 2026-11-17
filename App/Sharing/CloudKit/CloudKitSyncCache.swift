@@ -25,6 +25,10 @@ struct CloudKitSyncCache: Codable, Equatable {
     var unreported: [UUID]?
     /// The changes iCloud refused for good (#396), until the app model has kept them as given up.
     var refused: Set<UUID>?
+    /// When iCloud last saved this person's settings record with a heartbeat on it, per connection
+    /// (#435): iCloud's time, which the next heartbeat is measured from. Optional, so a cache kept
+    /// before it reads.
+    var lastHeartbeats: [UUID: Date]?
 
     /// A connection's record zone: named with the connection's ID, owned by whoever invited.
     struct Zone: Codable, Equatable {
