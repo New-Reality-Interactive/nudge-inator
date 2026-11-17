@@ -87,7 +87,7 @@
     "%@ resumed. It nudges you when it's next due." : {
       "comment" : "VoiceOver: spoken after Resume Reminder on a reminder's details. The placeholder is the reminder's title."
     },
-    "%@ sees how the reminders they send you are going: Done, Paused, Missed or Removed, and the last 7 days of a repeating one." : {
+    "%@ sees how the reminders they send you are going: Done, Paused, Missed or Removed, and the last 7 days of a repeating one. They also see when you last opened the app." : {
       "comment" : "A connection's page: under Status Sharing when it's on. The argument is the other person's name, such as \"Alex Morgan\"."
     },
     "%@ sees how this one is going." : {
@@ -98,9 +98,6 @@
     },
     "%@ sees “Not sharing this one” in place of how it's going." : {
       "comment" : "Reminder details: under Don't share this one while it's on. The placeholder is the sender's name."
-    },
-    "%@ sets these, for the reminders you send them." : {
-      "comment" : "A connection's page: under the other person's choices. The argument is their name, such as \"Alex Morgan\"."
     },
     "%@ · %@" : {
       "comment" : "A tag's screen: under a reminder's title. 1: its tags, such as \"#home #errands\", this screen's tag in bold. 2: its schedule, such as \"Every day at 8:00 AM\".\nBody of the notification that a reminder someone sent has arrived. 1: who sent it, such as \"From Alex Morgan\". 2: its strength in words, such as \"Firm: rings as an alarm from nudge 4\".\nMy Day: under the title of a tagged reminder. 1: its tags, such as \"#home #errands\", the ones the filter chose in bold. 2: the note, such as \"Nudging · 2 nudges · next 1:15 PM\".",
@@ -1732,6 +1729,9 @@
     "Last occurrence" : {
       "comment" : "Reminder details, Schedule: how the latest occurrence closed."
     },
+    "Last synced on %@" : {
+      "comment" : "A connection's page: under Connected since, once the other person's app hasn't synced for 14 days. The argument is the day it last did, such as \"Sep 10\"."
+    },
     "Later" : {
       "comment" : "A tag's screen: header of the reminders due after today."
     },
@@ -2557,6 +2557,9 @@
     },
     "They open the invite on their iPhone, and you're both connected." : {
       "comment" : "How Sharing Works, Connect: under \"They Accept\"."
+    },
+    "They set these, for the reminders you send them." : {
+      "comment" : "A connection's page: under the other person's choices, whose header names them."
     },
     "They stay with the same schedule, history and tags, from no one." : {
       "comment" : "Turn Off Sharing's sheet: under Keep as My Own Reminders."

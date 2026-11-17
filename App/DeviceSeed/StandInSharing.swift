@@ -154,10 +154,11 @@ extension View {
 
     /// A Stand-in menu in the toolbar for the phone check (ticket 195), only under the stand-in:
     /// receiving an invite, one that's unavailable, with `invited`, that person accepting, and with
-    /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196), sending
-    /// a reminder (ticket 198), getting what was sent to them (ticket 201), accepting what waits for
-    /// them (ticket 203), reporting how what you sent is going (ticket 206), changing what they sent
-    /// (ticket 204), deleting it (ticket 205) or disconnecting (ticket 197). Without either, on
+    /// `connected`, that person changing their Status sharing or Delivery mode (ticket 196), going
+    /// Quiet or syncing again (#436), sending a reminder (ticket 198), getting what was sent to them
+    /// (ticket 201), accepting what waits for them (ticket 203), reporting how what you sent is
+    /// going (ticket 206), changing what they sent (ticket 204), deleting it (ticket 205) or
+    /// disconnecting (ticket 197). Without either, on
     /// Connections, it also chooses the iCloud account the stand-in reports (ticket 210), and whether
     /// it says the iPhone is online (ticket 211).
     func standInSharingControls(invited: SharingConnection? = nil, connected: SharingConnection? = nil) -> some View {
@@ -170,16 +171,18 @@ extension View {
                         } else if let connected {
                             let theirs = connected.theirs
                             Button {
-                                adapter.theyChoose(ConnectionChoices(sharesStatus: !theirs.sharesStatus, deliveryMode: theirs.deliveryMode), for: connected.id)
+                                Task { await adapter.theyChoose(ConnectionChoices(sharesStatus: !theirs.sharesStatus, deliveryMode: theirs.deliveryMode), for: connected) }
                             } label: {
                                 Text(verbatim: "\(connected.name) Turns Status Sharing \(theirs.sharesStatus ? "Off" : "On")")
                             }
                             Button {
                                 let other: DeliveryMode = theirs.deliveryMode == .askMeFirst ? .startRightAway : .askMeFirst
-                                adapter.theyChoose(ConnectionChoices(sharesStatus: theirs.sharesStatus, deliveryMode: other), for: connected.id)
+                                Task { await adapter.theyChoose(ConnectionChoices(sharesStatus: theirs.sharesStatus, deliveryMode: other), for: connected) }
                             } label: {
                                 Text(verbatim: "\(connected.name) Chooses \(theirs.deliveryMode == .askMeFirst ? "Start right away" : "Ask me first")")
                             }
+                            Button { Task { await adapter.theyGoQuiet(connected) } } label: { Text(verbatim: "\(connected.name) Goes Quiet") }
+                            Button { Task { await adapter.theySync(connected) } } label: { Text(verbatim: "\(connected.name) Syncs Again") }
                             Button { adapter.theySend(.gentle, through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Gentle Reminder") }
                             Button { adapter.theySend(.relentless, through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Relentless Reminder") }
                             Button { adapter.theySendAChange(through: connected.id) } label: { Text(verbatim: "\(connected.name) Sends a Change") }
@@ -453,10 +456,26 @@ final class StandInSharingAdapter: SharingAdapter {
         Task { try? await events?.inviteAccepted(connectionID, by: SharingParticipant(id: "stand-in")) }
     }
 
-    /// Stands in for the other person changing their choices for the connection with `connectionID`
-    /// (ticket 196): their settings arrive, as through iCloud.
-    func theyChoose(_ choices: ConnectionChoices, for connectionID: UUID) {
-        Task { try? await events?.received(.settings(.init(choices), for: connectionID)) }
+    /// Stands in for the other person changing their choices for `connection` (ticket 196): their
+    /// settings arrive, as through iCloud, keeping the Last synced they last carried while their
+    /// Status sharing stays on and carrying none once it's off, as the heartbeat does (#435).
+    func theyChoose(_ choices: ConnectionChoices, for connection: SharingConnection) async {
+        let lastSynced = choices.sharesStatus ? connection.theirLastSynced : nil
+        try? await events?.received(.settings(.init(choices, lastSynced: lastSynced), for: connection.id))
+    }
+
+    /// Stands in for the other person's app going unopened (#436): their settings arrive with
+    /// their Status sharing on and a Last synced 18 days before `now`, so the connection is Quiet.
+    func theyGoQuiet(_ connection: SharingConnection, at now: Date = .now) async {
+        let choices = ConnectionChoices(sharesStatus: true, deliveryMode: connection.theirs.deliveryMode)
+        try? await events?.received(.settings(.init(choices, lastSynced: now.addingTimeInterval(-18 * 24 * 60 * 60)), for: connection.id))
+    }
+
+    /// Stands in for the other person's app syncing again (#436): their settings arrive with their
+    /// Status sharing on and a Last synced of `now`, so the connection isn't Quiet.
+    func theySync(_ connection: SharingConnection, at now: Date = .now) async {
+        let choices = ConnectionChoices(sharesStatus: true, deliveryMode: connection.theirs.deliveryMode)
+        try? await events?.received(.settings(.init(choices, lastSynced: now), for: connection.id))
     }
 
     /// Stands in for the other person sending a reminder of `strength` through the connection with
