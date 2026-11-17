@@ -1116,8 +1116,8 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <p class="why">Settings › Connections, the reminder form's Send To and the Reminders tab's Mine | Sent all work by tapping. These reach the rest. Sent has Mine's search, Filter and Sort.</p>
       <button type="button" class="cbtn" id="c-sh-conns">Settings › Connections</button>
       <button type="button" class="cbtn" id="c-sh-quiet">Maya Torres goes quiet</button>
-      <button type="button" class="cbtn" id="c-sh-heard">Maya Torres is heard from again</button>
-      <p class="why">Quiet: nothing heard for 14 days, with their status sharing on. Sam Okafor's is off, so that page never shows it, however long it has been.</p>
+      <button type="button" class="cbtn" id="c-sh-synced">Maya Torres syncs again</button>
+      <p class="why">Quiet: nothing synced for 14 days, with their status sharing on. Sam Okafor's is off, so that page never shows it, however long it has been.</p>
       <button type="button" class="cbtn" id="c-sh-noopen">An invite that couldn't be opened</button>
       <button type="button" class="cbtn" id="c-sh-other">The other person disconnects</button>
       <button type="button" class="cbtn" id="c-sh-received">Received reminder: details</button>
@@ -1636,8 +1636,8 @@ function seedShared() {
     { at: "2026-09-28T07:58", names: ["Maya Torres"], event: "send" },
   ];
   connections = [
-    { id: "maya", name: "Maya Torres", state: "connected", since: "2026-08-30", address: "maya.torres@icloud.com", statusSharing: true, delivery: "right", theirStatus: true, theirDelivery: "right", heard: "2026-09-27" },
-    { id: "sam", name: "Sam Okafor", state: "connected", since: "2026-09-12", address: "sam.okafor@icloud.com", statusSharing: true, delivery: "ask", theirStatus: false, theirDelivery: "ask", heard: "2026-09-01" },
+    { id: "maya", name: "Maya Torres", state: "connected", since: "2026-08-30", address: "maya.torres@icloud.com", statusSharing: true, delivery: "right", theirStatus: true, theirDelivery: "right", synced: "2026-09-27" },
+    { id: "sam", name: "Sam Okafor", state: "connected", since: "2026-09-12", address: "sam.okafor@icloud.com", statusSharing: true, delivery: "ask", theirStatus: false, theirDelivery: "ask", synced: "2026-09-01" },
     { id: "jordan", name: "Jordan Lee", state: "invited", sentAt: "2026-09-28T07:40", address: "jordan.lee@icloud.com" },
     { id: "priya", name: "Priya Shah", state: "invited", sentAt: "2026-09-25T18:10", address: "+1 (555) 010-4477" },
   ];
@@ -2900,10 +2900,10 @@ function createSent(fields, ids) {
 }
 
 /* Last synced (#434): when the other person last opened the app, shown only while their status
-   sharing for this connection is on and only once the connection is quiet (nothing heard for 14
+   sharing for this connection is on and only once the connection is quiet (nothing synced for 14
    days). Only on the connection's page, under Connected since; nowhere else. */
-const quiet = (c) => c.theirStatus && c.heard && dayDiff(L(`${c.heard}T00:00`), NOW) >= 14;
-const heardNote = (c) => { const d = L(`${c.heard}T00:00`); return `Last synced on ${MON[d.getMonth()]} ${d.getDate()}`; };
+const quiet = (c) => c.theirStatus && c.synced && dayDiff(L(`${c.synced}T00:00`), NOW) >= 14;
+const syncedNote = (c) => { const d = L(`${c.synced}T00:00`); return `Last synced on ${MON[d.getMonth()]} ${d.getDate()}`; };
 /* Settings › Connections. */
 const personTile = `<span class="ico round" style="background:var(--tile-gray)">${I("person", 19)}</span>`;
 function connRow(c) {
@@ -2957,7 +2957,7 @@ function viewConn(id) {
   const f = esc(c.name);
   const ask1 = c.delivery === "ask";
   return `${navBar({ title: c.name, large: false, back })}
-  <div class="sec" style="margin-top:12px"><div class="hero"><h1 tabindex="-1">${esc(c.name)}</h1><p>Connected since ${MON[L(`${c.since}T00:00`).getMonth()]} ${L(`${c.since}T00:00`).getDate()}</p>${quiet(c) ? `<p>${heardNote(c)}</p>` : ""}</div></div>
+  <div class="sec" style="margin-top:12px"><div class="hero"><h1 tabindex="-1">${esc(c.name)}</h1><p>Connected since ${MON[L(`${c.since}T00:00`).getMonth()]} ${L(`${c.since}T00:00`).getDate()}</p>${quiet(c) ? `<p>${syncedNote(c)}</p>` : ""}</div></div>
   <h2 class="sec-h">Reminders from ${f}</h2>
   <div class="sec"><ul class="list">
     <li><div class="formrow"><label for="cn-st">Status Sharing</label><input type="checkbox" class="switch" role="switch" id="cn-st" data-connstatus="${c.id}" ${c.statusSharing ? "checked" : ""}></div></li>
@@ -5075,8 +5075,8 @@ for (const [id, run] of Object.entries({
   "c-sw-on": () => startSharing(true),
   "c-sw-received": () => startSharing("received"),
   "c-sw-invite": () => openInviteLink(),
-  "c-sh-quiet": () => { if (!sharingOn()) startSharing(true); const c = conn("maya"); if (!c) { controlNote("No Maya Torres. Reset the mockup."); return; } c.theirStatus = true; c.heard = "2026-09-10"; controlNote("Last synced on Sep 10, 18 days ago"); showTab("settings", { kind: "conns" }); state.stacks.settings.push({ kind: "conn", id: "maya" }); nav(); },
-  "c-sh-heard": () => { if (!sharingOn()) startSharing(true); const c = conn("maya"); if (!c) { controlNote("No Maya Torres. Reset the mockup."); return; } c.heard = "2026-09-27"; controlNote("Maya Torres synced yesterday"); showTab("settings", { kind: "conns" }); state.stacks.settings.push({ kind: "conn", id: "maya" }); nav(); },
+  "c-sh-quiet": () => { if (!sharingOn()) startSharing(true); const c = conn("maya"); if (!c) { controlNote("No Maya Torres. Reset the mockup."); return; } c.theirStatus = true; c.synced = "2026-09-10"; controlNote("Last synced on Sep 10, 18 days ago"); showTab("settings", { kind: "conns" }); state.stacks.settings.push({ kind: "conn", id: "maya" }); nav(); },
+  "c-sh-synced": () => { if (!sharingOn()) startSharing(true); const c = conn("maya"); if (!c) { controlNote("No Maya Torres. Reset the mockup."); return; } c.synced = "2026-09-27"; controlNote("Maya Torres synced yesterday"); showTab("settings", { kind: "conns" }); state.stacks.settings.push({ kind: "conn", id: "maya" }); nav(); },
   "c-sh-noopen": () => (conn("priya") ? showTab("settings", { kind: "inv", id: "priya" }) : controlNote("It's gone. Reset the mockup.")),
   "c-sh-other": () => { const c = connected()[0]; if (!c) { controlNote("No connections left. Reset the mockup."); return; } Object.assign(state, { system: null, alert: null }); state.sheet = { kind: "disconnect", id: c.id, choice: "remove", other: true, ret: document.activeElement }; state.focus = "sheet"; render(); },
   "c-sh-received": () => openReceived("rc1"),

@@ -5,11 +5,11 @@ The change mockup for Last synced (#434, spec #127, version 1.4.0). Copied from 
 feature's change mockups. It's deleted when the 1.4.0 version mockup takes the change in.
 
 Open [`index.html`](index.html) in a browser, then the controls' Shared reminders › "Maya Torres
-goes quiet" (and "Maya Torres is heard from again" to go back).
+goes quiet" (and "Maya Torres syncs again" to go back).
 
 ## What changed since the account change mockup
 
-- **A quiet connection's note.** Once nothing has been heard from the other person for 14 days,
+- **A quiet connection's note.** Once the other person hasn't synced for 14 days,
   and their status sharing for the connection is on, the connection's page shows "Last synced on
   Sep 10" (the date in the person's locale) under Connected since. Nowhere else shows it, the
   Connections row included. Sam Okafor's status sharing is off, so Sam Okafor's page never shows it.

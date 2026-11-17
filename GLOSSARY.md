@@ -203,8 +203,12 @@ A recipient's choice, per connection, whether the sender sees how their reminder
 _Avoid_: Visibility, privacy setting
 
 **Last synced**:
-When the other person in a Connection last opened the app, as their side of it says. A person sees it only while the other person's Status sharing for that Connection is on, and only once the Connection is **quiet**: nothing heard for 14 days. It shows on that Connection's page, never elsewhere. It never ends a Connection by itself: silence can mean the app wasn't opened, the phone was off, the app was deleted, or their iPhone signed in to a different Apple Account. Disconnect stays the person's own choice.
+When the other person in a Connection last opened the app, as iCloud last received it from their app. A person sees it only while the other person's Status sharing for that Connection is on, and only once the Connection is Quiet. It shows on that Connection's page, never elsewhere. It never ends a Connection by itself: silence can mean the app wasn't opened, the phone was off, the app was deleted, or their iPhone signed in to a different Apple Account. Disconnect stays the person's own choice.
 _Avoid_: Last heard from, last seen, online, active, heartbeat
+
+**Quiet**:
+A Connection whose other person hasn't synced for 14 days, with their Status sharing for it on. Only then does its page show Last synced. Quiet never ends a Connection or changes what either person can do.
+_Avoid_: Inactive, stale, dormant
 
 **Delivery mode**:
 A recipient's choice, per connection, of how a received reminder starts: Start right away, or Ask me first, where it waits for them to accept it and sends no nudge until they do.
