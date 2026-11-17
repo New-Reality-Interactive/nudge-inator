@@ -10,7 +10,6 @@ import Testing
 @MainActor
 struct StandInQuietTests {
     let clock = FakeClock(now: NewYork.local(2026, 11, 16, 9))
-    let day: TimeInterval = 24 * 60 * 60
 
     func seeded() async throws -> (SharingModel, StandInSharingAdapter) {
         let model = try #require(StandInSharing.modelIfAsked(clock: clock, environment: [StandInSharing.variable: "seeded"]))
@@ -25,12 +24,12 @@ struct StandInQuietTests {
         try #require(model.connection(SeedSet.standInConnectionID))
     }
 
-    @Test func goingQuietShowsLastSynced18DaysBack() async throws {
+    @Test func goingQuietShowsALastSyncedPastTheQuietWindow() async throws {
         let (model, adapter) = try await seeded()
 
         await adapter.theyGoQuiet(try riley(on: model), at: clock.now)
 
-        #expect(model.lastSyncedIfQuiet(of: SeedSet.standInConnectionID) == clock.now.addingTimeInterval(-18 * day))
+        #expect(model.lastSyncedIfQuiet(of: SeedSet.standInConnectionID) == clock.now.addingTimeInterval(-StandInSharingAdapter.quietLastSyncedAgo))
     }
 
     @Test func syncingAgainEndsQuiet() async throws {
@@ -53,13 +52,23 @@ struct StandInQuietTests {
         #expect(model.lastSyncedIfQuiet(of: SeedSet.standInConnectionID) == nil)
     }
 
+    @Test func turningTheirStatusSharingBackOnCarriesAFreshLastSynced() async throws {
+        let (model, adapter) = try await seeded()
+        await adapter.theyChoose(ConnectionChoices(sharesStatus: false), for: try riley(on: model), at: clock.now)
+
+        await adapter.theyChoose(ConnectionChoices(sharesStatus: true), for: try riley(on: model), at: clock.now)
+
+        #expect(try riley(on: model).theirLastSynced == clock.now)
+        #expect(model.lastSyncedIfQuiet(of: SeedSet.standInConnectionID) == nil)
+    }
+
     @Test func changingTheirDeliveryModeKeepsQuiet() async throws {
         let (model, adapter) = try await seeded()
         await adapter.theyGoQuiet(try riley(on: model), at: clock.now)
 
         await adapter.theyChoose(ConnectionChoices(sharesStatus: true, deliveryMode: .askMeFirst), for: try riley(on: model))
 
-        #expect(model.lastSyncedIfQuiet(of: SeedSet.standInConnectionID) == clock.now.addingTimeInterval(-18 * day))
+        #expect(model.lastSyncedIfQuiet(of: SeedSet.standInConnectionID) == clock.now.addingTimeInterval(-StandInSharingAdapter.quietLastSyncedAgo))
     }
 }
 #endif

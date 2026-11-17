@@ -1730,7 +1730,7 @@
       "comment" : "Reminder details, Schedule: how the latest occurrence closed."
     },
     "Last synced on %@" : {
-      "comment" : "A connection's page: under Connected since, once the other person's app hasn't synced for 14 days. The argument is the day it last did, such as \"Sep 10\"."
+      "comment" : "A connection's page: under Connected since, once the other person's app hasn't synced for 14 days. The argument is the day it last did, such as \"Sep 10\", or \"Sep 10, 2025\" when it isn't this year."
     },
     "Later" : {
       "comment" : "A tag's screen: header of the reminders due after today."

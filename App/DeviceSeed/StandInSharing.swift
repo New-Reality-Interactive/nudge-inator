@@ -158,9 +158,8 @@ extension View {
     /// Quiet or syncing again (#436), sending a reminder (ticket 198), getting what was sent to them
     /// (ticket 201), accepting what waits for them (ticket 203), reporting how what you sent is
     /// going (ticket 206), changing what they sent (ticket 204), deleting it (ticket 205) or
-    /// disconnecting (ticket 197). Without either, on
-    /// Connections, it also chooses the iCloud account the stand-in reports (ticket 210), and whether
-    /// it says the iPhone is online (ticket 211).
+    /// disconnecting (ticket 197). Without either, on Connections, it also chooses the iCloud account
+    /// the stand-in reports (ticket 210), and whether it says the iPhone is online (ticket 211).
     func standInSharingControls(invited: SharingConnection? = nil, connected: SharingConnection? = nil) -> some View {
         toolbar {
             if let adapter = StandInSharing.current {
@@ -456,26 +455,34 @@ final class StandInSharingAdapter: SharingAdapter {
         Task { try? await events?.inviteAccepted(connectionID, by: SharingParticipant(id: "stand-in")) }
     }
 
+    /// How long before now a Quiet connection's other person last synced, under Goes Quiet: longer
+    /// than `SharingConnection.quietAfter` in any build.
+    static let quietLastSyncedAgo: TimeInterval = 18 * 24 * 60 * 60
+
     /// Stands in for the other person changing their choices for `connection` (ticket 196): their
-    /// settings arrive, as through iCloud, keeping the Last synced they last carried while their
-    /// Status sharing stays on and carrying none once it's off, as the heartbeat does (#435).
-    func theyChoose(_ choices: ConnectionChoices, for connection: SharingConnection) async {
-        let lastSynced = choices.sharesStatus ? connection.theirLastSynced : nil
-        try? await events?.received(.settings(.init(choices, lastSynced: lastSynced), for: connection.id))
+    /// settings arrive, as through iCloud. It takes the connection, not its ID, for the Last synced
+    /// they last carried, which stays while their Status sharing stays on. Turned on, they carry a
+    /// fresh one, and off, none, as the heartbeat does (#435).
+    func theyChoose(_ choices: ConnectionChoices, for connection: SharingConnection, at now: Date = .now) async {
+        let lastSynced = choices.sharesStatus ? connection.theirLastSynced ?? now : nil
+        await theirSettingsArrive(choices, lastSynced: lastSynced, for: connection)
     }
 
     /// Stands in for the other person's app going unopened (#436): their settings arrive with
-    /// their Status sharing on and a Last synced 18 days before `now`, so the connection is Quiet.
+    /// their Status sharing on and a Last synced `quietLastSyncedAgo` before `now`, so the
+    /// connection is Quiet.
     func theyGoQuiet(_ connection: SharingConnection, at now: Date = .now) async {
-        let choices = ConnectionChoices(sharesStatus: true, deliveryMode: connection.theirs.deliveryMode)
-        try? await events?.received(.settings(.init(choices, lastSynced: now.addingTimeInterval(-18 * 24 * 60 * 60)), for: connection.id))
+        await theirSettingsArrive(ConnectionChoices(sharesStatus: true, deliveryMode: connection.theirs.deliveryMode), lastSynced: now.addingTimeInterval(-Self.quietLastSyncedAgo), for: connection)
     }
 
     /// Stands in for the other person's app syncing again (#436): their settings arrive with their
     /// Status sharing on and a Last synced of `now`, so the connection isn't Quiet.
     func theySync(_ connection: SharingConnection, at now: Date = .now) async {
-        let choices = ConnectionChoices(sharesStatus: true, deliveryMode: connection.theirs.deliveryMode)
-        try? await events?.received(.settings(.init(choices, lastSynced: now), for: connection.id))
+        await theirSettingsArrive(ConnectionChoices(sharesStatus: true, deliveryMode: connection.theirs.deliveryMode), lastSynced: now, for: connection)
+    }
+
+    private func theirSettingsArrive(_ choices: ConnectionChoices, lastSynced: Date?, for connection: SharingConnection) async {
+        try? await events?.received(.settings(.init(choices, lastSynced: lastSynced), for: connection.id))
     }
 
     /// Stands in for the other person sending a reminder of `strength` through the connection with

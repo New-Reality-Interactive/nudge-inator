@@ -78,7 +78,7 @@ struct ConnectionPage: View {
                     // Read as the page draws, so a page left open doesn't turn Quiet by itself
                     // (#436): it does on the next visit, or the next change to the connection.
                     if let lastSynced = sharing.lastSyncedIfQuiet(of: connection.id) {
-                        Text("Last synced on \(Self.day(of: lastSynced))", comment: "A connection's page: under Connected since, once the other person's app hasn't synced for 14 days. The argument is the day it last did, such as \"Sep 10\".")
+                        Text("Last synced on \(Self.day(of: lastSynced))", comment: "A connection's page: under Connected since, once the other person's app hasn't synced for 14 days. The argument is the day it last did, such as \"Sep 10\", or \"Sep 10, 2025\" when it isn't this year.")
                             .font(.body)
                             .foregroundStyle(Color(uiColor: .secondaryLabel))
                     }
