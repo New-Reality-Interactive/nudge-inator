@@ -2877,8 +2877,11 @@
     "Your choices are as they were. Try again." : {
       "comment" : "A connection's page: under Couldn't Save the Change."
     },
+    "Your own reminders haven't changed. The people you were connected with haven't been told, so they still see you as connected. To share with them again, invite them from Settings › Connections." : {
+      "comment" : "The Apple Account Changed sheet: under what was removed, when connections were among it. A connection stays with the old Apple Account in iCloud, so the other people weren't told."
+    },
     "Your own reminders haven't changed. To share again, invite people from Settings › Connections." : {
-      "comment" : "The Apple Account Changed sheet: under what was removed."
+      "comment" : "The Apple Account Changed sheet: under what was removed, when no connection was among it."
     },
     "Your own reminders stay on this iPhone. Reminders you send or receive via an approved share, go through your iCloud. There's no account and no server of ours involved." : {
       "comment" : "Onboarding and How It Nudges: under \"Stays on your iPhone\".\nSettings: the privacy note under Your Data."

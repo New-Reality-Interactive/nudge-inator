@@ -746,7 +746,8 @@ sharing paused and offline banner.
   shape with no choice: a lead line, a list headed "Removed from This iPhone" (received reminders,
   connections, sent reminders, each a `{typography.body}` line over a `{typography.subhead}`
   `{colors.secondary-label}` detail, a row with nothing in it left out), a footer, and one prominent
-  OK. A swipe down closes it too, since it only informs.
+  OK. A swipe down closes it too, since it only informs. When connections were removed, the footer
+  also says the people in them weren't told (#433, `docs/mockups/2026-11-16-account-change-not-told/`).
 - **Sharing paused and offline, an exception to Warning's meaning (Colors):** the `permission-banner`
   with `{colors.warning}`, `icloud.slash` or `wifi.slash`, on Connections, Send To and Sent only. It
   extends Warning from the alarms-off and Time Sensitive-off banners to these two, as the same kind of

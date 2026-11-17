@@ -2,7 +2,8 @@ import SwiftUI
 
 /// The Apple Account Changed note (ticket 212, the mockup's `accountSheet`): a different Apple
 /// Account signed in, so the old account's sharing left this iPhone. It says what went, under
-/// Removed from This iPhone, and that the person's own reminders haven't changed. Connection
+/// Removed from This iPhone, and that the person's own reminders haven't changed. When connections
+/// went, it also says the people in them weren't told (#433, the 2026-11-16 mockup). Connection
 /// Ended's shape, with no choice to make: one prominent OK, and a swipe down closes it too.
 struct AccountChangedSheet: View {
     let note: AccountChangeNote
@@ -23,7 +24,7 @@ struct AccountChangedSheet: View {
                 } header: {
                     Text("Removed from This iPhone", comment: "The Apple Account Changed sheet: header of what was removed.")
                 } footer: {
-                    Text("Your own reminders haven't changed. To share again, invite people from Settings › Connections.", comment: "The Apple Account Changed sheet: under what was removed.")
+                    footer
                 }
                 Section {
                     Button(action: onDismiss) {
@@ -38,6 +39,15 @@ struct AccountChangedSheet: View {
             }
             .navigationTitle(Text("Apple Account Changed", comment: "The Apple Account Changed sheet's title: a different Apple Account signed in on the iPhone."))
             .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
+    private var footer: Text {
+        switch note.footer {
+        case .othersNotTold:
+            Text("Your own reminders haven't changed. The people you were connected with haven't been told, so they still see you as connected. To share with them again, invite them from Settings › Connections.", comment: "The Apple Account Changed sheet: under what was removed, when connections were among it. A connection stays with the old Apple Account in iCloud, so the other people weren't told.")
+        case .ownRemindersOnly:
+            Text("Your own reminders haven't changed. To share again, invite people from Settings › Connections.", comment: "The Apple Account Changed sheet: under what was removed, when no connection was among it.")
         }
     }
 
@@ -84,6 +94,21 @@ extension AccountChangeNote: Identifiable {
         case received(count: Int, senders: String)
         case connections(count: Int, names: String)
         case sent(count: Int)
+    }
+
+    /// What the note says under its rows (#433).
+    enum Footer: Hashable {
+        /// Connections were removed. They live on under the old Apple Account in iCloud, which a
+        /// device signed in to another account can't change, so the people in them weren't told.
+        case othersNotTold
+        /// No connection was removed: only that personal reminders stay.
+        case ownRemindersOnly
+    }
+
+    /// The note's footer: the others weren't told when any connection went, invites not yet
+    /// accepted among them (the approved mockup's wording covers both, #433's review).
+    var footer: Footer {
+        connections.isEmpty ? .ownRemindersOnly : .othersNotTold
     }
 
     /// The note's rows, in the mockup's order, a kind with nothing removed left out.

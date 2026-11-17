@@ -296,3 +296,20 @@ struct AccountChangeNoteRowsTests {
         #expect(note.rows == [.connections(count: 1, names: "Jordan Lee")])
     }
 }
+
+/// The Apple Account Changed note's footer (#433, the 2026-11-16 account-change mockup): a
+/// connection lives on under the old account in iCloud, so the people in the ones removed were
+/// never told, and the footer says so.
+struct AccountChangeNoteFooterTests {
+    @Test func aNoteThatRemovedConnectionsSaysTheOthersWerentTold() {
+        let note = AccountChangeNote(receivedCount: 1, senders: ["Maya Torres"], connections: ["Maya Torres"], sentCount: 0)
+
+        #expect(note.footer == .othersNotTold)
+    }
+
+    @Test func aNoteWithNoConnectionRemovedKeepsTheOwnRemindersFooter() {
+        let note = AccountChangeNote(receivedCount: 0, senders: [], connections: [], sentCount: 3)
+
+        #expect(note.footer == .ownRemindersOnly)
+    }
+}
