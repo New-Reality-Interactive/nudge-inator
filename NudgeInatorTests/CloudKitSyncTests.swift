@@ -152,7 +152,9 @@ extension CloudKitSyncTests {
 
     @Test func settingsGoBothWays() {
         let samsChoices = SharingChange.settings(.init(ConnectionChoices(sharesStatus: false, deliveryMode: .askMeFirst)), for: connectionID)
+        // With Status sharing on, the settings reach the other person with iCloud's time of them (#435).
         let alexsChoices = SharingChange.settings(.init(ConnectionChoices(sharesStatus: true)), for: connectionID)
+        let alexsAsSamGetsThem = SharingChange.settings(.init(ConnectionChoices(sharesStatus: true), lastSynced: icloud.now), for: connectionID)
 
         sam.submit(samsChoices)
         alex.submit(alexsChoices)
@@ -162,7 +164,7 @@ extension CloudKitSyncTests {
         sam.fetch()
 
         expectReceived(samsChoices, by: alex)
-        expectReceived(alexsChoices, by: sam)
+        expectReceived(alexsAsSamGetsThem, by: sam)
     }
 
     @Test func theInviteeSendsToTheInviterToo() {

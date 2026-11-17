@@ -267,6 +267,13 @@ final class FakeSharingAdapter: SharingAdapter {
 
     private(set) var stops = 0
 
+    /// Every heartbeat the app model asked for (#435), in order.
+    private(set) var heartbeats: [(connectionIDs: [UUID], now: Date)] = []
+
+    func heartbeat(for connectionIDs: [UUID], at now: Date) {
+        heartbeats.append((connectionIDs, now))
+    }
+
     func stop() {
         stops += 1
     }

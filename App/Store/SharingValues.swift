@@ -13,6 +13,10 @@ struct SharingConnection: Equatable, Identifiable {
     /// The other person's choices for what they receive from this person, as they last arrived.
     /// Their Status sharing is what the Sent read-out reads (`SentConnection.sharesStatus`).
     var theirs = ConnectionChoices()
+    /// When iCloud last received the other person's app (GLOSSARY.md, Last synced), from the heartbeat
+    /// on their settings record, or `nil` while there is none: their Status sharing is off, or
+    /// no heartbeat has reached this iPhone (#435).
+    var theirLastSynced: Date? = nil
     /// The email address or phone number of the Apple Account this person's invite went to, as the
     /// sharing sheet named it, or `nil` when the other person did the inviting.
     var address: String? = nil
@@ -177,6 +181,7 @@ extension SharingData {
         case .settings(let settings):
             guard let index = connections.firstIndex(where: { $0.id == change.connectionID }) else { return false }
             connections[index].theirs = settings.choices
+            connections[index].theirLastSynced = settings.lastSynced
             return true
         case .receipt(let receipt):
             guard let index = copyIndex(of: change) else { return false }

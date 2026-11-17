@@ -174,6 +174,13 @@ final class CloudKitSharingAdapter: SharingAdapter {
         return account
     }
 
+    func heartbeat(for connectionIDs: [UUID], at now: Date) {
+        start()
+        guard let sync else { return }
+        sync.heartbeat(for: connectionIDs, at: now)
+        keep()
+    }
+
     /// Whether the iPhone has a network path, which a path monitor keeps up to date. Online until
     /// `start()`, as the app model assumes.
     var isOnline: Bool { connectivity.isOnline }

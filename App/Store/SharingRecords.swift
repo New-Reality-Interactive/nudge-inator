@@ -18,6 +18,8 @@ final class ConnectionRecord: IdentifiedRecord {
     /// The other person's choices (`SharingConnection.theirs`).
     var theirSharesStatus: Bool
     var theirDeliveryMode: String
+    /// `SharingConnection.theirLastSynced`.
+    var theirLastSynced: Date?
     var address: String?
     var invitedAt: Date?
     var connectedAt: Date?

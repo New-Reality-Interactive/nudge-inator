@@ -20,6 +20,14 @@ struct SharingRecordMapping {
     struct FetchedRecord {
         let record: CKRecord
         let writtenByOtherPerson: Bool
+        /// When iCloud last saved the record: iCloud's own time, never a phone's clock (#435).
+        let modifiedAt: Date?
+
+        init(record: CKRecord, writtenByOtherPerson: Bool, modifiedAt: Date? = nil) {
+            self.record = record
+            self.writtenByOtherPerson = writtenByOtherPerson
+            self.modifiedAt = modifiedAt ?? record.modificationDate
+        }
     }
 
     /// What a change does to the zone's records.
@@ -64,6 +72,9 @@ struct SharingRecordMapping {
             record.encryptedValues[Field.name.rawValue] = settings.name
             record.encryptedValues[Field.sharesStatus.rawValue] = settings.choices.sharesStatus.recordValue
             record.encryptedValues[Field.deliveryMode.rawValue] = settings.choices.deliveryMode.storedValue
+            // The heartbeat follows Status sharing: with it off the field is cleared, so the other
+            // person has no Last synced (#435).
+            record.encryptedValues[Field.heartbeat.rawValue] = settings.choices.sharesStatus ? Self.newHeartbeat : nil
             writes.save.append(record)
         case .status(let status):
             guard let reminderID = change.reminderID else { break }
@@ -99,9 +110,9 @@ struct SharingRecordMapping {
         let named = fetched.compactMap(accepted)
         let fetchedByName = Dictionary(named.map { ($0.name.text, $0.record) }) { _, latest in latest }
         var statusesRead: Set<Reminder.ID> = []
-        return named.compactMap { record, name -> SharingChange? in
+        return named.compactMap { record, name, modifiedAt -> SharingChange? in
             guard name.type.isStatus else {
-                return try? change(from: record, named: name)
+                return try? change(from: record, named: name, modifiedAt: modifiedAt)
             }
             guard let reminderID = name.reminderID, statusesRead.insert(reminderID).inserted else { return nil }
             return try? statusChange(of: reminderID) { wanted in
@@ -109,6 +120,38 @@ struct SharingRecordMapping {
             }
         }
     }
+
+    /// This person's connection settings record with a new heartbeat on it, for a heartbeat that
+    /// goes on its own (#435). `existing` is the record the sync holds, on iCloud's latest version:
+    /// only the heartbeat is set on it, so what iCloud holds of it is left as it is. With none held,
+    /// the record is new and carries the defaults a reader needs (`ConnectionChoices`).
+    func heartbeat(existing: CKRecord?) -> CKRecord {
+        let record = existing ?? self.record(RecordName(type: .connectionSettings, writer: side), existing: { _ in nil })
+        if existing == nil {
+            let defaults = ConnectionChoices()
+            record.encryptedValues[Field.sharesStatus.rawValue] = defaults.sharesStatus.recordValue
+            record.encryptedValues[Field.deliveryMode.rawValue] = defaults.deliveryMode.storedValue
+        }
+        record.encryptedValues[Field.heartbeat.rawValue] = Self.newHeartbeat
+        return record
+    }
+
+    /// The heartbeat's field name, which a record this person wrote holds only while Status sharing is on.
+    static let heartbeatField = Field.heartbeat.rawValue
+
+    /// Whether the record named `recordName` is this person's connection settings record.
+    func isOwnSettings(recordName: String) -> Bool {
+        guard let name = RecordName(recordName) else { return false }
+        return name.type == .connectionSettings && name.writer == side
+    }
+
+    /// The name of this person's connection settings record.
+    var ownSettingsRecordName: String {
+        RecordName(type: .connectionSettings, writer: side).text
+    }
+
+    /// A value no earlier heartbeat had, so a save always changes the record and iCloud stamps it.
+    private static var newHeartbeat: Int64 { Int64.random(in: 1...Int64.max) }
 
     /// Whether this person's own app writes the record named `recordName`: it is named for their side.
     func isOwn(recordName: String) -> Bool {
@@ -131,11 +174,11 @@ struct SharingRecordMapping {
     static var sendRanks: Int { RecordType.allCases.count }
 
     /// The record and its name, if it is one the other person may write and did.
-    private func accepted(_ item: FetchedRecord) -> (record: CKRecord, name: RecordName)? {
+    private func accepted(_ item: FetchedRecord) -> (record: CKRecord, name: RecordName, modifiedAt: Date?)? {
         guard item.writtenByOtherPerson, let name = RecordName(item.record.recordID.recordName),
               name.writer != side, item.record.recordType == name.type.rawValue
         else { return nil }
-        return (item.record, name)
+        return (item.record, name, item.modifiedAt)
     }
 
     /// The change a deleted record means. Only a status means one: its recipient's app deleted it
@@ -149,7 +192,7 @@ struct SharingRecordMapping {
     }
 
     /// The change one record means by itself; a status needs its occurrences, so isn't read here.
-    private func change(from record: CKRecord, named name: RecordName) throws -> SharingChange? {
+    private func change(from record: CKRecord, named name: RecordName, modifiedAt: Date?) throws -> SharingChange? {
         switch name.type {
         case .connectionSettings:
             let choices = ConnectionChoices(
@@ -157,7 +200,9 @@ struct SharingRecordMapping {
                 deliveryMode: try DeliveryMode(storedValue: try record.required(Field.deliveryMode))
             )
             // The name is optional: the app model sends none (ticket 196).
-            return .settings(.init(name: record.encryptedValues[Field.name.rawValue] as? String, choices), for: connectionID)
+            // Last synced is iCloud's time of a record that carries a heartbeat (#435).
+            let lastSynced = record.encryptedValues[Field.heartbeat.rawValue] == nil ? nil : modifiedAt
+            return .settings(.init(name: record.encryptedValues[Field.name.rawValue] as? String, choices, lastSynced: lastSynced), for: connectionID)
         case .sentReminder:
             let reminderID = try name.requiredReminderID()
             if (record.encryptedValues[Field.canceled.rawValue] as? Int64) == true.recordValue {
@@ -333,6 +378,7 @@ private enum Field: String, CaseIterable {
     case name
     case sharesStatus
     case deliveryMode
+    case heartbeat
     case title
     case notes
     case dueTime

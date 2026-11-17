@@ -60,6 +60,8 @@ final class FakeICloud {
         var type: String
         var fields: [String: CloudKitSyncCache.StoredField]
         var version: Int
+        /// When iCloud saved it: iCloud's time, which `FakeICloud.now` sets (#435).
+        var modifiedAt: Date
         weak var writer: FakeSyncDevice?
     }
 
@@ -75,6 +77,8 @@ final class FakeICloud {
     fileprivate var records: [String: [String: Stored]] = [:]
     /// Every change, in order, for the devices' fetches to read on from.
     fileprivate var log: [Entry] = []
+    /// iCloud's time, which stamps each save.
+    var now = Date(timeIntervalSinceReferenceDate: 800_000_000)
     /// The next zone save fails as an iCloud Keychain reset leaves it.
     var resetsEncryptedData: Set<String> = []
     /// The next zone save fails as the person deleting the app's data from iCloud in Settings leaves it.
@@ -166,6 +170,11 @@ final class FakeSyncDevice {
         sentIDs += sync.submit(change)
     }
 
+    /// The app syncs at `now` on this phone's clock (#435).
+    func heartbeat(for connectionIDs: [UUID], at now: Date) {
+        sync.heartbeat(for: connectionIDs, at: now)
+    }
+
     func zoneID(_ connectionID: UUID, owner: FakeSyncDevice) -> CKRecordZone.ID {
         CKRecordZone.ID(zoneName: connectionID.uuidString, ownerName: owner === self ? CKCurrentUserDefaultName : owner.userRecordName)
     }
@@ -214,7 +223,7 @@ final class FakeSyncDevice {
             // The engine keeps what it retries itself.
             let retried: Set<CKError.Code> = [.networkFailure, .networkUnavailable, .serviceUnavailable, .requestRateLimited]
             queue.add(pendingRecordZoneChanges: failedSaves.filter { retried.contains($0.error.code) }.map { .saveRecord($0.record.recordID) })
-            take(sync.sent(saved: saved, failedSaves: failedSaves, deleted: deleted, failedDeletes: failedDeletes))
+            take(sync.sent(saved: saved, failedSaves: failedSaves, deleted: deleted, failedDeletes: failedDeletes, modifiedAt: { [icloud] _ in icloud.now }))
         }
     }
 
@@ -243,7 +252,7 @@ final class FakeSyncDevice {
         // The sync writes every field of its records, clearing those it no longer has.
         let fields = CloudKitSyncCache.StoredField.fields(of: record)
         let version = (icloud.records[zone]?[name]?.version ?? 0) + 1
-        icloud.records[zone, default: [:]][name] = FakeICloud.Stored(type: record.recordType, fields: fields, version: version, writer: self)
+        icloud.records[zone, default: [:]][name] = FakeICloud.Stored(type: record.recordType, fields: fields, version: version, modifiedAt: icloud.now, writer: self)
         seen[key] = version
         icloud.log.append(.record(zone: zone, name: name))
         return nil
@@ -298,7 +307,7 @@ final class FakeSyncDevice {
                 let key = "\(zone)/\(name)"
                 if let stored = icloud.records[zone]?[name] {
                     if modified[key] == nil { order.append(key) }
-                    modified[key] = .init(record: rebuilt(stored, name: name, zone: zone), writtenByOtherPerson: stored.writer !== self)
+                    modified[key] = .init(record: rebuilt(stored, name: name, zone: zone), writtenByOtherPerson: stored.writer !== self, modifiedAt: stored.modifiedAt)
                     seen[key] = stored.version
                 } else {
                     modified[key] = nil

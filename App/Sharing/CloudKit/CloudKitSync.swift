@@ -190,6 +190,56 @@ final class CloudKitSync {
         return []
     }
 
+    /// How long after iCloud last saved a heartbeat the next may go (#435).
+    static let heartbeatInterval: TimeInterval = 86_400
+
+    /// The person's app is syncing at `now` on the phone's clock: lets the other person's app know
+    /// it is still there, as one more save of the connection's settings record, for each of
+    /// `connectionIDs` (the connected ones the person's Status sharing is on for). At most once a
+    /// day, counted from iCloud's own stamp of the last save that carried one, so nothing depends on
+    /// what a phone's clock said then; a phone whose clock is more than a day behind iCloud's sends
+    /// on every sync, so it can't stay silent for good. A heartbeat is no change of the outbox:
+    /// nothing shows it as Waiting to sync.
+    func heartbeat(for connectionIDs: [UUID], at now: Date) {
+        for connectionID in connectionIDs {
+            guard let zone = cache.zones[connectionID], cache.zoneDeletes[connectionID] == nil,
+                  cache.sharesStatus[connectionID] ?? true,
+                  let mapping = try? mapping(for: zoneID(of: connectionID, ownerName: zone.ownerName))
+            else { continue }
+            let key = RecordKey(connectionID: connectionID, recordName: mapping.ownSettingsRecordName)
+            let held = cache.records[key]
+            // One already waiting to go carries a heartbeat itself: any settings write does while Status sharing is on.
+            guard held?.pending == nil, heartbeatIsDue(connectionID, at: now), let recordID = recordID(of: key) else { continue }
+            let existing = held.map { cached in
+                let record = cached.systemFields.flatMap(CKRecord.fromSystemFields) ?? CKRecord(recordType: cached.recordType, recordID: recordID)
+                cached.set(on: record)
+                return record
+            }
+            let record = mapping.heartbeat(existing: existing)
+            write(key, type: record.recordType, fields: CloudKitSyncCache.StoredField.fields(of: record), for: nil)
+        }
+    }
+
+    private func heartbeatIsDue(_ connectionID: UUID, at now: Date) -> Bool {
+        guard let last = cache.lastHeartbeats?[connectionID] else { return true }
+        return now.timeIntervalSince(last) >= Self.heartbeatInterval || last.timeIntervalSince(now) > Self.heartbeatInterval
+    }
+
+    /// Notes when iCloud saved `saved`, this person's own settings record, if the save carried a
+    /// heartbeat, so the next is measured from it; one without (Status sharing off) clears it.
+    private func noteHeartbeat(of saved: CKRecord, at stamp: Date?) {
+        let recordID = saved.recordID
+        guard let key = RecordKey(recordID), let mapping = try? mapping(for: recordID.zoneID),
+              mapping.isOwnSettings(recordName: recordID.recordName),
+              let cached = cache.records[key], cached.pending == nil
+        else { return }
+        if cached.fields[SharingRecordMapping.heartbeatField] != nil, let stamp {
+            cache.lastHeartbeats = (cache.lastHeartbeats ?? [:]).merging([key.connectionID: stamp]) { _, new in new }
+        } else if cached.fields[SharingRecordMapping.heartbeatField] == nil {
+            cache.lastHeartbeats?[key.connectionID] = nil
+        }
+    }
+
     /// Ending a connection: the inviter deletes the zone, which ends the share and takes every
     /// record with it; the invitee leaves the share by deleting it from their shared database
     /// (CloudKit: "Shared Records"). Whatever was still to go through the connection never will,
@@ -210,15 +260,16 @@ final class CloudKitSync {
         return moot
     }
 
-    /// Records a write to `key` waiting for `changeID`: a save of `fields`, or with `type` `nil`, a
-    /// delete. It replaces any earlier write still waiting, and so takes over its changes.
-    private func write(_ key: CloudKitSyncCache.RecordKey, type: String?, fields: [String: CloudKitSyncCache.StoredField]?, for changeID: UUID) {
+    /// Records a write to `key` waiting for `changeID`, or for no change of the outbox: a save of
+    /// `fields`, or with `type` `nil`, a delete. It replaces any earlier write still waiting, and
+    /// so takes over its changes.
+    private func write(_ key: CloudKitSyncCache.RecordKey, type: String?, fields: [String: CloudKitSyncCache.StoredField]?, for changeID: UUID?) {
         var record = cache.records[key] ?? CloudKitSyncCache.CachedRecord(recordType: type ?? "")
         let earlier = record.pending
         var pending = CloudKitSyncCache.PendingWrite(
             isDelete: fields == nil,
             version: (earlier?.version ?? 0) + 1,
-            changeIDs: (earlier?.changeIDs ?? []) + [changeID]
+            changeIDs: (earlier?.changeIDs ?? []) + [changeID].compactMap { $0 }
         )
         if let fields, let type {
             let before = Set(record.fields.keys).union(earlier?.clears ?? [])
@@ -284,11 +335,19 @@ final class CloudKitSync {
     }
 
     /// What a batch did in iCloud.
-    func sent(saved: [CKRecord], failedSaves: [FailedSave], deleted: [CKRecord.ID], failedDeletes: [CKRecord.ID: CKError]) -> Outcome {
+    /// `modifiedAt` gives when iCloud saved a record: its own stamp (#435), which a test stands in for.
+    func sent(
+        saved: [CKRecord],
+        failedSaves: [FailedSave],
+        deleted: [CKRecord.ID],
+        failedDeletes: [CKRecord.ID: CKError],
+        modifiedAt: (CKRecord) -> Date? = { $0.modificationDate }
+    ) -> Outcome {
         var settled: [UUID] = []
         var ended = Outcome()
         for record in saved {
             settled += settle(record.recordID, systemFields: record.archivedSystemFields)
+            noteHeartbeat(of: record, at: modifiedAt(record))
         }
         for recordID in deleted {
             settled += settle(recordID, systemFields: nil)
@@ -589,6 +648,7 @@ final class CloudKitSync {
         cache.zones[connectionID] = nil
         cache.zoneSaves.remove(connectionID)
         cache.sharesStatus[connectionID] = nil
+        cache.lastHeartbeats?[connectionID] = nil
         return waiting
     }
 

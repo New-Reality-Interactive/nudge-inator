@@ -247,6 +247,9 @@ final class StandInSharingAdapter: SharingAdapter {
 
     func stop() {}
 
+    /// The stand-in sends nothing.
+    func heartbeat(for connectionIDs: [UUID], at now: Date) {}
+
     /// The stand-in sends nothing, so nothing waits.
     var hasUnsentDisconnects: Bool { false }
 

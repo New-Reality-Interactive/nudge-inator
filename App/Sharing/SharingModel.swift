@@ -154,7 +154,24 @@ final class SharingModel {
             accountState = account.state
             record(account)
             finishWindingDownIfDone()
+            sendHeartbeats(if: account.state)
         }
+    }
+
+    /// Lets the other people know this app is still there (#435), for each connection that is
+    /// connected with this person's Status sharing on. Only while iCloud is available, and never
+    /// while winding down or once stopped: nothing new goes then.
+    private func sendHeartbeats(if state: SharingAccountState) {
+        guard state == .available, !isStopped, !isWindingDown else { return }
+        let connectionIDs = data.connections.filter { $0.state == .connected && $0.mine.sharesStatus }.map(\.id)
+        guard !connectionIDs.isEmpty else { return }
+        adapter.heartbeat(for: connectionIDs, at: clock.now)
+    }
+
+    /// The time the connection with `connectionID` last synced, if it is Quiet (#435): what its
+    /// page shows as Last synced. `nil` for any other connection.
+    func lastSyncedIfQuiet(of connectionID: UUID) -> Date? {
+        data.connections.first { $0.id == connectionID }?.lastSyncedIfQuiet(at: clock.now)
     }
 
     /// Whether the app may ask iCloud (spec #127, decision 4): only while Settings' Sharing switch

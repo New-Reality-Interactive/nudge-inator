@@ -77,6 +77,12 @@ protocol SharingAdapter: AnyObject {
     /// long that takes, and then reports with `sent(_:)`. The model keeps the change in the outbox
     /// until then.
     func submit(_ change: SharingChange)
+    /// The app is syncing: lets the other person's app know this one is still there, for each of
+    /// `connectionIDs`, the connected ones this person's Status sharing is on for (#435). The
+    /// adapter makes it at most once a day, by iCloud's stamp of the last one rather than a phone's
+    /// clock, and it is no change of the outbox. `now` is the app's clock. Called at launch and on
+    /// App opened, once the account is available and the app may ask iCloud.
+    func heartbeat(for connectionIDs: [UUID], at now: Date)
     /// Whether the iPhone can reach iCloud now (ticket 211), read at launch, on App opened and when
     /// `connectivityChanged()` says so. A synchronous main-actor read, so it returns a value the
     /// adapter already holds (kept up to date by a path monitor, say) and never asks the system or
@@ -197,10 +203,15 @@ struct SharingChange: Equatable {
         var name: String?
         /// Their Status sharing and Delivery mode for what the other person sends them.
         var choices: ConnectionChoices
+        /// When iCloud last received the person's app, from the heartbeat on their settings record
+        /// (#435), or `nil` when it carries none: their Status sharing is off. Only on settings that
+        /// arrive; the model sends none.
+        var lastSynced: Date?
 
-        init(name: String? = nil, _ choices: ConnectionChoices) {
+        init(name: String? = nil, _ choices: ConnectionChoices, lastSynced: Date? = nil) {
             self.name = name
             self.choices = choices
+            self.lastSynced = lastSynced
         }
     }
 
