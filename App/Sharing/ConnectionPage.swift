@@ -3,7 +3,8 @@ import SwiftUI
 
 /// A connected person's page (ticket 196): this person's Status sharing and Delivery mode for what
 /// they receive from them, both changeable at any time, then what the other person chose, then
-/// Disconnect (ticket 197). The mockup's `viewConn`.
+/// Disconnect (ticket 197), with Last synced under Connected since while the connection is Quiet
+/// (#436). The mockup's `viewConn`.
 ///
 /// It looks the connection up by ID, so what the other person chooses shows as it arrives. Once
 /// there's no connection with that ID, it says the connection ended, as the mockup does, and once
@@ -74,6 +75,13 @@ struct ConnectionPage: View {
                             .font(.body)
                             .foregroundStyle(Color(uiColor: .secondaryLabel))
                     }
+                    // Read as the page draws, so a page left open doesn't turn Quiet by itself
+                    // (#436): it does on the next visit, or the next change to the connection.
+                    if let lastSynced = sharing.lastSyncedIfQuiet(of: connection.id) {
+                        Text("Last synced on \(Self.day(of: lastSynced))", comment: "A connection's page: under Connected since, once the other person's app hasn't synced for 14 days. The argument is the day it last did, such as \"Sep 10\", or \"Sep 10, 2025\" when it isn't this year.")
+                            .font(.body)
+                            .foregroundStyle(Color(uiColor: .secondaryLabel))
+                    }
                 }
                 .padding(.vertical, Design.Spacing.s1)
             }
@@ -84,7 +92,7 @@ struct ConnectionPage: View {
             } header: {
                 Text("What \(name) Chose", comment: "A connection's page: header of the other person's choices for the reminders this person sends them. The argument is their name, such as \"Alex Morgan\".")
             } footer: {
-                Text("\(name) sets these, for the reminders you send them.", comment: "A connection's page: under the other person's choices. The argument is their name, such as \"Alex Morgan\".")
+                Text("They set these, for the reminders you send them.", comment: "A connection's page: under the other person's choices, whose header names them.")
             }
             Section {
                 Button(role: .destructive) {
@@ -127,7 +135,7 @@ struct ConnectionPage: View {
             Text("Reminders from \(name)", comment: "A connection's page: header of this person's choices for what they receive. The argument is the other person's name, such as \"Alex Morgan\".")
         } footer: {
             if connection.mine.sharesStatus {
-                Text("\(name) sees how the reminders they send you are going: Done, Paused, Missed or Removed, and the last 7 days of a repeating one.", comment: "A connection's page: under Status Sharing when it's on. The argument is the other person's name, such as \"Alex Morgan\".")
+                Text("\(name) sees how the reminders they send you are going: Done, Paused, Missed or Removed, and the last 7 days of a repeating one. They also see when you last opened the app.", comment: "A connection's page: under Status Sharing when it's on. The argument is the other person's name, such as \"Alex Morgan\".")
             } else {
                 Text("\(name) sees only that a reminder was Delivered.", comment: "A connection's page: under Status Sharing when it's off. The argument is the other person's name, such as \"Alex Morgan\".")
             }
