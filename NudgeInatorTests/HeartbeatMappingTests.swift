@@ -62,15 +62,17 @@ struct HeartbeatMappingTests {
 
     @Test func aHeartbeatOnItsOwnWritesOnlyTheHeartbeatOnARecordTheSyncHoldsNoFieldsOf() throws {
         let held = CKRecord(recordType: "ConnectionSettings", recordID: CKRecord.ID(recordName: "ConnectionSettings.owner", zoneID: writer.zoneID))
-        let record = writer.heartbeat(existing: held)
+        let record = writer.heartbeat(existing: held, choices: ConnectionChoices(deliveryMode: .askMeFirst))
 
         #expect(Set(record.encryptedValues.allKeys()) == ["heartbeat"])
     }
 
-    @Test func aHeartbeatOnItsOwnWritesTheDefaultsWhenNoRecordIsHeld() throws {
-        let record = writer.heartbeat(existing: nil)
+    @Test func aHeartbeatOnItsOwnWritesThePersonsChoicesWhenNoRecordIsHeld() throws {
+        let choices = ConnectionChoices(sharesStatus: true, deliveryMode: .askMeFirst)
+        let record = writer.heartbeat(existing: nil, choices: choices)
 
         #expect(Set(record.encryptedValues.allKeys()) == ["sharesStatus", "deliveryMode", "heartbeat"])
+        #expect(record.encryptedValues["deliveryMode"] as? String == choices.deliveryMode.storedValue)
         #expect(try lastSynced(of: record) == iCloudTime)
     }
 }

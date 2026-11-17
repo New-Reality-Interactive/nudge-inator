@@ -171,8 +171,8 @@ final class FakeSyncDevice {
     }
 
     /// The app syncs at `now` on this phone's clock (#435).
-    func heartbeat(for connectionIDs: [UUID], at now: Date) {
-        sync.heartbeat(for: connectionIDs, at: now)
+    func heartbeat(for connectionIDs: [UUID], choices: ConnectionChoices = ConnectionChoices(), at now: Date) {
+        sync.heartbeat(for: Dictionary(uniqueKeysWithValues: connectionIDs.map { ($0, choices) }), at: now)
     }
 
     func zoneID(_ connectionID: UUID, owner: FakeSyncDevice) -> CKRecordZone.ID {

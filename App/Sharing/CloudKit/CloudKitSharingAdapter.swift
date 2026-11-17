@@ -174,10 +174,10 @@ final class CloudKitSharingAdapter: SharingAdapter {
         return account
     }
 
-    func heartbeat(for connectionIDs: [UUID], at now: Date) {
+    func heartbeat(for choices: [UUID: ConnectionChoices], at now: Date) {
         start()
         guard let sync else { return }
-        sync.heartbeat(for: connectionIDs, at: now)
+        sync.heartbeat(for: choices, at: now)
         keep()
     }
 

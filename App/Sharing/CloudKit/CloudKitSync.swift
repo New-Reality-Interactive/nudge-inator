@@ -171,6 +171,9 @@ final class CloudKitSync {
         }
         if case .settings(let settings) = change.content {
             cache.sharesStatus[connectionID] = settings.choices.sharesStatus
+            // Status sharing off removes the Heartbeat now, so turning it on again inside a day
+            // doesn't wait on the stamp of the one before (#435).
+            if !settings.choices.sharesStatus { cache.lastHeartbeats?[connectionID] = nil }
         }
         let writes: SharingRecordMapping.Writes
         do {
@@ -195,13 +198,15 @@ final class CloudKitSync {
 
     /// The person's app is syncing at `now` on the phone's clock: lets the other person's app know
     /// it is still there, as one more save of the connection's settings record, for each of
-    /// `connectionIDs` (the connected ones the person's Status sharing is on for). At most once a
+    /// `choices`' connections (the connected ones the person's Status sharing is on for, with the
+    /// person's choices for each, which only a settings record the sync holds none of is made
+    /// from). At most once a
     /// day, counted from iCloud's own stamp of the last save that carried one, so nothing depends on
     /// what a phone's clock said then; a phone whose clock is more than a day behind iCloud's sends
     /// on every sync, so it can't stay silent for good. A heartbeat is no change of the outbox:
     /// nothing shows it as Waiting to sync.
-    func heartbeat(for connectionIDs: [UUID], at now: Date) {
-        for connectionID in connectionIDs {
+    func heartbeat(for choices: [UUID: ConnectionChoices], at now: Date) {
+        for (connectionID, choices) in choices {
             guard let zone = cache.zones[connectionID], cache.zoneDeletes[connectionID] == nil,
                   cache.sharesStatus[connectionID] ?? true,
                   let mapping = try? mapping(for: zoneID(of: connectionID, ownerName: zone.ownerName))
@@ -215,7 +220,7 @@ final class CloudKitSync {
                 cached.set(on: record)
                 return record
             }
-            let record = mapping.heartbeat(existing: existing)
+            let record = mapping.heartbeat(existing: existing, choices: choices)
             write(key, type: record.recordType, fields: CloudKitSyncCache.StoredField.fields(of: record), for: nil)
         }
     }
@@ -269,7 +274,7 @@ final class CloudKitSync {
         var pending = CloudKitSyncCache.PendingWrite(
             isDelete: fields == nil,
             version: (earlier?.version ?? 0) + 1,
-            changeIDs: (earlier?.changeIDs ?? []) + [changeID].compactMap { $0 }
+            changeIDs: (earlier?.changeIDs ?? []) + (changeID.map { [$0] } ?? [])
         )
         if let fields, let type {
             let before = Set(record.fields.keys).union(earlier?.clears ?? [])

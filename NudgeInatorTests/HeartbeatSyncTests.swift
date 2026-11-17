@@ -90,6 +90,26 @@ struct HeartbeatSyncTests {
         #expect(heartbeatWaiting)
     }
 
+    @Test func aHeartbeatForAConnectionWithNoSettingsRecordCarriesThePersonsChoices() throws {
+        icloud.now = start
+        alex.heartbeat(for: [connectionID], choices: ConnectionChoices(deliveryMode: .askMeFirst), at: start)
+        alex.send()
+        sam.fetch()
+
+        let change = try #require(sam.received.last)
+        guard case .settings(let settings) = change.content else { Issue.record("Not settings"); return }
+        #expect(settings.choices == ConnectionChoices(deliveryMode: .askMeFirst))
+    }
+
+    @Test func turningStatusSharingOffForgetsTheLastHeartbeatAtOnce() {
+        beat(at: start)
+        #expect(alex.sync.cache.lastHeartbeats?[connectionID] == start)
+
+        alex.submit(.settings(.init(ConnectionChoices(sharesStatus: false)), for: connectionID))
+
+        #expect(alex.sync.cache.lastHeartbeats?[connectionID] == nil)
+    }
+
     @Test func aHeartbeatKeepsTheSettingsTheRecordAlreadyHolds() throws {
         alex.submit(.settings(.init(ConnectionChoices(deliveryMode: .askMeFirst)), for: connectionID))
         alex.send()

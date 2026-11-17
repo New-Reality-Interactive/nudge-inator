@@ -163,9 +163,10 @@ final class SharingModel {
     /// while winding down or once stopped: nothing new goes then.
     private func sendHeartbeats(if state: SharingAccountState) {
         guard state == .available, !isStopped, !isWindingDown else { return }
-        let connectionIDs = data.connections.filter { $0.state == .connected && $0.mine.sharesStatus }.map(\.id)
-        guard !connectionIDs.isEmpty else { return }
-        adapter.heartbeat(for: connectionIDs, at: clock.now)
+        let choices = data.connections.filter { $0.state == .connected && $0.mine.sharesStatus }
+            .reduce(into: [UUID: ConnectionChoices]()) { $0[$1.id] = $1.mine }
+        guard !choices.isEmpty else { return }
+        adapter.heartbeat(for: choices, at: clock.now)
     }
 
     /// The time the connection with `connectionID` last synced, if it is Quiet (#435): what its

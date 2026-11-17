@@ -37,8 +37,15 @@ struct HeartbeatModelTests {
     @Test func theAppAsksForAHeartbeatOfAConnectedConnectionWithItsStatusSharingOn() async throws {
         let phone = try await phone([connected()])
 
-        #expect(phone.adapter.heartbeats.map(\.connectionIDs) == [[connectionID]])
+        #expect(phone.adapter.heartbeats.map(\.choices) == [[connectionID: ConnectionChoices()]])
         #expect(phone.adapter.heartbeats.map(\.now) == [phone.clock.now])
+    }
+
+    @Test func theHeartbeatRequestCarriesThePersonsOwnChoices() async throws {
+        let mine = ConnectionChoices(sharesStatus: true, deliveryMode: .askMeFirst)
+        let phone = try await phone([connected(mine: mine)])
+
+        #expect(phone.adapter.heartbeats.map(\.choices) == [[connectionID: mine]])
     }
 
     @Test func theAppAsksAgainWhenItIsOpenedAgain() async throws {
@@ -122,7 +129,7 @@ struct HeartbeatModelTests {
 
         phone.clock.now = synced.addingTimeInterval(fourteenDays)
 
-        #expect(try connection(on: phone).isQuiet(at: phone.clock.now, after: fourteenDays))
+        #expect(try connection(on: phone).lastSyncedIfQuiet(at: phone.clock.now, after: fourteenDays) != nil)
         #expect(try connection(on: phone).lastSyncedIfQuiet(at: phone.clock.now, after: fourteenDays) == synced)
     }
 
@@ -132,7 +139,7 @@ struct HeartbeatModelTests {
         phone.clock.now = phone.clock.now.addingTimeInterval(fourteenDays)
         try await arrives(phone.clock.now.addingTimeInterval(-60), on: phone)
 
-        #expect(try !connection(on: phone).isQuiet(at: phone.clock.now, after: fourteenDays))
+        #expect(try connection(on: phone).lastSyncedIfQuiet(at: phone.clock.now, after: fourteenDays) == nil)
     }
 
     @Test func aConnectionJustUnder14DaysIsNotQuiet() async throws {
@@ -141,14 +148,14 @@ struct HeartbeatModelTests {
 
         phone.clock.now = phone.clock.now.addingTimeInterval(fourteenDays - 1)
 
-        #expect(try !connection(on: phone).isQuiet(at: phone.clock.now, after: fourteenDays))
+        #expect(try connection(on: phone).lastSyncedIfQuiet(at: phone.clock.now, after: fourteenDays) == nil)
     }
 
     @Test func aConnectionWithNoLastSyncedIsNotQuiet() async throws {
         let phone = try await phone([connected()])
         phone.clock.now = phone.clock.now.addingTimeInterval(100 * fourteenDays)
 
-        #expect(try !connection(on: phone).isQuiet(at: phone.clock.now, after: fourteenDays))
+        #expect(try connection(on: phone).lastSyncedIfQuiet(at: phone.clock.now, after: fourteenDays) == nil)
     }
 
     @Test func aConnectionIsNotQuietOnceTheirStatusSharingIsOff() async throws {
@@ -156,7 +163,7 @@ struct HeartbeatModelTests {
         var connection = try connection(on: phone)
         connection.theirLastSynced = phone.clock.now.addingTimeInterval(-100 * fourteenDays)
 
-        #expect(!connection.isQuiet(at: phone.clock.now, after: fourteenDays))
+        #expect(connection.lastSyncedIfQuiet(at: phone.clock.now, after: fourteenDays) == nil)
     }
 
     @Test func theModelReadsQuietByItsOwnClockAndTheDefaultWindow() async throws {

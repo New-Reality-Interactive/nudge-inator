@@ -124,13 +124,12 @@ struct SharingRecordMapping {
     /// This person's connection settings record with a new heartbeat on it, for a heartbeat that
     /// goes on its own (#435). `existing` is the record the sync holds, on iCloud's latest version:
     /// only the heartbeat is set on it, so what iCloud holds of it is left as it is. With none held,
-    /// the record is new and carries the defaults a reader needs (`ConnectionChoices`).
-    func heartbeat(existing: CKRecord?) -> CKRecord {
+    /// the record is new and carries `choices`, the person's own, which a reader needs.
+    func heartbeat(existing: CKRecord?, choices: ConnectionChoices) -> CKRecord {
         let record = existing ?? self.record(RecordName(type: .connectionSettings, writer: side), existing: { _ in nil })
         if existing == nil {
-            let defaults = ConnectionChoices()
-            record.encryptedValues[Field.sharesStatus.rawValue] = defaults.sharesStatus.recordValue
-            record.encryptedValues[Field.deliveryMode.rawValue] = defaults.deliveryMode.storedValue
+            record.encryptedValues[Field.sharesStatus.rawValue] = choices.sharesStatus.recordValue
+            record.encryptedValues[Field.deliveryMode.rawValue] = choices.deliveryMode.storedValue
         }
         record.encryptedValues[Field.heartbeat.rawValue] = Self.newHeartbeat
         return record
