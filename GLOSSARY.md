@@ -44,7 +44,7 @@ The word, with its color, that says a reminder's or occurrence's status: Nudging
 _Avoid_: Status badge (a badge is a count)
 
 **Locked**:
-The state of a Nudging reminder's due time, repeat, strength, pace and Break through Focus. They can't be edited until the occurrence closes. Title, notes and tags stay editable. A sender's change to a received reminder passes the lock (ADR 0005).
+The state of a Nudging reminder's due time, repeat, strength, pace and Break through Focus. They can't be edited until the occurrence closes. Title, notes, tags and the alarm sound stay editable. A sender's change to a received reminder passes the lock (ADR 0005).
 _Avoid_: Frozen, read-only
 
 **Done**:
@@ -58,7 +58,15 @@ The system alarm's button, which silences the current ring and moves the ladder 
 The alarm's secondary button. It opens the app on the reminder, where the person can mark it Done.
 
 **Break through Focus**:
-A per-reminder setting. On: nudges are sent as alarms, which sound through silent mode and Focus. Off: nudges are ordinary notifications that a Focus can hold. A Relentless reminder always breaks through Focus; its switch stays on.
+A per-reminder setting. On: nudges are sent as alarms, which sound through silent mode and Focus. Off: nudges are ordinary notifications that a Focus can hold. A Relentless reminder always breaks through Focus; its switch stays on. What those alarms ring with is the reminder's Alarm sound.
+
+**Alarm sound**:
+What a reminder's alarms ring with: Default (the standard alarm sound, shown as "Default Alarm") or one of six tones the app ships: Chime, Bell, Pulse, Beacon, Rise and Siren. Each reminder has its own, Default unless set, and it applies only to nudges that arrive as alarms. It is the person's own, never part of what a sender sends: a received reminder keeps the sound its recipient set, and a sender's revision never changes it. Editable while the reminder is Nudging. Each alarm sound has a stable ID that is saved; an ID the app doesn't recognize reads as Default.
+_Avoid_: Ringtone, tone (a tone is one of the six shipped sounds), Default (alone: say Default Alarm)
+
+**Default alarm sound**:
+The alarm sound set in Settings that every new reminder starts with, and every received reminder starts with when it arrives: Default until the person changes it, and again after Delete All Data. Changing it never changes a reminder already made. Not to be confused with Default Alarm, the name a person sees for the alarm sound Default.
+_Avoid_: Global sound, sound setting
 
 **Strength**:
 How hard a reminder nudges: Gentle, Firm or Relentless. It sets the urgency ladder and the give-up limit, and with an Escalating pace the waits between nudges too. Relentless nudges only with alarms.

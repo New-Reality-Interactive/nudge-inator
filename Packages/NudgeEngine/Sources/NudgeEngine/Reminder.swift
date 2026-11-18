@@ -20,6 +20,10 @@ public struct Reminder: Identifiable, Equatable, Sendable {
     /// it but keeps it, so switching back to Firm or Gentle gives it back: read
     /// `breaksThroughFocus` for how the reminder acts.
     public var breakThroughFocus: Bool
+    /// What its alarms ring with, Default unless set. Local to the iPhone: a reminder's sender never
+    /// sets or changes it on a received copy. It is not a Locked field, so it stays editable while
+    /// the reminder is Nudging (ADR 0002).
+    public var alarmSound: AlarmSound
     /// The moment the reminder was added: `Engine.add(_:)` sets it from the engine's clock, and
     /// nothing changes it afterwards. `.distantPast` until then (GLOSSARY.md, Creation date).
     public var createdAt: Date
@@ -37,6 +41,7 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         strength: Strength,
         pace: Pace = .escalating,
         breakThroughFocus: Bool = true,
+        alarmSound: AlarmSound = .default,
         createdAt: Date = .distantPast,
         origin: ReminderOrigin = .mine
     ) {
@@ -49,6 +54,7 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         self.strength = strength
         self.pace = pace
         self.breakThroughFocus = breakThroughFocus
+        self.alarmSound = alarmSound
         self.createdAt = createdAt
         self.origin = origin
     }
