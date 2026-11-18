@@ -30,6 +30,10 @@ struct ShotsApp: App {
         /// (`ShotsSeed.markTheBinsDoneNotification`) marks "Take the bins out" Done while the test
         /// has a Reminders row's Delete question up (#280).
         case rowLeaves
+        /// Everything allowed, with the Debug stand-in's sharing (`NUDGE_SHARING_STANDIN`, which the UI
+        /// test sets): Riley Park connected, two invites, two reminders sent to Riley, and two
+        /// reminders from Riley, one nudging and one coming up (the website screenshots, #442).
+        case sharing
     }
 
     @State private var model: AppModel
@@ -163,11 +167,20 @@ enum ShotsSeed {
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .disabled)
         case .badgesNotSet:
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .notSupported)
-        case .app, .customLocking, .noReminders, .spareTag, .rowLeaves:
+        case .app, .customLocking, .noReminders, .spareTag, .rowLeaves, .sharing:
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .enabled)
         }
         let store = try! ReminderStore(location: .inMemory)
         if scenario != .noReminders { try! store.save(storedBeforeLaunch()) }
+        let sharingSwitch = SharingSwitchRecord(defaults: defaults)
+        let sharingTutorial = SharingTutorialRecord(defaults: defaults)
+        var standIn: SharingModel?
+        if scenario == .sharing {
+            // Sharing on, and its tutorial seen, so no sheet opens over the screens.
+            sharingSwitch.isOn = true
+            sharingTutorial.isSeen = true
+            standIn = StandInSharing.modelIfAsked(clock: clock)
+        }
         let model = AppModel(
             clock: clock,
             openStore: { store },
@@ -177,7 +190,10 @@ enum ShotsSeed {
             defaultPaceRecord: DefaultPaceRecord(defaults: defaults),
             remindersSortRecord: RemindersSortRecord(defaults: defaults),
             tagsSortRecord: TagsSortRecord(defaults: defaults),
-            doneQueue: .temporary
+            doneQueue: .temporary,
+            sharing: standIn,
+            sharingSwitch: sharingSwitch,
+            sharingTutorial: sharingTutorial
         )
         return model
     }
@@ -190,8 +206,19 @@ enum ShotsSeed {
             if scenario == .customLocking { seedCustomLocking(into: model) }
             if scenario == .spareTag { seedSpareTag(into: model) }
             if scenario == .rowLeaves { listenToMarkTheBinsDone(in: model) }
+            if scenario == .sharing { receiveFromRiley() }
         }
         await model.appOpened()
+    }
+
+    /// Two reminders from the stand-in's Riley Park, as their sends arriving: one due 10 minutes ago,
+    /// so it is nudging, and one due in 40 minutes (the website screenshots, #442).
+    static func receiveFromRiley() {
+        guard let standIn = StandInSharing.current else { return }
+        let riley = SeedSet.standInConnectionID
+        let now = clock.now
+        standIn.theySend(Reminder(title: "Pick up the prescription", notes: "The pharmacy closes at 6.", dueTime: now.addingTimeInterval(-10 * 60), strength: .firm), through: riley)
+        standIn.theySend(Reminder(title: "Bring the umbrella", dueTime: now.addingTimeInterval(40 * 60), strength: .gentle), through: riley)
     }
 
     /// The mockup's reminders (its `seed()`) and their paces (the rest Escalating), with the

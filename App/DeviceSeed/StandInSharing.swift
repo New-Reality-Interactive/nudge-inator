@@ -492,7 +492,13 @@ final class StandInSharingAdapter: SharingAdapter {
     func theySend(_ strength: Strength, through connectionID: UUID) {
         let due = Self.startOfMinute(minutesFromNow: 2)
         let title = strength == .relentless ? "Take the medicine" : "Bring the umbrella"
-        let sent = SentReminder(reminder: Reminder(title: title, notes: SeedSet.standInSentNotes, dueTime: due, strength: strength), revision: 0)
+        theySend(Reminder(title: title, notes: SeedSet.standInSentNotes, dueTime: due, strength: strength), through: connectionID)
+    }
+
+    /// The same send, of a reminder the caller made: the screenshots harness (#442's site shots)
+    /// sends ones with titles and times of its own.
+    func theySend(_ reminder: Reminder, through connectionID: UUID) {
+        let sent = SentReminder(reminder: reminder, revision: 0)
         lastSent[connectionID] = sent
         Task { try? await events?.received(.send(sent, to: connectionID)) }
     }

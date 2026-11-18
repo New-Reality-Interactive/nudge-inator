@@ -10,7 +10,7 @@ import XCTest
 final class ShotsUITests: XCTestCase {
     /// The harness's `SHOT_SCENARIO`s (`ShotsApp.Scenario`, which can't be imported here).
     enum ShotScenario: String {
-        case app, onboarding, notificationsOff, alarmsOff, timeSensitiveOff, badgesOff, badgesNotSet, customLocking, noReminders, spareTag, rowLeaves
+        case app, onboarding, notificationsOff, alarmsOff, timeSensitiveOff, badgesOff, badgesNotSet, customLocking, noReminders, spareTag, rowLeaves, sharing
     }
 
     private var app: XCUIApplication!
@@ -37,9 +37,11 @@ final class ShotsUITests: XCTestCase {
 
     /// `now` (`HH:mm`) sets the harness clock to that time today (`SHOT_NOW`, #297); without it, the
     /// run's `SHOTS_NOW` does, and without that the clock is the real one.
-    private func launch(_ scenario: ShotScenario, dark: Bool = false, now: String? = nil) {
+    private func launch(_ scenario: ShotScenario, dark: Bool = false, now: String? = nil, standIn: String? = nil) {
         app = makeApp()
         app.launchEnvironment["SHOT_SCENARIO"] = scenario.rawValue
+        // The Debug stand-in's sharing (`seeded`, `sent` or `empty`), for the `sharing` scenario.
+        if let standIn { app.launchEnvironment["NUDGE_SHARING_STANDIN"] = standIn }
         app.launchEnvironment["SHOT_DARK"] = dark ? "1" : "0"
         if let now = now ?? ProcessInfo.processInfo.environment["SHOTS_NOW"], !now.isEmpty {
             app.launchEnvironment["SHOT_NOW"] = now
@@ -1900,5 +1902,120 @@ final class ShotsUITests: XCTestCase {
         launch(.badgesNotSet)
         tab("Settings")
         shot("settings-badges-not-set", pages: 3)
+    }
+    // MARK: Website screenshots (#442)
+
+    /// The app page's carousel slides, saved as `site-<n>-<name>.png`, from one person's day: the
+    /// mockup's reminders and tags, with Riley Park connected and two reminders sent to and two
+    /// from Riley (`ShotsApp.Scenario.sharing`). Run alone: `SHOTS_TESTS="testSiteShots"`, with the
+    /// status bar overridden and the images resized by `scripts/site-shots.sh`.
+    func testSiteShots() {
+        launch(.onboarding)
+        shot("site-1-welcome")
+        launch(.sharing, standIn: "sent")
+        shot("site-2-now")
+        tab("My Day")
+        shot("site-3-my-day")
+        tab("Reminders")
+        // The Mine | Sent control, under the search field.
+        app.buttons["Sent"].firstMatch.tap()
+        pause(1)
+        shot("site-4-sent")
+        tab("Tags")
+        shot("site-6-tags")
+        // The form, filled in as far as typing goes, then its Send To page.
+        launch(.sharing, standIn: "sent")
+        openSheet("New Reminder", title: "New Reminder")
+        app.typeText("Pick up the kids from practice")
+        hideKeyboard()
+        let segment = app.buttons["Relentless"]
+        if !segment.waitForExistence(timeout: 2) || !segment.isHittable {
+            tapText("Strength", inSheet: true)
+        }
+        tapText("Relentless", inSheet: true)
+        shot("site-5-new-reminder")
+        tapText("Send To", inSheet: true)
+        // Riley chosen, so the page shows what choosing looks like.
+        tapText("Riley Park", inSheet: true)
+        shot("site-7-send-to")
+    }
+    // MARK: Shared reminders (the 1.4.0 release's drift check)
+
+    /// The screens the mockup draws for shared reminders (`scripts/mockup-shots.py`'s `connections`,
+    /// `connection`, `sent`, ...), named as it names them, with Riley Park connected, two invites, and
+    /// two reminders sent to and from Riley (`ShotsApp.Scenario.sharing`).
+    func testSharing() {
+        launch(.sharing, standIn: "sent")
+        tab("Settings")
+        shot("settings-sharing", pages: 3)
+        tapText("Connections")
+        shot("connections")
+        tapText("Riley Park")
+        shot("connection", pages: 2)
+        tapText("Disconnect")
+        shot("disconnect")
+        app.buttons["Close"].firstMatch.tap()
+        pause(0.5)
+        back()
+        tapText("Jordan Lee")
+        shot("connection-invited")
+        back()
+        tapButton(containing: "Invite Someone")
+        shot("invite-sheet")
+    }
+
+    /// Settings' Share Activity page.
+    func testShareActivity() {
+        launch(.sharing, standIn: "sent")
+        tab("Settings")
+        tapText("Share Activity")
+        shot("share-activity", pages: 3)
+        launch(.sharing, standIn: "empty")
+        tab("Settings")
+        tapText("Share Activity")
+        shot("share-activity-empty")
+    }
+
+    /// The Reminders tab's Sent view, and what it opens.
+    func testSent() {
+        launch(.sharing, standIn: "sent")
+        tab("Reminders")
+        app.buttons["Sent"].firstMatch.tap()
+        pause(1)
+        shot("sent", pages: 2)
+        tapText("Take the pills")
+        shot("sent-details", pages: 3)
+        back()
+        openSheet("Filter", title: "Filter Sent")
+        shot("sent-filter", pages: 2)
+        launch(.sharing, standIn: "seeded")
+        tab("Reminders")
+        app.buttons["Sent"].firstMatch.tap()
+        pause(1)
+        shot("sent-nothing-sent")
+        launch(.sharing, standIn: "empty")
+        tab("Reminders")
+        app.buttons["Sent"].firstMatch.tap()
+        pause(1)
+        shot("sent-no-connections")
+    }
+
+    /// A reminder from Riley, and the filters that know about it.
+    func testReceived() {
+        launch(.sharing, standIn: "sent")
+        tapText("Pick up the prescription")
+        shot("received-nudging", pages: 3)
+        launch(.sharing, standIn: "sent")
+        tapText("Pick up the prescription")
+        tapButton(containing: "Edit")
+        shot("form-received", pages: 2)
+        launch(.sharing, standIn: "sent")
+        tab("Reminders")
+        openSheet("Filter", title: "Filter Reminders")
+        shot("reminders-filter-from-others", pages: 2)
+        launch(.sharing, standIn: "sent")
+        tab("My Day")
+        openMyDayFilter()
+        shot("myday-filter-from-others", pages: 2)
     }
 }
