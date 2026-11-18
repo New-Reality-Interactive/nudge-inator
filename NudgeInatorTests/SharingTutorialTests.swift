@@ -50,7 +50,7 @@ struct SharingTutorialTests {
             ["Send the Invite", "Through Messages, Mail or Copy Link. Nothing is sent until you tap Send."],
             ["They Accept", "They open the invite on their iPhone, and you're both connected."],
         ])
-        #expect(String(localized: footnote) == "An invite opens only for the Apple Account it was sent to.")
+        #expect(String(localized: footnote) == "An invite opens only for the Apple Account it was sent to, and you both need the latest Nudge-inator.")
     }
 
     /// The pictures' pills, decoration only: their symbol and word, an arrow as "→".
