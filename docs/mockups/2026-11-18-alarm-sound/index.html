@@ -1451,11 +1451,13 @@ const PROFILES = {
 const WAITS = [2, 5, 10, 15, 30, 60, 120, 240, 480, 720, 960];
 const PACES = [["escalating", "Escalating"], ["consistent", "Consistent"]];
 const DEFAULT_PACE = { pace: "consistent", wait: 10 };
-const settings = { defaultPace: { ...DEFAULT_PACE }, defaultSound: "default" };
-/* Alarm sounds (#223, spec #129): Default, the sound alarms ring with today, then the six tones the
-   app ships, from gentle to insistent. A reminder keeps one; a new reminder, and a reminder someone
-   sends, starts with Settings' Default Alarm Sound. It plays only when a nudge arrives as an alarm. */
-const SOUNDS = [["default", "Default"], ["chime", "Chime"], ["bell", "Bell"], ["pulse", "Pulse"], ["beacon", "Beacon"], ["rise", "Rise"], ["siren", "Siren"]];
+const settings = { defaultPace: { ...DEFAULT_PACE }, defaultSound: "standard" };
+/* Alarm sounds (#223, spec #129): Default Alarm, iOS's own alarm sound, then the six tones the app
+   ships, from gentle to insistent. Settings' Default Alarm Sound is one of these: Default Alarm (the
+   first) until the person picks another. A reminder keeps one; a new reminder, and a reminder
+   someone sends, starts with the person's Default Alarm Sound, and a reminder made before this
+   update has Default Alarm. It plays only when a nudge arrives as an alarm. */
+const SOUNDS = [["standard", "Default Alarm"], ["chime", "Chime"], ["bell", "Bell"], ["pulse", "Pulse"], ["beacon", "Beacon"], ["rise", "Rise"], ["siren", "Siren"]];
 const soundName = (k) => (SOUNDS.find(([id]) => id === k) ?? SOUNDS[0])[1];
 const SOUND_FOOTER = "Plays when a nudge arrives as an alarm. Other nudges use the standard notification sound.";
 /* Whether a reminder sends alarms, so its form shows the Sound row: Relentless, or Firm with Break
@@ -2781,22 +2783,23 @@ function viewDefaultPace() {
   return `${navBar({ title: "Default Pace", large: false, back: backLabel() })}
   <div style="margin-top:12px">${paceControls(settings.defaultPace, { prefix: "s", attr: "data-dp", heading: "h2", footer: `<p class="sec-f">New reminders start with this pace. Changing it doesn't change the reminders you already have.</p>` })}</div>`;
 }
-/* The alarm sound picker (#223): Default first, then the tones, a checkmark on the current choice.
-   One list serves Settings' Default Alarm Sound and the form's Sound page. */
-function soundList(current, attr) {
+/* The alarm sound picker (#223): Default Alarm, then the six tones, a checkmark on the current
+   choice. One list serves Settings' Default Alarm Sound and the form's Sound page; VoiceOver names
+   it after the page. */
+function soundList(current, attr, label) {
   const row = ([k, t]) => `<li><button type="button" class="cell" role="radio" aria-checked="${k === current}" ${attr}="${k}"><span class="main">${t}</span>${k === current ? CHECK : ""}</button></li>`;
-  return `<ul class="list picklist" role="radiogroup" aria-label="Sound">${SOUNDS.map(row).join("")}</ul>`;
+  return `<ul class="list picklist" role="radiogroup" aria-label="${label}">${SOUNDS.map(row).join("")}</ul>`;
 }
 /* Settings' Default Alarm Sound page. */
 function viewDefaultSound() {
   return `${navBar({ title: "Default Alarm Sound", large: false, back: backLabel() })}
-  <div class="sec" style="margin-top:12px">${soundList(settings.defaultSound, "data-defsoundpick")}
-  <div class="sec-f hin-f"><p>${SOUND_FOOTER}</p><p>New reminders, and reminders someone sends you, start with this sound. Changing it doesn't change the reminders you already have.</p></div></div>`;
+  <div class="sec" style="margin-top:12px">${soundList(settings.defaultSound, "data-defsoundpick", "Default Alarm Sound")}
+  <div class="sec-f hin-f"><p>${SOUND_FOOTER}</p><p>New reminders, and reminders someone sends you, start with this sound. Reminders you already have keep theirs.</p></div></div>`;
 }
 /* Choosing a tone plays a short preview through the app's own audio, which follows the silent
-   switch. Default plays none: the system sound isn't a file the app can play. */
+   switch. Default Alarm plays none: the system sound isn't a file the app can play. */
 function previewNote(k) {
-  controlNote(k === "default" ? "Default: no preview plays." : `In the app, a short preview of ${soundName(k)} plays now.`);
+  controlNote(k === "standard" ? "Default Alarm: no preview plays." : `In the app, a short preview of ${soundName(k)} plays now.`);
 }
 function viewSettings() {
   const sections = settingsSections();
@@ -3658,7 +3661,7 @@ function draftFor(r) {
   const base = { title: "", body: "", tagIds: onTag?.kind === "tag" ? [onTag.id] : [],
     dtstart: "2026-09-28T09:00", repeat: "never", end: endFrom("2026-09-28T09:00"), strength: "firm", ...settings.defaultPace, breakThrough: true, sound: settings.defaultSound, to: [] };
   if (!r) return base;
-  const x = { ...base, title: r.title, body: r.body || "", tagIds: [...r.tagIds], dtstart: r.dtstart.slice(0, 16), strength: r.strength, ...paceOf(r), breakThrough: btOf(r), sound: r.sound ?? "default" };
+  const x = { ...base, title: r.title, body: r.body || "", tagIds: [...r.tagIds], dtstart: r.dtstart.slice(0, 16), strength: r.strength, ...paceOf(r), breakThrough: btOf(r), sound: r.sound ?? SOUNDS[0][0] };
   x.to = (r.to ?? []).map((t) => t.conn);
   // A preset with an end is still that preset: the end is End Repeat's, not the pattern's.
   const pattern = patternOf(r.rrule);
@@ -3946,7 +3949,7 @@ function editorTags(sh) {
 function editorSound(sh) {
   return `${sheetNav(sheetBack("main", "Back"), "Sound", "")}
   <div class="sheet-body" tabindex="-1">
-    <div class="sec">${soundList(sh.draft.sound, "data-soundpick")}<p class="sec-f">${SOUND_FOOTER}</p></div>
+    <div class="sec">${soundList(sh.draft.sound, "data-soundpick", "Sound")}<div class="sec-f hin-f"><p>${SOUND_FOOTER}</p></div></div>
   </div>`;
 }
 /* Adds the typed tag to the reminder, reusing a tag with the same name if there is one. */
@@ -4281,7 +4284,7 @@ function wipeAll() {
   occurrences = [];
   tags = [];
   settings.defaultPace = { ...DEFAULT_PACE };
-  settings.defaultSound = "default";
+  settings.defaultSound = "standard";
   // Both sorts are settings, so Delete All Data sets them back.
   state.tagList = newTagListState();
   state.dayFilter = newDayFilter();
@@ -5070,7 +5073,7 @@ for (const id of ["c-badge-color", "c-badge-count", "c-perm-b"]) document.getEle
 document.getElementById("c-reset").addEventListener("click", () => {
   seed();
   settings.defaultPace = { ...DEFAULT_PACE };
-  settings.defaultSound = "default";
+  settings.defaultSound = "standard";
   Object.assign(perm, { notifications: true, alarms: true, timeSensitive: true, badges: "allowed" });
   Object.assign(sharing, { on: true, icloud: "ok", offline: false });
   document.getElementById("c-sh-icloud").value = "ok";
@@ -5170,7 +5173,8 @@ function showTab(tab, top = null) {
 function showSent() { state.remsView = "sent"; showTab("rems"); }
 function openReceived(id) { if (remById(id)) showTab("now", { kind: "rem", id }); else controlNote("It's gone. Reset the mockup."); }
 /* The alarm sound controls (#223). */
-function editFor(tab, id, set = null) {
+function editFor(tab, id, set = null, { sharing = false } = {}) {
+  if (sharing && !sharingOn()) startSharing(true);
   showTab(tab);
   if (id && !remById(id)) { controlNote("It's gone. Reset the mockup."); return; }
   openEditor(id);
@@ -5183,13 +5187,14 @@ for (const [id, run] of Object.entries({
   "c-as-picker": () => { editFor("now", null); CLICK.sheetPage("sound"); },
   "c-as-settings": () => showTab("settings", { kind: "defsound" }),
   "c-as-nudging": () => editFor("now", "r1"),
-  "c-as-received": () => { if (!sharingOn()) startSharing(true); editFor("now", "rc2"); },
+  "c-as-received": () => editFor("now", "rc2", null, { sharing: true }),
   "c-as-arrive": () => {
+    // Sharing starts before rc9 is pushed, not through editFor: startSharing reseeds, which would drop it.
     if (!sharingOn()) startSharing(true);
     if (!remById("rc9")) reminders.push({ id: "rc9", from: "maya", createdAt: iso(NOW), tagIds: [], title: "Charge the car", body: null, dtstart: "2026-09-28T18:00", rrule: null, strength: "firm", pace: "escalating", sound: settings.defaultSound, status: "ACTIVE", nextOccurrenceAt: "2026-09-28T18:00" });
     editFor("now", "rc9");
   },
-  "c-as-sent": () => { if (!sharingOn()) startSharing(true); editFor("rems", "s1"); },
+  "c-as-sent": () => editFor("rems", "s1", null, { sharing: true }),
   "c-sh-conns": () => showTab("settings", { kind: "conns" }),
   "c-tu-first": () => { startSharing(false); tutorial.seen = false; showTab("settings"); controlNote("Sharing off, tutorial not seen. Turn Sharing on in Settings."); },
   "c-tu-later": () => { startSharing(true); tutorial.seen = true; showTab("settings"); openTutorial(false); },

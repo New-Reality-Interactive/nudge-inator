@@ -16,14 +16,18 @@ Open [`index.html`](index.html) in a browser. It's a single file with no depende
   (Relentless, or Firm with Break Through Focus on), and appears and goes as the switch or the
   strength changes. Gentle never rings, so it has none. The section's footer gains a second line:
   "Plays when a nudge arrives as an alarm. Other nudges use the standard notification sound."
-- **The picker:** Default first, then Chime, Bell, Pulse, Beacon, Rise and Siren, with a checkmark on
-  the current choice and the same footer. A choice is saved at once and the page stays open. The app
-  plays a short preview of the tone (none for Default); the mockup says so in the panel instead.
-  At the accessibility sizes the checkmark stays on its tone's line.
+- **The picker:** Default Alarm (iOS's own alarm sound) first, then Chime, Bell, Pulse, Beacon, Rise
+  and Siren, with a checkmark on the current choice and the same footer. Default Alarm is a sound
+  like the others; the person's default is whichever sound they picked in Settings. A choice is
+  saved at once and the page stays open. The app plays a short preview of a tone (none for Default
+  Alarm); the mockup says so in the panel instead. At the accessibility sizes the checkmark stays on
+  its sound's line.
 - **Settings › Default Alarm Sound:** a gray tile with `speaker.wave.2`, in Nudges right after Default
-  Pace, showing the current tone's name. It opens the same list, whose footer adds "New reminders,
-  and reminders someone sends you, start with this sound. Changing it doesn't change the reminders
-  you already have." A new reminder's form starts from it. Delete All Data sets it back to Default.
+  Pace, showing the current sound's name: Default Alarm, the first in the list, until the person
+  picks another. It opens the same list, whose footer adds "New reminders, and reminders someone
+  sends you, start with this sound. Reminders you already have keep theirs." A new reminder's form
+  starts from it. Delete All Data sets it back to Default Alarm. Reminders made before this update
+  have Default Alarm.
 - **Nudging:** the Edit form of a Nudging reminder keeps its Sound row editable, while start, repeat,
   strength, pace and Break Through Focus stay locked.
 - **Received reminders:** the copy's form keeps its title, notes and schedule locked, and shows the
@@ -32,6 +36,6 @@ Open [`index.html`](index.html) in a browser. It's a single file with no depende
 - **Sent reminders:** the sender's form for a reminder they're sending, or sent, has no Sound row; it
   never rings on their iPhone.
 - `scripts/mockup-shots.py` has the screens this adds: `form-sound-off`, `form-sound-gentle`,
-  `form-sound-picker`, `form-sent-edit` and `settings-default-sound`.
+  `form-sound-picker`, `form-sent-edit`, `form-received-arrive` and `settings-default-sound`.
 
 Nothing else changed.

@@ -172,6 +172,8 @@ SCREENS = {
   "form-sound-gentle": ("openEditor();state.sheet.draft.strength='gentle';render()", 4),
   "form-sound-picker": ("openEditor();CLICK.sheetPage('sound')", 1),
   "form-sent-edit": ("state.tab='rems';nav();openEditor('s1')", 4),
+  # A copy arrives with the recipient's Default Alarm Sound, set to Bell so it shows.
+  "form-received-arrive": ("settings.defaultSound='bell';document.getElementById('c-as-arrive').click()", 2),
   "settings-default-sound": ("state.tab='settings';nav();push({kind:'defsound'})", 1),
 }
 # Variant: JavaScript that sets it up.
