@@ -3,7 +3,7 @@ import Testing
 @testable import NudgeInator
 
 /// The How Sharing Works sheet's content and paging (#423), against the approved mockup's
-/// (version 5) wording, `docs/mockups/2026-11-15-sharing-tutorial/`.
+/// (version 5) wording, `docs/mockups/1.4.0/`.
 struct SharingTutorialTests {
     @Test func theFourPagesShowInOrder() {
         #expect(SharingTutorialPage.allCases.map { String(localized: $0.heading) } == [

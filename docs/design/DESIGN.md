@@ -643,7 +643,7 @@ The Reminders tab's tools, in its layout, so they're learned once.
   the tint. Tint is `{colors.accent-dark}`. Behavior: spec › Alarm presentation and ADR 0001.
 
 ### Shared reminders
-What the shared reminders mockup (`docs/mockups/2026-11-09-shared-reminders/`, #183) adds. It rewrites
+What the shared reminders mockup (`docs/mockups/1.4.0/`, #183) adds. It rewrites
 nothing above. Two items are exceptions to rules above, and name them: Disconnect's choice, and the
 sharing paused and offline banner.
 
@@ -724,7 +724,7 @@ sharing paused and offline banner.
   sync and Waiting for them to accept. The status labels on the row and on Sent To keep their own look.
 - **Waiting for You:** a section on Now between Nudging and Coming Up, each row with small filled
   Accept (`button-prominent`) and Remove (`button-destructive`) capsules, side by side as an even
-  pair, full width when the row stacks (#402, `docs/mockups/2026-11-15-disconnect-button/`). It doesn't count toward the Now badge.
+  pair, full width when the row stacks (#402, `docs/mockups/1.4.0/`). It doesn't count toward the Now badge.
 - **Notes on a received reminder:** a `{colors.cell}` card with `{rounded.control}` corners, `info.circle`
   or `clock` in `{colors.secondary-label}`, a semibold line and a detail line, which for a sender's change is one line per changed field ("Due
   time changed from 8:00 AM to 9:00 AM"; a notes change reads "Notes changed", with no text). No color:
@@ -734,20 +734,20 @@ sharing paused and offline banner.
   `button-destructive` Disconnect (#402), with the form's Cancel. When the other person ended the
   connection the sheet has a prominent Continue and no Cancel, because the connection is already over
   and the choice has to be made: the one question without a way to close it that changes nothing.
-- **Turn Off Sharing** (#388, the Turn Off Sharing mockup, `docs/mockups/2026-11-14-turn-off-sharing/`):
+- **Turn Off Sharing** (#388, the Turn Off Sharing mockup, `docs/mockups/1.4.0/`):
   Disconnect's sheet for everyone at once, under the same exception, asked whenever turning Sharing
   off would delete anything: a connection, an invite, a reminder sent or received. A first line
   saying what goes, the two options under "<n> Reminders You've Received" only when something was
   received, the note footer only while someone is connected (under the options, or under the first
   line when there are none), then a `button-destructive` Turn Off Sharing (#402), with the ✕ to
   cancel. The switch stays on until it's confirmed, and shows no message when it's off.
-- **Apple Account Changed** (#212's change mockup, `docs/mockups/2026-11-13-account-change/`): a
+- **Apple Account Changed** (#212's change mockup, `docs/mockups/1.4.0/`): a
   sheet over whatever screen is up, once, when a different Apple Account signs in. Connection Ended's
   shape with no choice: a lead line, a list headed "Removed from This iPhone" (received reminders,
   connections, sent reminders, each a `{typography.body}` line over a `{typography.subhead}`
   `{colors.secondary-label}` detail, a row with nothing in it left out), a footer, and one prominent
   OK. A swipe down closes it too, since it only informs. When connections were removed, the footer
-  also says the people in them weren't told (#433, `docs/mockups/2026-11-16-account-change-not-told/`).
+  also says the people in them weren't told (#433, `docs/mockups/1.4.0/`).
 - **Sharing paused and offline, an exception to Warning's meaning (Colors):** the `permission-banner`
   with `{colors.warning}`, `icloud.slash` or `wifi.slash`, on Connections, Send To and Sent only. It
   extends Warning from the alarms-off and Time Sensitive-off banners to these two, as the same kind of
