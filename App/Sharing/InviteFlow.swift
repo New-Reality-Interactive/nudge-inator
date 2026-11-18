@@ -84,7 +84,7 @@ private final class ContactApproval {
 }
 
 /// Invite Someone: who to invite (typed, matched from Contacts as you type, or picked with the plus),
-/// how to send the invite, and Invite. The mockup is `docs/mockups/2026-11-13-custom-invite-screen/`.
+/// how to send the invite, and Invite. The mockup is `docs/mockups/1.4.0/`.
 private struct InviteSheet: View {
     let sharing: SharingModel
     /// The invite being sent again: its person can't be changed.

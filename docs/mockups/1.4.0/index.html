@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Delete All Data Sharing</title>
+<title>Nudge-inator iOS mockup: 1.4.0</title>
 <style>
 /* ============ Colors =============
    Follows Apple's HIG "Color" and "Dark Mode" pages (docs/apple/design). Every token is a dynamic color
@@ -40,7 +40,7 @@
   --on-tile: #ffffff;
   --bar: rgba(249, 249, 249, 0.8); --bar-solid: #f9f9f9; --alert: rgba(242, 242, 247, 0.98); --alert-solid: #f2f2f7;
   --material: rgba(245, 245, 250, 0.9); --material-solid: #f5f5fa; --material-text: #000000; --material-text2: #3a3a3c;
-  --material-sep: rgba(60, 60, 67, 0.36); --material-red: #b00012; --hud: #ffffff;
+  --material-sep: rgba(60, 60, 67, 0.36); --material-red: #b00012;
   --blur: blur(20px) saturate(180%); --scrim: rgba(0, 0, 0, 0.4); --shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
   --glass: rgba(255, 255, 255, 0.72); --glass-solid: #ffffff; --glass-edge: rgba(0, 0, 0, 0.06);
   --glass-shadow: 0 2px 14px rgba(0, 0, 0, 0.12); --glass-selected: rgba(120, 120, 128, 0.16);
@@ -60,7 +60,7 @@
       --badge-fill: #e9152d; --on-badge: #ffffff;
       --bar: rgba(22, 22, 24, 0.8); --bar-solid: #161618; --alert: rgba(44, 44, 46, 0.88); --alert-solid: #2c2c2e;
       --material: rgba(30, 30, 32, 0.78); --material-solid: #1e1e20; --material-text: #ffffff; --material-text2: #aeaeb2;
-      --material-sep: rgba(84, 84, 88, 0.65); --material-red: #ff6961; --hud: #2c2c2e;
+      --material-sep: rgba(84, 84, 88, 0.65); --material-red: #ff6961;
       --blur: blur(20px) saturate(180%); --scrim: rgba(0, 0, 0, 0.6); --shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
       --glass: rgba(44, 44, 46, 0.72); --glass-solid: #2c2c2e; --glass-edge: rgba(255, 255, 255, 0.12);
       --glass-shadow: 0 2px 14px rgba(0, 0, 0, 0.5); --glass-selected: rgba(120, 120, 128, 0.32); --token-fill: #1c1c1e;
@@ -79,7 +79,7 @@
     --badge-fill: #e9152d; --on-badge: #ffffff;
     --bar: rgba(22, 22, 24, 0.8); --bar-solid: #161618; --alert: rgba(44, 44, 46, 0.88); --alert-solid: #2c2c2e;
     --material: rgba(30, 30, 32, 0.78); --material-solid: #1e1e20; --material-text: #ffffff; --material-text2: #aeaeb2;
-    --material-sep: rgba(84, 84, 88, 0.65); --material-red: #ff6961; --hud: #2c2c2e;
+    --material-sep: rgba(84, 84, 88, 0.65); --material-red: #ff6961;
     --blur: blur(20px) saturate(180%); --scrim: rgba(0, 0, 0, 0.6); --shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
     --glass: rgba(44, 44, 46, 0.72); --glass-solid: #2c2c2e; --glass-edge: rgba(255, 255, 255, 0.12);
     --glass-shadow: 0 2px 14px rgba(0, 0, 0, 0.5); --glass-selected: rgba(120, 120, 128, 0.32); --token-fill: #1c1c1e;
@@ -295,7 +295,7 @@
 :root[data-bold] { --regular: 600; --medium: 600; --semibold: 700; --bold: 800; }
 
 /* Foreground layers use the elevated backgrounds. */
-.sheet, .alert, .asheet, .hud { --system-grouped-background: var(--system-grouped-background-elevated); --secondary-system-grouped-background: var(--secondary-system-grouped-background-elevated); --tertiary-system-fill: var(--tertiary-system-fill-elevated); }
+.sheet, .alert, .asheet { --system-grouped-background: var(--system-grouped-background-elevated); --secondary-system-grouped-background: var(--secondary-system-grouped-background-elevated); --tertiary-system-fill: var(--tertiary-system-fill-elevated); }
 
 * { box-sizing: border-box; }
 html { font-size: calc(16px * min(var(--type-scale), 2)); }
@@ -336,6 +336,8 @@ svg { flex: none; }
 .controls { font-size: 15px; width: 320px; flex: none; background: var(--stage-card); border-radius: 16px; padding: 18px 18px 8px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12); line-height: 1.4; }
 .controls h2 { font-size: 17px; margin: 0 0 4px; }
 .controls p { margin: 0 0 12px; color: var(--stage-muted); }
+.controls .c-note:empty { display: none; }
+.controls .c-note { color: var(--stage-text, inherit); font-weight: 600; }
 /* Beside the phone, the controls scroll on their own, so the phone stays in view while they're used. */
 @media (min-width: 761px) {
   .controls { position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; overscroll-behavior: contain; }
@@ -628,7 +630,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .events time { flex: none; width: 5em; color: var(--label); font-variant-numeric: tabular-nums; }
 .events li > span { min-width: 0; overflow-wrap: anywhere; }
 
-/* ============ Sheets, alerts, HUD ============ */
+/* ============ Sheets and alerts ============ */
 .overlay { position: absolute; inset: 0; z-index: 40; }
 .scrim { position: absolute; inset: 0; background: var(--scrim); }
 .sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 48px; background: var(--system-grouped-background); border-radius: 38px 38px 0 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow); }
@@ -685,8 +687,6 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 /* A banner flicked away (mockup only): the iPhone hides it, and the app isn't told. */
 .btn.flick { font: var(--subhead); letter-spacing: var(--subhead-track); justify-self: center; background: rgba(0, 0, 0, 0.8); color: #fff; border-radius: 99px; padding: 6px 16px; }
 
-.hud { font: var(--subhead); letter-spacing: var(--subhead-track); position: absolute; top: 56px; left: 50%; transform: translate(-50%, -12px); z-index: 99; width: max-content; max-width: calc(100% - 32px); background: var(--hud); color: var(--label); border-radius: 22px; padding: 10px 18px; font-weight: var(--medium); box-shadow: var(--shadow); opacity: 0; pointer-events: none; text-align: center; }
-.hud.show { opacity: 1; transform: translate(-50%, 0); }
 
 /* Onboarding */
 .welcome { padding: 28px 28px 20px; }
@@ -806,7 +806,6 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .device[data-orient="landscape"] .sheet-body { padding: 12px var(--gut-r) 32px var(--gut-l); }
 .device[data-orient="landscape"] .alert { max-height: calc(100% - 24px); overflow-y: auto; scrollbar-width: none; }
 .device[data-orient="landscape"] .asheet:not(.anchored) { left: 50%; right: auto; bottom: 21px; width: calc(var(--sh) - 16px); max-height: calc(100% - 33px); overflow-y: auto; scrollbar-width: none; transform: translateX(-50%); }
-.device[data-orient="landscape"] .hud { top: 12px; }
 .device[data-orient="landscape"] .unavailable { padding-top: 24px; }
 .device[data-orient="landscape"] .welcome { padding-top: 8px; }
 /* The tab bar, shrunk while scrolling down (landscape): only the current tab, as a glass circle at
@@ -968,7 +967,6 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 @media (prefers-reduced-motion: no-preference) {
   .switch { transition: background 0.2s; }
   .switch::after { transition: left 0.2s; }
-  .hud { transition: opacity 0.2s, transform 0.2s; }
   .inline-title, #main .navrow::before { transition: opacity 0.15s; }
   .swipe:not(.dragging) .swipe-row { transition: transform 0.25s; }
   .list > li.leaving { transition: opacity 0.3s, height 0.3s 0.1s; }
@@ -1013,11 +1011,46 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .sheet-lead { font: var(--body); letter-spacing: var(--body-track); margin: 4px 32px 16px; }
 .formrow:has(.ckfield) { gap: 12px; }
 .btn.bordered.destr { color: var(--negative); }
+/* #402: a sheet's destructive confirmation (Disconnect, Turn Off Sharing) is a filled button in the
+   negative color, as Continue is filled in the accent color, and Waiting for You's Remove with it: red text on the gray fill read as dimmed.
+   "Show the button as before" in the controls panel draws it as #197 built it, to compare. */
+.btn.prominent.destr { background: var(--negative); color: var(--on-accent); }
+:root[data-before402] .btn.prominent.destr { background: var(--tertiary-system-fill); color: var(--negative); }
+/* Waiting for You's Accept and Remove change as a pair: Accept filled in the accent, Remove in red. */
+:root[data-before402] .waitact .btn.prominent:not(.destr) { background: var(--tertiary-system-fill); color: var(--accent); }
+.ck-pill { flex: 1; min-width: 0; display: flex; }
+.ck-pill > span { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 4px 6px 4px 12px; border-radius: 999px; background: var(--tertiary-system-fill); color: var(--accent); font: var(--body); letter-spacing: var(--body-track); }
+.ck-pill > span > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ck-pill button { flex: none; display: inline-flex; border: 0; background: none; color: inherit; padding: 2px; cursor: pointer; border-radius: 50%; }
+.ck-route-icon { flex: none; display: inline-flex; width: 1.5rem; justify-content: center; color: var(--accent); }
+.ck-add { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border: 0; border-radius: 50%; background: var(--tertiary-system-fill); color: var(--accent); cursor: pointer; padding: 0; }
 .ckfield { flex: 1; min-width: 0; border: 0; background: none; color: inherit; font: var(--body); letter-spacing: var(--body-track); padding: 0; outline-offset: 2px; }
 .unavailable .btn { margin-top: 14px; }
 .unavailable .btn.plain { display: block; margin: 8px auto 0; }
 .remsview ~ .unavailable { padding-top: 40px; }
 :root[data-type^="ax"] .hday { flex-basis: 3.2em; }
+/* How Sharing Works: a paged sheet. */
+.tut-art { display: flex; justify-content: center; align-items: center; gap: 14px; color: var(--accent); padding: 20px 32px 4px; }
+.tut-art .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; background: var(--fill, rgba(120,120,128,.16)); color: var(--label); font: var(--subhead); letter-spacing: var(--subhead-track); padding: 8px 14px; }
+.tut-art .arrow { color: var(--secondary-label); }
+.tut-h { font: var(--title2); letter-spacing: var(--title2-track); font-weight: var(--bold); text-align: center; margin: 10px 32px 8px; }
+.tut-steps { counter-reset: s; list-style: none; margin: 0; padding: 0; }
+.tut-steps li .cell::before { counter-increment: s; content: counter(s); flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: inline-flex; align-items: center; justify-content: center; font: var(--footnote); font-weight: var(--bold); margin-right: 12px; }
+.tut { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.sheet .navrow + .tut { padding-top: 0; }
+:root:not([data-ios="18"]) .sheet .navrow + .tut { padding-top: 84px; }
+:root:not([data-ios="18"]) .device[data-orient="landscape"] .sheet .navrow + .tut { padding-top: 72px; }
+.tut-track { flex: 1; min-height: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; cursor: grab; }
+.tut-track::-webkit-scrollbar { display: none; }
+.tut-track.dragging { scroll-snap-type: none; cursor: grabbing; user-select: none; }
+.tut-page { flex: 0 0 100%; min-width: 0; overflow-y: auto; scroll-snap-align: start; scroll-snap-stop: always; padding: 20px 0 16px; scrollbar-width: none; }
+.tut-page::-webkit-scrollbar { display: none; }
+.tut-foot { flex: none; padding: 4px 0 28px; background: var(--system-grouped-background); }
+.device[data-orient="landscape"] .tut-page { padding: 12px var(--gut-r) 12px var(--gut-l); }
+.device[data-orient="landscape"] .tut-foot { padding: 4px var(--gut-r) 12px var(--gut-l); }
+.tut-dots { display: flex; justify-content: center; gap: 8px; margin: 4px 0 0; }
+.tut-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--separator); display: block; }
+.tut-dots i[data-on] { background: var(--accent); }
 </style>
 </head>
 <body>
@@ -1033,7 +1066,6 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <div id="sheet"></div>
       <div id="system"></div>
       <div id="alert"></div>
-      <output class="hud" id="hud" aria-live="polite"></output>
       <p class="sr-only" id="announce" aria-live="polite"></p>
       <div class="home-ind" aria-hidden="true"></div>
     </div>
@@ -1045,11 +1077,47 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
   <aside class="controls" aria-labelledby="c-h">
     <h2 id="c-h">Mockup controls</h2>
     <p>Not part of the app. The clock is fixed at Mon, Sep 28, 8:20 AM and the data is made up.</p>
+    <p class="c-note" id="c-note" role="status" aria-live="polite"></p>
+    <fieldset>
+      <legend>How Sharing Works (tutorial)</legend>
+      <p class="why">A four-page sheet: what sharing is, Connect, Send a Reminder, Who Sees What. It opens by itself once, the first time Sharing is turned on, and any time from Settings › Sharing › How Sharing Works. Swipe left for the next page and right for the one before (drag with the mouse), or use Back and Next top right. Close is top left. On the last page Next becomes the standard confirm checkmark (Done). Text size and orientation are in the iPhone section below.</p>
+      <button type="button" class="cbtn" id="c-tu-first">First time: Sharing off, then turn it on</button>
+      <button type="button" class="cbtn" id="c-tu-later">From Settings, Sharing already on</button>
+      <button type="button" class="cbtn" id="c-tu-off">From Settings, Sharing off</button>
+      <button type="button" class="cbtn" id="c-tu-invite">First time: open an invite from Riley Park, Sharing off</button>
+      <p class="why">With Sharing off, the invite asks first. Turn On Sharing turns it on and accepts the invite, the Connected sheet shows, and the tutorial opens when Done is tapped. Change These counts as seen, so no tutorial follows.</p>
+    </fieldset>
+    <fieldset>
+      <legend>Disconnect button (#402)</legend>
+      <p class="why">The two sheets that end sharing confirm with a filled red button, so it reads as tappable. Waiting for You's Remove is filled red too, with Accept filled in the accent color beside it. Everything else on them is as it was. Text size and orientation are in the iPhone section below.</p>
+      <button type="button" class="cbtn" id="c-db-disconnect">Disconnect from Maya Torres</button>
+      <button type="button" class="cbtn" id="c-db-sharingoff">Turn Off Sharing</button>
+      <button type="button" class="cbtn" id="c-db-waiting">Now › Waiting for You (Accept and Remove)</button>
+      <button type="button" class="cbtn" id="c-db-ended">Connection Ended (Continue, unchanged)</button>
+      <label><input type="checkbox" id="c-db-before"> Show the button as before (#197)</label>
+    </fieldset>
+    <fieldset>
+      <legend>Share Activity (#397)</legend>
+      <p class="why">Settings › Sharing has a Share Activity row while Sharing is on. Its page lists what happened to sharing that you'd otherwise never see, newest first. "The other person disconnects" and "A different Apple Account signs in" below add an entry; turning Sharing off clears the record.</p>
+      <button type="button" class="cbtn" id="c-sa-entries">Settings › Share Activity, with entries</button>
+      <button type="button" class="cbtn" id="c-sa-empty">Settings › Share Activity, nothing recorded</button>
+    </fieldset>
+    <fieldset>
+      <legend>Sharing switch (#386, #388)</legend>
+      <p class="why">Settings' Sharing switch works by tapping: off asks first whenever it deletes anything, a connection, an invite or a reminder sent or received. These three keep the tab you're on, so the Now tab, the Reminders tab and the New Reminder form can be compared with Sharing off and on.</p>
+      <button type="button" class="cbtn" id="c-sw-off">Sharing off (new install, or updated from 1.3.0)</button>
+      <button type="button" class="cbtn" id="c-sw-on">Sharing on, with connections</button>
+      <button type="button" class="cbtn" id="c-sw-received">Sharing on, reminders received, no one connected</button>
+      <button type="button" class="cbtn" id="c-sw-invite">Open an invite from Riley Park</button>
+      <p class="why">With Sharing off, opening an invite asks to turn it on first. With it on, the invite is accepted as before.</p>
+    </fieldset>
     <fieldset>
       <legend>Shared reminders (#183)</legend>
       <p class="why">Settings › Connections, the reminder form's Send To and the Reminders tab's Mine | Sent all work by tapping. These reach the rest. Sent has Mine's search, Filter and Sort.</p>
       <button type="button" class="cbtn" id="c-sh-conns">Settings › Connections</button>
-      <button type="button" class="cbtn" id="c-sh-accept">Invite accepted (the recipient's side)</button>
+      <button type="button" class="cbtn" id="c-sh-quiet">Maya Torres goes quiet</button>
+      <button type="button" class="cbtn" id="c-sh-synced">Maya Torres syncs again</button>
+      <p class="why">Quiet: nothing synced for 14 days, with their status sharing on. Sam Okafor's is off, so that page never shows it, however long it has been.</p>
       <button type="button" class="cbtn" id="c-sh-noopen">An invite that couldn't be opened</button>
       <button type="button" class="cbtn" id="c-sh-other">The other person disconnects</button>
       <button type="button" class="cbtn" id="c-sh-received">Received reminder: details</button>
@@ -1059,6 +1127,17 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <button type="button" class="cbtn" id="c-sh-sent">Reminders › Sent</button>
       <button type="button" class="cbtn" id="c-sh-noconn">Sent, with no connections</button>
       <button type="button" class="cbtn" id="c-sh-nosent">Sent, with nothing sent</button>
+    </fieldset>
+    <fieldset>
+      <legend>Swipe to Edit (#429)</legend>
+      <p class="why">Swipe a row left with the mouse, or use these. A Sent row shows Edit at the edge and Delete beside it, as a tag does. Edit opens the sent reminder's form; Delete asks the page's confirmation first. A long swipe stops at the tiles.</p>
+      <button type="button" class="cbtn" id="c-sw-sent">Show the swipe on a Sent row</button>
+      <button type="button" class="cbtn" id="c-sw-sentdel">A Sent row's Delete confirmation</button>
+      <button type="button" class="cbtn" id="c-sw-mine-n">Show the swipe on a Nudging Mine row</button>
+      <button type="button" class="cbtn" id="c-sw-mine-o">Show the swipe on a Coming up Mine row</button>
+      <button type="button" class="cbtn" id="c-sw-mine-r">Show the swipe on a received copy</button>
+      <label><input type="checkbox" id="c-sw-noedit" autocomplete="off"> Mine without Edit (as today)</label>
+      <p class="why">Mine's own rows add Edit beside Done and Delete, for the developer to decide. A received copy keeps Remove only: its sender owns what it says.</p>
       <label for="c-sh-icloud">iCloud</label>
       <select id="c-sh-icloud" autocomplete="off"><option value="ok" selected>Available</option><option value="none">No iCloud account</option><option value="restricted">Restricted</option><option value="unavailable">Temporarily unavailable</option></select>
       <button type="button" class="cbtn" id="c-sh-account">A different Apple Account signs in</button>
@@ -1259,6 +1338,10 @@ function gearPath() {
 const CAL = `<rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.2V7.5a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v1.7z" fill="currentColor"/>${dot(8, 13)}${dot(12, 13)}${dot(16, 13)}${dot(8, 16.8)}${dot(12, 16.8)}`;
 const TAG = '<path d="M3.8 5.3v5.6a2 2 0 0 0 .6 1.4l7.9 7.9a2 2 0 0 0 2.8 0l4.8-4.8a2 2 0 0 0 0-2.8L12 4.7a2 2 0 0 0-1.4-.6H5a1.2 1.2 0 0 0-1.2 1.2z"/>';
 const SYMBOLS = {
+  "arrow.right": { d: '<path d="M4.500 12h15M13.500 6l6 6-6 6"/>' },
+  "icloud": { d: '<path d="M7 18.500a4.500 4.500 0 0 1-.600-8.960A5.500 5.500 0 0 1 17.200 9a4.800 4.800 0 0 1-.200 9.500z"/>' },
+  "paperplane": { d: '<path d="M21 3 3 10.500l7 3 3 7z"/><path d="M10 13.500 21 3"/>' },
+  "eye": { d: '<path d="M2.500 12S6 5.500 12 5.500 21.500 12 21.500 12 18 18.500 12 18.500 2.500 12 2.500 12z"/><circle cx="12" cy="12" r="3"/>' },
   "app.badge": { d: '<path d="M14.2 4H7.5a3.5 3.5 0 0 0-3.5 3.5v9A3.5 3.5 0 0 0 7.5 20h9a3.5 3.5 0 0 0 3.5-3.5V9.8"/><circle cx="18.6" cy="5.4" r="2.6" fill="currentColor"/>' },
   "bell": { d: '<path d="M18 16.5V11a6 6 0 0 0-12 0v5.5L4.5 18.2h15z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/>', dy: -0.3 },
   "bell.slash": { d: '<path d="M18 16.5V11a6 6 0 0 0-12 0v5.5L4.5 18.2h15z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/><path d="M3.5 3.2 20.5 21"/>', dy: -0.3 },
@@ -1269,6 +1352,7 @@ const SYMBOLS = {
   "person.2": { d: '<circle cx="9" cy="8" r="3.6"/><path d="M2.5 19.8a6.5 6.5 0 0 1 13 0z"/><path d="M15.2 4.8a3.6 3.6 0 0 1 0 6.4M17.2 13.9a6.5 6.5 0 0 1 4.3 5.9h-3.2"/>' },
   "person.badge.plus": { d: '<circle cx="9.5" cy="8" r="3.8"/><path d="M2.5 20a7 7 0 0 1 14 0z"/><path d="M19 5.2v6M16 8.2h6"/>' },
   "person.slash": { d: '<circle cx="12" cy="7.8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0z"/><path d="M3.5 3.2 20.5 21"/>', scale: 0.94 },
+  "list.bullet.rectangle": { d: `<rect x="3" y="5" width="18" height="14" rx="3.2"/>${dot(7.4, 9.7, 1.1)}${dot(7.4, 14.3, 1.1)}<path d="M10.6 9.7h6.4M10.6 14.3h6.4"/>` },
   "icloud.slash": { d: '<path d="M7 18.5h10.2a4.3 4.3 0 0 0 .6-8.6 6 6 0 0 0-11.5-1A4.9 4.9 0 0 0 7 18.5z"/><path d="M3.5 3.2 20.5 21"/>' },
   "wifi.slash": { d: `<path d="M3 9.5a13 13 0 0 1 18 0M6.3 13a8.3 8.3 0 0 1 11.4 0M9.4 16.3a4 4 0 0 1 5.2 0"/>${dot(12, 19.4, 1.3)}<path d="M3.5 3.2 20.5 21"/>` },
   "minus": { d: '<path d="M5 12h14"/>' },
@@ -1279,11 +1363,15 @@ const SYMBOLS = {
   "square.stack": { d: '<rect x="3.5" y="9" width="17" height="11.5" rx="2.5"/><path d="M5.8 6.2h12.4M8.3 3.5h7.4"/>', scale: 0.96 },
   "gearshape": { d: gearPath(), scale: 0.98 },
   "plus": { d: '<path d="M12 4.5v15M4.5 12h15"/>' },
+  "message": { d: '<path d="M12 4.2c-4.6 0-8.3 3.1-8.3 7 0 2.2 1.2 4.1 3 5.4l-.8 3.4 3.7-2c.8.2 1.6.3 2.4.3 4.6 0 8.3-3.1 8.3-7.1S16.600 4.200 12 4.200z"/>' },
+  "envelope": { d: '<rect x="3" y="5.500" width="18" height="13" rx="2.500"/><path d="m3.800 7.800 8.200 5.700 8.200-5.700"/>' },
+  "link": { d: '<path d="M10.200 13.800a3.900 3.900 0 0 0 5.500 0l2.900-2.900a3.900 3.900 0 0 0-5.500-5.500l-.9.900"/><path d="M13.800 10.200a3.900 3.900 0 0 0-5.500 0l-2.900 2.900a3.900 3.900 0 0 0 5.500 5.500l.9-.9"/>' },
   "xmark": { d: '<path d="M6.2 6.2 17.8 17.8M17.8 6.2 6.2 17.8"/>', scale: 0.92 },
   "xmark.circle.fill": { d: '<circle cx="12" cy="12" r="9.5" fill="currentColor" stroke="none"/><path d="M8.6 8.6 15.4 15.4M15.4 8.6 8.6 15.4" style="stroke:var(--tertiary-system-fill)"/>' },
   "checkmark": { d: '<path d="M5 12.8 9.7 17.5 19 6.8"/>' },
   "ellipsis": { d: `${dot(5.5, 12, 1.7)}${dot(12, 12, 1.7)}${dot(18.5, 12, 1.7)}` },
   "chevron.right": { d: '<path d="m9.5 5.5 6.5 6.5-6.5 6.5"/>' },
+  "chevron.forward": { d: '<path d="m9 4.5 7.5 7.5-7.5 7.5"/>' },
   "chevron.backward": { d: '<path d="m15 4.5-7.5 7.5 7.5 7.5"/>' },
   "moon.fill": { d: '<path d="M19.8 14.8A8 8 0 0 1 9.2 4.2a8.2 8.2 0 1 0 10.6 10.6z" fill="currentColor"/>', scale: 0.94 },
   "arrow.up.forward": { d: '<path d="M7 17 17 7M8.5 7H17v8.5"/>', scale: 0.94 },
@@ -1490,8 +1578,11 @@ const ev = (type, at, data = {}) => ({ id: uid(), type, at, data });
 /* Tags replace groups. A reminder has any number of tags (tagIds), and a tag is just a name:
    one word, shown as "#name", with no color, so it never competes with the status colors. */
 let tags, reminders, occurrences;
-let connections, sent;
-const sharing = { icloud: "ok", offline: false };
+let connections, sent, activity;
+/* `on` is Settings' Sharing switch (#386). Off, none of sharing exists: no connections, invites,
+   sent or received reminders, and nothing about them shows anywhere. */
+const sharing = { on: true, icloud: "ok", offline: false };
+const sharingOn = () => sharing.on;
 function seed() {
   tags = ["home", "health", "work", "money", "morning", "appointments", "travel", "volunteer", "yoga"].map((name) => ({ id: name, name }));
   reminders = [
@@ -1542,9 +1633,22 @@ function seed() {
 }
 /* Shared reminders (#183): two connections, two invites, what they've sent here and what's been sent to them. */
 function seedShared() {
+  /* Share Activity (#397): the record, oldest first, as the sharing store keeps it. One entry of
+     each kind: a change of Apple Account naming everyone it removed, a lost connection, the other
+     person leaving, and changes iCloud refused, one of them for a connection that had ended by
+     then: a waiting change keeps its connection's name, so every entry has one. */
+  activity = [
+    { at: "2026-08-29T10:04", names: ["Chris Nolan", "Pat Rivera", "Dana Kim"], event: "account" },
+    { at: "2026-09-14T09:41", names: ["Alex Morgan"], event: "left" },
+    { at: "2026-09-21T18:02", names: ["Robin Vega"], event: "lost" },
+    { at: "2026-09-26T07:15", names: ["Sam Okafor"], event: "settings" },
+    { at: "2026-09-27T16:12", names: ["Alex Morgan"], event: "cancel" },
+    { at: "2026-09-27T21:30", names: ["Sam Okafor"], event: "status" },
+    { at: "2026-09-28T07:58", names: ["Maya Torres"], event: "send" },
+  ];
   connections = [
-    { id: "maya", name: "Maya Torres", state: "connected", since: "2026-08-30", address: "maya.torres@icloud.com", statusSharing: true, delivery: "right", theirStatus: true, theirDelivery: "right" },
-    { id: "sam", name: "Sam Okafor", state: "connected", since: "2026-09-12", address: "sam.okafor@icloud.com", statusSharing: true, delivery: "ask", theirStatus: false, theirDelivery: "ask" },
+    { id: "maya", name: "Maya Torres", state: "connected", since: "2026-08-30", address: "maya.torres@icloud.com", statusSharing: true, delivery: "right", theirStatus: true, theirDelivery: "right", synced: "2026-09-27" },
+    { id: "sam", name: "Sam Okafor", state: "connected", since: "2026-09-12", address: "sam.okafor@icloud.com", statusSharing: true, delivery: "ask", theirStatus: false, theirDelivery: "ask", synced: "2026-09-01" },
     { id: "jordan", name: "Jordan Lee", state: "invited", sentAt: "2026-09-28T07:40", address: "jordan.lee@icloud.com" },
     { id: "priya", name: "Priya Shah", state: "invited", sentAt: "2026-09-25T18:10", address: "+1 (555) 010-4477" },
   ];
@@ -1768,6 +1872,7 @@ function titleOf(entry) {
   if (entry.kind === "defpace") return "Default Pace";
   if (entry.kind === "about") return "About";
   if (entry.kind === "conns") return "Connections";
+  if (entry.kind === "activity") return "Share Activity";
   if (entry.kind === "conn" || entry.kind === "inv") return conn(entry.id)?.name ?? "Connection";
   return remById(entry.id)?.title ?? "Reminder";
 }
@@ -2062,8 +2167,8 @@ function dayFilterSheet() {
     <div class="sec"><ul class="list">${tagRows || `<li class="empty">No tags yet. Add them when you edit a reminder.</li>`}</ul>
     <p class="sec-f">${f.ids.length > 1 ? "All Tags shows reminders with every checked tag. Any Tag shows those with at least one." : "Check one or more tags. Match needs two or more."}</p></div>
     <div class="sec"><ul class="list">${check("data-daynone", "1", "No Tags", f.none, `<span class="s">Only reminders without tags</span>`)}</ul></div>
-    <h3 class="sec-h">From</h3>
-    <div class="sec"><ul class="list">${check("data-dayfrom", "1", "From others", f.fromOthers, `<span class="s">Only reminders someone sent you</span>`)}</ul></div>
+    ${sharingOn() ? `<h3 class="sec-h">From</h3>
+    <div class="sec"><ul class="list">${check("data-dayfrom", "1", "From others", f.fromOthers, `<span class="s">Only reminders someone sent you</span>`)}</ul></div>` : ""}
     <p class="sec-f" style="margin:0 32px">Apply shows ${plural(n, "reminder")} due today.</p>
     <div class="remreset">${reset}</div>
   </div>`;
@@ -2203,6 +2308,10 @@ function searchBar() {
   const cancel = `<button type="button" class="btn plain scancel${q ? " on" : ""}" data-remqclear>Cancel</button>`;
   return `<div class="remsearch" role="search"><label class="sfield">${I("magnifyingglass", 17)}<input type="search" id="rem-q" placeholder="Search titles and notes" aria-label="Search titles and notes" value="${esc(q)}" autocomplete="off">${clear}</label>${cancel}</div>`;
 }
+/* #429: whether Mine's own rows get an Edit tile. The developer decides from this mockup. */
+let mineEdit = true;
+/* DESIGN.md's swipe-edit tile, as the Tags tab draws it: a blue circle with a pencil, Edit under it. */
+const editTile = (id) => `<button type="button" class="swipe-act tile edit" data-edit="${id}" tabindex="-1" aria-hidden="true"><span class="disc">${I("pencil", 22)}</span><span>Edit</span></button>`;
 /* A row: due time, title and tags, then the status label. No notes. Swiping left shows Done (only
    while Nudging) at the edge and Delete beside it, with no full swipe; nothing on the right. The
    swipe is hidden from assistive technology; the app gives every row Delete, and Nudging rows
@@ -2217,8 +2326,12 @@ function remListRow(r) {
   </button>`;
   const done = occ ? `<button type="button" class="swipe-act tile done" data-remack="${occ.id}" tabindex="-1" aria-hidden="true"><span class="disc">${I("checkmark", 22)}</span><span>Done</span></button>` : "";
   const del = `<button type="button" class="swipe-act tile del" data-delete="${r.id}" tabindex="-1" aria-hidden="true"><span class="disc">${I("trash", 22)}</span><span>${r.from ? "Remove" : "Delete"}</span></button>`;
-  const actions = `${occ ? `<button type="button" class="sr-only" data-remack="${occ.id}">Done: ${esc(r.title)}</button>` : ""}<button type="button" class="sr-only" data-delete="${r.id}">${r.from ? "Remove" : "Delete"}: ${esc(r.title)}</button>`;
-  return `<li data-rid="${r.id}"><div class="swipe" data-swipe-width="${occ ? 130 : 70}"><div class="swipe-acts tiles">${del}${done}</div><div class="swipe-row">${cell}</div></div>${actions}</li>`;
+  // #429: Edit on the person's own rows, beside Done (or at the edge). A received copy keeps Remove only.
+  const withEdit = mineEdit && !r.from;
+  const edit = withEdit ? editTile(r.id) : "";
+  const actions = `${occ ? `<button type="button" class="sr-only" data-remack="${occ.id}">Done: ${esc(r.title)}</button>` : ""}${withEdit ? `<button type="button" class="sr-only" data-edit="${r.id}">Edit: ${esc(r.title)}</button>` : ""}<button type="button" class="sr-only" data-delete="${r.id}">${r.from ? "Remove" : "Delete"}: ${esc(r.title)}</button>`;
+  const tiles = 1 + (occ ? 1 : 0) + (withEdit ? 1 : 0);
+  return `<li data-rid="${r.id}"><div class="swipe" data-swipe-width="${10 + 60 * tiles}"><div class="swipe-acts tiles">${del}${edit}${done}</div><div class="swipe-row">${cell}</div></div>${actions}</li>`;
 }
 /* Search or filters match nothing. It never says there are no reminders, names what's narrowing
    the list, and offers to clear it. The app ships each sentence as one whole string. */
@@ -2230,7 +2343,7 @@ function noMatch() {
   return `<div class="unavailable">${I(q ? "magnifyingglass" : "line.3.horizontal.decrease", 52)}<h2>${q ? `No Results for “${esc(q)}”` : "No Matches"}</h2><p>${text}</p><button type="button" class="btn bordered" data-remclearall>${label}</button></div>`;
 }
 function viewRems() {
-  if (state.remsView === "sent") return viewSentTab();
+  if (state.remsView === "sent" && sharingOn()) return viewSentTab();
   if (!reminders.length) {
     return `${navBar({ title: "Reminders", trailing: plusBtn })}${remsSeg()}<div class="unavailable">${I("list.bullet.clipboard", 52)}<h2>No Reminders Yet</h2><p>Every reminder you make shows here, whatever its state.</p><button type="button" class="btn bordered" data-new>${I("plus", 18)} New Reminder</button></div>`;
   }
@@ -2300,8 +2413,8 @@ function remFilterSheet() {
     <div class="sec"><ul class="list">${statusRows}</ul><p class="sec-f">Shows reminders with any checked status.</p></div>
     <h3 class="sec-h">Strength</h3>
     <div class="sec"><ul class="list">${strengthRows}</ul><p class="sec-f">Shows reminders with any checked strength.</p></div>
-    <h3 class="sec-h">From</h3>
-    <div class="sec"><ul class="list">${check("data-remfrom", "1", "From others", d.fromOthers, `<span class="s">Only reminders someone sent you</span>`)}</ul></div>
+    ${sharingOn() ? `<h3 class="sec-h">From</h3>
+    <div class="sec"><ul class="list">${check("data-remfrom", "1", "From others", d.fromOthers, `<span class="s">Only reminders someone sent you</span>`)}</ul></div>` : ""}
     <h3 class="sec-h">Due Date</h3>
     <div class="sec"><ul class="list">${dateRow("from", "From")}${dateRow("to", "To")}</ul>
     <p class="sec-f">Both days are included. A reminder with nothing more coming is found by its last due date.</p></div>
@@ -2579,8 +2692,12 @@ function settingsSections() {
     <li><button type="button" class="cell" data-about><span class="ico" style="background:var(--tile-gray)">${I("iphone", 19)}</span><span class="main">About</span>${chev}</button></li>
   </ul></div>` },
     { title: "Sharing", body: `<div class="sec"><ul class="list icons">
-    <li><button type="button" class="cell" data-conns><span class="ico" style="background:var(--tile-gray)">${I("person.2", 19)}</span><span class="main">Connections</span><span class="trail">${connected().length || ""}</span>${chev}</button></li>
-  </ul></div>` },
+    <li><div class="cell"><span class="ico" style="background:var(--tile-blue)">${I("square.and.arrow.up", 19)}</span><label class="main" for="set-sharing">Sharing</label><input type="checkbox" class="switch" role="switch" id="set-sharing" data-sharing ${sharingOn() ? "checked" : ""}></div></li>
+    ${sharingOn() ? `<li><button type="button" class="cell" data-conns><span class="ico" style="background:var(--tile-gray)">${I("person.2", 19)}</span><span class="main">Connections</span><span class="trail">${connected().length || ""}</span>${chev}</button></li>
+    <li><button type="button" class="cell" data-activity><span class="ico" style="background:var(--tile-gray)">${I("list.bullet.rectangle", 19)}</span><span class="main">Share Activity</span>${chev}</button></li>` : ""}
+    <li><button type="button" class="cell tint" data-tutorial><span class="ico" style="background:var(--tile-gray)">${I("info.circle", 19)}</span><span class="main">How Sharing Works</span></button></li>
+  </ul>
+  <p class="sec-f">Connect with people through iCloud to send each other reminders.</p></div>` },
     { title: "Nudges", body: `<div class="sec"><ul class="list icons">
     <li><div class="cell"><span class="ico" style="background:var(--tile-red)">${I("bell", 19)}</span><span class="main">Notifications</span><span class="trail">${ok(perm.notifications && perm.timeSensitive, "On", perm.notifications ? "On · Time Sensitive off" : "Off")}</span></div></li>
     <li><div class="cell"><span class="ico" style="background:var(--tile-orange)">${I("alarm", 19)}</span><span class="main">Alarms</span><span class="trail">${ok(perm.alarms, "On", "Off")}</span></div></li>
@@ -2691,6 +2808,7 @@ const ICLOUD_WHY = {
   unavailable: "iCloud isn't available right now. Sharing starts again by itself.",
 };
 function sharingBanner() {
+  if (!sharingOn()) return "";
   if (!icloudOK()) return `<div class="banner info" role="note">${I("icloud.slash", 22)}<div><p><strong>Sharing is paused.</strong> ${ICLOUD_WHY[sharing.icloud]} Reminders you've received keep nudging.</p>${sharing.icloud === "unavailable" ? "" : `<button type="button" class="btn bordered small" data-ios-settings>Open Settings</button>`}</div></div>`;
   if (sharing.offline) return `<div class="banner info" role="note">${I("wifi.slash", 22)}<div><p><strong>You're offline.</strong> Reminders you've received keep nudging. What you send or change goes when you're back online.</p></div></div>`;
   return "";
@@ -2705,7 +2823,7 @@ function waitingSection() {
       const d = L(r.dtstart);
       return `<li><div class="cell"><span class="time">${hm(d)}<small>${dayLabel(d)}</small></span>
         <span class="main"><button type="button" class="linkish t" data-open="${r.id}">${esc(r.title)}</button>${fromLabel(r)}
-        <span class="waitact"><button type="button" class="btn bordered small" data-accept="${r.id}" aria-label="Accept: ${esc(r.title)}">Accept</button><button type="button" class="btn bordered small destr" data-delete="${r.id}" aria-label="Remove: ${esc(r.title)}">Remove</button></span></span>
+        <span class="waitact"><button type="button" class="btn prominent small" data-accept="${r.id}" aria-label="Accept: ${esc(r.title)}">Accept</button><button type="button" class="btn prominent small destr" data-delete="${r.id}" aria-label="Remove: ${esc(r.title)}">Remove</button></span></span>
       </div></li>`;
     }).join("")}</ul><p class="sec-f">These won't nudge you until you accept them.</p></div></section>`;
 }
@@ -2714,13 +2832,13 @@ function acceptReminder(rid) {
   r.status = "ACTIVE";
   const n = nextOccurrence(r);
   r.nextOccurrenceAt = n ? iso(n) : null;
-  hud(n ? `Accepted. Next: ${when(n)}` : "Accepted");
+  
 }
 function removeReceived(rid) {
   const r = remById(rid), c = conn(r.from);
   const seen = c?.statusSharing && !r.dontShare;
   ask({ style: "sheet", title: `Remove “${r.title}”?`, message: `This removes your copy and cancels its ${hasAlarmKit() ? "nudges and alarms" : "nudges"}.${seen ? ` ${fromName(r)} sees it as Removed.` : ""}`,
-    buttons: [{ label: "Remove Reminder", role: "destructive", run: () => { deleteReminder(rid, r.title); hud(`Removed “${r.title}”`); } }, { label: "Cancel", role: "cancel" }] });
+    buttons: [{ label: "Remove Reminder", role: "destructive", run: () => { deleteReminder(rid, r.title); } }, { label: "Cancel", role: "cancel" }] });
 }
 
 /* A received reminder's details: what it is, who sent it, what the recipient can and can't do. */
@@ -2770,7 +2888,7 @@ function viewReceived(r) {
 /* The reminder form's Send To row, and its page. */
 function sendToSection(sh) {
   const x = sh.draft, r = sh.editId && remById(sh.editId);
-  if (r && !r.to) return "";
+  if (!sharingOn() || (r && !r.to)) return "";
   const names = listJoin(x.to.map((id) => conn(id)?.name).filter(Boolean));
   if (r) return `<div class="sec"><ul class="list"><li><div class="cell"><span class="main">Sent To</span><span class="trail">${esc(names)}</span></div></li></ul><p class="sec-f">Your change reaches everyone, with a note saying what changed.</p></div>`;
   if (!icloudOK()) return `<div class="sec"><ul class="list"><li><button type="button" class="cell" disabled><span class="main">Send To</span><span class="trail">Paused</span></button></li></ul><p class="sec-f">Sharing is paused. ${ICLOUD_WHY[sharing.icloud]}</p></div>`;
@@ -2796,10 +2914,15 @@ function createSent(fields, ids) {
   const n = nextOccurrence(s);
   s.nextOccurrenceAt = n ? iso(n) : null;
   sent.push(s);
-  hud(sharing.offline ? `Waiting to sync: “${s.title}”` : `Sent “${s.title}”`);
+  
   return s;
 }
 
+/* Last synced (#434): when the other person last opened the app, shown only while their status
+   sharing for this connection is on and only once the connection is quiet (nothing synced for 14
+   days). Only on the connection's page, under Connected since; nowhere else. */
+const quiet = (c) => c.theirStatus && c.synced && dayDiff(L(`${c.synced}T00:00`), NOW) >= 14;
+const syncedNote = (c) => { const d = L(`${c.synced}T00:00`); return `Last synced on ${MON[d.getMonth()]} ${d.getDate()}`; };
 /* Settings › Connections. */
 const personTile = `<span class="ico round" style="background:var(--tile-gray)">${I("person", 19)}</span>`;
 function connRow(c) {
@@ -2821,17 +2944,43 @@ function viewConnections() {
   ${on.length ? `<h2 class="sec-h">Connected</h2><div class="sec"><ul class="list icons">${on.map(connRow).join("")}</ul></div>` : ""}
   ${inv.length ? `<h2 class="sec-h">Invited</h2><div class="sec"><ul class="list icons">${inv.map(inviteRow).join("")}</ul></div>` : ""}`;
 }
+/* Settings › Share Activity (#397): the record, newest first. Each entry is who it concerns, what
+   happened in the app's own sentence (#396), and when. Nothing to tap: the rows are plain text. */
+const ACTIVITY_TEXT = {
+  send: "iCloud refused a reminder you sent, so it wasn't delivered.",
+  revise: "iCloud refused a change to a reminder you sent, so it wasn't delivered.",
+  cancel: "iCloud refused deleting a reminder you sent, so their copy wasn't removed.",
+  status: "iCloud refused an update about a reminder they sent you, so it wasn't delivered.",
+  settings: "iCloud refused a change to your sharing choices, so it wasn't delivered.",
+  disconnect: "iCloud refused part of disconnecting, so it didn't finish.",
+  lost: "iCloud lost the connection, so it ended. It can happen after an iCloud Keychain reset, or after removing the app's data from iCloud in Settings.",
+  left: "They disconnected, so the connection ended.",
+  account: "A different Apple Account signed in, so sharing from the old one was removed.",
+};
+/* The names as ListFormatter joins them in US English: "A", "A and B", "A, B, and C". */
+const nameList = (names) => (names.length < 3 ? names.join(" and ") : `${names.slice(0, -1).join(", ")}, and ${names.at(-1)}`);
+function activityRow(e) {
+  const who = nameList(e.names);
+  return `<li><div class="cell"><span class="main"><span class="t">${esc(who)}</span><span class="s">${esc(ACTIVITY_TEXT[e.event])}</span><span class="s">${when(L(e.at))}</span></span></div></li>`;
+}
+function viewActivity() {
+  const head = navBar({ title: "Share Activity", large: false, back: backLabel() });
+  if (!activity.length) return `${head}<div class="unavailable">${I("checkmark.circle.fill", 52)}<h2>No Share Activity</h2><p>Nothing has gone wrong with sharing. If iCloud refuses a change or a connection ends, it shows here.</p></div>`;
+  return `${head}
+  <div class="sec" style="margin-top:12px"><ul class="list" aria-label="Share Activity, newest first">${activity.toReversed().map(activityRow).join("")}</ul>
+  <p class="sec-f">Kept on this iPhone only. Turning off Sharing clears it.</p></div>`;
+}
 function viewConn(id) {
   const c = conn(id), back = backLabel();
   if (!c) return `${navBar({ title: "", large: false, back })}<div class="unavailable">${I("info.circle", 48)}<h2>Connection Ended</h2></div>`;
   const f = esc(c.name);
   const ask1 = c.delivery === "ask";
   return `${navBar({ title: c.name, large: false, back })}
-  <div class="sec" style="margin-top:12px"><div class="hero"><h1 tabindex="-1">${esc(c.name)}</h1><p>Connected since ${MON[L(`${c.since}T00:00`).getMonth()]} ${L(`${c.since}T00:00`).getDate()}</p></div></div>
+  <div class="sec" style="margin-top:12px"><div class="hero"><h1 tabindex="-1">${esc(c.name)}</h1><p>Connected since ${MON[L(`${c.since}T00:00`).getMonth()]} ${L(`${c.since}T00:00`).getDate()}</p>${quiet(c) ? `<p>${syncedNote(c)}</p>` : ""}</div></div>
   <h2 class="sec-h">Reminders from ${f}</h2>
   <div class="sec"><ul class="list">
     <li><div class="formrow"><label for="cn-st">Status Sharing</label><input type="checkbox" class="switch" role="switch" id="cn-st" data-connstatus="${c.id}" ${c.statusSharing ? "checked" : ""}></div></li>
-  </ul><p class="sec-f">${c.statusSharing ? `${f} sees how the reminders ${f} sends you are going: Done, Paused, Missed or Removed, and the last 7 days of a repeating one.` : `${f} sees only that a reminder was Delivered.`}</p></div>
+  </ul><p class="sec-f">${c.statusSharing ? `${f} sees how the reminders they send you are going: Done, Paused, Missed or Removed, and the last 7 days of a repeating one. They also see when you last opened the app.` : `${f} sees only that a reminder was Delivered.`}</p></div>
   <h3 class="sec-h" id="l-delivery">Delivery Mode</h3>
   <div class="sec">${choiceRow("Delivery Mode", { id: "cn-del", name: "conn-delivery", labelId: "l-delivery", attr: `data-conndelivery="${c.id}"`, options: [["right", "Start right away"], ["ask", "Ask me first"]], value: c.delivery })}
   <p class="sec-f">${ask1 ? `Each reminder from ${f} waits for you to accept it, and sends no nudge until you do.` : `Reminders from ${f} start nudging as soon as they arrive.`} Applies to reminders sent from now on.</p></div>
@@ -2839,7 +2988,7 @@ function viewConn(id) {
   <div class="sec"><ul class="list">
     <li><div class="cell"><span class="main">Status Sharing</span><span class="trail">${c.theirStatus ? "On" : "Off"}</span></div></li>
     <li><div class="cell"><span class="main">Delivery Mode</span><span class="trail">${c.theirDelivery === "ask" ? "Ask me first" : "Start right away"}</span></div></li>
-  </ul><p class="sec-f">${f} sets these, for the reminders you send ${f}.</p></div>
+  </ul><p class="sec-f">They set these, for the reminders you send them.</p></div>
   <div class="sec"><ul class="list"><li><button type="button" class="cell destructive" data-disconnect="${c.id}">${I("person.slash", 20)} Disconnect</button></li></ul></div>`;
 }
 function viewInvite(id) {
@@ -2860,46 +3009,101 @@ function viewInvite(id) {
 
 /* The hint before the system's sharing sheet, then a stand-in for that sheet. */
 function openInvite(v) {
-  state.sheet = { kind: "invite", step: "hint", back: v === "form" ? state.sheet : null, again: conn(v) ?? null, ret: document.activeElement };
+  const again = conn(v) ?? null;
+  state.sheet = { kind: "invite", step: "form", back: v === "form" ? state.sheet : null, again, ret: document.activeElement,
+    ...(again ? { locked: true, chosen: true, name: again.name, address: again.address } : {}) };
   state.focus = "sheet"; render();
 }
+/* How the invite link goes out. Messages and Mail open iOS's own compose screen, prefilled, and the person taps Send there; Copy Link has no screen. Mail is listed only when the device can send mail (canSendMail), which the app checks. */
+/* Contacts for the stand-ins. In the app the contact access button finds them from the text typed. */
+const CK_CONTACTS = [["Casey Morgan", "casey.morgan@icloud.com"], ["Jordan Lee", "+1 (555) 010-0134"], ["Maya Torres", "maya.torres@icloud.com"], ["Sam Okafor", "sam.okafor@icloud.com"]];
+function ckMatches(q) {
+  const t = q.trim().toLowerCase();
+  if (!t) return [];
+  const digits = t.replace(/\D/g, "");
+  return CK_CONTACTS.filter(([n, a]) => n.toLowerCase().includes(t) || a.toLowerCase().includes(t) || (digits.length > 1 && a.replace(/\D/g, "").includes(digits)));
+}
+/* The contact access button's stand-in: iOS draws it under the field, with the matching contact, and one tap shares that contact with the app. */
+function ckMatchesHtml(q) {
+  const m = ckMatches(q).filter(([, a]) => a.toLowerCase() !== q.trim().toLowerCase());
+  if (!m.length) return "";
+  return `<div class="sec"><ul class="list icons">${m.map(([n, a]) => `<li><button type="button" class="cell" data-ckmatch="${esc(a)}|${esc(n)}">${personTile}<span class="main"><span class="t">${esc(n)}</span><span class="s">${esc(a)}</span></span><span class="trail" style="color:var(--accent)">Allow</span></button></li>`).join("")}</ul><p class="standin">A stand-in. iOS draws this button, and the first tap asks to share that contact with the app.</p></div>`;
+}
+const INVITE_VIA = [["Messages", "message"], ["Mail", "envelope"], ["Copy Link", "link"]];
+/* Which routes fit the address: a phone number can be texted, an email address can be mailed, and a link can be copied for either. Until there is a person, no route can be chosen. */
+function ckKind(address) {
+  const t = (address ?? "").trim();
+  if (t.includes("@")) return "email";
+  if (t.replace(/\D/g, "").length >= 7) return "phone";
+  return null;
+}
+function ckViaAllowed(kind, via) { return !!kind && (via === "Copy Link" || (kind === "email" ? via === "Mail" : via === "Messages")); }
+/* The route in use: the one the person picked while it still fits, else the natural one for the address (Mail for an email, Messages for a phone number). */
+function ckVia(sh) {
+  const kind = ckKind(sh.address ?? sh.again?.address);
+  if (!kind) return null;
+  if (sh.via && ckViaAllowed(kind, sh.via)) return sh.via;
+  return kind === "email" ? "Mail" : "Messages";
+}
+/* Invite waits for a person (a contact, or an address that is an email or a phone number) and for a way to send. */
+function ckReady(sh) { return !!ckKind(sh.address ?? sh.again?.address) && !!ckVia(sh); }
+function ckGoHtml(sh) { return `<div class="sheet-actions"><button type="button" class="btn prominent" data-invitesend ${ckReady(sh) ? "" : "disabled"}>Invite</button></div>`; }
+function ckViaHtml(sh) {
+  const kind = ckKind(sh.address ?? sh.again?.address), via = ckVia(sh);
+  if (!kind) return "";
+  const routes = INVITE_VIA.map(([v]) => v).filter((v) => ckViaAllowed(kind, v));
+  return `<h2 class="sec-h">Send With</h2>
+    <div class="sec"><ul class="list">${routes.map((v) => `<li><button type="button" class="cell" role="radio" aria-checked="${v === via}" data-invitevia="${v}"><span class="ck-route-icon">${I(INVITE_VIA.find(([n]) => n === v)[1], 20)}</span><span class="main">${v}</span>${v === via ? CHECK : ""}</button></li>`).join("")}</ul><p class="sec-f">${via === "Copy Link" ? "Copies the invite link, for you to send anywhere." : `${via} opens its own screen with the invite ready, and you tap Send there.`} Nothing is sent until you do.</p></div>`;
+}
 function inviteSheet(sh) {
-  if (sh.step === "hint") return `${sheetNav(cancelButton(), "Invite Someone", "")}
+  return `${sheetNav(cancelButton(), sh.locked ? "Invite Again" : "Invite Someone", "")}
   <div class="sheet-body" tabindex="-1">
-    <div class="unavailable" style="padding-top:24px">${I("person.badge.plus", 52)}<h2>Invite One Person</h2><p>Use the email address or phone number of their Apple Account, or the invite won't open for them.</p></div>
-    <div class="sheet-actions"><button type="button" class="btn prominent" data-invitego>Continue</button></div>
-  </div>`;
-  const sug = [["Casey Morgan", "casey.morgan@icloud.com"], ["Maya Torres", "maya.torres@icloud.com"]];
-  return `${sheetNav(cancelButton(), "Add People", `<button type="button" class="btn bar prominent" data-invitesend>Send</button>`)}
-  <div class="sheet-body" tabindex="-1">
-    <p class="standin">A stand-in. iOS draws this sheet.</p>
-    <div class="sec"><ul class="list"><li><div class="formrow"><label for="ck-to">To</label><input type="text" class="ckfield" id="ck-to" autocomplete="off" placeholder="Email or phone" value="${esc(sh.again?.address ?? "")}"></div></li></ul></div>
-    <h3 class="sec-h">Suggestions</h3>
-    <div class="sec"><ul class="list">${sug.map(([n, a]) => `<li><button type="button" class="cell" data-cksug="${a}|${n}"><span class="main"><span class="t">${n}</span><span class="s">${a}</span></span></button></li>`).join("")}</ul></div>
-    <h3 class="sec-h">Send With</h3>
-    <div class="sec"><ul class="list"><li><div class="cell"><span class="main">Messages</span></div></li><li><div class="cell"><span class="main">Mail</span></div></li><li><div class="cell"><span class="main">Copy Link</span></div></li></ul></div>
+    <h2 class="sec-h" id="ck-l">Who to Invite</h2>
+    <div class="sec"><ul class="list"><li><div class="formrow">${sh.chosen ? `<div class="ck-pill" id="ck-to"><span><span>${esc(sh.name)}</span>${sh.locked ? "" : `<button type="button" data-ckclear aria-label="Remove ${esc(sh.name)}">${I("xmark", 16)}</button>`}</span></div>` : `<input type="text" class="ckfield" id="ck-to" aria-labelledby="ck-l" autocomplete="off" placeholder="Email or phone" value="${esc(sh.address ?? sh.again?.address ?? "")}">`}${sh.locked ? "" : `<button type="button" class="ck-add" data-ckcontacts aria-label="Choose from Contacts">${I("plus", 18)}</button>`}</div></li></ul><p class="sec-f">${sh.chosen ? `The invite opens only for ${esc(sh.name)} at ${esc(sh.address)}.` : "Use the email address or phone number of their Apple Account, or the invite won't open for them."}</p></div>
+    <div id="ck-matches">${sh.chosen ? "" : ckMatchesHtml(sh.address ?? sh.again?.address ?? "")}</div>
+    <div id="ck-via">${ckViaHtml(sh)}</div>
+    <div id="ck-go">${ckGoHtml(sh)}</div>
   </div>`;
 }
 function sendInvite() {
-  const sh = state.sheet, typed = document.getElementById("ck-to").value.trim();
+  const sh = state.sheet, typed = sh.chosen ? sh.address : document.getElementById("ck-to").value.trim();
   if (!typed) return;
   const name = sh.name && sh.address === typed ? sh.name : typed;
   const already = connected().find((c) => sameName(c.name, name) || sameName(c.address ?? "", typed));
   if (already) { ask({ title: "Already Connected", message: `You and ${already.name} are already connected.`, buttons: [{ label: "OK" }] }); return; }
-  if (sh.again) Object.assign(sh.again, { sentAt: iso(NOW), address: typed });
-  else connections.push({ id: `c${Date.now()}`, name, state: "invited", sentAt: iso(NOW), address: typed });
+  Object.assign(sh, { name, address: typed });
+  const via = ckVia(sh);
+  if (!via) return;
+  const go = () => {
+    if (via === "Copy Link") { finishInvite(via); return; }
+    ask({ style: "sheet", title: via === "Messages" ? "New Message" : "New Email", message: `A stand-in. iOS draws this screen, with ${typed} and the invite link filled in. The person taps Send here.`,
+      buttons: [{ label: "Send", run: () => finishInvite(via) }, { label: "Cancel", role: "cancel" }] });
+  };
+  // Someone already invited isn't listed twice: inviting again replaces that invite.
+  const pending = !sh.again && invited().find((c) => sameName(c.name, name) || sameName(c.address ?? "", typed));
+  if (pending) {
+    ask({ title: "Already Invited", message: `You've already invited ${pending.name}. Inviting again sends a new invite, and the earlier one stops working.`,
+      buttons: [{ label: "Invite Again", run: () => { sh.again = pending; go(); } }, { label: "Cancel", role: "cancel" }] });
+    return;
+  }
+  go();
+}
+function finishInvite(via) {
+  const sh = state.sheet;
+  if (sh.again) Object.assign(sh.again, { sentAt: iso(NOW), address: sh.address });
+  else connections.push({ id: `c${Date.now()}`, name: sh.name, state: "invited", sentAt: iso(NOW), address: sh.address });
   closeSheet();
-  hud(`Invite sent to ${name}`);
+  
 }
 function cancelInvite(id) {
   const c = conn(id);
   ask({ style: "sheet", title: `Cancel the invite to ${c.name}?`, message: "It stops working, even if they've already got it.",
-    buttons: [{ label: "Cancel Invite", role: "destructive", run: () => { connections = connections.filter((x) => x.id !== id); for (const k of Object.keys(state.stacks)) state.stacks[k] = state.stacks[k].filter((e) => !(e.kind === "inv" && e.id === id)); hud(`Canceled the invite to ${c.name}`); nav(); } }, { label: "Keep Invite", role: "cancel" }] });
+    buttons: [{ label: "Cancel Invite", role: "destructive", run: () => { connections = connections.filter((x) => x.id !== id); for (const k of Object.keys(state.stacks)) state.stacks[k] = state.stacks[k].filter((e) => !(e.kind === "inv" && e.id === id)); controlNote(`Canceled the invite to ${c.name}`); nav(); } }, { label: "Keep Invite", role: "cancel" }] });
 }
 /* The invited person's side, after iCloud has checked the account and opened the app. */
-function showAccepted() {
+function showAccepted(tut = false) {
   if (!conn("riley")) connections.push({ id: "riley", name: "Riley Park", state: "connected", since: "2026-09-28", statusSharing: true, delivery: "right", theirStatus: true, theirDelivery: "right" });
-  state.sheet = { kind: "accepted", id: "riley", ret: document.activeElement };
+  state.sheet = { kind: "accepted", id: "riley", tut, ret: document.activeElement };
   state.focus = "sheet"; render();
 }
 function acceptedSheet(sh) {
@@ -2928,13 +3132,14 @@ function disconnectSheet(sh) {
       ${opt("remove", "Remove", "Deletes them and cancels their nudges and alarms.")}
       ${opt("keep", "Keep as My Own Reminders", `They stay with the same schedule, history and tags, no longer from ${f}.`)}
     </ul>${sh.other ? "" : `<p class="sec-f">${f} gets a note that the connection ended, and chooses what happens to the reminders you sent.</p>`}</div>
-    <div class="sheet-actions"><button type="button" class="btn ${sh.other ? "prominent" : "bordered destr"}" data-dcgo>${sh.other ? "Continue" : "Disconnect"}</button></div>
+    <div class="sheet-actions"><button type="button" class="btn prominent${sh.other ? "" : " destr"}" data-dcgo>${sh.other ? "Continue" : "Disconnect"}</button></div>
   </div>`;
 }
 /* A different Apple Account signed in (#212, spec #127 A13). The old account's sharing is already
    gone from this iPhone when this shows: what it received (with their nudges and alarms), its
    connections and invites, what it sent, and its unsent changes. Personal reminders stay. Shown
-   once, over whatever screen is up; OK or a swipe down closes it. */
+   once, over whatever screen is up; OK or a swipe down closes it. With connections removed, its
+   footer says those people weren't told (#433): their connection lives on under the old account. */
 function accountSheet(sh) {
   // The locale's list, as the app's Foundation list formatter writes it ("A, B, and C" in US English).
   const list = (a) => new Intl.ListFormat("en-US", { type: "conjunction" }).format(a);
@@ -2947,7 +3152,9 @@ function accountSheet(sh) {
     <p class="sheet-lead">This iPhone is signed in to a different Apple Account now, so sharing stopped for the people you were connected with through the other account.</p>
     <h3 class="sec-h">Removed from This iPhone</h3>
     <div class="sec"><ul class="list">${rows.map(([t, sub]) => `<li><div class="cell"><span class="main"><span class="t">${esc(t)}</span><span class="s">${esc(sub)}</span></span></div></li>`).join("")}</ul>
-    <p class="sec-f">Your own reminders haven't changed. To share again, invite people from Settings › Connections.</p></div>
+    <p class="sec-f">${sh.conns.length
+      ? "Your own reminders haven't changed. The people you were connected with haven't been told, so they still see you as connected. To share with them again, invite them from Settings › Connections."
+      : "Your own reminders haven't changed. To share again, invite people from Settings › Connections."}</p></div>
     <div class="sheet-actions"><button type="button" class="btn prominent" data-sheet-close>OK</button></div>
   </div>`;
 }
@@ -2956,9 +3163,10 @@ function changeAccount() {
   // Whole names, as the app keeps them: it has no first name of its own (#212's review).
   const senders = connections.filter((c) => reminders.some((r) => r.from === c.id)).map((c) => c.name);
   const sh = { kind: "account", received: gone.size, senders, conns: connections.map((c) => c.name), sent: sent.length, ret: document.activeElement };
-  if (!sh.received && !sh.conns.length && !sh.sent) { hud("Nothing shared on this iPhone, so no note. Reset the mockup."); return; }
+  if (!sh.received && !sh.conns.length && !sh.sent) { controlNote("Nothing shared on this iPhone, so no note. Reset the mockup."); return; }
   reminders = reminders.filter((r) => !gone.has(r.id));
   occurrences = occurrences.filter((o) => !gone.has(o.reminderId));
+  activity = sh.conns.length ? [{ at: iso(NOW), names: sh.conns, event: "account" }] : [];
   connections = []; sent = [];
   for (const k of Object.keys(state.stacks)) state.stacks[k] = state.stacks[k].filter((e) => !["conn", "inv", "sent"].includes(e.kind) && !(e.kind === "rem" && gone.has(e.id)));
   Object.assign(state, { system: null, alert: null, sheet: sh, focus: "sheet", keepScroll: false });
@@ -2976,16 +3184,217 @@ function finishDisconnect() {
   }
   for (const s of sent) s.to = s.to.filter((t) => t.conn !== c.id);
   sent = sent.filter((s) => s.to.length);
+  if (sh.other) activity.push({ at: iso(NOW), names: [c.name], event: "left" });
   connections = connections.filter((x) => x.id !== c.id);
   for (const k of Object.keys(state.stacks)) state.stacks[k] = state.stacks[k].filter((e) => !(e.kind === "conn" && e.id === c.id) && !(e.kind === "rem" && gone.has(e.id)));
   state.sheet = null;
-  hud(`Disconnected from ${c.name}`);
+  
   nav();
+}
+
+/* ================= How Sharing Works (tutorial) =================
+   A four-page sheet. It opens by itself once, the first time Sharing is turned on (Close or the last
+   page's Done ends it for good), and from Settings › Sharing › How Sharing Works any time after. */
+const tutorial = { seen: false };
+const TUTORIAL = [
+  { art: () => `<span class="pill">${I("iphone", 20)} You</span><span class="arrow">${I("arrow.right", 22)}</span><span class="pill">${I("iphone", 20)} Maya Torres</span>`,
+    h: "Send Each Other Reminders",
+    lead: "Connect with someone you trust, and the reminders you send them nudge on their iPhone like their own.",
+    rows: [["icloud", "You both need iCloud", "Sharing goes through iCloud, so each of you signs in to iCloud on your iPhone."],
+           ["hand.raised", "Only people you agree to", "You're connected only after one of you accepts the other's invite. Until then, nobody can send you a reminder."]] },
+  { art: () => `<span class="pill">${I("person.badge.plus", 20)} Invite</span><span class="arrow">${I("arrow.right", 22)}</span><span class="pill">${I("checkmark.circle.fill", 20)} Connected</span>`,
+    h: "Connect", steps: [["Invite Someone", "Settings › Connections. Enter the email address or phone number of their Apple Account."],
+                          ["Send the Invite", "Through Messages, Mail or Copy Link. Nothing is sent until you tap Send."],
+                          ["They Accept", "They open the invite on their iPhone, and you're both connected."]],
+    foot: "An invite opens only for the Apple Account it was sent to." },
+  { art: () => `<span class="pill">${I("bell", 20)} From Maya Torres</span>`,
+    h: "Send a Reminder",
+    lead: "Pick Send To when you make a reminder, and choose who gets it. It nudges them at the strength you chose.",
+    rows: [["paperplane", "It shows your name", "It appears among their reminders, labeled From you. They can mark it Done, pause it, remove it and tag it."],
+           ["clock", "Their Delivery Mode", "Each person chooses, for each connection, whether reminders start right away or wait for them to accept first."]] },
+  { art: () => `<span class="pill">${I("lock", 20)} Yours</span><span class="pill">${I("eye", 20)} Status</span>`,
+    h: "Who Sees What",
+    rows: [["lock", "You own what you send", "Only you can change what it says or when it's due. They can't edit it."],
+           ["eye", "Status is their choice", "With Status Sharing on, you see whether it's Done, Paused, Missed or Removed. With it off, you see only that it was Delivered."],
+           ["person.2", "Disconnect any time", "Settings › Connections. They choose to keep or remove the reminders you sent."],
+           ["list.bullet.rectangle", "Share Activity", "Settings › Share Activity shows what happened to sharing that you'd otherwise never see."]] },
+];
+function openTutorial(first) {
+  tutorial.seen = true;
+  state.sheet = { kind: "tutorial", page: 0, first, ret: document.activeElement };
+  state.focus = "sheet"; render();
+}
+function tutorialPage(p) {
+  const body = p.steps
+    ? `<div class="sec"><ol class="list tut-steps">${p.steps.map(([t, s]) => `<li><div class="cell"><span class="main"><span class="t">${t}</span><span class="s">${s}</span></span></div></li>`).join("")}</ol>${p.foot ? `<p class="sec-f">${p.foot}</p>` : ""}</div>`
+    : `${p.lead ? `<p class="sheet-lead">${p.lead}</p>` : ""}<div class="sec"><ul class="list icons">${p.rows.map(([ic, t, s]) => `<li><div class="cell"><span class="ico" style="background:var(--tile-blue)">${I(ic, 19)}</span><span class="main"><span class="t">${t}</span><span class="s">${s}</span></span></div></li>`).join("")}</ul></div>`;
+  return `<div class="tut-art" aria-hidden="true">${p.art()}</div><h3 class="tut-h">${p.h}</h3>${body}`;
+}
+/* The four pages sit side by side and snap: swipe left for the next page, right for the one before. The
+   page dots and the one button stay put under them. Back is gone (swipe right goes back) and the last
+   page shows only Close and Done. Continue stays as the plain, tappable way forward, and is what
+   VoiceOver and Switch Control use. */
+function tutNavRight(page) {
+  const n = TUTORIAL.length, last = page === n - 1;
+  const arrow = (attr, label, icon, off) => glass()
+    ? `<button type="button" class="btn bar icon glass" ${attr} aria-label="${label}"${off ? " disabled" : ""}>${I(icon, 22, true)}</button>`
+    : `<button type="button" class="btn bar icon" ${attr} aria-label="${label}"${off ? " disabled" : ""}>${I(icon, 22, true)}</button>`;
+  const back = arrow("data-twback", "Back", "chevron.backward", page === 0);
+  if (last) return `<span class="bar-group">${back}</span>${confirmButton("data-sheet-close", "Done")}`;
+  return `<span class="bar-group">${back}${arrow("data-twnext", "Next", "chevron.forward", false)}</span>`;
+}
+/* The pages swipe, and Back and Next sit together top right in one capsule (Back is dimmed on page 1).
+   On the last page Next becomes the standard confirm checkmark. Close is top left, where a sheet's dismiss goes. Only the
+   page dots stay under the pages. */
+function tutorialSheet(sh) {
+  const n = TUTORIAL.length;
+  const close = cancelButton().replace("data-sheet-cancel", "data-sheet-close").replace(">Cancel<", ">Close<").replace('aria-label="Cancel"', 'aria-label="Close"');
+  const dots = `<div class="tut-dots" role="img" aria-label="Page ${sh.page + 1} of ${n}">${TUTORIAL.map((_, i) => `<i ${i === sh.page ? "data-on" : ""}></i>`).join("")}</div>`;
+  return `${sheetNav(close, "How Sharing Works", tutNavRight(sh.page))}
+  <div class="tut">
+    <div class="tut-track" id="tut-track" tabindex="-1">${TUTORIAL.map((p, i) => `<section class="tut-page" data-tutpage="${i}" aria-label="Page ${i + 1} of ${n}" ${i === sh.page ? "" : "inert"}>${tutorialPage(p)}</section>`).join("")}</div>
+    <div class="tut-foot">${dots}</div>
+  </div>`;
+}
+/* After each render: show the current page, with no animation. */
+function syncTutorial() {
+  const t = document.getElementById("tut-track");
+  if (!t || state.sheet?.kind !== "tutorial") return;
+  t.style.scrollBehavior = "auto";
+  t.scrollLeft = state.sheet.page * t.clientWidth;
+  t.style.scrollBehavior = "";
+}
+/* A swipe settled on a page: update the dots, the button and which page can be reached, without a render. */
+function tutorialSettled() {
+  const t = document.getElementById("tut-track"), sh = state.sheet;
+  if (!t || sh?.kind !== "tutorial" || !t.clientWidth) return;
+  const page = Math.max(0, Math.min(TUTORIAL.length - 1, Math.round(t.scrollLeft / t.clientWidth)));
+  if (page === sh.page) return;
+  sh.page = page;
+  const n = TUTORIAL.length;
+  t.querySelectorAll(".tut-page").forEach((el, i) => { el.inert = i !== page; });
+  const dots = document.querySelector(".tut-dots");
+  dots.setAttribute("aria-label", `Page ${page + 1} of ${n}`);
+  dots.querySelectorAll("i").forEach((d, i) => { if (i === page) d.setAttribute("data-on", ""); else d.removeAttribute("data-on"); });
+  document.querySelector(".sheet .navrow > div:last-child").innerHTML = tutNavRight(page);
+}
+document.getElementById("sheet").addEventListener("scroll", (e) => {
+  if (e.target.id !== "tut-track") return;
+  clearTimeout(tutorialSettled.t); tutorialSettled.t = setTimeout(tutorialSettled, 60);
+}, true);
+/* A mouse drags the pages, as a finger swipes them on the iPhone. */
+(() => {
+  let drag = null;
+  const sheet = document.getElementById("sheet");
+  sheet.addEventListener("pointerdown", (e) => {
+    const t = e.target.closest?.("#tut-track");
+    if (!t || e.pointerType !== "mouse" || e.button !== 0) return;
+    drag = { t, x: e.clientX, left: t.scrollLeft, moved: false };
+  });
+  window.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.moved && Math.abs(dx) < 6) return;
+    drag.moved = true; drag.t.classList.add("dragging");
+    drag.t.scrollLeft = drag.left - dx;
+  });
+  window.addEventListener("pointerup", () => {
+    if (!drag) return;
+    const { t, left, moved } = drag; drag = null;
+    if (!moved) return;
+    const w = t.clientWidth, moveBy = t.scrollLeft - left;
+    const target = Math.max(0, Math.min(TUTORIAL.length - 1, Math.round(left / w) + (Math.abs(moveBy) > w * 0.2 ? Math.sign(moveBy) : 0)));
+    t.classList.remove("dragging");
+    t.scrollTo({ left: target * w, behavior: "smooth" });
+  });
+})();
+
+/* ================= The Sharing switch (#386, #388) =================
+   Off takes all of sharing away. Whenever that deletes anything (a connection, an invite, a
+   reminder sent or received) it asks first, as every destructive action does, with Disconnect's
+   Remove or Keep choice asked once for everyone; with nothing to delete it's immediate.
+   On again starts fresh: no connections, nothing sent. */
+function setSharing(on) {
+  if (on) {
+    sharing.on = true; state.keepScroll = true;
+    // The first point of need: the first time Sharing is turned on, the tutorial opens over Settings.
+    if (!tutorial.seen) { openTutorial(true); return; }
+    render(); return;
+  }
+  if (connections.length || sent.length || reminders.some((r) => r.from)) {
+    // The switch stays on until the person confirms.
+    state.sheet = { kind: "sharingoff", choice: "remove", ret: document.getElementById("set-sharing") };
+    state.focus = "sheet"; render(); return;
+  }
+  turnSharingOff("remove");
+}
+function sharingOffSheet(sh) {
+  const inv = invited().length, on = connected().length, n = reminders.filter((r) => r.from).length;
+  const opt = (v, label, sub) => `<li><button type="button" class="cell" role="radio" aria-checked="${sh.choice === v}" data-sochoice="${v}"><span class="main"><span class="t">${label}</span><span class="s">${sub}</span></span>${sh.choice === v ? CHECK : ""}</button></li>`;
+  // "This disconnects you from 2 people and cancels 2 invites.": connections and open invites apart.
+  const ppl = on === 1 ? "1 person" : `${on} people`, invs = inv === 1 ? "1 invite" : `${inv} invites`;
+  const foot = on ? `<p class="sec-f">Everyone you're connected with gets a note that the connection ended, and chooses what happens to the reminders you sent them.</p>` : "";
+  const what = on && inv ? `This disconnects you from ${ppl} and cancels ${invs}. ` : on ? `This disconnects you from ${ppl}. ` : inv ? `This cancels ${invs}. ` : "";
+  return `${sheetNav(cancelButton(), "Turn Off Sharing", "")}
+  <div class="sheet-body" tabindex="-1">
+    <p class="sheet-lead">${what}You won't be able to send or receive reminders, and your Sent list and its history are deleted.</p>
+    ${n ? `<h3 class="sec-h">${plural(n, "Reminder")} You've Received</h3>
+    <div class="sec"><ul class="list" role="radiogroup">
+      ${opt("remove", "Remove", "Deletes them and cancels their nudges and alarms.")}
+      ${opt("keep", "Keep as My Own Reminders", "They stay with the same schedule, history and tags, from no one.")}
+    </ul>${foot}</div>` : foot ? `<div class="sec">${foot}</div>` : ""}
+    <div class="sheet-actions"><button type="button" class="btn prominent destr" data-sogo>Turn Off Sharing</button></div>
+  </div>`;
+}
+/* Everything Disconnect does, for everyone at once, then the invites and Sent go too. */
+function turnSharingOff(choice) {
+  const gone = new Set(reminders.filter((r) => r.from && (choice === "remove" || r.status === "CANCELED")).map((r) => r.id));
+  reminders = reminders.filter((r) => !gone.has(r.id));
+  occurrences = occurrences.filter((o) => !gone.has(o.reminderId));
+  for (const r of reminders) if (r.from) {
+    delete r.from; delete r.change; delete r.dontShare; delete r.syncing;
+    if (r.status === "WAITING") { r.status = "ACTIVE"; const n = nextOccurrence(r); r.nextOccurrenceAt = n ? iso(n) : null; }
+  }
+  connections = []; sent = []; activity = [];
+  sharing.on = false;
+  state.remsView = "mine"; state.sentTools = newSentTools();
+  state.rems.filter.fromOthers = false; state.dayFilter.fromOthers = false;
+  for (const k of Object.keys(state.stacks)) state.stacks[k] = state.stacks[k].filter((e) => !["conns", "activity", "conn", "inv", "sent"].includes(e.kind) && !(e.kind === "rem" && gone.has(e.id)));
+  state.sheet = null;
+  
+  refresh("#set-sharing");
+}
+/* An invite opened from Messages or Mail while Sharing is off: turning it on accepts it too. */
+function openInviteLink() {
+  Object.assign(state, { system: null, alert: null, sheet: null });
+  if (sharingOn()) { showAccepted(); return; }
+  ask({ title: "Turn on sharing to connect with Riley Park?", message: "Riley Park invited you to send each other reminders through iCloud. Sharing is off on this iPhone.",
+    buttons: [{ label: "Not Now", role: "cancel" }, { label: "Turn On Sharing", run: () => { sharing.on = true; showAccepted(!tutorial.seen); } }] });
+}
+/* The mockup's starting points, keeping the tab that's showing. "received": Sharing on, with the
+   reminders received kept but no one connected or invited and nothing sent, as when the other
+   people ended their connections: turning off still asks, since it deletes or keeps them. */
+function startSharing(mode) {
+  const on = mode !== false, tab = state.tab, editor = state.sheet?.kind === "editor" ? state.sheet : null;
+  seed();
+  if (mode === "received") { connections = []; sent = []; }
+  if (!on) {
+    activity = [];
+    reminders = reminders.filter((r) => !r.from);
+    occurrences = occurrences.filter((o) => remById(o.reminderId));
+    connections = []; sent = [];
+  }
+  sharing.on = on;
+  Object.assign(state, { sentTools: newSentTools(), remsView: "mine", tab, stacks: { now: [], day: [], rems: [], tags: [], settings: [] }, rems: newRemsState(), dayFilter: newDayFilter(), dayStatus: null, system: null, alert: null, sheet: editor });
+  if (editor) editor.draft.to = [];
+  nav();
+  controlNote(mode === "received" ? "Sharing on, reminders received, no one connected" : on ? "Sharing on, with connections" : "Sharing off");
 }
 
 /* The Reminders tab's Mine | Sent control. Two short words, so it stays segmented at every size.
    Under the search field, where iOS puts content below a navigation bar's search drawer (#201). */
 function remsSeg() {
+  if (!sharingOn()) return "";
   const v = state.remsView;
   return `<fieldset class="seg remsview" aria-label="Show">${[["mine", "Mine"], ["sent", "Sent"]].map(([k, t]) => `<label><input type="radio" name="remsview" data-remsview value="${k}" ${k === v ? "checked" : ""}><span>${t}</span></label>`).join("")}</fieldset>`;
 }
@@ -3007,14 +3416,21 @@ function sentStatus(t, c) {
 }
 const showsHistory = (s, t, c) => s.rrule && t.hist && c.theirStatus && !t.notShare && !t.sync && !t.waiting;
 function sentDue(s) { return L(s.nextOccurrenceAt ?? s.dtstart); }
+/* A Sent row (#429): swiping left shows Edit at the edge and Delete beside it, as on Tags, with
+   no full swipe and nothing on the right. Edit opens the sent reminder's form, and Delete asks the
+   page's confirmation first. The swipe is hidden from assistive technology; VoiceOver gets Edit and
+   Delete as the row's actions, which the visually hidden buttons stand in for here. */
 function sentRow(s, t, c) {
   const d = sentDue(s), st = sentStatus(t, c);
-  return `<li><button type="button" class="cell sentcell" data-opensent="${s.id}">
+  const cell = `<button type="button" class="cell sentcell" data-opensent="${s.id}">
     <span class="time">${hm(d)}<small>${dayLabel(d)}</small></span>
     <span class="main"><span class="t">${esc(s.title)}</span><span class="s">${st.line}</span></span>
     <span class="trail">${st.label}${chev}</span>
     ${showsHistory(s, t, c) ? histStrip(t) : ""}
-  </button></li>`;
+  </button>`;
+  const del = `<button type="button" class="swipe-act tile del" data-deletesent="${s.id}" tabindex="-1" aria-hidden="true"><span class="disc">${I("trash", 22)}</span><span>Delete</span></button>`;
+  const actions = `<button type="button" class="sr-only" data-edit="${s.id}">Edit: ${esc(s.title)}</button><button type="button" class="sr-only" data-deletesent="${s.id}">Delete: ${esc(s.title)}</button>`;
+  return `<li data-sid="${s.id}-${c.id}"><div class="swipe" data-swipe-width="130"><div class="swipe-acts tiles">${del}${editTile(s.id)}</div><div class="swipe-row">${cell}</div></div>${actions}</li>`;
 }
 /* Sent's tools: the Reminders tab's search, Filter and Sort, on each person's copy, because status is per person. */
 function newSentFilter() { return { people: [], status: [], strength: [], from: null, to: null }; }
@@ -3136,7 +3552,7 @@ function viewSent(id) {
 function deleteSent(id) {
   const s = remById(id);
   ask({ style: "sheet", title: `Delete “${s.title}”?`, message: "It's canceled on everyone's iPhone, with a note saying so.",
-    buttons: [{ label: "Delete Reminder", role: "destructive", run: () => { sent = sent.filter((x) => x.id !== id); for (const k of Object.keys(state.stacks)) state.stacks[k] = state.stacks[k].filter((e) => !(e.kind === "sent" && e.id === id)); hud(`Deleted “${s.title}”`); nav(); } }, { label: "Cancel", role: "cancel" }] });
+    buttons: [{ label: "Delete Reminder", role: "destructive", run: () => { sent = sent.filter((x) => x.id !== id); for (const k of Object.keys(state.stacks)) state.stacks[k] = state.stacks[k].filter((e) => !(e.kind === "sent" && e.id === id)); controlNote(`Deleted “${s.title}”`); nav(); } }, { label: "Cancel", role: "cancel" }] });
 }
 /* The notifications shared reminders add, on the simulated Lock Screen. */
 function showSharedNotification(title, body) {
@@ -3500,7 +3916,7 @@ function updateReminder(r, fields) {
   }
   // A paused reminder has no next time until Resume.
   if (r.status === "PAUSED") r.nextOccurrenceAt = null;
-  hud("Changes saved");
+  
   return r;
 }
 const lockedFields = (r) => ({ dtstart: r.dtstart, rrule: r.rrule, repeatCustom: !!r.repeatCustom, strength: r.strength, pace: r.pace, wait: r.wait, breakThrough: btOf(r) });
@@ -3509,7 +3925,7 @@ function createReminder(fields) {
   const n = nextOccurrence(r);
   r.nextOccurrenceAt = n ? iso(n) : null;
   reminders.push(r);
-  hud(`Added “${r.title}”`);
+  
   return r;
 }
 function saveEditor() {
@@ -3518,7 +3934,7 @@ function saveEditor() {
   for (const t of sh.newTags) if (x.tagIds.includes(t.id)) tags.push(t);
   const fields = { title: x.title.trim(), body: x.body.trim() || null, tagIds: x.tagIds.filter(tagById), dtstart: x.dtstart, rrule: ruleFor(x), repeatCustom: x.repeat === "custom", strength: x.strength, pace: x.pace, wait: x.pace === "consistent" ? x.wait : undefined, breakThrough: x.breakThrough };
   const r = sh.editId ? updateReminder(remById(sh.editId), fields) : x.to.length ? createSent(fields, x.to) : createReminder(fields);
-  if (sh.editId && r.to) hud(`Sent your change to ${listJoin(r.to.map((t) => conn(t.conn)?.name).filter(Boolean))}`);
+  
   state.sheet = null;
   const top = state.stacks[state.tab].at(-1), kind = r.to ? "sent" : "rem";
   if (top?.kind !== kind || top.id !== r.id) stackPush({ kind, id: r.id });
@@ -3527,10 +3943,13 @@ function saveEditor() {
 function closeSheet() {
   const ret = state.sheet?.ret, back = state.sheet?.back;
   // An invite started from the form goes back to the form.
+  const tut = state.sheet?.kind === "accepted" && state.sheet.tut;
   state.sheet = back ?? null;
   state.focus = back ? "sheet" : ret && document.contains(ret) ? ret : "heading";
   state.keepScroll = true;
   render();
+  // Turning Sharing on for an invite is the first time too: the tutorial follows the Connected sheet, once it has closed.
+  if (tut) openTutorial(true);
 }
 function cancelSheet() {
   const sh = state.sheet;
@@ -3563,8 +3982,8 @@ function tagSheet(sh) {
 }
 function saveTag() {
   const sh = state.sheet, name = cleanTag(sh.draft.name);
-  if (sh.id) { tagById(sh.id).name = name; hud(`Renamed to #${name}`); }
-  else { tags.push({ id: `t${Date.now()}`, name }); hud(`Added #${name}`); }
+  if (sh.id) { tagById(sh.id).name = name; }
+  else { tags.push({ id: `t${Date.now()}`, name }); }
   closeSheet();
 }
 
@@ -3728,7 +4147,7 @@ function ack(id, from) {
   if (!r.rrule) r.status = "COMPLETED";
   if (r.from && sharing.offline) r.syncing = true;
   const alarms = simulate(r.strength, capOf(r), paceOf(r)).nudges.some((n) => viaFor(n.urgency, btActs(r)) === "alarm");
-  hud(`Done: ${r.title}. ${alarms ? "Its alarms are cancelled." : "Nudging stopped."}`);
+  
 }
 function pause(rid) {
   const r = remById(rid);
@@ -3736,7 +4155,7 @@ function pause(rid) {
   r.nextOccurrenceAt = null;
   r.pausedAt = iso(NOW);
   for (const o of openOccs().filter((x) => x.reminderId === rid)) closeSkipped(o, "paused");
-  hud(`Paused “${r.title}”`);
+  
 }
 /* Closing an occurrence cancels its pending nudges and alarms and removes its notifications. */
 function closeSkipped(o, reason) {
@@ -3756,13 +4175,13 @@ function resume(rid) {
   r.status = "ACTIVE";
   const n = nextOccurrence(r);
   r.nextOccurrenceAt = n ? iso(n) : null;
-  hud(n ? `Resumed. Next: ${when(n)}` : "Resumed");
+  
 }
 function deleteReminder(rid, title) {
   reminders = reminders.filter((x) => x.id !== rid);
   occurrences = occurrences.filter((o) => o.reminderId !== rid);
   for (const k of Object.keys(state.stacks)) state.stacks[k] = state.stacks[k].filter((e) => !(e.kind === "rem" && e.id === rid));
-  hud(`Deleted “${title}”`);
+  
   nav();
 }
 function del(rid) {
@@ -3781,7 +4200,7 @@ function deleteTag(t) {
     // With no tags left the tools go, so nothing is left narrowing the list.
     if (!tags.length) Object.assign(state.tagList, { q: "", filter: newTagFilter() });
   };
-  hud(`Deleted #${t.name}`);
+  
   tagLeave(t.id, change, true);
 }
 /* Today's words (TagsScreen.swift). */
@@ -3792,9 +4211,11 @@ function confirmDeleteTag(t) {
     buttons: [{ label: "Cancel", role: "cancel" }, { label: "Delete", role: "destructive", run: () => deleteTag(t) }] });
 }
 function wipeAll() {
+  sharing.on = false; state.remsView = "mine";
   state.sentTools = newSentTools();
   connections = [];
   sent = [];
+  activity = [];
   reminders = [];
   occurrences = [];
   tags = [];
@@ -3805,7 +4226,7 @@ function wipeAll() {
   // The sort direction is a setting, so Delete All Data sets it back to oldest first.
   state.rems = newRemsState();
   for (const k of Object.keys(state.stacks)) state.stacks[k] = [];
-  hud("All data deleted");
+  
   nav();
 }
 /* First launch: the system's notification prompt, then the alarm prompt. The two permissions are
@@ -3897,14 +4318,13 @@ function answerAlert(i) {
   render();
 }
 
-/* A short confirmation at the top of the screen. It stays until the next tap or key press rather
-   than vanishing on a timer, so no one has to read it in a hurry (HIG, Accessibility > Cognitive).
-   What it says is also shown on the screen itself, such as a status label. */
-function hud(msg) {
-  const h = document.getElementById("hud");
-  h.textContent = "";
-  // Status messages belong to the app, so none appear over the Lock Screen or the alarm.
-  setTimeout(() => { if (state.system) return; h.textContent = msg; h.classList.add("show"); }, 30);
+/* What a mockup control did, or why it did nothing, in the controls panel: never on the iPhone.
+   The app shows no success message (DESIGN.md): an action that worked shows its result, and only
+   a failure says anything. */
+function controlNote(msg) {
+  const n = document.getElementById("c-note");
+  n.textContent = "";
+  setTimeout(() => { n.textContent = msg; }, 30);
 }
 /* Spoken status for VoiceOver. The views re-render whole, and text that's replaced isn't reliably
    read, so filter and search results are announced here: one region that stays put. */
@@ -3918,9 +4338,6 @@ function dayNews() {
   const st = DAY_STATUS[state.dayStatus], n = st ? items.filter((it) => st.test(it.status)).length : items.length;
   return `${st ? `Showing only ${st.label}: ${n}` : `Showing all: ${n}`} due today${dayFilterOn() ? ` ${dayFilterPhrase()}` : ""}`;
 }
-function hideHud() { document.getElementById("hud").classList.remove("show"); }
-document.addEventListener("pointerdown", hideHud, true);
-document.addEventListener("keydown", hideHud, true);
 
 /* ================= Rendering ================= */
 const VIEWS = { now: viewNow, day: viewDay, rems: viewRems, tags: viewTags, settings: viewSettings };
@@ -3930,6 +4347,7 @@ function currentView(top) {
   if (top.kind === "defpace") return viewDefaultPace();
   if (top.kind === "about") return viewAbout();
   if (top.kind === "conns") return viewConnections();
+  if (top.kind === "activity") return viewActivity();
   if (top.kind === "conn") return viewConn(top.id);
   if (top.kind === "inv") return viewInvite(top.id);
   if (top.kind === "sent") return viewSent(top.id);
@@ -3960,6 +4378,8 @@ function sheetContent(sh) {
   if (sh.kind === "accepted") return acceptedSheet(sh);
   if (sh.kind === "disconnect") return disconnectSheet(sh);
   if (sh.kind === "account") return accountSheet(sh);
+  if (sh.kind === "sharingoff") return sharingOffSheet(sh);
+  if (sh.kind === "tutorial") return tutorialSheet(sh);
   return sh.kind === "tag" ? tagSheet(sh) : onboardSheet();
 }
 function sheetTitle(sh) {
@@ -3972,6 +4392,8 @@ function sheetTitle(sh) {
   if (sh.kind === "accepted") return "Connected";
   if (sh.kind === "disconnect") return "Disconnect";
   if (sh.kind === "account") return "Apple Account Changed";
+  if (sh.kind === "sharingoff") return "Turn Off Sharing";
+  if (sh.kind === "tutorial") return "How Sharing Works";
   return sh.kind === "dayfilter" ? "Filter My Day" : "Welcome";
 }
 /* The browser tab's title names whatever is on top. */
@@ -4020,6 +4442,7 @@ function render() {
   document.title = `${pageTitle(top)} · Nudge-inator`;
   document.querySelectorAll("textarea.grow").forEach(growField);
   updateControls();
+  syncTutorial();
   applyFocus();
 }
 /* Sizes a wrapping one-paragraph field to its text, for browsers without field-sizing. */
@@ -4200,20 +4623,29 @@ const CLICK = {
   sentreset: () => { state.sheet.draft = newSentFilter(); refresh("sheet"); },
   sentapply: () => { state.sentTools.filter = state.sheet.draft; closeSheet(); announce(sentCountNews()); },
   conns: () => push({ kind: "conns" }),
+  activity: () => push({ kind: "activity" }),
   conn: (v) => push({ kind: "conn", id: v }),
   inv: (v) => push({ kind: "inv", id: v }),
   opensent: (v) => push({ kind: "sent", id: v }),
   deletesent: (v) => deleteSent(v),
   invite: (v) => openInvite(v),
-  invitego: () => { state.sheet.step = "cloud"; state.focus = "sheet"; render(); },
   invitesend: () => sendInvite(),
-  cksug: (v) => { const [address, name] = v.split("|"); Object.assign(state.sheet, { address, name }); document.getElementById("ck-to").value = address; },
+  invitevia: (v) => { const f = document.getElementById("ck-to"); if (f?.tagName === "INPUT") state.sheet.address = f.value; state.sheet.via = v; render(); },
+  ckmatch: (v) => { const [address, name] = v.split("|"); Object.assign(state.sheet, { address, name, chosen: true }); render(); },
+  ckclear: () => { Object.assign(state.sheet, { address: "", name: null, chosen: false }); render(); document.getElementById("ck-to")?.focus(); },
+  ckcontacts: () => {
+    const pick = (name, address) => ({ label: `${name}, ${address}`, run: () => { Object.assign(state.sheet, { address, name, chosen: true }); render(); } });
+    ask({ style: "sheet", title: "Contacts", message: "A stand-in. iOS draws this picker, and shares only the email address or phone number you choose.",
+      buttons: [...CK_CONTACTS.map(([n, ad]) => pick(n, ad)), { label: "Cancel", role: "cancel" }] });
+  },
   cancelinvite: (v) => cancelInvite(v),
   accept: (v) => { acceptReminder(v); refresh("heading"); },
-  acceptreview: () => { const id = state.sheet.id; state.sheet = null; state.tab = "settings"; state.stacks.settings = [{ kind: "conn", id }]; nav(); },
+  acceptreview: () => { tutorial.seen = true; const id = state.sheet.id; state.sheet = null; state.tab = "settings"; state.stacks.settings = [{ kind: "conn", id }]; nav(); },
   disconnect: (v) => { state.sheet = { kind: "disconnect", id: v, choice: "remove", ret: document.activeElement }; state.focus = "sheet"; render(); },
   dcchoice: (v) => { state.sheet.choice = v; refresh(`[data-dcchoice="${v}"]`); },
   dcgo: () => finishDisconnect(),
+  sochoice: (v) => { state.sheet.choice = v; refresh(`[data-sochoice="${v}"]`); },
+  sogo: () => turnSharingOff(state.sheet.choice),
   sendpick: (v) => { const x = state.sheet.draft; x.to = toggled(x.to, v); refresh(`[data-sendpick="${v}"]`); },
   dayfrom: () => { const f = state.sheet.draft; f.fromOthers = !f.fromOthers; refresh("[data-dayfrom]"); },
   dayfromoff: () => { state.dayFilter.fromOthers = false; refresh("[data-dayfilter]"); announce(dayNews()); },
@@ -4221,9 +4653,12 @@ const CLICK = {
   back: () => pop(),
   open: (v) => push({ kind: "rem", id: v }),
   hin: () => push({ kind: "hin" }),
+  tutorial: () => openTutorial(false),
+  twback: () => { const t = document.getElementById("tut-track"); t.scrollTo({ left: (state.sheet.page - 1) * t.clientWidth, behavior: "smooth" }); },
+  twnext: () => { const t = document.getElementById("tut-track"); t.scrollTo({ left: (state.sheet.page + 1) * t.clientWidth, behavior: "smooth" }); },
   defpace: () => push({ kind: "defpace" }),
   about: () => push({ kind: "about" }),
-  weblink: (v) => hud(`Opens ${ABOUT_LINKS.find(([k]) => k === v)[3].replace("https://", "")} in the web browser`),
+  weblink: (v) => controlNote(`Opens ${ABOUT_LINKS.find(([k]) => k === v)[3].replace("https://", "")} in the web browser`),
   ack: (v, el) => { const focus = nextFocusAfterAck(v, el); ack(v, el?.dataset.src); refresh(focus); },
   pause: (v) => { pause(v); refresh(`[data-resume="${v}"]`); },
   resume: (v) => { resume(v); if (!state.alert && !state.sheet) refresh(`[data-pause="${v}"]`); },
@@ -4316,14 +4751,14 @@ const CLICK = {
     if (v === "open") { state.tab = "now"; state.stacks.now = [{ kind: "rem", id: o.reminderId }]; nav(); return; }
     // Stop quiets this ring. The next nudge was already scheduled, so it still comes on time.
     nav();
-    hud(`Stopped. Still nudging: next nudge ${hm(L(o.nextNudgeAt))}.`);
+    
   },
   lockClose: () => {
     state.system = null;
     if (!state.stacks[state.tab].length) state.tab = "now";
     nav();
   },
-  iosSettings: () => hud("Opens Nudge-inator in iOS Settings"),
+  iosSettings: () => controlNote("Opens Nudge-inator in iOS Settings"),
   test: () => showNotification("test"),
   wipe: () => ask({ title: "Delete All Data?", message: `This deletes every reminder, tag and all history from this iPhone, and cancels every ${hasAlarmKit() ? "nudge and alarm" : "nudge"}.${connections.some((c) => c.state !== "ended") ? " It also disconnects everyone and deletes the reminders you've sent and received, here and in iCloud." : ""} It can't be undone.`,
     buttons: [{ label: "Cancel", role: "cancel" }, { label: "Delete", role: "destructive", run: wipeAll }] }),
@@ -4420,6 +4855,7 @@ function onTagField(t) {
 }
 document.addEventListener("input", (e) => {
   const t = e.target;
+  if (t.id === "ck-to" && state.sheet) { state.sheet.address = t.value; document.getElementById("ck-matches").innerHTML = ckMatchesHtml(t.value); document.getElementById("ck-via").innerHTML = ckViaHtml(state.sheet); document.getElementById("ck-go").innerHTML = ckGoHtml(state.sheet); return; }
   if (t.dataset.dp) {
     // Settings' Default Pace applies as soon as it changes.
     settings.defaultPace[t.dataset.dp] = t.dataset.dp === "wait" ? Number(t.value) : t.value;
@@ -4549,6 +4985,7 @@ function syncPermControls() {
 }
 document.getElementById("c-notif").addEventListener("click", () => { state.alert = null; showNotification("nudge"); });
 document.getElementById("c-alarm").addEventListener("click", () => { state.alert = null; showAlarm(); });
+document.getElementById("c-db-before").addEventListener("change", (e) => { document.documentElement.toggleAttribute("data-before402", e.target.checked); });
 document.getElementById("c-onboard").addEventListener("click", () => { state.system = null; state.alert = null; state.sheet = { kind: "onboard", ret: document.activeElement }; state.focus = "sheet"; render(); });
 document.getElementById("c-perm-n").addEventListener("change", (e) => { perm.notifications = e.target.checked; state.keepScroll = true; render(); });
 document.getElementById("c-perm-a").addEventListener("change", (e) => { perm.alarms = e.target.checked; state.keepScroll = true; render(); });
@@ -4567,7 +5004,7 @@ document.getElementById("c-reset").addEventListener("click", () => {
   seed();
   settings.defaultPace = { ...DEFAULT_PACE };
   Object.assign(perm, { notifications: true, alarms: true, timeSensitive: true, badges: "allowed" });
-  Object.assign(sharing, { icloud: "ok", offline: false });
+  Object.assign(sharing, { on: true, icloud: "ok", offline: false });
   document.getElementById("c-sh-icloud").value = "ok";
   document.getElementById("c-sh-offline").checked = false;
   document.getElementById("c-perm-b").value = "allowed";
@@ -4576,7 +5013,7 @@ document.getElementById("c-reset").addEventListener("click", () => {
   document.getElementById("c-perm-t").checked = true;
   Object.assign(state, { sentTools: newSentTools(), remsView: "mine", tab: "now", stacks: { now: [], day: [], rems: [], tags: [], settings: [] }, rems: newRemsState(), dayFilter: newDayFilter(), dayStatus: null, tagList: newTagListState(), tabMin: false, sheet: null, system: null, alert: null });
   nav();
-  hud("Mockup reset");
+  controlNote("Mockup reset");
 });
 
 /* The Reminders tab's controls (#107). */
@@ -4584,7 +5021,7 @@ function showRemsTab() { Object.assign(state, { system: null, alert: null, sheet
 const firstRow = (st) => remRows().find((r) => remStatus(r) === st)?.id;
 function revealSwipe(rid) {
   const row = rid && main.querySelector(`[data-rid="${rid}"] .swipe-row`);
-  if (!row) { hud("No such row on screen. Reset the mockup."); return; }
+  if (!row) { controlNote("No such row on screen. Reset the mockup."); return; }
   // Open at once, without the slide, so a screenshot taken straight after shows it.
   row.style.transition = "none";
   setSwipe(row, -openWidth(row));
@@ -4600,6 +5037,22 @@ document.getElementById("c-rem-leave").addEventListener("click", () => {
 });
 document.getElementById("c-rem-none").addEventListener("click", () => { reminders = []; occurrences = []; showRemsTab(); });
 
+/* The Swipe to Edit controls (#429). */
+function revealRow(sel) {
+  const row = main.querySelector(`${sel} .swipe-row`);
+  if (!row) { controlNote("No such row on screen. Reset the mockup."); return; }
+  row.style.transition = "none";
+  setSwipe(row, -openWidth(row));
+  void row.offsetWidth;
+  row.style.transition = "";
+}
+document.getElementById("c-sw-sent").addEventListener("click", () => { showSent(); revealRow("[data-sid]"); });
+document.getElementById("c-sw-sentdel").addEventListener("click", () => { showSent(); const li = main.querySelector("[data-sid]"); if (li) deleteSent(li.querySelector("[data-opensent]").dataset.opensent); });
+document.getElementById("c-sw-mine-n").addEventListener("click", () => { state.remsView = "mine"; showRemsTab(); revealSwipe(firstRow("NUDGING")); });
+document.getElementById("c-sw-mine-o").addEventListener("click", () => { state.remsView = "mine"; showRemsTab(); revealSwipe(remRows().find((r) => remStatus(r) === "UPCOMING" && !r.from)?.id); });
+document.getElementById("c-sw-mine-r").addEventListener("click", () => { state.remsView = "mine"; showRemsTab(); revealSwipe(remRows().find((r) => r.from)?.id); });
+document.getElementById("c-sw-noedit").addEventListener("change", (e) => { mineEdit = !e.target.checked; state.keepScroll = true; render(); });
+
 /* The Tags tab tools' controls (#138). */
 function showTagsTab(list = {}) {
   Object.assign(state, { system: null, alert: null, sheet: null, tab: "tags" });
@@ -4609,7 +5062,7 @@ function showTagsTab(list = {}) {
 }
 function revealTagSwipe(id) {
   const row = main.querySelector(`[data-tagid="${id}"] .swipe-row`);
-  if (!row) { hud("No such row on screen. Reset the mockup."); return; }
+  if (!row) { controlNote("No such row on screen. Reset the mockup."); return; }
   row.style.transition = "none";
   setSwipe(row, -openWidth(row));
   void row.offsetWidth;
@@ -4647,12 +5100,27 @@ function showTab(tab, top = null) {
   nav();
 }
 function showSent() { state.remsView = "sent"; showTab("rems"); }
-function openReceived(id) { if (remById(id)) showTab("now", { kind: "rem", id }); else hud("It's gone. Reset the mockup."); }
+function openReceived(id) { if (remById(id)) showTab("now", { kind: "rem", id }); else controlNote("It's gone. Reset the mockup."); }
 for (const [id, run] of Object.entries({
   "c-sh-conns": () => showTab("settings", { kind: "conns" }),
-  "c-sh-accept": () => { Object.assign(state, { system: null, alert: null }); showAccepted(); },
-  "c-sh-noopen": () => (conn("priya") ? showTab("settings", { kind: "inv", id: "priya" }) : hud("It's gone. Reset the mockup.")),
-  "c-sh-other": () => { const c = connected()[0]; if (!c) { hud("No connections left. Reset the mockup."); return; } Object.assign(state, { system: null, alert: null }); state.sheet = { kind: "disconnect", id: c.id, choice: "remove", other: true, ret: document.activeElement }; state.focus = "sheet"; render(); },
+  "c-tu-first": () => { startSharing(false); tutorial.seen = false; showTab("settings"); controlNote("Sharing off, tutorial not seen. Turn Sharing on in Settings."); },
+  "c-tu-later": () => { startSharing(true); tutorial.seen = true; showTab("settings"); openTutorial(false); },
+  "c-tu-invite": () => { startSharing(false); tutorial.seen = false; openInviteLink(); },
+  "c-tu-off": () => { startSharing(false); tutorial.seen = true; showTab("settings"); openTutorial(false); },
+  "c-db-disconnect": () => { startSharing(true); const c = conn("maya"); showTab("settings", { kind: "conn", id: c.id }); state.sheet = { kind: "disconnect", id: c.id, choice: "remove", ret: document.activeElement }; state.focus = "sheet"; render(); },
+  "c-db-waiting": () => { startSharing(true); showTab("now"); requestAnimationFrame(() => document.getElementById("h-wait")?.scrollIntoView({ block: "start" })); },
+  "c-db-sharingoff": () => { startSharing(true); showTab("settings"); setSharing(false); },
+  "c-db-ended": () => { startSharing(true); const c = conn("maya"); showTab("settings", { kind: "conns" }); state.sheet = { kind: "disconnect", id: c.id, choice: "remove", other: true, ret: document.activeElement }; state.focus = "sheet"; render(); },
+  "c-sa-entries": () => { if (!sharingOn() || !activity.length) startSharing(true); showTab("settings", { kind: "activity" }); },
+  "c-sa-empty": () => { if (!sharingOn()) startSharing(true); activity = []; showTab("settings", { kind: "activity" }); },
+  "c-sw-off": () => startSharing(false),
+  "c-sw-on": () => startSharing(true),
+  "c-sw-received": () => startSharing("received"),
+  "c-sw-invite": () => openInviteLink(),
+  "c-sh-quiet": () => { if (!sharingOn()) startSharing(true); const c = conn("maya"); if (!c) { controlNote("No Maya Torres. Reset the mockup."); return; } c.theirStatus = true; c.synced = "2026-09-10"; controlNote("Last synced on Sep 10, 18 days ago"); showTab("settings", { kind: "conns" }); state.stacks.settings.push({ kind: "conn", id: "maya" }); nav(); },
+  "c-sh-synced": () => { if (!sharingOn()) startSharing(true); const c = conn("maya"); if (!c) { controlNote("No Maya Torres. Reset the mockup."); return; } c.synced = "2026-09-27"; controlNote("Maya Torres synced yesterday"); showTab("settings", { kind: "conns" }); state.stacks.settings.push({ kind: "conn", id: "maya" }); nav(); },
+  "c-sh-noopen": () => (conn("priya") ? showTab("settings", { kind: "inv", id: "priya" }) : controlNote("It's gone. Reset the mockup.")),
+  "c-sh-other": () => { const c = connected()[0]; if (!c) { controlNote("No connections left. Reset the mockup."); return; } Object.assign(state, { system: null, alert: null }); state.sheet = { kind: "disconnect", id: c.id, choice: "remove", other: true, ret: document.activeElement }; state.focus = "sheet"; render(); },
   "c-sh-received": () => openReceived("rc1"),
   "c-sh-waiting": () => openReceived("rc3"),
   "c-sh-changed": () => openReceived("rc2"),
@@ -4666,17 +5134,22 @@ for (const [id, run] of Object.entries({
   "c-sh-n-done": () => showSharedNotification("Book the vet", "Maya Torres marked it Done"),
   "c-sh-n-removed": () => showSharedNotification("Pick up the groceries", "Maya Torres removed it"),
   "c-sh-n-missed": () => showSharedNotification("Sign the lease renewal", "Missed: Maya Torres didn't mark it Done"),
-})) document.getElementById(id).addEventListener("click", run);
+})) document.getElementById(id).addEventListener("click", () => {
+  // With Sharing off none of these exist (#386).
+  if (id.startsWith("c-sh-") && !sharingOn()) { controlNote("Sharing is off. Turn it on in Settings first."); return; }
+  run();
+});
 document.getElementById("c-sh-icloud").addEventListener("change", (e) => { sharing.icloud = e.target.value; state.keepScroll = true; render(); });
 document.getElementById("c-sh-offline").addEventListener("change", (e) => {
   sharing.offline = e.target.checked;
   // Back online: everything waiting goes.
-  if (!sharing.offline) { for (const r of reminders) delete r.syncing; for (const s of sent) for (const t of s.to) t.sync = false; hud("Back online. Everything's sent."); }
+  if (!sharing.offline) { for (const r of reminders) delete r.syncing; for (const s of sent) for (const t of s.to) t.sync = false; controlNote("Back online. Everything's sent."); }
   state.keepScroll = true; render();
 });
 document.addEventListener("change", (e) => {
   const t = e.target, d = t.dataset;
   if ("remsview" in d) { state.remsView = t.value; nav(); }
+  else if ("sharing" in d) setSharing(t.checked);
   else if (d.dontshare) { remById(d.dontshare).dontShare = t.checked; refresh("#rs-ds"); }
   else if (d.connstatus) { conn(d.connstatus).statusSharing = t.checked; refresh("#cn-st"); }
   else if (d.conndelivery) { conn(d.conndelivery).delivery = t.value; refresh(`[data-conndelivery]`); }
