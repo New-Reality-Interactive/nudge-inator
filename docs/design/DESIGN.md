@@ -250,7 +250,7 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
   the icon. My Day's chosen-tag tokens and each button's VoiceOver label carry the count there.
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
   actions are `{colors.tile-green}` (Done), `{colors.tile-red}` (Delete) and `{colors.tile-blue}` (Edit). Settings rows: red (Notifications, Badges, Delete All Data), orange
-  (Alarms), gray (About, Open iOS Settings, Default Pace, How It Nudges, How Sharing Works, and About's Privacy Policy
+  (Alarms), gray (About, Open iOS Settings, Default Pace, Default Alarm Sound, How It Nudges, How Sharing Works, and About's Privacy Policy
   and Support), blue (Send a Test Nudge, Sharing). Tiles are icons for rows, not
   statuses, so "one color, one meaning" does not apply to them.
 
@@ -758,6 +758,29 @@ sharing paused and offline banner.
   `icloud.slash`, `wifi.slash`, `minus`. Also used here: `pause` and `info.circle`. How Sharing Works
   uses `iphone`, `arrow.forward` (it flips in right to left), `icloud`, `paperplane`, `eye`, `hand.raised`, `lock`, `clock`, `person.2`,
   `person.badge.plus`, `list.bullet.rectangle`, `checkmark.circle.fill`, `bell` and `info.circle`.
+
+### Alarm sound
+What the alarm sound mockup (`docs/mockups/2026-11-18-alarm-sound/`, #223) adds. It rewrites
+nothing above.
+
+- **Sound row:** on the reminder form, in the Break Through Focus section under the switch, a row
+  in `{typography.body}` with the current tone's name trailing in `{colors.secondary-label}` and a
+  chevron, as the Tags row. It opens the Sound page. It shows only while the reminder sends alarms
+  (Relentless, or Firm with Break Through Focus on), and appears and goes at once as the switch or
+  the strength changes. It's never locked: not while Nudging, and not on a received copy, whose other
+  fields the sender owns. A reminder being sent, and the sender's form for one they sent, has none.
+  The section's footer adds, under the switch's line: "Plays when a nudge arrives as an alarm. Other
+  nudges use the standard notification sound."
+- **The picker:** one inset grouped list for Settings and the form: Default first, then Chime, Bell,
+  Pulse, Beacon, Rise and Siren, with `checkmark` in the accent on the current choice, which stays on
+  its tone's line at the accessibility sizes. A choice is saved at once and plays a short preview
+  (none for Default); the page stays open. VoiceOver reads each tone as a selectable row with its
+  selected state. The footer is the Sound row's; on Settings' page a second line says new and
+  received reminders start with it and changing it leaves existing reminders alone.
+- **Settings' Default Alarm Sound:** a Settings row with a `{colors.tile-gray}` tile and
+  `speaker.wave.2`, in Nudges right after Default Pace, showing the current tone's name as Default
+  Pace shows its pace.
+- **Symbol added:** `speaker.wave.2`.
 
 ## Mapping to code
 

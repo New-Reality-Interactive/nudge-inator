@@ -166,6 +166,13 @@ SCREENS = {
   # Share Activity (#397). Only a mockup with it draws these.
   "share-activity": ("state.tab='settings';nav();push({kind:'activity'})", 3),
   "share-activity-empty": ("activity=[];state.tab='settings';nav();push({kind:'activity'})", 1),
+  # Alarm sound (#223). Only a mockup with it draws these; form-new, form-new-relentless,
+  # form-edit-locked and form-received show the Sound row too.
+  "form-sound-off": ("openEditor();state.sheet.draft.breakThrough=false;render()", 4),
+  "form-sound-gentle": ("openEditor();state.sheet.draft.strength='gentle';render()", 4),
+  "form-sound-picker": ("openEditor();CLICK.sheetPage('sound')", 1),
+  "form-sent-edit": ("state.tab='rems';nav();openEditor('s1')", 4),
+  "settings-default-sound": ("state.tab='settings';nav();push({kind:'defsound'})", 1),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}
