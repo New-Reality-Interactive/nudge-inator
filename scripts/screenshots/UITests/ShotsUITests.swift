@@ -10,7 +10,7 @@ import XCTest
 final class ShotsUITests: XCTestCase {
     /// The harness's `SHOT_SCENARIO`s (`ShotsApp.Scenario`, which can't be imported here).
     enum ShotScenario: String {
-        case app, onboarding, notificationsOff, alarmsOff, timeSensitiveOff, badgesOff, badgesNotSet, customLocking, noReminders, spareTag, rowLeaves, sharing
+        case app, onboarding, notificationsOff, alarmsOff, timeSensitiveOff, badgesOff, badgesNotSet, customLocking, noReminders, spareTag, rowLeaves, sharing, sharingOff
     }
 
     private var app: XCUIApplication!
@@ -1954,8 +1954,10 @@ final class ShotsUITests: XCTestCase {
         shot("connection", pages: 2)
         tapText("Disconnect")
         shot("disconnect")
-        app.buttons["Close"].firstMatch.tap()
-        pause(0.5)
+        // The sheet's ✕ is the Cancel (or Close) of its bar.
+        let dismiss = app.buttons.matching(NSPredicate(format: "label IN %@", ["Cancel", "Close"])).firstMatch
+        if dismiss.waitForExistence(timeout: 2) { dismiss.tap() } else { XCTFail("No Cancel or Close:\n\(app.debugDescription)") }
+        pause(0.8)
         back()
         tapText("Jordan Lee")
         shot("connection-invited")
@@ -2017,5 +2019,82 @@ final class ShotsUITests: XCTestCase {
         tab("My Day")
         openMyDayFilter()
         shot("myday-filter-from-others", pages: 2)
+    }
+    /// A Sent row's swipe: Edit and Delete tiles, then the delete question.
+    func testSentSwipe() {
+        launch(.sharing, standIn: "sent")
+        tab("Reminders")
+        app.buttons["Sent"].firstMatch.tap()
+        pause(1)
+        swipe("Take the pills")
+        shot("sent-swipe")
+        app.buttons["Delete"].firstMatch.tap()
+        pause(1)
+        shot("sent-delete")
+    }
+
+    /// The Stand-in menu's states: iCloud unavailable, offline, and another Apple Account signing in.
+    func testSharingStates() {
+        launch(.sharing, standIn: "sent")
+        tab("Settings")
+        tapText("Connections")
+        app.buttons["Stand-in"].firstMatch.tap()
+        app.buttons["iCloud"].firstMatch.tap()
+        app.buttons["No iCloud Account"].firstMatch.tap()
+        pause(1)
+        shot("sharing-paused")
+        app.buttons["Stand-in"].firstMatch.tap()
+        app.buttons["iCloud"].firstMatch.tap()
+        app.buttons["Available"].firstMatch.tap()
+        app.buttons["Stand-in"].firstMatch.tap()
+        app.buttons["Network"].firstMatch.tap()
+        app.buttons["Offline"].firstMatch.tap()
+        pause(1)
+        tab("Reminders")
+        app.buttons["Sent"].firstMatch.tap()
+        pause(1)
+        shot("sharing-offline")
+        launch(.sharing, standIn: "sent")
+        tab("Settings")
+        tapText("Connections")
+        app.buttons["Stand-in"].firstMatch.tap()
+        app.buttons["Another Apple Account Signs In"].firstMatch.tap()
+        pause(1.5)
+        shot("account-changed", pages: 2)
+    }
+
+    /// With Sharing off, and the sheet that turning it off from on asks.
+    func testSharingOff() {
+        launch(.sharingOff, standIn: "empty")
+        tab("Settings")
+        shot("settings-sharing-off")
+        tab("Now")
+        shot("now-sharing-off")
+        tab("Reminders")
+        shot("reminders-sharing-off")
+        launch(.sharing, standIn: "sent")
+        tab("Settings")
+        // The switch's own end of the row: a tap in the middle of it lands on the label.
+        app.switches.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        pause(1.5)
+        shot("sharing-off-confirm", pages: 2)
+    }
+
+    /// The Reminders and My Day lists with From others chosen in their filter.
+    func testFromOthersFiltered() {
+        launch(.sharing, standIn: "sent")
+        tab("Reminders")
+        openSheet("Filter", title: "Filter Reminders")
+        tapText("From others", inSheet: true)
+        barTap { app.buttons["Apply"].firstMatch.tap() }
+        pause(1)
+        shot("reminders-filter-from-others-applied")
+        launch(.sharing, standIn: "sent")
+        tab("My Day")
+        openMyDayFilter()
+        tapText("From others", inSheet: true)
+        barTap { app.buttons["Apply"].firstMatch.tap() }
+        pause(1)
+        shot("myday-filter-from-others-applied")
     }
 }

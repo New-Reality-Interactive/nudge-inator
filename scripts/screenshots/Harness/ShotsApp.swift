@@ -34,6 +34,9 @@ struct ShotsApp: App {
         /// test sets): Riley Park connected, two invites, two reminders sent to Riley, and two
         /// reminders from Riley, one nudging and one coming up (the website screenshots, #442).
         case sharing
+        /// As `sharing`, with Sharing switched off in Settings: no adapter until the switch is turned
+        /// on, which makes the stand-in (`NUDGE_SHARING_STANDIN`).
+        case sharingOff
     }
 
     @State private var model: AppModel
@@ -167,7 +170,7 @@ enum ShotsSeed {
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .disabled)
         case .badgesNotSet:
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .notSupported)
-        case .app, .customLocking, .noReminders, .spareTag, .rowLeaves, .sharing:
+        case .app, .customLocking, .noReminders, .spareTag, .rowLeaves, .sharing, .sharingOff:
             center.settings = NotificationSettingsSnapshot(authorizationStatus: .authorized, timeSensitiveSetting: .enabled, badgeSetting: .enabled)
         }
         let store = try! ReminderStore(location: .inMemory)
@@ -175,6 +178,7 @@ enum ShotsSeed {
         let sharingSwitch = SharingSwitchRecord(defaults: defaults)
         let sharingTutorial = SharingTutorialRecord(defaults: defaults)
         var standIn: SharingModel?
+        if scenario == .sharingOff { sharingSwitch.isOn = false }
         if scenario == .sharing {
             // Sharing on, and its tutorial seen, so no sheet opens over the screens.
             sharingSwitch.isOn = true
@@ -193,7 +197,8 @@ enum ShotsSeed {
             doneQueue: .temporary,
             sharing: standIn,
             sharingSwitch: sharingSwitch,
-            sharingTutorial: sharingTutorial
+            sharingTutorial: sharingTutorial,
+            makeSharing: { StandInSharing.modelIfAsked(clock: clock) }
         )
         return model
     }

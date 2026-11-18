@@ -505,6 +505,8 @@ button.cell:active, a.cell:active { background: var(--tertiary-system-fill); }
 .errinline { color: var(--negative); }
 .cell:disabled { cursor: default; }
 .cell:disabled .main { color: var(--secondary-label); }
+/* A disabled accent row (Invite Someone while sharing is paused) is dimmed, as the app draws it. */
+.cell.tint:disabled { color: var(--tertiary-label); }
 .lockglyph { display: inline-flex; vertical-align: -2px; color: var(--secondary-label); }
 
 .pill-input { background: var(--tertiary-system-fill); border: 0; border-radius: 7px; padding: 6px 10px; color: var(--label); max-width: 100%; }
@@ -1008,6 +1010,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 .standin { font: var(--footnote); letter-spacing: var(--footnote-track); color: var(--secondary-label); margin: 0 32px 12px; text-align: center; }
 .sheet-actions { display: flex; flex-direction: column; gap: 12px; margin: 16px; }
 .sheet-actions .btn { width: 100%; justify-content: center; }
+.sheet-foot { flex: none; padding-bottom: 28px; }
 .sheet-lead { font: var(--body); letter-spacing: var(--body-track); margin: 4px 32px 16px; }
 .formrow:has(.ckfield) { gap: 12px; }
 .btn.bordered.destr { color: var(--negative); }
@@ -3062,8 +3065,8 @@ function inviteSheet(sh) {
     <div class="sec"><ul class="list"><li><div class="formrow">${sh.chosen ? `<div class="ck-pill" id="ck-to"><span><span>${esc(sh.name)}</span>${sh.locked ? "" : `<button type="button" data-ckclear aria-label="Remove ${esc(sh.name)}">${I("xmark", 16)}</button>`}</span></div>` : `<input type="text" class="ckfield" id="ck-to" aria-labelledby="ck-l" autocomplete="off" placeholder="Email or phone" value="${esc(sh.address ?? sh.again?.address ?? "")}">`}${sh.locked ? "" : `<button type="button" class="ck-add" data-ckcontacts aria-label="Choose from Contacts">${I("plus", 18)}</button>`}</div></li></ul><p class="sec-f">${sh.chosen ? `The invite opens only for ${esc(sh.name)} at ${esc(sh.address)}.` : "Use the email address or phone number of their Apple Account, or the invite won't open for them."}</p></div>
     <div id="ck-matches">${sh.chosen ? "" : ckMatchesHtml(sh.address ?? sh.again?.address ?? "")}</div>
     <div id="ck-via">${ckViaHtml(sh)}</div>
-    <div id="ck-go">${ckGoHtml(sh)}</div>
-  </div>`;
+  </div>
+  <div id="ck-go" class="sheet-foot">${ckGoHtml(sh)}</div>`;
 }
 function sendInvite() {
   const sh = state.sheet, typed = sh.chosen ? sh.address : document.getElementById("ck-to").value.trim();

@@ -46,3 +46,26 @@ states, and the notifications.
 - `scripts/mockup-shots.py` has the screens these add.
 
 Nothing else changed.
+
+## Checked against the app
+
+Before release, the screens this feature adds were compared with the app (`docs/agents/release.md`,
+the drift check): the app's screenshots from the screenshots harness's sharing walk (the iPhone 15
+simulator, iOS 27.2, portrait, with the Debug stand-in's people) beside this mockup's, screen by
+screen. `as-built/` holds the app's, as small reference images.
+
+- **Compared, and the same:** Settings › Sharing (on and off), Connections, a connection's page,
+  an invited person's page, Disconnect, Turn Off Sharing, Share Activity (and empty), the Sent view (and
+  empty, with no connections, and after a swipe and its delete question), a sent reminder's details,
+  Filter Sent, a received reminder's details and edit form, the From others filters, Sharing is paused,
+  You're offline, Apple Account Changed, and the Now and Reminders tabs with Sharing off.
+- **Corrected here:** Invite Someone's Invite button sits at the bottom of the sheet, as the app draws
+  it, not under the footer, and a disabled accent row (Invite Someone while sharing is paused) is dimmed. `scripts/mockup-shots.py`'s `invite-sheet` and `invite-already-connected`
+  entries clicked something the mockup no longer has.
+- **Differences that are data, not design:** the people (Maya Torres and Sam Okafor here, Riley Park in the
+  app's stand-in), the dates, and the status strips under a repeating sent reminder, which the stand-in's
+  sent reminders don't have.
+- **Not compared:** How Sharing Works' pages, the notifications, a copy waiting to be accepted, the
+  Last synced note, Send To with iCloud paused, Sent's search, sort menu and no-match states, Connection
+  Ended and the accepted-invite sheet. Each was checked on the iPhone against its change mockup when its
+  ticket was built.
