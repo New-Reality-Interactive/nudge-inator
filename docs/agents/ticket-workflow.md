@@ -15,8 +15,8 @@ Everything else the ticket needs is in the ticket: its sections, and **Before yo
 
 1. Check every issue blocking it is closed (`issue-tracker.md`, Blocked by). If one isn't, stop and say which.
    If the ticket can't be built backwards compatible (`release.md`, Features and versions), stop and say what breaks.
-2. Branch from an up-to-date `main`: `<feature>-<n>-<slug>`, such as `tags-83-filter-sheet`, `<feature>`
-   being the slug in the milestone's description.
+2. Branch from the up-to-date release branch of the ticket's milestone (`release.md`, Release branches): `<feature>-<n>-<slug>`, such as `tags-83-filter-sheet`, `<feature>`
+   being the slug in the milestone's description. If `release/<version>` doesn't exist yet, create it from the spec's `Base:` and push it first.
 3. Read the ticket, all its sections (Context, Must keep, Developer stops) and its Before you start, the Comments of the tickets it builds on, and the spec
    sections it names (`review.md`, Session size).
 
@@ -90,15 +90,15 @@ A ticket that changes something on screen records every finding in its Comments 
 9. Rerun `scripts/test.sh` if anything changed since its last run. Then
    give the developer a summary of the PR and ask whether to create it. `/implement` is not that go; any
    answer that affirms continuing is, and it covers the merge too. After it: push, run
-   `mattpocock-skills:pr` and open the PR to `main` with `gh pr create`, titled
-   `#<n> (<feature>): <short summary>`, with `Closes #<n>` as the body's last line before the
-   attribution, so the merge closes the ticket. A hook refuses a body without the `pr` skill's sections. Wait for its CI
+   `mattpocock-skills:pr` and open the PR to the release branch with `gh pr create --base release/<version>`, titled
+   `#<n> (<feature>): <short summary>`, with `Part of #<n>` as the body's last line before the
+   attribution: GitHub closes a ticket by `Closes #<n>` only when the PR merges into `main`, so a PR into a release branch closes nothing by itself, and the agent closes the ticket after the merge (step 10). A hook refuses a body without the `pr` skill's sections. Wait for its CI
    checks on the pushed commit; if one fails, find out why, fix it, push and wait again. On green,
    merge it without asking, then go on to step 10.
 
 ## When the PR is merged
 
-10. `git switch main && git pull`, check the merge commit is there, and delete the local branch
+10. `gh issue close <n>` with a comment naming the PR, `git switch release/<version> && git pull`, check the merge commit is there, and delete the local branch
     with `git branch -d`. Shut down every simulator (`xcrun simctl shutdown all`), then check
     `xcrun simctl list devices booted` lists none: no simulator stays running once a ticket's PR
     has merged. If the ticket went sideways, suggest `/retro` before `/clear`.

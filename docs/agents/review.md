@@ -5,7 +5,7 @@ How a ticket is reviewed, and how to keep a session's context small. Review runs
 ## Review procedure
 
 - One full review per ticket, after `scripts/test.sh` passes. After fixing findings, re-review only the files the fixes changed. Ask before any second full round.
-- Give the skill its inputs up front so it skips the issue-ref search: the fixed point (`main` unless told otherwise) and the ticket's issue number, for example `#83`.
+- Give the skill its inputs up front so it skips the issue-ref search: the fixed point (the ticket's release branch, `release/<version>`, unless told otherwise) and the ticket's issue number, for example `#83`.
 - Tell it the repo's rules (`CODING_STANDARDS.md`, `AGENTS.md`) win over the skill's smell baseline. Where a rule endorses something a smell would flag, drop the smell.
 - The Standards agent reads `CODING_STANDARDS.md`, and `AGENTS.md`'s AlarmKit and Testing sections.
 - Nothing gates localization, accessibility labels or Swift 6 isolation except the String Catalog check in CI and the stale-string check in `scripts/test.sh`, so the Standards agent is the only check on them.
