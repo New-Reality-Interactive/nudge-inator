@@ -281,7 +281,10 @@ struct DeviceSeedTests {
 
     @Test func noShippedReminderCanScheduleAnAlarm() {
         // Relentless always breaks through Focus, and an alarm outlives an uninstall.
-        let reminders = SeedSet.all.flatMap(\.reminders).map { $0.reminder(tagIDs: [], now: target.now) }
+        // The one exception is `urgency-cards` (#442): Urgent on Relentless is a card to look at.
+        // A seed schedules no alarm, and `clean` removes it.
+        let sets = SeedSet.all.filter { $0.name != "urgency-cards" }
+        let reminders = sets.flatMap(\.reminders).map { $0.reminder(tagIDs: [], now: target.now) }
         #expect(reminders.allSatisfy { !$0.breakThroughFocus && $0.strength != .relentless })
     }
 

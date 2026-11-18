@@ -103,6 +103,6 @@ public struct SeedSet: Sendable {
 
 extension SeedSet {
     /// Every set a launch can name.
-    public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .deliveredNudges, .keptOrder, .received, .fromOthers, .rowSwipes]
+    public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .deliveredNudges, .keptOrder, .received, .fromOthers, .rowSwipes, .urgencyCards]
 }
 #endif

@@ -86,12 +86,13 @@ struct UrgencyWord: View {
 
     var body: some View {
         if let systemImage = urgency.systemImage {
-            Label {
-                Text(verbatim: urgency.name)
-            } icon: {
+            // An `HStack`, not a `Label`: a label's icon takes a column sized to the glyph, so the
+            // wider alarm sat far from "Urgent" while the arrow sat close to "High" (#442).
+            HStack(spacing: Design.Spacing.s1) {
                 Image(systemName: systemImage)
+                    .accessibilityHidden(true)
+                Text(verbatim: urgency.name)
             }
-            .labelStyle(.titleAndIcon)
             .font(.caption.weight(.semibold))
             .foregroundStyle(urgency.color)
         }
