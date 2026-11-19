@@ -131,6 +131,13 @@ extension Strength {
     public func breaksThroughFocus(switchedOn: Bool) -> Bool {
         self == .relentless || switchedOn
     }
+
+    /// Whether a reminder of this strength with its Break Through Focus switch `switchedOn` sends
+    /// any alarm: it breaks through Focus and its ladder reaches Urgent. Gentle never does, so it
+    /// never rings. The reminder form shows its Sound row only then (#230).
+    public func sendsAlarms(switchedOn: Bool) -> Bool {
+        breaksThroughFocus(switchedOn: switchedOn) && ladder.urgentFrom != nil
+    }
 }
 
 /// Whose a reminder is. A reminder saved before sharing existed has no origin and reads back as

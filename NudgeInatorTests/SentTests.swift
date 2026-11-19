@@ -341,6 +341,8 @@ extension SentTests {
         #expect(form.isEditing)
         #expect(!form.showsTags)
         #expect(!form.offersSendTo)
+        // Firm with the switch on, yet it never rings on the sender's iPhone (spec #129 story 40).
+        #expect(!form.showsSound)
         #expect(form.lockedFields.isEmpty)
         #expect(!form.isContentLocked)
         #expect(form.title == "Take the pills")

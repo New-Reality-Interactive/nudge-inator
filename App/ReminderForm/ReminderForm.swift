@@ -38,6 +38,9 @@ final class ReminderForm: Identifiable {
     /// The Every row's wait, one of `Pace.consistentWaits`. Kept while Escalating is chosen, so
     /// choosing Consistent again finds it (spec story 25).
     var consistentWait = DefaultPace.shipped.consistentWait
+    /// The sound its alarms ring with (#230): a New form's starts as Settings' Default Alarm Sound,
+    /// an Edit form's as the reminder has it. Never locked: not while nudging, nor on a received copy.
+    var alarmSound = AlarmSound.default
 
     /// The connections of the people chosen in Send To (ticket 198), in the order chosen, including
     /// any who have stopped being connected since: `recipients` leaves those out.
@@ -69,6 +72,15 @@ final class ReminderForm: Identifiable {
     var isBreakThroughFocusFixed: Bool {
         strength.breaksThroughFocus(switchedOn: false)
     }
+
+    /// Whether the draft sends alarms (the engine's rule): Relentless, or Firm with the switch on.
+    var sendsAlarms: Bool {
+        strength.sendsAlarms(switchedOn: breakThroughFocus)
+    }
+
+    /// Whether the form has a Sound row (#230): only while the draft sends alarms, and never for a
+    /// reminder being sent or already sent, which never rings on this iPhone (#223's mockup).
+    var showsSound: Bool { sendsAlarms && recipients.isEmpty && !isSent }
 
     /// Why Save is turned down, shown as text under the field it's about.
     enum SaveBlock: Equatable {
@@ -120,14 +132,15 @@ final class ReminderForm: Identifiable {
     /// The draft as the form opened, set once `init` has filled it in.
     private var opened: Reminder?
 
-    /// A New Reminder form, starting with Settings' Default Pace (spec story 39). `tagIDs` are
-    /// chosen when it opens, as from a tag's screen. Neither is a change the person made.
-    /// `sharing` offers Send To.
-    init(engine currentEngine: @escaping () -> Engine, now: @escaping () -> Date, defaultPace: DefaultPace, tagIDs: [Tag.ID] = [], sharing: SharingModel? = nil) {
+    /// A New Reminder form, starting with Settings' Default Pace (spec story 39) and Default Alarm
+    /// Sound (#230). `tagIDs` are chosen when it opens, as from a tag's screen. None of these is a
+    /// change the person made. `sharing` offers Send To.
+    init(engine currentEngine: @escaping () -> Engine, now: @escaping () -> Date, defaultPace: DefaultPace, defaultAlarmSound: AlarmSound, tagIDs: [Tag.ID] = [], sharing: SharingModel? = nil) {
         self.tagIDs = tagIDs
         self.sharing = sharing
         paceChoice = defaultPace.choice
         consistentWait = defaultPace.consistentWait
+        alarmSound = defaultAlarmSound
         self.currentEngine = currentEngine
         tagRules = currentEngine()
         self.now = now
@@ -187,6 +200,7 @@ final class ReminderForm: Identifiable {
         strength = reminder.strength
         breakThroughFocus = reminder.breakThroughFocus
         setPaceControls(to: reminder.pace)
+        alarmSound = reminder.alarmSound
         opened = draft(tagIDs: tagIDs)
     }
 
@@ -194,7 +208,8 @@ final class ReminderForm: Identifiable {
     var isEditing: Bool { original != nil }
 
     /// A received reminder's form (ticket 200): its sender owns the title and notes, which are
-    /// read-only, and every schedule field, which is locked. Only the tags can change.
+    /// read-only, and every schedule field, which is locked. Only the tags and the alarm sound
+    /// (#230) can change.
     var isContentLocked: Bool { original?.isReceived == true }
 
     /// Whether Cancel should ask before throwing the draft away (the mockup's `draftDirty`). The
@@ -549,7 +564,7 @@ final class ReminderForm: Identifiable {
             isSaved = true
             return true
         }
-        if isContentLocked { return saveTags(of: original, to: model) }
+        if isContentLocked { return saveOwnFields(of: original, to: model) }
         if isSent { return saveSent(to: model) }
         // It may have started nudging since the form opened. Checked with the engine's own rule
         // before any typed tag is created, so a turned-down save leaves nothing behind.
@@ -586,12 +601,13 @@ final class ReminderForm: Identifiable {
         return true
     }
 
-    /// A received reminder's Save: the reminder as it is, with the chosen tags, so nothing the
-    /// sender owns can change, even as the draft writes it (a title's spaces, say). `false` if the
-    /// engine turned it down.
-    private func saveTags(of original: Reminder, to model: AppModel) -> Bool {
+    /// A received reminder's Save: the reminder as it is, with the chosen tags and alarm sound,
+    /// the recipient's own (#230), so nothing the sender owns can change, even as the draft writes
+    /// it (a title's spaces, say). `false` if the engine turned it down.
+    private func saveOwnFields(of original: Reminder, to model: AppModel) -> Bool {
         var edited = model.engine.reminders.first { $0.id == original.id } ?? original
         edited.tagIDs = savedTagIDs(through: model)
+        edited.alarmSound = alarmSound
         do throws(EditError) {
             try model.edit(edited)
             isSaved = true
@@ -618,8 +634,7 @@ final class ReminderForm: Identifiable {
             strength: strength,
             pace: pace,
             breakThroughFocus: breakThroughFocus,
-            // The form doesn't show the sound, so an Edit keeps the one the reminder has.
-            alarmSound: original?.alarmSound ?? .default
+            alarmSound: alarmSound
         )
     }
 

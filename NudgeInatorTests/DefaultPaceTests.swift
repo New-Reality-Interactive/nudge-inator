@@ -84,7 +84,7 @@ final class DefaultPaceTests {
     @Test func changingTheDefaultPaceLeavesEveryReminderAsItWas() async throws {
         let model = try model()
         await model.launch()
-        let form = ReminderForm(engine: { model.engine }, now: { [clock] in clock.now }, defaultPace: model.defaultPace)
+        let form = ReminderForm(engine: { model.engine }, now: { [clock] in clock.now }, defaultPace: model.defaultPace, defaultAlarmSound: model.defaultAlarmSound)
         form.title = "Water the plants"
         #expect(form.save(to: model))
         model.add(Reminder(title: "Stretch", dueTime: NewYork.local(2026, 10, 16, 9), strength: .firm, pace: .escalating))

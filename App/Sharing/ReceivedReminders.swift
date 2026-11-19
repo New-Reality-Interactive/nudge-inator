@@ -9,6 +9,8 @@ protocol ReceivedReminders: AnyObject {
     /// connection with `connectionID`, or `nil` when none is. Throws if the reminders haven't been
     /// read, so it can't say.
     func copy(of sendersReminderID: Reminder.ID, through connectionID: UUID) throws -> Reminder?
+    /// Settings' Default Alarm Sound, which a new copy starts with (#230).
+    var defaultAlarmSound: AlarmSound { get }
     /// Keeps `copy` among the person's reminders and plans it as their own. Throws, keeping
     /// nothing, if the reminders haven't been read or the store won't keep it.
     func keep(_ copy: Reminder) throws

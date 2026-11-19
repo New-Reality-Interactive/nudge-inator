@@ -23,11 +23,18 @@ struct SharingAdapterTests {
         let adapter = FakeSharingAdapter()
         let reminderFile = TemporaryStoreFile()
         let sharingFile = TemporaryStoreFile()
+        /// This phone's own settings suite, kept across a relaunch, so a Default Alarm Sound set on
+        /// one phone isn't another's. `deinit` removes it, even when a test fails.
+        let settingsSuite = "SharingAdapterTests.Phone.\(UUID().uuidString)"
         /// Fails to open the sharing store while set, as a locked or damaged file would.
         var sharingStoreOpens = true
         private(set) var model: AppModel!
 
         struct StoreWouldNotOpen: Error {}
+
+        deinit {
+            UserDefaults().removePersistentDomain(forName: settingsSuite)
+        }
 
         init(seed: SharingData = SharingData()) throws {
             try SharingStore(location: .file(sharingFile.url)).save(seed)
@@ -48,7 +55,7 @@ struct SharingAdapterTests {
                 openStore: { try ReminderStore(location: .file(reminderFile.url)) },
                 notifications: NotificationAdapter(center: center, clock: clock),
                 alarms: AlarmAdapter(manager: manager, clock: clock),
-                settingsRecords: .temporary(),
+                settingsRecords: .temporary(defaultAlarmSound: DefaultAlarmSoundRecord(defaults: UserDefaults(suiteName: settingsSuite)!)),
                 doneQueue: .temporary,
                 sharing: SharingModel(adapter: adapter, clock: clock) {
                     guard opens() else { throw StoreWouldNotOpen() }

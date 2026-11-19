@@ -684,8 +684,19 @@
         }
       }
     },
+    "**%@ owns this reminder.** You can add or remove your own tags and choose its alarm sound. Its title, notes, schedule, strength and pace stay as %@ set them." : {
+      "comment" : "Top of the Edit Reminder form of a received reminder that rings alarms, whose sender owns everything but the tags and the alarm sound. Both placeholders are the sender's name.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**%1$@ owns this reminder.** You can add or remove your own tags and choose its alarm sound. Its title, notes, schedule, strength and pace stay as %2$@ set them."
+          }
+        }
+      }
+    },
     "**%@ owns this reminder.** You can add or remove your own tags. Its title, notes, schedule, strength and pace stay as %@ set them." : {
-      "comment" : "Top of the Edit Reminder form of a received reminder, whose sender owns everything but the tags. Both placeholders are the sender's name.",
+      "comment" : "Top of the Edit Reminder form of a received reminder that never rings, whose sender owns everything but the tags. Both placeholders are the sender's name.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1729,6 +1740,9 @@
     "It's canceled on everyone's iPhone, with a note saying so." : {
       "comment" : "Under the question asked before deleting a reminder this person sent to others."
     },
+    "Its sender owns this. You can change only its tags and alarm sound." : {
+      "comment" : "VoiceOver hint on each field of a received reminder's Edit Reminder form, which only its sender can change, when the reminder rings alarms and so has a Sound row."
+    },
     "Its sender owns this. You can change only its tags." : {
       "comment" : "VoiceOver hint on each field of a received reminder's Edit Reminder form, which only its sender can change."
     },
@@ -2472,6 +2486,9 @@
     },
     "Sort" : {
       "comment" : "VoiceOver label of the Reminders tab's Sort button, which opens the Sort menu.\nVoiceOver label of the Tags tab's Sort button, which opens the Sort menu."
+    },
+    "Sound" : {
+      "comment" : "The reminder form's row that opens the alarm sound list, and that page's title. Beside the row, the sound chosen, such as \"Chime\"."
     },
     "Start right away" : {
       "comment" : "Delivery Mode: a reminder from this person starts nudging as soon as it arrives."
