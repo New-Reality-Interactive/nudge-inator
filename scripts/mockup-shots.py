@@ -175,6 +175,15 @@ SCREENS = {
   # A copy arrives with the recipient's Default Alarm Sound, set to Bell so it shows.
   "form-received-arrive": ("settings.defaultSound='bell';document.getElementById('c-as-arrive').click()", 2),
   "settings-default-sound": ("state.tab='settings';nav();push({kind:'defsound'})", 1),
+  # Details tone and Use for All (#456). Only a mockup with it draws these; details-relentless
+  # and details-received show the Sound row too.
+  "details-sound": ("document.getElementById('c-dt-firm').click()", 2),
+  "details-sound-off": ("document.getElementById('c-dt-firmoff').click()", 2),
+  "details-received-sound": ("document.getElementById('c-dt-received').click()", 3),
+  "settings-use-for-all": ("document.getElementById('c-dt-useall').click()", 2),
+  "settings-use-for-all-confirm": ("document.getElementById('c-dt-confirm').click()", 1),
+  "settings-use-for-all-confirm-one": ("document.getElementById('c-dt-one').click()", 1),
+  "settings-use-for-all-done": ("document.getElementById('c-dt-same').click()", 2),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}
