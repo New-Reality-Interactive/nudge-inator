@@ -48,9 +48,7 @@ struct SharingAdapterTests {
                 openStore: { try ReminderStore(location: .file(reminderFile.url)) },
                 notifications: NotificationAdapter(center: center, clock: clock),
                 alarms: AlarmAdapter(manager: manager, clock: clock),
-                defaultPaceRecord: .temporary,
-                remindersSortRecord: .temporary,
-                tagsSortRecord: .temporary,
+                settingsRecords: .temporary(),
                 doneQueue: .temporary,
                 sharing: SharingModel(adapter: adapter, clock: clock) {
                     guard opens() else { throw StoreWouldNotOpen() }
@@ -349,9 +347,7 @@ struct SharingAdapterTests {
             openStore: { try ReminderStore(location: .inMemory) },
             notifications: NotificationAdapter(center: center, clock: clock),
             alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: clock),
-            defaultPaceRecord: .temporary,
-            remindersSortRecord: .temporary,
-            tagsSortRecord: .temporary,
+            settingsRecords: .temporary(),
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )

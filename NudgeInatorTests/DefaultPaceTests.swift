@@ -30,9 +30,7 @@ final class DefaultPaceTests {
             openStore: { store },
             notifications: NotificationAdapter(center: center, clock: clock),
             alarms: AlarmAdapter(manager: manager, clock: clock),
-            defaultPaceRecord: try record(),
-            remindersSortRecord: .temporary,
-            tagsSortRecord: .temporary,
+            settingsRecords: .temporary(defaultPace: try record()),
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )

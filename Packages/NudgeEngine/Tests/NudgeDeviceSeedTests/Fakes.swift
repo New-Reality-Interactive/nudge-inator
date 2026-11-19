@@ -11,6 +11,7 @@ final class FakeTarget: SeedTarget {
     private(set) var tags: [Tag] = []
     private(set) var settings: [SeedSetting: String] = [
         .defaultPace: "escalating.600",
+        .defaultAlarmSound: "bell",
         .remindersSort: "created.ascending",
     ]
     /// What the record held when the first reminder arrived.

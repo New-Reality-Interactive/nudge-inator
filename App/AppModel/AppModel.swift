@@ -57,9 +57,8 @@ final class AppModel {
     private let timeZone: TimeZone
     private let giveUpLimit: GiveUpLimit
     private let onboardingRecord: OnboardingRecord
-    private let defaultPaceRecord: DefaultPaceRecord
-    private let remindersSortRecord: RemindersSortRecord
-    private let tagsSortRecord: TagsSortRecord
+    /// The choices Delete All Data clears: the Default Pace and Default Alarm Sound, and the sorts.
+    private let settingsRecords: SettingsRecords
     /// Where a Done waits while the store can't be read (ticket 32).
     private let doneQueue: DoneQueue
     /// Settings' Sharing switch (#387, #388), which makes the sharing model and lets it go.
@@ -110,9 +109,7 @@ final class AppModel {
         notifications: NotificationAdapter,
         alarms: AlarmAdapter,
         onboardingRecord: OnboardingRecord = .standard,
-        defaultPaceRecord: DefaultPaceRecord = .standard,
-        remindersSortRecord: RemindersSortRecord = .standard,
-        tagsSortRecord: TagsSortRecord = .standard,
+        settingsRecords: SettingsRecords = .standard,
         doneQueue: DoneQueue,
         sharing: SharingModel? = nil,
         sharingSwitch: SharingSwitchRecord = .standard,
@@ -128,9 +125,7 @@ final class AppModel {
         self.timeZone = timeZone
         self.giveUpLimit = giveUpLimit
         self.onboardingRecord = onboardingRecord
-        self.defaultPaceRecord = defaultPaceRecord
-        self.remindersSortRecord = remindersSortRecord
-        self.tagsSortRecord = tagsSortRecord
+        self.settingsRecords = settingsRecords
         self.doneQueue = doneQueue
         self.sharingSwitch = SharingSwitch(model: sharing, record: sharingSwitch, make: makeSharing)
         self.sharingTutorial = sharingTutorial
@@ -707,10 +702,22 @@ final class AppModel {
     var defaultPace: DefaultPace {
         get {
             access(keyPath: \.defaultPace)
-            return defaultPaceRecord.defaultPace
+            return settingsRecords.defaultPace.defaultPace
         }
         set {
-            withMutation(keyPath: \.defaultPace) { defaultPaceRecord.defaultPace = newValue }
+            withMutation(keyPath: \.defaultPace) { settingsRecords.defaultPace.defaultPace = newValue }
+        }
+    }
+
+    /// Settings' Default Alarm Sound (#228). Read from the record each time, as the Default Pace
+    /// is. Changing it changes no reminder already made.
+    var defaultAlarmSound: AlarmSound {
+        get {
+            access(keyPath: \.defaultAlarmSound)
+            return settingsRecords.defaultAlarmSound.sound
+        }
+        set {
+            withMutation(keyPath: \.defaultAlarmSound) { settingsRecords.defaultAlarmSound.sound = newValue }
         }
     }
 
@@ -719,10 +726,10 @@ final class AppModel {
     var remindersSort: RemindersSort {
         get {
             access(keyPath: \.remindersSort)
-            return remindersSortRecord.sort
+            return settingsRecords.remindersSort.sort
         }
         set {
-            withMutation(keyPath: \.remindersSort) { remindersSortRecord.sort = newValue }
+            withMutation(keyPath: \.remindersSort) { settingsRecords.remindersSort.sort = newValue }
         }
     }
 
@@ -731,10 +738,10 @@ final class AppModel {
     var tagsSort: TagSort {
         get {
             access(keyPath: \.tagsSort)
-            return tagsSortRecord.sort
+            return settingsRecords.tagsSort.sort
         }
         set {
-            withMutation(keyPath: \.tagsSort) { tagsSortRecord.sort = newValue }
+            withMutation(keyPath: \.tagsSort) { settingsRecords.tagsSort.sort = newValue }
         }
     }
 
@@ -744,14 +751,14 @@ final class AppModel {
         await notifications.sendTestNudge()
     }
 
-    /// Settings' Delete All Data (ticket 30, 214): the store, sharing, the Default Pace and the
-    /// Reminders and Tags tabs' sorts, then the engine, then everything the adapters hold, including the test nudge and the
-    /// nudges already in Notification Center. Not through `perform`: the store goes first and a
-    /// store that turns the delete down stops it, so the reminders and their nudges stay as they
-    /// were. A disk failure is likelier than a failed cancel, and a nudge left pending for deleted
-    /// data is cancelled by the next App opened, which plans from nothing. Every ring stops, with no
-    /// reminder left for Stop or Open to act on. Before the store has been read there is nothing to
-    /// delete.
+    /// Settings' Delete All Data (ticket 30, 214): the store, sharing, the Default Pace, the Default
+    /// Alarm Sound and the Reminders and Tags tabs' sorts, then the engine, then everything the
+    /// adapters hold, including the test nudge and the nudges already in Notification Center. Not
+    /// through `perform`: the store goes first and a store that turns the delete down stops it, so
+    /// the reminders and their nudges stay as they were. A disk failure is likelier than a failed
+    /// cancel, and a nudge left pending for deleted data is cancelled by the next App opened, which
+    /// plans from nothing. Every ring stops, with no reminder left for Stop or Open to act on. Before
+    /// the store has been read there is nothing to delete.
     func deleteAllData() async throws {
         guard case .ready = launchState, let store else { return }
         try store.deleteAllData()
@@ -759,9 +766,10 @@ final class AppModel {
         // delete again; the rest of the delete still happens and the failure is thrown last.
         let sharingFailure = deleteSharing()
         saveError = nil
-        withMutation(keyPath: \.defaultPace) { defaultPaceRecord.clear() }
-        withMutation(keyPath: \.remindersSort) { remindersSortRecord.clear() }
-        withMutation(keyPath: \.tagsSort) { tagsSortRecord.clear() }
+        withMutation(keyPath: \.defaultPace) { settingsRecords.defaultPace.clear() }
+        withMutation(keyPath: \.defaultAlarmSound) { settingsRecords.defaultAlarmSound.clear() }
+        withMutation(keyPath: \.remindersSort) { settingsRecords.remindersSort.clear() }
+        withMutation(keyPath: \.tagsSort) { settingsRecords.tagsSort.clear() }
         // A new engine, not emptied lists: the old one keeps a key for every history it held, and
         // its alarm-limit records. Its empty plan still reaches the adapters.
         var empty = makeEngine(permissions: permissions)

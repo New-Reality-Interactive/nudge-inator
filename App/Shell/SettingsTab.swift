@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Settings: the permission banners, About, what the app may send (notifications, alarms and
 /// badges), a way to open iOS Settings when something is off, Send a Test Nudge, the Default Pace,
-/// How It Nudges, and Delete All Data.
+/// the Default Alarm Sound, How It Nudges, and Delete All Data.
 struct SettingsTab: View {
     let state: ScreenState
     /// What previews show, since they have no app model: the permissions and how they leave
@@ -20,6 +20,8 @@ struct SettingsTab: View {
     @State private var testNudgeSentAt: Date?
     /// The Default Pace previews show and change, since they have no app model.
     @State private var previewDefaultPace = DefaultPace.shipped
+    /// The Default Alarm Sound previews show and change, since they have no app model.
+    @State private var previewDefaultAlarmSound = AlarmSound.default
     /// The Sharing switch previews show and change, since they have no app model.
     @State private var previewSharingOn = false
     /// Whether the Turn Off Sharing sheet (#388) is up.
@@ -270,6 +272,16 @@ struct SettingsTab: View {
                 )
             }
             NavigationLink {
+                DefaultAlarmSoundPage(sound: defaultAlarmSound)
+            } label: {
+                SettingsRow(
+                    tile: .tileGray,
+                    symbol: "speaker.wave.2",
+                    title: DefaultAlarmSoundPage.title,
+                    value: Text(defaultAlarmSound.wrappedValue.title)
+                )
+            }
+            NavigationLink {
                 HowItNudgesPage(previewPermissions: previewPermissions, previewDefaultPace: defaultPace.wrappedValue)
             } label: {
                 SettingsRow(
@@ -279,7 +291,7 @@ struct SettingsTab: View {
                 )
             }
         } header: {
-            Text("Nudges", comment: "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and How It Nudges.")
+            Text("Nudges", comment: "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace, Default Alarm Sound and How It Nudges.")
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s2) {
                 ForEach(SettingsStatus.footer(for: reach), id: \.self) { $0.text }
@@ -318,6 +330,12 @@ struct SettingsTab: View {
     private var defaultPace: Binding<DefaultPace> {
         guard let model else { return $previewDefaultPace }
         return Binding { model.defaultPace } set: { model.defaultPace = $0 }
+    }
+
+    /// The model's Default Alarm Sound, read from its record each time. Without a model, the previews'.
+    private var defaultAlarmSound: Binding<AlarmSound> {
+        guard let model else { return $previewDefaultAlarmSound }
+        return Binding { model.defaultAlarmSound } set: { model.defaultAlarmSound = $0 }
     }
 
     /// How each urgency reaches the person, from the engine. Without a model, the previews' states.
