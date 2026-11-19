@@ -37,7 +37,7 @@ struct SendToTests {
 
     /// A New form on `phone`, filled in as `reminder` says.
     func form(on phone: Phone, filledWith reminder: Reminder) -> ReminderForm {
-        let form = ReminderForm(engine: { phone.model.engine }, now: { phone.clock.now }, defaultPace: .shipped, sharing: phone.model.sharing)
+        let form = ReminderForm(engine: { phone.model.engine }, now: { phone.clock.now }, defaultPace: .shipped, defaultAlarmSound: .default, sharing: phone.model.sharing)
         form.title = reminder.title
         form.notes = reminder.notes
         form.tagIDs = reminder.tagIDs
@@ -391,6 +391,20 @@ struct SendToTests {
         #expect(form.sendToChoices.isEmpty)
     }
 
+    /// A reminder being sent never rings on this iPhone, so its form has no Sound row (#223's
+    /// mockup, spec #129 story 40), and choosing no one gives it back.
+    @Test func choosingSomeoneTakesTheSoundRowAwayAndChoosingNoOneGivesItBack() async throws {
+        let (alex, _, _) = try await phones()
+        let form = form(on: alex, filledWith: pills)
+        #expect(form.showsSound)
+
+        form.toggleRecipient(rileyID)
+        #expect(!form.showsSound)
+
+        form.toggleRecipient(rileyID)
+        #expect(form.showsSound)
+    }
+
     @Test func choosingSomeoneTakesTheTagsAwayAndChoosingNoOneGivesThemBack() async throws {
         let (alex, _, _) = try await phones()
         let tag = try #require(try alex.model.createTag(named: "health"))
@@ -425,7 +439,7 @@ struct SendToTests {
         let (alex, _, _) = try await phones()
         alex.model.add(pills)
         let edit = try #require(ReminderForm(engine: { alex.model.engine }, editing: pills.id, now: { alex.clock.now }))
-        let unshared = ReminderForm(engine: { alex.model.engine }, now: { alex.clock.now }, defaultPace: .shipped)
+        let unshared = ReminderForm(engine: { alex.model.engine }, now: { alex.clock.now }, defaultPace: .shipped, defaultAlarmSound: .default)
 
         #expect(!edit.offersSendTo)
         #expect(!unshared.offersSendTo)

@@ -62,7 +62,7 @@ struct NewReminderButton: View {
 
     var body: some View {
         Button {
-            if let model { form = ReminderForm(engine: { model.engine }, now: { .now }, defaultPace: model.defaultPace, tagIDs: tagIDs, sharing: model.sharing) }
+            if let model { form = ReminderForm(engine: { model.engine }, now: { .now }, defaultPace: model.defaultPace, defaultAlarmSound: model.defaultAlarmSound, tagIDs: tagIDs, sharing: model.sharing) }
         } label: {
             Label {
                 Text("New Reminder", comment: "Toolbar button (a plus) that opens the New Reminder form, and the button under Nothing Sent on the Reminders tab's Sent.")

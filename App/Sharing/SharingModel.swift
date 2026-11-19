@@ -713,7 +713,7 @@ extension SharingModel: SharingAdapterEvents {
         if let held {
             copy = held
         } else {
-            copy = sent.copy(through: connectionID, deliveryMode: connection.mine.deliveryMode, alarmSound: .default)
+            copy = sent.copy(through: connectionID, deliveryMode: connection.mine.deliveryMode, alarmSound: receivedReminders.defaultAlarmSound)
             try receivedReminders.keep(copy)
         }
         guard !kept.receivedSyncStates.contains(where: { $0.reminderID == copy.id }) else { return }

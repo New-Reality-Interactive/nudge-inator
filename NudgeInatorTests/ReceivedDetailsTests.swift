@@ -80,6 +80,20 @@ struct ReceivedDetailsTests {
         #expect(arrivals(on: riley).map(\.body) == ["From Alex Morgan · Relentless: rings an alarm until you mark it done"])
     }
 
+    /// Spec #129 story 37: a copy arrives with the recipient's Default Alarm Sound, never the
+    /// sender's, which doesn't cross a share.
+    @Test func aCopyArrivesWithTheRecipientsDefaultAlarmSound() async throws {
+        let (alex, riley) = try await phones()
+        alex.model.defaultAlarmSound = .siren
+        riley.model.defaultAlarmSound = .bell
+        var sendersReminder = pills
+        sendersReminder.alarmSound = .chime
+
+        try await send(sendersReminder, from: alex, to: riley)
+
+        #expect(try received(on: riley).alarmSound == .bell)
+    }
+
     @Test func aSendDeliveredTwicePostsOneArrival() async throws {
         let (alex, riley) = try await phones()
         try await send(pills, from: alex, to: riley)
@@ -205,6 +219,41 @@ struct ReceivedDetailsTests {
         #expect(riley.model.engine.tagLabels(for: saved.tagIDs) == ["#health"])
         #expect(saved.title == "Take the pills")
         #expect(saved.notes == "Two with water.")
+    }
+
+    /// Spec #129 story 38: a copy that sends alarms shows the Sound row, editable, while what its
+    /// sender owns stays locked, and the sound it saves is the one its alarms ring with.
+    @Test func aCopyThatSendsAlarmsSavesTheSoundChosenAndNothingTheSenderOwns() async throws {
+        let (alex, riley) = try await phones()
+        riley.manager.authorizationState = .authorized
+        try await send(pills, from: alex, to: riley)
+        let copy = try received(on: riley)
+        let form = try editForm(of: copy.id, on: riley)
+
+        #expect(form.showsSound)
+        #expect(form.lockedFields == Set(LockedField.allCases))
+        form.alarmSound = .rise
+        form.title = "Skip the pills"
+
+        #expect(form.save(to: riley.model))
+        await settle(riley)
+        let saved = try received(on: riley)
+        #expect(saved.alarmSound == .rise)
+        #expect(saved.title == "Take the pills")
+        #expect(!riley.manager.scheduled.isEmpty)
+        #expect(riley.manager.scheduled.allSatisfy { $0.sound == .named("rise.caf") })
+    }
+
+    /// A copy whose sender turned Break Through Focus off never rings, so it has no Sound row.
+    @Test func aCopyThatSendsNoAlarmsHasNoSoundRow() async throws {
+        let (alex, riley) = try await phones()
+        var quiet = pills
+        quiet.breakThroughFocus = false
+        try await send(quiet, from: alex, to: riley)
+
+        let form = try editForm(of: try received(on: riley).id, on: riley)
+
+        #expect(!form.showsSound)
     }
 
     @Test func aTagChangeOnANudgingCopySaves() async throws {

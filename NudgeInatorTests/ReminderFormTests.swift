@@ -15,13 +15,14 @@ struct ReminderFormTests {
     let center = FakeNotificationCenter()
     let manager = FakeAlarmManager()
 
-    func launchedModel() async throws -> AppModel {
+    func launchedModel(settingsRecords: SettingsRecords = .temporary()) async throws -> AppModel {
         let store = try ReminderStore(location: .inMemory)
         let model = AppModel(
             clock: clock,
             openStore: { store },
             notifications: NotificationAdapter(center: center, clock: clock),
             alarms: AlarmAdapter(manager: manager, clock: clock),
+            settingsRecords: settingsRecords,
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )
@@ -31,8 +32,8 @@ struct ReminderFormTests {
 
     /// A New form. Its Default Pace is Escalating unless a test passes another, so the strength's
     /// own waits show until a test chooses Consistent.
-    func newForm(on model: AppModel, defaultPace: DefaultPace = DefaultPace(choice: .escalating, consistentWait: 10 * 60)) -> ReminderForm {
-        ReminderForm(engine: { model.engine }, now: { [clock] in clock.now }, defaultPace: defaultPace)
+    func newForm(on model: AppModel, defaultPace: DefaultPace = DefaultPace(choice: .escalating, consistentWait: 10 * 60), defaultAlarmSound: AlarmSound = .default) -> ReminderForm {
+        ReminderForm(engine: { model.engine }, now: { [clock] in clock.now }, defaultPace: defaultPace, defaultAlarmSound: defaultAlarmSound)
     }
 
     func editForm(of reminderID: Reminder.ID, on model: AppModel) throws -> ReminderForm {
@@ -114,6 +115,53 @@ struct ReminderFormTests {
         let saved = try #require(model.engine.reminders.only)
         #expect(saved.title == "Take the recycling out")
         #expect(saved.alarmSound == sound)
+    }
+
+    /// Spec #129 stories 15 to 17: the Sound row shows only while the draft sends alarms, and
+    /// follows the strength and the switch as they change. Relentless shows it with the switch off.
+    @Test func theSoundRowFollowsTheStrengthAndTheSwitch() async throws {
+        let model = try await launchedModel()
+        let form = newForm(on: model)
+        #expect(form.strength == .firm && form.breaksThroughFocus)
+        #expect(form.showsSound)
+
+        form.breaksThroughFocus = false
+        #expect(!form.showsSound)
+        form.strength = .relentless
+        #expect(form.showsSound)
+        form.strength = .gentle
+        #expect(!form.showsSound)
+        form.breaksThroughFocus = true
+        #expect(!form.showsSound)
+        form.strength = .firm
+        #expect(form.showsSound)
+    }
+
+    /// Spec #129 story 7: a New form starts from the Default Alarm Sound passed at creation, which
+    /// isn't a change the person made, and saves it: its alarms ring with it. Story 8: a later
+    /// change to the default leaves the saved reminder's sound alone.
+    @Test func aNewReminderStartsWithTheDefaultAlarmSoundAndKeepsIt() async throws {
+        manager.authorizationState = .authorized
+        // A suite of this test's own, removed even when it fails, so the default it sets stays here.
+        let suiteName = "ReminderFormTests.\(UUID().uuidString)"
+        defer { UserDefaults().removePersistentDomain(forName: suiteName) }
+        let sounds = DefaultAlarmSoundRecord(defaults: try #require(UserDefaults(suiteName: suiteName)))
+        let model = try await launchedModel(settingsRecords: .temporary(defaultAlarmSound: sounds))
+        model.defaultAlarmSound = .chime
+        let form = newForm(on: model, defaultAlarmSound: model.defaultAlarmSound)
+
+        #expect(form.alarmSound == .chime)
+        #expect(!form.hasChanges)
+        form.title = "Call the bank"
+        form.dueTime = NewYork.local(2026, 10, 15, 9)
+        #expect(form.save(to: model))
+        await model.waitUntilApplied()
+
+        #expect(model.engine.reminders.only?.alarmSound == .chime)
+        #expect(!manager.scheduled.isEmpty)
+        #expect(manager.scheduled.allSatisfy { $0.sound == .named("chime.caf") })
+        model.defaultAlarmSound = .siren
+        #expect(model.engine.reminders.only?.alarmSound == .chime)
     }
 
     /// Spec story 25: Escalating hides the Every row but keeps its wait, so Consistent finds it
@@ -306,6 +354,33 @@ struct ReminderFormTests {
         #expect(saved.dueTime == bins.dueTime)
         #expect(saved.strength == .firm)
         #expect(model.engine.openOccurrence(for: bins.id) != nil)
+    }
+
+    /// Spec #129 stories 21 and 22: the sound isn't locked while Nudging. The Edit form shows the
+    /// row and saves a new sound with the locked fields as they were, and the alarms yet to ring
+    /// are scheduled with the new tone.
+    @Test func anEditOfANudgingReminderChangesItsSoundAndItsAlarmsRingWithIt() async throws {
+        manager.authorizationState = .authorized
+        let model = try await launchedModel()
+        model.add(bins)
+        await model.waitUntilApplied()
+        let form = try editForm(of: bins.id, on: model)
+
+        #expect(form.lockedFields == [.dueTime, .repeatRule, .strength, .pace, .breakThroughFocus])
+        #expect(form.showsSound)
+        #expect(form.alarmSound == .default)
+        form.alarmSound = .bell
+        #expect(form.hasChanges)
+
+        #expect(form.save(to: model))
+        await model.waitUntilApplied()
+        let saved = try #require(model.engine.reminders.only)
+        #expect(saved.alarmSound == .bell)
+        #expect(saved.dueTime == bins.dueTime)
+        #expect(saved.strength == .firm)
+        #expect(model.engine.openOccurrence(for: bins.id) != nil)
+        #expect(!manager.scheduled.isEmpty)
+        #expect(manager.scheduled.allSatisfy { $0.sound == .named("bell.caf") })
     }
 
     enum NotNudging: CaseIterable {
@@ -1242,7 +1317,7 @@ struct ReminderFormTests {
         let model = try await launchedModel()
         let home = try #require(try model.createTag(named: "home"))
         let now = clock.now
-        let form = ReminderForm(engine: { model.engine }, now: { now }, defaultPace: .shipped, tagIDs: [home.id])
+        let form = ReminderForm(engine: { model.engine }, now: { now }, defaultPace: .shipped, defaultAlarmSound: .default, tagIDs: [home.id])
         let hasChanges = form.hasChanges
         form.title = "Water the plants"
 

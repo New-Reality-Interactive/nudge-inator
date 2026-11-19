@@ -2,9 +2,9 @@ import NudgeEngine
 import SwiftUI
 
 /// The New and Edit Reminder form, as the mockup's sheet: Title, Notes and Tags; Starts and
-/// Repeat; Strength; Pace; Break Through Focus. While the reminder is Nudging the schedule fields
-/// are disabled, each with a `lock`, under a note that says why (ticket 13). Save goes through the
-/// app model; without one (previews) it is disabled.
+/// Repeat; Strength; Pace; Break Through Focus and its Sound row (#230). While the reminder is
+/// Nudging the schedule fields are disabled, each with a `lock`, under a note that says why
+/// (ticket 13). Save goes through the app model; without one (previews) it is disabled.
 struct ReminderFormSheet: View {
     @Bindable var form: ReminderForm
     @Environment(AppModel.self) private var model: AppModel?
@@ -19,7 +19,7 @@ struct ReminderFormSheet: View {
     var body: some View {
         NavigationStack(path: $pages) {
             Form {
-                if form.isEditing { EditNoteSection(isLocked: !form.lockedFields.isEmpty, senderName: form.senderName) }
+                if form.isEditing { EditNoteSection(isLocked: !form.lockedFields.isEmpty, senderName: form.senderName, sendsAlarms: form.sendsAlarms) }
                 WhatSection(form: form)
                 if form.offersSendTo { SendToSection(form: form, isInviting: $isInviting) }
                 ScheduleSection(form: form, isShowingCustomRepeat: $isShowingCustomRepeat)
@@ -31,7 +31,7 @@ struct ReminderFormSheet: View {
             .scrollDismissesKeyboard(.interactively)
             .centeredInReadableColumn()
             // A received reminder's fields are locked because its sender owns them (ticket 200).
-            .environment(\.lockHint, form.isContentLocked ? LockNote.senderHint : LockNote.hint)
+            .environment(\.lockHint, form.isContentLocked ? LockNote.senderHint(sendsAlarms: form.sendsAlarms) : LockNote.hint)
             .navigationTitle(form.isEditing
                 ? Text("Edit Reminder", comment: "Title of the form that edits a reminder.")
                 : Text("New Reminder", comment: "Title of the form that makes a reminder."))
@@ -40,6 +40,7 @@ struct ReminderFormSheet: View {
                 switch page {
                 case .tags: TagsPage(form: form)
                 case .sendTo: SendToPage(form: form, isInviting: $isInviting)
+                case .sound: AlarmSoundPicker(title: Text(SoundRow.title), sound: $form.alarmSound)
                 }
             }
             .toolbar { toolbar }
@@ -116,6 +117,8 @@ struct ReminderFormSheet: View {
 enum ReminderFormPage: Hashable {
     case tags
     case sendTo
+    /// The alarm sound picker, for this reminder (#230).
+    case sound
 }
 
 /// The note at the top of the Edit form: who owns a received reminder (ticket 200), why the
@@ -124,6 +127,9 @@ private struct EditNoteSection: View {
     let isLocked: Bool
     /// A received reminder's sender, or `nil` for the person's own.
     let senderName: String?
+    /// Whether the reminder sends alarms, so a received one's note says its sound can be chosen
+    /// (#230). Two whole sentences, not a joined fragment (#223's review).
+    let sendsAlarms: Bool
 
     var body: some View {
         Section {
@@ -131,8 +137,13 @@ private struct EditNoteSection: View {
             Group {
                 if let senderName {
                     Label {
-                        Text("**\(senderName) owns this reminder.** You can add or remove your own tags. Its title, notes, schedule, strength and pace stay as \(senderName) set them.",
-                             comment: "Top of the Edit Reminder form of a received reminder, whose sender owns everything but the tags. Both placeholders are the sender's name.")
+                        if sendsAlarms {
+                            Text("**\(senderName) owns this reminder.** You can add or remove your own tags and choose its alarm sound. Its title, notes, schedule, strength and pace stay as \(senderName) set them.",
+                                 comment: "Top of the Edit Reminder form of a received reminder that rings alarms, whose sender owns everything but the tags and the alarm sound. Both placeholders are the sender's name.")
+                        } else {
+                            Text("**\(senderName) owns this reminder.** You can add or remove your own tags. Its title, notes, schedule, strength and pace stay as \(senderName) set them.",
+                                 comment: "Top of the Edit Reminder form of a received reminder that never rings, whose sender owns everything but the tags. Both placeholders are the sender's name.")
+                        }
                     } icon: {
                         LockGlyph()
                     }
@@ -472,7 +483,8 @@ private struct PaceSection: View {
 }
 
 /// The Break Through Focus switch, locked while nudging. Relentless shows it on and dimmed, with
-/// a footnote saying why (spec stories 30 and 45).
+/// a footnote saying why (spec stories 30 and 45). Under it, while the reminder sends alarms, the
+/// Sound row (#230), never locked, with its own line in the footer.
 private struct BreakThroughFocusSection: View {
     @Bindable var form: ReminderForm
 
@@ -486,20 +498,47 @@ private struct BreakThroughFocusSection: View {
             }
             .disabled(form.isBreakThroughFocusFixed)
             .lockedWhileNudging(isLocked)
+            if form.showsSound { SoundRow(sound: form.alarmSound) }
         } footer: {
-            switch (form.breaksThroughFocus, form.strength) {
-            case _ where form.isBreakThroughFocusFixed:
-                Text("Relentless always rings, so it always breaks through a Focus.",
-                     comment: "Under Break Through Focus when the strength is Relentless, which shows the switch on and dimmed.")
-            case (true, .gentle):
-                Text("High nudges are Time Sensitive, so a Focus can't hold them. Gentle never reaches Urgent, so it never rings.",
-                     comment: "Under Break Through Focus when it's on and the strength is Gentle.")
-            case (true, _):
-                Text("High nudges are Time Sensitive and Urgent nudges ring as alarms, so a Focus can't hold them.",
-                     comment: "Under Break Through Focus when it's on and the strength is Firm.")
-            case (false, _):
-                Text("Every nudge is an ordinary notification, which a Focus can hold. Nothing rings.",
-                     comment: "Under Break Through Focus when it's off.")
+            VStack(alignment: .leading, spacing: Design.Spacing.s1) {
+                switchFooter
+                if form.showsSound { AlarmSoundPicker.footer }
+            }
+        }
+    }
+
+    @ViewBuilder private var switchFooter: some View {
+        switch (form.breaksThroughFocus, form.strength) {
+        case _ where form.isBreakThroughFocusFixed:
+            Text("Relentless always rings, so it always breaks through a Focus.",
+                 comment: "Under Break Through Focus when the strength is Relentless, which shows the switch on and dimmed.")
+        case (true, .gentle):
+            Text("High nudges are Time Sensitive, so a Focus can't hold them. Gentle never reaches Urgent, so it never rings.",
+                 comment: "Under Break Through Focus when it's on and the strength is Gentle.")
+        case (true, _):
+            Text("High nudges are Time Sensitive and Urgent nudges ring as alarms, so a Focus can't hold them.",
+                 comment: "Under Break Through Focus when it's on and the strength is Firm.")
+        case (false, _):
+            Text("Every nudge is an ordinary notification, which a Focus can hold. Nothing rings.",
+                 comment: "Under Break Through Focus when it's off.")
+        }
+    }
+}
+
+/// The form's Sound row (#230): the reminder's alarm sound by name, opening the picker. As the
+/// Tags row draws it.
+private struct SoundRow: View {
+    let sound: AlarmSound
+
+    /// The row's title, and the picker page's.
+    static let title = LocalizedStringResource("Sound", comment: "The reminder form's row that opens the alarm sound list, and that page's title. Beside the row, the sound chosen, such as \"Chime\".")
+
+    var body: some View {
+        NavigationLink(value: ReminderFormPage.sound) {
+            LabeledContent {
+                Text(sound.title)
+            } label: {
+                Text(Self.title)
             }
         }
     }
@@ -549,7 +588,7 @@ private struct LockedFieldModifier: ViewModifier {
 
 extension EnvironmentValues {
     /// Why the form's locked fields are locked, as their VoiceOver hint: nudging (`LockNote.hint`),
-    /// or a received reminder's sender owns them (`LockNote.senderHint`, ticket 200).
+    /// or a received reminder's sender owns them (`LockNote.senderHint(sendsAlarms:)`, ticket 200).
     @Entry var lockHint = LockNote.hint
 }
 
@@ -570,10 +609,20 @@ enum LockNote {
     )
 
     /// The reason on each field of a received reminder's form (ticket 200), brief for the same reason.
-    static let senderHint = LocalizedStringResource(
-        "Its sender owns this. You can change only its tags.",
-        comment: "VoiceOver hint on each field of a received reminder's Edit Reminder form, which only its sender can change."
-    )
+    /// One that rings has a Sound row too, which the person can change (#230).
+    static func senderHint(sendsAlarms: Bool) -> LocalizedStringResource {
+        if sendsAlarms {
+            LocalizedStringResource(
+                "Its sender owns this. You can change only its tags and alarm sound.",
+                comment: "VoiceOver hint on each field of a received reminder's Edit Reminder form, which only its sender can change, when the reminder rings alarms and so has a Sound row."
+            )
+        } else {
+            LocalizedStringResource(
+                "Its sender owns this. You can change only its tags.",
+                comment: "VoiceOver hint on each field of a received reminder's Edit Reminder form, which only its sender can change."
+            )
+        }
+    }
 }
 
 extension Strength {
