@@ -1,3 +1,4 @@
+import ActivityKit
 import AlarmKit
 import AppIntents
 import NudgeShared
@@ -10,9 +11,9 @@ struct AlarmSnapshot: Equatable, Sendable {
 }
 
 /// The calls the alarm adapter makes on `AlarmManager`, so tests can swap in a fake. It takes the
-/// schedule and attributes rather than an `AlarmConfiguration`, which has no readable properties,
-/// so tests can read back what each alarm shows. `@MainActor` because the adapter and the app
-/// model that owns it are.
+/// schedule, attributes and sound rather than an `AlarmConfiguration`, which has no readable
+/// properties, so tests can read back what each alarm shows and rings with. `@MainActor` because
+/// the adapter and the app model that owns it are.
 @MainActor
 protocol AlarmManaging: AnyObject {
     func schedule(
@@ -20,7 +21,8 @@ protocol AlarmManaging: AnyObject {
         schedule: Alarm.Schedule,
         attributes: AlarmAttributes<NudgeAlarmMetadata>,
         stopIntent: (any LiveActivityIntent)?,
-        secondaryIntent: (any LiveActivityIntent)?
+        secondaryIntent: (any LiveActivityIntent)?,
+        sound: AlertConfiguration.AlertSound
     ) async throws
     func cancel(id: Alarm.ID) throws
     func stop(id: Alarm.ID) throws
@@ -40,7 +42,8 @@ final class SystemAlarmManager: AlarmManaging {
         schedule: Alarm.Schedule,
         attributes: AlarmAttributes<NudgeAlarmMetadata>,
         stopIntent: (any LiveActivityIntent)?,
-        secondaryIntent: (any LiveActivityIntent)?
+        secondaryIntent: (any LiveActivityIntent)?,
+        sound: AlertConfiguration.AlertSound
     ) async throws {
         // `.alarm` "behaves like a traditional alarm", unlike the countdown-style init. The stop
         // intent only refreshes the badge and stops nothing itself. Apple's docs don't say whether
@@ -50,7 +53,8 @@ final class SystemAlarmManager: AlarmManaging {
             schedule: schedule,
             attributes: attributes,
             stopIntent: stopIntent,
-            secondaryIntent: secondaryIntent
+            secondaryIntent: secondaryIntent,
+            sound: sound
         )
         _ = try await AlarmManager.shared.schedule(id: id, configuration: configuration)
     }

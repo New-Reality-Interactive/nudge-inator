@@ -1,3 +1,4 @@
+import ActivityKit
 import NudgeEngine
 
 extension AlarmSound {
@@ -6,5 +7,13 @@ extension AlarmSound {
     /// is no file the app can play.
     var toneFileName: String? {
         self == .default ? nil : "\(id).caf"
+    }
+
+    /// What AlarmKit is given to ring with: its own default sound for Default, exactly as before
+    /// 1.5.0, or the tone's bundled file. Apple: `named(_:)` takes a file in the main bundle or
+    /// `Library/Sounds`. The file is named with its extension: developers report the default sound
+    /// played without it on iOS 26.5 (spec #129), a device check.
+    var alertSound: AlertConfiguration.AlertSound {
+        toneFileName.map { .named($0) } ?? .default
     }
 }

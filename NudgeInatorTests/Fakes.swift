@@ -1,3 +1,4 @@
+import ActivityKit
 import AlarmKit
 import AppIntents
 import Foundation
@@ -195,8 +196,8 @@ final class TemporaryStoreFile: Sendable {
     }
 }
 
-/// Stands in for `AlarmManager`: keeps the schedule and attributes of every alarm the adapter
-/// schedules, so tests assert on what the alert shows and when it rings.
+/// Stands in for `AlarmManager`: keeps the schedule, attributes and sound of every alarm the
+/// adapter schedules, so tests assert on what the alert shows, when it rings and with what.
 @MainActor
 final class FakeAlarmManager: AlarmManaging {
     struct Scheduled {
@@ -205,6 +206,7 @@ final class FakeAlarmManager: AlarmManaging {
         var attributes: AlarmAttributes<NudgeAlarmMetadata>
         var stopIntent: (any LiveActivityIntent)?
         var secondaryIntent: (any LiveActivityIntent)?
+        var sound: AlertConfiguration.AlertSound
         var state: Alarm.State = .scheduled
 
         var fireDate: Date? {
@@ -228,9 +230,10 @@ final class FakeAlarmManager: AlarmManaging {
         schedule: Alarm.Schedule,
         attributes: AlarmAttributes<NudgeAlarmMetadata>,
         stopIntent: (any LiveActivityIntent)?,
-        secondaryIntent: (any LiveActivityIntent)?
+        secondaryIntent: (any LiveActivityIntent)?,
+        sound: AlertConfiguration.AlertSound
     ) async throws {
-        let alarm = Scheduled(id: id, schedule: schedule, attributes: attributes, stopIntent: stopIntent, secondaryIntent: secondaryIntent)
+        let alarm = Scheduled(id: id, schedule: schedule, attributes: attributes, stopIntent: stopIntent, secondaryIntent: secondaryIntent, sound: sound)
         scheduleCalls.append(alarm)
         defer { whileScheduling?() }
         if let scheduleError { throw scheduleError }
