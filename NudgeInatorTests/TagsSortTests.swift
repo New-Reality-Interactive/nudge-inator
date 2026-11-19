@@ -37,6 +37,7 @@ final class TagsSortTests {
             notifications: NotificationAdapter(center: FakeNotificationCenter(), clock: clock),
             alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: clock),
             defaultPaceRecord: .temporary,
+            defaultAlarmSoundRecord: .temporary,
             remindersSortRecord: try remindersRecord(),
             tagsSortRecord: try record(),
             doneQueue: .temporary,

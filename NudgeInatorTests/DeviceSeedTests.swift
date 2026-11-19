@@ -68,6 +68,7 @@ struct ModelSeedTargetTests {
             notifications: NotificationAdapter(center: FakeNotificationCenter(), clock: clock),
             alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: clock),
             defaultPaceRecord: .temporary,
+            defaultAlarmSoundRecord: .temporary,
             remindersSortRecord: .temporary,
             tagsSortRecord: .temporary,
             doneQueue: .temporary,

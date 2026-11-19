@@ -58,6 +58,7 @@ final class AppModel {
     private let giveUpLimit: GiveUpLimit
     private let onboardingRecord: OnboardingRecord
     private let defaultPaceRecord: DefaultPaceRecord
+    private let defaultAlarmSoundRecord: DefaultAlarmSoundRecord
     private let remindersSortRecord: RemindersSortRecord
     private let tagsSortRecord: TagsSortRecord
     /// Where a Done waits while the store can't be read (ticket 32).
@@ -111,6 +112,7 @@ final class AppModel {
         alarms: AlarmAdapter,
         onboardingRecord: OnboardingRecord = .standard,
         defaultPaceRecord: DefaultPaceRecord = .standard,
+        defaultAlarmSoundRecord: DefaultAlarmSoundRecord = .standard,
         remindersSortRecord: RemindersSortRecord = .standard,
         tagsSortRecord: TagsSortRecord = .standard,
         doneQueue: DoneQueue,
@@ -129,6 +131,7 @@ final class AppModel {
         self.giveUpLimit = giveUpLimit
         self.onboardingRecord = onboardingRecord
         self.defaultPaceRecord = defaultPaceRecord
+        self.defaultAlarmSoundRecord = defaultAlarmSoundRecord
         self.remindersSortRecord = remindersSortRecord
         self.tagsSortRecord = tagsSortRecord
         self.doneQueue = doneQueue
@@ -714,6 +717,18 @@ final class AppModel {
         }
     }
 
+    /// Settings' Default Alarm Sound (#228). Read from the record each time, as the Default Pace
+    /// is. Changing it changes no reminder already made.
+    var defaultAlarmSound: AlarmSound {
+        get {
+            access(keyPath: \.defaultAlarmSound)
+            return defaultAlarmSoundRecord.sound
+        }
+        set {
+            withMutation(keyPath: \.defaultAlarmSound) { defaultAlarmSoundRecord.sound = newValue }
+        }
+    }
+
     /// The Reminders tab's Sort menu choice (#115). Read from the record each time, as the Default
     /// Pace is, so a launch before the first unlock doesn't fix it at Created, Oldest First.
     var remindersSort: RemindersSort {
@@ -744,7 +759,8 @@ final class AppModel {
         await notifications.sendTestNudge()
     }
 
-    /// Settings' Delete All Data (ticket 30, 214): the store, sharing, the Default Pace and the
+    /// Settings' Delete All Data (ticket 30, 214): the store, sharing, the Default Pace, the Default
+    /// Alarm Sound and the
     /// Reminders and Tags tabs' sorts, then the engine, then everything the adapters hold, including the test nudge and the
     /// nudges already in Notification Center. Not through `perform`: the store goes first and a
     /// store that turns the delete down stops it, so the reminders and their nudges stay as they
@@ -760,6 +776,7 @@ final class AppModel {
         let sharingFailure = deleteSharing()
         saveError = nil
         withMutation(keyPath: \.defaultPace) { defaultPaceRecord.clear() }
+        withMutation(keyPath: \.defaultAlarmSound) { defaultAlarmSoundRecord.clear() }
         withMutation(keyPath: \.remindersSort) { remindersSortRecord.clear() }
         withMutation(keyPath: \.tagsSort) { tagsSortRecord.clear() }
         // A new engine, not emptied lists: the old one keeps a key for every history it held, and

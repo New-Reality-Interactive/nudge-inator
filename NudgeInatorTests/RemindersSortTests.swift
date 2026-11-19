@@ -29,6 +29,7 @@ final class RemindersSortTests {
             notifications: NotificationAdapter(center: FakeNotificationCenter(), clock: clock),
             alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: clock),
             defaultPaceRecord: .temporary,
+            defaultAlarmSoundRecord: .temporary,
             remindersSortRecord: try record(),
             tagsSortRecord: .temporary,
             doneQueue: .temporary,

@@ -357,6 +357,12 @@ extension DefaultPaceRecord {
     static var temporary: DefaultPaceRecord { DefaultPaceRecord(defaults: UserDefaults(suiteName: "NudgeInatorTests.DefaultPace")!) }
 }
 
+extension DefaultAlarmSoundRecord {
+    /// A record in a suite of the tests' own, as `DefaultPaceRecord.temporary` is.
+    /// `DefaultAlarmSoundTests` uses suites of its own.
+    static var temporary: DefaultAlarmSoundRecord { DefaultAlarmSoundRecord(defaults: UserDefaults(suiteName: "NudgeInatorTests.DefaultAlarmSound")!) }
+}
+
 extension RemindersSortRecord {
     /// A record in a suite of the tests' own, as `DefaultPaceRecord.temporary`. `RemindersSortTests`
     /// uses suites of its own.

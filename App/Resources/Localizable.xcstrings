@@ -1039,6 +1039,12 @@
     "Badges" : {
       "comment" : "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging."
     },
+    "Beacon" : {
+      "comment" : "Alarm sound name: a beacon-like signal tone that ships with the app."
+    },
+    "Bell" : {
+      "comment" : "Alarm sound name: a bell tone that ships with the app."
+    },
     "Below is how each strength nudges a new reminder at your Default Pace, %@, with Break Through Focus on." : {
       "comment" : "How It Nudges page: under the points at the top, before the three strengths' schedules. The placeholder is the Default Pace, such as \"Consistent · 10 min\" or \"Escalating\"."
     },
@@ -1101,6 +1107,9 @@
     },
     "Check the spelling or try a new search." : {
       "comment" : "Reminders tab, Mine and Sent: under the title when a search alone finds nothing.\nTags tab: under the title when a search finds nothing."
+    },
+    "Chime" : {
+      "comment" : "Alarm sound name: a gentle chime tone that ships with the app."
     },
     "Choose Time" : {
       "comment" : "Opens the Edit Reminder form to choose a new time, so the reminder can resume."
@@ -1224,6 +1233,12 @@
     },
     "Daily" : {
       "comment" : "The Custom repeat page's frequency."
+    },
+    "Default Alarm" : {
+      "comment" : "Alarm sound name: iOS's own alarm sound, the first choice in the alarm sound list."
+    },
+    "Default Alarm Sound" : {
+      "comment" : "Settings: the row that opens the alarm sound list for every new reminder, and that page's title. Beside the row, the sound chosen, such as \"Chime\"."
     },
     "Default Pace" : {
       "comment" : "Settings: row that opens the page setting the pace every new reminder starts with. Under it, that pace, such as \"Consistent · 10 min\".\nTitle of the page in Settings that sets the pace every new reminder starts with."
@@ -1822,6 +1837,9 @@
     "New reminders start with this pace. Changing it doesn't change the reminders you already have." : {
       "comment" : "Default Pace page: under the Pace and Every controls."
     },
+    "New reminders, and reminders someone sends you, start with this sound. Reminders you already have keep theirs." : {
+      "comment" : "Default Alarm Sound page: under the alarm sound list, after the line on when it plays."
+    },
     "Newest First" : {
       "comment" : "Reminders tab's Sort menu, sorted by Created: the reminder made last at the top."
     },
@@ -2039,7 +2057,7 @@
       "comment" : "Invite: the title of the share the invite carries, which the invitation shows."
     },
     "Nudges" : {
-      "comment" : "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and How It Nudges."
+      "comment" : "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace, Default Alarm Sound and How It Nudges."
     },
     "Nudges 1–%lld are notifications. Nudges %lld–%lld ring as alarms." : {
       "comment" : "How It Nudges footer. 1: the last nudge that is a notification. 2: the first nudge that rings as an alarm. 3: the last nudge.",
@@ -2228,8 +2246,14 @@
     "Pick Send To when you make a reminder, and choose who gets it. It nudges them at the strength you chose." : {
       "comment" : "How Sharing Works, Send a Reminder: the line under the heading. Send To is the reminder form's row."
     },
+    "Plays when a nudge arrives as an alarm. Other nudges use the standard notification sound." : {
+      "comment" : "Under the alarm sound list, and under the reminder form's Sound row."
+    },
     "Privacy Policy" : {
       "comment" : "About page: row that opens the app's privacy policy on the website, in the web browser."
+    },
+    "Pulse" : {
+      "comment" : "Alarm sound name: a pulsing beep tone that ships with the app."
     },
     "Relentless" : {
       "comment" : "Strength name, in the form and the Reminders and Filter Sent sheets: the reminder nudges hardest."
@@ -2322,6 +2346,9 @@
     },
     "Rings as an alarm from nudge %lld." : {
       "comment" : "Under the reminder form's strength. The placeholder is the first nudge that rings as an alarm."
+    },
+    "Rise" : {
+      "comment" : "Alarm sound name: a tone that rises in pitch, shipped with the app."
     },
     "Save" : {
       "comment" : "The Edit Reminder form's confirm button (a checkmark)."
@@ -2424,6 +2451,9 @@
     },
     "Shows what you sent to any checked person." : {
       "comment" : "Sent's filter sheet: under the list of connected people."
+    },
+    "Siren" : {
+      "comment" : "Alarm sound name: the most insistent tone that ships with the app, like a siren."
     },
     "Skipped" : {
       "comment" : "Status label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed because its reminder was paused."

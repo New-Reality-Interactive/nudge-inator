@@ -37,6 +37,7 @@ final class SharingSwitchTests {
             notifications: NotificationAdapter(center: center, clock: clock),
             alarms: AlarmAdapter(manager: manager, clock: clock),
             defaultPaceRecord: .temporary,
+            defaultAlarmSoundRecord: .temporary,
             remindersSortRecord: .temporary,
             tagsSortRecord: .temporary,
             doneQueue: .temporary,

@@ -24,6 +24,7 @@ final class HowItNudgesPageTests {
             notifications: NotificationAdapter(center: FakeNotificationCenter(), clock: clock),
             alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: clock),
             defaultPaceRecord: DefaultPaceRecord(defaults: try #require(UserDefaults(suiteName: suiteName))),
+            defaultAlarmSoundRecord: .temporary,
             remindersSortRecord: .temporary,
             tagsSortRecord: .temporary,
             doneQueue: .temporary,

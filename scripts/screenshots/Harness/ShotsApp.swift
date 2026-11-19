@@ -192,6 +192,7 @@ enum ShotsSeed {
             alarms: AlarmAdapter(manager: manager, clock: clock),
             onboardingRecord: onboarding,
             defaultPaceRecord: DefaultPaceRecord(defaults: defaults),
+            defaultAlarmSoundRecord: DefaultAlarmSoundRecord(defaults: defaults),
             remindersSortRecord: RemindersSortRecord(defaults: defaults),
             tagsSortRecord: TagsSortRecord(defaults: defaults),
             doneQueue: .temporary,
