@@ -42,7 +42,7 @@ class AlarmDeviceCheckSuite {
         return adapter
     }
 
-    func nudge(_ nudgeNumber: Int, at fireTime: Date, title: String) -> SchedulePlan.Item {
+    func nudge(_ nudgeNumber: Int, at fireTime: Date, title: String, alarmSound: AlarmSound = .default) -> SchedulePlan.Item {
         let item = SchedulePlan.Item(
             reminderID: reminderID,
             dueTime: fireTime,
@@ -52,6 +52,7 @@ class AlarmDeviceCheckSuite {
             fireTime: fireTime,
             urgency: .urgent,
             title: title,
+            alarmSound: alarmSound,
             deliveryKind: .alarm
         )
         scheduledIDs.append(AlarmAdapter.alarmID(for: item))
