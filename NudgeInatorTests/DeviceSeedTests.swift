@@ -67,10 +67,7 @@ struct ModelSeedTargetTests {
             openStore: { store },
             notifications: NotificationAdapter(center: FakeNotificationCenter(), clock: clock),
             alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: clock),
-            defaultPaceRecord: .temporary,
-            defaultAlarmSoundRecord: .temporary,
-            remindersSortRecord: .temporary,
-            tagsSortRecord: .temporary,
+            settingsRecords: .temporary(),
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )

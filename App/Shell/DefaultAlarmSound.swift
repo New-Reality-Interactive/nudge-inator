@@ -8,7 +8,8 @@ struct DefaultAlarmSoundRecord {
 
     static var standard: DefaultAlarmSoundRecord { DefaultAlarmSoundRecord(defaults: .standard) }
 
-    private static let key = "defaultAlarmSound"
+    /// Where the sound is saved. Never change it, or a saved choice is lost.
+    static let key = "defaultAlarmSound"
 
     /// Saved by the sound's ID, so an ID a newer build saved reads as Default (`AlarmSound(id:)`).
     var sound: AlarmSound {

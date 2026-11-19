@@ -23,10 +23,7 @@ final class HowItNudgesPageTests {
             openStore: { store },
             notifications: NotificationAdapter(center: FakeNotificationCenter(), clock: clock),
             alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: clock),
-            defaultPaceRecord: DefaultPaceRecord(defaults: try #require(UserDefaults(suiteName: suiteName))),
-            defaultAlarmSoundRecord: .temporary,
-            remindersSortRecord: .temporary,
-            tagsSortRecord: .temporary,
+            settingsRecords: .temporary(defaultPace: DefaultPaceRecord(defaults: try #require(UserDefaults(suiteName: suiteName)))),
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )

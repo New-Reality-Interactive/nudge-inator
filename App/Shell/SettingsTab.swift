@@ -272,12 +272,12 @@ struct SettingsTab: View {
                 )
             }
             NavigationLink {
-                AlarmSoundPicker.defaultAlarmSound(defaultAlarmSound)
+                DefaultAlarmSoundPage(sound: defaultAlarmSound)
             } label: {
                 SettingsRow(
                     tile: .tileGray,
                     symbol: "speaker.wave.2",
-                    title: AlarmSoundPicker.defaultAlarmSoundTitle,
+                    title: DefaultAlarmSoundPage.title,
                     value: Text(defaultAlarmSound.wrappedValue.title)
                 )
             }

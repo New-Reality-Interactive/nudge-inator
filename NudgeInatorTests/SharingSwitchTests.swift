@@ -36,10 +36,7 @@ final class SharingSwitchTests {
             openStore: { try ReminderStore(location: .file(reminderFile.url)) },
             notifications: NotificationAdapter(center: center, clock: clock),
             alarms: AlarmAdapter(manager: manager, clock: clock),
-            defaultPaceRecord: .temporary,
-            defaultAlarmSoundRecord: .temporary,
-            remindersSortRecord: .temporary,
-            tagsSortRecord: .temporary,
+            settingsRecords: .temporary(),
             doneQueue: .temporary,
             sharingSwitch: record,
             makeSharing: { [unowned self] in

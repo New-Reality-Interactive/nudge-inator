@@ -363,6 +363,19 @@ extension DefaultAlarmSoundRecord {
     static var temporary: DefaultAlarmSoundRecord { DefaultAlarmSoundRecord(defaults: UserDefaults(suiteName: "NudgeInatorTests.DefaultAlarmSound")!) }
 }
 
+extension SettingsRecords {
+    /// Every record in the tests' own suites, so a model's Delete All Data never clears the app's
+    /// own choices. A test of one record passes that one over a suite of its own.
+    static func temporary(
+        defaultPace: DefaultPaceRecord = .temporary,
+        defaultAlarmSound: DefaultAlarmSoundRecord = .temporary,
+        remindersSort: RemindersSortRecord = .temporary,
+        tagsSort: TagsSortRecord = .temporary
+    ) -> SettingsRecords {
+        SettingsRecords(defaultPace: defaultPace, defaultAlarmSound: defaultAlarmSound, remindersSort: remindersSort, tagsSort: tagsSort)
+    }
+}
+
 extension RemindersSortRecord {
     /// A record in a suite of the tests' own, as `DefaultPaceRecord.temporary`. `RemindersSortTests`
     /// uses suites of its own.

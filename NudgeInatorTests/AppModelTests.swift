@@ -31,10 +31,7 @@ struct AppModelTests {
             openStore: openStore,
             notifications: notifications,
             alarms: AlarmAdapter(manager: manager, clock: clock),
-            defaultPaceRecord: .temporary,
-            defaultAlarmSoundRecord: .temporary,
-            remindersSortRecord: .temporary,
-            tagsSortRecord: .temporary,
+            settingsRecords: .temporary(),
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )
@@ -160,10 +157,7 @@ struct AppModelTests {
             openStore: { try ReminderStore(location: .file(storeFile.url)) },
             notifications: notifications,
             alarms: AlarmAdapter(manager: manager, clock: clock),
-            defaultPaceRecord: .temporary,
-            defaultAlarmSoundRecord: .temporary,
-            remindersSortRecord: .temporary,
-            tagsSortRecord: .temporary,
+            settingsRecords: .temporary(),
             doneQueue: queue,
             timeZone: NewYork.timeZone
         )

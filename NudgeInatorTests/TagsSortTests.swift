@@ -36,10 +36,7 @@ final class TagsSortTests {
             openStore: { store },
             notifications: NotificationAdapter(center: FakeNotificationCenter(), clock: clock),
             alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: clock),
-            defaultPaceRecord: .temporary,
-            defaultAlarmSoundRecord: .temporary,
-            remindersSortRecord: try remindersRecord(),
-            tagsSortRecord: try record(),
+            settingsRecords: .temporary(remindersSort: try remindersRecord(), tagsSort: try record()),
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )

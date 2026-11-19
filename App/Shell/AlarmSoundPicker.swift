@@ -30,8 +30,8 @@ struct AlarmSoundPicker: View {
                 }
             }
         }
-        // VoiceOver names the list after its page (#223's review), as My Day names its groups. A
-        // device check: VoiceOver on the picker.
+        // VoiceOver names the list after its page (#223's review), as My Day names its groups.
+        // Kept unless the VoiceOver device check finds it adds a stop that repeats the title.
         .accessibilityElement(children: .contain)
         .accessibilityLabel(title)
         .centeredInReadableColumn()
@@ -40,32 +40,9 @@ struct AlarmSoundPicker: View {
     }
 }
 
-extension AlarmSoundPicker {
-    /// The Settings row's title and its page's.
-    static let defaultAlarmSoundTitle = Text("Default Alarm Sound", comment: "Settings: the row that opens the alarm sound list for every new reminder, and that page's title. Beside the row, the sound chosen, such as \"Chime\".")
-
-    /// Settings' Default Alarm Sound page.
-    static func defaultAlarmSound(_ sound: Binding<AlarmSound>) -> AlarmSoundPicker {
-        AlarmSoundPicker(
-            title: defaultAlarmSoundTitle,
-            sound: sound,
-            extraFooter: Text("New reminders, and reminders someone sends you, start with this sound. Reminders you already have keep theirs.",
-                              comment: "Default Alarm Sound page: under the alarm sound list, after the line on when it plays.")
-        )
-    }
-}
-
-#Preview("Settings") {
-    @Previewable @State var sound = AlarmSound.default
+#Preview {
+    @Previewable @State var sound = AlarmSound.chime
     NavigationStack {
-        AlarmSoundPicker.defaultAlarmSound($sound)
+        AlarmSoundPicker(title: Text(verbatim: "Sound"), sound: $sound)
     }
-}
-
-#Preview("Largest text") {
-    @Previewable @State var sound = AlarmSound.beacon
-    NavigationStack {
-        AlarmSoundPicker.defaultAlarmSound($sound)
-    }
-    .dynamicTypeSize(.accessibility5)
 }

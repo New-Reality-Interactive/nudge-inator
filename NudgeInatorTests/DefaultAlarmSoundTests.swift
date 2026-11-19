@@ -29,10 +29,7 @@ final class DefaultAlarmSoundTests {
             openStore: { store },
             notifications: NotificationAdapter(center: center, clock: clock),
             alarms: AlarmAdapter(manager: manager, clock: clock),
-            defaultPaceRecord: .temporary,
-            defaultAlarmSoundRecord: DefaultAlarmSoundRecord(defaults: try defaults()),
-            remindersSortRecord: .temporary,
-            tagsSortRecord: .temporary,
+            settingsRecords: .temporary(defaultAlarmSound: DefaultAlarmSoundRecord(defaults: try defaults())),
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )
@@ -60,7 +57,7 @@ final class DefaultAlarmSoundTests {
 
     /// A newer build may save a sound this one doesn't know.
     @Test func anUnknownSavedSoundReadsAsDefaultAlarm() async throws {
-        try defaults().set("foghorn", forKey: "defaultAlarmSound")
+        try defaults().set("foghorn", forKey: DefaultAlarmSoundRecord.key)
         let model = try model()
         await model.launch()
 
@@ -73,7 +70,7 @@ final class DefaultAlarmSoundTests {
         let model = try model()
         await model.launch()
 
-        try defaults().set(AlarmSound.siren.id, forKey: "defaultAlarmSound")
+        try defaults().set(AlarmSound.siren.id, forKey: DefaultAlarmSoundRecord.key)
 
         #expect(model.defaultAlarmSound == .siren)
     }
@@ -86,7 +83,7 @@ final class DefaultAlarmSoundTests {
         try await model.deleteAllData()
 
         #expect(model.defaultAlarmSound == .default)
-        #expect(try defaults().string(forKey: "defaultAlarmSound") == nil)
+        #expect(try defaults().string(forKey: DefaultAlarmSoundRecord.key) == nil)
     }
 
     /// Spec story 8: each reminder keeps its own sound.
