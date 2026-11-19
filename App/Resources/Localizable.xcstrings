@@ -1129,6 +1129,9 @@
     "Choose one or more people. Each gets their own copy, at this strength, and it won't nudge you." : {
       "comment" : "Under the Send To page's list of people."
     },
+    "Choosing a sound plays it. Default Alarm is iOS's own sound, which apps can't play, so you'll hear it when an alarm rings." : {
+      "comment" : "Under the alarm sound list, after the line on when it plays. Default Alarm is the first sound in the list, iOS's own alarm sound."
+    },
     "Clear All Filters" : {
       "comment" : "My Day: the item in the Filter button's menu that removes every tag, No Tags and From others from the filter.\nReminders and Tags: the item in the Filter button's menu that removes every sheet filter, and leaves the search."
     },
