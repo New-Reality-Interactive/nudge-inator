@@ -774,7 +774,8 @@ nothing above.
 - **The picker:** one inset grouped list for Settings and the form: Default Alarm (iOS's own alarm
   sound) first, then Chime, Bell, Pulse, Beacon, Rise and Siren. `checkmark` in the accent marks the
   current choice and stays on its sound's line at the accessibility sizes. A choice is saved at once
-  and plays a short preview (none for Default Alarm); the page stays open. VoiceOver reads the list
+  and plays the whole tone, as the Clock app does (on silent too), until it ends, another sound is
+  chosen or the page closes (none for Default Alarm); the page stays open. VoiceOver reads the list
   by its page's title, and each sound as a selectable row with its selected state. The footer is the
   Sound row's, in the same footer style on both pages; on Settings' page a second line says new and
   received reminders start with this sound and existing reminders keep theirs.
