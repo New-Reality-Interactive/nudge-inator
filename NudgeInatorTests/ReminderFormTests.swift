@@ -100,6 +100,22 @@ struct ReminderFormTests {
         #expect(model.engine.reminders.only?.pace == .consistent(wait: 30 * 60))
     }
 
+    @Test(arguments: AlarmSound.allCases)
+    func anEditKeepsTheRemindersAlarmSound(sound: AlarmSound) async throws {
+        let model = try await launchedModel()
+        var reminder = bins
+        reminder.alarmSound = sound
+        model.add(reminder)
+
+        let edit = try editForm(of: reminder.id, on: model)
+        edit.title = "Take the recycling out"
+        #expect(edit.save(to: model))
+
+        let saved = try #require(model.engine.reminders.only)
+        #expect(saved.title == "Take the recycling out")
+        #expect(saved.alarmSound == sound)
+    }
+
     /// Spec story 25: Escalating hides the Every row but keeps its wait, so Consistent finds it
     /// again, and a reminder saved Escalating carries no wait.
     @Test func escalatingKeepsTheWaitForConsistentAndSavesWithoutIt() async throws {

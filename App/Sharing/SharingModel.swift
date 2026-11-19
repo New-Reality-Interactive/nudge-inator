@@ -713,7 +713,6 @@ extension SharingModel: SharingAdapterEvents {
         if let held {
             copy = held
         } else {
-            // Default until the Default Alarm Sound setting exists (spec #129, ticket 5), which then goes here.
             copy = sent.copy(through: connectionID, deliveryMode: connection.mine.deliveryMode, alarmSound: .default)
             try receivedReminders.keep(copy)
         }
@@ -732,12 +731,18 @@ extension SharingModel: SharingAdapterEvents {
     /// won't keep the note logs and carries on: the copy has changed, and the revision offered again
     /// would be ignored as not newer.
     private func applyRevision(_ sent: SentReminder, to held: Reminder, through connection: SharingConnection, in receivedReminders: any ReceivedReminders) throws {
-        // Only the sender's content is read from it, so its sound is moot.
-        let senders = sent.copy(through: connection.id, deliveryMode: connection.mine.deliveryMode, alarmSound: .default)
-        let revised = Reminder(
-            id: held.id, title: senders.title, notes: senders.notes, dueTime: senders.dueTime, repeatRule: senders.repeatRule,
-            strength: senders.strength, pace: senders.pace, breakThroughFocus: senders.breakThroughFocus, origin: senders.origin
-        )
+        // The held copy with the sender's content laid over it, so what is the recipient's own (their
+        // tags and alarm sound) stays theirs.
+        let senders = sent.copy(through: connection.id, deliveryMode: connection.mine.deliveryMode, alarmSound: held.alarmSound)
+        var revised = held
+        revised.title = senders.title
+        revised.notes = senders.notes
+        revised.dueTime = senders.dueTime
+        revised.repeatRule = senders.repeatRule
+        revised.strength = senders.strength
+        revised.pace = senders.pace
+        revised.breakThroughFocus = senders.breakThroughFocus
+        revised.origin = senders.origin
         let changes = try receivedReminders.applySendersRevision(revised)
         guard !changes.isEmpty else { return }
         do {

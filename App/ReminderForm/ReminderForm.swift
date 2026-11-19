@@ -617,7 +617,9 @@ final class ReminderForm: Identifiable {
             repeatRule: repeatRule,
             strength: strength,
             pace: pace,
-            breakThroughFocus: breakThroughFocus
+            breakThroughFocus: breakThroughFocus,
+            // The form doesn't show the sound, so an Edit keeps the one the reminder has.
+            alarmSound: original?.alarmSound ?? .default
         )
     }
 
