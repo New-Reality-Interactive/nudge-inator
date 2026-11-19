@@ -65,6 +65,7 @@ struct ModelSeedTarget: SeedTarget {
     func setting(_ setting: SeedSetting) -> String {
         switch setting {
         case .defaultPace: SeedSettingText.text(of: model.defaultPace)
+        case .defaultAlarmSound: SeedSettingText.text(of: model.defaultAlarmSound)
         case .remindersSort: SeedSettingText.text(of: model.remindersSort)
         }
     }
@@ -73,6 +74,8 @@ struct ModelSeedTarget: SeedTarget {
         switch setting {
         case .defaultPace:
             if let pace = SeedSettingText.defaultPace(from: value) { model.defaultPace = pace }
+        case .defaultAlarmSound:
+            if let sound = SeedSettingText.defaultAlarmSound(from: value) { model.defaultAlarmSound = sound }
         case .remindersSort:
             if let sort = SeedSettingText.remindersSort(from: value) { model.remindersSort = sort }
         }
@@ -80,7 +83,8 @@ struct ModelSeedTarget: SeedTarget {
 }
 
 /// How a setting's value is written in a set and in the record: `created.ascending` for the sort,
-/// `consistent.600` for the Default Pace (choice, then the Consistent wait in seconds).
+/// `consistent.600` for the Default Pace (choice, then the Consistent wait in seconds), and the
+/// sound's ID for the Default Alarm Sound.
 enum SeedSettingText {
     static func text(of sort: RemindersSort) -> String {
         "\(sort.field.rawValue).\(sort.order.rawValue)"
@@ -107,6 +111,15 @@ enum SeedSettingText {
               Pace.consistentWaits.contains(wait)
         else { return nil }
         return DefaultPace(choice: choice, consistentWait: wait)
+    }
+
+    static func text(of sound: AlarmSound) -> String {
+        sound.id
+    }
+
+    /// Only an ID this build knows: unlike the store, a set naming no sound changes nothing.
+    static func defaultAlarmSound(from text: String) -> AlarmSound? {
+        AlarmSound.allCases.first { $0.id == text }
     }
 }
 

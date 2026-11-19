@@ -4,9 +4,10 @@ import NudgeEngine
 
 /// A setting a set can change, by the name the record keeps it under. Its value is text the app
 /// reads and writes (`created.ascending` for the Reminders tab's sort, `consistent.600` for the
-/// Default Pace); the seed only keeps and restores it.
+/// Default Pace, a sound's ID such as `chime` for the Default Alarm Sound); the seed only keeps and restores it.
 public enum SeedSetting: String, Sendable {
     case defaultPace
+    case defaultAlarmSound
     case remindersSort
 }
 
@@ -103,6 +104,6 @@ public struct SeedSet: Sendable {
 
 extension SeedSet {
     /// Every set a launch can name.
-    public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .deliveredNudges, .keptOrder, .received, .fromOthers, .rowSwipes, .urgencyCards]
+    public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .deliveredNudges, .keptOrder, .received, .fromOthers, .rowSwipes, .urgencyCards, .alarmSound]
 }
 #endif
