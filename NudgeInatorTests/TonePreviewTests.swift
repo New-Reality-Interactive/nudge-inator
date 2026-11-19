@@ -33,6 +33,23 @@ struct TonePreviewTests {
         #expect(player.calls == [.stop, .play("chime.caf"), .stop, .play("siren.caf")])
     }
 
+    @Test func choosingTheTonePlayingStopsIt() {
+        let preview = TonePreview(player: player)
+        preview.play(.beacon)
+        preview.play(.beacon)
+
+        #expect(player.calls == [.stop, .play("beacon.caf"), .stop])
+    }
+
+    @Test func choosingTheToneAgainOnceItHasEndedPlaysItAgain() {
+        let preview = TonePreview(player: player)
+        preview.play(.rise)
+        player.finish()
+        preview.play(.rise)
+
+        #expect(player.calls == [.stop, .play("rise.caf"), .stop, .play("rise.caf")])
+    }
+
     @Test func leavingThePageStopsThePreview() {
         let preview = TonePreview(player: player)
         preview.play(.bell)
@@ -51,12 +68,20 @@ final class FakeTonePlayer: TonePlaying {
     }
 
     private(set) var calls: [Call] = []
+    private(set) var isPlaying = false
 
     func play(_ file: URL) {
         calls.append(.play(file.lastPathComponent))
+        isPlaying = true
     }
 
     func stop() {
         calls.append(.stop)
+        isPlaying = false
+    }
+
+    /// The tone played to its end, as a real file does after 25 seconds.
+    func finish() {
+        isPlaying = false
     }
 }

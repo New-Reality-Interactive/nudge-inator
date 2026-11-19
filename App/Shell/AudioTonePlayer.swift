@@ -6,6 +6,8 @@ import AVFoundation
 final class AudioTonePlayer: NSObject, TonePlaying, AVAudioPlayerDelegate {
     private var player: AVAudioPlayer?
 
+    var isPlaying: Bool { player?.isPlaying ?? false }
+
     func play(_ file: URL) {
         stop()
         let session = AVAudioSession.sharedInstance()
