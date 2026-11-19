@@ -31,6 +31,9 @@ struct AlarmSoundPicker: View {
             } footer: {
                 VStack(alignment: .leading, spacing: Design.Spacing.s2) {
                     Self.footer
+                    // The picker's own line, not under the form's Sound row (#229's mockup).
+                    Text("Choosing a sound plays it. Default Alarm is iOS's own sound, which apps can't play, so you'll hear it when an alarm rings.",
+                         comment: "Under the alarm sound list, after the line on when it plays. Default Alarm is the first sound in the list, iOS's own alarm sound.")
                     if let extraFooter { extraFooter }
                 }
             }
