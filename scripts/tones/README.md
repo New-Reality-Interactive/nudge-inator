@@ -12,7 +12,8 @@ python3 scripts/tones/generate-tones.py
 ```
 
 This needs only Python 3 and rewrites `App/Resources/Tones/<name>.caf`. Nothing in it is random, so
-running it again produces the same files. Each file is about 25 seconds of mono 16-bit linear PCM at
+running it again on the same Mac and Python produces the same files (the sine maths comes from the
+system's math library, so another platform may differ in the last bit). Each file is about 25 seconds of mono 16-bit linear PCM at
 22.05 kHz; keep a tone under 30 seconds, because Apple's notification sound documentation says a
 longer file falls back to the default sound.
 

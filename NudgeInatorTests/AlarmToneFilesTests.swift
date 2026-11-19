@@ -7,15 +7,16 @@ import Testing
 /// The six alarm tones the app ships (#225) are in the built app under the names the alarm adapter
 /// and the preview pass. The test bundle is hosted in the app, so `Bundle.main` is the app's bundle.
 struct AlarmToneFilesTests {
-    static let tones: [AlarmSound] = [.chime, .bell, .pulse, .beacon, .rise, .siren]
+    /// Each tone and its file name, written out: renaming a tone's saved ID must fail here.
+    static let tones: [(sound: AlarmSound, file: String)] = [
+        (.chime, "chime.caf"), (.bell, "bell.caf"), (.pulse, "pulse.caf"),
+        (.beacon, "beacon.caf"), (.rise, "rise.caf"), (.siren, "siren.caf"),
+    ]
 
-    @Test func eachToneIsAFileNamedAfterItsIDInTheAppBundle() throws {
-        for sound in Self.tones {
-            let name = try #require(sound.toneFileName)
-
-            #expect(name == "\(sound.id).caf")
-            #expect(Bundle.main.url(forResource: name, withExtension: nil) != nil, "\(name) is not in the app bundle")
-        }
+    @Test(arguments: tones)
+    func aToneIsAFileInTheAppBundleNamedAfterItsID(sound: AlarmSound, file: String) {
+        #expect(sound.toneFileName == file)
+        #expect(Bundle.main.url(forResource: file, withExtension: nil) != nil, "\(file) is not in the app bundle")
     }
 
     @Test func defaultHasNoFile() {
@@ -23,18 +24,18 @@ struct AlarmToneFilesTests {
     }
 
     @Test func everySoundButDefaultIsOneOfTheSixTones() {
-        #expect(AlarmSound.allCases.filter { $0.toneFileName != nil } == Self.tones)
+        #expect(AlarmSound.allCases.filter { $0.toneFileName != nil } == Self.tones.map(\.sound))
     }
 
-    /// Apple: a notification sound over 30 seconds falls back to the default sound.
-    @Test func eachToneIsAboutTwentyFiveSecondsAndUnderThirty() throws {
-        for sound in Self.tones {
-            let name = try #require(sound.toneFileName)
-            let url = try #require(Bundle.main.url(forResource: name, withExtension: nil))
-            let file = try AVAudioFile(forReading: url)
-            let seconds = Double(file.length) / file.processingFormat.sampleRate
+    /// Apple's notification sound docs: a file over 30 seconds falls back to the default sound. The
+    /// tones are made 25 seconds long, as 16-bit linear PCM, one of the formats those docs list.
+    @Test(arguments: tones)
+    func aToneIsTwentyFiveSecondsOfLinearPCM(sound: AlarmSound, file: String) throws {
+        let url = try #require(Bundle.main.url(forResource: file, withExtension: nil))
+        let audio = try AVAudioFile(forReading: url)
+        let seconds = Double(audio.length) / audio.fileFormat.sampleRate
 
-            #expect(seconds > 20 && seconds < 30, "\(sound.id) is \(seconds) seconds")
-        }
+        #expect(abs(seconds - 25) < 1, "\(file) is \(seconds) seconds")
+        #expect(audio.fileFormat.commonFormat == .pcmFormatInt16)
     }
 }
