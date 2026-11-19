@@ -31,7 +31,6 @@ struct AlarmSoundPicker: View {
             }
         }
         // VoiceOver names the list after its page (#223's review), as My Day names its groups.
-        // Kept unless the VoiceOver device check finds it adds a stop that repeats the title.
         .accessibilityElement(children: .contain)
         .accessibilityLabel(title)
         .centeredInReadableColumn()

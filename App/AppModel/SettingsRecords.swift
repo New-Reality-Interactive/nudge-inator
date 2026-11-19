@@ -5,10 +5,10 @@ import Foundation
 /// them as one and a new one is added here, not at every place a model is made. The onboarding and
 /// sharing records stay apart: Delete All Data doesn't clear them.
 struct SettingsRecords {
-    var defaultPace: DefaultPaceRecord
-    var defaultAlarmSound: DefaultAlarmSoundRecord
-    var remindersSort: RemindersSortRecord
-    var tagsSort: TagsSortRecord
+    let defaultPace: DefaultPaceRecord
+    let defaultAlarmSound: DefaultAlarmSoundRecord
+    let remindersSort: RemindersSortRecord
+    let tagsSort: TagsSortRecord
 
     /// Every record over `defaults`.
     init(defaults: UserDefaults) {
