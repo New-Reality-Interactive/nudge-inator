@@ -357,6 +357,34 @@ struct ReminderStoreTests {
         #expect(throws: error) { try store().load() }
     }
 
+    /// Every alarm sound a reminder can hold comes back after a relaunch (#226).
+    @Test(arguments: AlarmSound.allCases)
+    func aReminderKeepsItsAlarmSoundAfterARelaunch(sound: AlarmSound) throws {
+        let reminder = Reminder(title: "Wake up", dueTime: NewYork.local(2026, 10, 15, 7), strength: .relentless, alarmSound: sound)
+        try store().save(StoredData(reminders: [reminder], tags: [], histories: [:]))
+
+        #expect(try store().load().reminders.map(\.alarmSound) == [sound])
+    }
+
+    /// A reminder saved by a newer build can hold a sound this build doesn't know: it loads on
+    /// Default, never as an error, and the rest of it is as saved.
+    @Test func aSoundIDTheAppDoesntRecognizeReadsAsDefault() throws {
+        let reminder = Reminder(title: "Wake up", dueTime: NewYork.local(2026, 10, 15, 7), strength: .relentless, alarmSound: .siren)
+        try store().save(StoredData(reminders: [reminder], tags: [], histories: [:]))
+        let container = try ModelContainer(
+            for: ReminderRecord.self, ClosedOccurrenceRecord.self, PauseSpanRecord.self, ReplacedTitleRecord.self, TagRecord.self,
+            configurations: ReminderStore.configuration(for: .file(fileURL))
+        )
+        for record in try container.mainContext.fetch(FetchDescriptor<ReminderRecord>()) {
+            record.alarmSoundID = "foghorn"
+        }
+        try container.mainContext.save()
+
+        var expected = reminder
+        expected.alarmSound = .default
+        #expect(try store().load().reminders == [expected])
+    }
+
     /// A pace kind the store can't map back is an error, not a reminder that quietly nudges
     /// another way.
     @Test func aPaceKindTheStoreCantMapBackIsUnreadable() throws {

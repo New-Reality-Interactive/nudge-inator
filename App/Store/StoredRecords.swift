@@ -48,6 +48,10 @@ final class ReminderRecord: IdentifiedRecord {
     var receivedState: String?
     /// The sender's due time of a one-off accepted after it had come, `nil` for every other copy.
     var receivedOriginalDueTime: Date?
+    /// The reminder's alarm sound (schema version 4), as `AlarmSound`'s saved ID. Its default lets the
+    /// lightweight stage open a store saved before alarm sounds existed with every reminder on
+    /// Default. An ID this build doesn't know reads as Default.
+    var alarmSoundID: String = "default"
     /// Its history goes with it: Delete clears a reminder's whole history (ticket 12).
     @Relationship(deleteRule: .cascade, inverse: \ClosedOccurrenceRecord.reminder)
     var closedOccurrences: [ClosedOccurrenceRecord] = []

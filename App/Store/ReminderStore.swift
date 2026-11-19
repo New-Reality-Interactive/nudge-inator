@@ -68,7 +68,7 @@ struct ReminderStore {
         try backfillCreationDates(with: now)
     }
 
-    nonisolated private static let schema = Schema(versionedSchema: StoreSchemaV3.self)
+    nonisolated private static let schema = Schema(versionedSchema: StoreSchemaV4.self)
 
     /// Gives the reminders without a creation date one instant, so they sort by `position` and before
     /// every reminder made afterwards. The lightweight stage can only add the property with its
@@ -230,6 +230,7 @@ private extension ReminderRecord {
         breakThroughFocus = reminder.breakThroughFocus
         createdAt = reminder.createdAt
         setOrigin(reminder.origin)
+        alarmSoundID = reminder.alarmSound.id
     }
 
     /// Saves a received reminder's origin and clears every field for one of the person's own.
@@ -282,6 +283,7 @@ private extension ReminderRecord {
             strength: try Strength(storedValue: strength),
             pace: try Pace(storedKind: paceKind, wait: paceWait),
             breakThroughFocus: breakThroughFocus,
+            alarmSound: AlarmSound(id: alarmSoundID),
             createdAt: createdAt,
             origin: try origin()
         )
