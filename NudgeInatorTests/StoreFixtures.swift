@@ -1,10 +1,12 @@
 import Foundation
 import NudgeEngine
+import Testing
 @testable import NudgeInator
 
-/// The reminders, tags and history the per-version migration suites after 1.2.0 write into an
-/// older store and expect back (`Version2StoreMigrationTests`, `Version3StoreMigrationTests`). One
-/// copy, so a suite's tests read the same data; each suite adds what only its version holds.
+/// The reminders, tags and history the per-version migration suites write into an older store and
+/// expect back (`Version2StoreMigrationTests`, `Version3StoreMigrationTests`). One copy, so a
+/// suite's tests read the same data; each suite adds what only its version holds. They all have a
+/// creation date, which 1.2.0's store (`StoreMigrationTests`, with its own fixtures) never saved.
 struct StoreFixtures {
     let home = Tag(name: "home")
     let health = Tag(name: "health")
@@ -58,6 +60,15 @@ extension StoreFixtured {
     var bins: Reminder { fixtures.bins }
     var rent: Reminder { fixtures.rent }
     var pillsHistory: ReminderHistory { fixtures.pillsHistory }
+
+    /// The plan the engine makes from `reminders` on 2026-10-20, 8:00 in New York. Every notification
+    /// and alarm identifier comes from it, so an update that leaves it unchanged re-plans nothing.
+    func enginePlan(of reminders: [Reminder]) throws -> SchedulePlan {
+        let scheduler = FakeScheduler()
+        var engine = Engine(clock: FakeClock(now: NewYork.local(2026, 10, 20, 8)), scheduler: scheduler, timeZone: NewYork.timeZone)
+        engine.update(reminders: reminders)
+        return try #require(scheduler.lastPlan)
+    }
 
     /// The store as the first launch after the update opens it.
     func openAfterUpdate() throws -> ReminderStore {

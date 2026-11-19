@@ -53,17 +53,10 @@ struct Version2StoreMigrationTests: StoreFixtured {
     /// so none changes and nothing is re-planned.
     @Test func theEnginesPlanOverAVersion2StoresRemindersEqualsThePlanOverTheOnesWrittenIntoIt() throws {
         try Version2Store.write(to: fileURL, reminders: [pills, bins, rent], tags: [home, health], histories: [pills.id: pillsHistory])
-        func plan(of reminders: [Reminder]) throws -> SchedulePlan {
-            let scheduler = FakeScheduler()
-            var engine = Engine(clock: FakeClock(now: NewYork.local(2026, 10, 20, 8)), scheduler: scheduler, timeZone: NewYork.timeZone)
-            engine.update(reminders: reminders)
-            return try #require(scheduler.lastPlan)
-        }
-
         let loaded = try openAfterUpdate().load()
 
-        #expect(try plan(of: loaded.reminders) == plan(of: [pills, bins, rent]))
-        #expect(try !plan(of: loaded.reminders).items.isEmpty)
+        #expect(try enginePlan(of: loaded.reminders) == enginePlan(of: [pills, bins, rent]))
+        #expect(try !enginePlan(of: loaded.reminders).items.isEmpty)
     }
 
     @Test func aVersion1StoreStillOpensThroughBothStages() throws {

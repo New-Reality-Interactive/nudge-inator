@@ -1,7 +1,6 @@
 import Foundation
 import Testing
 import NudgeEngine
-import SwiftData
 @testable import NudgeInator
 
 /// 1.3.0 opens 1.2.0's store (schema version 1) under schema version 2, which adds the creation
