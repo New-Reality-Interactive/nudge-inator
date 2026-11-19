@@ -648,6 +648,7 @@ public struct Engine {
                 fireTime: fireTime,
                 urgency: urgency,
                 title: title(of: reminder, firingAt: fireTime),
+                alarmSound: reminder.alarmSound,
                 deliveryKind: delivery.kind,
                 isPastAlarmLimit: delivery.isPastAlarmLimit
             )

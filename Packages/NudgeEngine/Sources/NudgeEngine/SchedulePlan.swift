@@ -27,6 +27,10 @@ public struct SchedulePlan: Equatable, Sendable {
         public var urgency: Urgency
         public var title: String
 
+        /// What the nudge rings with if it is an alarm: its reminder's alarm sound. It has no effect
+        /// on whether the nudge is an alarm, and a notification ignores it.
+        public var alarmSound: AlarmSound
+
         /// How the nudge reaches the phone. Adapters act on this, not on the urgency.
         public var deliveryKind: DeliveryKind
 
@@ -49,6 +53,7 @@ public struct SchedulePlan: Equatable, Sendable {
             fireTime: Date,
             urgency: Urgency,
             title: String,
+            alarmSound: AlarmSound = .default,
             deliveryKind: DeliveryKind,
             isPastAlarmLimit: Bool = false,
             predictedBadgeCount: Int = 0
@@ -60,6 +65,7 @@ public struct SchedulePlan: Equatable, Sendable {
             self.fireTime = fireTime
             self.urgency = urgency
             self.title = title
+            self.alarmSound = alarmSound
             self.deliveryKind = deliveryKind
             self.isPastAlarmLimit = isPastAlarmLimit
             self.predictedBadgeCount = predictedBadgeCount
