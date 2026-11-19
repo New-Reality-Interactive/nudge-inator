@@ -2,9 +2,9 @@ import NudgeEngine
 import SwiftUI
 
 /// The New and Edit Reminder form, as the mockup's sheet: Title, Notes and Tags; Starts and
-/// Repeat; Strength; Pace; Break Through Focus and its Sound row (#230). While the reminder is Nudging the schedule fields
-/// are disabled, each with a `lock`, under a note that says why (ticket 13). Save goes through the
-/// app model; without one (previews) it is disabled.
+/// Repeat; Strength; Pace; Break Through Focus and its Sound row (#230). While the reminder is
+/// Nudging the schedule fields are disabled, each with a `lock`, under a note that says why
+/// (ticket 13). Save goes through the app model; without one (previews) it is disabled.
 struct ReminderFormSheet: View {
     @Bindable var form: ReminderForm
     @Environment(AppModel.self) private var model: AppModel?
@@ -40,7 +40,7 @@ struct ReminderFormSheet: View {
                 switch page {
                 case .tags: TagsPage(form: form)
                 case .sendTo: SendToPage(form: form, isInviting: $isInviting)
-                case .sound: AlarmSoundPicker(title: SoundRow.title, sound: $form.alarmSound)
+                case .sound: AlarmSoundPicker(title: Text(SoundRow.title), sound: $form.alarmSound)
                 }
             }
             .toolbar { toolbar }
@@ -531,14 +531,14 @@ private struct SoundRow: View {
     let sound: AlarmSound
 
     /// The row's title, and the picker page's.
-    static let title = Text("Sound", comment: "The reminder form's row that opens the alarm sound list, and that page's title. Beside the row, the sound chosen, such as \"Chime\".")
+    static let title = LocalizedStringResource("Sound", comment: "The reminder form's row that opens the alarm sound list, and that page's title. Beside the row, the sound chosen, such as \"Chime\".")
 
     var body: some View {
         NavigationLink(value: ReminderFormPage.sound) {
             LabeledContent {
                 Text(sound.title)
             } label: {
-                Self.title
+                Text(Self.title)
             }
         }
     }

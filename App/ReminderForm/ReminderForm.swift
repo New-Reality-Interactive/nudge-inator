@@ -564,7 +564,7 @@ final class ReminderForm: Identifiable {
             isSaved = true
             return true
         }
-        if isContentLocked { return saveOwnFields(of: original, to: model) }
+        if isContentLocked { return saveRecipientsFields(of: original, to: model) }
         if isSent { return saveSent(to: model) }
         // It may have started nudging since the form opened. Checked with the engine's own rule
         // before any typed tag is created, so a turned-down save leaves nothing behind.
@@ -604,7 +604,7 @@ final class ReminderForm: Identifiable {
     /// A received reminder's Save: the reminder as it is, with the chosen tags and alarm sound,
     /// the recipient's own (#230), so nothing the sender owns can change, even as the draft writes
     /// it (a title's spaces, say). `false` if the engine turned it down.
-    private func saveOwnFields(of original: Reminder, to model: AppModel) -> Bool {
+    private func saveRecipientsFields(of original: Reminder, to model: AppModel) -> Bool {
         var edited = model.engine.reminders.first { $0.id == original.id } ?? original
         edited.tagIDs = savedTagIDs(through: model)
         edited.alarmSound = alarmSound
