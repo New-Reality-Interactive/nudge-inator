@@ -811,10 +811,7 @@ struct AppModelTests {
 
     /// Writes a strength the store can't map back, as a bad schema change might.
     func damageStrength(inStoreAt url: URL) throws {
-        let container = try ModelContainer(
-            for: ReminderRecord.self, ClosedOccurrenceRecord.self, PauseSpanRecord.self, ReplacedTitleRecord.self, TagRecord.self,
-            configurations: ReminderStore.configuration(for: .file(url))
-        )
+        let container = try openStoredRecords(at: url)
         for record in try container.mainContext.fetch(FetchDescriptor<ReminderRecord>()) {
             record.strength = "very"
         }
