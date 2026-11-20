@@ -9,8 +9,7 @@ enum SettingsTutorial: CaseIterable, Identifiable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .howItNudges:
-            LocalizedStringResource("How It Nudges", comment: "Settings: row under Tutorials that opens the page explaining how each strength nudges, and what onboarding said.")
+        case .howItNudges: HowItNudgesTutorialPage.title
         case .howSharingWorks: SharingTutorialPage.title
         case .howAlarmSoundsWork: AlarmSoundsTutorialPage.title
         }

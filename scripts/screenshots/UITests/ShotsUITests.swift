@@ -1592,15 +1592,14 @@ final class ShotsUITests: XCTestCase {
         tapText("30 min", inSheet: true)
         back()
         shot("settings-default-pace-30-min")
-        // The page under each pace, as in the mockup (item 13): Consistent · 10 min, then Escalating.
-        // Four pages in portrait, many more at the largest text.
+        // The How It Nudges sheet at each pace (#470, the tutorial sheets mockup): Consistent · 10 min,
+        // then Escalating's strength pages.
         tapText("Default Pace")
         tapButton(containing: "Every, ", inSheet: true)
         tapText("10 min", inSheet: true)
         back()
         tapText("How It Nudges")
-        shot("settings-how-it-nudges", pages: 40, stopsAtEnd: true)
-        back()
+        tutorialShots("tutorial-how-it-nudges", pages: 4)
         tapText("Default Pace")
         // At accessibility sizes the pace is a menu rather than segments.
         let segment = app.buttons["Escalating"]
@@ -1611,7 +1610,27 @@ final class ShotsUITests: XCTestCase {
         tapText("Escalating", inSheet: true)
         back()
         tapText("How It Nudges")
-        shot("settings-how-it-nudges-escalating", pages: 40, stopsAtEnd: true)
+        tutorialShots("tutorial-how-it-nudges-escalating", pages: 4)
+    }
+
+    /// Saves each page of the open tutorial sheet as `<name>-p1` to `-p<pages>`, the first page in
+    /// one shot and the others in as many as their schedules need (as the mockup's shots are),
+    /// tapping Next between them, then closes it with the last page's Done.
+    private func tutorialShots(_ name: String, pages: Int) {
+        for page in 1...pages {
+            if page == 1 {
+                shot("\(name)-p1")
+            } else {
+                shot("\(name)-p\(page)", pages: 20, stopsAtEnd: true)
+            }
+            let button = app.buttons[page < pages ? "Next" : "Done"].firstMatch
+            guard button.waitForExistence(timeout: 2) else {
+                XCTFail("No \(page < pages ? "Next" : "Done") on page \(page):\n\(app.debugDescription)")
+                return
+            }
+            button.tap()
+            pause(0.8)
+        }
     }
 
     func testForm() {

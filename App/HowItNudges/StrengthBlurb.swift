@@ -17,17 +17,20 @@ struct StrengthBlurb: Equatable {
         firstAlarm = howItNudges.firstAlarm
     }
 
-    var text: Text {
+    var text: Text { Text(resource) }
+
+    /// Also the How It Nudges sheet's line under a strength's heading (#470).
+    var resource: LocalizedStringResource {
         switch firstAlarm {
         case 1?:
-            return Text("Every nudge rings as an alarm.",
-                        comment: "Under the reminder form's strength, when every nudge rings, as Relentless's do.")
+            LocalizedStringResource("Every nudge rings as an alarm.",
+                                    comment: "Under the reminder form's strength, and under a strength's heading in the How It Nudges tutorial, when every nudge rings, as Relentless's do.")
         case let firstAlarm?:
-            return Text("Rings as an alarm from nudge \(firstAlarm).",
-                        comment: "Under the reminder form's strength. The placeholder is the first nudge that rings as an alarm.")
+            LocalizedStringResource("Rings as an alarm from nudge \(firstAlarm).",
+                                    comment: "Under the reminder form's strength, and under a strength's heading in the How It Nudges tutorial. The placeholder is the first nudge that rings as an alarm.")
         case nil:
-            return Text("Never rings as an alarm.",
-                        comment: "Under the reminder form's strength, when none of its nudges rings.")
+            LocalizedStringResource("Never rings as an alarm.",
+                                    comment: "Under the reminder form's strength, and under a strength's heading in the How It Nudges tutorial, when none of its nudges rings.")
         }
     }
 }

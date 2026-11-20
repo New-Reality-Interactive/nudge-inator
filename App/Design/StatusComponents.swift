@@ -23,10 +23,17 @@ struct StrengthBadge: View {
 }
 
 /// The badge's bars, the mockup's `strengthBar`: rising bars, the ones above the strength
-/// outlined. They scale with the text.
-private struct StrengthBars: View {
+/// outlined. They scale with the text: 11 pt beside the badge's caption, and as tall as a pill's
+/// icon on a How It Nudges strength page, where they stand alone (#470's phone check, the mockup
+/// `2026-11-20-how-it-nudges-strength-pills`).
+struct StrengthBars: View {
     let strength: Strength
-    @ScaledMetric(relativeTo: .caption) private var height: CGFloat = 11
+    @ScaledMetric private var height: CGFloat
+
+    init(strength: Strength, height: CGFloat = 11, relativeTo textStyle: Font.TextStyle = .caption) {
+        self.strength = strength
+        _height = ScaledMetric(wrappedValue: height, relativeTo: textStyle)
+    }
 
     var body: some View {
         HStack(alignment: .bottom, spacing: height * 0.15) {

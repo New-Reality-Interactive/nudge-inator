@@ -560,7 +560,10 @@ The Reminders tab's tools, in its layout, so they're learned once.
 
 ### How It Nudges
 - **Token:** `how-it-nudges`. Inset grouped list, summary in the section footer, `{typography.footnote}`
-  rows. Each row leads with a small urgency dot, then urgency word, time range and Via label.
+  rows. Each row leads with a small urgency dot, then urgency word, time range and Via label. At the
+  accessibility sizes the urgency word and Via label stack under the times, left-aligned, so every
+  row's word starts at the same place (#470's phone check). On a How It Nudges tutorial page the
+  section has no header: the page's heading names the strength.
 
 ### Buttons
 - Every button is at least 44 pt tall.
@@ -671,15 +674,15 @@ sharing paused and offline banner.
   tutorial, in the order the features shipped: How It Nudges, How Sharing Works, then How Alarm Sounds
   Work (#467). Each row is a `{colors.tile-gray}` tile with its feature's symbol (`bell`, `person.2`,
   `speaker.wave.2`) and its title in the accent, which says it can be tapped, as Send a Test Nudge's
-  does. A row that opens a sheet has no chevron, since the HIG keeps the disclosure indicator for
-  drilling in (#423); every tutorial is a sheet like How Sharing Works once #470 turns How It Nudges
-  into one, which until then keeps its pushed page and chevron. Every tutorial sheet is the one
-  How Sharing Works uses (below), with its own pages. Only How Sharing Works opens by itself.
+  does. Every row opens a sheet, so none has a chevron, since the HIG keeps the disclosure indicator
+  for drilling in (#423, #470). Every tutorial sheet is the one How Sharing Works uses (below), with
+  its own pages. Only How Sharing Works opens by itself.
 - **How Sharing Works sheet** (mockup `2026-11-15-sharing-tutorial`, #423): four pages in an inset
   grouped list, inline title How Sharing Works. Each page has decorative pills (an SF Symbol and a
   word in `{colors.label}`, 8 pt apart, on `tertiary-system-fill`, `arrow.forward` between them in
-  `{colors.secondary-label}`; stacked with `arrow.down` where they don't fit on one line), hidden
-  from VoiceOver; a centered heading in `{typography.title2}` bold; then a lead in
+  `{colors.secondary-label}`; stacked with `arrow.down` where they don't fit on one line; each pill
+  keeps its words on one line, as wide as they need, and its text stops growing at xxxLarge, in every
+  tutorial (#470, mockup `2026-11-20-tutorial-pills-one-line`)), hidden from VoiceOver; a centered heading in `{typography.title2}` bold; then a lead in
   `{typography.body}` and rows with a `{colors.tile-blue}` tile, a title in `{typography.body}` and a
   line under it in `{typography.subhead}` `{colors.secondary-label}`, or, on Connect, three numbered
   steps in accent circles (Accent's one exception; capped at 44 pt, dividers from the circle's
@@ -691,12 +694,21 @@ sharing paused and offline banner.
   top left on every page. Back (`chevron.backward`) and Next (`chevron.forward`) share one capsule
   top right, Back dimmed on page 1; on the last page Next becomes the system's confirm checkmark,
   named Done, which closes the sheet. A page change speaks the new page's heading.
+- **How It Nudges sheet** (mockups `2026-11-20-tutorial-sheets` and
+  `2026-11-20-how-it-nudges-strength-pills`, #470): How Sharing Works' sheet with
+  four pages, inline title How It Nudges, opened only from its row. What to Expect (`bell` Nudge, an
+  arrow, `checkmark.circle.fill` Done) lists the welcome's four points as rows with their symbols,
+  and #459's line about the alarm sound as a second line under the alarms point; onboarding shows
+  the points without it. Gentle, Firm and Relentless each show a pill of the strength's bars alone,
+  as tall as the other pills' icons, as the picture (the heading names the strength); the strength's line the form shows under Strength in `{typography.body}`;
+  "At your Default Pace, <pace>, with Break Through Focus on." in `{typography.subhead}`
+  `{colors.secondary-label}`; then the How It Nudges section (How It Nudges, above) with no header. The pages are
+  built at the Default Pace as the sheet opens, so a changed pace shows the next time.
 - **How Alarm Sounds Work sheet** (mockups `2026-11-20-tutorial-sheets` and
   `2026-11-20-alarm-sounds-tutorial-leads`, #467): How Sharing Works' sheet with three pages, each a
   lead and rows, inline title How Alarm Sounds Work, opened only from its row: Pick Your Default
   Sound (a `speaker.wave.2` Default Alarm Sound pill, two rows), Change Your Reminders (`bell` Wake
-  Up, an arrow, `speaker.wave.2` Chime, each pill on one line and its text stopping at xxxLarge;
-  three rows and a footer) and When It Plays (an `alarm` Alarm pill alone, since a notification
+  Up, an arrow, `speaker.wave.2` Chime; three rows and a footer) and When It Plays (an `alarm` Alarm pill alone, since a notification
   never plays the sound; three rows). Its pills and the Use for All Reminders row reuse the screens'
   own strings, and its tests check that the sentences name Default Alarm Sound, Sound and the tones
   as the screens do.

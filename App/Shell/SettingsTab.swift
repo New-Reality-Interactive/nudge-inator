@@ -70,10 +70,9 @@ struct SettingsTab: View {
             }
             .sheet(item: $shownTutorial) { tutorial in
                 switch tutorial {
+                case .howItNudges: TutorialSheet(pages: howItNudgesPages)
                 case .howSharingWorks: TutorialSheet<SharingTutorialPage>()
                 case .howAlarmSoundsWork: TutorialSheet<AlarmSoundsTutorialPage>()
-                // Its row pushes a page instead, so it never opens a sheet.
-                case .howItNudges: EmptyView()
                 }
             }
             .navigationTitle(Text(AppTab.settings.title))
@@ -293,32 +292,28 @@ struct SettingsTab: View {
     }
 
     /// One row per feature's tutorial, in the order the features shipped (#466). Every row is in the
-    /// accent color, which says it can be tapped; a row that pushes a page also ends in the list's
-    /// chevron, and a sheet's has none.
+    /// accent color, which says it can be tapped, and opens a sheet, so none has a chevron (#470).
+    /// How Sharing Works also opens by itself the first time Sharing is turned on
+    /// (`sharingTutorialFirstTime`); the others never do.
     private var tutorialsSection: some View {
         Section {
             ForEach(SettingsTutorial.allCases, id: \.self) { tutorial in
-                let row = SettingsRow(tile: .tileGray, symbol: tutorial.symbol, title: Text(tutorial.title), titleColor: .accentColor)
-                switch tutorial {
-                case .howItNudges:
-                    NavigationLink {
-                        HowItNudgesPage(previewPermissions: previewPermissions, previewDefaultPace: defaultPace.wrappedValue)
-                    } label: {
-                        row
-                    }
-                case .howSharingWorks, .howAlarmSoundsWork:
-                    // A sheet. How Sharing Works also opens by itself the first time Sharing is
-                    // turned on (`sharingTutorialFirstTime`); How Alarm Sounds Work never does.
-                    Button {
-                        shownTutorial = tutorial
-                    } label: {
-                        row
-                    }
+                Button {
+                    shownTutorial = tutorial
+                } label: {
+                    SettingsRow(tile: .tileGray, symbol: tutorial.symbol, title: Text(tutorial.title), titleColor: .accentColor)
                 }
             }
         } header: {
             Text("Tutorials", comment: "Settings: header of the section with a row for each feature's tutorial, such as How It Nudges and How Sharing Works.")
         }
+    }
+
+    /// How It Nudges' pages at the Default Pace as the sheet opens; previews, with no model, use
+    /// theirs.
+    private var howItNudgesPages: [HowItNudgesTutorialPage] {
+        if let model { return HowItNudgesTutorialPage.pages(model: model) }
+        return HowItNudgesTutorialPage.pages(pace: defaultPace.wrappedValue.pace, engine: .unscheduled(permissions: previewPermissions))
     }
 
     private var dataSection: some View {
