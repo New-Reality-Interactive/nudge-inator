@@ -16,7 +16,7 @@ struct WelcomeFeatureTests {
         #expect(feature.note(on: .onboarding) == nil)
     }
 
-    @Test(arguments: [WelcomeFeature.nudgesUntilDone, .chooseWhatBreaksThrough, .staysOnYourIPhone])
+    @Test(arguments: WelcomeFeature.allCases.filter { $0 != .ringsAsAlarms })
     func theOtherPointsAddNothingOnHowItNudges(feature: WelcomeFeature) {
         #expect(feature.note(on: .howItNudges) == nil)
     }

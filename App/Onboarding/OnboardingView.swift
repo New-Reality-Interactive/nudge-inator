@@ -19,7 +19,7 @@ struct OnboardingView: View {
                     .frame(maxWidth: .infinity)
                     .accessibilityAddTraits(.isHeader)
                 switch step {
-                case .welcome: WelcomeFeatures()
+                case .welcome: WelcomeFeatures(place: .onboarding)
                 case .alarmsOnly: WelcomeFeature.ringsAsAlarms.view(on: .onboarding)
                 }
                 Button(action: continueToPrompts) {
@@ -53,7 +53,7 @@ struct OnboardingView: View {
 /// The welcome's four points, also at the top of Settings' How It Nudges, so they can be found
 /// again (HIG, Onboarding).
 struct WelcomeFeatures: View {
-    var place: WelcomeFeature.Place = .onboarding
+    let place: WelcomeFeature.Place
 
     var body: some View {
         VStack(alignment: .leading, spacing: Design.Spacing.s5) {
@@ -75,7 +75,6 @@ enum WelcomeFeature: CaseIterable {
         case howItNudges
     }
 
-    /// A line under the point's text, on How It Nudges only.
     func note(on place: Place) -> LocalizedStringResource? {
         switch (self, place) {
         case (.ringsAsAlarms, .howItNudges):
@@ -95,14 +94,12 @@ enum WelcomeFeature: CaseIterable {
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                 title.font(.headline)
-                text
-                    .font(.subheadline)
-                    .foregroundStyle(Color(uiColor: .secondaryLabel))
-                if let note = note(on: place) {
-                    Text(note)
-                        .font(.subheadline)
-                        .foregroundStyle(Color(uiColor: .secondaryLabel))
+                Group {
+                    text
+                    if let note = note(on: place) { Text(note) }
                 }
+                .font(.subheadline)
+                .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
             .fixedSize(horizontal: false, vertical: true)
         }
