@@ -17,7 +17,7 @@ struct HowItNudgesPage: View {
         let content = pageContent
         List {
             Section {
-                WelcomeFeatures()
+                WelcomeFeatures(place: .howItNudges)
                     .padding(.vertical, Design.Spacing.s2)
             } footer: {
                 Text(content.intro)

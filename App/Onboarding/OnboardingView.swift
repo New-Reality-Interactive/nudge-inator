@@ -20,7 +20,7 @@ struct OnboardingView: View {
                     .accessibilityAddTraits(.isHeader)
                 switch step {
                 case .welcome: WelcomeFeatures()
-                case .alarmsOnly: WelcomeFeature.ringsAsAlarms.view
+                case .alarmsOnly: WelcomeFeature.ringsAsAlarms.view(on: .onboarding)
                 }
                 Button(action: continueToPrompts) {
                     Text("Continue", comment: "Onboarding: the only button, which goes on to the system's permission prompts.")
@@ -53,9 +53,11 @@ struct OnboardingView: View {
 /// The welcome's four points, also at the top of Settings' How It Nudges, so they can be found
 /// again (HIG, Onboarding).
 struct WelcomeFeatures: View {
+    var place: WelcomeFeature.Place = .onboarding
+
     var body: some View {
         VStack(alignment: .leading, spacing: Design.Spacing.s5) {
-            ForEach(WelcomeFeature.allCases, id: \.self) { $0.view }
+            ForEach(WelcomeFeature.allCases, id: \.self) { $0.view(on: place) }
         }
     }
 }
@@ -66,7 +68,24 @@ enum WelcomeFeature: CaseIterable {
     case chooseWhatBreaksThrough
     case staysOnYourIPhone
 
-    var view: some View {
+    /// Where the points show. How It Nudges is where a person who updated learns what changed,
+    /// since the app has no What's New screen, so only it adds a note to a point (#459).
+    enum Place {
+        case onboarding
+        case howItNudges
+    }
+
+    /// A line under the point's text, on How It Nudges only.
+    func note(on place: Place) -> LocalizedStringResource? {
+        switch (self, place) {
+        case (.ringsAsAlarms, .howItNudges):
+            LocalizedStringResource("Choose the sound alarms ring with in Settings, under Default Alarm Sound, and for each reminder, under Sound on its form.", comment: "How It Nudges only, not onboarding: under the point \"Urgent nudges ring as alarms\". Default Alarm Sound is the Settings row, and Sound is the reminder form's row.")
+        default:
+            nil
+        }
+    }
+
+    func view(on place: Place) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: Design.Spacing.s4) {
             Image(systemName: systemImage)
                 .font(.title2)
@@ -79,6 +98,11 @@ enum WelcomeFeature: CaseIterable {
                 text
                     .font(.subheadline)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
+                if let note = note(on: place) {
+                    Text(note)
+                        .font(.subheadline)
+                        .foregroundStyle(Color(uiColor: .secondaryLabel))
+                }
             }
             .fixedSize(horizontal: false, vertical: true)
         }
