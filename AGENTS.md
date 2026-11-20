@@ -10,6 +10,10 @@ Issues and specs are GitHub issues: one milestone per feature, a `spec` issue wi
 
 Versions, backwards compatibility, migrations and the release steps: `docs/agents/release.md`. A change that can't stay backwards compatible, or a proposed version that doesn't fit its change: tell the developer before any work begins.
 
+### Free and Pro
+
+One app with a free tier and a one-time Pro unlock; what is Pro, what stays free, and the question every new milestone asks ("Pro or free?"): `docs/agents/monetization.md`.
+
 ### Triage labels
 
 Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
