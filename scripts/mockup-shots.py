@@ -184,6 +184,9 @@ SCREENS = {
   "settings-use-for-all-confirm": ("document.getElementById('c-dt-confirm').click()", 1),
   "settings-use-for-all-confirm-one": ("document.getElementById('c-dt-one').click()", 1),
   "settings-use-for-all-done": ("document.getElementById('c-dt-same').click()", 2),
+  # Tutorials (#465). Only a mockup with it draws these; settings shows the section too.
+  "settings-tutorials": ("setTimeout(()=>document.getElementById('c-tt-section').click(),200)", 1),
+  "settings-how-alarm-sounds-work": ("document.getElementById('c-tt-sound').click()", 3),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}
