@@ -130,7 +130,7 @@ private struct PageView<Page: TutorialPage>: View {
             }
         // The section reminder details and the form draw, headed by the page's heading alone.
         case .schedule(_, _, let howItNudges):
-            HowItNudgesSection(howItNudges: howItNudges) { EmptyView() }
+            HowItNudgesSection(headerless: howItNudges)
         }
     }
 }

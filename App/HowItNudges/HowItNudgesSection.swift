@@ -7,16 +7,35 @@ import SwiftUI
 struct HowItNudgesSection<Header: View>: View {
     let howItNudges: HowItNudges
     @ViewBuilder var header: Header
+    /// False on a How It Nudges tutorial page, whose heading names the strength: a section with an
+    /// empty header still keeps the header's room above it (#470's phone check).
+    var hasHeader = true
 
     var body: some View {
-        Section {
-            ForEach(howItNudges.rows, id: \.nudges) { HowItNudgesRowView(row: $0) }
-        } header: {
-            header
-        } footer: {
-            VStack(alignment: .leading, spacing: Design.Spacing.s2) {
-                ForEach(HowItNudgesSentence.summary(of: howItNudges), id: \.self) { $0.text }
+        if hasHeader {
+            Section {
+                rows
+            } header: {
+                header
+            } footer: {
+                summary
             }
+        } else {
+            Section {
+                rows
+            } footer: {
+                summary
+            }
+        }
+    }
+
+    private var rows: some View {
+        ForEach(howItNudges.rows, id: \.nudges) { HowItNudgesRowView(row: $0) }
+    }
+
+    private var summary: some View {
+        VStack(alignment: .leading, spacing: Design.Spacing.s2) {
+            ForEach(HowItNudgesSentence.summary(of: howItNudges), id: \.self) { $0.text }
         }
     }
 }
@@ -29,10 +48,27 @@ extension HowItNudgesSection where Header == Text {
     }
 }
 
+extension HowItNudgesSection where Header == EmptyView {
+    /// With no header, as on a How It Nudges tutorial page (#470).
+    init(headerless howItNudges: HowItNudges) {
+        self.howItNudges = howItNudges
+        header = EmptyView()
+        hasHeader = false
+    }
+}
+
 /// One row: "Nudges 4–20 at +52 min, 30 sec / every 5 min", and "Urgent" over the Via label. At
 /// accessibility sizes the urgency and Via label go under the times. One VoiceOver element.
 private struct HowItNudgesRowView: View {
     let row: HowItNudges.Row
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    /// Right-aligned beside the times; left-aligned under them, where `SizeAdaptiveStack` stacks at
+    /// accessibility sizes, so every row's urgency word starts at the same place (#470's phone check).
+    private var labelAlignment: HorizontalAlignment {
+        dynamicTypeSize.isAccessibilitySize ? .leading : .trailing
+    }
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: Design.Spacing.s3) {
@@ -47,7 +83,7 @@ private struct HowItNudgesRowView: View {
                         .foregroundStyle(Color(uiColor: .secondaryLabel))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                VStack(alignment: .trailing, spacing: Design.Spacing.s1) {
+                VStack(alignment: labelAlignment, spacing: Design.Spacing.s1) {
                     Text(verbatim: row.urgency.name)
                         .fontWeight(.semibold)
                         .foregroundStyle(row.urgency.color)
