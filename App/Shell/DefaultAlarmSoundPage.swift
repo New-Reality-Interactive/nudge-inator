@@ -14,10 +14,10 @@ struct DefaultAlarmSoundPage: View {
     @State private var isConfirmingUseForAll = false
 
     /// The Settings row's title, and this page's; How Alarm Sounds Work names it too.
-    static let title = LocalizedStringResource("Default Alarm Sound", comment: "Settings: the row that opens the alarm sound list for every new reminder, and that page's title. Beside the row, the sound chosen, such as \"Chime\".")
+    nonisolated static let title = LocalizedStringResource("Default Alarm Sound", comment: "Settings: the row that opens the alarm sound list for every new reminder, and that page's title. Beside the row, the sound chosen, such as \"Chime\".")
 
     /// The row's title, and its confirmation's button; How Alarm Sounds Work names it too.
-    static let useForAllTitle = LocalizedStringResource("Use for All Reminders", comment: "Default Alarm Sound page: the row that gives every reminder the sound chosen above, and the button in the question that asks before it does.")
+    nonisolated static let useForAllTitle = LocalizedStringResource("Use for All Reminders", comment: "Default Alarm Sound page: the row that gives every reminder the sound chosen above, and the button in the question that asks before it does.")
 
     var body: some View {
         AlarmSoundPicker(

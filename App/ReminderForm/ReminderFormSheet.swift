@@ -532,7 +532,7 @@ struct SoundRow: View {
     let sound: AlarmSound
 
     /// The row's title, and the picker page's.
-    static let title = LocalizedStringResource("Sound", comment: "The reminder form's row that opens the alarm sound list, and that page's title. Beside the row, the sound chosen, such as \"Chime\".")
+    nonisolated static let title = LocalizedStringResource("Sound", comment: "The reminder form's row that opens the alarm sound list, and that page's title. Beside the row, the sound chosen, such as \"Chime\".")
 
     var body: some View {
         NavigationLink(value: ReminderFormPage.sound) {
