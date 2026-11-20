@@ -1710,10 +1710,10 @@
       "comment" : "Under Break Through Focus when it's on and the strength is Gentle."
     },
     "How It Nudges" : {
-      "comment" : "Section header on reminder details and the reminder form: the nudges a reminder sends, when, and how they arrive.\nSettings: row that opens the page explaining how each strength nudges, and what onboarding said.\nTitle of the page in Settings that explains how each strength nudges."
+      "comment" : "Section header on reminder details and the reminder form: the nudges a reminder sends, when, and how they arrive.\nSettings: row under Tutorials that opens the page explaining how each strength nudges, and what onboarding said.\nTitle of the page in Settings that explains how each strength nudges."
     },
     "How Sharing Works" : {
-      "comment" : "How Sharing Works: the sheet's title, and the Settings row under Sharing that opens it."
+      "comment" : "How Sharing Works: the sheet's title, and the Settings row under Tutorials that opens it."
     },
     "I'd like us to send each other reminders in Nudge-inator. Open this on your iPhone to connect: %@" : {
       "comment" : "Invite message and email: the body. The argument is the invite's link."
@@ -2109,7 +2109,7 @@
       "comment" : "Invite: the title of the share the invite carries, which the invitation shows."
     },
     "Nudges" : {
-      "comment" : "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace, Default Alarm Sound and How It Nudges."
+      "comment" : "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and Default Alarm Sound."
     },
     "Nudges 1–%lld are notifications. Nudges %lld–%lld ring as alarms." : {
       "comment" : "How It Nudges footer. 1: the last nudge that is a notification. 2: the first nudge that rings as an alarm. 3: the last nudge.",
@@ -2847,6 +2847,9 @@
     },
     "Turn on sharing to connect with %@?" : {
       "comment" : "Opening an invite while Sharing is off: title of the question. The argument is the name of the person who sent the invite, such as \"Alex Morgan\"."
+    },
+    "Tutorials" : {
+      "comment" : "Settings: header of the section with a row for each feature's tutorial, such as How It Nudges and How Sharing Works."
     },
     "Unknown" : {
       "comment" : "About page: shown for the version or build number when the app can't read it."

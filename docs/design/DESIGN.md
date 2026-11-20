@@ -250,7 +250,7 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
   the icon. My Day's chosen-tag tokens and each button's VoiceOver label carry the count there.
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
   actions are `{colors.tile-green}` (Done), `{colors.tile-red}` (Delete) and `{colors.tile-blue}` (Edit). Settings rows: red (Notifications, Badges, Delete All Data), orange
-  (Alarms), gray (About, Open iOS Settings, Default Pace, Default Alarm Sound, How It Nudges, How Sharing Works, and About's Privacy Policy
+  (Alarms), gray (About, Open iOS Settings, Default Pace, Default Alarm Sound, the Tutorials rows, and About's Privacy Policy
   and Support), blue (Send a Test Nudge, Sharing). Tiles are icons for rows, not
   statuses, so "one color, one meaning" does not apply to them.
 
@@ -665,10 +665,15 @@ sharing paused and offline banner.
   "Connect with people through iCloud to send each other reminders." The Connections row shows only
   while the switch is on (#387). Below it, also only while the switch is on, the Share Activity row
   is a `{colors.tile-gray}` tile with `list.bullet.rectangle` and a chevron, with no status (#397).
-  Last in the section, with Sharing on or off (under Share Activity while on, under the switch while
-  off), How Sharing Works is a `{colors.tile-gray}` tile with `info.circle` and its title in the
-  accent, with no chevron, as Send a Test Nudge: it opens the How Sharing Works sheet, not a page, and
-  the HIG keeps the disclosure indicator for drilling in (#423).
+  How Sharing Works is no longer in this section: it's under Tutorials (#466).
+- **Tutorials section** (mockups `2026-11-20-tutorials` and `2026-11-20-tutorial-sheets`, #466):
+  Settings' last section above Your Data, headed Tutorials, with no footer. One row per feature's
+  tutorial, in the order the features shipped: How It Nudges, How Sharing Works, then How Alarm Sounds
+  Work (#467). Each row is a `{colors.tile-gray}` tile with its feature's symbol (`bell`, `person.2`,
+  `speaker.wave.2`) and its title in the accent, which says it can be tapped, as Send a Test Nudge's
+  does. A row that opens a sheet has no chevron, since the HIG keeps the disclosure indicator for
+  drilling in (#423); every tutorial is a sheet like How Sharing Works once #470 turns How It Nudges
+  into one, which until then keeps its pushed page and chevron.
 - **How Sharing Works sheet** (mockup `2026-11-15-sharing-tutorial`, #423): four pages in an inset
   grouped list, inline title How Sharing Works. Each page has decorative pills (an SF Symbol and a
   word in `{colors.label}`, 8 pt apart, on `tertiary-system-fill`, `arrow.forward` between them in
