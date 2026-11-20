@@ -58,7 +58,7 @@ struct InvitePage: View {
                     VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                         Text("Didn't open for them?", comment: "An invited person's page: heading of the help for an invite that went to the wrong Apple Account.")
                             .font(.body.weight(.semibold))
-                        Text("An invite opens only for the Apple Account it was sent to. Check the email address or phone number of their Apple Account, then invite them again.", comment: "An invited person's page: the help under \"Didn't open for them?\".")
+                        Text("An invite opens only for the Apple Account it was sent to, and only in the latest Nudge-inator. If it doesn't open, check the email address or phone number of their Apple Account, and ask them to update Nudge-inator, then invite them again.", comment: "An invited person's page: the help under \"Didn't open for them?\".")
                             .font(.subheadline)
                             .foregroundStyle(Color(uiColor: .secondaryLabel))
                     }

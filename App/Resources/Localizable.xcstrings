@@ -962,10 +962,10 @@
     "Already Invited" : {
       "comment" : "Invite: title of the question shown when the person invited has an invite waiting."
     },
-    "An invite opens only for the Apple Account it was sent to." : {
+    "An invite opens only for the Apple Account it was sent to, and you both need the latest Nudge-inator." : {
       "comment" : "How Sharing Works, Connect: the note under the steps."
     },
-    "An invite opens only for the Apple Account it was sent to. Check the email address or phone number of their Apple Account, then invite them again." : {
+    "An invite opens only for the Apple Account it was sent to, and only in the latest Nudge-inator. If it doesn't open, check the email address or phone number of their Apple Account, and ask them to update Nudge-inator, then invite them again." : {
       "comment" : "An invited person's page: the help under \"Didn't open for them?\"."
     },
     "Any Tag" : {

@@ -65,7 +65,7 @@ enum SharingTutorialPage: TutorialPage, CaseIterable {
                      text: LocalizedStringResource("Through Messages, Mail or Copy Link. Nothing is sent until you tap Send.", comment: "How Sharing Works, Connect: under \"Send the Invite\". Messages, Mail and Copy Link are the ways the invite can be sent.")),
                 TutorialStep(title: LocalizedStringResource("They Accept", comment: "How Sharing Works, Connect: the third numbered step."),
                      text: LocalizedStringResource("They open the invite on their iPhone, and you're both connected.", comment: "How Sharing Works, Connect: under \"They Accept\".")),
-            ], footnote: LocalizedStringResource("An invite opens only for the Apple Account it was sent to.", comment: "How Sharing Works, Connect: the note under the steps."))
+            ], footnote: LocalizedStringResource("An invite opens only for the Apple Account it was sent to, and you both need the latest Nudge-inator.", comment: "How Sharing Works, Connect: the note under the steps."))
         case .sendAReminder:
             .points(lead: LocalizedStringResource("Pick Send To when you make a reminder, and choose who gets it. It nudges them at the strength you chose.", comment: "How Sharing Works, Send a Reminder: the line under the heading. Send To is the reminder form's row."), [
                 TutorialPoint(symbol: "paperplane",

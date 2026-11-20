@@ -130,3 +130,14 @@ Every step names the exact control to tap and what the developer should see when
 If a run doesn't do what you said it would, stop and explain before running anything else. Once the last check is done, list every check and its result, so the person can see none is left.
 
 A check that runs the app's model sets the Icon badge from its own store, and the badge can't be read back to restore it. If the app was installed before the run, have the person open it once at the end: App opened sets their own count again.
+
+## Findings: an invite opened on an older version (#444, 2026-11-18)
+
+Checked with the iPhone on TestFlight 1.4.0 (1), iOS 27.x, as sender, and the iPad (10th generation, iPadOS 27.2.1) on TestFlight 1.3.0 (1) with Automatic Updates off, signed in to the second Apple Account, as recipient. The invite went by email (Gmail on the iPhone, Mail on the iPad). The Messages channel was not run (the developer's call): the email result stands for the iCloud share link, and Messages' invite card (title, icon) is unchecked.
+
+- **Before tapping** (Mail on the iPad): a plain email, "Invitation to Nudge-inator", with the iCloud link. No title card or icon.
+- **After tapping the link:** a system prompt, *Open "Nudge-inator Reminders"? Brian Mericle wants to collaborate. You'll join as Brian Mericle (nudge-test@…).* with Not Now and Open. It names the app "Nudge-inator Reminders" and says nothing about versions.
+- **After Open:** an alert, *Couldn't Open "Nudge-inator Reminders". You need a newer version of Nudge-inator to open this, but the required version couldn't be found in the App Store.* One OK button; OK leaves the person in Mail. No app opens. The text points at the App Store, which a TestFlight tester can't use.
+- **Reopening 1.3.0:** nothing about the invite anywhere; the app is unchanged.
+- **Sender, before and after the recipient's failed accept:** unchanged, "Invited · Waiting for them to accept", with Invite Again and Cancel Invite. Its "Didn't open for them?" help covered only a wrong address.
+- **What changed (1.4.1):** that help, and How Sharing Works' note under Connect, now say both people need the latest Nudge-inator. An older build can't be changed, so the recipient's alert stays as above.
