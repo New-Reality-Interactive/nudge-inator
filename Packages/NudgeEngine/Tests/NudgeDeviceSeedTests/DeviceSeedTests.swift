@@ -57,6 +57,14 @@ struct DeviceSeedTests {
         #expect(SeedReminder(id: SeedReminder.fixedID(97), title: "Mine", dueIn: 60).reminder(tagIDs: [], now: .now).origin == .mine)
     }
 
+    /// Use for All Reminders' check (#458) needs a reminder on a tone.
+    @Test func aSeedReminderKeepsTheAlarmSoundItIsGiven() {
+        let seed = SeedReminder(id: SeedReminder.fixedID(96), title: "On a tone", dueIn: 60, alarmSound: .chime)
+
+        #expect(seed.reminder(tagIDs: [], now: .now).alarmSound == .chime)
+        #expect(SeedReminder(id: SeedReminder.fixedID(95), title: "Mine", dueIn: 60).reminder(tagIDs: [], now: .now).alarmSound == .default)
+    }
+
     @Test func aSetsRemindersKeepTheirIDs() {
         _ = run("sample")
 
