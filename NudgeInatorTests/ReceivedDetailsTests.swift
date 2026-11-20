@@ -124,6 +124,21 @@ struct ReceivedDetailsTests {
         #expect(details.notes == "Two with water.")
     }
 
+    /// #457: a received copy that rings names the sound chosen on this iPhone, never the sender's.
+    @Test func detailsOfARingingCopyNameTheSoundChosenOnThisIPhone() async throws {
+        let (alex, riley) = try await phones()
+        riley.model.defaultAlarmSound = .bell
+        var sendersReminder = pills
+        sendersReminder.alarmSound = .chime
+        try await send(sendersReminder, from: alex, to: riley)
+
+        let details = try details(of: received(on: riley).id, on: riley)
+
+        #expect(details.sound == .bell)
+        // Its footers say the sound is the person's own.
+        #expect(details.rings)
+    }
+
     @Test func detailsOfAnOwnReminderAreAsBefore() async throws {
         let (_, riley) = try await phones()
         riley.model.add(pills)

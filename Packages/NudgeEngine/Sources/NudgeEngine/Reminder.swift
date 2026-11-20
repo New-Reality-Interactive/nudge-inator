@@ -104,6 +104,11 @@ extension Reminder {
         strength.breaksThroughFocus(switchedOn: breakThroughFocus)
     }
 
+    /// Whether it sends any alarm, by its strength's rule with its own switch (#230).
+    public var sendsAlarms: Bool {
+        strength.sendsAlarms(switchedOn: breakThroughFocus)
+    }
+
     /// The latest occurrence's due time at or before `date`, or `nil` before the first one.
     func latestDueTime(atOrBefore date: Date, calendar: Calendar) -> Date? {
         guard let repeatRule else { return date >= dueTime ? dueTime : nil }

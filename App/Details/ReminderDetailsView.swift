@@ -196,7 +196,10 @@ private struct DetailsList: View {
             } footer: {
                 if let received = details.received {
                     Label {
-                        Text("\(received.senderName) owns this schedule.", comment: "Reminder details: under Schedule of a received reminder, which only its sender can change. The placeholder is the sender's name.")
+                        // Whole sentences, chosen by whether the copy rings (#457).
+                        !details.rings
+                            ? Text("\(received.senderName) owns this schedule.", comment: "Reminder details: under Schedule of a received reminder, which only its sender can change. The placeholder is the sender's name.")
+                            : Text("\(received.senderName) owns this schedule. The sound is yours: it's chosen on this iPhone.", comment: "Reminder details: under Schedule of a received reminder that rings as an alarm. Only its sender can change the schedule, but its alarm sound is the person's own. The placeholder is the sender's name.")
                     } icon: {
                         LockGlyph()
                     }
@@ -249,8 +252,11 @@ private struct DetailsList: View {
                     if details.isCanceled {
                         Text("Removing it clears it from your list.", comment: "Reminder details: under Remove Reminder on a received reminder its sender deleted.")
                     } else if let received = details.received {
-                        Text("You can mark it Done, pause it, remove it and add your own tags. \(received.senderName) owns its title, notes, schedule, strength and pace.",
-                             comment: "Reminder details: under Remove Reminder on a received reminder, what the person can and can't change. The placeholder is the sender's name.")
+                        !details.rings
+                            ? Text("You can mark it Done, pause it, remove it and add your own tags. \(received.senderName) owns its title, notes, schedule, strength and pace.",
+                                   comment: "Reminder details: under Remove Reminder on a received reminder, what the person can and can't change. The placeholder is the sender's name.")
+                            : Text("You can mark it Done, pause it, remove it, add your own tags and choose its alarm sound. \(received.senderName) owns its title, notes, schedule, strength and pace.",
+                                   comment: "Reminder details: under Remove Reminder on a received reminder that rings as an alarm, what the person can and can't change. The placeholder is the sender's name.")
                     }
                     if details.pauseAction == .pause {
                         Text("Pausing stops the nudging. Anything due while it's paused is skipped, not missed.",
@@ -457,12 +463,21 @@ private struct DetailsHero: View {
     }
 }
 
-/// Repeats, Next, Pace, Break Through Focus, and how the latest occurrence closed.
+/// Repeats, Next, Pace, Break Through Focus, the Sound while it rings (#457), and how the latest
+/// occurrence closed. A sent reminder's details have no Sound row: it has no sound on this iPhone.
 private struct ScheduleRows: View {
     let details: ReminderDetails
 
     var body: some View {
         ScheduleSummaryRows(repeats: details.repeats, next: details.next, pace: details.pace, breaksThroughFocus: details.reminder.breaksThroughFocus)
+        if let sound = details.sound {
+            // It only names the sound, as Pace does, with no chevron: Edit changes it.
+            LabeledContent {
+                Text(sound.title)
+            } label: {
+                Text("Sound", comment: "Reminder details, Schedule: the alarm sound the reminder rings with. Beside it, the sound's name, such as \"Chime\".")
+            }
+        }
         if let last = details.lastOccurrence {
             LastOccurrenceRow(last: last)
         }
