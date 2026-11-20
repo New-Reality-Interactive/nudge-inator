@@ -75,6 +75,9 @@
     "%@ owns this schedule." : {
       "comment" : "Reminder details: under Schedule of a received reminder, which only its sender can change. The placeholder is the sender's name."
     },
+    "%@ owns this schedule. The sound is yours: it's chosen on this iPhone." : {
+      "comment" : "Reminder details: under Schedule of a received reminder that rings as an alarm. Only its sender can change the schedule, but its alarm sound is the person's own. The placeholder is the sender's name."
+    },
     "%@ paused. It won't nudge you until you resume it." : {
       "comment" : "VoiceOver: spoken after Pause Reminder on a reminder's details. The placeholder is the reminder's title."
     },
@@ -2488,7 +2491,7 @@
       "comment" : "VoiceOver label of the Reminders tab's Sort button, which opens the Sort menu.\nVoiceOver label of the Tags tab's Sort button, which opens the Sort menu."
     },
     "Sound" : {
-      "comment" : "The reminder form's row that opens the alarm sound list, and that page's title. Beside the row, the sound chosen, such as \"Chime\"."
+      "comment" : "Reminder details, Schedule: the alarm sound the reminder rings with. Beside it, the sound's name, such as \"Chime\".\nThe reminder form's row that opens the alarm sound list, and that page's title. Beside the row, the sound chosen, such as \"Chime\"."
     },
     "Start right away" : {
       "comment" : "Delivery Mode: a reminder from this person starts nudging as soon as it arrives."
@@ -2899,6 +2902,9 @@
     },
     "You can mark it Done, pause it, remove it and add your own tags. %@ owns its title, notes, schedule, strength and pace." : {
       "comment" : "Reminder details: under Remove Reminder on a received reminder, what the person can and can't change. The placeholder is the sender's name."
+    },
+    "You can mark it Done, pause it, remove it, add your own tags and choose its alarm sound. %@ owns its title, notes, schedule, strength and pace." : {
+      "comment" : "Reminder details: under Remove Reminder on a received reminder that rings as an alarm, what the person can and can't change. The placeholder is the sender's name."
     },
     "You choose what breaks through" : {
       "comment" : "Onboarding and How It Nudges: the title of the point about Break Through Focus."

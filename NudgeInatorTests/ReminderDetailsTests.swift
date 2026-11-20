@@ -387,4 +387,52 @@ struct ReminderDetailsTests {
 
         #expect(try #require(ReminderDetails(engine: model.engine, id: bins.id)).status == .paused)
     }
+
+    // MARK: Sound (#457)
+
+    /// The Schedule's Sound row names the reminder's sound only while it rings, by the form's rule:
+    /// Relentless, or Firm with Break Through Focus on. Gentle never rings.
+    @Test(arguments: [
+        (Strength.firm, true, true),
+        (.firm, false, false),
+        (.relentless, false, true),
+        (.relentless, true, true),
+        (.gentle, true, false),
+        (.gentle, false, false),
+    ])
+    func theSoundShowsOnlyWhileTheReminderRings(strength: Strength, breakThroughFocus: Bool, rings: Bool) async throws {
+        let model = try await launchedModel()
+        let reminder = Reminder(title: "Call the bank", dueTime: bins.dueTime, strength: strength, breakThroughFocus: breakThroughFocus, alarmSound: .siren)
+        model.add(reminder)
+
+        let details = try #require(ReminderDetails(engine: model.engine, id: reminder.id))
+        #expect(details.sound == (rings ? .siren : nil))
+    }
+
+    /// Default Alarm shows by name, as the form's Sound row names it.
+    @Test func aRingingReminderOnTheDefaultSoundNamesDefaultAlarm() async throws {
+        let model = try await launchedModel()
+        model.add(bins)
+
+        let sound = try #require(ReminderDetails(engine: model.engine, id: bins.id)?.sound)
+        #expect(sound == .default)
+        #expect(String(localized: sound.title) == "Default Alarm")
+    }
+
+    /// The row comes and goes as Break Through Focus is switched in Edit.
+    @Test func theSoundFollowsBreakThroughFocusAsItIsEdited() async throws {
+        let model = try await launchedModel()
+        var reminder = bins
+        reminder.alarmSound = .chime
+        model.add(reminder)
+        #expect(ReminderDetails(engine: model.engine, id: reminder.id)?.sound == .chime)
+
+        reminder.breakThroughFocus = false
+        try model.edit(reminder)
+        #expect(try #require(ReminderDetails(engine: model.engine, id: reminder.id)).sound == nil)
+
+        reminder.breakThroughFocus = true
+        try model.edit(reminder)
+        #expect(ReminderDetails(engine: model.engine, id: reminder.id)?.sound == .chime)
+    }
 }
