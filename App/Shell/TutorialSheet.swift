@@ -139,10 +139,6 @@ private struct PageView<Page: TutorialPage>: View {
 private struct PageTop<Page: TutorialPage>: View {
     let page: Page
 
-    /// A pill's gap between its icon and word: the mockup's 8 pt, growing with the text, or at the
-    /// largest sizes `person.badge.plus`'s badge touches the word (#423's phone check).
-    @ScaledMetric(relativeTo: .subheadline) private var pillGap: CGFloat = Design.Spacing.s2
-
     var body: some View {
         VStack(alignment: .leading, spacing: Design.Spacing.s3) {
             // Pills side by side where they fit on one line each, else stacked, with a down arrow,
@@ -190,7 +186,10 @@ private struct PageTop<Page: TutorialPage>: View {
         ForEach(page.art.indices, id: \.self) { index in
             switch page.art[index] {
             case .pill(let symbol, let text):
-                HStack(spacing: pillGap) {
+                // The mockup's 8 pt at every size: the text stops growing at xxxLarge, where
+                // `person.badge.plus`'s badge no longer reaches the word, and a gap grown with the
+                // text sat too far from it (#470's phone check; #423 grew it).
+                HStack(spacing: Design.Spacing.s2) {
                     Image(systemName: symbol)
                     Text(text)
                         .lineLimit(1)
