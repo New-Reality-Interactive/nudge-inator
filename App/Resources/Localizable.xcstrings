@@ -824,11 +824,23 @@
         }
       }
     },
+    "A Firm reminder's Urgent nudges with Break Through Focus on, and every Relentless nudge, ring as alarms." : {
+      "comment" : "How Alarm Sounds Work, When It Plays: under \"Only alarms play it\". Firm and Relentless are strengths, Urgent a nudge's urgency."
+    },
+    "A Gentle reminder, or a Firm one with Break Through Focus off, never rings, so it has no Sound row." : {
+      "comment" : "How Alarm Sounds Work, When It Plays: under \"Some reminders never ring\". Gentle and Firm are strengths; Sound is the form's row."
+    },
     "A different Apple Account signed in, so sharing from the old one was removed." : {
       "comment" : "Share Activity: an entry for a change of Apple Account, which removed the old account's connections."
     },
     "A new schedule applies from the next time it's due. A new strength, pace or Break Through Focus setting applies from the next nudge." : {
       "comment" : "Top of the Edit Reminder form when the reminder isn't nudging: when changes apply."
+    },
+    "A reminder someone sends you rings with the sound chosen on your iPhone." : {
+      "comment" : "How Alarm Sounds Work, Change Your Reminders: the note under the rows."
+    },
+    "A reminder's details name its sound, under Break Through Focus." : {
+      "comment" : "How Alarm Sounds Work, Change Your Reminders: under \"Named on its details\". Break Through Focus is the details' row."
     },
     "A to Z" : {
       "comment" : "Tags tab's Sort menu, sorted by Name: alphabetical order."
@@ -875,7 +887,7 @@
       }
     },
     "Alarm" : {
-      "comment" : "Nudge card: the next nudge rings as an alarm."
+      "comment" : "Nudge card: the next nudge rings as an alarm. Also How Alarm Sounds Work's picture of a nudge that rings as an alarm."
     },
     "Alarms" : {
       "comment" : "Settings: row that shows whether alarms are allowed."
@@ -1071,7 +1083,7 @@
       "comment" : "Delivery Mode: a reminder from this person waits to be accepted before it nudges."
     },
     "Back" : {
-      "comment" : "How Sharing Works: the top bar's button (a back arrow) that goes back a page. Dimmed on the first page."
+      "comment" : "A tutorial sheet, such as How Sharing Works: the top bar's button (a back arrow) that goes back a page. Dimmed on the first page."
     },
     "Badges" : {
       "comment" : "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging."
@@ -1133,6 +1145,9 @@
     "Change These" : {
       "comment" : "Accepting an invite: on the Connected sheet, opens the connection's page in Settings to change Status Sharing and Delivery Mode."
     },
+    "Change Your Reminders" : {
+      "comment" : "How Alarm Sounds Work: the second page's heading, about changing the sound of reminders already made."
+    },
     "Change these in iOS Settings." : {
       "comment" : "Settings: last line of the footer under the Nudges rows."
     },
@@ -1159,6 +1174,9 @@
     },
     "Choose from Contacts" : {
       "comment" : "Invite Someone: the plus beside the address field, which opens the contact picker."
+    },
+    "Choose from six tones, from the gentle Chime to the insistent Siren. Default Alarm is iOS's own sound, which apps can't play, so you'll hear it when an alarm rings." : {
+      "comment" : "How Alarm Sounds Work, Pick Your Default Sound: under \"Tap a tone to hear it\". Chime, Siren and Default Alarm are alarm sound names."
     },
     "Choose one or more days." : {
       "comment" : "Under the Custom repeat page's weekdays."
@@ -1350,7 +1368,7 @@
       "comment" : "Reminder details: on a received reminder, the switch that keeps its status from its sender."
     },
     "Done" : {
-      "comment" : "Accepting an invite: closes the Connected sheet.\nHow Sharing Works: the last page's confirm button (a checkmark), in place of Next, which closes the sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
+      "comment" : "A tutorial sheet, such as How Sharing Works: the last page's confirm button (a checkmark), in place of Next, which closes the sheet.\nAccepting an invite: closes the Connected sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
     },
     "Done after %lld nudges" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence closed as Done. The placeholder is how many nudges it sent.",
@@ -1465,6 +1483,9 @@
     },
     "Edit Reminder" : {
       "comment" : "Title of the form that edits a reminder."
+    },
+    "Edit a reminder and change its Sound, under Break Through Focus, even while it's nudging." : {
+      "comment" : "How Alarm Sounds Work, Change Your Reminders: under \"Sound on the form\". Sound is the form's row and Break Through Focus its switch."
     },
     "Edit tags of %@" : {
       "comment" : "VoiceOver label of a received reminder's Edit button on its details, whose form changes only its tags. The placeholder is the reminder's title."
@@ -1709,6 +1730,9 @@
     "High nudges are Time Sensitive, so a Focus can't hold them. Gentle never reaches Urgent, so it never rings." : {
       "comment" : "Under Break Through Focus when it's on and the strength is Gentle."
     },
+    "How Alarm Sounds Work" : {
+      "comment" : "How Alarm Sounds Work: the sheet's title, and the Settings row under Tutorials that opens it."
+    },
     "How It Nudges" : {
       "comment" : "Section header on reminder details and the reminder form: the nudges a reminder sends, when, and how they arrive.\nSettings: row under Tutorials that opens the page explaining how each strength nudges, and what onboarding said.\nTitle of the page in Settings that explains how each strength nudges."
     },
@@ -1717,6 +1741,9 @@
     },
     "I'd like us to send each other reminders in Nudge-inator. Open this on your iPhone to connect: %@" : {
       "comment" : "Invite message and email: the body. The argument is the invite's link."
+    },
+    "In Settings, under Default Alarm Sound, choose the sound your alarms ring with." : {
+      "comment" : "How Alarm Sounds Work, Pick Your Default Sound: the line under the heading. Default Alarm Sound is the Settings row."
     },
     "Invitation to Nudge-inator" : {
       "comment" : "Invite email: the subject."
@@ -1871,6 +1898,9 @@
     "Name, Z to A" : {
       "comment" : "VoiceOver value of the Tags tab's Sort button: sorted by Name, Z to A."
     },
+    "Named on its details" : {
+      "comment" : "How Alarm Sounds Work, Change Your Reminders: the row about the reminder details naming its sound."
+    },
     "Needs two or more checked tags." : {
       "comment" : "A filter sheet: VoiceOver's reason the Match choice is disabled."
     },
@@ -1886,6 +1916,9 @@
     "New Tag" : {
       "comment" : "The Tags page's field for typing a new tag's name.\nTitle of the sheet that adds a tag.\nToolbar button (a plus) on Tags that adds a tag."
     },
+    "New reminders start with it" : {
+      "comment" : "How Alarm Sounds Work, Pick Your Default Sound: the row about which reminders take the Default Alarm Sound."
+    },
     "New reminders start with this pace. Changing it doesn't change the reminders you already have." : {
       "comment" : "Default Pace page: under the Pace and Every controls."
     },
@@ -1896,7 +1929,7 @@
       "comment" : "Reminders tab's Sort menu, sorted by Created: the reminder made last at the top."
     },
     "Next" : {
-      "comment" : "How Sharing Works: the top bar's button (a forward arrow) that goes on to the next page.\nReminder details, Schedule: when the reminder is next due."
+      "comment" : "A tutorial sheet, such as How Sharing Works: the top bar's button (a forward arrow) that goes on to the next page.\nReminder details, Schedule: when the reminder is next due."
     },
     "Next 7 days" : {
       "comment" : "Now: how far ahead the Coming Up section looks."
@@ -2051,7 +2084,7 @@
       "comment" : "Invite: under Couldn't Send the Invite.\nThe reminder form: under Couldn't Send the Reminder."
     },
     "Notification" : {
-      "comment" : "Nudge card: the next nudge comes as a notification."
+      "comment" : "Nudge card: the next nudge comes as a notification. Also How Alarm Sounds Work's picture of a nudge that arrives as a notification."
     },
     "Notification: Break Through Focus is off" : {
       "comment" : "Via label on a nudge card and in How It Nudges: a High or Urgent nudge comes as an ordinary notification because the reminder's Break Through Focus switch is off."
@@ -2087,6 +2120,9 @@
     },
     "Notifications off" : {
       "comment" : "Nudge card, in red: the next nudge can't arrive because notifications are off."
+    },
+    "Notifications use the standard sound, and so does every nudge while Alarms are off in iOS Settings." : {
+      "comment" : "How Alarm Sounds Work, When It Plays: under \"Other nudges sound standard\". Alarms is the app's permission in iOS Settings."
     },
     "Now" : {
       "comment" : "Tab bar: the tab with what's nudging you now, coming up and closed lately"
@@ -2216,6 +2252,9 @@
     "Only Done stops the nudging." : {
       "comment" : "Nudge card: under the Done button."
     },
+    "Only alarms play it" : {
+      "comment" : "How Alarm Sounds Work, When It Plays: the row about which nudges ring as alarms."
+    },
     "Only people you agree to" : {
       "comment" : "How Sharing Works, Send Each Other Reminders: the row about connecting only through an accepted invite."
     },
@@ -2252,6 +2291,9 @@
     "Opens the reminder's details." : {
       "comment" : "VoiceOver hint on a nudge card's title and on a Now row: tapping it opens the reminder's details."
     },
+    "Other nudges sound standard" : {
+      "comment" : "How Alarm Sounds Work, When It Plays: the row about nudges that use the standard notification sound."
+    },
     "Pace" : {
       "comment" : "Reminder details, Schedule: how the waits between the reminder's nudges are spaced.\nThe pace choice, in the reminder form and on Settings' Default Pace page: Escalating or Consistent."
     },
@@ -2267,7 +2309,7 @@
       }
     },
     "Page %lld of %lld" : {
-      "comment" : "How Sharing Works: VoiceOver's reading of the page dots. 1: this page's number. 2: how many pages there are.",
+      "comment" : "A tutorial sheet, such as How Sharing Works: VoiceOver's reading of the page dots. 1: this page's number. 2: how many pages there are.",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2297,6 +2339,9 @@
     },
     "Pick Send To when you make a reminder, and choose who gets it. It nudges them at the strength you chose." : {
       "comment" : "How Sharing Works, Send a Reminder: the line under the heading. Send To is the reminder form's row."
+    },
+    "Pick Your Default Sound" : {
+      "comment" : "How Alarm Sounds Work: the first page's heading, about Settings' Default Alarm Sound."
     },
     "Plays when a nudge arrives as an alarm. Other nudges use the standard notification sound." : {
       "comment" : "Under the alarm sound list, and under the reminder form's Sound row."
@@ -2447,6 +2492,9 @@
     "Settings › Connections. They choose to keep or remove the reminders you sent." : {
       "comment" : "How Sharing Works, Who Sees What: under \"Disconnect any time\". Settings › Connections is where Disconnect is."
     },
+    "Settings › Default Alarm Sound. Gives every reminder you have the default, including ones people sent you." : {
+      "comment" : "How Alarm Sounds Work, Change Your Reminders: under Use for All Reminders. Settings › Default Alarm Sound is where it is."
+    },
     "Settings › Share Activity shows what happened to sharing that you'd otherwise never see." : {
       "comment" : "How Sharing Works, Who Sees What: under \"Share Activity\"."
     },
@@ -2513,6 +2561,12 @@
     "Skipped: the reminder was paused" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence that closed because its reminder was paused."
     },
+    "So do reminders someone sends you. The reminders you already have keep their sounds." : {
+      "comment" : "How Alarm Sounds Work, Pick Your Default Sound: under \"New reminders start with it\"."
+    },
+    "Some reminders never ring" : {
+      "comment" : "How Alarm Sounds Work, When It Plays: the row about reminders that send no alarms."
+    },
     "Someone" : {
       "comment" : "Invite: the sender's name when iCloud gives none.\nWho owns a received reminder, on its details and form, when the app doesn't know who sent it, as in \"Someone owns this schedule.\""
     },
@@ -2524,6 +2578,9 @@
     },
     "Sound" : {
       "comment" : "Reminder details, Schedule: the alarm sound the reminder rings with. Beside it, the sound's name, such as \"Chime\".\nThe reminder form's row that opens the alarm sound list, and that page's title. Beside the row, the sound chosen, such as \"Chime\"."
+    },
+    "Sound on the form" : {
+      "comment" : "How Alarm Sounds Work, Change Your Reminders: the row about the reminder form's Sound row."
     },
     "Start right away" : {
       "comment" : "Delivery Mode: a reminder from this person starts nudging as soon as it arrives."
@@ -2583,6 +2640,9 @@
     },
     "Tap + to make one. Every reminder you make shows here, whatever its state." : {
       "comment" : "Reminders tab: under the title when there are no reminders at all."
+    },
+    "Tap a tone to hear it" : {
+      "comment" : "How Alarm Sounds Work, Pick Your Default Sound: the row about the preview a tone plays when tapped."
     },
     "Test nudge" : {
       "comment" : "Title of the notification that Settings' Send a Test Nudge sends."
@@ -2896,6 +2956,9 @@
     "Waiting to sync, %@" : {
       "comment" : "VoiceOver, on a Sent row and a recipient on a sent reminder's details: the send or a change to it hasn't gone through iCloud yet. The placeholder is the line under the title, such as \"Not delivered yet\" or \"Delivered\"."
     },
+    "Wake Up" : {
+      "comment" : "How Alarm Sounds Work, Change Your Reminders: the picture's example reminder title, beside a bell, before the sound it rings with. Keep it short: the picture keeps it to one line."
+    },
     "Weekly" : {
       "comment" : "The Custom repeat page's frequency."
     },
@@ -2904,6 +2967,9 @@
     },
     "What %@ Chose" : {
       "comment" : "A connection's page: header of the other person's choices for the reminders this person sends them. The argument is their name, such as \"Alex Morgan\"."
+    },
+    "When It Plays" : {
+      "comment" : "How Alarm Sounds Work: the last page's heading, about which nudges ring with the sound."
     },
     "When it really matters, your iPhone rings and vibrates like an alarm, even on silent and in a Focus. Stopping the alarm only quiets it: the next nudge still comes, and only Done ends the reminder." : {
       "comment" : "Onboarding and How It Nudges: under \"Urgent nudges ring as alarms\"."

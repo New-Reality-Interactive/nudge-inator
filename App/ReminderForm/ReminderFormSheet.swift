@@ -526,8 +526,9 @@ private struct BreakThroughFocusSection: View {
 }
 
 /// The form's Sound row (#230): the reminder's alarm sound by name, opening the picker. As the
-/// Tags row draws it.
-private struct SoundRow: View {
+/// Tags row draws it. Not private: How Alarm Sounds Work's tests check the sheet names the row
+/// by this title.
+struct SoundRow: View {
     let sound: AlarmSound
 
     /// The row's title, and the picker page's.
