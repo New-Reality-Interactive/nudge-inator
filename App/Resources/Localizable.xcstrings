@@ -1148,6 +1148,9 @@
     "Change Your Reminders" : {
       "comment" : "How Alarm Sounds Work: the second page's heading, about changing the sound of reminders already made."
     },
+    "Change the sound of reminders you already have, all at once or one at a time." : {
+      "comment" : "How Alarm Sounds Work, Change Your Reminders: the line under the heading."
+    },
     "Change these in iOS Settings." : {
       "comment" : "Settings: last line of the footer under the Nudges rows."
     },
@@ -2084,7 +2087,7 @@
       "comment" : "Invite: under Couldn't Send the Invite.\nThe reminder form: under Couldn't Send the Reminder."
     },
     "Notification" : {
-      "comment" : "Nudge card: the next nudge comes as a notification. Also How Alarm Sounds Work's picture of a nudge that arrives as a notification."
+      "comment" : "Nudge card: the next nudge comes as a notification."
     },
     "Notification: Break Through Focus is off" : {
       "comment" : "Via label on a nudge card and in How It Nudges: a High or Urgent nudge comes as an ordinary notification because the reminder's Break Through Focus switch is off."
@@ -3054,6 +3057,9 @@
     },
     "Your reminders are still on this iPhone, and nudges already scheduled will still come. Unlock your iPhone, then open %@ again." : {
       "comment" : "Explains the unreadable store: nothing is lost, and reopening the app tries again. The placeholder is the app's name."
+    },
+    "Your sound plays only when a nudge rings as an alarm." : {
+      "comment" : "How Alarm Sounds Work, When It Plays: the line under the heading."
     },
     "Yours" : {
       "comment" : "How Sharing Works, Who Sees What: the picture's first pill, what the sender owns."

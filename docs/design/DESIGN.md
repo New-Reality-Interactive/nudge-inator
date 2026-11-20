@@ -691,12 +691,13 @@ sharing paused and offline banner.
   top left on every page. Back (`chevron.backward`) and Next (`chevron.forward`) share one capsule
   top right, Back dimmed on page 1; on the last page Next becomes the system's confirm checkmark,
   named Done, which closes the sheet. A page change speaks the new page's heading.
-- **How Alarm Sounds Work sheet** (mockup `2026-11-20-tutorial-sheets`, #467): How Sharing Works'
-  sheet with three pages of rows, inline title How Alarm Sounds Work, opened only from its row:
-  Pick Your Default Sound (a `speaker.wave.2` Default Alarm Sound pill, a lead, two rows), Change
-  Your Reminders (`bell` Wake Up, an arrow, `speaker.wave.2` Chime, each pill on one line and its
-  text stopping at xxxLarge; three rows and a footer) and When It Plays (`alarm` Alarm and `bell`
-  Notification pills, three rows). Its pills and the Use for All Reminders row reuse the screens'
+- **How Alarm Sounds Work sheet** (mockups `2026-11-20-tutorial-sheets` and
+  `2026-11-20-alarm-sounds-tutorial-leads`, #467): How Sharing Works' sheet with three pages, each a
+  lead and rows, inline title How Alarm Sounds Work, opened only from its row: Pick Your Default
+  Sound (a `speaker.wave.2` Default Alarm Sound pill, two rows), Change Your Reminders (`bell` Wake
+  Up, an arrow, `speaker.wave.2` Chime, each pill on one line and its text stopping at xxxLarge;
+  three rows and a footer) and When It Plays (an `alarm` Alarm pill alone, since a notification
+  never plays the sound; three rows). Its pills and the Use for All Reminders row reuse the screens'
   own strings, and its tests check that the sentences name Default Alarm Sound, Sound and the tones
   as the screens do.
 - **Share Activity entries:** plain rows with nothing to tap, newest first, in one inset list: who

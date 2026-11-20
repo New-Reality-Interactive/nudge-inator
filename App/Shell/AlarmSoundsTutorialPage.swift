@@ -1,8 +1,8 @@
 import Foundation
 import NudgeEngine
 
-/// A page of the How Alarm Sounds Work sheet (#467, the mockup `2026-11-20-tutorial-sheets`), in the
-/// order the sheet shows them. It never opens by itself: alarm sounds have no screen of their own
+/// A page of the How Alarm Sounds Work sheet (#467, the mockups `2026-11-20-tutorial-sheets` and
+/// `2026-11-20-alarm-sounds-tutorial-leads`), in the order the sheet shows them. It never opens by itself: alarm sounds have no screen of their own
 /// to reach first, so only its Settings row opens it.
 enum AlarmSoundsTutorialPage: TutorialPage {
     case pickYourDefaultSound
@@ -33,8 +33,8 @@ enum AlarmSoundsTutorialPage: TutorialPage {
              .arrow,
              .pill(symbol: "speaker.wave.2", text: AlarmSound.chime.title)]
         case .whenItPlays:
-            [.pill(symbol: "alarm", text: LocalizedStringResource("Alarm", comment: "Nudge card: the next nudge rings as an alarm. Also How Alarm Sounds Work's picture of a nudge that rings as an alarm.")),
-             .pill(symbol: "bell", text: LocalizedStringResource("Notification", comment: "Nudge card: the next nudge comes as a notification. Also How Alarm Sounds Work's picture of a nudge that arrives as a notification."))]
+            // The alarm alone: a notification never plays the sound (#467's phone check).
+            [.pill(symbol: "alarm", text: LocalizedStringResource("Alarm", comment: "Nudge card: the next nudge rings as an alarm. Also How Alarm Sounds Work's picture of a nudge that rings as an alarm."))]
         }
     }
 
@@ -53,7 +53,7 @@ enum AlarmSoundsTutorialPage: TutorialPage {
                               text: LocalizedStringResource("So do reminders someone sends you. The reminders you already have keep their sounds.", comment: "How Alarm Sounds Work, Pick Your Default Sound: under \"New reminders start with it\".")),
             ])
         case .changeYourReminders:
-            .points(lead: nil, [
+            .points(lead: LocalizedStringResource("Change the sound of reminders you already have, all at once or one at a time.", comment: "How Alarm Sounds Work, Change Your Reminders: the line under the heading."), [
                 TutorialPoint(symbol: "square.stack",
                               title: DefaultAlarmSoundPage.useForAllTitle,
                               text: LocalizedStringResource("Settings › Default Alarm Sound. Gives every reminder you have the default, including ones people sent you.", comment: "How Alarm Sounds Work, Change Your Reminders: under Use for All Reminders. Settings › Default Alarm Sound is where it is.")),
@@ -65,7 +65,7 @@ enum AlarmSoundsTutorialPage: TutorialPage {
                               text: LocalizedStringResource("A reminder's details name its sound, under Break Through Focus.", comment: "How Alarm Sounds Work, Change Your Reminders: under \"Named on its details\". Break Through Focus is the details' row.")),
             ], footnote: LocalizedStringResource("A reminder someone sends you rings with the sound chosen on your iPhone.", comment: "How Alarm Sounds Work, Change Your Reminders: the note under the rows."))
         case .whenItPlays:
-            .points(lead: nil, [
+            .points(lead: LocalizedStringResource("Your sound plays only when a nudge rings as an alarm.", comment: "How Alarm Sounds Work, When It Plays: the line under the heading."), [
                 TutorialPoint(symbol: "alarm",
                               title: LocalizedStringResource("Only alarms play it", comment: "How Alarm Sounds Work, When It Plays: the row about which nudges ring as alarms."),
                               text: LocalizedStringResource("A Firm reminder's Urgent nudges with Break Through Focus on, and every Relentless nudge, ring as alarms.", comment: "How Alarm Sounds Work, When It Plays: under \"Only alarms play it\". Firm and Relentless are strengths, Urgent a nudge's urgency.")),

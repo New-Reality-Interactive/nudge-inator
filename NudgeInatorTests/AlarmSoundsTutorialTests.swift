@@ -4,7 +4,8 @@ import Testing
 @testable import NudgeInator
 
 /// The How Alarm Sounds Work sheet's content and paging (#467), against the approved tutorial sheets
-/// mockup's wording, `docs/mockups/2026-11-20-tutorial-sheets/`.
+/// mockup's wording, `docs/mockups/2026-11-20-tutorial-sheets/`, with the leads and picture of
+/// `docs/mockups/2026-11-20-alarm-sounds-tutorial-leads/` (#467's phone check).
 struct AlarmSoundsTutorialTests {
     @Test func theThreePagesShowInOrder() {
         #expect(AlarmSoundsTutorialPage.allCases.map { String(localized: $0.heading) } == [
@@ -23,13 +24,13 @@ struct AlarmSoundsTutorialTests {
           ["plus", "New reminders start with it", "So do reminders someone sends you. The reminders you already have keep their sounds."]],
          nil),
         (.changeYourReminders,
-         nil,
+         "Change the sound of reminders you already have, all at once or one at a time.",
          [["square.stack", "Use for All Reminders", "Settings › Default Alarm Sound. Gives every reminder you have the default, including ones people sent you."],
           ["pencil", "Sound on the form", "Edit a reminder and change its Sound, under Break Through Focus, even while it's nudging."],
           ["list.bullet.rectangle", "Named on its details", "A reminder's details name its sound, under Break Through Focus."]],
          "A reminder someone sends you rings with the sound chosen on your iPhone."),
         (.whenItPlays,
-         nil,
+         "Your sound plays only when a nudge rings as an alarm.",
          [["alarm", "Only alarms play it", "A Firm reminder's Urgent nudges with Break Through Focus on, and every Relentless nudge, ring as alarms."],
           ["bell.slash", "Some reminders never ring", "A Gentle reminder, or a Firm one with Break Through Focus off, never rings, so it has no Sound row."],
           ["bell", "Other nudges sound standard", "Notifications use the standard sound, and so does every nudge while Alarms are off in iOS Settings."]],
@@ -50,7 +51,7 @@ struct AlarmSoundsTutorialTests {
     @Test(arguments: [
         (AlarmSoundsTutorialPage.pickYourDefaultSound, ["speaker.wave.2 Default Alarm Sound"], false),
         (.changeYourReminders, ["bell Wake Up", "→", "speaker.wave.2 Chime"], true),
-        (.whenItPlays, ["alarm Alarm", "bell Notification"], false),
+        (.whenItPlays, ["alarm Alarm"], false),
     ])
     func eachPageHasTheMockupsPicture(page: AlarmSoundsTutorialPage, pieces: [String], stopsGrowing: Bool) {
         #expect(page.art.map { piece in

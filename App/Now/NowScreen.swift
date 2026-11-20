@@ -171,7 +171,7 @@ struct NudgeCard: Identifiable {
         case .alarm:
             LocalizedStringResource("Alarm", comment: "Nudge card: the next nudge rings as an alarm. Also How Alarm Sounds Work's picture of a nudge that rings as an alarm.")
         case .notification(weakerBecause: nil):
-            LocalizedStringResource("Notification", comment: "Nudge card: the next nudge comes as a notification. Also How Alarm Sounds Work's picture of a nudge that arrives as a notification.")
+            LocalizedStringResource("Notification", comment: "Nudge card: the next nudge comes as a notification.")
         case .notification(weakerBecause: .alarmsOff):
             LocalizedStringResource("Notification: alarms are off", comment: "Nudge card: an Urgent nudge comes as a notification because alarms aren't allowed.")
         case .notification(weakerBecause: .alarmsAndTimeSensitiveOff):
