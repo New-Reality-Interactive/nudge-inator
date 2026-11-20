@@ -259,6 +259,28 @@ struct ReceivedDetailsTests {
         #expect(riley.manager.scheduled.allSatisfy { $0.sound == .named("rise.caf") })
     }
 
+    /// Use for All Reminders (#458) changes a received copy too, which rings with it, and sends its
+    /// sender nothing: the sound is the recipient's own.
+    @Test func useForAllRemindersChangesACopyAndTellsItsSenderNothing() async throws {
+        let (alex, riley) = try await phones()
+        riley.manager.authorizationState = .authorized
+        try await send(pills, from: alex, to: riley)
+        riley.model.add(Reminder(title: "Stretch", dueTime: NewYork.local(2026, 10, 15, 9), strength: .relentless, alarmSound: .chime))
+        await settle(alex, riley)
+        let submittedBefore = riley.adapter.submitted.count
+        riley.model.defaultAlarmSound = .pulse
+        #expect(riley.model.remindersToChangeByUseForAll == 2)
+
+        riley.model.useDefaultAlarmSoundForAllReminders()
+        await settle(alex, riley)
+
+        #expect(riley.model.engine.reminders.map(\.alarmSound) == [.pulse, .pulse])
+        #expect(!riley.manager.scheduled.isEmpty)
+        #expect(riley.manager.scheduled.allSatisfy { $0.sound == .named("pulse.caf") })
+        #expect(riley.adapter.submitted.count == submittedBefore)
+        #expect(alex.model.engine.reminders.isEmpty)
+    }
+
     /// A copy whose sender turned Break Through Focus off never rings, so it has no Sound row.
     @Test func aCopyThatSendsNoAlarmsHasNoSoundRow() async throws {
         let (alex, riley) = try await phones()

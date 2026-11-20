@@ -654,6 +654,29 @@
         }
       }
     },
+    "%lld reminders, including ones people sent you, will use %@." : {
+      "comment" : "Under the question asked before Use for All Reminders. 1: how many reminders change, only those not on the sound already. 2: the sound, such as \"Chime\".",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld reminder will use %2$@."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$lld reminders, including ones people sent you, will use %2$@."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld tags out of %lld" : {
       "comment" : "Tags tab: the header row's count, in every case, even with nothing narrowing the list. 1: the tags shown. 2: every tag.",
       "localizations" : {
@@ -1093,7 +1116,7 @@
       "comment" : "Title shown when the app can't read its stored reminders, for example before the first unlock after a restart."
     },
     "Cancel" : {
-      "comment" : "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, the Reminders and Tags filters', the invite hint's, and Disconnect's.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nInvite: leaves the Already Invited question without sending.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nSettings: keeps your data instead of deleting it."
+      "comment" : "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, the Reminders and Tags filters', the invite hint's, and Disconnect's.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nInvite: leaves the Already Invited question without sending.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nLeaves every reminder's sound as it is, instead of Use for All Reminders.\nSettings: keeps your data instead of deleting it."
     },
     "Cancel Invite" : {
       "comment" : "An invited person's page: opens the question that asks before canceling the invite.\nThe question before canceling an invite: cancels it."
@@ -1142,6 +1165,9 @@
     },
     "Choose one or more people. Each gets their own copy, at this strength, and it won't nudge you." : {
       "comment" : "Under the Send To page's list of people."
+    },
+    "Choosing a sound above leaves the reminders you already have as they are. This gives every one of them %@, including reminders someone sent you." : {
+      "comment" : "Default Alarm Sound page: under Use for All Reminders. The placeholder is the sound chosen above, such as \"Chime\"."
     },
     "Choosing a sound plays it. Default Alarm is iOS's own sound, which apps can't play, so you'll hear it when an alarm rings." : {
       "comment" : "Under the alarm sound list, after the line on when it plays. Default Alarm is the first sound in the list, iOS's own alarm sound."
@@ -1591,6 +1617,9 @@
     "Every nudge rings as an alarm." : {
       "comment" : "Under the reminder form's strength, when every nudge rings, as Relentless's do."
     },
+    "Every reminder you have uses %@." : {
+      "comment" : "Default Alarm Sound page: under Use for All Reminders, dimmed because every reminder already has the sound chosen. The placeholder is that sound, such as \"Chime\"."
+    },
     "Everyone you're connected with gets a note that the connection ended, and chooses what happens to the reminders you sent them." : {
       "comment" : "Turn Off Sharing's sheet: under the choice, while someone is connected."
     },
@@ -1857,7 +1886,7 @@
     "New reminders start with this pace. Changing it doesn't change the reminders you already have." : {
       "comment" : "Default Pace page: under the Pace and Every controls."
     },
-    "New reminders, and reminders someone sends you, start with this sound. Reminders you already have keep theirs." : {
+    "New reminders, and reminders someone sends you, start with this sound." : {
       "comment" : "Default Alarm Sound page: under the alarm sound list, after the line on when it plays."
     },
     "Newest First" : {
@@ -2827,6 +2856,12 @@
     },
     "Urgent nudges ring as alarms, even in silent mode and in every Focus." : {
       "comment" : "Settings: footer under the Nudges rows, when alarms are allowed."
+    },
+    "Use %@ for All Reminders?" : {
+      "comment" : "Asked before Use for All Reminders on the Default Alarm Sound page. The placeholder is the sound chosen, such as \"Chime\"."
+    },
+    "Use for All Reminders" : {
+      "comment" : "Default Alarm Sound page: the row that gives every reminder the sound chosen above, and the button in the question that asks before it does."
     },
     "Use the email address or phone number of their Apple Account, or the invite won't open for them." : {
       "comment" : "Invite Someone: under the address field before a person is chosen."

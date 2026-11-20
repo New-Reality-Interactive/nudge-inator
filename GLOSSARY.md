@@ -65,8 +65,12 @@ What a reminder's alarms ring with: Default (the standard alarm sound, shown as 
 _Avoid_: Ringtone, tone (a tone is one of the six shipped sounds), Default (alone: say Default Alarm)
 
 **Default alarm sound**:
-The alarm sound set in Settings that every new reminder starts with, and every received reminder starts with when it arrives: Default until the person changes it, and again after Delete All Data. Changing it never changes a reminder already made. Not to be confused with Default Alarm, the name a person sees for the alarm sound Default.
+The alarm sound set in Settings that every new reminder starts with, and every received reminder starts with when it arrives: Default until the person changes it, and again after Delete All Data. Changing it never changes a reminder already made; only Use for All Reminders does. Not to be confused with Default Alarm, the name a person sees for the alarm sound Default.
 _Avoid_: Global sound, sound setting
+
+**Use for All Reminders**:
+The action, beside the Default alarm sound, that gives every reminder on this iPhone, one's own and received, the Default alarm sound, after the person confirms. Reminders the person sent to others have no alarm sound on this iPhone and aren't among them, and a received reminder's new sound never reaches its sender.
+_Avoid_: Apply to all, reset sounds
 
 **Strength**:
 How hard a reminder nudges: Gentle, Firm or Relentless. It sets the urgency ladder and the give-up limit, and with an Escalating pace the waits between nudges too. Relentless nudges only with alarms.
