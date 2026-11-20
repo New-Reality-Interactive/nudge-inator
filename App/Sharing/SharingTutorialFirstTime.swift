@@ -7,7 +7,7 @@ extension View {
     /// never opens by itself again; the Settings row still opens it (#423).
     func sharingTutorialFirstTime(model: AppModel?) -> some View {
         sheet(isPresented: Binding { model?.isSharingTutorialDue ?? false } set: { if !$0 { model?.sharingTutorialClosed() } }) {
-            SharingTutorialSheet()
+            TutorialSheet<SharingTutorialPage>()
         }
     }
 }

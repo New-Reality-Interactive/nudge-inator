@@ -27,8 +27,9 @@ struct SettingsTab: View {
     /// Whether the Turn Off Sharing sheet (#388) is up.
     @State private var isTurningSharingOff = false
     @State private var turnOffFailed = false
-    /// Whether How Sharing Works (#423) is up. Local, so opening it changes no setting.
-    @State private var isShowingSharingTutorial = false
+    /// The tutorial sheet its Tutorials row opened (#423, #467), if any. Local, so opening one
+    /// changes no setting.
+    @State private var shownTutorial: SettingsTutorial?
 
     var body: some View {
         NavigationStack(path: path) {
@@ -67,8 +68,13 @@ struct SettingsTab: View {
             } message: {
                 Text("Nothing has changed. Try again.", comment: "Settings and Turn Off Sharing's sheet: under Couldn't Turn Off Sharing.")
             }
-            .sheet(isPresented: $isShowingSharingTutorial) {
-                SharingTutorialSheet()
+            .sheet(item: $shownTutorial) { tutorial in
+                switch tutorial {
+                case .howSharingWorks: TutorialSheet<SharingTutorialPage>()
+                case .howAlarmSoundsWork: TutorialSheet<AlarmSoundsTutorialPage>()
+                // Its row pushes a page instead, so it never opens a sheet.
+                case .howItNudges: EmptyView()
+                }
             }
             .navigationTitle(Text(AppTab.settings.title))
             #if DEBUG
@@ -267,7 +273,7 @@ struct SettingsTab: View {
                 SettingsRow(
                     tile: .tileGray,
                     symbol: "speaker.wave.2",
-                    title: DefaultAlarmSoundPage.title,
+                    title: Text(DefaultAlarmSoundPage.title),
                     value: Text(defaultAlarmSound.wrappedValue.title)
                 )
             }
@@ -300,10 +306,11 @@ struct SettingsTab: View {
                     } label: {
                         row
                     }
-                case .howSharingWorks:
-                    // A sheet, which also opens by itself the first time Sharing is turned on.
+                case .howSharingWorks, .howAlarmSoundsWork:
+                    // A sheet. How Sharing Works also opens by itself the first time Sharing is
+                    // turned on (`sharingTutorialFirstTime`); How Alarm Sounds Work never does.
                     Button {
-                        isShowingSharingTutorial = true
+                        shownTutorial = tutorial
                     } label: {
                         row
                     }

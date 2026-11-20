@@ -673,7 +673,8 @@ sharing paused and offline banner.
   `speaker.wave.2`) and its title in the accent, which says it can be tapped, as Send a Test Nudge's
   does. A row that opens a sheet has no chevron, since the HIG keeps the disclosure indicator for
   drilling in (#423); every tutorial is a sheet like How Sharing Works once #470 turns How It Nudges
-  into one, which until then keeps its pushed page and chevron.
+  into one, which until then keeps its pushed page and chevron. Every tutorial sheet is the one
+  How Sharing Works uses (below), with its own pages. Only How Sharing Works opens by itself.
 - **How Sharing Works sheet** (mockup `2026-11-15-sharing-tutorial`, #423): four pages in an inset
   grouped list, inline title How Sharing Works. Each page has decorative pills (an SF Symbol and a
   word in `{colors.label}`, 8 pt apart, on `tertiary-system-fill`, `arrow.forward` between them in
@@ -690,6 +691,15 @@ sharing paused and offline banner.
   top left on every page. Back (`chevron.backward`) and Next (`chevron.forward`) share one capsule
   top right, Back dimmed on page 1; on the last page Next becomes the system's confirm checkmark,
   named Done, which closes the sheet. A page change speaks the new page's heading.
+- **How Alarm Sounds Work sheet** (mockups `2026-11-20-tutorial-sheets` and
+  `2026-11-20-alarm-sounds-tutorial-leads`, #467): How Sharing Works' sheet with three pages, each a
+  lead and rows, inline title How Alarm Sounds Work, opened only from its row: Pick Your Default
+  Sound (a `speaker.wave.2` Default Alarm Sound pill, two rows), Change Your Reminders (`bell` Wake
+  Up, an arrow, `speaker.wave.2` Chime, each pill on one line and its text stopping at xxxLarge;
+  three rows and a footer) and When It Plays (an `alarm` Alarm pill alone, since a notification
+  never plays the sound; three rows). Its pills and the Use for All Reminders row reuse the screens'
+  own strings, and its tests check that the sentences name Default Alarm Sound, Sound and the tones
+  as the screens do.
 - **Share Activity entries:** plain rows with nothing to tap, newest first, in one inset list: who
   it concerns in `{typography.body}` (several names joined as a list), then what happened and when
   ("Today at 7:58 AM"), each in `{typography.subhead}` `{colors.secondary-label}`. VoiceOver reads

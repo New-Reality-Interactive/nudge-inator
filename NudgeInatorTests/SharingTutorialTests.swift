@@ -32,7 +32,7 @@ struct SharingTutorialTests {
           ["list.bullet.rectangle", "Share Activity", "Settings › Share Activity shows what happened to sharing that you'd otherwise never see."]]),
     ] as [(SharingTutorialPage, String?, [[String]])])
     func aPageOfPointsHasTheMockupsLeadAndRows(page: SharingTutorialPage, lead: String?, rows: [[String]]) throws {
-        guard case .points(let actualLead, let points) = page.content else {
+        guard case .points(let actualLead, let points, footnote: nil) = page.content else {
             Issue.record("\(page) isn't a page of points")
             return
         }
@@ -70,7 +70,7 @@ struct SharingTutorialTests {
     }
 
     @Test func nextMovesForwardAPageAndStopsAtTheLast() {
-        var paging = SharingTutorialPaging()
+        var paging = TutorialPaging<SharingTutorialPage>()
         #expect(paging.page == .sendEachOtherReminders)
         #expect(!paging.canGoBack)
         #expect(!paging.isLastPage)
@@ -93,7 +93,7 @@ struct SharingTutorialTests {
     }
 
     @Test func backMovesBackAPageAndStopsAtTheFirst() {
-        var paging = SharingTutorialPaging()
+        var paging = TutorialPaging<SharingTutorialPage>()
         paging.goForward()
         paging.goForward()
         paging.goBack()
@@ -107,7 +107,7 @@ struct SharingTutorialTests {
 
     /// A swipe settles on a page, which the paged view sets: Back, the last page and the dots follow it.
     @Test func aSwipeLandsOnAPageAndTheBarAndDotsFollow() {
-        var paging = SharingTutorialPaging()
+        var paging = TutorialPaging<SharingTutorialPage>()
         paging.page = .sendAReminder
         #expect(paging.canGoBack)
         #expect(!paging.isLastPage)

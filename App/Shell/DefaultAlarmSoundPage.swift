@@ -13,15 +13,15 @@ struct DefaultAlarmSoundPage: View {
 
     @State private var isConfirmingUseForAll = false
 
-    /// The Settings row's title, and this page's.
-    static let title = Text("Default Alarm Sound", comment: "Settings: the row that opens the alarm sound list for every new reminder, and that page's title. Beside the row, the sound chosen, such as \"Chime\".")
+    /// The Settings row's title, and this page's; How Alarm Sounds Work names it too.
+    nonisolated static let title = LocalizedStringResource("Default Alarm Sound", comment: "Settings: the row that opens the alarm sound list for every new reminder, and that page's title. Beside the row, the sound chosen, such as \"Chime\".")
 
-    /// The row's title, and its confirmation's button.
-    private static let useForAllTitle = Text("Use for All Reminders", comment: "Default Alarm Sound page: the row that gives every reminder the sound chosen above, and the button in the question that asks before it does.")
+    /// The row's title, and its confirmation's button; How Alarm Sounds Work names it too.
+    nonisolated static let useForAllTitle = LocalizedStringResource("Use for All Reminders", comment: "Default Alarm Sound page: the row that gives every reminder the sound chosen above, and the button in the question that asks before it does.")
 
     var body: some View {
         AlarmSoundPicker(
-            title: Self.title,
+            title: Text(Self.title),
             sound: $sound,
             extraFooter: Text("New reminders, and reminders someone sends you, start with this sound.",
                               comment: "Default Alarm Sound page: under the alarm sound list, after the line on when it plays.")
@@ -47,7 +47,7 @@ struct DefaultAlarmSoundPage: View {
             Button {
                 isConfirmingUseForAll = true
             } label: {
-                Self.useForAllTitle
+                Text(Self.useForAllTitle)
             }
             .disabled(remindersToChange == 0)
             // The system's confirmation dialog, from its row, as Delete Reminder asks (#286). Not
@@ -57,7 +57,7 @@ struct DefaultAlarmSoundPage: View {
                 isPresented: $isConfirmingUseForAll,
                 titleVisibility: .visible
             ) {
-                Button(action: useForAllReminders) { Self.useForAllTitle }
+                Button(action: useForAllReminders) { Text(Self.useForAllTitle) }
                 Button(role: .cancel) {
                 } label: {
                     Text("Cancel", comment: "Leaves every reminder's sound as it is, instead of Use for All Reminders.")

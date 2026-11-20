@@ -169,7 +169,7 @@ struct NudgeCard: Identifiable {
     static func via(_ delivery: NudgeDelivery) -> LocalizedStringResource {
         switch delivery {
         case .alarm:
-            LocalizedStringResource("Alarm", comment: "Nudge card: the next nudge rings as an alarm.")
+            LocalizedStringResource("Alarm", comment: "Nudge card: the next nudge rings as an alarm. Also How Alarm Sounds Work's picture of a nudge that rings as an alarm.")
         case .notification(weakerBecause: nil):
             LocalizedStringResource("Notification", comment: "Nudge card: the next nudge comes as a notification.")
         case .notification(weakerBecause: .alarmsOff):
