@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Settings: the permission banners, About, what the app may send (notifications, alarms and
 /// badges), a way to open iOS Settings when something is off, Send a Test Nudge, the Default Pace,
-/// the Default Alarm Sound, How It Nudges, and Delete All Data.
+/// the Default Alarm Sound, the Tutorials, and Delete All Data.
 struct SettingsTab: View {
     let state: ScreenState
     /// What previews show, since they have no app model: the permissions and how they leave
@@ -37,6 +37,7 @@ struct SettingsTab: View {
                     generalSection
                     sharingSection
                     nudgesSection
+                    tutorialsSection
                     dataSection
                 }
             }
@@ -142,9 +143,9 @@ struct SettingsTab: View {
         }
     }
 
-    /// The Sharing switch (#387), Connections (ticket 194) and Share Activity (#397) only while it's
-    /// on, and last, on or off, How Sharing Works (#423). Off, none of sharing exists (the
-    /// Sharing-switch mockup), but how it works can still be read.
+    /// The Sharing switch (#387), and Connections (ticket 194) and Share Activity (#397) only while
+    /// it's on. Off, none of sharing exists (the Sharing-switch mockup). How Sharing Works is under
+    /// Tutorials (#466), so how it works can be read either way.
     private var sharingSection: some View {
         Section {
             Toggle(isOn: sharingOn) {
@@ -175,19 +176,6 @@ struct SettingsTab: View {
                         title: Text("Share Activity", comment: "Share Activity: the page's title, and the Settings row that opens it.")
                     )
                 }
-            }
-            // Always the section's last row, with Sharing on or off (the mockup, 2026-11-15).
-            Button {
-                isShowingSharingTutorial = true
-            } label: {
-                SettingsRow(
-                    tile: .tileGray,
-                    symbol: "info.circle",
-                    title: Text("How Sharing Works", comment: "How Sharing Works: the sheet's title, and the Settings row under Sharing that opens it."),
-                    // It opens a sheet, not a page, so no chevron (the HIG keeps that for drilling in):
-                    // the accent says it can be tapped, as Send a Test Nudge's does (#423's phone check).
-                    titleColor: .accentColor
-                )
             }
         } header: {
             Text("Sharing", comment: "Settings: the switch that turns sharing reminders with other people on or off, and the header of its section.")
@@ -283,17 +271,8 @@ struct SettingsTab: View {
                     value: Text(defaultAlarmSound.wrappedValue.title)
                 )
             }
-            NavigationLink {
-                HowItNudgesPage(previewPermissions: previewPermissions, previewDefaultPace: defaultPace.wrappedValue)
-            } label: {
-                SettingsRow(
-                    tile: .tileGray,
-                    symbol: "info.circle",
-                    title: Text("How It Nudges", comment: "Settings: row that opens the page explaining how each strength nudges, and what onboarding said.")
-                )
-            }
         } header: {
-            Text("Nudges", comment: "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace, Default Alarm Sound and How It Nudges.")
+            Text("Nudges", comment: "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and Default Alarm Sound.")
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s2) {
                 ForEach(SettingsStatus.footer(for: reach), id: \.self) { $0.text }
@@ -304,6 +283,34 @@ struct SettingsTab: View {
             // Until the test nudge has arrived, and a moment past it.
             try? await Task.sleep(for: .seconds(NotificationAdapter.testNudgeDelay + 1))
             testNudgeSentAt = nil
+        }
+    }
+
+    /// One row per feature's tutorial, in the order the features shipped (#466). Every row is in the
+    /// accent color, which says it can be tapped; a row that pushes a page also ends in the list's
+    /// chevron, and a sheet's has none.
+    private var tutorialsSection: some View {
+        Section {
+            ForEach(SettingsTutorial.allCases, id: \.self) { tutorial in
+                let row = SettingsRow(tile: .tileGray, symbol: tutorial.symbol, title: Text(tutorial.title), titleColor: .accentColor)
+                switch tutorial {
+                case .howItNudges:
+                    NavigationLink {
+                        HowItNudgesPage(previewPermissions: previewPermissions, previewDefaultPace: defaultPace.wrappedValue)
+                    } label: {
+                        row
+                    }
+                case .howSharingWorks:
+                    // A sheet, which also opens by itself the first time Sharing is turned on.
+                    Button {
+                        isShowingSharingTutorial = true
+                    } label: {
+                        row
+                    }
+                }
+            }
+        } header: {
+            Text("Tutorials", comment: "Settings: header of the section with a row for each feature's tutorial, such as How It Nudges and How Sharing Works.")
         }
     }
 

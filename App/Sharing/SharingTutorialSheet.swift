@@ -32,7 +32,7 @@ struct SharingTutorialSheet: View {
             .onChange(of: paging.page) { _, page in
                 VoiceOverAnnouncement.post(page.heading)
             }
-            .navigationTitle(Text("How Sharing Works", comment: "How Sharing Works: the sheet's title, and the Settings row under Sharing that opens it."))
+            .navigationTitle(Text("How Sharing Works", comment: "How Sharing Works: the sheet's title, and the Settings row under Tutorials that opens it."))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar }
         }
