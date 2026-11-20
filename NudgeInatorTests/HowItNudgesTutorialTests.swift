@@ -47,13 +47,14 @@ final class HowItNudgesTutorialTests {
         ])
     }
 
-    /// Each strength page as the mockup draws it: the strength's badge, its line, the pace it's drawn
+    /// Each strength page as the mockups draw it: a pill of the strength's bars
+    /// (`2026-11-20-how-it-nudges-strength-pills`), its line, the pace it's drawn
     /// at, and its schedule. The give-up spans are worked out in `HowItNudgesSummaryTests` and the
     /// engine's `HowItNudgesTests`: at Consistent · 10 min each strength sends 20 nudges, one wait
     /// apart, 19 × 600 + 600 = 12,000 s, and Relentless folds into one Urgent row.
     @Test func eachStrengthPageShowsItsScheduleAtTheDefaultPace() throws {
         let escalating = try strengthPages(HowItNudgesTutorialPage.pages(pace: .escalating, engine: engine()))
-        #expect(escalating.map(\.art) == [["badge Gentle"], ["badge Firm"], ["badge Relentless"]])
+        #expect(escalating.map(\.art) == [["bars Gentle"], ["bars Firm"], ["bars Relentless"]])
         #expect(escalating.map(\.lead) == ["Never rings as an alarm.", "Rings as an alarm from nudge 4.", "Every nudge rings as an alarm."])
         #expect(escalating.map(\.note) == Array(repeating: "At your Default Pace, Escalating, with Break Through Focus on.", count: 3))
         #expect(escalating.map(\.schedule.givesUpAfter) == [29044, 8250, 3090])

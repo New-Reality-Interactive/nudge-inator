@@ -693,12 +693,13 @@ sharing paused and offline banner.
   top left on every page. Back (`chevron.backward`) and Next (`chevron.forward`) share one capsule
   top right, Back dimmed on page 1; on the last page Next becomes the system's confirm checkmark,
   named Done, which closes the sheet. A page change speaks the new page's heading.
-- **How It Nudges sheet** (mockup `2026-11-20-tutorial-sheets`, #470): How Sharing Works' sheet with
+- **How It Nudges sheet** (mockups `2026-11-20-tutorial-sheets` and
+  `2026-11-20-how-it-nudges-strength-pills`, #470): How Sharing Works' sheet with
   four pages, inline title How It Nudges, opened only from its row. What to Expect (`bell` Nudge, an
   arrow, `checkmark.circle.fill` Done) lists the welcome's four points as rows with their symbols,
   and #459's line about the alarm sound as a second line under the alarms point; onboarding shows
-  the points without it. Gentle, Firm and Relentless each show the strength's badge, half again as
-  big, as the picture; the strength's line the form shows under Strength in `{typography.body}`;
+  the points without it. Gentle, Firm and Relentless each show a pill of the strength's bars alone,
+  as tall as the other pills' icons, as the picture (the heading names the strength); the strength's line the form shows under Strength in `{typography.body}`;
   "At your Default Pace, <pace>, with Break Through Focus on." in `{typography.subhead}`
   `{colors.secondary-label}`; then the How It Nudges section (How It Nudges, above) with no header. The pages are
   built at the Default Pace as the sheet opens, so a changed pace shows the next time.

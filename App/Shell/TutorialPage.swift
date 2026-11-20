@@ -21,8 +21,8 @@ extension TutorialPage {
     var artStopsGrowingAtLargestStandardSize: Bool { false }
 }
 
-/// A piece of a page's picture: a pill, an SF Symbol and a word, an arrow between two, or a
-/// strength's badge.
+/// A piece of a page's picture: a pill, an SF Symbol and a word, an arrow between two, or a pill
+/// of a strength's bars.
 enum TutorialArtPiece: Sendable {
     case pill(symbol: String, text: LocalizedStringResource)
     case arrow

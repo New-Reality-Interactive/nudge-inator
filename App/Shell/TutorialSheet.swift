@@ -203,11 +203,13 @@ private struct PageTop<Page: TutorialPage>: View {
                     .font(.title3)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
             case .strength(let strength):
-                // The badge a reminder's row shows, half again as big, as the mockup's
-                // `.tut-strength`: drawn at that size rather than scaled, so it takes the room it
-                // draws in and grows with the text (#470's review).
-                StrengthBadge(strength: strength, isLarge: true)
-                    .padding(.vertical, Design.Spacing.s1)
+                // The strength's bars alone in a pill, as tall as the other pills' icons: the
+                // heading names the strength (#470's phone check).
+                StrengthBars(strength: strength, height: 16, relativeTo: .subheadline)
+                    .foregroundStyle(Color(uiColor: .label))
+                    .padding(.horizontal, Design.Spacing.s4)
+                    .padding(.vertical, Design.Spacing.s2)
+                    .background(Capsule().fill(Color(uiColor: .tertiarySystemFill)))
             }
         }
     }
