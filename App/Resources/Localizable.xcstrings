@@ -1166,6 +1166,9 @@
     "Choose one or more people. Each gets their own copy, at this strength, and it won't nudge you." : {
       "comment" : "Under the Send To page's list of people."
     },
+    "Choose the sound alarms ring with in Settings, under Default Alarm Sound, and for each reminder, under Sound on its form." : {
+      "comment" : "How It Nudges only, not onboarding: under the point \"Urgent nudges ring as alarms\". Default Alarm Sound is the Settings row, and Sound is the reminder form's row."
+    },
     "Choosing a sound above leaves the reminders you already have as they are. This gives every one of them %@, including reminders someone sent you." : {
       "comment" : "Default Alarm Sound page: under Use for All Reminders. The placeholder is the sound chosen above, such as \"Chime\"."
     },
