@@ -166,6 +166,44 @@ struct AlarmSoundTests {
         #expect(try #require(scheduler.lastPlan).items.allSatisfy { $0.alarmSound == .bell })
     }
 
+    // MARK: Use for All Reminders (#458)
+
+    /// One's own on Chime, one already on Rise, and a received copy on Default: Use for All
+    /// Reminders with Rise changes two, in one plan, and the plan rings with Rise.
+    @Test func useForAllRemindersGivesEveryReminderTheSoundInOnePlan() throws {
+        clock.now = NewYork.local(2026, 10, 15, 8)
+        var engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone)
+        engine.update(reminders: [
+            Reminder(title: "Stretch", dueTime: NewYork.local(2026, 10, 15, 10), strength: .relentless, alarmSound: .chime),
+            Reminder(title: "Pay rent", dueTime: NewYork.local(2026, 10, 15, 11), strength: .relentless, alarmSound: .rise),
+            Reminder(title: "Take the pills", dueTime: NewYork.local(2026, 10, 15, 12), strength: .relentless,
+                     origin: .received(connectionID: UUID(), sendersReminderID: UUID(), revision: 1, state: .accepted)),
+        ])
+        #expect(engine.reminderCount(notUsing: .rise) == 2)
+        let plansBefore = scheduler.appliedPlans.count
+
+        engine.useAlarmSoundForAllReminders(.rise)
+
+        #expect(engine.reminders.map(\.alarmSound) == [.rise, .rise, .rise])
+        #expect(engine.reminderCount(notUsing: .rise) == 0)
+        #expect(scheduler.appliedPlans.count == plansBefore + 1)
+        #expect(try #require(scheduler.lastPlan).items.allSatisfy { $0.alarmSound == .rise })
+    }
+
+    /// With every reminder already on the sound there is nothing to change, so no plan is applied.
+    @Test func useForAllRemindersWithEveryReminderOnTheSoundAppliesNoPlan() {
+        clock.now = NewYork.local(2026, 10, 15, 8)
+        var reminder = pills
+        reminder.alarmSound = .bell
+        var engine = engine(for: reminder)
+        let plansBefore = scheduler.appliedPlans.count
+
+        engine.useAlarmSoundForAllReminders(.bell)
+
+        #expect(engine.reminderCount(notUsing: .bell) == 0)
+        #expect(scheduler.appliedPlans.count == plansBefore)
+    }
+
     /// A received copy's content is the sender's, but the sound is the recipient's own, so an Edit
     /// that changes only the sound is accepted, and one that changes the content is still rejected.
     @Test func theRecipientCanChangeAReceivedCopysSoundButNotItsContent() throws {

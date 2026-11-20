@@ -98,6 +98,15 @@ final class DefaultAlarmSoundTests {
         #expect(model.engine.reminders.map(\.alarmSound) == [.chime, .default])
     }
 
+    /// Use for All Reminders' confirmation (#458), in the approved mockup's words for one and many.
+    @Test(arguments: [
+        (1, AlarmSound.chime, "1 reminder will use Chime."),
+        (3, .default, "3 reminders, including ones people sent you, will use Default Alarm."),
+    ])
+    func useForAllRemindersAsksInWordsForOneAndForMany(count: Int, sound: AlarmSound, message: String) {
+        #expect(String(localized: DefaultAlarmSoundPage.useForAllMessage(changing: count, to: sound)) == message)
+    }
+
     /// The picker's rows in order, the engine's Default named Default Alarm (#223's review).
     @Test func theSoundsAreNamedInThePickersOrder() {
         let names = AlarmSound.allCases.map { String(localized: $0.title) }

@@ -118,6 +118,67 @@ extension AppModelTests {
         #expect(center.pending.allSatisfy { $0.content.sound == nil })
     }
 
+    // MARK: Use for All Reminders (#458)
+
+    /// Every reminder takes the Default Alarm Sound, whatever its strength, and the count the page
+    /// shows beforehand is the reminders it changes.
+    @Test func useForAllRemindersGivesEveryReminderTheDefault() async throws {
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+        model.add(Reminder(title: "Stretch", dueTime: NewYork.local(2026, 10, 16, 9), strength: .gentle, alarmSound: .chime))
+        model.add(Reminder(title: "Pay rent", dueTime: NewYork.local(2026, 10, 16, 10), strength: .relentless, alarmSound: .siren))
+        model.add(Reminder(title: "Water the plants", dueTime: NewYork.local(2026, 10, 16, 11), strength: .relentless))
+        model.defaultAlarmSound = .siren
+        #expect(model.remindersToChangeByUseForAll == 2)
+
+        model.useDefaultAlarmSoundForAllReminders()
+
+        #expect(model.engine.reminders.map(\.alarmSound) == [.siren, .siren, .siren])
+        #expect(model.remindersToChangeByUseForAll == 0)
+    }
+
+    @Test func useForAllRemindersReplacesANudgingRemindersAlarmsYetToRing() async throws {
+        let model = try await nudgingCall().model
+        let pending = manager.scheduled.filter { $0.fireDate.map { $0 > clock.now } ?? false }
+        #expect(!pending.isEmpty)
+        model.defaultAlarmSound = .beacon
+
+        model.useDefaultAlarmSoundForAllReminders()
+        await model.waitUntilApplied()
+
+        #expect(Set(manager.cancelledIDs).isSuperset(of: pending.map(\.id)))
+        #expect(manager.scheduled.map(\.fireDate) == pending.map(\.fireDate))
+        #expect(manager.scheduled.allSatisfy { $0.sound == .named("beacon.caf") })
+    }
+
+    @Test func useForAllRemindersLeavesARingingAlarmRinging() async throws {
+        let (model, ringing) = try await nudgingCall(ringing: true)
+        model.defaultAlarmSound = .siren
+
+        model.useDefaultAlarmSoundForAllReminders()
+        await model.waitUntilApplied()
+
+        #expect(state(of: ringing) == .alerting)
+        #expect(!manager.cancelledIDs.contains(ringing))
+        #expect(manager.stoppedIDs.isEmpty)
+    }
+
+    /// A reminder already on the default keeps its alarms, so nothing is rescheduled for it.
+    @Test func useForAllRemindersLeavesAReminderOnTheDefaultAsItWas() async throws {
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+        var chosen = call
+        chosen.alarmSound = .rise
+        model.add(chosen)
+        await model.waitUntilApplied()
+        let scheduledBefore = manager.scheduleCalls.count
+        model.defaultAlarmSound = .rise
+
+        model.useDefaultAlarmSoundForAllReminders()
+        await model.waitUntilApplied()
+
+        #expect(manager.cancelledIDs.isEmpty)
+        #expect(manager.scheduleCalls.count == scheduledBefore)
+    }
+
     /// Send a Test Nudge shows how a notification nudge looks, whatever sound a reminder has.
     @Test func aTestNudgeIsOneOrdinaryNotificationBesideAReminderWithATone() async throws {
         let model = await launchedModel(store: try ReminderStore(location: .inMemory))

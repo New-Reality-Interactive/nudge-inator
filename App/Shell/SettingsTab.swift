@@ -272,7 +272,9 @@ struct SettingsTab: View {
                 )
             }
             NavigationLink {
-                DefaultAlarmSoundPage(sound: defaultAlarmSound)
+                DefaultAlarmSoundPage(sound: defaultAlarmSound, remindersToChange: model?.remindersToChangeByUseForAll ?? 0) {
+                    model?.useDefaultAlarmSoundForAllReminders()
+                }
             } label: {
                 SettingsRow(
                     tile: .tileGray,

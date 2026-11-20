@@ -502,7 +502,7 @@ private struct BreakThroughFocusSection: View {
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                 switchFooter
-                if form.showsSound { AlarmSoundPicker.footer }
+                if form.showsSound { AlarmSoundFooter.text }
             }
         }
     }

@@ -721,6 +721,22 @@ final class AppModel {
         }
     }
 
+    /// How many reminders Use for All Reminders would change (#458): those, one's own and received,
+    /// not on the Default Alarm Sound. What the confirmation counts, and none dims the row.
+    /// Reminders the person sent have no sound on this iPhone, so they aren't among them.
+    var remindersToChangeByUseForAll: Int {
+        engine.reminderCount(notUsing: defaultAlarmSound)
+    }
+
+    /// Use for All Reminders (#458): every reminder, one's own and received, takes the Default
+    /// Alarm Sound. A nudging reminder's alarms yet to ring are replaced with the new tone; one
+    /// ringing now isn't cut off, since a re-plan never cancels a ring. Nothing reaches a sender:
+    /// a copy's sound is the recipient's own and is in no status report.
+    func useDefaultAlarmSoundForAllReminders() {
+        let sound = defaultAlarmSound
+        perform { $0.useAlarmSoundForAllReminders(sound) }
+    }
+
     /// The Reminders tab's Sort menu choice (#115). Read from the record each time, as the Default
     /// Pace is, so a launch before the first unlock doesn't fix it at Created, Oldest First.
     var remindersSort: RemindersSort {

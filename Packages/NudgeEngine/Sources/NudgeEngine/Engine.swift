@@ -413,6 +413,24 @@ public struct Engine {
         applyPlan()
     }
 
+    /// How many reminders, one's own and received, aren't on `sound`: the ones Use for All Reminders
+    /// with it would change (#458).
+    public func reminderCount(notUsing sound: AlarmSound) -> Int {
+        reminders.count { $0.alarmSound != sound }
+    }
+
+    /// Settings' Use for All Reminders (#458): every reminder the engine holds, one's own and
+    /// received, takes `sound`, in one re-plan. The sound is no Locked field and a received copy's
+    /// own, so this is the edit each reminder's Sound row would make: a reminder already on `sound`
+    /// is left as it is, keeping its alarm IDs, and with none to change no plan is applied.
+    public mutating func useAlarmSoundForAllReminders(_ sound: AlarmSound) {
+        guard reminderCount(notUsing: sound) > 0 else { return }
+        for index in reminders.indices {
+            reminders[index].alarmSound = sound
+        }
+        applyPlan()
+    }
+
     /// Fixes how the occurrences that closed so far closed, before the reminder's fields change,
     /// since the clock would now work them out from the new fields. With `movingNudgeTimes` the new
     /// fields apply from the next occurrence: due times up to the latest never happened, and the
