@@ -4,7 +4,7 @@ import NudgeEngine
 /// A page of the How Alarm Sounds Work sheet (#467, the mockups `2026-11-20-tutorial-sheets` and
 /// `2026-11-20-alarm-sounds-tutorial-leads`), in the order the sheet shows them. It never opens by itself: alarm sounds have no screen of their own
 /// to reach first, so only its Settings row opens it.
-enum AlarmSoundsTutorialPage: TutorialPage {
+enum AlarmSoundsTutorialPage: TutorialPage, CaseIterable {
     case pickYourDefaultSound
     case changeYourReminders
     case whenItPlays

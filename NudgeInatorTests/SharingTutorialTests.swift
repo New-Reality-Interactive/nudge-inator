@@ -61,12 +61,7 @@ struct SharingTutorialTests {
         (.whoSeesWhat, ["lock Yours", "eye Status"]),
     ])
     func eachPageHasTheMockupsPicture(page: SharingTutorialPage, pieces: [String]) {
-        #expect(page.art.map { piece in
-            switch piece {
-            case .pill(let symbol, let text): "\(symbol) \(String(localized: text))"
-            case .arrow: "→"
-            }
-        } == pieces)
+        #expect(page.art.map(\.described) == pieces)
     }
 
     @Test func nextMovesForwardAPageAndStopsAtTheLast() {

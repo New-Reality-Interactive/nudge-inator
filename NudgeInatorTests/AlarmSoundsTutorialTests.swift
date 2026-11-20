@@ -54,12 +54,7 @@ struct AlarmSoundsTutorialTests {
         (.whenItPlays, ["alarm Alarm"], false),
     ])
     func eachPageHasTheMockupsPicture(page: AlarmSoundsTutorialPage, pieces: [String], stopsGrowing: Bool) {
-        #expect(page.art.map { piece in
-            switch piece {
-            case .pill(let symbol, let text): "\(symbol) \(String(localized: text))"
-            case .arrow: "→"
-            }
-        } == pieces)
+        #expect(page.art.map(\.described) == pieces)
         #expect(page.artStopsGrowingAtLargestStandardSize == stopsGrowing)
     }
 

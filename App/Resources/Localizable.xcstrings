@@ -1082,6 +1082,9 @@
     "Ask me first" : {
       "comment" : "Delivery Mode: a reminder from this person waits to be accepted before it nudges."
     },
+    "At your Default Pace, %@, with Break Through Focus on." : {
+      "comment" : "How It Nudges: under a strength's line, before its schedule. The placeholder is the Default Pace, such as \"Consistent · 10 min\" or \"Escalating\"."
+    },
     "Back" : {
       "comment" : "A tutorial sheet, such as How Sharing Works: the top bar's button (a back arrow) that goes back a page. Dimmed on the first page."
     },
@@ -1093,9 +1096,6 @@
     },
     "Bell" : {
       "comment" : "Alarm sound name: a bell tone that ships with the app."
-    },
-    "Below is how each strength nudges a new reminder at your Default Pace, %@, with Break Through Focus on." : {
-      "comment" : "How It Nudges page: under the points at the top, before the three strengths' schedules. The placeholder is the Default Pace, such as \"Consistent · 10 min\" or \"Escalating\"."
     },
     "Both days are included." : {
       "comment" : "Sent's filter sheet: under the first and last day a sent reminder may be due, by the next due time its row shows."
@@ -1371,7 +1371,7 @@
       "comment" : "Reminder details: on a received reminder, the switch that keeps its status from its sender."
     },
     "Done" : {
-      "comment" : "A tutorial sheet, such as How Sharing Works: the last page's confirm button (a checkmark), in place of Next, which closes the sheet.\nAccepting an invite: closes the Connected sheet.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
+      "comment" : "A tutorial sheet, such as How Sharing Works: the last page's confirm button (a checkmark), in place of Next, which closes the sheet.\nAccepting an invite: closes the Connected sheet.\nHow It Nudges, What to Expect: the picture's last pill, after an arrow from Nudge: the reminder marked Done.\nMy Day: a Nudging row's swipe action that marks the reminder Done and stops its nudges.\nMy Day: the button on a Nudging row that marks the reminder Done and stops its nudges.\nMy Day: the caption of the count of occurrences done today.\nNotification action: marks the reminder Done and stops its nudges.\nNudge card's swipe action: marks the reminder Done and stops its nudges.\nNudge card: the button that marks the reminder Done and stops its nudges.\nReminders tab: a Nudging row's swipe action and VoiceOver action that marks the reminder Done and stops its nudges.\nStatus label, and a Status row in the Reminders and Filter Sent sheets: an occurrence closed as Done.\nThe tag sheet's confirm button (a checkmark)."
     },
     "Done after %lld nudges" : {
       "comment" : "Now, Last 24 Hours: under the title of an occurrence closed as Done. The placeholder is how many nudges it sent.",
@@ -1642,7 +1642,7 @@
       "comment" : "Under Break Through Focus when it's off."
     },
     "Every nudge rings as an alarm." : {
-      "comment" : "Under the reminder form's strength, when every nudge rings, as Relentless's do."
+      "comment" : "Under the reminder form's strength, and under a strength's heading in the How It Nudges tutorial, when every nudge rings, as Relentless's do."
     },
     "Every reminder you have uses %@." : {
       "comment" : "Default Alarm Sound page: under Use for All Reminders, dimmed because every reminder already has the sound chosen. The placeholder is that sound, such as \"Chime\"."
@@ -1737,7 +1737,7 @@
       "comment" : "How Alarm Sounds Work: the sheet's title, and the Settings row under Tutorials that opens it."
     },
     "How It Nudges" : {
-      "comment" : "Section header on reminder details and the reminder form: the nudges a reminder sends, when, and how they arrive.\nSettings: row under Tutorials that opens the page explaining how each strength nudges, and what onboarding said.\nTitle of the page in Settings that explains how each strength nudges."
+      "comment" : "How It Nudges: the sheet's title, and the Settings row under Tutorials that opens it, about how each strength nudges and what onboarding said.\nSection header on reminder details and the reminder form: the nudges a reminder sends, when, and how they arrive."
     },
     "How Sharing Works" : {
       "comment" : "How Sharing Works: the sheet's title, and the Settings row under Tutorials that opens it."
@@ -1911,7 +1911,7 @@
       "comment" : "Change note line: a reminder that doesn't repeat, as the old or new repeat.\nRepeat preset, in the form's Repeat menu: the reminder doesn't repeat.\nThe reminder form's End Repeat choice: the repeat never ends."
     },
     "Never rings as an alarm." : {
-      "comment" : "Under the reminder form's strength, when none of its nudges rings."
+      "comment" : "Under the reminder form's strength, and under a strength's heading in the How It Nudges tutorial, when none of its nudges rings."
     },
     "New Reminder" : {
       "comment" : "Title of the form that makes a reminder.\nToolbar button (a plus) that opens the New Reminder form, and the button under Nothing Sent on the Reminders tab's Sent."
@@ -2132,6 +2132,9 @@
     },
     "Now, %@" : {
       "comment" : "My Day: the marker among the rows that shows where the time is now. The placeholder is the time, such as \"1:00 PM\"."
+    },
+    "Nudge" : {
+      "comment" : "How It Nudges, What to Expect: the picture's first pill, a nudge, before an arrow to Done."
     },
     "Nudge %lld of %lld" : {
       "comment" : "Nudge card: how many nudges it has sent of the most it sends, such as \"Nudge 3 of 20\".",
@@ -2445,7 +2448,7 @@
       "comment" : "Reminder details: brings a paused reminder back at its next time."
     },
     "Rings as an alarm from nudge %lld." : {
-      "comment" : "Under the reminder form's strength. The placeholder is the first nudge that rings as an alarm."
+      "comment" : "Under the reminder form's strength, and under a strength's heading in the How It Nudges tutorial. The placeholder is the first nudge that rings as an alarm."
     },
     "Rise" : {
       "comment" : "Alarm sound name: a tone that rises in pitch, shipped with the app."
@@ -2970,6 +2973,9 @@
     },
     "What %@ Chose" : {
       "comment" : "A connection's page: header of the other person's choices for the reminders this person sends them. The argument is their name, such as \"Alex Morgan\"."
+    },
+    "What to Expect" : {
+      "comment" : "How It Nudges: the first page's heading, over the points onboarding showed."
     },
     "When It Plays" : {
       "comment" : "How Alarm Sounds Work: the last page's heading, about which nudges ring with the sound."

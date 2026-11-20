@@ -2,7 +2,7 @@ import Foundation
 
 /// A page of the How Sharing Works sheet (#423, the mockup `2026-11-15-sharing-tutorial`), in the
 /// order the sheet shows them.
-enum SharingTutorialPage: TutorialPage {
+enum SharingTutorialPage: TutorialPage, CaseIterable {
     case sendEachOtherReminders
     case connect
     case sendAReminder

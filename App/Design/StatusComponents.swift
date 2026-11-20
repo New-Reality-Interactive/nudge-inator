@@ -5,17 +5,22 @@ import SwiftUI
 /// Strength has no color, so the bars and the name carry it.
 struct StrengthBadge: View {
     let strength: Strength
+    /// About half again as big, as the picture on a How It Nudges strength page (#470): its text
+    /// in body (17 pt) rather than caption (12 pt), and its bars and padding with it.
+    var isLarge = false
+
+    private var scale: CGFloat { isLarge ? 1.5 : 1 }
 
     var body: some View {
-        HStack(spacing: Design.Spacing.s1) {
-            StrengthBars(strength: strength)
+        HStack(spacing: Design.Spacing.s1 * scale) {
+            StrengthBars(strength: strength, textStyle: isLarge ? .body : .caption)
             Text(strength.title)
         }
-        .font(.caption.weight(.semibold))
+        .font((isLarge ? Font.body : .caption).weight(.semibold))
         .foregroundStyle(Color(uiColor: .label))
-        .padding(.vertical, Design.Size.badgeVerticalPadding)
-        .padding(.leading, Design.Size.badgeLeadingPadding)
-        .padding(.trailing, Design.Spacing.s2)
+        .padding(.vertical, Design.Size.badgeVerticalPadding * scale)
+        .padding(.leading, Design.Size.badgeLeadingPadding * scale)
+        .padding(.trailing, Design.Spacing.s2 * scale)
         .overlay(Capsule().strokeBorder(Color.neutral))
         // The name says it; the bars only show it.
         .accessibilityElement(children: .combine)
@@ -26,7 +31,13 @@ struct StrengthBadge: View {
 /// outlined. They scale with the text.
 private struct StrengthBars: View {
     let strength: Strength
-    @ScaledMetric(relativeTo: .caption) private var height: CGFloat = 11
+    @ScaledMetric private var height: CGFloat
+
+    /// 11 pt beside caption text, and as much bigger beside a larger style as the text is.
+    init(strength: Strength, textStyle: Font.TextStyle) {
+        self.strength = strength
+        _height = ScaledMetric(wrappedValue: textStyle == .caption ? 11 : 11 * 17 / 12, relativeTo: textStyle)
+    }
 
     var body: some View {
         HStack(alignment: .bottom, spacing: height * 0.15) {

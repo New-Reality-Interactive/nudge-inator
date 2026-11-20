@@ -3,7 +3,7 @@ import SwiftUI
 
 /// DESIGN.md's How It Nudges: an inset grouped section of footnote rows, each leading with a small
 /// urgency dot, then which nudges, when, the urgency word and the Via label, with the summary in
-/// the footer. Reminder details, the form and the Settings page all draw it from the engine.
+/// the footer. Reminder details, the form and the How It Nudges sheet all draw it from the engine.
 struct HowItNudgesSection<Header: View>: View {
     let howItNudges: HowItNudges
     @ViewBuilder var header: Header
@@ -150,7 +150,7 @@ extension HowItNudgesSentence {
 extension HowItNudges {
     /// A strength's ladder from an engine with the given permissions, for previews.
     static func preview(_ strength: Strength, _ permissions: PermissionStates = PermissionStates(alarms: .allowed), breakThroughFocus: Bool = true) -> HowItNudges {
-        Engine(clock: SystemClock(), scheduler: NoOpScheduler(), permissions: permissions)
+        Engine.unscheduled(permissions: permissions)
             .howItNudges(strength, breakThroughFocus: breakThroughFocus)
     }
 }

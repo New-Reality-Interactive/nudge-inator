@@ -671,10 +671,9 @@ sharing paused and offline banner.
   tutorial, in the order the features shipped: How It Nudges, How Sharing Works, then How Alarm Sounds
   Work (#467). Each row is a `{colors.tile-gray}` tile with its feature's symbol (`bell`, `person.2`,
   `speaker.wave.2`) and its title in the accent, which says it can be tapped, as Send a Test Nudge's
-  does. A row that opens a sheet has no chevron, since the HIG keeps the disclosure indicator for
-  drilling in (#423); every tutorial is a sheet like How Sharing Works once #470 turns How It Nudges
-  into one, which until then keeps its pushed page and chevron. Every tutorial sheet is the one
-  How Sharing Works uses (below), with its own pages. Only How Sharing Works opens by itself.
+  does. Every row opens a sheet, so none has a chevron, since the HIG keeps the disclosure indicator
+  for drilling in (#423, #470). Every tutorial sheet is the one How Sharing Works uses (below), with
+  its own pages. Only How Sharing Works opens by itself.
 - **How Sharing Works sheet** (mockup `2026-11-15-sharing-tutorial`, #423): four pages in an inset
   grouped list, inline title How Sharing Works. Each page has decorative pills (an SF Symbol and a
   word in `{colors.label}`, 8 pt apart, on `tertiary-system-fill`, `arrow.forward` between them in
@@ -691,6 +690,15 @@ sharing paused and offline banner.
   top left on every page. Back (`chevron.backward`) and Next (`chevron.forward`) share one capsule
   top right, Back dimmed on page 1; on the last page Next becomes the system's confirm checkmark,
   named Done, which closes the sheet. A page change speaks the new page's heading.
+- **How It Nudges sheet** (mockup `2026-11-20-tutorial-sheets`, #470): How Sharing Works' sheet with
+  four pages, inline title How It Nudges, opened only from its row. What to Expect (`bell` Nudge, an
+  arrow, `checkmark.circle.fill` Done) lists the welcome's four points as rows with their symbols,
+  and #459's line about the alarm sound as a second line under the alarms point; onboarding shows
+  the points without it. Gentle, Firm and Relentless each show the strength's badge, half again as
+  big, as the picture; the strength's line the form shows under Strength in `{typography.body}`;
+  "At your Default Pace, <pace>, with Break Through Focus on." in `{typography.subhead}`
+  `{colors.secondary-label}`; then the How It Nudges section (How It Nudges, above) with no header. The pages are
+  built at the Default Pace as the sheet opens, so a changed pace shows the next time.
 - **How Alarm Sounds Work sheet** (mockups `2026-11-20-tutorial-sheets` and
   `2026-11-20-alarm-sounds-tutorial-leads`, #467): How Sharing Works' sheet with three pages, each a
   lead and rows, inline title How Alarm Sounds Work, opened only from its row: Pick Your Default
