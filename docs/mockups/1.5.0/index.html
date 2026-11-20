@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Tutorial Sheets</title>
+<title>Nudge-inator 1.5.0</title>
 <style>
 /* ============ Colors =============
    Follows Apple's HIG "Color" and "Dark Mode" pages (docs/apple/design). Every token is a dynamic color
@@ -1044,11 +1044,18 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
 /* A tutorial page's line above its schedule (tutorial sheets). */
 /* A strength page's badge, drawn larger in the art. */
 .tut-strength { display: inline-flex; transform: scale(1.5); padding: 6px 0; }
-/* How Alarm Sounds Work's page 2 art: each pill keeps its words on one line, and its text stops
-   growing at the largest standard size (xxxLarge), since the art is decoration VoiceOver skips. */
-.tut-art .pill.nowrap { white-space: nowrap; }
-:root[data-type^="ax"] .tut-art .pill.nowrap { font: 21px/26px var(--font); letter-spacing: -0.018em; }
-:root[data-type^="ax"] .tut-art .pill.nowrap .i { width: 22px !important; height: 22px !important; }
+/* Every tutorial's art (#470's phone check): each pill keeps its words on one line, and its text
+   stops growing at the largest standard size (xxxLarge), since the art is decoration VoiceOver
+   skips. Each pill is as wide as its own words, and every pill on a page has the same text size.
+   Where the pills don't fit side by side they stack, the arrow pointing down, as the app's do. */
+.tut-art .pill { white-space: nowrap; }
+.tut-art.stacked { flex-direction: column; gap: 8px; }
+.tut-art.stacked .arrow { transform: rotate(90deg); }
+/* A strength page's picture: the strength's bars alone in a pill, since the heading names it. */
+.tut-art .pill .bars rect.off { fill: none; stroke: currentColor; stroke-width: 1.2; opacity: 0.55; }
+:root[data-type^="ax"] .tut-art .pill { font: 21px/26px var(--font); letter-spacing: -0.018em; }
+:root[data-type^="ax"] .tut-art .pill .i { width: 22px !important; height: 22px !important; }
+:root[data-type^="ax"] .tut-art .pill .bars { width: 24px; height: 22px; }
 .tut-sub { font: var(--subhead); letter-spacing: var(--subhead-track); color: var(--secondary-label); margin-bottom: 8px; }
 .tut-h { font: var(--title2); letter-spacing: var(--title2-track); font-weight: var(--bold); text-align: center; margin: 10px 32px 8px; }
 .tut-steps { counter-reset: s; list-style: none; margin: 0; padding: 0; }
@@ -3358,11 +3365,17 @@ const nudgesPages = () => [
     h: "What to Expect",
     rows: WELCOME.map(([icon, t, x]) => [icon, t, HIN_NOTES[icon] ? `${x}</span><span class="s">${HIN_NOTES[icon]}` : x]) },
   ...["gentle", "firm", "relentless"].map((k) => ({
-    art: () => `<span class="tut-strength">${strengthBadge(k)}</span>`,
+    art: () => `<span class="pill">${strengthPillBars(k)}</span>`,
     h: NAME[k],
     lead: strengthBlurb(k, true, settings.defaultPace),
     body: () => `<p class="sheet-lead tut-sub">At your Default Pace, ${paceText(settings.defaultPace)}, with Break Through Focus on.</p>${hinSection(k, settings.defaultPace, true, null)}` })),
 ];
+/* A strength page's pill: the badge's bars at the pills' 20 pt icon size, with no name, since the
+   page's heading names the strength (#470's phone check). */
+function strengthPillBars(s) {
+  const bars = [0, 1, 2].map((i) => strengthBar(i, i < STEPS[s])).join("");
+  return `<svg class="bars" width="22" height="20" viewBox="0 0 12 11" aria-hidden="true">${bars}</svg>`;
+}
 /* How Alarm Sounds Work (tutorial sheets): three pages, naming the rows as the screens do: Default
    Alarm Sound, Use for All Reminders and Sound. */
 const SOUNDS_PAGES = [
@@ -3373,14 +3386,16 @@ const SOUNDS_PAGES = [
            ["plus", "New reminders start with it", "So do reminders someone sends you. The reminders you already have keep their sounds."]] },
   // The art is one reminder and the sound it rings with; a one-word title keeps both pills on one line
   // at the largest text size.
-  { art: () => `<span class="pill nowrap">${I("bell", 20)} Wake Up</span><span class="arrow">${I("arrow.right", 22)}</span><span class="pill nowrap">${I("speaker.wave.2", 20)} Chime</span>`,
+  { art: () => `<span class="pill">${I("bell", 20)} Wake Up</span><span class="arrow">${I("arrow.right", 22)}</span><span class="pill">${I("speaker.wave.2", 20)} Chime</span>`,
     h: "Change Your Reminders",
+    lead: "Change the sound of reminders you already have, all at once or one at a time.",
     rows: [["square.stack", "Use for All Reminders", "Settings › Default Alarm Sound. Gives every reminder you have the default, including ones people sent you."],
            ["pencil", "Sound on the form", "Edit a reminder and change its Sound, under Break Through Focus, even while it's nudging."],
            ["list.bullet.rectangle", "Named on its details", "A reminder's details name its sound, under Break Through Focus."]],
     foot: "A reminder someone sends you rings with the sound chosen on your iPhone." },
-  { art: () => `<span class="pill">${I("alarm", 20)} Alarm</span><span class="pill">${I("bell", 20)} Notification</span>`,
+  { art: () => `<span class="pill">${I("alarm", 20)} Alarm</span>`,
     h: "When It Plays",
+    lead: "Your sound plays only when a nudge rings as an alarm.",
     rows: [["alarm", "Only alarms play it", "A Firm reminder's Urgent nudges with Break Through Focus on, and every Relentless nudge, ring as alarms."],
            ["bell.slash", "Some reminders never ring", "A Gentle reminder, or a Firm one with Break Through Focus off, never rings, so it has no Sound row."],
            ["bell", "Other nudges sound standard", "Notifications use the standard sound, and so does every nudge while Alarms are off in iOS Settings."]] },
@@ -5532,6 +5547,17 @@ setDevice(device.id);
 
 state.focus = null;
 render();
+</script>
+<script>
+/* The app's ViewThatFits: pills side by side where they fit, else stacked. */
+function stackTutorialArt() {
+  for (const art of document.querySelectorAll(".tut-art")) {
+    art.classList.remove("stacked");
+    if (art.scrollWidth > art.clientWidth + 1) art.classList.add("stacked");
+  }
+}
+new MutationObserver(() => requestAnimationFrame(stackTutorialArt)).observe(document.body, { childList: true, subtree: true });
+addEventListener("resize", stackTutorialArt);
 </script>
 </body>
 </html>
