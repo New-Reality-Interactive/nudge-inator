@@ -12,13 +12,6 @@ protocol TutorialPage: Equatable, Sendable {
     /// Above the heading, decoration only.
     var art: [TutorialArtPiece] { get }
     var content: TutorialContent { get }
-    /// Whether the art's text stops growing at the largest standard size. Art that would otherwise
-    /// wrap inside its pills does, since VoiceOver skips it.
-    var artStopsGrowingAtLargestStandardSize: Bool { get }
-}
-
-extension TutorialPage {
-    var artStopsGrowingAtLargestStandardSize: Bool { false }
 }
 
 /// A piece of a page's picture: a pill, an SF Symbol and a word, an arrow between two, or a pill

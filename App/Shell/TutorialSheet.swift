@@ -154,7 +154,10 @@ private struct PageTop<Page: TutorialPage>: View {
                 VStack(spacing: Design.Spacing.s2) { art(arrow: "arrow.down") }
             }
             .frame(maxWidth: .infinity)
-            .dynamicTypeSize(page.artStopsGrowingAtLargestStandardSize ? ...DynamicTypeSize.xxxLarge : ...DynamicTypeSize.accessibility5)
+            // Every pill keeps its words on one line, so its text stops growing at the largest
+            // standard size: the art is decoration VoiceOver skips (#470's phone check, the mockup
+            // `2026-11-20-tutorial-pills-one-line`).
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .accessibilityHidden(true)
             Text(page.heading)
                 .font(.title2.bold())
@@ -190,8 +193,7 @@ private struct PageTop<Page: TutorialPage>: View {
                 HStack(spacing: pillGap) {
                     Image(systemName: symbol)
                     Text(text)
-                        // One line where the art stops growing, as the mockup's pills there do.
-                        .lineLimit(page.artStopsGrowingAtLargestStandardSize ? 1 : nil)
+                        .lineLimit(1)
                 }
                 .font(.subheadline)
                 .foregroundStyle(Color(uiColor: .label))

@@ -680,8 +680,9 @@ sharing paused and offline banner.
 - **How Sharing Works sheet** (mockup `2026-11-15-sharing-tutorial`, #423): four pages in an inset
   grouped list, inline title How Sharing Works. Each page has decorative pills (an SF Symbol and a
   word in `{colors.label}`, 8 pt apart, on `tertiary-system-fill`, `arrow.forward` between them in
-  `{colors.secondary-label}`; stacked with `arrow.down` where they don't fit on one line), hidden
-  from VoiceOver; a centered heading in `{typography.title2}` bold; then a lead in
+  `{colors.secondary-label}`; stacked with `arrow.down` where they don't fit on one line; each pill
+  keeps its words on one line, as wide as they need, and its text stops growing at xxxLarge, in every
+  tutorial (#470, mockup `2026-11-20-tutorial-pills-one-line`)), hidden from VoiceOver; a centered heading in `{typography.title2}` bold; then a lead in
   `{typography.body}` and rows with a `{colors.tile-blue}` tile, a title in `{typography.body}` and a
   line under it in `{typography.subhead}` `{colors.secondary-label}`, or, on Connect, three numbered
   steps in accent circles (Accent's one exception; capped at 44 pt, dividers from the circle's
@@ -707,8 +708,7 @@ sharing paused and offline banner.
   `2026-11-20-alarm-sounds-tutorial-leads`, #467): How Sharing Works' sheet with three pages, each a
   lead and rows, inline title How Alarm Sounds Work, opened only from its row: Pick Your Default
   Sound (a `speaker.wave.2` Default Alarm Sound pill, two rows), Change Your Reminders (`bell` Wake
-  Up, an arrow, `speaker.wave.2` Chime, each pill on one line and its text stopping at xxxLarge;
-  three rows and a footer) and When It Plays (an `alarm` Alarm pill alone, since a notification
+  Up, an arrow, `speaker.wave.2` Chime; three rows and a footer) and When It Plays (an `alarm` Alarm pill alone, since a notification
   never plays the sound; three rows). Its pills and the Use for All Reminders row reuse the screens'
   own strings, and its tests check that the sentences name Default Alarm Sound, Sound and the tones
   as the screens do.

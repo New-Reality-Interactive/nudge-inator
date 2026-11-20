@@ -31,7 +31,6 @@ final class HowItNudgesTutorialTests {
     @Test func whatToExpectListsTheWelcomesPoints() {
         let page = HowItNudgesTutorialPage.whatToExpect
         #expect(page.art.map(\.described) == ["bell Nudge", "→", "checkmark.circle.fill Done"])
-        #expect(!page.artStopsGrowingAtLargestStandardSize)
         guard case .points(let lead, let points, let footnote) = page.content else {
             Issue.record("What to Expect isn't a page of points")
             return

@@ -46,16 +46,14 @@ struct AlarmSoundsTutorialTests {
         #expect(actualFootnote.map { String(localized: $0) } == footnote)
     }
 
-    /// The pictures' pills, decoration only: their symbol and word, an arrow as "→". Only the second
-    /// page's, a reminder and its sound, stops growing at the largest standard size.
+    /// The pictures' pills, decoration only: their symbol and word, an arrow as "→".
     @Test(arguments: [
-        (AlarmSoundsTutorialPage.pickYourDefaultSound, ["speaker.wave.2 Default Alarm Sound"], false),
-        (.changeYourReminders, ["bell Wake Up", "→", "speaker.wave.2 Chime"], true),
-        (.whenItPlays, ["alarm Alarm"], false),
+        (AlarmSoundsTutorialPage.pickYourDefaultSound, ["speaker.wave.2 Default Alarm Sound"]),
+        (.changeYourReminders, ["bell Wake Up", "→", "speaker.wave.2 Chime"]),
+        (.whenItPlays, ["alarm Alarm"]),
     ])
-    func eachPageHasTheMockupsPicture(page: AlarmSoundsTutorialPage, pieces: [String], stopsGrowing: Bool) {
+    func eachPageHasTheMockupsPicture(page: AlarmSoundsTutorialPage, pieces: [String]) {
         #expect(page.art.map(\.described) == pieces)
-        #expect(page.artStopsGrowingAtLargestStandardSize == stopsGrowing)
     }
 
     /// The sheet names the rows as the screens do: Settings' Default Alarm Sound, its Use for All

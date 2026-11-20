@@ -38,9 +38,6 @@ enum AlarmSoundsTutorialPage: TutorialPage, CaseIterable {
         }
     }
 
-    /// A reminder and its sound keep to one line each, so their text stops growing (the mockup).
-    var artStopsGrowingAtLargestStandardSize: Bool { self == .changeYourReminders }
-
     var content: TutorialContent {
         switch self {
         case .pickYourDefaultSound:
