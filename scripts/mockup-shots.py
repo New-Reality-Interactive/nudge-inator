@@ -187,6 +187,14 @@ SCREENS = {
   # Tutorials (#465). Only a mockup with it draws these; settings shows the section too.
   "settings-tutorials": ("setTimeout(()=>document.getElementById('c-tt-section').click(),200)", 1),
   "settings-how-alarm-sounds-work": ("document.getElementById('c-tt-sound').click()", 3),
+  # Tutorial sheets: each tutorial is a paged sheet. Only a mockup with them draws these.
+  "tutorial-how-it-nudges-p1": ("setTimeout(()=>{document.getElementById('c-tt-hin').click();state.sheet.page=0;render()},200)", 1),
+  "tutorial-how-it-nudges-p2": ("setTimeout(()=>{document.getElementById('c-tt-hin').click();state.sheet.page=1;render()},200)", 3),
+  "tutorial-how-it-nudges-p3": ("setTimeout(()=>{document.getElementById('c-tt-hin').click();state.sheet.page=2;render()},200)", 3),
+  "tutorial-how-it-nudges-p4": ("setTimeout(()=>{document.getElementById('c-tt-hin').click();state.sheet.page=3;render()},200)", 3),
+  "tutorial-how-alarm-sounds-work-p1": ("setTimeout(()=>{document.getElementById('c-tt-sound').click();state.sheet.page=0;render()},200)", 1),
+  "tutorial-how-alarm-sounds-work-p2": ("setTimeout(()=>{document.getElementById('c-tt-sound').click();state.sheet.page=1;render()},200)", 1),
+  "tutorial-how-alarm-sounds-work-p3": ("setTimeout(()=>{document.getElementById('c-tt-sound').click();state.sheet.page=2;render()},200)", 1),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}
