@@ -276,7 +276,10 @@ final class AppModel {
     }
 
     private func makeEngine(permissions: PermissionStates) -> Engine {
-        Engine(clock: clock, scheduler: scheduler, giveUpLimit: giveUpLimit, timeZone: timeZone, permissions: permissions)
+        Engine(
+            clock: clock, scheduler: scheduler, giveUpLimit: giveUpLimit, timeZone: timeZone, permissions: permissions,
+            quietHours: quietHours
+        )
     }
 
     /// The one launch, which the app delegate starts and App opened waits for.
@@ -317,6 +320,8 @@ final class AppModel {
         var engine = makeEngine(permissions: permissions)
         engine.update(tags: stored.tags)
         engine.update(histories: stored.histories)
+        // Before the reminders, which plan once with them in place (#368).
+        engine.update(replacedQuietHours: settingsRecords.quietHours.replacedQuietHours)
         engine.update(reminders: stored.reminders)
         let queued = loadQueuedDones()
         for done in queued {
@@ -763,14 +768,22 @@ final class AppModel {
 
     /// The quiet hours schedules (#366), none until a person sets one, which means off. Read from
     /// the record each time, as the Default Pace is, so a launch before the first unlock doesn't
-    /// fix it at none.
+    /// fix it at none. A change after launch re-plans (#368): nudges now inside a window are
+    /// cancelled, ones no longer inside are scheduled, and the schedules it replaced are saved with
+    /// them. Before launch it only saves: the launch builds its engine from the record.
     var quietHours: QuietHours {
         get {
             access(keyPath: \.quietHours)
             return settingsRecords.quietHours.quietHours
         }
         set {
-            withMutation(keyPath: \.quietHours) { settingsRecords.quietHours.quietHours = newValue }
+            withMutation(keyPath: \.quietHours) {
+                settingsRecords.quietHours.quietHours = newValue
+                // The engine's list is only the saved one once launch has handed it back.
+                guard case .ready = launchState else { return }
+                perform { $0.update(quietHours: newValue) }
+                settingsRecords.quietHours.replacedQuietHours = engine.replacedQuietHours
+            }
         }
     }
 
