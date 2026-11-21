@@ -34,7 +34,7 @@ struct TagsPage: View {
                 if form.tags.isEmpty {
                     EmptyRow(text: Text("No tags yet. Add one above.", comment: "The Tags page's list when there are no tags."))
                 }
-                ForEach(sortedTags) { tag in
+                ForEach(form.tagsInNameOrder) { tag in
                     // The person's own tag name, never translated.
                     CheckmarkRow(title: Text(verbatim: "#\(tag.name)"), isChecked: form.tagIDs.contains(tag.id)) {
                         form.toggleTag(tag.id)
@@ -47,11 +47,6 @@ struct TagsPage: View {
         .centeredInReadableColumn()
         .navigationTitle(Text("Tags", comment: "Title of the reminder form's Tags page."))
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private var sortedTags: [Tag] {
-        let order = NameOrder()
-        return form.tags.sorted { order.isOrdered($0.name, $0.id, before: $1.name, $1.id) }
     }
 
     /// Adds the typed tag and keeps the field focused for the next one, as the mockup does.

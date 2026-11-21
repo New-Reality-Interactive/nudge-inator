@@ -21,5 +21,14 @@ struct StandInNamesTests {
         #expect(model.data.sentCopies.count == 4)
         #expect(Set(model.data.sentCopies.map(\.connectionID)) == Set(connected.map(\.id)))
     }
+
+    @Test func sentListsThePeopleInTheLocalesNameOrder() async throws {
+        let model = try #require(StandInSharing.modelIfAsked(clock: clock, environment: [StandInSharing.variable: "names"]))
+        model.refreshAccountState()
+        await model.waitUntilApplied()
+
+        // By code point "Émile Roy" would come last.
+        #expect(model.data.sentConnections.map(\.name) == ["Ana Ortiz", "Émile Roy", "Riley Park", "Zoe Adams"])
+    }
 }
 #endif
