@@ -6,7 +6,7 @@ public struct TagSort: Equatable, Sendable {
     public var order: Order
 
     public enum Field: String, CaseIterable, Sendable {
-        /// By name, ignoring case.
+        /// By name, in the person's locale's order.
         case name
         /// By how many reminders have the tag.
         case reminderCount
@@ -76,13 +76,14 @@ public struct TagList: Equatable, Sendable {
 
 extension Engine {
     /// The Tags tab's list as it stands now, in `sort`'s order. Tags with the same reminder count
-    /// sort by name, A to Z, under both orders (spec #104, Decision 43). Only tags `filter` matches
-    /// are listed.
+    /// sort by name, A to Z, under both orders (spec #104, Decision 43). Names are in `nameOrder`
+    /// (ticket 335). Only tags `filter` matches are listed.
     public func tagList(
         sortedBy sort: TagSort = .nameAToZ,
-        filteredBy filter: TagListFilter = TagListFilter()
+        filteredBy filter: TagListFilter = TagListFilter(),
+        nameOrder: NameOrder = NameOrder()
     ) -> TagList {
-        let byName = tagSummaries().filter(filter.matches)
+        let byName = tagSummaries(nameOrder: nameOrder).filter(filter.matches)
         let rows: [TagSummary] = switch sort.field {
         case .name:
             sort.order == .ascending ? byName : byName.reversed()

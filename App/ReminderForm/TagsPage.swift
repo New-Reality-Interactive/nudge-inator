@@ -50,7 +50,8 @@ struct TagsPage: View {
     }
 
     private var sortedTags: [Tag] {
-        form.tags.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        let order = NameOrder()
+        return form.tags.sorted { order.isOrdered($0.name, $0.id, before: $1.name, $1.id) }
     }
 
     /// Adds the typed tag and keeps the field focused for the next one, as the mockup does.

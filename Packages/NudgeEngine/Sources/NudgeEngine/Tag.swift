@@ -37,7 +37,7 @@ extension Tag {
         foldedName(a) == foldedName(b)
     }
 
-    /// The name folded for comparing and sorting, with no locale.
+    /// The name folded for comparing, with no locale.
     static func foldedName(_ name: String) -> String {
         name.folding(options: .caseInsensitive, locale: nil)
     }
@@ -55,12 +55,12 @@ public struct TagSummary: Equatable, Sendable {
 }
 
 extension Engine {
-    /// Every tag's row on the Tags tab, by name ignoring case, then by ID so the order is fixed.
-    public func tagSummaries() -> [TagSummary] {
+    /// Every tag's row on the Tags tab, by name in `nameOrder`, then by ID so the order is fixed.
+    public func tagSummaries(nameOrder: NameOrder = NameOrder()) -> [TagSummary] {
         let today = myDay().items.map(\.reminderID)
         let nudging = Set(nudgingOccurrences().map(\.reminderID))
         return tags
-            .sorted { (Tag.foldedName($0.name), $0.id.uuidString) < (Tag.foldedName($1.name), $1.id.uuidString) }
+            .sorted { nameOrder.isOrdered($0.name, $0.id, before: $1.name, $1.id) }
             .map { tag in
                 let tagged = taggedReminders(tag.id).map(\.id)
                 return TagSummary(
