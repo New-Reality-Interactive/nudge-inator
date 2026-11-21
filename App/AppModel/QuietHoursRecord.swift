@@ -11,6 +11,11 @@ import NudgeEngine
 /// isn't a dictionary, lacks a field or fails the engine's throwing initializers (a time the clock
 /// doesn't show, a start equal to the end, a day that isn't a weekday) is left out and the others
 /// are kept, in the order they were saved.
+///
+/// The record also keeps the schedules each edit replaced, with when (#368), which the engine
+/// reports and takes back at launch, so a past occurrence's held count reads as it was after a
+/// relaunch. Each is a dictionary: when it was replaced and the schedules in the same shape, read
+/// the same defensive way. Never pruned: only the person's edits add one.
 struct QuietHoursRecord {
     let defaults: UserDefaults
 
@@ -18,6 +23,15 @@ struct QuietHoursRecord {
 
     /// The key the list is saved under.
     static let key = "quietHoursSchedules"
+
+    /// The key the replaced schedules are saved under.
+    static let replacedKey = "quietHoursReplacedSchedules"
+
+    /// The fields of one replaced entry.
+    enum ReplacedField {
+        static let replacedAt = "replacedAt"
+        static let schedules = "schedules"
+    }
 
     /// The fields of one entry.
     enum Field {
@@ -37,9 +51,37 @@ struct QuietHoursRecord {
         }
     }
 
-    /// Back to none.
+    /// The schedules each edit replaced, oldest first, with when the edit was made.
+    var replacedQuietHours: [Replaced<QuietHours>] {
+        get {
+            let entries = defaults.array(forKey: Self.replacedKey) ?? []
+            return entries.compactMap(Self.replaced(from:))
+        }
+        nonmutating set {
+            defaults.set(newValue.map(Self.entry(for:)), forKey: Self.replacedKey)
+        }
+    }
+
+    /// Back to none, with no replaced schedules kept.
     func clear() {
         defaults.removeObject(forKey: Self.key)
+        defaults.removeObject(forKey: Self.replacedKey)
+    }
+
+    private static func entry(for replaced: Replaced<QuietHours>) -> [String: Any] {
+        [
+            ReplacedField.replacedAt: replaced.replacedAt,
+            ReplacedField.schedules: replaced.value.schedules.map(entry(for:)),
+        ]
+    }
+
+    private static func replaced(from entry: Any) -> Replaced<QuietHours>? {
+        guard
+            let entry = entry as? [String: Any],
+            let replacedAt = entry[ReplacedField.replacedAt] as? Date,
+            let schedules = entry[ReplacedField.schedules] as? [Any]
+        else { return nil }
+        return Replaced(value: QuietHours(schedules: schedules.compactMap(schedule(from:))), replacedAt: replacedAt)
     }
 
     private static func entry(for schedule: QuietHoursSchedule) -> [String: Any] {
