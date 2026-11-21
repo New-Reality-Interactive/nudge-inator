@@ -761,6 +761,19 @@ final class AppModel {
         }
     }
 
+    /// The quiet hours schedules (#366), none until a person sets one, which means off. Read from
+    /// the record each time, as the Default Pace is, so a launch before the first unlock doesn't
+    /// fix it at none.
+    var quietHours: QuietHours {
+        get {
+            access(keyPath: \.quietHours)
+            return settingsRecords.quietHours.quietHours
+        }
+        set {
+            withMutation(keyPath: \.quietHours) { settingsRecords.quietHours.quietHours = newValue }
+        }
+    }
+
     /// Settings' Send a Test Nudge (ticket 30): one ordinary notification a few seconds away. It is
     /// no reminder's, so the engine and the store know nothing of it.
     func sendTestNudge() async {
@@ -768,10 +781,10 @@ final class AppModel {
     }
 
     /// Settings' Delete All Data (ticket 30, 214): the store, sharing, the Default Pace, the Default
-    /// Alarm Sound and the Reminders and Tags tabs' sorts, then the engine, then everything the
-    /// adapters hold, including the test nudge and the nudges already in Notification Center. Not
-    /// through `perform`: the store goes first and a store that turns the delete down stops it, so
-    /// the reminders and their nudges stay as they were. A disk failure is likelier than a failed
+    /// Alarm Sound, the Reminders and Tags tabs' sorts and the quiet hours schedules, then the
+    /// engine, then everything the adapters hold, including the test nudge and the nudges already
+    /// in Notification Center. Not through `perform`: the store goes first and a store that turns
+    /// the delete down stops it, so the reminders and their nudges stay as they were. A disk failure is likelier than a failed
     /// cancel, and a nudge left pending for deleted data is cancelled by the next App opened, which
     /// plans from nothing. Every ring stops, with no reminder left for Stop or Open to act on. Before
     /// the store has been read there is nothing to delete.
@@ -786,6 +799,7 @@ final class AppModel {
         withMutation(keyPath: \.defaultAlarmSound) { settingsRecords.defaultAlarmSound.clear() }
         withMutation(keyPath: \.remindersSort) { settingsRecords.remindersSort.clear() }
         withMutation(keyPath: \.tagsSort) { settingsRecords.tagsSort.clear() }
+        withMutation(keyPath: \.quietHours) { settingsRecords.quietHours.clear() }
         // A new engine, not emptied lists: the old one keeps a key for every history it held, and
         // its alarm-limit records. Its empty plan still reaches the adapters.
         var empty = makeEngine(permissions: permissions)

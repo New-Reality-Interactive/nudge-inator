@@ -370,9 +370,10 @@ extension SettingsRecords {
         defaultPace: DefaultPaceRecord = .temporary,
         defaultAlarmSound: DefaultAlarmSoundRecord = .temporary,
         remindersSort: RemindersSortRecord = .temporary,
-        tagsSort: TagsSortRecord = .temporary
+        tagsSort: TagsSortRecord = .temporary,
+        quietHours: QuietHoursRecord = .temporary
     ) -> SettingsRecords {
-        SettingsRecords(defaultPace: defaultPace, defaultAlarmSound: defaultAlarmSound, remindersSort: remindersSort, tagsSort: tagsSort)
+        SettingsRecords(defaultPace: defaultPace, defaultAlarmSound: defaultAlarmSound, remindersSort: remindersSort, tagsSort: tagsSort, quietHours: quietHours)
     }
 }
 
@@ -386,6 +387,12 @@ extension TagsSortRecord {
     /// A record in a suite of the tests' own, as `DefaultPaceRecord.temporary`. `TagsSortTests` uses
     /// suites of its own.
     static var temporary: TagsSortRecord { TagsSortRecord(defaults: UserDefaults(suiteName: "NudgeInatorTests.TagsSort")!) }
+}
+
+extension QuietHoursRecord {
+    /// A record in a suite of the tests' own, as `DefaultPaceRecord.temporary`.
+    /// `QuietHoursRecordTests` uses suites of its own.
+    static var temporary: QuietHoursRecord { QuietHoursRecord(defaults: UserDefaults(suiteName: "NudgeInatorTests.QuietHours")!) }
 }
 
 extension SharingSwitchRecord {
