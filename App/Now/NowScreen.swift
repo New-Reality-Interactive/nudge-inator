@@ -242,6 +242,9 @@ struct ClosedRow: Identifiable {
     var id: String { "\(reminder.id.uuidString) \(closed.occurrence.dueTime.timeIntervalSinceReferenceDate)" }
     var title: String { reminder.title }
 
+    /// Under how it closed, how many of its nudges quiet hours held, on a Missed one (#369).
+    var missedNote: MissedNote? { MissedNote(closed) }
+
     /// How it closed, under the title: the mockup's `closedLabel`.
     var detail: LocalizedStringResource {
         Self.detail(closingAs: closed.occurrence.state, nudgesSent: closed.nudgesSent)

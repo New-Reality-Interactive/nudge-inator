@@ -16,5 +16,9 @@ public protocol SeedTarget {
     func deleteTag(_ tagID: Tag.ID)
     func setting(_ setting: SeedSetting) -> String
     func setSetting(_ setting: SeedSetting, to value: String)
+    /// Makes `start` to `end` read as quiet hours that were turned off at `replacedAt` (#369).
+    func addQuietSpan(from start: Date, to end: Date, replacedAt: Date)
+    /// Takes away the span added with `replacedAt`, and nothing else.
+    func removeQuietSpan(replacedAt: Date)
 }
 #endif

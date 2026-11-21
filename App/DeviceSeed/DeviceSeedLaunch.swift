@@ -70,6 +70,14 @@ struct ModelSeedTarget: SeedTarget {
         }
     }
 
+    func addQuietSpan(from start: Date, to end: Date, replacedAt: Date) {
+        model.addSeedQuietSpan(from: start, to: end, replacedAt: replacedAt)
+    }
+
+    func removeQuietSpan(replacedAt: Date) {
+        model.removeSeedQuietSpan(replacedAt: replacedAt)
+    }
+
     func setSetting(_ setting: SeedSetting, to value: String) {
         switch setting {
         case .defaultPace:

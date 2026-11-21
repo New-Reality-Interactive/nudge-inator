@@ -526,6 +526,39 @@ final class AppModel {
     func addKeepingCreationDate(_ reminder: Reminder) {
         perform { $0.update(reminders: $0.reminders + [reminder]) }
     }
+
+    /// The device seed's quiet span (#369): `start` to `end` reads as quiet hours that were on
+    /// then and turned off at `replacedAt`, kept with the replaced schedules in the record and the
+    /// engine, so a seeded reminder's nudges in it count as held. The current schedules don't change.
+    /// A span that crosses midnight is one schedule on its first day, as the Quiet Hours page makes.
+    func addSeedQuietSpan(from start: Date, to end: Date, replacedAt: Date) {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        func time(of date: Date) -> TimeOfDay? {
+            let parts = calendar.dateComponents([.hour, .minute], from: date)
+            return try? TimeOfDay(hour: parts.hour ?? 0, minute: parts.minute ?? 0)
+        }
+        guard
+            let startTime = time(of: start), let endTime = time(of: end),
+            let day = RepeatRule.Weekday(rawValue: calendar.component(.weekday, from: start)),
+            let schedule = try? QuietHoursSchedule(start: startTime, end: endTime, days: [day])
+        else {
+            Self.logger.error("The seed's quiet span from \(start, privacy: .public) to \(end, privacy: .public) couldn't be made")
+            return
+        }
+        let span = Replaced(value: QuietHours(schedules: [schedule]), replacedAt: replacedAt)
+        setReplacedQuietHours((engine.replacedQuietHours + [span]).sorted { $0.replacedAt < $1.replacedAt })
+    }
+
+    /// Takes away the seed's span added with `replacedAt`, and no other replaced schedules.
+    func removeSeedQuietSpan(replacedAt: Date) {
+        setReplacedQuietHours(engine.replacedQuietHours.filter { $0.replacedAt != replacedAt })
+    }
+
+    private func setReplacedQuietHours(_ replaced: [Replaced<QuietHours>]) {
+        settingsRecords.quietHours.replacedQuietHours = replaced
+        perform { $0.update(replacedQuietHours: replaced) }
+    }
     #endif
 
     func markDone(_ reminderID: Reminder.ID) {

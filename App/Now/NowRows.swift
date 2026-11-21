@@ -104,6 +104,9 @@ struct ClosedRowView: View {
             Text(row.detail)
                 .font(.subheadline)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
+            if let note = row.missedNote {
+                MissedNoteLine(note: note)
+            }
             if let from = row.from {
                 FromLabel(from: from, strength: row.reminder.strength)
             }

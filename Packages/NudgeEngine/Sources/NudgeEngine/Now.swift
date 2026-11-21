@@ -23,6 +23,13 @@ public struct ClosedOccurrence: Equatable, Sendable {
     /// How many of those `nudgesSent` quiet hours held, each read as the schedules were when it
     /// was due: the Missed note's "Quiet hours held 3 of its 20 nudges".
     public var nudgesHeld = 0
+
+    /// The Missed note's held count (#369): `nudgesHeld` on an occurrence that closed as Missed with
+    /// a nudge held, and `nil` on Done, Skipped, or Missed with none held, which have no note.
+    public var missedNudgesHeld: Int? {
+        guard case .missed = occurrence.state, nudgesHeld > 0 else { return nil }
+        return nudgesHeld
+    }
 }
 
 extension Engine {

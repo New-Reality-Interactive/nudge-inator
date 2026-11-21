@@ -83,6 +83,20 @@ public struct SeedReminder: Sendable {
     }
 }
 
+/// A span before the load that reads as quiet hours (#369): quiet hours that were on over it and
+/// were turned off at the load, so the set's nudges due in it count as held and a reminder that gave
+/// up since closes Missed with a held count. The person's own quiet hours aren't changed.
+public struct SeedQuietSpan: Sendable {
+    /// Seconds from the load to the span's start; negative, as it is in the past.
+    public var startIn: TimeInterval
+    public var length: TimeInterval
+
+    public init(startIn: TimeInterval, length: TimeInterval) {
+        self.startIn = startIn
+        self.length = length
+    }
+}
+
 /// A named set of test data for one manual device check. Add one by writing a file like
 /// `SearchSet.swift` and listing it in `SeedSet.all`.
 public struct SeedSet: Sendable {
@@ -92,23 +106,27 @@ public struct SeedSet: Sendable {
     public var tags: [String]
     /// Settings the check needs; removal puts them back as they were.
     public var settings: [SeedSetting: String]
+    /// A span before the load that reads as quiet hours, or `nil`.
+    public var quietHoursBefore: SeedQuietSpan?
     public var reminders: [SeedReminder]
 
     public init(
         name: String,
         tags: [String] = [],
         settings: [SeedSetting: String] = [:],
+        quietHoursBefore: SeedQuietSpan? = nil,
         reminders: [SeedReminder]
     ) {
         self.name = name
         self.tags = tags
         self.settings = settings
+        self.quietHoursBefore = quietHoursBefore
         self.reminders = reminders
     }
 }
 
 extension SeedSet {
     /// Every set a launch can name.
-    public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .nameOrder, .deliveredNudges, .keptOrder, .received, .fromOthers, .rowSwipes, .urgencyCards, .alarmSound, .detailsSound, .useForAll]
+    public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .nameOrder, .deliveredNudges, .keptOrder, .received, .fromOthers, .rowSwipes, .urgencyCards, .alarmSound, .detailsSound, .useForAll, .missedNote]
 }
 #endif

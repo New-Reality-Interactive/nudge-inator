@@ -69,12 +69,24 @@ public enum DeviceSeed {
             target.setSetting(setting, to: value)
         }
 
-        // Written before the reminders, so a launch that stops partway can still be removed.
+        // A load again replaces the earlier span.
+        let now = target.now
+        if let addedAt = loaded.quietSpanAddedAt {
+            target.removeQuietSpan(replacedAt: addedAt)
+        }
+        loaded.quietSpanAddedAt = set.quietHoursBefore == nil ? nil : now
+
+        // Written before the span and the reminders, so a launch that stops partway can still be removed.
         loaded.reminderIDs = set.reminders.map(\.id)
         record.sets[set.name] = loaded
         store.write(record)
 
-        let now = target.now
+        // Before the reminders, so their plan reads it.
+        if let span = set.quietHoursBefore {
+            let start = now.addingTimeInterval(span.startIn)
+            target.addQuietSpan(from: start, to: start.addingTimeInterval(span.length), replacedAt: now)
+        }
+
         for seeded in set.reminders {
             let tagIDs = seeded.tagNames.compactMap { tagIDsByName[$0] }
             target.add(seeded.reminder(tagIDs: tagIDs, now: now))
@@ -104,6 +116,9 @@ public enum DeviceSeed {
         }
 
         for loaded in loadedSets {
+            if let addedAt = loaded.quietSpanAddedAt {
+                target.removeQuietSpan(replacedAt: addedAt)
+            }
             for (name, value) in loaded.earlierSettings {
                 if let setting = SeedSetting(rawValue: name) {
                     target.setSetting(setting, to: value)
