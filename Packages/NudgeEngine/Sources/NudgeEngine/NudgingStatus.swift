@@ -10,8 +10,8 @@ public struct NudgingStatus: Equatable, Sendable {
     public var nudgesInAll: Int
     /// The urgency of the latest nudge sent.
     public var urgency: Urgency
-    /// The nudge still to come, or `nil` after the last one, or when the next occurrence of its
-    /// repeat falls due first and takes over.
+    /// The next nudge that will arrive, or `nil` after the last one, when quiet hours hold every
+    /// one left, or when the next occurrence of its repeat falls due first and takes over.
     public var nextNudge: NextNudge?
     /// When it closes as Missed, by its give-up limit or a take-over, unless it's Done first.
     public var missedAt: Date
@@ -66,7 +66,8 @@ extension Engine {
         let missedAt = min(giveUpTime, takeOverTime ?? giveUpTime)
         // Cut at the take-over, as the plan's ladder is.
         let nudgeTimes = nudgeTimes(of: reminder, dueAt: occurrence.dueTime, takenOverAt: takeOverTime)
-        let nextNudge = nudgeTimes.indices.dropFirst(nudgesSent).first.map { index in
+        // A held nudge won't arrive, so the next one named is the first after it that will.
+        let nextNudge = nudgeTimes.indices.dropFirst(nudgesSent).first { !isHeld(firingAt: nudgeTimes[$0]) }.map { index in
             let urgency = strength.urgency(ofNudge: index + 1)
             let delivery = nudgeDelivery(of: reminder, firingAt: nudgeTimes[index], urgency: urgency)
             return NextNudge(nudgeNumber: index + 1, fireTime: nudgeTimes[index], urgency: urgency, delivery: delivery)

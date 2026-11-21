@@ -360,6 +360,17 @@ struct ReminderStoreTests {
         #expect(try store().load().reminders.map(\.alarmSound) == [sound])
     }
 
+    /// A closing's held count, and one with none, come back after a relaunch as saved (#367).
+    @Test(arguments: [Int?.none, 0, 3])
+    func aClosingKeepsItsHeldCountAfterARelaunch(nudgesHeld: Int?) throws {
+        let reminder = Reminder(title: "Leave for the train", dueTime: NewYork.local(2026, 11, 16, 9), strength: .relentless)
+        let closing = Closing(state: .missed(reason: .giveUpLimit), closedAt: NewYork.local(2026, 11, 16, 9, 51), nudgesSent: 20, nudgesHeld: nudgesHeld)
+        let history = ReminderHistory(closedOccurrences: [reminder.dueTime: closing])
+        try store().save(StoredData(reminders: [reminder], tags: [], histories: [reminder.id: history]))
+
+        #expect(try store().load().histories[reminder.id] == history)
+    }
+
     /// A reminder saved by a newer build can hold a sound this build doesn't know: it loads on
     /// Default, never as an error, and the rest of it is as saved.
     @Test func aSoundIDTheAppDoesntRecognizeReadsAsDefault() throws {

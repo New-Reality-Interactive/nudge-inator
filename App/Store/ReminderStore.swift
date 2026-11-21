@@ -68,7 +68,7 @@ struct ReminderStore {
         try backfillCreationDates(with: now)
     }
 
-    nonisolated private static let schema = Schema(versionedSchema: StoreSchemaV4.self)
+    nonisolated private static let schema = Schema(versionedSchema: StoreSchemaV5.self)
 
     /// Gives the reminders without a creation date one instant, so they sort by `position` and before
     /// every reminder made afterwards. The lightweight stage can only add the property with its
@@ -187,7 +187,8 @@ struct ReminderStore {
                 state: closing.state.storedValue,
                 nudgeNumber: closing.state.nudgeNumber,
                 closedAt: closing.closedAt,
-                nudgesSent: closing.nudgesSent
+                nudgesSent: closing.nudgesSent,
+                nudgesHeld: closing.nudgesHeld
             )
         }
         record.pauseSpans.forEach(context.delete)
@@ -295,7 +296,8 @@ private extension ReminderRecord {
                 let closing = Closing(
                     state: try OccurrenceState(storedValue: record.state, nudgeNumber: record.nudgeNumber),
                     closedAt: record.closedAt,
-                    nudgesSent: record.nudgesSent
+                    nudgesSent: record.nudgesSent,
+                    nudgesHeld: record.nudgesHeld
                 )
                 return (record.dueTime, closing)
             }) { _, _ in throw StoreError.unreadable(field: .closedOccurrenceDueTime, value: "two closings for one due time") },

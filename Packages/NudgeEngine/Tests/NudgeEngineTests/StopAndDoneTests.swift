@@ -130,7 +130,7 @@ struct StopAndDoneTests {
         engine.markDone(reminder.id, occurrenceDueAt: dueTime, doneAt: dueTime + 1125)
 
         let reading = try #require(engine.reading(of: reminder.id, dueAt: dueTime))
-        #expect(reading.closing == Closing(state: .done, closedAt: dueTime + 1125, nudgesSent: 4))
+        #expect(reading.closing == Closing(state: .done, closedAt: dueTime + 1125, nudgesSent: 4, nudgesHeld: 0))
         #expect(try #require(scheduler.lastPlan).items.isEmpty)
     }
 
