@@ -195,6 +195,9 @@ SCREENS = {
   "tutorial-how-alarm-sounds-work-p1": ("setTimeout(()=>{document.getElementById('c-tt-sound').click();state.sheet.page=0;render()},200)", 1),
   "tutorial-how-alarm-sounds-work-p2": ("setTimeout(()=>{document.getElementById('c-tt-sound').click();state.sheet.page=1;render()},200)", 1),
   "tutorial-how-alarm-sounds-work-p3": ("setTimeout(()=>{document.getElementById('c-tt-sound').click();state.sheet.page=2;render()},200)", 1),
+  # The Missed note (#369). Only a mockup with it draws these; now and myday show it too.
+  "now-last-24-hours": ("setTimeout(()=>document.getElementById('c-mn-now').click(),200)", 1),
+  "details-missed-held": ("setTimeout(()=>document.getElementById('c-mn-details').click(),200)", 3),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}
