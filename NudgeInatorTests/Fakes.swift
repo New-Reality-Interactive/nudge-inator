@@ -74,7 +74,11 @@ final class FakeNotificationCenter: UserNotificationCenter {
         pending
     }
 
+    /// Every identifier passed to `removePendingNotificationRequests(withIdentifiers:)`, in order.
+    private(set) var removed: [String] = []
+
     func removePendingNotificationRequests(withIdentifiers identifiers: [String]) {
+        removed.append(contentsOf: identifiers)
         pending.removeAll { identifiers.contains($0.identifier) }
     }
 
