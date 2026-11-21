@@ -1941,7 +1941,7 @@ final class ShotsUITests: XCTestCase {
         pause(1)
         shot("site-4-sent")
         tab("Tags")
-        shot("site-6-tags")
+        shot("site-7-tags")
         // The form, filled in as far as typing goes, then its Send To page.
         launch(.sharing, standIn: "sent")
         openSheet("New Reminder", title: "New Reminder")
@@ -1956,7 +1956,7 @@ final class ShotsUITests: XCTestCase {
         tapText("Send To", inSheet: true)
         // Riley chosen, so the page shows what choosing looks like.
         tapText("Riley Park", inSheet: true)
-        shot("site-7-send-to")
+        shot("site-6-send-to")
         // Every tutorial in Settings' Tutorials section, one shot a page (release.md, Website
         // tutorials), which scripts/site-shots.sh copies as tutorial-<slug>-<page>.png.
         launch(.sharing, standIn: "sent")
