@@ -69,6 +69,8 @@ public struct Engine {
     /// Formats the times and dates in a repeat's summary.
     let locale: Locale
     private(set) var permissions: PermissionStates
+    /// The person's quiet hours, read through `isQuiet(at:)`.
+    private(set) var quietHours: QuietHours
     /// Earlier permission states, oldest first, with when the app reported a change. A nudge that
     /// fired before the change was delivered under the old states, so its plan item keeps that
     /// delivery. App-wide, so not in a reminder's `History`.
@@ -106,7 +108,8 @@ public struct Engine {
         giveUpLimit: GiveUpLimit = .shipped,
         timeZone: TimeZone = .autoupdatingCurrent,
         locale: Locale = .autoupdatingCurrent,
-        permissions: PermissionStates = PermissionStates()
+        permissions: PermissionStates = PermissionStates(),
+        quietHours: QuietHours = QuietHours()
     ) {
         self.init(
             clock: clock,
@@ -115,7 +118,8 @@ public struct Engine {
             alarmLimit: .shipped,
             timeZone: timeZone,
             locale: locale,
-            permissions: permissions
+            permissions: permissions,
+            quietHours: quietHours
         )
     }
 
@@ -128,7 +132,8 @@ public struct Engine {
         alarmLimit: AlarmLimit,
         timeZone: TimeZone = .autoupdatingCurrent,
         locale: Locale = .autoupdatingCurrent,
-        permissions: PermissionStates = PermissionStates()
+        permissions: PermissionStates = PermissionStates(),
+        quietHours: QuietHours = QuietHours()
     ) {
         self.clock = clock
         self.scheduler = scheduler
@@ -141,6 +146,7 @@ public struct Engine {
         self.calendar = calendar
         self.locale = locale
         self.permissions = permissions
+        self.quietHours = quietHours
     }
 
     /// Replaces the whole list: App opened, the store's reload, and the app's re-plan when time
