@@ -1592,15 +1592,14 @@ final class ShotsUITests: XCTestCase {
         tapText("30 min", inSheet: true)
         back()
         shot("settings-default-pace-30-min")
-        // The page under each pace, as in the mockup (item 13): Consistent · 10 min, then Escalating.
-        // Four pages in portrait, many more at the largest text.
+        // The How It Nudges sheet at each pace (#470, the tutorial sheets mockup): Consistent · 10 min,
+        // then Escalating's strength pages.
         tapText("Default Pace")
         tapButton(containing: "Every, ", inSheet: true)
         tapText("10 min", inSheet: true)
         back()
         tapText("How It Nudges")
-        shot("settings-how-it-nudges", pages: 40, stopsAtEnd: true)
-        back()
+        tutorialShots("tutorial-how-it-nudges", pages: 4)
         tapText("Default Pace")
         // At accessibility sizes the pace is a menu rather than segments.
         let segment = app.buttons["Escalating"]
@@ -1611,7 +1610,27 @@ final class ShotsUITests: XCTestCase {
         tapText("Escalating", inSheet: true)
         back()
         tapText("How It Nudges")
-        shot("settings-how-it-nudges-escalating", pages: 40, stopsAtEnd: true)
+        tutorialShots("tutorial-how-it-nudges-escalating", pages: 4)
+    }
+
+    /// Saves each page of the open tutorial sheet as `<name>-p1` to `-p<pages>`, the first page in
+    /// one shot and the others in as many as their schedules need (as the mockup's shots are),
+    /// tapping Next between them, then closes it with the last page's Done.
+    private func tutorialShots(_ name: String, pages: Int) {
+        for page in 1...pages {
+            if page == 1 {
+                shot("\(name)-p1")
+            } else {
+                shot("\(name)-p\(page)", pages: 20, stopsAtEnd: true)
+            }
+            let button = app.buttons[page < pages ? "Next" : "Done"].firstMatch
+            guard button.waitForExistence(timeout: 2) else {
+                XCTFail("No \(page < pages ? "Next" : "Done") on page \(page):\n\(app.debugDescription)")
+                return
+            }
+            button.tap()
+            pause(0.8)
+        }
     }
 
     func testForm() {
@@ -1938,6 +1957,29 @@ final class ShotsUITests: XCTestCase {
         // Riley chosen, so the page shows what choosing looks like.
         tapText("Riley Park", inSheet: true)
         shot("site-7-send-to")
+        // Every tutorial in Settings' Tutorials section, one shot a page (release.md, Website
+        // tutorials), which scripts/site-shots.sh copies as tutorial-<slug>-<page>.png.
+        launch(.sharing, standIn: "sent")
+        tab("Settings")
+        for (title, slug, pages) in [("How It Nudges", "how-it-nudges", 4), ("How Sharing Works", "how-sharing-works", 4), ("How Alarm Sounds Work", "how-alarm-sounds-work", 3)] {
+            tapText(title)
+            siteTutorialShots("site-tutorial-\(slug)", pages: pages)
+        }
+    }
+
+    /// Saves each page of the open tutorial sheet once, as `<name>-<page>`, as it opens to it,
+    /// tapping Next between them, then closes it with the last page's Done.
+    private func siteTutorialShots(_ name: String, pages: Int) {
+        for page in 1...pages {
+            shot("\(name)-\(page)")
+            let button = app.buttons[page < pages ? "Next" : "Done"].firstMatch
+            guard button.waitForExistence(timeout: 2) else {
+                XCTFail("No \(page < pages ? "Next" : "Done") on \(name) page \(page):\n\(app.debugDescription)")
+                return
+            }
+            button.tap()
+            pause(0.8)
+        }
     }
     // MARK: Shared reminders (the 1.4.0 release's drift check)
 
@@ -2078,6 +2120,46 @@ final class ShotsUITests: XCTestCase {
         app.switches.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         pause(1.5)
         shot("sharing-off-confirm", pages: 2)
+    }
+
+    // MARK: Alarm sounds (the 1.5.0 release's drift check)
+
+    /// The screens the mockup draws for alarm sounds and the Tutorials section
+    /// (`scripts/mockup-shots.py`'s `settings-default-sound`, `details-sound`, ...), named as it
+    /// names them. Dentist appointment rings with Chime; every other reminder has Default Alarm.
+    func testAlarmSounds() {
+        launch(.app)
+        tab("Settings")
+        tapText("Default Alarm Sound")
+        shot("settings-default-sound", pages: 3, stopsAtEnd: true)
+        tapText("Use for All Reminders", inSheet: true)
+        shot("settings-use-for-all-confirm")
+        launch(.app)
+        tab("Settings")
+        _ = scrollTo("Tutorials")
+        shot("settings-tutorials")
+        tapText("How Alarm Sounds Work")
+        tutorialShots("tutorial-how-alarm-sounds-work", pages: 3)
+        tab("Reminders")
+        tapText("Dentist appointment")
+        shot("details-sound", pages: 3, stopsAtEnd: true)
+        back()
+        tapText("Walk the dog")
+        shot("details-sound-off", pages: 3, stopsAtEnd: true)
+    }
+
+    /// The form's Sound row and its page, on a new Relentless reminder.
+    func testFormSound() {
+        launch(.app)
+        openSheet("New Reminder", title: "New Reminder")
+        hideKeyboard()
+        let segment = app.buttons["Relentless"]
+        if !segment.waitForExistence(timeout: 2) || !segment.isHittable {
+            tapText("Strength", inSheet: true)
+        }
+        tapText("Relentless", inSheet: true)
+        tapText("Sound", inSheet: true)
+        shot("form-sound-picker", pages: 2, stopsAtEnd: true)
     }
 
     /// The Reminders and My Day lists with From others chosen in their filter.

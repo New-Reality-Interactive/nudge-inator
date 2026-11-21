@@ -5,7 +5,7 @@
 #   scripts/check-release-has-no-seed.sh <path>.app      checks that app (the archive script's)
 # Looks for the seed's own names in the app's executables: its module, launch variable, record key,
 # types, the model's seed-only add, a set's reminder title, and the stand-in sharing's (#194) variable and
-# type. Any one found fails.
+# type. Any one found fails. It also checks that the six alarm tones (#225) are in the app.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -49,5 +49,12 @@ if ls "$app"/*.debug.dylib > /dev/null 2>&1; then
   echo "FAIL: $app is a Debug build" >&2
   found=1
 fi
+# The alarm tones (#225) are the one thing a Release build holds that it didn't before: all six.
+for tone in chime bell pulse beacon rise siren; do
+  if [ ! -f "$app/$tone.caf" ]; then
+    echo "FAIL: $tone.caf is not in $app" >&2
+    found=1
+  fi
+done
 [ $found -eq 0 ] && echo "OK: no device-seed code in $app"
 exit $found

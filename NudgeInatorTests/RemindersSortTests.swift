@@ -28,9 +28,7 @@ final class RemindersSortTests {
             openStore: { store },
             notifications: NotificationAdapter(center: FakeNotificationCenter(), clock: clock),
             alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: clock),
-            defaultPaceRecord: .temporary,
-            remindersSortRecord: try record(),
-            tagsSortRecord: .temporary,
+            settingsRecords: .temporary(remindersSort: try record()),
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )

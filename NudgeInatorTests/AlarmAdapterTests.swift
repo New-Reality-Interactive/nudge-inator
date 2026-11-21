@@ -27,6 +27,7 @@ struct AlarmAdapterTests {
         of reminderID: UUID = pills,
         dueAt dueTime: Date = NewYork.local(2026, 10, 16),
         title: String = "Take the pills",
+        alarmSound: AlarmSound = .default,
         isPastAlarmLimit: Bool = false
     ) -> SchedulePlan.Item {
         SchedulePlan.Item(
@@ -38,6 +39,7 @@ struct AlarmAdapterTests {
             fireTime: fireTime,
             urgency: .urgent,
             title: title,
+            alarmSound: alarmSound,
             deliveryKind: deliveryKind,
             isPastAlarmLimit: isPastAlarmLimit
         )
@@ -157,10 +159,43 @@ struct AlarmAdapterTests {
     /// independently (Python's `hashlib.sha1` with the same namespace and names): the first half
     /// names the occurrence (reminder and due time, ticket 32), the second the nudge (fire time and
     /// title), with RFC 9562's version 8 and variant bits.
+    /// It is also the ID a Default alarm had before 1.5.0, so an update finds every pending alarm
+    /// and cancels and reschedules nothing (#227).
     @Test func theAlarmIDIsAVersionEightUUIDOfTheOccurrenceAndTheNudge() {
-        let id = AlarmAdapter.alarmID(for: nudge(4, at: NewYork.local(2026, 10, 16, 9, 10)))
+        let id = AlarmAdapter.alarmID(for: nudge(4, at: NewYork.local(2026, 10, 16, 9, 10), alarmSound: .default))
 
         #expect(id.uuidString == "B922D948-47D5-8D7E-90E9-107121305AE8")
+    }
+
+    /// AlarmKit can't say what an alarm rings with, so a tone joins the nudge's half of the ID, as
+    /// the title does: worked out the same way, with the name `nudge.sound.chime.<fire time>.<title>`.
+    @Test func aTonesAlarmIDNamesTheToneInTheNudgesHalf() {
+        let id = AlarmAdapter.alarmID(for: nudge(4, at: NewYork.local(2026, 10, 16, 9, 10), alarmSound: .chime))
+
+        #expect(id.uuidString == "B922D948-47D5-8D7E-A8D2-58AD97CE9C23")
+    }
+
+    /// Every sound gives its own ID for the same nudge, all in the same occurrence, so a Done
+    /// before the first unlock still finds them.
+    @Test func eachSoundGivesTheSameNudgeItsOwnIDInTheSameOccurrence() {
+        let ids = AlarmSound.allCases.map { AlarmAdapter.alarmID(for: nudge(4, at: NewYork.local(2026, 10, 16, 9, 10), alarmSound: $0)) }
+
+        #expect(Set(ids).count == AlarmSound.allCases.count)
+        #expect(Set(ids.map { $0.uuidString.prefix(18) }) == ["B922D948-47D5-8D7E"])
+    }
+
+    /// A Done before the store can be read cancels an occurrence's alarms by ID alone, whatever
+    /// they ring with (ticket 32).
+    @Test func cancellingAnOccurrencesNudgesCancelsItsAlarmsWithATone() async throws {
+        let adapter = adapter()
+        let toned = nudge(4, at: NewYork.local(2026, 10, 16, 9, 10), alarmSound: .beacon)
+        adapter.apply(SchedulePlan(items: [toned]))
+        await adapter.waitUntilApplied()
+
+        await adapter.cancelNudges(of: Self.pills, dueAt: toned.dueTime)
+
+        #expect(manager.cancelledIDs == [AlarmAdapter.alarmID(for: toned)])
+        #expect(manager.scheduled.isEmpty)
     }
 
     /// A Done before the first unlock stops its occurrence's alarms with no store, so no title, to

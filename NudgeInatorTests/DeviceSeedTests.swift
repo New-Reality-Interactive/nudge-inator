@@ -26,7 +26,20 @@ final class DeviceSeedTests {
         #expect(SeedSettingText.defaultPace(from: SeedSettingText.text(of: pace)) == pace)
     }
 
+    @Test(arguments: AlarmSound.allCases)
+    func aDefaultAlarmSoundSurvivesBeingWrittenAndRead(sound: AlarmSound) {
+        #expect(SeedSettingText.defaultAlarmSound(from: SeedSettingText.text(of: sound)) == sound)
+    }
+
+    /// #228's phone check starts on Default Alarm.
+    @Test func theAlarmSoundSetStartsOnDefaultAlarm() throws {
+        let set = try #require(SeedSet.all.first { $0.name == "alarm-sound" })
+        let text = try #require(set.settings[.defaultAlarmSound])
+        #expect(SeedSettingText.defaultAlarmSound(from: text) == .default)
+    }
+
     @Test func textTheAppDoesntKnowIsIgnored() {
+        #expect(SeedSettingText.defaultAlarmSound(from: "foghorn") == nil)
         #expect(SeedSettingText.remindersSort(from: "title.ascending") == nil)
         #expect(SeedSettingText.remindersSort(from: "created") == nil)
         #expect(SeedSettingText.defaultPace(from: "consistent.7") == nil)
@@ -67,9 +80,7 @@ struct ModelSeedTargetTests {
             openStore: { store },
             notifications: NotificationAdapter(center: FakeNotificationCenter(), clock: clock),
             alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: clock),
-            defaultPaceRecord: .temporary,
-            remindersSortRecord: .temporary,
-            tagsSortRecord: .temporary,
+            settingsRecords: .temporary(),
             doneQueue: .temporary,
             timeZone: NewYork.timeZone
         )

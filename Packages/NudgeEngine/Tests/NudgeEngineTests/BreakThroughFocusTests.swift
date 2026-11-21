@@ -69,4 +69,17 @@ struct BreakThroughFocusTests {
         let items = try planItems(for: .relentless, breakThroughFocus: false)
         #expect(items.map(\.deliveryKind) == [DeliveryKind](repeating: .alarm, count: 20))
     }
+
+    /// Spec #129: a reminder sends alarms when it is Relentless, or Firm with the switch on; Gentle
+    /// never reaches Urgent, so it never rings (the form's Sound row, #230). The plan agrees.
+    @Test(arguments: [
+        (Strength.gentle, false, false), (.gentle, true, false),
+        (.firm, false, false), (.firm, true, true),
+        (.relentless, false, true), (.relentless, true, true),
+    ])
+    func sendsAlarmsWhenThePlanHasAnAlarm(strength: Strength, switchedOn: Bool, sendsAlarms: Bool) throws {
+        #expect(strength.sendsAlarms(switchedOn: switchedOn) == sendsAlarms)
+        let items = try planItems(for: strength, breakThroughFocus: switchedOn)
+        #expect(items.contains { $0.deliveryKind == .alarm } == sendsAlarms)
+    }
 }

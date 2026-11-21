@@ -183,7 +183,7 @@ struct SharingPausedTests {
 
     /// A New form on `phone`, filled in as `pills`.
     func form(on phone: Phone) -> ReminderForm {
-        let form = ReminderForm(engine: { phone.model.engine }, now: { phone.clock.now }, defaultPace: .shipped, sharing: phone.model.sharing)
+        let form = ReminderForm(engine: { phone.model.engine }, now: { phone.clock.now }, defaultPace: .shipped, defaultAlarmSound: .default, sharing: phone.model.sharing)
         form.title = pills.title
         form.dueTime = pills.dueTime
         form.repeatRule = pills.repeatRule

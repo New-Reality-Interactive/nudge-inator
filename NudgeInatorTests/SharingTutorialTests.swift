@@ -32,7 +32,7 @@ struct SharingTutorialTests {
           ["list.bullet.rectangle", "Share Activity", "Settings › Share Activity shows what happened to sharing that you'd otherwise never see."]]),
     ] as [(SharingTutorialPage, String?, [[String]])])
     func aPageOfPointsHasTheMockupsLeadAndRows(page: SharingTutorialPage, lead: String?, rows: [[String]]) throws {
-        guard case .points(let actualLead, let points) = page.content else {
+        guard case .points(let actualLead, let points, footnote: nil) = page.content else {
             Issue.record("\(page) isn't a page of points")
             return
         }
@@ -50,7 +50,7 @@ struct SharingTutorialTests {
             ["Send the Invite", "Through Messages, Mail or Copy Link. Nothing is sent until you tap Send."],
             ["They Accept", "They open the invite on their iPhone, and you're both connected."],
         ])
-        #expect(String(localized: footnote) == "An invite opens only for the Apple Account it was sent to.")
+        #expect(String(localized: footnote) == "An invite opens only for the Apple Account it was sent to, and you both need the latest Nudge-inator.")
     }
 
     /// The pictures' pills, decoration only: their symbol and word, an arrow as "→".
@@ -61,16 +61,11 @@ struct SharingTutorialTests {
         (.whoSeesWhat, ["lock Yours", "eye Status"]),
     ])
     func eachPageHasTheMockupsPicture(page: SharingTutorialPage, pieces: [String]) {
-        #expect(page.art.map { piece in
-            switch piece {
-            case .pill(let symbol, let text): "\(symbol) \(String(localized: text))"
-            case .arrow: "→"
-            }
-        } == pieces)
+        #expect(page.art.map(\.described) == pieces)
     }
 
     @Test func nextMovesForwardAPageAndStopsAtTheLast() {
-        var paging = SharingTutorialPaging()
+        var paging = TutorialPaging<SharingTutorialPage>()
         #expect(paging.page == .sendEachOtherReminders)
         #expect(!paging.canGoBack)
         #expect(!paging.isLastPage)
@@ -93,7 +88,7 @@ struct SharingTutorialTests {
     }
 
     @Test func backMovesBackAPageAndStopsAtTheFirst() {
-        var paging = SharingTutorialPaging()
+        var paging = TutorialPaging<SharingTutorialPage>()
         paging.goForward()
         paging.goForward()
         paging.goBack()
@@ -107,7 +102,7 @@ struct SharingTutorialTests {
 
     /// A swipe settles on a page, which the paged view sets: Back, the last page and the dots follow it.
     @Test func aSwipeLandsOnAPageAndTheBarAndDotsFollow() {
-        var paging = SharingTutorialPaging()
+        var paging = TutorialPaging<SharingTutorialPage>()
         paging.page = .sendAReminder
         #expect(paging.canGoBack)
         #expect(!paging.isLastPage)

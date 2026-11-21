@@ -83,6 +83,28 @@ struct ReceivedRevisionTests {
         #expect(riley.model.engine.reminders.count == 1)
     }
 
+    /// The sound is the recipient's own: the sender's never reaches the copy, the recipient can change
+    /// it, and a revision leaves it as they set it.
+    @Test func aRevisionLeavesTheCopysAlarmSoundAsTheRecipientSetIt() async throws {
+        let (alex, riley) = try await phones()
+        var sendersReminder = pills
+        sendersReminder.alarmSound = .siren
+        try await send(sendersReminder, from: alex, to: riley)
+        var held = try copy(on: riley)
+        #expect(held.alarmSound == .default)
+
+        held.alarmSound = .bell
+        try riley.model.edit(held)
+        try await revise(sendersReminder, from: alex, to: riley) {
+            $0.title = "Take the blue pills"
+            $0.alarmSound = .chime
+        }
+
+        held = try copy(on: riley)
+        #expect(held.title == "Take the blue pills")
+        #expect(held.alarmSound == .bell)
+    }
+
     // MARK: While Nudging
 
     /// Due at 8:30 once, Firm: nudging from 8:30, so it is Nudging at 8:35.

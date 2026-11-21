@@ -20,6 +20,10 @@ public struct Reminder: Identifiable, Equatable, Sendable {
     /// it but keeps it, so switching back to Firm or Gentle gives it back: read
     /// `breaksThroughFocus` for how the reminder acts.
     public var breakThroughFocus: Bool
+    /// What its alarms ring with, Default unless set. Local to the iPhone: a reminder's sender never
+    /// sets or changes it on a received copy. It is not a Locked field, so it stays editable while
+    /// the reminder is Nudging (ADR 0002).
+    public var alarmSound: AlarmSound
     /// The moment the reminder was added: `Engine.add(_:)` sets it from the engine's clock, and
     /// nothing changes it afterwards. `.distantPast` until then (GLOSSARY.md, Creation date).
     public var createdAt: Date
@@ -37,6 +41,7 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         strength: Strength,
         pace: Pace = .escalating,
         breakThroughFocus: Bool = true,
+        alarmSound: AlarmSound = .default,
         createdAt: Date = .distantPast,
         origin: ReminderOrigin = .mine
     ) {
@@ -49,6 +54,7 @@ public struct Reminder: Identifiable, Equatable, Sendable {
         self.strength = strength
         self.pace = pace
         self.breakThroughFocus = breakThroughFocus
+        self.alarmSound = alarmSound
         self.createdAt = createdAt
         self.origin = origin
     }
@@ -98,6 +104,11 @@ extension Reminder {
         strength.breaksThroughFocus(switchedOn: breakThroughFocus)
     }
 
+    /// Whether it sends any alarm, by its strength's rule with its own switch (#230).
+    public var sendsAlarms: Bool {
+        strength.sendsAlarms(switchedOn: breakThroughFocus)
+    }
+
     /// The latest occurrence's due time at or before `date`, or `nil` before the first one.
     func latestDueTime(atOrBefore date: Date, calendar: Calendar) -> Date? {
         guard let repeatRule else { return date >= dueTime ? dueTime : nil }
@@ -124,6 +135,13 @@ extension Strength {
     /// (ADR 0004). The one place the rule lives: the plan, the nudge card and How It Nudges read it.
     public func breaksThroughFocus(switchedOn: Bool) -> Bool {
         self == .relentless || switchedOn
+    }
+
+    /// Whether a reminder of this strength with its Break Through Focus switch `switchedOn` sends
+    /// any alarm: it breaks through Focus and its ladder reaches Urgent. Gentle never does, so it
+    /// never rings. The reminder form shows its Sound row only then (#230).
+    public func sendsAlarms(switchedOn: Bool) -> Bool {
+        breaksThroughFocus(switchedOn: switchedOn) && ladder.urgentFrom != nil
     }
 }
 

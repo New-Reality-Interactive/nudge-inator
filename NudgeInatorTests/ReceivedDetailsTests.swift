@@ -80,6 +80,20 @@ struct ReceivedDetailsTests {
         #expect(arrivals(on: riley).map(\.body) == ["From Alex Morgan · Relentless: rings an alarm until you mark it done"])
     }
 
+    /// Spec #129 story 37: a copy arrives with the recipient's Default Alarm Sound, never the
+    /// sender's, which doesn't cross a share.
+    @Test func aCopyArrivesWithTheRecipientsDefaultAlarmSound() async throws {
+        let (alex, riley) = try await phones()
+        alex.model.defaultAlarmSound = .siren
+        riley.model.defaultAlarmSound = .bell
+        var sendersReminder = pills
+        sendersReminder.alarmSound = .chime
+
+        try await send(sendersReminder, from: alex, to: riley)
+
+        #expect(try received(on: riley).alarmSound == .bell)
+    }
+
     @Test func aSendDeliveredTwicePostsOneArrival() async throws {
         let (alex, riley) = try await phones()
         try await send(pills, from: alex, to: riley)
@@ -108,6 +122,21 @@ struct ReceivedDetailsTests {
         #expect(received.senderName == "Alex Morgan")
         #expect(String(localized: received.strengthLine.text) == "Firm: rings as an alarm from nudge 4")
         #expect(details.notes == "Two with water.")
+    }
+
+    /// #457: a received copy that rings names the sound chosen on this iPhone, never the sender's.
+    @Test func detailsOfARingingCopyNameTheSoundChosenOnThisIPhone() async throws {
+        let (alex, riley) = try await phones()
+        riley.model.defaultAlarmSound = .bell
+        var sendersReminder = pills
+        sendersReminder.alarmSound = .chime
+        try await send(sendersReminder, from: alex, to: riley)
+
+        let details = try details(of: received(on: riley).id, on: riley)
+
+        #expect(details.sound == .bell)
+        // Its footers say the sound is the person's own.
+        #expect(details.rings)
     }
 
     @Test func detailsOfAnOwnReminderAreAsBefore() async throws {
@@ -205,6 +234,63 @@ struct ReceivedDetailsTests {
         #expect(riley.model.engine.tagLabels(for: saved.tagIDs) == ["#health"])
         #expect(saved.title == "Take the pills")
         #expect(saved.notes == "Two with water.")
+    }
+
+    /// Spec #129 story 38: a copy that sends alarms shows the Sound row, editable, while what its
+    /// sender owns stays locked, and the sound it saves is the one its alarms ring with.
+    @Test func aCopyThatSendsAlarmsSavesTheSoundChosenAndNothingTheSenderOwns() async throws {
+        let (alex, riley) = try await phones()
+        riley.manager.authorizationState = .authorized
+        try await send(pills, from: alex, to: riley)
+        let copy = try received(on: riley)
+        let form = try editForm(of: copy.id, on: riley)
+
+        #expect(form.showsSound)
+        #expect(form.lockedFields == Set(LockedField.allCases))
+        form.alarmSound = .rise
+        form.title = "Skip the pills"
+
+        #expect(form.save(to: riley.model))
+        await settle(riley)
+        let saved = try received(on: riley)
+        #expect(saved.alarmSound == .rise)
+        #expect(saved.title == "Take the pills")
+        #expect(!riley.manager.scheduled.isEmpty)
+        #expect(riley.manager.scheduled.allSatisfy { $0.sound == .named("rise.caf") })
+    }
+
+    /// Use for All Reminders (#458) changes a received copy too, which rings with it, and sends its
+    /// sender nothing: the sound is the recipient's own.
+    @Test func useForAllRemindersChangesACopyAndTellsItsSenderNothing() async throws {
+        let (alex, riley) = try await phones()
+        riley.manager.authorizationState = .authorized
+        try await send(pills, from: alex, to: riley)
+        riley.model.add(Reminder(title: "Stretch", dueTime: NewYork.local(2026, 10, 15, 9), strength: .relentless, alarmSound: .chime))
+        await settle(alex, riley)
+        let submittedBefore = riley.adapter.submitted.count
+        riley.model.defaultAlarmSound = .pulse
+        #expect(riley.model.remindersToChangeByUseForAll == 2)
+
+        riley.model.useDefaultAlarmSoundForAllReminders()
+        await settle(alex, riley)
+
+        #expect(riley.model.engine.reminders.map(\.alarmSound) == [.pulse, .pulse])
+        #expect(!riley.manager.scheduled.isEmpty)
+        #expect(riley.manager.scheduled.allSatisfy { $0.sound == .named("pulse.caf") })
+        #expect(riley.adapter.submitted.count == submittedBefore)
+        #expect(alex.model.engine.reminders.isEmpty)
+    }
+
+    /// A copy whose sender turned Break Through Focus off never rings, so it has no Sound row.
+    @Test func aCopyThatSendsNoAlarmsHasNoSoundRow() async throws {
+        let (alex, riley) = try await phones()
+        var quiet = pills
+        quiet.breakThroughFocus = false
+        try await send(quiet, from: alex, to: riley)
+
+        let form = try editForm(of: try received(on: riley).id, on: riley)
+
+        #expect(!form.showsSound)
     }
 
     @Test func aTagChangeOnANudgingCopySaves() async throws {

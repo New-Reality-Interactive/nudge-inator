@@ -7,13 +7,13 @@ extension ReminderForm {
     static func preview(tags: [String] = []) -> ReminderForm {
         var engine = Engine(clock: PreviewClock(), scheduler: NoOpScheduler())
         engine.update(tags: tags.map { Tag(name: $0) })
-        return ReminderForm(engine: { engine }, now: { .now }, defaultPace: .shipped)
+        return ReminderForm(engine: { engine }, now: { .now }, defaultPace: .shipped, defaultAlarmSound: .default)
     }
 
     /// A New Reminder form with Send To over the stand-in's people, or with `seeded` false, no one.
     static func previewSendTo(seeded: Bool = true) -> ReminderForm {
         let engine = Engine(clock: PreviewClock(), scheduler: NoOpScheduler())
-        return ReminderForm(engine: { engine }, now: { .now }, defaultPace: .shipped, sharing: StandInSharing.previewModel(seeded: seeded))
+        return ReminderForm(engine: { engine }, now: { .now }, defaultPace: .shipped, defaultAlarmSound: .default, sharing: StandInSharing.previewModel(seeded: seeded))
     }
 
     /// The Edit form of a Firm reminder that fell due ten minutes ago, so it is Nudging.

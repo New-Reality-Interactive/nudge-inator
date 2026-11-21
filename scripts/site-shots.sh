@@ -3,7 +3,8 @@
 # carousel slides, taken from one person's day by the screenshots harness's `testSiteShots`
 # (scripts/screenshots/), on the iOS 27.2 simulator in portrait, at 8:20 AM with the status bar
 # overridden, then resized to 600 x 1302 and copied to <site repo>/shots/<version>/ as
-# carousel-<n>-<name>.png. It touches nothing else in the site repository.
+# carousel-<n>-<name>.png, and each tutorial page as tutorial-<slug>-<page>.png. It touches nothing else
+# in the site repository.
 # Usage: scripts/site-shots.sh <version>      Env: SITE_REPO (default: the website's checkout)
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -33,7 +34,12 @@ dest="$site/shots/$version"
 mkdir -p "$dest"
 for shot in "$out/$simulator/portrait"/site-*.png; do
   name="$(basename "$shot" .png)"
-  name="carousel-${name#site-}"
+  case "$name" in
+    # A tutorial page keeps a name with no version, so copying the folder over the site's shots/
+    # replaces the old one (release.md, Website tutorials).
+    site-tutorial-*) name="${name#site-}" ;;
+    *) name="carousel-${name#site-}" ;;
+  esac
   sips --resampleWidth 600 "$shot" --out "$dest/$name.png" > /dev/null || exit 1
 done
 echo "Website screenshots: $dest"

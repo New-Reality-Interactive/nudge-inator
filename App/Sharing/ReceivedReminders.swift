@@ -9,6 +9,8 @@ protocol ReceivedReminders: AnyObject {
     /// connection with `connectionID`, or `nil` when none is. Throws if the reminders haven't been
     /// read, so it can't say.
     func copy(of sendersReminderID: Reminder.ID, through connectionID: UUID) throws -> Reminder?
+    /// Settings' Default Alarm Sound, which a new copy starts with (#230).
+    var defaultAlarmSound: AlarmSound { get }
     /// Keeps `copy` among the person's reminders and plans it as their own. Throws, keeping
     /// nothing, if the reminders haven't been read or the store won't keep it.
     func keep(_ copy: Reminder) throws
@@ -35,8 +37,10 @@ protocol ReceivedReminders: AnyObject {
 extension SentReminder {
     /// The recipient's copy of it, received through the connection with `connectionID`: an ID of its
     /// own, the sender's content and no tags, accepted or waiting as the recipient's `deliveryMode`
-    /// for that connection says.
-    func copy(through connectionID: UUID, deliveryMode: DeliveryMode) -> Reminder {
+    /// for that connection says. The alarm sound is the recipient's own, the Default Alarm Sound
+    /// passed in at creation: the sender's never crosses a share, and a sender's revision never
+    /// changes it (GLOSSARY.md, Alarm sound).
+    func copy(through connectionID: UUID, deliveryMode: DeliveryMode, alarmSound: AlarmSound) -> Reminder {
         Reminder(
             title: reminder.title,
             notes: reminder.notes,
@@ -45,6 +49,7 @@ extension SentReminder {
             strength: reminder.strength,
             pace: reminder.pace,
             breakThroughFocus: reminder.breakThroughFocus,
+            alarmSound: alarmSound,
             origin: .received(connectionID: connectionID, sendersReminderID: reminder.id, revision: revision, state: deliveryMode == .startRightAway ? .accepted : .waiting)
         )
     }

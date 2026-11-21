@@ -166,6 +166,35 @@ SCREENS = {
   # Share Activity (#397). Only a mockup with it draws these.
   "share-activity": ("state.tab='settings';nav();push({kind:'activity'})", 3),
   "share-activity-empty": ("activity=[];state.tab='settings';nav();push({kind:'activity'})", 1),
+  # Alarm sound (#223). Only a mockup with it draws these; form-new, form-new-relentless,
+  # form-edit-locked and form-received show the Sound row too.
+  "form-sound-off": ("openEditor();state.sheet.draft.breakThrough=false;render()", 4),
+  "form-sound-gentle": ("openEditor();state.sheet.draft.strength='gentle';render()", 4),
+  "form-sound-picker": ("openEditor();CLICK.sheetPage('sound')", 1),
+  "form-sent-edit": ("state.tab='rems';nav();openEditor('s1')", 4),
+  # A copy arrives with the recipient's Default Alarm Sound, set to Bell so it shows.
+  "form-received-arrive": ("settings.defaultSound='bell';document.getElementById('c-as-arrive').click()", 2),
+  "settings-default-sound": ("state.tab='settings';nav();push({kind:'defsound'})", 1),
+  # Details tone and Use for All (#456). Only a mockup with it draws these; details-relentless
+  # and details-received show the Sound row too.
+  "details-sound": ("document.getElementById('c-dt-firm').click()", 2),
+  "details-sound-off": ("document.getElementById('c-dt-firmoff').click()", 2),
+  "details-received-sound": ("document.getElementById('c-dt-received').click()", 3),
+  "settings-use-for-all": ("document.getElementById('c-dt-useall').click()", 2),
+  "settings-use-for-all-confirm": ("document.getElementById('c-dt-confirm').click()", 1),
+  "settings-use-for-all-confirm-one": ("document.getElementById('c-dt-one').click()", 1),
+  "settings-use-for-all-done": ("document.getElementById('c-dt-same').click()", 2),
+  # Tutorials (#465). Only a mockup with it draws these; settings shows the section too.
+  "settings-tutorials": ("setTimeout(()=>document.getElementById('c-tt-section').click(),200)", 1),
+  "settings-how-alarm-sounds-work": ("document.getElementById('c-tt-sound').click()", 3),
+  # Tutorial sheets: each tutorial is a paged sheet. Only a mockup with them draws these.
+  "tutorial-how-it-nudges-p1": ("setTimeout(()=>{document.getElementById('c-tt-hin').click();state.sheet.page=0;render()},200)", 1),
+  "tutorial-how-it-nudges-p2": ("setTimeout(()=>{document.getElementById('c-tt-hin').click();state.sheet.page=1;render()},200)", 3),
+  "tutorial-how-it-nudges-p3": ("setTimeout(()=>{document.getElementById('c-tt-hin').click();state.sheet.page=2;render()},200)", 3),
+  "tutorial-how-it-nudges-p4": ("setTimeout(()=>{document.getElementById('c-tt-hin').click();state.sheet.page=3;render()},200)", 3),
+  "tutorial-how-alarm-sounds-work-p1": ("setTimeout(()=>{document.getElementById('c-tt-sound').click();state.sheet.page=0;render()},200)", 1),
+  "tutorial-how-alarm-sounds-work-p2": ("setTimeout(()=>{document.getElementById('c-tt-sound').click();state.sheet.page=1;render()},200)", 1),
+  "tutorial-how-alarm-sounds-work-p3": ("setTimeout(()=>{document.getElementById('c-tt-sound').click();state.sheet.page=2;render()},200)", 1),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}

@@ -191,9 +191,7 @@ enum ShotsSeed {
             notifications: NotificationAdapter(center: center, clock: clock),
             alarms: AlarmAdapter(manager: manager, clock: clock),
             onboardingRecord: onboarding,
-            defaultPaceRecord: DefaultPaceRecord(defaults: defaults),
-            remindersSortRecord: RemindersSortRecord(defaults: defaults),
-            tagsSortRecord: TagsSortRecord(defaults: defaults),
+            settingsRecords: SettingsRecords(defaults: defaults),
             doneQueue: .temporary,
             sharing: standIn,
             sharingSwitch: sharingSwitch,
@@ -251,8 +249,8 @@ enum ShotsSeed {
         let plants = Reminder(title: "Water the plants", tagIDs: tagged("home"), dueTime: at(580), repeatRule: everyThreeDays, strength: .gentle, breakThroughFocus: false)
         // 9:00 AM on the 1st of each month, in 3 days.
         let rent = Reminder(title: "Pay rent", notes: "Transfer to the landlord's account.", tagIDs: tagged("money", "home"), dueTime: at(40, days: 3), repeatRule: .everyMonth, strength: .relentless)
-        // 1:15 PM in 4 days, every 10 min.
-        let dentist = Reminder(title: "Dentist appointment", notes: "Bring the insurance card.", tagIDs: tagged("health", "appointments"), dueTime: at(295, days: 4), strength: .firm, pace: .consistent(wait: 10 * 60))
+        // 1:15 PM in 4 days, every 10 min, ringing with Chime, as in the 1.5.0 mockup.
+        let dentist = Reminder(title: "Dentist appointment", notes: "Bring the insurance card.", tagIDs: tagged("health", "appointments"), dueTime: at(295, days: 4), strength: .firm, pace: .consistent(wait: 10 * 60), alarmSound: .chime)
         // 18 days ago, Done after 41 minutes.
         let passport = Reminder(title: "Renew passport", tagIDs: tagged("money", "travel"), dueTime: at(40, days: -18), strength: .firm)
         // 9:30 AM every weekday, every 5 min.

@@ -250,7 +250,7 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
   the icon. My Day's chosen-tag tokens and each button's VoiceOver label carry the count there.
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
   actions are `{colors.tile-green}` (Done), `{colors.tile-red}` (Delete) and `{colors.tile-blue}` (Edit). Settings rows: red (Notifications, Badges, Delete All Data), orange
-  (Alarms), gray (About, Open iOS Settings, Default Pace, How It Nudges, How Sharing Works, and About's Privacy Policy
+  (Alarms), gray (About, Open iOS Settings, Default Pace, Default Alarm Sound, the Tutorials rows, and About's Privacy Policy
   and Support), blue (Send a Test Nudge, Sharing). Tiles are icons for rows, not
   statuses, so "one color, one meaning" does not apply to them.
 
@@ -560,7 +560,10 @@ The Reminders tab's tools, in its layout, so they're learned once.
 
 ### How It Nudges
 - **Token:** `how-it-nudges`. Inset grouped list, summary in the section footer, `{typography.footnote}`
-  rows. Each row leads with a small urgency dot, then urgency word, time range and Via label.
+  rows. Each row leads with a small urgency dot, then urgency word, time range and Via label. At the
+  accessibility sizes the urgency word and Via label stack under the times, left-aligned, so every
+  row's word starts at the same place (#470's phone check). On a How It Nudges tutorial page the
+  section has no header: the page's heading names the strength.
 
 ### Buttons
 - Every button is at least 44 pt tall.
@@ -665,15 +668,21 @@ sharing paused and offline banner.
   "Connect with people through iCloud to send each other reminders." The Connections row shows only
   while the switch is on (#387). Below it, also only while the switch is on, the Share Activity row
   is a `{colors.tile-gray}` tile with `list.bullet.rectangle` and a chevron, with no status (#397).
-  Last in the section, with Sharing on or off (under Share Activity while on, under the switch while
-  off), How Sharing Works is a `{colors.tile-gray}` tile with `info.circle` and its title in the
-  accent, with no chevron, as Send a Test Nudge: it opens the How Sharing Works sheet, not a page, and
-  the HIG keeps the disclosure indicator for drilling in (#423).
+  How Sharing Works is no longer in this section: it's under Tutorials (#466).
+- **Tutorials section** (mockups `2026-11-20-tutorials` and `2026-11-20-tutorial-sheets`, #466):
+  Settings' last section above Your Data, headed Tutorials, with no footer. One row per feature's
+  tutorial, in the order the features shipped: How It Nudges, How Sharing Works, then How Alarm Sounds
+  Work (#467). Each row is a `{colors.tile-gray}` tile with its feature's symbol (`bell`, `person.2`,
+  `speaker.wave.2`) and its title in the accent, which says it can be tapped, as Send a Test Nudge's
+  does. Every row opens a sheet, so none has a chevron, since the HIG keeps the disclosure indicator
+  for drilling in (#423, #470). Every tutorial sheet is the one How Sharing Works uses (below), with
+  its own pages. Only How Sharing Works opens by itself.
 - **How Sharing Works sheet** (mockup `2026-11-15-sharing-tutorial`, #423): four pages in an inset
   grouped list, inline title How Sharing Works. Each page has decorative pills (an SF Symbol and a
   word in `{colors.label}`, 8 pt apart, on `tertiary-system-fill`, `arrow.forward` between them in
-  `{colors.secondary-label}`; stacked with `arrow.down` where they don't fit on one line), hidden
-  from VoiceOver; a centered heading in `{typography.title2}` bold; then a lead in
+  `{colors.secondary-label}`; stacked with `arrow.down` where they don't fit on one line; each pill
+  keeps its words on one line, as wide as they need, and its text stops growing at xxxLarge, in every
+  tutorial (#470, mockup `2026-11-20-tutorial-pills-one-line`)), hidden from VoiceOver; a centered heading in `{typography.title2}` bold; then a lead in
   `{typography.body}` and rows with a `{colors.tile-blue}` tile, a title in `{typography.body}` and a
   line under it in `{typography.subhead}` `{colors.secondary-label}`, or, on Connect, three numbered
   steps in accent circles (Accent's one exception; capped at 44 pt, dividers from the circle's
@@ -685,6 +694,24 @@ sharing paused and offline banner.
   top left on every page. Back (`chevron.backward`) and Next (`chevron.forward`) share one capsule
   top right, Back dimmed on page 1; on the last page Next becomes the system's confirm checkmark,
   named Done, which closes the sheet. A page change speaks the new page's heading.
+- **How It Nudges sheet** (mockups `2026-11-20-tutorial-sheets` and
+  `2026-11-20-how-it-nudges-strength-pills`, #470): How Sharing Works' sheet with
+  four pages, inline title How It Nudges, opened only from its row. What to Expect (`bell` Nudge, an
+  arrow, `checkmark.circle.fill` Done) lists the welcome's four points as rows with their symbols,
+  and #459's line about the alarm sound as a second line under the alarms point; onboarding shows
+  the points without it. Gentle, Firm and Relentless each show a pill of the strength's bars alone,
+  as tall as the other pills' icons, as the picture (the heading names the strength); the strength's line the form shows under Strength in `{typography.body}`;
+  "At your Default Pace, <pace>, with Break Through Focus on." in `{typography.subhead}`
+  `{colors.secondary-label}`; then the How It Nudges section (How It Nudges, above) with no header. The pages are
+  built at the Default Pace as the sheet opens, so a changed pace shows the next time.
+- **How Alarm Sounds Work sheet** (mockups `2026-11-20-tutorial-sheets` and
+  `2026-11-20-alarm-sounds-tutorial-leads`, #467): How Sharing Works' sheet with three pages, each a
+  lead and rows, inline title How Alarm Sounds Work, opened only from its row: Pick Your Default
+  Sound (a `speaker.wave.2` Default Alarm Sound pill, two rows), Change Your Reminders (`bell` Wake
+  Up, an arrow, `speaker.wave.2` Chime; three rows and a footer) and When It Plays (an `alarm` Alarm pill alone, since a notification
+  never plays the sound; three rows). Its pills and the Use for All Reminders row reuse the screens'
+  own strings, and its tests check that the sentences name Default Alarm Sound, Sound and the tones
+  as the screens do.
 - **Share Activity entries:** plain rows with nothing to tap, newest first, in one inset list: who
   it concerns in `{typography.body}` (several names joined as a list), then what happened and when
   ("Today at 7:58 AM"), each in `{typography.subhead}` `{colors.secondary-label}`. VoiceOver reads
@@ -758,6 +785,53 @@ sharing paused and offline banner.
   `icloud.slash`, `wifi.slash`, `minus`. Also used here: `pause` and `info.circle`. How Sharing Works
   uses `iphone`, `arrow.forward` (it flips in right to left), `icloud`, `paperplane`, `eye`, `hand.raised`, `lock`, `clock`, `person.2`,
   `person.badge.plus`, `list.bullet.rectangle`, `checkmark.circle.fill`, `bell` and `info.circle`.
+
+### Alarm sound
+What the alarm sound mockup (`docs/mockups/2026-11-18-alarm-sound/`, #223) adds. It rewrites
+nothing above.
+
+- **Sound row:** on the reminder form, in the Break Through Focus section under the switch, a row
+  in `{typography.body}` with the current tone's name trailing in `{colors.secondary-label}` and a
+  chevron, as the Tags row. It opens the Sound page. It shows only while the reminder sends alarms
+  (Relentless, or Firm with Break Through Focus on), and appears and goes at once as the switch or
+  the strength changes. It's never locked: not while Nudging, and not on a received copy, whose other
+  fields the sender owns. Neither a reminder being sent nor the sender's form for one they sent has
+  one. The section's footer adds, under the switch's line: "Plays when a nudge arrives as an alarm.
+  Other nudges use the standard notification sound."
+- **The picker:** one inset grouped list for Settings and the form: Default Alarm (iOS's own alarm
+  sound) first, then Chime, Bell, Pulse, Beacon, Rise and Siren. `checkmark` in the accent marks the
+  current choice and stays on its sound's line at the accessibility sizes. A choice is saved at once
+  and plays the whole tone, as the Clock app does (on silent too), until it ends, another sound is
+  chosen or the page closes (none for Default Alarm); the page stays open. VoiceOver reads the list
+  by its page's title, and each sound as a selectable row with its selected state. The footer is the
+  Sound row's, in the same footer style on both pages; on Settings' page a second line says new and
+  received reminders start with this sound and existing reminders keep theirs.
+- **Settings' Default Alarm Sound:** a Settings row with a `{colors.tile-gray}` tile and
+  `speaker.wave.2`, in Nudges right after Default Pace, showing the current tone's name as Default
+  Pace shows its pace. It starts as Default Alarm, the list's first sound.
+- **Symbols added:** `speaker.wave.2`.
+
+### Details tone and Use for All
+What the details tone and Use for All mockup (`docs/mockups/2026-11-19-details-tone-use-for-all/`,
+#456) adds. It rewrites nothing above except the Default Alarm Sound page's footer.
+
+- **Details, Sound row:** on a reminder's details, in Schedule under Break Through Focus, a row in
+  `{typography.body}` with the sound's name trailing in `{colors.secondary-label}` (Default Alarm by
+  name), as Pace shows its pace, with no chevron: it only names the sound, and Edit changes it. It
+  shows only while the reminder rings, by the form's Sound row's rule, and never on a received copy
+  its sender canceled. On a received copy it names
+  the sound chosen on this iPhone; while that copy rings, the schedule's lock footer adds "The sound
+  is yours: it's chosen on this iPhone." and the footer under Remove Reminder says the person can
+  choose its alarm sound.
+- **Use for All Reminders:** on Settings' Default Alarm Sound page, its own section under the list,
+  one row in `{colors.accent}` text (a tint row, as Pause Reminder). Its footer says choosing a sound
+  above leaves existing reminders as they are and this gives every one of them the default, received
+  ones included; the list's footer drops "Reminders you already have keep theirs." When every
+  reminder already has the default, the row is dimmed and its footer reads "Every reminder you have
+  uses <sound>." Tapping it asks with the system confirmation dialog (Components): "Use <sound> for
+  All Reminders?", "<n> reminders, including ones people sent you, will use <sound>." counting only
+  the reminders it changes ("1 reminder will use <sound>." for one), and a Use for All Reminders
+  button that is not destructive, since nothing is deleted. Focus goes where iOS puts it.
 
 ## Mapping to code
 

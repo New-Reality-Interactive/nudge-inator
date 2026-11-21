@@ -33,6 +33,13 @@ struct ReminderDetails {
     var strength: Strength { reminder.strength }
     /// The Schedule's Pace row.
     var pace: Pace { reminder.pace }
+    /// Whether the reminder rings as an alarm (#457): it sends alarms, by the form's rule (#230),
+    /// and isn't a received copy its sender canceled, which never nudges again. A received copy's
+    /// footers choose their sentences by it.
+    var rings: Bool { reminder.sendsAlarms && !reminder.isCanceled }
+    /// The Schedule's Sound row (#457): the sound chosen on this iPhone, or `nil` while the
+    /// reminder doesn't ring.
+    var sound: AlarmSound? { rings ? reminder.alarmSound : nil }
     /// Done is shown only while the reminder is Nudging.
     var offersDone: Bool { card != nil }
     /// A received copy waiting to be accepted (ticket 203): the waiting note, Accept and Remove in

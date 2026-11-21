@@ -19,8 +19,8 @@ struct OnboardingView: View {
                     .frame(maxWidth: .infinity)
                     .accessibilityAddTraits(.isHeader)
                 switch step {
-                case .welcome: WelcomeFeatures()
-                case .alarmsOnly: WelcomeFeature.ringsAsAlarms.view
+                case .welcome: WelcomeFeatures(place: .onboarding)
+                case .alarmsOnly: WelcomeFeature.ringsAsAlarms.view(on: .onboarding)
                 }
                 Button(action: continueToPrompts) {
                     Text("Continue", comment: "Onboarding: the only button, which goes on to the system's permission prompts.")
@@ -50,12 +50,14 @@ struct OnboardingView: View {
     }
 }
 
-/// The welcome's four points, also at the top of Settings' How It Nudges, so they can be found
-/// again (HIG, Onboarding).
+/// The welcome's four points. The How It Nudges sheet's first page lists them too, so they can be
+/// found again (HIG, Onboarding; #470).
 struct WelcomeFeatures: View {
+    let place: WelcomeFeature.Place
+
     var body: some View {
         VStack(alignment: .leading, spacing: Design.Spacing.s5) {
-            ForEach(WelcomeFeature.allCases, id: \.self) { $0.view }
+            ForEach(WelcomeFeature.allCases, id: \.self) { $0.view(on: place) }
         }
     }
 }
@@ -66,26 +68,46 @@ enum WelcomeFeature: CaseIterable {
     case chooseWhatBreaksThrough
     case staysOnYourIPhone
 
-    var view: some View {
+    /// Where the points show. How It Nudges is where a person who updated learns what changed,
+    /// since the app has no What's New screen, so only it adds a note to a point (#459).
+    enum Place {
+        case onboarding
+        case howItNudges
+    }
+
+    func note(on place: Place) -> LocalizedStringResource? {
+        switch (self, place) {
+        case (.ringsAsAlarms, .howItNudges):
+            LocalizedStringResource("Choose the sound alarms ring with in Settings, under Default Alarm Sound, and for each reminder, under Sound on its form.", comment: "How It Nudges only, not onboarding: under the point \"Urgent nudges ring as alarms\". Default Alarm Sound is the Settings row, and Sound is the reminder form's row.")
+        default:
+            nil
+        }
+    }
+
+    func view(on place: Place) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: Design.Spacing.s4) {
-            Image(systemName: systemImage)
+            Image(systemName: symbol)
                 .font(.title2)
                 // Not the accent, which the mockup uses: DESIGN.md keeps it for things you can tap.
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
                 .frame(minWidth: Design.Spacing.s5 + Design.Spacing.s4)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
-                title.font(.headline)
-                text
-                    .font(.subheadline)
-                    .foregroundStyle(Color(uiColor: .secondaryLabel))
+                Text(title).font(.headline)
+                Group {
+                    Text(text)
+                    if let note = note(on: place) { Text(note) }
+                }
+                .font(.subheadline)
+                .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
             .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)
     }
 
-    private var systemImage: String {
+    /// Also the How It Nudges sheet's row for the point (#470).
+    var symbol: String {
         switch self {
         case .nudgesUntilDone: "bell"
         case .ringsAsAlarms: "alarm"
@@ -94,25 +116,25 @@ enum WelcomeFeature: CaseIterable {
         }
     }
 
-    private var title: Text {
+    var title: LocalizedStringResource {
         switch self {
-        case .nudgesUntilDone: Text("Nudges until you're done", comment: "Onboarding and How It Nudges: the title of the first point.")
-        case .ringsAsAlarms: Text("Urgent nudges ring as alarms", comment: "Onboarding and How It Nudges: the title of the point about alarms.")
-        case .chooseWhatBreaksThrough: Text("You choose what breaks through", comment: "Onboarding and How It Nudges: the title of the point about Break Through Focus.")
-        case .staysOnYourIPhone: Text("Stays on your iPhone", comment: "Onboarding and How It Nudges: the title of the point about privacy.")
+        case .nudgesUntilDone: LocalizedStringResource("Nudges until you're done", comment: "Onboarding and How It Nudges: the title of the first point.")
+        case .ringsAsAlarms: LocalizedStringResource("Urgent nudges ring as alarms", comment: "Onboarding and How It Nudges: the title of the point about alarms.")
+        case .chooseWhatBreaksThrough: LocalizedStringResource("You choose what breaks through", comment: "Onboarding and How It Nudges: the title of the point about Break Through Focus.")
+        case .staysOnYourIPhone: LocalizedStringResource("Stays on your iPhone", comment: "Onboarding and How It Nudges: the title of the point about privacy.")
         }
     }
 
-    private var text: Text {
+    var text: LocalizedStringResource {
         switch self {
         case .nudgesUntilDone:
-            Text("Reminders keep coming back until you tap Done: at a steady pace, or more often and more insistently.", comment: "Onboarding and How It Nudges: under \"Nudges until you're done\".")
+            LocalizedStringResource("Reminders keep coming back until you tap Done: at a steady pace, or more often and more insistently.", comment: "Onboarding and How It Nudges: under \"Nudges until you're done\".")
         case .ringsAsAlarms:
-            Text("When it really matters, your iPhone rings and vibrates like an alarm, even on silent and in a Focus. Stopping the alarm only quiets it: the next nudge still comes, and only Done ends the reminder.", comment: "Onboarding and How It Nudges: under \"Urgent nudges ring as alarms\".")
+            LocalizedStringResource("When it really matters, your iPhone rings and vibrates like an alarm, even on silent and in a Focus. Stopping the alarm only quiets it: the next nudge still comes, and only Done ends the reminder.", comment: "Onboarding and How It Nudges: under \"Urgent nudges ring as alarms\".")
         case .chooseWhatBreaksThrough:
-            Text("Each Gentle or Firm reminder has a Break Through Focus switch. Turn it off and a Focus can hold its nudges, and nothing rings. Relentless always breaks through.", comment: "Onboarding and How It Nudges: under \"You choose what breaks through\".")
+            LocalizedStringResource("Each Gentle or Firm reminder has a Break Through Focus switch. Turn it off and a Focus can hold its nudges, and nothing rings. Relentless always breaks through.", comment: "Onboarding and How It Nudges: under \"You choose what breaks through\".")
         case .staysOnYourIPhone:
-            Text("Your own reminders stay on this iPhone. Reminders you send or receive via an approved share, go through your iCloud. There's no account and no server of ours involved.", comment: "Onboarding and How It Nudges: under \"Stays on your iPhone\".")
+            LocalizedStringResource("Your own reminders stay on this iPhone. Reminders you send or receive via an approved share, go through your iCloud. There's no account and no server of ours involved.", comment: "Onboarding and How It Nudges: under \"Stays on your iPhone\".")
         }
     }
 }

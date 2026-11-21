@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Settings: the permission banners, About, what the app may send (notifications, alarms and
 /// badges), a way to open iOS Settings when something is off, Send a Test Nudge, the Default Pace,
-/// How It Nudges, and Delete All Data.
+/// the Default Alarm Sound, the Tutorials, and Delete All Data.
 struct SettingsTab: View {
     let state: ScreenState
     /// What previews show, since they have no app model: the permissions and how they leave
@@ -20,13 +20,16 @@ struct SettingsTab: View {
     @State private var testNudgeSentAt: Date?
     /// The Default Pace previews show and change, since they have no app model.
     @State private var previewDefaultPace = DefaultPace.shipped
+    /// The Default Alarm Sound previews show and change, since they have no app model.
+    @State private var previewDefaultAlarmSound = AlarmSound.default
     /// The Sharing switch previews show and change, since they have no app model.
     @State private var previewSharingOn = false
     /// Whether the Turn Off Sharing sheet (#388) is up.
     @State private var isTurningSharingOff = false
     @State private var turnOffFailed = false
-    /// Whether How Sharing Works (#423) is up. Local, so opening it changes no setting.
-    @State private var isShowingSharingTutorial = false
+    /// The tutorial sheet its Tutorials row opened (#423, #467), if any. Local, so opening one
+    /// changes no setting.
+    @State private var shownTutorial: SettingsTutorial?
 
     var body: some View {
         NavigationStack(path: path) {
@@ -35,6 +38,7 @@ struct SettingsTab: View {
                     generalSection
                     sharingSection
                     nudgesSection
+                    tutorialsSection
                     dataSection
                 }
             }
@@ -64,8 +68,12 @@ struct SettingsTab: View {
             } message: {
                 Text("Nothing has changed. Try again.", comment: "Settings and Turn Off Sharing's sheet: under Couldn't Turn Off Sharing.")
             }
-            .sheet(isPresented: $isShowingSharingTutorial) {
-                SharingTutorialSheet()
+            .sheet(item: $shownTutorial) { tutorial in
+                switch tutorial {
+                case .howItNudges: TutorialSheet(pages: howItNudgesPages)
+                case .howSharingWorks: TutorialSheet<SharingTutorialPage>()
+                case .howAlarmSoundsWork: TutorialSheet<AlarmSoundsTutorialPage>()
+                }
             }
             .navigationTitle(Text(AppTab.settings.title))
             #if DEBUG
@@ -140,9 +148,9 @@ struct SettingsTab: View {
         }
     }
 
-    /// The Sharing switch (#387), Connections (ticket 194) and Share Activity (#397) only while it's
-    /// on, and last, on or off, How Sharing Works (#423). Off, none of sharing exists (the
-    /// Sharing-switch mockup), but how it works can still be read.
+    /// The Sharing switch (#387), and Connections (ticket 194) and Share Activity (#397) only while
+    /// it's on. Off, none of sharing exists (the Sharing-switch mockup). How Sharing Works is under
+    /// Tutorials (#466), so how it works can be read either way.
     private var sharingSection: some View {
         Section {
             Toggle(isOn: sharingOn) {
@@ -173,19 +181,6 @@ struct SettingsTab: View {
                         title: Text("Share Activity", comment: "Share Activity: the page's title, and the Settings row that opens it.")
                     )
                 }
-            }
-            // Always the section's last row, with Sharing on or off (the mockup, 2026-11-15).
-            Button {
-                isShowingSharingTutorial = true
-            } label: {
-                SettingsRow(
-                    tile: .tileGray,
-                    symbol: "info.circle",
-                    title: Text("How Sharing Works", comment: "How Sharing Works: the sheet's title, and the Settings row under Sharing that opens it."),
-                    // It opens a sheet, not a page, so no chevron (the HIG keeps that for drilling in):
-                    // the accent says it can be tapped, as Send a Test Nudge's does (#423's phone check).
-                    titleColor: .accentColor
-                )
             }
         } header: {
             Text("Sharing", comment: "Settings: the switch that turns sharing reminders with other people on or off, and the header of its section.")
@@ -270,16 +265,19 @@ struct SettingsTab: View {
                 )
             }
             NavigationLink {
-                HowItNudgesPage(previewPermissions: previewPermissions, previewDefaultPace: defaultPace.wrappedValue)
+                DefaultAlarmSoundPage(sound: defaultAlarmSound, remindersToChange: model?.remindersToChangeByUseForAll ?? 0) {
+                    model?.useDefaultAlarmSoundForAllReminders()
+                }
             } label: {
                 SettingsRow(
                     tile: .tileGray,
-                    symbol: "info.circle",
-                    title: Text("How It Nudges", comment: "Settings: row that opens the page explaining how each strength nudges, and what onboarding said.")
+                    symbol: "speaker.wave.2",
+                    title: Text(DefaultAlarmSoundPage.title),
+                    value: Text(defaultAlarmSound.wrappedValue.title)
                 )
             }
         } header: {
-            Text("Nudges", comment: "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and How It Nudges.")
+            Text("Nudges", comment: "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and Default Alarm Sound.")
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s2) {
                 ForEach(SettingsStatus.footer(for: reach), id: \.self) { $0.text }
@@ -291,6 +289,31 @@ struct SettingsTab: View {
             try? await Task.sleep(for: .seconds(NotificationAdapter.testNudgeDelay + 1))
             testNudgeSentAt = nil
         }
+    }
+
+    /// One row per feature's tutorial, in the order the features shipped (#466). Every row is in the
+    /// accent color, which says it can be tapped, and opens a sheet, so none has a chevron (#470).
+    /// How Sharing Works also opens by itself the first time Sharing is turned on
+    /// (`sharingTutorialFirstTime`); the others never do.
+    private var tutorialsSection: some View {
+        Section {
+            ForEach(SettingsTutorial.allCases, id: \.self) { tutorial in
+                Button {
+                    shownTutorial = tutorial
+                } label: {
+                    SettingsRow(tile: .tileGray, symbol: tutorial.symbol, title: Text(tutorial.title), titleColor: .accentColor)
+                }
+            }
+        } header: {
+            Text("Tutorials", comment: "Settings: header of the section with a row for each feature's tutorial, such as How It Nudges and How Sharing Works.")
+        }
+    }
+
+    /// How It Nudges' pages at the Default Pace as the sheet opens; previews, with no model, use
+    /// theirs.
+    private var howItNudgesPages: [HowItNudgesTutorialPage] {
+        if let model { return HowItNudgesTutorialPage.pages(model: model) }
+        return HowItNudgesTutorialPage.pages(pace: defaultPace.wrappedValue.pace, engine: .unscheduled(permissions: previewPermissions))
     }
 
     private var dataSection: some View {
@@ -318,6 +341,12 @@ struct SettingsTab: View {
     private var defaultPace: Binding<DefaultPace> {
         guard let model else { return $previewDefaultPace }
         return Binding { model.defaultPace } set: { model.defaultPace = $0 }
+    }
+
+    /// The model's Default Alarm Sound, read from its record each time. Without a model, the previews'.
+    private var defaultAlarmSound: Binding<AlarmSound> {
+        guard let model else { return $previewDefaultAlarmSound }
+        return Binding { model.defaultAlarmSound } set: { model.defaultAlarmSound = $0 }
     }
 
     /// How each urgency reaches the person, from the engine. Without a model, the previews' states.

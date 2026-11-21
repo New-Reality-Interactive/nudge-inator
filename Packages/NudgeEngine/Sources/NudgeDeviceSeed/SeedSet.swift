@@ -4,9 +4,10 @@ import NudgeEngine
 
 /// A setting a set can change, by the name the record keeps it under. Its value is text the app
 /// reads and writes (`created.ascending` for the Reminders tab's sort, `consistent.600` for the
-/// Default Pace); the seed only keeps and restores it.
+/// Default Pace, a sound's ID such as `chime` for the Default Alarm Sound); the seed only keeps and restores it.
 public enum SeedSetting: String, Sendable {
     case defaultPace
+    case defaultAlarmSound
     case remindersSort
 }
 
@@ -28,6 +29,8 @@ public struct SeedReminder: Sendable {
     public var repeatRule: RepeatRule?
     /// Mine, or a copy received through a connection (ticket 197's set).
     public var origin: ReminderOrigin
+    /// Default Alarm unless a set gives a tone (#458's set).
+    public var alarmSound: AlarmSound
 
     public init(
         id: UUID,
@@ -38,7 +41,8 @@ public struct SeedReminder: Sendable {
         createdAgo: TimeInterval = 0,
         strength: Strength = .gentle,
         repeatRule: RepeatRule? = nil,
-        origin: ReminderOrigin = .mine
+        origin: ReminderOrigin = .mine,
+        alarmSound: AlarmSound = .default
     ) {
         self.id = id
         self.title = title
@@ -49,6 +53,7 @@ public struct SeedReminder: Sendable {
         self.strength = strength
         self.repeatRule = repeatRule
         self.origin = origin
+        self.alarmSound = alarmSound
     }
 
     /// A reminder ID that never changes, so the same set always has the same IDs. `number` is
@@ -71,6 +76,7 @@ public struct SeedReminder: Sendable {
             repeatRule: repeatRule,
             strength: strength,
             breakThroughFocus: false,
+            alarmSound: alarmSound,
             createdAt: now.addingTimeInterval(-createdAgo),
             origin: origin
         )
@@ -103,6 +109,6 @@ public struct SeedSet: Sendable {
 
 extension SeedSet {
     /// Every set a launch can name.
-    public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .deliveredNudges, .keptOrder, .received, .fromOthers, .rowSwipes, .urgencyCards]
+    public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .deliveredNudges, .keptOrder, .received, .fromOthers, .rowSwipes, .urgencyCards, .alarmSound, .detailsSound, .useForAll]
 }
 #endif

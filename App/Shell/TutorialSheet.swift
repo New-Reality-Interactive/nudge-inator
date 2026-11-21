@@ -1,11 +1,17 @@
+import NudgeEngine
 import SwiftUI
 
-/// How Sharing Works (#423; #430, the mockup `2026-11-16-tutorial-swipe-top-bar`): four pages on
-/// what sharing is, connecting, sending and who sees what. A swipe moves between them, and so do the
-/// Back and Next buttons, as the HIG's Gestures page asks: a gesture is a shortcut, not the only way.
-/// It takes no model, so opening and closing it changes nothing.
-struct SharingTutorialSheet: View {
-    @State private var paging = SharingTutorialPaging()
+/// A tutorial sheet, first built for How Sharing Works (#423; #430, the mockup
+/// `2026-11-16-tutorial-swipe-top-bar`) and shared by every tutorial since (#467, the mockup
+/// `2026-11-20-tutorial-sheets`). A swipe moves between the pages, and so do the Back and Next
+/// buttons, as the HIG's Gestures page asks: a gesture is a shortcut, not the only way. It takes no
+/// model, so opening and closing it changes nothing. Its pages are the ones it opened with.
+struct TutorialSheet<Page: TutorialPage>: View {
+    @State private var paging: TutorialPaging<Page>
+
+    init(pages: [Page]) {
+        _paging = State(initialValue: TutorialPaging(pages: pages))
+    }
 
     @Environment(\.dismiss) private var dismiss
 
@@ -14,12 +20,13 @@ struct SharingTutorialSheet: View {
             VStack(spacing: 0) {
                 // A paged TabView: the pages sit side by side and settle one at a time, and it mirrors
                 // for right to left. Its own dots are off: the page's dots stay under it, pinned.
-                TabView(selection: $paging.page) {
-                    ForEach(SharingTutorialPage.allCases, id: \.self) { page in
-                        TutorialPage(page: page)
-                            .tag(page)
+                // Tagged by place, so a page needn't be hashable.
+                TabView(selection: $paging.pageIndex) {
+                    ForEach(paging.pages.indices, id: \.self) { index in
+                        PageView(page: paging.pages[index])
+                            .tag(index)
                             // Only the page on screen is reachable with VoiceOver.
-                            .accessibilityHidden(page != paging.page)
+                            .accessibilityHidden(index != paging.pageIndex)
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
@@ -29,10 +36,10 @@ struct SharingTutorialSheet: View {
             .background(Color(uiColor: .systemGroupedBackground))
             // The new page's heading is spoken, as an announcement: VoiceOver's focus is never moved
             // by hand (#276, #221).
-            .onChange(of: paging.page) { _, page in
-                VoiceOverAnnouncement.post(page.heading)
+            .onChange(of: paging.pageIndex) {
+                VoiceOverAnnouncement.post(paging.page.heading)
             }
-            .navigationTitle(Text("How Sharing Works", comment: "How Sharing Works: the sheet's title, and the Settings row under Sharing that opens it."))
+            .navigationTitle(Text(Page.title))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbar }
         }
@@ -53,7 +60,7 @@ struct SharingTutorialSheet: View {
                 withAnimation { paging.goBack() }
             } label: {
                 Label {
-                    Text("Back", comment: "How Sharing Works: the top bar's button (a back arrow) that goes back a page. Dimmed on the first page.")
+                    Text("Back", comment: "A tutorial sheet, such as How Sharing Works: the top bar's button (a back arrow) that goes back a page. Dimmed on the first page.")
                 } icon: {
                     Image(systemName: "chevron.backward")
                 }
@@ -64,7 +71,7 @@ struct SharingTutorialSheet: View {
                     withAnimation { paging.goForward() }
                 } label: {
                     Label {
-                        Text("Next", comment: "How Sharing Works: the top bar's button (a forward arrow) that goes on to the next page.")
+                        Text("Next", comment: "A tutorial sheet, such as How Sharing Works: the top bar's button (a forward arrow) that goes on to the next page.")
                     } icon: {
                         Image(systemName: "chevron.forward")
                     }
@@ -77,7 +84,7 @@ struct SharingTutorialSheet: View {
                     dismiss()
                 } label: {
                     Label {
-                        Text("Done", comment: "How Sharing Works: the last page's confirm button (a checkmark), in place of Next, which closes the sheet.")
+                        Text("Done", comment: "A tutorial sheet, such as How Sharing Works: the last page's confirm button (a checkmark), in place of Next, which closes the sheet.")
                     } icon: {
                         Image(systemName: "checkmark")
                     }
@@ -88,8 +95,8 @@ struct SharingTutorialSheet: View {
 }
 
 /// One page: its picture, heading and rows, in an inset grouped list that scrolls on its own.
-private struct TutorialPage: View {
-    let page: SharingTutorialPage
+private struct PageView<Page: TutorialPage>: View {
+    let page: Page
 
     var body: some View {
         List {
@@ -103,7 +110,15 @@ private struct TutorialPage: View {
 
     @ViewBuilder private var content: some View {
         switch page.content {
-        case .points(_, let points):
+        // Two cases, not an optional footer: a page with no note gets no footer area at all, so
+        // How Sharing Works' pages keep their spacing.
+        case .points(_, let points, let footnote?):
+            Section {
+                ForEach(points.indices, id: \.self) { PointRow(point: points[$0]) }
+            } footer: {
+                Text(footnote)
+            }
+        case .points(_, let points, nil):
             Section {
                 ForEach(points.indices, id: \.self) { PointRow(point: points[$0]) }
             }
@@ -113,17 +128,16 @@ private struct TutorialPage: View {
             } footer: {
                 Text(footnote)
             }
+        // The section reminder details and the form draw, headed by the page's heading alone.
+        case .schedule(_, _, let howItNudges):
+            HowItNudgesSection(headerless: howItNudges)
         }
     }
 }
 
 /// The page's picture, its heading and, on a page of points, the lead under it.
-private struct PageTop: View {
-    let page: SharingTutorialPage
-
-    /// A pill's gap between its icon and word: the mockup's 8 pt, growing with the text, or at the
-    /// largest sizes `person.badge.plus`'s badge touches the word (#423's phone check).
-    @ScaledMetric(relativeTo: .subheadline) private var pillGap: CGFloat = Design.Spacing.s2
+private struct PageTop<Page: TutorialPage>: View {
+    let page: Page
 
     var body: some View {
         VStack(alignment: .leading, spacing: Design.Spacing.s3) {
@@ -136,15 +150,30 @@ private struct PageTop: View {
                 VStack(spacing: Design.Spacing.s2) { art(arrow: "arrow.down") }
             }
             .frame(maxWidth: .infinity)
+            // Every pill keeps its words on one line, so its text stops growing at the largest
+            // standard size: the art is decoration VoiceOver skips (#470's phone check, the mockup
+            // `2026-11-20-tutorial-pills-one-line`).
+            .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             .accessibilityHidden(true)
             Text(page.heading)
                 .font(.title2.bold())
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 .accessibilityAddTraits(.isHeader)
-            if case .points(let lead?, _) = page.content {
+            switch page.content {
+            case .points(let lead?, _, _):
                 Text(lead)
                     .font(.body)
+            case .schedule(let lead, let note, _):
+                VStack(alignment: .leading, spacing: Design.Spacing.s2) {
+                    Text(lead)
+                        .font(.body)
+                    Text(note)
+                        .font(.subheadline)
+                        .foregroundStyle(Color(uiColor: .secondaryLabel))
+                }
+            case .points(nil, _, _), .steps:
+                EmptyView()
             }
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -157,9 +186,13 @@ private struct PageTop: View {
         ForEach(page.art.indices, id: \.self) { index in
             switch page.art[index] {
             case .pill(let symbol, let text):
-                HStack(spacing: pillGap) {
+                // The mockup's 8 pt at every size: the text stops growing at xxxLarge, where
+                // `person.badge.plus`'s badge no longer reaches the word, and a gap grown with the
+                // text sat too far from it (#470's phone check; #423 grew it).
+                HStack(spacing: Design.Spacing.s2) {
                     Image(systemName: symbol)
                     Text(text)
+                        .lineLimit(1)
                 }
                 .font(.subheadline)
                 .foregroundStyle(Color(uiColor: .label))
@@ -170,6 +203,14 @@ private struct PageTop: View {
                 Image(systemName: arrow)
                     .font(.title3)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
+            case .strength(let strength):
+                // The strength's bars alone in a pill, as tall as the other pills' icons: the
+                // heading names the strength (#470's phone check).
+                StrengthBars(strength: strength, height: 16, relativeTo: .subheadline)
+                    .foregroundStyle(Color(uiColor: .label))
+                    .padding(.horizontal, Design.Spacing.s4)
+                    .padding(.vertical, Design.Spacing.s2)
+                    .background(Capsule().fill(Color(uiColor: .tertiarySystemFill)))
             }
         }
     }
@@ -178,7 +219,7 @@ private struct PageTop: View {
 /// A row with the blue tile of its SF Symbol, the title and the line under it, read as one. Stacked
 /// at accessibility sizes, as a Settings row is.
 private struct PointRow: View {
-    let point: SharingTutorialPage.Point
+    let point: TutorialPoint
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .body) private var tileSize: CGFloat = Design.Size.settingsTile
@@ -196,7 +237,7 @@ private struct PointRow: View {
     var body: some View {
         SizeAdaptiveStack(rowAlignment: .top, rowSpacing: Design.Spacing.s3, stackedSpacing: Design.Spacing.s2) {
             SquareTile(symbol: point.symbol, color: .tileBlue, size: scaledTile)
-            RowText(title: point.title, text: point.text)
+            RowText(title: point.title, text: point.text, note: point.note)
         }
         // Separators start at the text, past the tile, as in Settings.
         .alignmentGuide(.listRowSeparatorLeading) { [separatorInset] dimensions in
@@ -206,11 +247,11 @@ private struct PointRow: View {
     }
 }
 
-/// One of Connect's numbered steps: the number in an accent circle, the title and the line under it.
+/// A numbered step, as Connect's: the number in an accent circle, the title and the line under it.
 /// Stacked at accessibility sizes, as a point's row is.
 private struct StepRow: View {
     let number: Int
-    let step: SharingTutorialPage.Step
+    let step: TutorialStep
 
     @ScaledMetric(relativeTo: .footnote) private var circle: CGFloat = Design.Size.stepNumber
 
@@ -229,7 +270,7 @@ private struct StepRow: View {
                 .foregroundStyle(Color.white)
                 .frame(width: cappedCircle, height: cappedCircle)
                 .background(Circle().fill(Color.accentColor))
-            RowText(title: step.title, text: step.text)
+            RowText(title: step.title, text: step.text, note: nil)
         }
         // Dividers start at the circle's edge, as the mockup's step list draws them.
         .alignmentGuide(.listRowSeparatorLeading) { dimensions in
@@ -242,28 +283,32 @@ private struct StepRow: View {
 private struct RowText: View {
     let title: LocalizedStringResource
     let text: LocalizedStringResource
+    let note: LocalizedStringResource?
 
     var body: some View {
         VStack(alignment: .leading, spacing: Design.Spacing.s1) {
             Text(title)
                 .font(.body)
-            Text(text)
-                .font(.subheadline)
-                .foregroundStyle(Color(uiColor: .secondaryLabel))
+            Group {
+                Text(text)
+                if let note { Text(note) }
+            }
+            .font(.subheadline)
+            .foregroundStyle(Color(uiColor: .secondaryLabel))
         }
         .fixedSize(horizontal: false, vertical: true)
     }
 }
 
 /// Where the sheet is, as dots; VoiceOver reads "Page 2 of 4".
-private struct PageDots: View {
-    let paging: SharingTutorialPaging
+private struct PageDots<Page: TutorialPage>: View {
+    let paging: TutorialPaging<Page>
 
     var body: some View {
         HStack(spacing: Design.Spacing.s2) {
-            ForEach(SharingTutorialPage.allCases, id: \.self) { page in
+            ForEach(paging.pages.indices, id: \.self) { index in
                 Circle()
-                    .fill(page == paging.page ? Color.accentColor : Color(uiColor: .separator))
+                    .fill(index == paging.pageIndex ? Color.accentColor : Color(uiColor: .separator))
                     .frame(width: Design.Size.pageDot, height: Design.Size.pageDot)
             }
         }
@@ -273,18 +318,49 @@ private struct PageDots: View {
     }
 }
 
+extension TutorialSheet where Page: CaseIterable, Page.AllCases == [Page] {
+    /// Over every case, for a tutorial whose pages never change.
+    init() {
+        self.init(pages: Page.allCases)
+    }
+}
+
 #Preview("How Sharing Works") {
-    Color.clear.sheet(isPresented: .constant(true)) { SharingTutorialSheet() }
+    Color.clear.sheet(isPresented: .constant(true)) { TutorialSheet<SharingTutorialPage>() }
 }
 
 #Preview("How Sharing Works, largest text, dark") {
     Color.clear.sheet(isPresented: .constant(true)) {
-        SharingTutorialSheet()
+        TutorialSheet<SharingTutorialPage>()
             .environment(\.dynamicTypeSize, .accessibility5)
     }
     .preferredColorScheme(.dark)
 }
 
 #Preview("How Sharing Works, landscape", traits: .landscapeLeft) {
-    Color.clear.sheet(isPresented: .constant(true)) { SharingTutorialSheet() }
+    Color.clear.sheet(isPresented: .constant(true)) { TutorialSheet<SharingTutorialPage>() }
+}
+
+#Preview("How Alarm Sounds Work") {
+    Color.clear.sheet(isPresented: .constant(true)) { TutorialSheet<AlarmSoundsTutorialPage>() }
+}
+
+#Preview("How Alarm Sounds Work, largest text") {
+    Color.clear.sheet(isPresented: .constant(true)) {
+        TutorialSheet<AlarmSoundsTutorialPage>()
+            .environment(\.dynamicTypeSize, .accessibility5)
+    }
+}
+
+#Preview("How It Nudges") {
+    Color.clear.sheet(isPresented: .constant(true)) {
+        TutorialSheet(pages: HowItNudgesTutorialPage.pages(pace: .escalating, engine: .unscheduled()))
+    }
+}
+
+#Preview("How It Nudges, largest text") {
+    Color.clear.sheet(isPresented: .constant(true)) {
+        TutorialSheet(pages: HowItNudgesTutorialPage.pages(pace: .consistent(wait: 10 * 60), engine: .unscheduled()))
+            .environment(\.dynamicTypeSize, .accessibility5)
+    }
 }

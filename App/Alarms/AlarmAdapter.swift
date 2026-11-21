@@ -170,7 +170,8 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
                     schedule: .fixed(item.fireTime),
                     attributes: Self.attributes(for: item, hasOpenButton: intent != nil),
                     stopIntent: stopIntent(),
-                    secondaryIntent: intent
+                    secondaryIntent: intent,
+                    sound: item.alarmSound.alertSound
                 )
             } catch AlarmManager.AlarmError.maximumLimitReached {
                 // Each one: a slot can free up between alarms if another app's go.
@@ -342,9 +343,15 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
     /// schedules and states. The second half names the nudge. The fire time, not the nudge number,
     /// does: a plan can hold two ladders for one reminder (ticket 15). The title is in it because
     /// AlarmKit can't say what an alarm shows: a title Edit gives a new ID, so the old alarm is
-    /// cancelled and the new one scheduled.
+    /// cancelled and the new one scheduled. The sound is in it for the same reason, but only when
+    /// it isn't Default, so a Default alarm keeps the ID it had before 1.5.0 and an update cancels
+    /// and reschedules nothing (#227). The tone's name leads, where a Default name has the fire
+    /// time's digits, so no title makes one name read as the other.
     static func alarmID(for item: SchedulePlan.Item) -> Alarm.ID {
-        let nudge = nameHash("nudge.\(milliseconds(of: item.fireTime)).\(item.title)")
+        let fireTimeAndTitle = "\(milliseconds(of: item.fireTime)).\(item.title)"
+        let nudge = nameHash(item.alarmSound == .default
+            ? "nudge.\(fireTimeAndTitle)"
+            : "nudge.sound.\(item.alarmSound.id).\(fireTimeAndTitle)")
         var bytes = occurrenceBytes(of: item.reminderID, dueAt: item.dueTime) + nudge
         bytes[8] = (bytes[8] & 0x3F) | 0x80  // RFC 9562 variant
         return UUID(uuid: (
@@ -399,8 +406,9 @@ final class AlarmAdapter: @MainActor SchedulerAdapter {
     private static let openButton = AlarmButton(text: LocalizedStringResource("Open", comment: "Alarm button: opens the app on the reminder, where Done is. Shown on the Lock Screen; keep it short."), textColor: .black, systemImageName: "arrow.up.forward.app")
 
     /// The title only (Privacy) and the system Stop button, which `Alert(title:secondaryButton:...)`
-    /// supplies (iOS 26.1+). No countdown or paused presentation.
-    private static func attributes(for item: SchedulePlan.Item, hasOpenButton: Bool) -> AlarmAttributes<NudgeAlarmMetadata> {
+    /// supplies (iOS 26.1+). No countdown or paused presentation. Internal for #227's device check,
+    /// which schedules a tone without its extension past the adapter.
+    static func attributes(for item: SchedulePlan.Item, hasOpenButton: Bool) -> AlarmAttributes<NudgeAlarmMetadata> {
         // Interpolated, so the title is an argument and never looked up as a localization key. Its
         // own table, Untranslated.xcstrings, marks the "%@" it extracts as not to be translated,
         // which leaves "%@" in the main table free for strings that are.
