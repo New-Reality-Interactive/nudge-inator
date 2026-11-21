@@ -66,3 +66,5 @@ docs/screenshots
 NudgeInator.xcodeproj/
 # xcode-build-server for VS Code; machine-specific (README)
 buildServer.json
+# Scratch output from image generation
+generated_images/
