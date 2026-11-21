@@ -106,7 +106,7 @@ What can still reach the person with the permissions they've given: how a nudge 
 The number of nudges or span of time after which an open occurrence stops nudging and closes as Missed.
 
 **Missed**:
-How an occurrence closes when it hits its give-up limit, or when the next occurrence takes over while it is still nudging.
+How an occurrence closes when it hits its give-up limit, or when the next occurrence takes over while it is still nudging. Held nudges count toward both, so an occurrence can be Missed with nothing ever sounding.
 
 **Paused**:
 The state of a reminder that has stopped nudging without being lost. Pause closes its Nudging occurrence as Skipped and silences its ringing alarm, and anything due while it is paused is Skipped too. Resume brings it back at its next future due time.

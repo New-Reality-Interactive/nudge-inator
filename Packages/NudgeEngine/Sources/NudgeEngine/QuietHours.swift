@@ -89,9 +89,14 @@ extension RepeatRule.Weekday {
 }
 
 extension Engine {
-    /// Whether `date` is quiet, read on the wall clock in the engine's time zone and calendar, so it
-    /// follows the phone's clock and time zone.
+    /// Whether `date` is quiet under the current quiet hours, read on the wall clock in the engine's
+    /// time zone and calendar, so it follows the phone's clock and time zone.
     public func isQuiet(at date: Date) -> Bool {
+        isQuiet(at: date, under: quietHours)
+    }
+
+    /// Whether `date` is quiet under `quietHours`, which may be ones a change has since replaced.
+    func isQuiet(at date: Date, under quietHours: QuietHours) -> Bool {
         let parts = calendar.dateComponents([.weekday, .hour, .minute, .second], from: date)
         guard
             let weekday = parts.weekday.flatMap(RepeatRule.Weekday.init(rawValue:)),

@@ -17,8 +17,12 @@ public struct ClosedOccurrence: Equatable, Sendable {
     public var reminderID: Reminder.ID
     public var occurrence: Occurrence
     public var closedAt: Date
-    /// How many nudges it sent before it closed: "Done after 3 nudges".
+    /// How many nudges it sent before it closed: "Done after 3 nudges". Held nudges count toward
+    /// it, since a held nudge counts as dismissed (ADR 0007).
     public var nudgesSent: Int
+    /// How many of those `nudgesSent` quiet hours held, each read as the schedules were when it
+    /// was due: the Missed note's "Quiet hours held 3 of its 20 nudges".
+    public var nudgesHeld = 0
 }
 
 extension Engine {
@@ -91,8 +95,16 @@ extension Engine {
     /// The reminder's occurrence due at `dueTime` with how it closed, or `nil` while it is Nudging
     /// or if `dueTime` isn't one of its past due times: what a Done row on My Day shows.
     public func closedOccurrence(of reminderID: Reminder.ID, dueAt dueTime: Date) -> ClosedOccurrence? {
-        guard let (occurrence, closing) = reading(of: reminderID, dueAt: dueTime), let closing else { return nil }
-        return ClosedOccurrence(reminderID: reminderID, occurrence: occurrence, closedAt: closing.closedAt, nudgesSent: closing.nudgesSent)
+        guard let (occurrence, closing) = reading(of: reminderID, dueAt: dueTime), let closing,
+              let reminder = reminder(reminderID)
+        else { return nil }
+        return ClosedOccurrence(
+            reminderID: reminderID,
+            occurrence: occurrence,
+            closedAt: closing.closedAt,
+            nudgesSent: closing.nudgesSent,
+            nudgesHeld: closing.nudgesHeld ?? nudgesHeld(of: reminder, dueAt: dueTime, nudgesSent: closing.nudgesSent)
+        )
     }
 
     /// Each held reminder's title, for putting lists in time order.
