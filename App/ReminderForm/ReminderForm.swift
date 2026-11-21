@@ -517,6 +517,13 @@ final class ReminderForm: Identifiable {
     /// Every tag the Tags page offers: the saved ones, then the ones typed here.
     var tags: [Tag] { tagRules.tags }
 
+    /// `tags` as the Tags page lists them: by name in the person's locale's order, as the Tags tab
+    /// does (#335).
+    var tagsInNameOrder: [Tag] {
+        let order = NameOrder()
+        return tags.sorted { order.isOrdered($0.name, $0.id, before: $1.name, $1.id) }
+    }
+
     /// The Tags row: the chosen tags as `#name`, in the order chosen, or `nil` if there are none.
     /// Tokens separated by spaces as the mockup shows them, not a sentence, so not a list format.
     var chosenTagsText: String? {

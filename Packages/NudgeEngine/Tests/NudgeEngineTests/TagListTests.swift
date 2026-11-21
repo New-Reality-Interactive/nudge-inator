@@ -6,6 +6,7 @@ import Testing
 struct TagListTests {
     let clock = FakeClock(now: NewYork.local(2026, 10, 15, 20))
     let scheduler = FakeScheduler()
+    let english = NameOrder(locale: Locale(identifier: "en_US"))
 
     /// Three reminders use #Errands, one uses #home and one #Art; #zoo and #Bills have none.
     /// The mixed case is what shows the names sort ignoring it.
@@ -32,11 +33,11 @@ struct TagListTests {
         (TagSort(field: .reminderCount, order: .ascending), ["Bills", "zoo", "Art", "home", "Errands"]),
     ])
     func theRowsFollowTheSort(sort: TagSort, names: [String]) {
-        #expect(engine().tagList(sortedBy: sort).rows.map(\.tag.name) == names)
+        #expect(engine().tagList(sortedBy: sort, nameOrder: english).rows.map(\.tag.name) == names)
     }
 
     @Test func withNoSortChosenItIsNameAToZ() {
-        #expect(engine().tagList().rows.map(\.tag.name) == ["Art", "Bills", "Errands", "home", "zoo"])
+        #expect(engine().tagList(nameOrder: english).rows.map(\.tag.name) == ["Art", "Bills", "Errands", "home", "zoo"])
     }
 
     @Test func eachRowCarriesItsTagsCounts() {

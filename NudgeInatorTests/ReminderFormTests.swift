@@ -688,6 +688,15 @@ struct ReminderFormTests {
         #expect(model.engine.reminders.only?.notes == "Half a pouch")
     }
 
+    @Test func theTagsPageListsTagsInTheLocalesNameOrder() async throws {
+        let model = try await launchedModel()
+        for name in ["zoo", "éclair", "Eve", "apple", "Tag-10", "Tag-2"] { try model.createTag(named: name) }
+        let form = newForm(on: model)
+
+        // By code point "éclair" would come last; "Tag-2" comes before "Tag-10".
+        #expect(form.tagsInNameOrder.map(\.name) == ["apple", "éclair", "Eve", "Tag-2", "Tag-10", "zoo"])
+    }
+
     @Test func theTagsRowListsTheChosenTagsAsHashNamesInTheOrderChosen() async throws {
         let model = try await launchedModel()
         let home = try #require(try model.createTag(named: "home"))

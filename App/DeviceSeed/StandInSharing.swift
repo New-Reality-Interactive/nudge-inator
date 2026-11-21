@@ -6,7 +6,8 @@ import SwiftUI
 
 /// Sharing for the phone check of Connections (ticket 194), in place of the CloudKit adapter: a
 /// launch with `NUDGE_SHARING_STANDIN=seeded` (a connection and two invites, one 3 days old),
-/// `=sent` (those, and two reminders already delivered to Riley, ticket 207) or `=empty` gets a
+/// `=sent` (those, and two reminders already delivered to Riley, ticket 207), `=names` (four connected
+/// people, one a reminder sent to each, whose names show the locale's order, #335) or `=empty` gets a
 /// stand-in adapter over an in-memory sharing store. `=off` (#389) is `empty` with Sharing off
 /// until the person turns it on; each such launch first sets the Sharing switch off, so a launch with
 /// `=off` is also the cleanup of a check that turned it on. A launch without the variable shares through
@@ -51,10 +52,11 @@ enum StandInSharing {
             let (reminders, copies) = sentToRiley(now: clock.now)
             seed.sentReminders = reminders
             seed.sentCopies = copies
+        case "names": seed = namesSeeded(now: clock.now)
         case "empty", "off": seed = SharingData()
         case .none: return nil
         case .some(let other):
-            logger.error("No stand-in sharing called \(other, privacy: .public): use seeded, sent, empty or off")
+            logger.error("No stand-in sharing called \(other, privacy: .public): use seeded, sent, names, empty or off")
             return nil
         }
         var opened: SharingStore?
@@ -91,6 +93,22 @@ enum StandInSharing {
             SharingConnection(id: UUID(), name: "Jordan Lee", state: .invited, address: "jordan.lee@icloud.com", invitedAt: now.addingTimeInterval(-20 * 60)),
             SharingConnection(id: UUID(), name: "Priya Shah", state: .invited, address: "+1 (555) 010-4477", invitedAt: now.addingTimeInterval(-3 * 24 * 60 * 60)),
         ], activity: activity(now: now))
+    }
+
+    /// Four connected people for the check of Sent's name order (#335), each sent one reminder: Zoe
+    /// Adams, Riley Park, Ana Ortiz and Émile Roy. In English Émile sits between Ana and Riley; by
+    /// code point it would come last.
+    private static func namesSeeded(now: Date) -> SharingData {
+        let people = ["Zoe Adams", "Riley Park", "Ana Ortiz", "Émile Roy"]
+        var data = SharingData(connections: people.map {
+            SharingConnection(id: UUID(), name: $0, state: .connected, address: nil, connectedAt: now.addingTimeInterval(-10 * 24 * 60 * 60))
+        })
+        for (index, connection) in data.connections.enumerated() {
+            let reminder = Reminder(title: "Note for \(connection.name)", dueTime: now.addingTimeInterval(Double(index + 1) * 24 * 60 * 60), strength: .gentle)
+            data.sentReminders.append(SentReminder(reminder: reminder, revision: 0))
+            data.sentCopies.append(SentCopy(connectionID: connection.id, reminderID: reminder.id, createdAt: now.addingTimeInterval(Double(index - 5) * 60), receipt: .started, statusRecord: nil))
+        }
+        return data
     }
 
     /// The Share Activity record for the phone check of its page (#397), oldest first: an entry of
