@@ -102,6 +102,28 @@
     "%@ sees “Not sharing this one” in place of how it's going." : {
       "comment" : "Reminder details: under Don't share this one while it's on. The placeholder is the sender's name."
     },
+    "%@ to %@, Every %@" : {
+      "comment" : "Quiet Hours page: what VoiceOver reads for a schedule: its start and end times, then the days it starts on, such as \"10:00 PM to 7:00 AM, Every Fri and Sat\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ to %2$@, Every %3$@"
+          }
+        }
+      }
+    },
+    "%@ to %@, Every day" : {
+      "comment" : "Quiet Hours page: what VoiceOver reads for a schedule that runs every day: its start and end times, such as \"10:00 PM to 7:00 AM, Every day\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ to %2$@, Every day"
+          }
+        }
+      }
+    },
     "%@ · %@" : {
       "comment" : "A tag's screen: under a reminder's title. 1: its tags, such as \"#home #errands\", this screen's tag in bold. 2: its schedule, such as \"Every day at 8:00 AM\".\nBody of the notification that a reminder someone sent has arrived. 1: who sent it, such as \"From Alex Morgan\". 2: its strength in words, such as \"Firm: rings as an alarm from nudge 4\".\nMy Day: under the title of a tagged reminder. 1: its tags, such as \"#home #errands\", the ones the filter chose in bold. 2: the note, such as \"Nudging · 2 nudges · next 1:15 PM\".",
       "localizations" : {
@@ -288,6 +310,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@: rings as an alarm from nudge %2$lld"
+          }
+        }
+      }
+    },
+    "%@–%@" : {
+      "comment" : "Quiet Hours page: a schedule's times, start then end, joined by an en dash with no spaces, such as \"10:00 PM–7:00 AM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@–%2$@"
           }
         }
       }
@@ -857,6 +890,9 @@
     "Add" : {
       "comment" : "The New Reminder form's confirm button (a checkmark).\nThe Tags page's button that adds the typed tag to the reminder."
     },
+    "Add a schedule, and no nudge arrives while it runs." : {
+      "comment" : "Quiet Hours page: under \"No Schedules\"."
+    },
     "Add a title to save." : {
       "comment" : "Under the reminder form's title when it is empty, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name."
     },
@@ -962,11 +998,11 @@
     "Already Invited" : {
       "comment" : "Invite: title of the question shown when the person invited has an invite waiting."
     },
-    "An invite opens only for the Apple Account it was sent to, and you both need the latest Nudge-inator." : {
-      "comment" : "How Sharing Works, Connect: the note under the steps."
-    },
     "An invite opens only for the Apple Account it was sent to, and only in the latest Nudge-inator. If it doesn't open, check the email address or phone number of their Apple Account, and ask them to update Nudge-inator, then invite them again." : {
       "comment" : "An invited person's page: the help under \"Didn't open for them?\"."
+    },
+    "An invite opens only for the Apple Account it was sent to, and you both need the latest Nudge-inator." : {
+      "comment" : "How Sharing Works, Connect: the note under the steps."
     },
     "Any Tag" : {
       "comment" : "A filter sheet: the Match choice that needs at least one checked tag."
@@ -1511,6 +1547,9 @@
     "Every" : {
       "comment" : "The row for a Consistent pace's wait between nudges, such as \"10 min\", in the reminder form and on Settings' Default Pace page."
     },
+    "Every %@" : {
+      "comment" : "Quiet Hours page: under a schedule's times, the days it starts on as a list of short day names, such as \"Every Fri and Sat\" or \"Every Sun, Mon, and Thu\"."
+    },
     "Every %@ at first, down to every %@." : {
       "comment" : "Under the reminder form's pace when it is Escalating. 1: the wait after the first nudge, such as \"30 min\". 2: the shortest wait.",
       "localizations" : {
@@ -1637,6 +1676,9 @@
     },
     "Every Year" : {
       "comment" : "Repeat preset, in the form's Repeat menu."
+    },
+    "Every day" : {
+      "comment" : "Quiet Hours page: under a schedule's times, when it runs on every day of the week."
     },
     "Every nudge is an ordinary notification, which a Focus can hold. Nothing rings." : {
       "comment" : "Under Break Through Focus when it's off."
@@ -1966,11 +2008,17 @@
     "No Results for “%@”" : {
       "comment" : "Reminders tab, Mine and Sent: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces.\nTags tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces."
     },
+    "No Schedules" : {
+      "comment" : "Quiet Hours page: title of the empty state, with no quiet hours schedule."
+    },
     "No Share Activity" : {
       "comment" : "Share Activity: title of the empty state, with nothing recorded."
     },
     "No Tags" : {
       "comment" : "A filter sheet: the row that shows only reminders without tags.\nMy Day: the filter token that shows only reminders without tags.\nTags: title when there are no tags yet."
+    },
+    "No nudge arrives during quiet hours, alarms included. A nudge held this way counts as one you didn't answer, so a reminder can still end as Missed." : {
+      "comment" : "Quiet Hours page: under the schedules, what quiet hours do."
     },
     "No reminder has this tag yet. Tap + to make one, or add the tag to a reminder you already have." : {
       "comment" : "A tag's screen when no reminder has the tag."
@@ -2151,7 +2199,7 @@
       "comment" : "Invite: the title of the share the invite carries, which the invitation shows."
     },
     "Nudges" : {
-      "comment" : "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and Default Alarm Sound."
+      "comment" : "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace, Quiet Hours and Default Alarm Sound."
     },
     "Nudges 1–%lld are notifications. Nudges %lld–%lld ring as alarms." : {
       "comment" : "How It Nudges footer. 1: the last nudge that is a notification. 2: the first nudge that rings as an alarm. 3: the last nudge.",
@@ -2229,7 +2277,7 @@
       "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nA sent reminder's details or Sent row: dismisses the message that the reminder couldn't be deleted.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nDisconnect's sheet and Connection Ended: dismisses Couldn't Disconnect.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the Link Copied message and closes the sheet.\nInvite: dismisses the message that the invite couldn't be made.\nSettings and Turn Off Sharing's sheet: dismisses Couldn't Turn Off Sharing.\nSettings: dismisses the message that deleting failed.\nThe Apple Account Changed sheet: closes it.\nThe Edit Reminder form: closes the form of a sent reminder that was deleted while it was open.\nThe reminder form: dismisses the message that the reminder couldn't be sent."
     },
     "Off" : {
-      "comment" : "A connection's page and the Connected sheet: Status Sharing is off.\nReminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off."
+      "comment" : "A connection's page and the Connected sheet: Status Sharing is off.\nReminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off.\nSettings: the Quiet Hours row when no schedule is on, so quiet hours never hold a nudge."
     },
     "Oldest First" : {
       "comment" : "Reminders tab's Sort menu, sorted by Created: the reminder made first at the top."
@@ -2242,6 +2290,9 @@
     },
     "On Date" : {
       "comment" : "The reminder form's End Repeat choice: the repeat ends on a date."
+    },
+    "On until %@" : {
+      "comment" : "Settings: what VoiceOver reads for the Quiet Hours row while quiet hours hold nudges, such as \"On until 7:00 AM\"."
     },
     "On · Time Sensitive off" : {
       "comment" : "Settings: status of the Notifications row when notifications are allowed but Time Sensitive is turned off."
@@ -2357,6 +2408,9 @@
     },
     "Pulse" : {
       "comment" : "Alarm sound name: a pulsing beep tone that ships with the app."
+    },
+    "Quiet Hours" : {
+      "comment" : "Settings: the row that opens the Quiet Hours page, and that page's title."
     },
     "Quiet hours held %lld of its %lld nudges." : {
       "comment" : "Under how an occurrence closed as Missed (Now's Last 24 Hours, My Day, and Last occurrence on a reminder's details), when quiet hours held some of its nudges. 1: how many were held. 2: how many nudges it had in all, held or sent.",
@@ -2512,6 +2566,9 @@
     "Schedule" : {
       "comment" : "Reminder details: section header for when and how the reminder nudges."
     },
+    "Schedules" : {
+      "comment" : "Quiet Hours page: header of the list of quiet hours schedules."
+    },
     "Search tags" : {
       "comment" : "Tags tab: the search field's prompt."
     },
@@ -2649,6 +2706,34 @@
     },
     "Starts" : {
       "comment" : "The reminder form's start date and time."
+    },
+    "Starts %@" : {
+      "comment" : "Settings: the Quiet Hours row when the next schedule starts later today, such as \"Starts 10:00 PM\"."
+    },
+    "Starts %@ %@" : {
+      "comment" : "Settings: the Quiet Hours row when the next schedule starts on another day: the day, short, then the time, such as \"Starts Fri 11:00 PM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Starts %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Starts %@ at %@" : {
+      "comment" : "Settings: what VoiceOver reads for the Quiet Hours row when the next schedule starts on another day, such as \"Starts Friday at 11:00 PM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Starts %1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "Starts at %@" : {
+      "comment" : "Settings: what VoiceOver reads for the Quiet Hours row when the next schedule starts later today, such as \"Starts at 10:00 PM\"."
     },
     "Status" : {
       "comment" : "How Sharing Works, Who Sees What: the picture's second pill, the status the recipient chooses to share.\nThe Reminders and Filter Sent sheets: header of the list of statuses."
@@ -2964,6 +3049,9 @@
     "Turn On Sharing" : {
       "comment" : "Opening an invite while Sharing is off: turns Sharing on and accepts the invite."
     },
+    "Turn a schedule off to keep it for later." : {
+      "comment" : "Quiet Hours page: under the schedules."
+    },
     "Turn on sharing to connect with %@?" : {
       "comment" : "Opening an invite while Sharing is off: title of the question. The argument is the name of the person who sent the invite, such as \"Alex Morgan\"."
     },
@@ -2972,6 +3060,9 @@
     },
     "Unknown" : {
       "comment" : "About page: shown for the version or build number when the app can't read it."
+    },
+    "Until %@" : {
+      "comment" : "Settings: the Quiet Hours row while quiet hours hold nudges, with the time they get through again, such as \"Until 7:00 AM\"."
     },
     "Urgent nudges come as ordinary notifications, which silent mode can mute and a Focus can hold." : {
       "comment" : "Settings: footer under the Nudges rows, when neither alarms nor Time Sensitive can deliver Urgent nudges."

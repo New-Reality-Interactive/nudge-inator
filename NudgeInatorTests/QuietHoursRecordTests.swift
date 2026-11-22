@@ -60,6 +60,25 @@ final class QuietHoursRecordTests {
         #expect(relaunched.quietHours == saved)
     }
 
+    /// The Quiet Hours page's switch (#370): off keeps the schedule, in its place, and on again
+    /// brings it back as it was, after a relaunch too.
+    @Test func aScheduleSwitchedOffIsKeptAndSwitchingItOnBringsItBack() throws {
+        let night = try schedule(22, 7, days: [.sunday, .monday])
+        let weekend = try schedule(23, 8, days: [.friday, .saturday])
+        let first = try model()
+        first.quietHours = QuietHours(schedules: [night, weekend])
+
+        first.setQuietHoursSchedule(at: 0, on: false)
+
+        let relaunched = try model()
+        #expect(relaunched.quietHours.schedules.map(\.isOn) == [false, true])
+        #expect(relaunched.quietHours.schedules.map(\.start) == [night.start, weekend.start])
+
+        relaunched.setQuietHoursSchedule(at: 0, on: true)
+
+        #expect(try model().quietHours == QuietHours(schedules: [night, weekend]))
+    }
+
     @Test func aScheduleWithNoDaysIsKept() throws {
         let saved = QuietHours(schedules: [try schedule(22, 7, days: [])])
         let model = try model()

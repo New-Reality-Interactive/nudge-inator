@@ -79,6 +79,13 @@ public struct QuietHours: Equatable, Sendable {
     public init(schedules: [QuietHoursSchedule] = []) {
         self.schedules = schedules
     }
+
+    /// Turns the schedule at `index` on or off, keeping it in its place (#370). An index with no
+    /// schedule changes nothing.
+    public mutating func switchSchedule(at index: Int, on: Bool) {
+        guard schedules.indices.contains(index) else { return }
+        schedules[index].isOn = on
+    }
 }
 
 extension RepeatRule.Weekday {
@@ -88,7 +95,72 @@ extension RepeatRule.Weekday {
     }
 }
 
+/// Whether quiet hours hold nudges at a moment, and until when (#370): what Settings' Quiet Hours
+/// row reads.
+public enum QuietHoursState: Equatable, Sendable {
+    /// Nudges are held until this moment, when they get through again.
+    case quietUntil(Date)
+    /// Nothing is held now; the next schedule that's on starts at this moment.
+    case startsAt(Date)
+    /// No schedule is on, so nothing is held.
+    case off
+}
+
 extension Engine {
+    /// Whether quiet hours hold nudges at `date` and until when, read on the wall clock in the
+    /// engine's time zone and calendar.
+    public func quietHoursState(at date: Date) -> QuietHoursState {
+        if let end = quietEnd(after: date) { return .quietUntil(end) }
+        guard let start = nextStart(after: date) else { return .off }
+        return .startsAt(start)
+    }
+
+    /// When nudges get through again, if `date` is quiet: the latest end of the windows covering
+    /// it, followed on while another window covers that end, so back-to-back schedules read as one.
+    /// Follows at most 14 windows, so schedules that leave no gap at all still give an answer.
+    func quietEnd(after date: Date) -> Date? {
+        var end: Date?
+        var moment = date
+        for _ in 0..<14 {
+            guard let next = quietHours.schedules.compactMap({ windowEnd(of: $0, covering: moment) }).max() else { break }
+            end = next
+            moment = next
+        }
+        return end
+    }
+
+    /// The first start of a schedule that's on after `date`, looking a week and a day ahead so a
+    /// schedule on `date`'s weekday whose start has passed is found a week on.
+    func nextStart(after date: Date) -> Date? {
+        let today = calendar.startOfDay(for: date)
+        let starts = (0...7).flatMap { offset -> [Date] in
+            guard
+                let day = calendar.date(byAdding: .day, value: offset, to: today),
+                let weekday = RepeatRule.Weekday(rawValue: calendar.component(.weekday, from: day))
+            else { return [] }
+            return quietHours.schedules
+                .filter { $0.isOn && $0.days.contains(weekday) }
+                .compactMap { calendar.date(bySettingHour: $0.start.hour, minute: $0.start.minute, second: 0, of: day) }
+        }
+        return starts.filter { $0 > date }.min()
+    }
+
+    /// When the window of `schedule` that covers `date` ends, or nil if none covers it: later the
+    /// same day, or the next day for a window that crosses midnight and started on `date`'s day.
+    func windowEnd(of schedule: QuietHoursSchedule, covering date: Date) -> Date? {
+        let parts = calendar.dateComponents([.weekday, .hour, .minute, .second], from: date)
+        guard
+            let weekday = parts.weekday.flatMap(RepeatRule.Weekday.init(rawValue:)),
+            let hour = parts.hour, let minute = parts.minute, let second = parts.second
+        else { return nil }
+        let secondsIntoDay = hour * 3600 + minute * 60 + second
+        guard schedule.covers(weekday: weekday, secondsIntoDay: secondsIntoDay) else { return nil }
+        let endsTomorrow = schedule.crossesMidnight && secondsIntoDay >= schedule.start.secondsIntoDay
+        let day = calendar.startOfDay(for: date)
+        guard let endDay = calendar.date(byAdding: .day, value: endsTomorrow ? 1 : 0, to: day) else { return nil }
+        return calendar.date(bySettingHour: schedule.end.hour, minute: schedule.end.minute, second: 0, of: endDay)
+    }
+
     /// Whether `date` is quiet under the current quiet hours, read on the wall clock in the engine's
     /// time zone and calendar, so it follows the phone's clock and time zone.
     public func isQuiet(at date: Date) -> Bool {

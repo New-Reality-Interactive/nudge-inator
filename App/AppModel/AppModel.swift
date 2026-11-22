@@ -820,6 +820,21 @@ final class AppModel {
         }
     }
 
+    /// The Quiet Hours page's switch (#370): turns the schedule at `index` on or off and keeps it in
+    /// its place. It writes through `quietHours`, so the re-plan follows and the schedules it
+    /// replaced are kept for past Missed notes; a schedule already in that state changes nothing.
+    func setQuietHoursSchedule(at index: Int, on: Bool) {
+        var changed = quietHours
+        changed.switchSchedule(at: index, on: on)
+        quietHours = changed
+    }
+
+    /// Whether quiet hours hold nudges at `date` and until when, or when the next schedule
+    /// starts: what Settings' Quiet Hours row reads (#370).
+    func quietHoursState(at date: Date) -> QuietHoursState {
+        engine.quietHoursState(at: date)
+    }
+
     /// Settings' Send a Test Nudge (ticket 30): one ordinary notification a few seconds away. It is
     /// no reminder's, so the engine and the store know nothing of it.
     func sendTestNudge() async {
