@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Settings: the permission banners, About, what the app may send (notifications, alarms and
 /// badges), a way to open iOS Settings when something is off, Send a Test Nudge, the Default Pace,
-/// the Default Alarm Sound, the Tutorials, and Delete All Data.
+/// Quiet Hours, the Default Alarm Sound, the Tutorials, and Delete All Data.
 struct SettingsTab: View {
     let state: ScreenState
     /// What previews show, since they have no app model: the permissions and how they leave
@@ -265,6 +265,22 @@ struct SettingsTab: View {
                 )
             }
             NavigationLink {
+                QuietHoursPage()
+            } label: {
+                // Read again every minute, so it changes as a schedule starts or ends while
+                // Settings is open.
+                TimelineView(.everyMinute) { context in
+                    let row = QuietHoursWording(calendar: .autoupdatingCurrent)
+                        .row(model?.quietHoursState(at: context.date) ?? .off, now: context.date)
+                    SettingsRow(
+                        tile: .tileGray,
+                        symbol: "bell.slash",
+                        title: Text(QuietHoursPage.title),
+                        value: Text(row.text).accessibilityLabel(Text(row.spoken))
+                    )
+                }
+            }
+            NavigationLink {
                 DefaultAlarmSoundPage(sound: defaultAlarmSound, remindersToChange: model?.remindersToChangeByUseForAll ?? 0) {
                     model?.useDefaultAlarmSoundForAllReminders()
                 }
@@ -277,7 +293,7 @@ struct SettingsTab: View {
                 )
             }
         } header: {
-            Text("Nudges", comment: "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and Default Alarm Sound.")
+            Text("Nudges", comment: "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace, Quiet Hours and Default Alarm Sound.")
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s2) {
                 ForEach(SettingsStatus.footer(for: reach), id: \.self) { $0.text }

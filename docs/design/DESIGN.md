@@ -811,6 +811,25 @@ nothing above.
   Pace shows its pace. It starts as Default Alarm, the list's first sound.
 - **Symbols added:** `speaker.wave.2`.
 
+### Quiet Hours page
+What the Quiet Hours page mockup (`docs/mockups/2026-11-21-quiet-hours-page/`, #370) adds:
+- **Settings' Quiet Hours:** a Settings row with a `{colors.tile-gray}` tile and `bell.slash`, in
+  Nudges right after Default Pace. Under the label, as Default Pace shows its pace, whether nudges
+  are held now and until when: "Until 7:00 AM" while a schedule that's on covers this moment (when
+  nudges get through again, so back-to-back schedules read as one), "Starts 10:00 PM" for the next
+  start of a schedule that's on, with the short weekday when it isn't today ("Starts Fri
+  11:00 PM"), or "Off" with no schedule on. VoiceOver reads "On until 7:00 AM", "Starts Friday at
+  11:00 PM". It is read again every minute.
+- **Schedule row:** a Settings row ending in the system switch, with a `{colors.tile-gray}` tile and
+  `clock`; the times as the label ("10:00 PM–7:00 AM", an en dash with no spaces) and the days under
+  it in `{typography.subheadline}` `{colors.secondary-label}`, as the iOS Focus schedules list words
+  them: "Every Sun, Mon, Tue, Wed, and Thu", "Every Fri and Sat", "Every day", in the calendar's
+  week order. A schedule that's off keeps its row, its times in `{colors.secondary-label}`.
+  VoiceOver reads the times, the days and the switch's state as one element.
+- **The page:** inline title "Quiet Hours"; the Schedules section with a footer on turning one off
+  and on what quiet hours do. With no schedules, the empty state is `bell.slash`, "No Schedules".
+- **Symbols added:** `bell.slash`, `clock` on a schedule.
+
 ### Details tone and Use for All
 What the details tone and Use for All mockup (`docs/mockups/2026-11-19-details-tone-use-for-all/`,
 #456) adds. It rewrites nothing above except the Default Alarm Sound page's footer.

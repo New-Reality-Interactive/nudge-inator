@@ -12,6 +12,9 @@ struct SettingsRow: View {
     var titleColor: Color = Color(uiColor: .label)
     /// Under the label, such as "Consistent · 10 min".
     var value: Text?
+    /// The value's style: body under a row that opens a page, subheadline under a Quiet Hours
+    /// schedule's times (#370).
+    var valueFont: Font = .body
     var status: Text?
     var statusIsNegative = false
     var accessory: Accessory?
@@ -72,7 +75,7 @@ struct SettingsRow: View {
                     .foregroundStyle(titleColor)
                 if let value {
                     value
-                        .font(.body)
+                        .font(valueFont)
                         .foregroundStyle(Color(uiColor: .secondaryLabel))
                 }
             }

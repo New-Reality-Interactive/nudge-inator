@@ -38,7 +38,29 @@ final class DeviceSeedTests {
         #expect(SeedSettingText.defaultAlarmSound(from: text) == .default)
     }
 
+    @Test func quietHoursSurviveBeingWrittenAndRead() throws {
+        let schedules = QuietHours(schedules: [
+            try QuietHoursSchedule(start: TimeOfDay(hour: 22), end: TimeOfDay(hour: 7), days: [.sunday, .thursday]),
+            try QuietHoursSchedule(start: TimeOfDay(hour: 18, minute: 30), end: TimeOfDay(hour: 21), days: [.tuesday], isOn: false),
+        ])
+        #expect(SeedSettingText.quietHours(from: SeedSettingText.text(of: schedules)) == schedules)
+        #expect(SeedSettingText.quietHours(from: SeedSettingText.text(of: QuietHours())) == QuietHours())
+    }
+
+    /// #370's phone check: two schedules on and one off, and a set with none for the empty state.
+    @Test func theQuietHoursSetsAreOnesTheAppReads() throws {
+        let page = try #require(SeedSet.all.first { $0.name == "quiet-hours-page" })
+        let pageText = try #require(page.settings[.quietHours])
+        let schedules = try #require(SeedSettingText.quietHours(from: pageText))
+        #expect(schedules.schedules.map(\.isOn) == [true, true, false])
+        let none = try #require(SeedSet.all.first { $0.name == "quiet-hours-none" })
+        let noneText = try #require(none.settings[.quietHours])
+        #expect(SeedSettingText.quietHours(from: noneText) == QuietHours())
+    }
+
     @Test func textTheAppDoesntKnowIsIgnored() {
+        #expect(SeedSettingText.quietHours(from: "25:00-07:00 SU on") == nil)
+        #expect(SeedSettingText.quietHours(from: "22:00-22:00 SU on") == nil)
         #expect(SeedSettingText.defaultAlarmSound(from: "foghorn") == nil)
         #expect(SeedSettingText.remindersSort(from: "title.ascending") == nil)
         #expect(SeedSettingText.remindersSort(from: "created") == nil)
