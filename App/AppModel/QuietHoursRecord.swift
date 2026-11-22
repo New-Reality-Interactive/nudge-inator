@@ -18,8 +18,9 @@ import NudgeEngine
 ///
 /// The record also keeps the schedules each edit replaced, with when (#368), which the engine
 /// reports and takes back at launch, so a past occurrence's held count reads as it was after a
-/// relaunch. Each is a dictionary: when it was replaced, the schedules in the same shape and Quiet Now's moment if it was on, read
-/// the same defensive way. Never pruned: only the person's edits add one.
+/// relaunch. Each is a dictionary: when it was replaced, the schedules in the same shape and
+/// Quiet Now's moment if it was on, read the same defensive way. Never pruned: only the person's
+/// edits add one.
 struct QuietHoursRecord {
     let defaults: UserDefaults
 
@@ -38,7 +39,7 @@ struct QuietHoursRecord {
     enum ReplacedField {
         static let replacedAt = "replacedAt"
         static let schedules = "schedules"
-        static let quietNowSince = "quietNowSince"
+        static let quietNowSince = QuietHoursRecord.quietNowKey
     }
 
     /// The fields of one entry.
@@ -53,7 +54,10 @@ struct QuietHoursRecord {
     var quietHours: QuietHours {
         get {
             let entries = defaults.array(forKey: Self.key) ?? []
-            return QuietHours(schedules: entries.compactMap(Self.schedule(from:)), quietNowSince: defaults.object(forKey: Self.quietNowKey) as? Date)
+            return QuietHours(
+                schedules: entries.compactMap(Self.schedule(from:)),
+                quietNowSince: defaults.object(forKey: Self.quietNowKey) as? Date
+            )
         }
         nonmutating set {
             defaults.set(newValue.schedules.map(Self.entry(for:)), forKey: Self.key)

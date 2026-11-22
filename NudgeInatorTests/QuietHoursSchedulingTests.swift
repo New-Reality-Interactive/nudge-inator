@@ -355,7 +355,7 @@ final class QuietHoursSchedulingTests {
     }
 
     /// Quiet Now (#497) holds with no schedule at all: everything cancelled once, nothing scheduled.
-    @Test func quietNowCancelsEveryPendingNudgeAndTurningItOffSchedulesThemAgainWithNoCatchUp() async throws {
+    @Test func quietNowCancelsEveryPendingNudge() async throws {
         let model = try await launchedModel()
         model.add(call)
         await model.waitUntilApplied()
@@ -368,7 +368,14 @@ final class QuietHoursSchedulingTests {
         #expect(center.pending.isEmpty)
         #expect(manager.scheduled.isEmpty)
         #expect(Set(manager.cancelledIDs) == before)
+    }
 
+    @Test func turningQuietNowOffSchedulesTheNudgesAgainWithNoCatchUp() async throws {
+        let model = try await launchedModel()
+        model.add(call)
+        model.turnQuietNow(on: true)
+        await model.waitUntilApplied()
+        #expect(center.pending.isEmpty)
         let added = center.added.count
         model.turnQuietNow(on: false)
         await model.waitUntilApplied()

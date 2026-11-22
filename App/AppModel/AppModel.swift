@@ -868,8 +868,8 @@ final class AppModel {
     }
 
     /// Settings' Delete All Data (ticket 30, 214): the store, sharing, the Default Pace, the Default
-    /// Alarm Sound, the Reminders and Tags tabs' sorts and the quiet hours schedules and Quiet Now, then the
-    /// engine, then everything the adapters hold, including the test nudge and the nudges already
+    /// Alarm Sound, the Reminders and Tags tabs' sorts and the quiet hours schedules and Quiet Now,
+    /// then the engine, then everything the adapters hold, including the test nudge and the nudges already
     /// in Notification Center. Not through `perform`: the store goes first and a store that turns
     /// the delete down stops it, so the reminders and their nudges stay as they were. A disk failure is likelier than a failed
     /// cancel, and a nudge left pending for deleted data is cancelled by the next App opened, which
