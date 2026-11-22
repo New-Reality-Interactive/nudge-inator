@@ -198,6 +198,17 @@ SCREENS = {
   # The Missed note (#369). Only a mockup with it draws these; now and myday show it too.
   "now-last-24-hours": ("setTimeout(()=>document.getElementById('c-mn-now').click(),200)", 1),
   "details-missed-held": ("setTimeout(()=>document.getElementById('c-mn-details').click(),200)", 3),
+  # The Quiet Hours page (#370, #371). Only a mockup with it draws these; settings shows its row too.
+  "quiet-hours": ("setTimeout(()=>document.getElementById('c-qh-page').click(),200)", 1),
+  "quiet-hours-several": ("setTimeout(()=>document.getElementById('c-qh-many').click(),200)", 1),
+  "settings-quiet-hours-active": ("setTimeout(()=>document.getElementById('c-qh-running').click(),200)", 1),
+  "quiet-hours-now":("setTimeout(()=>document.getElementById('c-qh-now').click(),200)", 1),
+  "quiet-hours-empty":("setTimeout(()=>document.getElementById('c-qh-empty').click(),200)", 1),
+  "quiet-hours-add": ("setTimeout(()=>document.getElementById('c-qh-add').click(),200)", 2),
+  "quiet-hours-edit": ("setTimeout(()=>document.getElementById('c-qh-edit').click(),200)", 2),
+  "quiet-hours-same": ("setTimeout(()=>document.getElementById('c-qh-same').click(),200)", 1),
+  "quiet-hours-no-days": ("setTimeout(()=>document.getElementById('c-qh-nodays').click(),200)", 2),
+  "quiet-hours-delete": ("setTimeout(()=>document.getElementById('c-qh-delete').click(),200)", 1),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}
