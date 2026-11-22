@@ -1576,6 +1576,34 @@ final class ShotsUITests: XCTestCase {
         XCTAssertGreaterThanOrEqual(count.frame.minY, bar.frame.maxY, "After \(button), the list stopped short of its top", line: line)
     }
 
+    /// The Quiet Hours page (#498, the Add Button mockup): the empty state with its plus, Quiet Now
+    /// on and off, the Add Schedule sheet, and the list with Quiet Now on. Writes what the Quiet Now
+    /// switch exposes to VoiceOver to `quiet-hours-accessibility.txt`.
+    func testQuietHours() {
+        launch(.app)
+        tab("Settings")
+        tapText("Quiet Hours")
+        shot("quiet-hours-empty")
+        let quietNow = app.switches["Quiet Now"]
+        XCTAssert(quietNow.waitForExistence(timeout: 3), "No Quiet Now switch:\n\(app.debugDescription)")
+        try? quietNow.debugDescription.write(to: directory.appending(path: "quiet-hours-accessibility.txt"), atomically: true, encoding: .utf8)
+        // The switch itself, at the row's right end: the middle is the label, which doesn't toggle.
+        func flipQuietNow() {
+            app.switches["Quiet Now"].coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            pause(0.5)
+        }
+        flipQuietNow()
+        shot("quiet-hours-empty-now-on")
+        flipQuietNow()
+        openSheet("Add Schedule", title: "Add Schedule")
+        shot("quiet-hours-add-sheet")
+        barTap { app.buttons["Add"].tap() }
+        pause(0.8)
+        shot("quiet-hours-list")
+        flipQuietNow()
+        shot("quiet-hours-list-now-on")
+    }
+
     func testSettings() {
         launch(.app)
         tab("Settings")

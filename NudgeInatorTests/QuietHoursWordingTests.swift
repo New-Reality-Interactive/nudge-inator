@@ -31,27 +31,46 @@ struct QuietHoursWordingTests {
     }
 
     @Test func whileQuietTheRowSaysUntilWhen() {
-        let row = wording.row(.quietUntil(monday(7)), now: monday(6))
+        let row = wording.row(.quietUntil(monday(7)), quietNowSince: nil, now: monday(6))
         #expect(english(row.text) == "Until 7:00\u{202F}AM")
         #expect(english(row.spoken) == "On until 7:00\u{202F}AM")
     }
 
     @Test func theNextStartTodayIsJustItsTime() {
-        let row = wording.row(.startsAt(monday(22)), now: monday(8))
+        let row = wording.row(.startsAt(monday(22)), quietNowSince: nil, now: monday(8))
         #expect(english(row.text) == "Starts 10:00\u{202F}PM")
         #expect(english(row.spoken) == "Starts at 10:00\u{202F}PM")
     }
 
     @Test func theNextStartOnAnotherDayNamesTheDay() {
-        let row = wording.row(.startsAt(monday(23, plusDays: 4)), now: monday(8))
+        let row = wording.row(.startsAt(monday(23, plusDays: 4)), quietNowSince: nil, now: monday(8))
         #expect(english(row.text) == "Starts Fri 11:00\u{202F}PM")
         #expect(english(row.spoken) == "Starts Friday at 11:00\u{202F}PM")
     }
 
     @Test func withNoScheduleOnTheRowSaysOff() {
-        let row = wording.row(.off, now: monday(8))
+        let row = wording.row(.off, quietNowSince: nil, now: monday(8))
         #expect(english(row.text) == "Off")
         #expect(english(row.spoken) == "Off")
+    }
+
+    @Test(arguments: [QuietHoursState.off, .startsAt(Date(timeIntervalSince1970: 1_700_000_000)), .quietUntil(Date(timeIntervalSince1970: 1_700_030_000))])
+    func whileQuietNowIsOnTheRowSaysOnWhateverTheSchedulesSay(state: QuietHoursState) {
+        let row = wording.row(state, quietNowSince: monday(8), now: monday(9))
+        #expect(english(row.text) == "On")
+        #expect(english(row.spoken) == "On")
+    }
+
+    @Test func onceQuietNowIsOffTheRowGoesBackToTheSchedules() {
+        let row = wording.row(.quietUntil(monday(7)), quietNowSince: nil, now: monday(6))
+        #expect(english(row.text) == "Until 7:00\u{202F}AM")
+    }
+
+    @Test func quietNowsFooterSaysWhatItDoesThenSinceWhen() {
+        #expect(english(wording.quietNowFooter(since: nil))
+                == "Holds every nudge from now until you turn it off, whatever your schedules say.")
+        #expect(english(wording.quietNowFooter(since: monday(8, 20)))
+                == "On since 8:20\u{202F}AM. No nudge arrives until you turn it off.")
     }
 
     @Test func aScheduleReadsAsItsRangeAndItsDays() throws {
