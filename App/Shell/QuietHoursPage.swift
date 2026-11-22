@@ -47,6 +47,8 @@ struct QuietHoursPage: View {
                     title: Text("Quiet Now", comment: "Quiet Hours page: the switch that holds every nudge until it is turned off.")
                 )
             }
+            // A section footer isn't tied to its switch for VoiceOver, so the switch reads it too.
+            .accessibilityHint(Text(wording.quietNowFooter(since: quietHours.quietNowSince)))
         } footer: {
             Text(wording.quietNowFooter(since: quietHours.quietNowSince))
         }
