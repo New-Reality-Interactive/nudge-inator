@@ -18,9 +18,9 @@ struct QuietHoursBannerView: View {
         if let detail {
             BannerCard(systemImage: "bell.slash", text: text(detail), borderColor: .neutral) {}
                 .textCase(nil)
+                .accessibilityElement(children: .combine)
                 // In a header, but not one itself.
                 .accessibilityRemoveTraits(.isHeader)
-                .accessibilityElement(children: .combine)
         }
     }
 
@@ -31,6 +31,14 @@ struct QuietHoursBannerView: View {
         var detail = AttributedString(localized: detail)
         detail.foregroundColor = Color(uiColor: .secondaryLabel)
         return Text(title + AttributedString("\n") + detail)
+    }
+}
+
+extension View {
+    /// Sets what the holding banners below read, from the minute's clock (#499). Each of Now, My Day
+    /// and Reminders applies it inside its `TimelineView`.
+    func quietHoursHolding(_ model: AppModel?, at date: Date) -> some View {
+        environment(\.quietHoursHoldingDetail, model?.quietHoursHoldingDetail(at: date))
     }
 }
 

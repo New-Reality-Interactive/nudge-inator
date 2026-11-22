@@ -13,8 +13,8 @@ Open [`index.html`](index.html) in a browser. It's a single file with no depende
 - **A banner under the date (Now, My Day) and under the Mine | Sent picker (Reminders)** while
   Quiet Now is on or a schedule that's on covers the time, the same test as Settings' On and Until.
   It sits after any permission banners, above the lists, counts and filters.
-- **Words:** "Quiet hours are holding nudges" in bold, then "Until 9:00 AM" (the latest end when
-  several schedules overlap, as Settings' Until reads) or "Until you turn it off" for Quiet Now,
+- **Words:** "Quiet hours are holding nudges" in bold, then "Until 9:00 AM." (the latest end when
+  several schedules overlap, as Settings' Until reads) or "Until you turn it off." for Quiet Now,
   then "Change this in Settings, under Quiet Hours." (words only: a › would read as a tap target).
 - **Look:** the permission banner's card, with a gray border and a `bell.slash` icon, since being held
   is the person's own choice, not a problem to fix (red and orange stay for what needs attention).

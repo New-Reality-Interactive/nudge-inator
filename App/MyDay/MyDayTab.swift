@@ -41,7 +41,7 @@ struct MyDayTab: View {
                         markDone: { model?.markDone($0) }
                     )
                     .onChange(of: screen.offersFilter, initial: true) { _, offers in offersFilter = offers }
-                    .environment(\.quietHoursHoldingDetail, model?.quietHoursHoldingDetail(at: context.date))
+                    .quietHoursHolding(model, at: context.date)
                 }
             }
             // With the button gone (an empty day at midnight, the last tag deleted) the tag filter

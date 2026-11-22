@@ -27,7 +27,7 @@ struct NowTab: View {
                     } openDetails: { reminderID in
                         path.append(OpenedReminder(id: reminderID))
                     }
-                    .environment(\.quietHoursHoldingDetail, model?.quietHoursHoldingDetail(at: context.date))
+                    .quietHoursHolding(model, at: context.date)
                 }
             }
             .navigationTitle(Text(AppTab.now.title))

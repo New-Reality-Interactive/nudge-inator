@@ -86,7 +86,7 @@ struct RemindersTab: View {
                             mine
                         }
                     }
-                    .environment(\.quietHoursHoldingDetail, model?.quietHoursHoldingDetail(at: context.date))
+                    .quietHoursHolding(model, at: context.date)
                 }
             }
             .modifier(ListSearchField(
