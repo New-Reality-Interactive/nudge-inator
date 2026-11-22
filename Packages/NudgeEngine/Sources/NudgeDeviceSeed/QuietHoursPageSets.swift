@@ -15,7 +15,7 @@ extension SeedSet {
     /// Quiet Hours page opens it. `clean` puts back the schedules and the tutorial's flag the phone had.
     static let quietHoursTutorial = SeedSet(
         name: "quiet-hours-tutorial",
-        settings: [.quietHours: quietHoursPage.settings[.quietHours] ?? "", .quietHoursTutorial: "unseen"],
+        settings: [.quietHours: quietHoursPage.settings[.quietHours] ?? "", .quietHoursTutorial: SeedSeenText.unseen],
         reminders: []
     )
 

@@ -34,14 +34,15 @@ enum QuietHoursTutorialPage: TutorialPage, CaseIterable {
     private static var exampleStart: Date { wording.onReferenceDay(example.start) }
     private static var exampleEnd: Date { wording.onReferenceDay(example.end) }
 
-    /// The mockup's art, with the real SF Symbols. The Quiet Hours page's controls and the Missed
-    /// status are named with the screens' own strings, so the two can't be worded apart.
+    /// The mockup's art, with the real SF Symbols. The Quiet Hours page's Quiet Now and Add Schedule
+    /// and the Missed status are named with the screens' own strings, so the two can't be worded
+    /// apart. The first step's title, "Add a Schedule", is the tutorial's own.
     var art: [TutorialArtPiece] {
         switch self {
         case .restWithoutNudges:
-            [.pill(symbol: "moon.fill", text: LocalizedStringResource("\(Self.exampleStart, format: Self.wording.timeStyle)", comment: "How Quiet Hours Work, Rest Without Nudges: the picture's first pill, beside a moon: an example schedule's start time, such as \"10:00 PM\". The placeholder is the time.")),
+            [.pill(symbol: "moon.fill", text: LocalizedStringResource("quietHoursTutorial.exampleStart", defaultValue: "\(Self.exampleStart, format: Self.wording.timeStyle)", comment: "How Quiet Hours Work, Rest Without Nudges: the picture's first pill, beside a moon: an example schedule's start time, such as \"10:00 PM\". The placeholder is the time.")),
              .arrow,
-             .pill(symbol: "bell", text: LocalizedStringResource("\(Self.exampleEnd, format: Self.wording.timeStyle)", comment: "How Quiet Hours Work, Rest Without Nudges: the picture's second pill, beside a bell: the example schedule's end time, such as \"7:00 AM\". The placeholder is the time."))]
+             .pill(symbol: "bell", text: LocalizedStringResource("quietHoursTutorial.exampleEnd", defaultValue: "\(Self.exampleEnd, format: Self.wording.timeStyle)", comment: "How Quiet Hours Work, Rest Without Nudges: the picture's second pill, beside a bell: the example schedule's end time, such as \"7:00 AM\". The placeholder is the time."))]
         case .quietNow:
             [.pill(symbol: "bell.slash", text: QuietHoursPage.quietNowTitle)]
         case .yourSchedules:
@@ -61,11 +62,11 @@ enum QuietHoursTutorialPage: TutorialPage, CaseIterable {
                               title: LocalizedStringResource("A start, an end and days", comment: "How Quiet Hours Work, Rest Without Nudges: the row about what a schedule is made of."),
                               text: LocalizedStringResource("Such as \(Self.exampleStart, format: Self.wording.timeStyle) to \(Self.exampleEnd, format: Self.wording.timeStyle), every day. A schedule that ends before it starts runs past midnight.", comment: "How Quiet Hours Work, Rest Without Nudges: under \"A start, an end and days\". 1: an example schedule's start time, such as \"10:00 PM\". 2: its end time, such as \"7:00 AM\".")),
                 TutorialPoint(symbol: "bell.slash",
-                              title: LocalizedStringResource("Every nudge waits", comment: "How Quiet Hours Work, Rest Without Nudges: the row about which nudges quiet hours hold."),
-                              text: LocalizedStringResource("Notifications and alarms alike, even a Relentless reminder's. Quiet hours hold them all.", comment: "How Quiet Hours Work, Rest Without Nudges: under \"Every nudge waits\". Relentless is a strength.")),
+                              title: LocalizedStringResource("Every nudge is held", comment: "How Quiet Hours Work, Rest Without Nudges: the row about which nudges quiet hours hold."),
+                              text: LocalizedStringResource("Notifications and alarms alike, even a Relentless reminder's. Quiet hours hold them all.", comment: "How Quiet Hours Work, Rest Without Nudges: under \"Every nudge is held\". Relentless is a strength.")),
             ])
         case .quietNow:
-            .points(lead: LocalizedStringResource("The switch above your schedules, for a quiet time no schedule covers.", comment: "How Quiet Hours Work, Quiet Now: the line under the heading. Quiet Now is the switch above the schedules on the Quiet Hours page."), [
+            .points(lead: LocalizedStringResource("The switch above your schedules, for quiet hours no schedule covers.", comment: "How Quiet Hours Work, Quiet Now: the line under the heading. Quiet Now is the switch above the schedules on the Quiet Hours page."), [
                 TutorialPoint(symbol: "bell.slash",
                               title: LocalizedStringResource("Holds every nudge", comment: "How Quiet Hours Work, Quiet Now: the row about what Quiet Now does."),
                               text: LocalizedStringResource("From the moment you turn it on until you turn it off, whatever your schedules say. It never ends by itself.", comment: "How Quiet Hours Work, Quiet Now: under \"Holds every nudge\".")),

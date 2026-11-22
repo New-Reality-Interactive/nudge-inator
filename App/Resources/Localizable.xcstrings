@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "%@" : {
-      "comment" : "How Quiet Hours Work, Rest Without Nudges: the picture's first pill, beside a moon: an example schedule's start time, such as \"10:00 PM\". The placeholder is the time.\nHow Quiet Hours Work, Rest Without Nudges: the picture's second pill, beside a bell: the example schedule's end time, such as \"7:00 AM\". The placeholder is the time.\nMy Day: under the title of an occurrence due later today. The placeholder is how soon, such as \"in 4 hr.\"."
+      "comment" : "My Day: under the title of an occurrence due later today. The placeholder is how soon, such as \"in 4 hr.\"."
     },
     "%@ %@" : {
       "comment" : "Via label: a glyph, then how a nudge arrives. Keep the glyph first.",
@@ -1748,11 +1748,11 @@
     "Every nudge is an ordinary notification, which a Focus can hold. Nothing rings." : {
       "comment" : "Under Break Through Focus when it's off."
     },
+    "Every nudge is held" : {
+      "comment" : "How Quiet Hours Work, Rest Without Nudges: the row about which nudges quiet hours hold."
+    },
     "Every nudge rings as an alarm." : {
       "comment" : "Under the reminder form's strength, and under a strength's heading in the How It Nudges tutorial, when every nudge rings, as Relentless's do."
-    },
-    "Every nudge waits" : {
-      "comment" : "How Quiet Hours Work, Rest Without Nudges: the row about which nudges quiet hours hold."
     },
     "Every reminder you have uses %@." : {
       "comment" : "Default Alarm Sound page: under Use for All Reminders, dimmed because every reminder already has the sound chosen. The placeholder is that sound, such as \"Chime\"."
@@ -2254,7 +2254,7 @@
       "comment" : "Settings: row that shows whether notifications are allowed."
     },
     "Notifications and alarms alike, even a Relentless reminder's. Quiet hours hold them all." : {
-      "comment" : "How Quiet Hours Work, Rest Without Nudges: under \"Every nudge waits\". Relentless is a strength."
+      "comment" : "How Quiet Hours Work, Rest Without Nudges: under \"Every nudge is held\". Relentless is a strength."
     },
     "Notifications are off, so none of them can reach you." : {
       "comment" : "How It Nudges footer, when notifications are off and none of the nudges rings as an alarm."
@@ -2956,7 +2956,7 @@
     "The start and end are the same. Change one to save." : {
       "comment" : "Add Schedule and Edit Schedule (quiet hours): under Starts and Ends, in red, while they are the same time, so Save is off."
     },
-    "The switch above your schedules, for a quiet time no schedule covers." : {
+    "The switch above your schedules, for quiet hours no schedule covers." : {
       "comment" : "How Quiet Hours Work, Quiet Now: the line under the heading. Quiet Now is the switch above the schedules on the Quiet Hours page."
     },
     "Their Delivery Mode" : {
@@ -3397,6 +3397,30 @@
     },
     "iCloud refused part of disconnecting, so it didn't finish." : {
       "comment" : "Share Activity: an entry for a disconnect that iCloud refused for good."
+    },
+    "quietHoursTutorial.exampleEnd" : {
+      "comment" : "How Quiet Hours Work, Rest Without Nudges: the picture's second pill, beside a bell: the example schedule's end time, such as \"7:00 AM\". The placeholder is the time.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@"
+          }
+        }
+      }
+    },
+    "quietHoursTutorial.exampleStart" : {
+      "comment" : "How Quiet Hours Work, Rest Without Nudges: the picture's first pill, beside a moon: an example schedule's start time, such as \"10:00 PM\". The placeholder is the time.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@"
+          }
+        }
+      }
     },
     "then waits %@" : {
       "comment" : "How It Nudges row: the wait after one nudge before the next. The placeholder is a duration, such as \"30 min\"."

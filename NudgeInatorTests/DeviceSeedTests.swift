@@ -111,7 +111,7 @@ final class DeviceSeedTests {
 struct ModelSeedTargetTests {
     let clock = FakeClock(now: NewYork.local(2026, 10, 15, 8))
 
-    func launchedModel(store: ReminderStore, quietHoursTutorial: QuietHoursTutorialRecord = .standard) async -> AppModel {
+    func launchedModel(store: ReminderStore, quietHoursTutorial: QuietHoursTutorialRecord = .temporary) async -> AppModel {
         let model = AppModel(
             clock: clock,
             openStore: { store },
@@ -163,7 +163,7 @@ struct ModelSeedTargetTests {
 
     /// The set makes the tutorial unseen, and `clean` puts back what the phone had: seen.
     @Test func theTutorialsFlagIsSetAndPutBackThroughTheModel() async throws {
-        let model = await launchedModel(store: try ReminderStore(location: .inMemory), quietHoursTutorial: .temporary)
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
         model.quietHoursTutorialClosed()
         let target = ModelSeedTarget(model: model)
         let set = try #require(SeedSet.all.first { $0.name == "quiet-hours-tutorial" })

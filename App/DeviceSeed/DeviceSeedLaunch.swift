@@ -68,7 +68,7 @@ struct ModelSeedTarget: SeedTarget {
         case .defaultAlarmSound: SeedSettingText.text(of: model.defaultAlarmSound)
         case .remindersSort: SeedSettingText.text(of: model.remindersSort)
         case .quietHours: SeedSettingText.text(of: model.quietHours)
-        case .quietHoursTutorial: model.isQuietHoursTutorialDue ? "unseen" : "seen"
+        case .quietHoursTutorial: model.isQuietHoursTutorialDue ? SeedSeenText.unseen : SeedSeenText.seen
         }
     }
 
@@ -96,8 +96,8 @@ struct ModelSeedTarget: SeedTarget {
             if let quietHours = SeedSettingText.quietHours(from: value) { model.quietHours = quietHours }
         case .quietHoursTutorial:
             switch value {
-            case "seen": model.quietHoursTutorialClosed()
-            case "unseen": model.markQuietHoursTutorialUnseen()
+            case SeedSeenText.seen: model.quietHoursTutorialClosed()
+            case SeedSeenText.unseen: model.markQuietHoursTutorialUnseen()
             default: break
             }
         }

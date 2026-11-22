@@ -15,6 +15,12 @@ public enum SeedSetting: String, Sendable {
     case quietHoursTutorial
 }
 
+/// The value of a seen-flag setting, such as `.quietHoursTutorial`: how a set and the record write it.
+public enum SeedSeenText {
+    public static let seen = "seen"
+    public static let unseen = "unseen"
+}
+
 /// One reminder of a set. Its ID is fixed, so a second load replaces it and removal finds it
 /// without looking at its title. It is built with Break Through Focus off: it defaults to on, which
 /// can schedule a real alarm, and uninstalling the app doesn't remove those.

@@ -671,12 +671,12 @@ sharing paused and offline banner.
   How Sharing Works is no longer in this section: it's under Tutorials (#466).
 - **Tutorials section** (mockups `2026-11-20-tutorials` and `2026-11-20-tutorial-sheets`, #466):
   Settings' last section above Your Data, headed Tutorials, with no footer. One row per feature's
-  tutorial, in the order the features shipped: How It Nudges, How Sharing Works, then How Alarm Sounds
-  Work (#467). Each row is a `{colors.tile-gray}` tile with its feature's symbol (`bell`, `person.2`,
-  `speaker.wave.2`) and its title in the accent, which says it can be tapped, as Send a Test Nudge's
+  tutorial, in the order the features shipped: How It Nudges, How Sharing Works, How Alarm Sounds
+  Work (#467), then How Quiet Hours Work (#468). Each row is a `{colors.tile-gray}` tile with its
+  feature's symbol (`bell`, `person.2`, `speaker.wave.2`, `bell.slash`) and its title in the accent, which says it can be tapped, as Send a Test Nudge's
   does. Every row opens a sheet, so none has a chevron, since the HIG keeps the disclosure indicator
   for drilling in (#423, #470). Every tutorial sheet is the one How Sharing Works uses (below), with
-  its own pages. Only How Sharing Works opens by itself.
+  its own pages. Only How Sharing Works and How Quiet Hours Work open by themselves.
 - **How Sharing Works sheet** (mockup `2026-11-15-sharing-tutorial`, #423): four pages in an inset
   grouped list, inline title How Sharing Works. Each page has decorative pills (an SF Symbol and a
   word in `{colors.label}`, 8 pt apart, on `tertiary-system-fill`, `arrow.forward` between them in
@@ -686,7 +686,8 @@ sharing paused and offline banner.
   `{typography.body}` and rows with a `{colors.tile-blue}` tile, a title in `{typography.body}` and a
   line under it in `{typography.subhead}` `{colors.secondary-label}`, or, on Connect, three numbered
   steps in accent circles (Accent's one exception; capped at 44 pt, dividers from the circle's
-  edge) and a footer. Rows stack at the accessibility
+  edge) and a footer, with an optional lead under the heading, as How Quiet Hours Work's Your
+  Schedules has (#468). Rows stack at the accessibility
   sizes, as Settings rows do. The pages swipe, a paged `TabView` that settles one page at a time
   (#430, mockup `2026-11-16-tutorial-swipe-top-bar`); each page scrolls on its own. Under them,
   pinned and centred, page dots (accent for this page, separator for the others; VoiceOver reads
@@ -712,6 +713,15 @@ sharing paused and offline banner.
   never plays the sound; three rows). Its pills and the Use for All Reminders row reuse the screens'
   own strings, and its tests check that the sentences name Default Alarm Sound, Sound and the tones
   as the screens do.
+- **How Quiet Hours Work sheet** (mockup `2026-11-22-quiet-hours-tutorial`, #468): How Sharing Works'
+  sheet with four pages, inline title How Quiet Hours Work. It opens by itself over the Quiet Hours
+  page the first time that page opens (Close, Done or a swipe ends that for good; an update keeps
+  it; opening it from Settings' row doesn't count), and any time from its row. Rest Without Nudges
+  (`moon.fill` 10:00 PM, an arrow, `bell` 7:00 AM; two rows), Quiet Now (a `bell.slash` Quiet Now
+  pill; two rows), Your Schedules (a `plus` Add Schedule pill; a lead under the heading, then three
+  numbered steps and a footer) and Held Nudges (`bell.slash` Held, an arrow, `xmark.circle.fill`
+  Missed; three rows, the last quoting the Missed note). Its pills reuse the screens' own strings,
+  and the Missed note is the note's own text.
 - **Share Activity entries:** plain rows with nothing to tap, newest first, in one inset list: who
   it concerns in `{typography.body}` (several names joined as a list), then what happened and when
   ("Today at 7:58 AM"), each in `{typography.subhead}` `{colors.secondary-label}`. VoiceOver reads
