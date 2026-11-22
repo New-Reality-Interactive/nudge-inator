@@ -117,8 +117,12 @@ How an occurrence closes when its reminder is paused while it is Nudging, or whe
 _Avoid_: Cancelled
 
 **Quiet hours**:
-A person's set of quiet hours schedules, during which no nudge is delivered, alarms and Relentless ones included. A time is quiet when any schedule that is on covers it; with none on, nothing is quiet. Not Break through Focus, which is about a nudge sounding through a system Focus, and not a Connection's Quiet.
+A person's set of quiet hours schedules, during which no nudge is delivered, alarms and Relentless ones included. A time is quiet when any schedule that is on covers it, or when Quiet Now was on by then; with none on and Quiet Now off, nothing is quiet. Not Break through Focus, which is about a nudge sounding through a system Focus, and not a Connection's Quiet.
 _Avoid_: Do not disturb, silent hours, mute
+
+**Quiet Now**:
+A single on or off state beside the quiet hours schedules (#497). While it is on, no nudge is delivered, alarms and Relentless ones included, from the moment it was turned on until it is turned off; it never ends by itself, whatever the schedules say. Its nudges are held nudges, so a reminder can still close as Missed. Kept with the schedules, with the moment it was turned on. Delete All Data turns it off.
+_Avoid_: Do not disturb, mute, snooze, pause (that is one reminder's)
 
 **Quiet hours schedule**:
 One window of quiet hours: a start time of day, an end time of day, the days of the week it starts on, and an on or off state. If its end is not after its start it runs through midnight into the next day (10 PM to 7 AM on Sunday ends on Monday 7 AM). It includes its start and ends at its end. Its start can't be its end. It is not a pace: a pace spaces a reminder's nudges, a schedule says when none is delivered.

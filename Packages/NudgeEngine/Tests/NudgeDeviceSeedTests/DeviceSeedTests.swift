@@ -13,6 +13,17 @@ struct DeviceSeedTests {
         DeviceSeed.run(command: command, sets: sets, on: target, record: store)
     }
 
+    /// #497: a check that turned Quiet Now on by hand leaves nothing behind, with any set loaded or none.
+    @Test(arguments: ["sample", "none"])
+    func cleanTurnsQuietNowOff(loaded: String) {
+        if loaded != "none" { _ = run(loaded) }
+        target.isQuietNowOn = true
+
+        _ = run("clean")
+
+        #expect(!target.isQuietNowOn)
+    }
+
     // MARK: Load
 
     @Test func loadingASetAddsItsRemindersAndTags() {

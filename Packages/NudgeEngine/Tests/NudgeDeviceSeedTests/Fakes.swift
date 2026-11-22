@@ -65,6 +65,13 @@ final class FakeTarget: SeedTarget {
         quietSpans.append((start, end, replacedAt))
     }
 
+    /// Whether Quiet Now is on (#497); a check turns it on by hand.
+    var isQuietNowOn = false
+
+    func turnQuietNowOff() {
+        isQuietNowOn = false
+    }
+
     func removeQuietSpan(replacedAt: Date) {
         quietSpans.removeAll { $0.replacedAt == replacedAt }
     }

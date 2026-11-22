@@ -126,6 +126,9 @@ public enum DeviceSeed {
             }
         }
 
+        // Whatever sets were loaded: a check can turn it on by hand (#497).
+        target.turnQuietNowOff()
+
         store.write(SeedRecord())
     }
 }

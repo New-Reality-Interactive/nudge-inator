@@ -13,9 +13,12 @@ import NudgeEngine
 /// to the end, a day that isn't a weekday) is left out and the others are kept, in the order they
 /// were saved.
 ///
+/// Quiet Now (#497) is one more key, the moment it was turned on, absent while it is off, so an
+/// install updated from 1.5.0 or earlier reads it as off with no migration.
+///
 /// The record also keeps the schedules each edit replaced, with when (#368), which the engine
 /// reports and takes back at launch, so a past occurrence's held count reads as it was after a
-/// relaunch. Each is a dictionary: when it was replaced and the schedules in the same shape, read
+/// relaunch. Each is a dictionary: when it was replaced, the schedules in the same shape and Quiet Now's moment if it was on, read
 /// the same defensive way. Never pruned: only the person's edits add one.
 struct QuietHoursRecord {
     let defaults: UserDefaults
@@ -25,6 +28,9 @@ struct QuietHoursRecord {
     /// The key the list is saved under.
     static let key = "quietHoursSchedules"
 
+    /// The key Quiet Now's moment is saved under (#497): when it was turned on, absent while off.
+    static let quietNowKey = "quietNowSince"
+
     /// The key the replaced schedules are saved under.
     static let replacedKey = "quietHoursReplacedSchedules"
 
@@ -32,6 +38,7 @@ struct QuietHoursRecord {
     enum ReplacedField {
         static let replacedAt = "replacedAt"
         static let schedules = "schedules"
+        static let quietNowSince = "quietNowSince"
     }
 
     /// The fields of one entry.
@@ -46,10 +53,15 @@ struct QuietHoursRecord {
     var quietHours: QuietHours {
         get {
             let entries = defaults.array(forKey: Self.key) ?? []
-            return QuietHours(schedules: entries.compactMap(Self.schedule(from:)))
+            return QuietHours(schedules: entries.compactMap(Self.schedule(from:)), quietNowSince: defaults.object(forKey: Self.quietNowKey) as? Date)
         }
         nonmutating set {
             defaults.set(newValue.schedules.map(Self.entry(for:)), forKey: Self.key)
+            if let since = newValue.quietNowSince {
+                defaults.set(since, forKey: Self.quietNowKey)
+            } else {
+                defaults.removeObject(forKey: Self.quietNowKey)
+            }
         }
     }
 
@@ -64,17 +76,20 @@ struct QuietHoursRecord {
         }
     }
 
-    /// Back to none, with no replaced schedules kept.
+    /// Back to none, with Quiet Now off and no replaced schedules kept.
     func clear() {
         defaults.removeObject(forKey: Self.key)
+        defaults.removeObject(forKey: Self.quietNowKey)
         defaults.removeObject(forKey: Self.replacedKey)
     }
 
     private static func entry(for replaced: Replaced<QuietHours>) -> [String: Any] {
-        [
+        var entry: [String: Any] = [
             ReplacedField.replacedAt: replaced.replacedAt,
             ReplacedField.schedules: replaced.value.schedules.map(entry(for:)),
         ]
+        if let since = replaced.value.quietNowSince { entry[ReplacedField.quietNowSince] = since }
+        return entry
     }
 
     private static func replaced(from entry: Any) -> Replaced<QuietHours>? {
@@ -83,7 +98,8 @@ struct QuietHoursRecord {
             let replacedAt = entry[ReplacedField.replacedAt] as? Date,
             let schedules = entry[ReplacedField.schedules] as? [Any]
         else { return nil }
-        return Replaced(value: QuietHours(schedules: schedules.compactMap(schedule(from:))), replacedAt: replacedAt)
+        let quietNowSince = entry[ReplacedField.quietNowSince] as? Date
+        return Replaced(value: QuietHours(schedules: schedules.compactMap(schedule(from:)), quietNowSince: quietNowSince), replacedAt: replacedAt)
     }
 
     private static func entry(for schedule: QuietHoursSchedule) -> [String: Any] {

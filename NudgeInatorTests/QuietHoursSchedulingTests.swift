@@ -354,6 +354,45 @@ final class QuietHoursSchedulingTests {
         #expect(manager.cancelledIDs.count == alarmCount)
     }
 
+    /// Quiet Now (#497) holds with no schedule at all: everything cancelled once, nothing scheduled.
+    @Test func quietNowCancelsEveryPendingNudgeAndTurningItOffSchedulesThemAgainWithNoCatchUp() async throws {
+        let model = try await launchedModel()
+        model.add(call)
+        await model.waitUntilApplied()
+        let before = Set(manager.scheduled.map(\.id))
+        #expect(center.pending.count == notificationCount)
+
+        model.turnQuietNow(on: true)
+        await model.waitUntilApplied()
+
+        #expect(center.pending.isEmpty)
+        #expect(manager.scheduled.isEmpty)
+        #expect(Set(manager.cancelledIDs) == before)
+
+        let added = center.added.count
+        model.turnQuietNow(on: false)
+        await model.waitUntilApplied()
+
+        #expect(center.pending.count == notificationCount)
+        #expect(Set(manager.scheduled.map(\.id)) == Self.alarmIDsIn150)
+        // Nothing but the ladder's own nudges: no extra catch-up notification.
+        #expect(center.added.count == added + notificationCount)
+    }
+
+    /// Quiet Now saved before a launch holds from the first plan.
+    @Test func quietNowSavedBeforeALaunchHoldsFromTheFirstPlan() async throws {
+        let first = try model()
+        first.turnQuietNow(on: true)
+        let store = try ReminderStore(location: .file(storeFile.url))
+        try store.save(StoredData(reminders: [call], tags: [], histories: [:]))
+
+        let relaunched = try await launchedModel()
+        await relaunched.waitUntilApplied()
+
+        #expect(relaunched.engine.reminders == [call])
+        expectNothingScheduled()
+    }
+
     @Test func clearingTheScheduleSchedulesWhatItHeldOnceWithTheSameAlarmIDs() async throws {
         let model = try await launchedModel()
         model.quietHours = try window((9, 20), to: (23, 59))

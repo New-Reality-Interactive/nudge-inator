@@ -79,6 +79,10 @@ struct ModelSeedTarget: SeedTarget {
         model.removeSeedQuietSpan(replacedAt: replacedAt)
     }
 
+    func turnQuietNowOff() {
+        model.turnQuietNow(on: false)
+    }
+
     func setSetting(_ setting: SeedSetting, to value: String) {
         switch setting {
         case .defaultPace:
