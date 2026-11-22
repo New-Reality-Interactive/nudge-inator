@@ -73,6 +73,7 @@ struct SettingsTab: View {
                 case .howItNudges: TutorialSheet(pages: howItNudgesPages)
                 case .howSharingWorks: TutorialSheet<SharingTutorialPage>()
                 case .howAlarmSoundsWork: TutorialSheet<AlarmSoundsTutorialPage>()
+                case .howQuietHoursWork: TutorialSheet<QuietHoursTutorialPage>()
                 }
             }
             .navigationTitle(Text(AppTab.settings.title))
@@ -311,7 +312,8 @@ struct SettingsTab: View {
     /// One row per feature's tutorial, in the order the features shipped (#466). Every row is in the
     /// accent color, which says it can be tapped, and opens a sheet, so none has a chevron (#470).
     /// How Sharing Works also opens by itself the first time Sharing is turned on
-    /// (`sharingTutorialFirstTime`); the others never do.
+    /// (`sharingTutorialFirstTime`), and How Quiet Hours Work the first time the Quiet Hours page
+    /// opens (`quietHoursTutorialFirstTime`); the others never do.
     private var tutorialsSection: some View {
         Section {
             ForEach(SettingsTutorial.allCases, id: \.self) { tutorial in

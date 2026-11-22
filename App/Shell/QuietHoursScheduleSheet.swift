@@ -198,7 +198,7 @@ struct QuietHoursScheduleSheet: View {
     }
 
     /// The sheet's title, and the Quiet Hours page's button that opens it.
-    static let addTitle = LocalizedStringResource("Add Schedule", comment: "Title of the sheet that adds a quiet hours schedule, and the Quiet Hours page's button that opens it.")
+    nonisolated static let addTitle = LocalizedStringResource("Add Schedule", comment: "Title of the sheet that adds a quiet hours schedule, and the Quiet Hours page's button that opens it.")
     private static let editTitle = LocalizedStringResource("Edit Schedule", comment: "Title of the sheet that changes or deletes a quiet hours schedule.")
 }
 

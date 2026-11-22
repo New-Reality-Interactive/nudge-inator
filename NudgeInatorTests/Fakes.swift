@@ -399,6 +399,12 @@ extension QuietHoursRecord {
     static var temporary: QuietHoursRecord { QuietHoursRecord(defaults: UserDefaults(suiteName: "NudgeInatorTests.QuietHours")!) }
 }
 
+extension QuietHoursTutorialRecord {
+    /// A record in a suite of the tests' own, as `DefaultPaceRecord.temporary`.
+    /// `QuietHoursTutorialFirstTimeTests` uses suites of its own.
+    static var temporary: QuietHoursTutorialRecord { QuietHoursTutorialRecord(defaults: UserDefaults(suiteName: "NudgeInatorTests.QuietHoursTutorial")!) }
+}
+
 extension SharingSwitchRecord {
     /// A suite of the tests' own, so a test turning Sharing off never writes the app's record.
     static var temporary: SharingSwitchRecord { SharingSwitchRecord(defaults: UserDefaults(suiteName: "NudgeInatorTests.SharingSwitch")!) }

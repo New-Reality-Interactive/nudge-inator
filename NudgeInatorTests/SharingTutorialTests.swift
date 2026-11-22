@@ -41,7 +41,7 @@ struct SharingTutorialTests {
     }
 
     @Test func connectNumbersItsThreeStepsAndEndsWithANote() {
-        guard case .steps(let steps, let footnote) = SharingTutorialPage.connect.content else {
+        guard case .steps(nil, let steps, let footnote) = SharingTutorialPage.connect.content else {
             Issue.record("Connect isn't a page of steps")
             return
         }

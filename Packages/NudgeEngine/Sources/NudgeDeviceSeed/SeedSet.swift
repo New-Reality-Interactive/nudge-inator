@@ -11,6 +11,14 @@ public enum SeedSetting: String, Sendable {
     case remindersSort
     /// The quiet hours schedules (#370), as `SeedSettingText` in the app writes them.
     case quietHours
+    /// Whether How Quiet Hours Work has been seen (#468): `seen` or `unseen`.
+    case quietHoursTutorial
+}
+
+/// The value of a seen-flag setting, such as `.quietHoursTutorial`: how a set and the record write it.
+public enum SeedSeenText {
+    public static let seen = "seen"
+    public static let unseen = "unseen"
 }
 
 /// One reminder of a set. Its ID is fixed, so a second load replaces it and removal finds it
@@ -129,6 +137,6 @@ public struct SeedSet: Sendable {
 
 extension SeedSet {
     /// Every set a launch can name.
-    public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .nameOrder, .deliveredNudges, .keptOrder, .received, .fromOthers, .rowSwipes, .urgencyCards, .alarmSound, .detailsSound, .useForAll, .missedNote, .quietHoursPage, .quietHoursNone]
+    public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .nameOrder, .deliveredNudges, .keptOrder, .received, .fromOthers, .rowSwipes, .urgencyCards, .alarmSound, .detailsSound, .useForAll, .missedNote, .quietHoursPage, .quietHoursNone, .quietHoursTutorial]
 }
 #endif
