@@ -69,21 +69,24 @@ struct RemindersTab: View {
     var body: some View {
         NavigationStack(path: $path) {
             TabScreen(state: state) {
-                TimelineView(.everyMinute) { _ in
-                    if shown == .sent, let model, let sharing = model.sharing {
-                        SentList(
-                            screen: SentScreen(engine: model.engine, sharing: sharing.data, tools: sentTools),
-                            sharing: sharing,
-                            manageConnections: manageConnections,
-                            countFocusRequests: countFocusRequests,
-                            openDetails: { path.append(OpenedSentReminder(id: $0)) },
-                            clearSearchAndFilters: { sentTools.clearSearchAndFilter() },
-                            edit: { editForm = ReminderForm(editingSent: $0, in: model) },
-                            delete: { model.deleteSentLoggingFailure($0) }
-                        )
-                    } else {
-                        mine
+                TimelineView(.everyMinute) { context in
+                    Group {
+                        if shown == .sent, let model, let sharing = model.sharing {
+                            SentList(
+                                screen: SentScreen(engine: model.engine, sharing: sharing.data, tools: sentTools),
+                                sharing: sharing,
+                                manageConnections: manageConnections,
+                                countFocusRequests: countFocusRequests,
+                                openDetails: { path.append(OpenedSentReminder(id: $0)) },
+                                clearSearchAndFilters: { sentTools.clearSearchAndFilter() },
+                                edit: { editForm = ReminderForm(editingSent: $0, in: model) },
+                                delete: { model.deleteSentLoggingFailure($0) }
+                            )
+                        } else {
+                            mine
+                        }
                     }
+                    .environment(\.quietHoursHoldingDetail, model?.quietHoursHoldingDetail(at: context.date))
                 }
             }
             .modifier(ListSearchField(
@@ -303,6 +306,7 @@ struct RemindersTab: View {
     /// centered while it fits, as Sent's empty states are.
     private var noReminders: some View {
         ScrollView {
+            QuietHoursBannerAboveEmptyState()
             noRemindersContent
         }
         .centeredWhenShort()
@@ -358,8 +362,11 @@ private struct RemindersListView: View {
                 } header: {
                     // Above the rows' group, not in a cell, as the mockup draws it. It stays above the
                     // no-match empty state.
-                    CountHeaderRow(count: screen.countText, countFocus: $countFocused)
-                        .textCase(nil)
+                    VStack(alignment: .leading, spacing: Design.Spacing.s3) {
+                        QuietHoursBannerView()
+                        CountHeaderRow(count: screen.countText, countFocus: $countFocused)
+                    }
+                    .textCase(nil)
                 }
             }
         }

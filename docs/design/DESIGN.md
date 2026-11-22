@@ -593,6 +593,23 @@ The Reminders tab's tools, in its layout, so they're learned once.
   the banner's width with `{rounded.control}` corners, as a nudge card's Done does; its label
   wraps there rather than truncating.
 
+### Quiet hours banner
+What the quiet hours banner mockup (`docs/mockups/2026-11-22-quiet-hours-banner/`, #499) adds. It
+rewrites nothing above.
+- **Shown** on Now, My Day and Reminders (Mine and Sent, empty states too) while Quiet Now is on or a
+  schedule that's on covers the time, the same test as Settings' Quiet Hours row. It leads the content
+  after any permission banners, above the lists, counts and filters; on Reminders it follows the
+  Mine | Sent control, ahead of the sharing banner.
+- **Look:** the permission banner's card (`{colors.cell}`, `{rounded.card}`, 2 pt border) with a
+  `{colors.neutral}` border and a `bell.slash` icon: being held is the person's own choice, not
+  a problem to fix, so it uses neither red nor orange. A bold title, "Quiet hours are holding nudges",
+  and under it, in `{colors.secondary-label}`, "Until 9:00 AM." (the latest end of the schedules
+  running, as Settings' Until reads) or "Until you turn it off." for Quiet Now, then "Change this in
+  Settings, under Quiet Hours."
+- **Not tappable** (the developer's call, #499): it never leaves the tab, so it has no chevron, button
+  or link styling, and names where to change quiet hours in words alone. VoiceOver reads it as one
+  element. At accessibility text sizes the icon goes above the text, as the permission banner's does.
+
 ### Settings row
 - Icon tile, label in `{typography.body}`, trailing status in `{colors.secondary-label}` (or
   `{colors.negative}` when off) or a chevron. The Badges row is the exception: its status is

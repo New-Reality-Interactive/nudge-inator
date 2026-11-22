@@ -81,6 +81,7 @@ private struct SentGroups: View {
                 } header: {
                     // The banner, then the count, above the groups, as the mockup's `viewSentTab`.
                     VStack(alignment: .leading, spacing: Design.Spacing.s3) {
+                        QuietHoursBannerView()
                         SharingBannerView(banner: banner)
                         CountHeaderRow(count: screen.countText, countFocus: $countFocused)
                     }
@@ -314,6 +315,7 @@ private struct NoOneToSendToView: View {
 
     var body: some View {
         ScrollView {
+            QuietHoursBannerAboveEmptyState()
             BannerAboveEmptyState(banner: banner)
             ContentUnavailableView {
                 EmptyStateLabel(systemImage: "person.2") {
@@ -343,6 +345,7 @@ private struct NothingSentView: View {
 
     var body: some View {
         ScrollView {
+            QuietHoursBannerAboveEmptyState()
             BannerAboveEmptyState(banner: banner)
             ContentUnavailableView {
                 EmptyStateLabel(systemImage: "list.bullet.clipboard") {

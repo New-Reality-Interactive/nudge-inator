@@ -2522,6 +2522,9 @@
     "Quiet Now is holding every nudge. These schedules apply again when you turn it off." : {
       "comment" : "Quiet Hours page: under the schedules while Quiet Now is on."
     },
+    "Quiet hours are holding nudges" : {
+      "comment" : "Banner on Now, My Day and Reminders while quiet hours are holding nudges: its bold title."
+    },
     "Quiet hours held %lld of its %lld nudges." : {
       "comment" : "Under how an occurrence closed as Missed (Now's Last 24 Hours, My Day, and Last occurrence on a reminder's details), when quiet hours held some of its nudges. 1: how many were held. 2: how many nudges it had in all, held or sent.",
       "localizations" : {
@@ -3211,6 +3214,12 @@
     },
     "Until %@" : {
       "comment" : "Settings: the Quiet Hours row while quiet hours hold nudges, with the time they get through again, such as \"Until 7:00 AM\"."
+    },
+    "Until %@. Change this in Settings, under Quiet Hours." : {
+      "comment" : "Banner on Now, My Day and Reminders while a quiet hours schedule is holding nudges, under its title, with the time they get through again, such as \"Until 7:00 AM.\" Names where to change it: Settings, then the Quiet Hours row. Not a button."
+    },
+    "Until you turn it off. Change this in Settings, under Quiet Hours." : {
+      "comment" : "Banner on Now, My Day and Reminders while Quiet Now is holding every nudge, under its title. Names where to change it: Settings, then the Quiet Hours row. Not a button."
     },
     "Urgent nudges come as ordinary notifications, which silent mode can mute and a Focus can hold." : {
       "comment" : "Settings: footer under the Nudges rows, when neither alarms nor Time Sensitive can deliver Urgent nudges."
