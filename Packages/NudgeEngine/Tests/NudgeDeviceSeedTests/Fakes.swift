@@ -69,6 +69,13 @@ final class FakeTarget: SeedTarget {
         quietSpans.removeAll { $0.replacedAt == replacedAt }
     }
 
+    /// Whether Quiet Now is on (#497); a check turns it on by hand.
+    var isQuietNowOn = false
+
+    func turnQuietNowOff() {
+        isQuietNowOn = false
+    }
+
     /// What the person made by hand.
     func addPersonsOwn(title: String, tagNamed tagName: String? = nil) -> Reminder {
         var tagIDs: [Tag.ID] = []

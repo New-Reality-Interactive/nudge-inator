@@ -206,4 +206,70 @@ final class QuietHoursRecordTests {
         #expect(try self.model().quietHours == QuietHours())
         #expect(try defaults().object(forKey: QuietHoursRecord.key) == nil)
     }
+
+    // MARK: Quiet Now (#497)
+
+    /// Quiet Now is kept with the schedules, since when included, after a relaunch.
+    @Test func quietNowIsKeptWithItsMomentAfterARelaunch() throws {
+        let night = try schedule(22, 7, days: [.sunday])
+        let first = try model()
+        first.quietHours = QuietHours(schedules: [night])
+
+        first.turnQuietNow(on: true)
+
+        let relaunched = try model()
+        #expect(relaunched.quietHours.quietNowSince == clock.now)
+        #expect(relaunched.quietHours.schedules == [night])
+        relaunched.turnQuietNow(on: false)
+        #expect(try model().quietHours == QuietHours(schedules: [night]))
+    }
+
+    /// A record from before Quiet Now has none, and reads as off.
+    @Test func withNoQuietNowSavedItIsOff() throws {
+        let model = try model()
+        model.quietHours = QuietHours(schedules: [try schedule(22, 7, days: [.sunday])])
+
+        #expect(try self.model().quietHours.quietNowSince == nil)
+        #expect(try defaults().object(forKey: QuietHoursRecord.quietNowKey) == nil)
+    }
+
+    /// Turning it on and off goes through the model's quiet hours: the engine re-plans and keeps
+    /// the replaced quiet hours, Quiet Now's moment included, saved for a relaunch.
+    @Test func turningItOnAndOffReachesTheEngineAndKeepsWhatItReplaced() async throws {
+        let model = try model()
+        await model.launch()
+        let turnedOnAt = clock.now
+
+        model.turnQuietNow(on: true)
+        #expect(model.quietHours.quietNowSince == turnedOnAt)
+        model.turnQuietNow(on: false)
+        #expect(model.quietHours.quietNowSince == nil)
+
+        let replaced = QuietHoursRecord(defaults: try defaults()).replacedQuietHours.map(\.value)
+        #expect(replaced == [QuietHours(), QuietHours(quietNowSince: turnedOnAt)])
+    }
+
+    /// Turning it on while it is on changes nothing and keeps the first moment.
+    @Test func turningItOnAgainKeepsTheFirstMoment() throws {
+        let model = try model()
+        model.turnQuietNow(on: true)
+        let first = clock.now
+        clock.now = first.addingTimeInterval(600)
+
+        model.turnQuietNow(on: true)
+
+        #expect(model.quietHours.quietNowSince == first)
+    }
+
+    @Test func deleteAllDataTurnsQuietNowOff() async throws {
+        let model = try model()
+        await model.launch()
+        model.turnQuietNow(on: true)
+
+        try await model.deleteAllData()
+
+        #expect(model.quietHours.quietNowSince == nil)
+        #expect(try self.model().quietHours.quietNowSince == nil)
+        #expect(try defaults().object(forKey: QuietHoursRecord.quietNowKey) == nil)
+    }
 }

@@ -20,5 +20,7 @@ public protocol SeedTarget {
     func addQuietSpan(from start: Date, to end: Date, replacedAt: Date)
     /// Takes away the span added with `replacedAt`, and nothing else.
     func removeQuietSpan(replacedAt: Date)
+    /// Turns Quiet Now off (#497), so a check that left it on is put back by a `clean`.
+    func turnQuietNowOff()
 }
 #endif

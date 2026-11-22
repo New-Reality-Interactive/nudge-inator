@@ -86,13 +86,29 @@ public struct QuietHoursSchedule: Equatable, Identifiable, Sendable {
     }
 }
 
-/// A person's quiet hours: a set of schedules. A moment is quiet when any schedule that is on
-/// covers it. With no schedule, or every one off, nothing is quiet.
+/// A person's quiet hours: a set of schedules and Quiet Now (#497). A moment is quiet when any
+/// schedule that is on covers it, or Quiet Now was on by then. With no schedule, or every one off,
+/// and Quiet Now off, nothing is quiet.
 public struct QuietHours: Equatable, Sendable {
     public var schedules: [QuietHoursSchedule]
+    /// When Quiet Now was turned on, or nil while it is off. While on, every moment from then is
+    /// quiet, whatever the schedules say. It never ends by itself. Kept with the schedules, so the
+    /// quiet hours a change replaces say whether it was on, and since when.
+    public private(set) var quietNowSince: Date?
 
-    public init(schedules: [QuietHoursSchedule] = []) {
+    public init(schedules: [QuietHoursSchedule] = [], quietNowSince: Date? = nil) {
         self.schedules = schedules
+        self.quietNowSince = quietNowSince
+    }
+
+    /// Turns Quiet Now on as of `date` (#497). Already on keeps the first moment.
+    public mutating func turnOnQuietNow(at date: Date) {
+        quietNowSince = quietNowSince ?? date
+    }
+
+    /// Turns Quiet Now off (#497).
+    public mutating func turnOffQuietNow() {
+        quietNowSince = nil
     }
 
     /// Turns the schedule `id` on or off, keeping it in its place (#370). An identity these quiet
@@ -199,6 +215,7 @@ extension Engine {
 
     /// Whether `date` is quiet under `quietHours`, which may be ones a change has since replaced.
     func isQuiet(at date: Date, under quietHours: QuietHours) -> Bool {
+        if let since = quietHours.quietNowSince, date >= since { return true }
         let parts = calendar.dateComponents([.weekday, .hour, .minute, .second], from: date)
         guard
             let weekday = parts.weekday.flatMap(RepeatRule.Weekday.init(rawValue:)),
