@@ -23,7 +23,7 @@ struct QuietHoursPage: View {
         .navigationTitle(Text(Self.title))
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $openSheet) { kind in
-            QuietHoursScheduleSheet(kind: kind, wording: wording, save: save, delete: delete)
+            QuietHoursScheduleSheet(kind: kind, schedules: quietHours.schedules, wording: wording, save: save, delete: delete)
         }
     }
 

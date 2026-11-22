@@ -67,6 +67,27 @@ struct QuietHoursScheduleDraftTests {
         #expect(try !#require(draft.schedule).isOn)
     }
 
+    /// A schedule can't copy another's start, end and days, on or off (the approved duplicate
+    /// schedule mockup): a copy holds nothing more, and turning one copy off leaves the other on.
+    @Test func aCopyOfAnotherScheduleCantBeSavedAndSaysWhy() throws {
+        let nightly = try QuietHoursSchedule(start: TimeOfDay(hour: 22), end: TimeOfDay(hour: 7), days: Set(RepeatRule.Weekday.allCases), isOn: false)
+        var draft = QuietHoursScheduleDraft(among: [nightly, saved])
+        #expect(draft.problems == [.sameAsAnother])
+        #expect(draft.schedule == nil)
+        #expect(english(QuietHoursScheduleDraft.Problem.sameAsAnother.message) == "You already have a schedule with these times and days.")
+        draft.toggle(.sunday)
+        #expect(draft.problems.isEmpty)
+        #expect(draft.schedule != nil)
+    }
+
+    @Test func anEditIsNeverACopyOfItself() throws {
+        let other = try QuietHoursSchedule(start: TimeOfDay(hour: 21), end: TimeOfDay(hour: 8), days: [.friday, .saturday])
+        var draft = QuietHoursScheduleDraft(editing: saved, among: [saved, other])
+        #expect(draft.problems.isEmpty)
+        draft.start = try TimeOfDay(hour: 21)
+        #expect(draft.problems == [.sameAsAnother])
+    }
+
     @Test func changingAndChangingBackIsNoChange() {
         var draft = QuietHoursScheduleDraft(editing: saved)
         draft.toggle(.monday)

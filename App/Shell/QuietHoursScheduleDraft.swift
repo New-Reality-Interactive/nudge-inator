@@ -5,7 +5,8 @@ import NudgeEngine
 /// Quiet Hours page mockup): the start, the end, the days, the switch, and what stops Save. A new
 /// schedule starts at 10:00 PM to 7:00 AM, every day, on; an edited one starts as saved and keeps
 /// its identity. Edit Schedule's Schedule switch writes `isOn`, kept on Save like the rest (the
-/// approved schedule switch mockup).
+/// approved schedule switch mockup). It can't copy another schedule's start, end and days (the
+/// approved duplicate schedule mockup).
 struct QuietHoursScheduleDraft {
     var start: TimeOfDay
     var end: TimeOfDay
@@ -20,6 +21,8 @@ struct QuietHoursScheduleDraft {
     private let openedEnd: TimeOfDay
     private let openedDays: Set<RepeatRule.Weekday>
     private let openedIsOn: Bool
+    /// The other schedules, which this one may not copy.
+    private let others: [QuietHoursSchedule]
     /// A new schedule's identity, made once so saving a draft twice can't add two schedules.
     private let newID = UUID()
 
@@ -27,6 +30,7 @@ struct QuietHoursScheduleDraft {
     enum Problem: Equatable {
         case startEqualsEnd
         case noDays
+        case sameAsAnother
 
         var message: LocalizedStringResource {
             switch self {
@@ -36,26 +40,32 @@ struct QuietHoursScheduleDraft {
             case .noDays:
                 LocalizedStringResource("Choose at least one day to save.",
                                         comment: "Add Schedule and Edit Schedule (quiet hours): under the days, in red, while no day is checked, so Save is off.")
+            case .sameAsAnother:
+                LocalizedStringResource("You already have a schedule with these times and days.",
+                                        comment: "Add Schedule and Edit Schedule (quiet hours): under Starts and Ends, in red, while the start, end and days are another schedule's, so Save is off.")
             }
         }
     }
 
-    /// A new schedule.
-    init() {
+    /// A new schedule, among the `schedules` there are.
+    init(among schedules: [QuietHoursSchedule] = []) {
         self.init(start: TimeOfDay(wrappingMinutes: 22 * 60), end: TimeOfDay(wrappingMinutes: 7 * 60),
-                  days: Set(RepeatRule.Weekday.allCases), isOn: true, saved: nil)
+                  days: Set(RepeatRule.Weekday.allCases), isOn: true, saved: nil, others: schedules)
     }
 
-    init(editing schedule: QuietHoursSchedule) {
-        self.init(start: schedule.start, end: schedule.end, days: schedule.days, isOn: schedule.isOn, saved: schedule)
+    /// `schedule`, among the `schedules` there are, which may hold it.
+    init(editing schedule: QuietHoursSchedule, among schedules: [QuietHoursSchedule] = []) {
+        self.init(start: schedule.start, end: schedule.end, days: schedule.days, isOn: schedule.isOn, saved: schedule,
+                  others: schedules.filter { $0.id != schedule.id })
     }
 
-    private init(start: TimeOfDay, end: TimeOfDay, days: Set<RepeatRule.Weekday>, isOn: Bool, saved: QuietHoursSchedule?) {
+    private init(start: TimeOfDay, end: TimeOfDay, days: Set<RepeatRule.Weekday>, isOn: Bool, saved: QuietHoursSchedule?, others: [QuietHoursSchedule]) {
         self.start = start
         self.end = end
         self.days = days
         self.isOn = isOn
         self.saved = saved
+        self.others = others
         openedStart = start
         openedEnd = end
         openedDays = days
@@ -69,11 +79,13 @@ struct QuietHoursScheduleDraft {
         if days.contains(day) { days.remove(day) } else { days.insert(day) }
     }
 
-    /// What stops Save, the times' first.
+    /// What stops Save, the times' first. A copy of another schedule has a start unlike its end and
+    /// some days, so it never shows with the others.
     var problems: [Problem] {
         var problems: [Problem] = []
         if start == end { problems.append(.startEqualsEnd) }
         if days.isEmpty { problems.append(.noDays) }
+        if others.contains(where: { $0.start == start && $0.end == end && $0.days == days }) { problems.append(.sameAsAnother) }
         return problems
     }
 

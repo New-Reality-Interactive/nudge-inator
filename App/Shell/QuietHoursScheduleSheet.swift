@@ -19,8 +19,9 @@ enum QuietHoursSheetKind: Identifiable {
 /// other edit (the approved schedule switch mockup); then Starts and Ends as
 /// compact time pills, as the reminder form's Starts row, with a line on when it ends; the days as
 /// a checklist in the calendar's week order; and, for a schedule that exists, Delete Schedule,
-/// which asks first. Add or Save stays off while the start equals the end or no day is checked,
-/// and a red line says why. Cancel with changes asks before discarding, as the other sheets do.
+/// which asks first. Add or Save stays off while the start equals the end, no day is checked, or
+/// the times and days are another schedule's (the approved duplicate schedule mockup), and a red
+/// line says why. Cancel with changes asks before discarding, as the other sheets do.
 struct QuietHoursScheduleSheet: View {
     let wording: QuietHoursWording
     /// Writes the saved schedule: the model's, or the previews'.
@@ -32,15 +33,16 @@ struct QuietHoursScheduleSheet: View {
     @State private var isConfirmingDelete = false
     @Environment(\.dismiss) private var dismiss
 
-    init(kind: QuietHoursSheetKind, wording: QuietHoursWording, save: @escaping (QuietHoursSchedule) -> Void, delete: @escaping (QuietHoursSchedule.ID) -> Void) {
+    /// `schedules` are the ones there are, which a new or edited schedule may not copy.
+    init(kind: QuietHoursSheetKind, schedules: [QuietHoursSchedule], wording: QuietHoursWording, save: @escaping (QuietHoursSchedule) -> Void, delete: @escaping (QuietHoursSchedule.ID) -> Void) {
         self.wording = wording
         self.save = save
         switch kind {
         case .add:
-            _draft = State(initialValue: QuietHoursScheduleDraft())
+            _draft = State(initialValue: QuietHoursScheduleDraft(among: schedules))
             self.delete = nil
         case .edit(let schedule):
-            _draft = State(initialValue: QuietHoursScheduleDraft(editing: schedule))
+            _draft = State(initialValue: QuietHoursScheduleDraft(editing: schedule, among: schedules))
             self.delete = { delete(schedule.id) }
         }
     }
@@ -90,8 +92,11 @@ struct QuietHoursScheduleSheet: View {
                 Text("Ends", comment: "Add Schedule and Edit Schedule (quiet hours): the time the schedule ends, on the same day or the next.")
             }
         } footer: {
+            // The reasons about the whole schedule, near the top, so they show without scrolling.
             if draft.problems.contains(.startEqualsEnd) {
                 problemText(.startEqualsEnd)
+            } else if draft.problems.contains(.sameAsAnother) {
+                problemText(.sameAsAnother)
             } else if let ends = wording.ends(draft) {
                 Text(ends)
             }
@@ -199,13 +204,13 @@ struct QuietHoursScheduleSheet: View {
 
 #if DEBUG
 #Preview("Add") {
-    QuietHoursScheduleSheet(kind: .add, wording: QuietHoursWording(calendar: .autoupdatingCurrent), save: { _ in }, delete: { _ in })
+    QuietHoursScheduleSheet(kind: .add, schedules: [], wording: QuietHoursWording(calendar: .autoupdatingCurrent), save: { _ in }, delete: { _ in })
 }
 
 #Preview("Edit, largest text") {
     QuietHoursScheduleSheet(
         kind: .edit(try! QuietHoursSchedule(start: TimeOfDay(hour: 23), end: TimeOfDay(hour: 8), days: [.friday, .saturday])),
-        wording: QuietHoursWording(calendar: .autoupdatingCurrent), save: { _ in }, delete: { _ in }
+        schedules: [], wording: QuietHoursWording(calendar: .autoupdatingCurrent), save: { _ in }, delete: { _ in }
     )
     .dynamicTypeSize(.accessibility5)
 }

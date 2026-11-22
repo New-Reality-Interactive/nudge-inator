@@ -3189,6 +3189,9 @@
     "You" : {
       "comment" : "How Sharing Works, Send Each Other Reminders: the picture's pill for the person reading, beside an iPhone."
     },
+    "You already have a schedule with these times and days." : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): under Starts and Ends, in red, while the start, end and days are another schedule's, so Save is off."
+    },
     "You already have the tag %@." : {
       "comment" : "Tag sheet: shown when another tag has the name, ignoring case. VoiceOver also speaks it when it appears, and after the dimmed Done's name. The placeholder is that tag, such as \"#home\"."
     },
