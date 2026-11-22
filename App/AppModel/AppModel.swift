@@ -824,14 +824,14 @@ final class AppModel {
     /// place. Like saving and deleting, it writes through `quietHours`, so the re-plan follows and
     /// the schedules it replaced are kept for past Missed notes; a change that leaves the schedules
     /// as they were changes nothing.
-    func setQuietHoursSchedule(_ id: QuietHoursSchedule.ID, on: Bool) {
+    func switchQuietHoursSchedule(_ id: QuietHoursSchedule.ID, on: Bool) {
         changeQuietHours { $0.switchSchedule(id, on: on) }
     }
 
     /// Add Schedule's and a schedule's sheet (#371): a new schedule at the end of the list, an
     /// edited one in its place.
     func saveQuietHoursSchedule(_ schedule: QuietHoursSchedule) {
-        changeQuietHours { $0.save(schedule) }
+        changeQuietHours { $0.saveSchedule(schedule) }
     }
 
     /// Delete Schedule (#371), once the person has confirmed it.

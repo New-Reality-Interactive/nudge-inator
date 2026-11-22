@@ -109,7 +109,8 @@ struct QuietHoursWording {
     /// The time a pill's `date` reads on the clock.
     func time(of date: Date) -> TimeOfDay? {
         let parts = calendar.dateComponents([.hour, .minute], from: date)
-        return try? TimeOfDay(hour: parts.hour ?? 0, minute: parts.minute ?? 0)
+        guard let hour = parts.hour, let minute = parts.minute else { return nil }
+        return try? TimeOfDay(hour: hour, minute: minute)
     }
 
     // MARK: Formats

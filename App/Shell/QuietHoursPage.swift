@@ -48,7 +48,7 @@ struct QuietHoursPage: View {
     private var scheduleList: some View {
         List {
             Section {
-                // A schedule is known by its place in the list, the order they were added.
+                // In the order they were added; each row is its schedule's, by identity (#371).
                 ForEach(quietHours.schedules) { schedule in
                     Toggle(isOn: isOn(schedule.id)) {
                         SettingsRow(
@@ -101,7 +101,7 @@ struct QuietHoursPage: View {
             quietHours.schedules.first { $0.id == id }?.isOn ?? false
         } set: { on in
             if let model {
-                model.setQuietHoursSchedule(id, on: on)
+                model.switchQuietHoursSchedule(id, on: on)
             } else {
                 changePreview { $0.switchSchedule(id, on: on) }
             }
@@ -110,7 +110,7 @@ struct QuietHoursPage: View {
 
     /// The sheet's Add or Save: the model's, which writes the record so the re-plan follows.
     private func save(_ schedule: QuietHoursSchedule) {
-        if let model { model.saveQuietHoursSchedule(schedule) } else { changePreview { $0.save(schedule) } }
+        if let model { model.saveQuietHoursSchedule(schedule) } else { changePreview { $0.saveSchedule(schedule) } }
     }
 
     /// The sheet's Delete Schedule, once confirmed.

@@ -17,14 +17,14 @@ struct QuietHoursEditingTests {
 
     @Test func savingANewScheduleAddsItAtTheEnd() {
         var quietHours = QuietHours(schedules: [night, weekend])
-        quietHours.save(lunch)
+        quietHours.saveSchedule(lunch)
         #expect(quietHours.schedules == [night, weekend, lunch])
     }
 
     @Test func savingAnEditedScheduleReplacesItInItsPlace() throws {
         var quietHours = QuietHours(schedules: [night, weekend, lunch])
         let later = try QuietHoursSchedule(id: weekend.id, start: TimeOfDay(hour: 23, minute: 30), end: TimeOfDay(hour: 9), days: [.saturday], isOn: false)
-        quietHours.save(later)
+        quietHours.saveSchedule(later)
         #expect(quietHours.schedules == [night, later, lunch])
     }
 
@@ -34,6 +34,13 @@ struct QuietHoursEditingTests {
         #expect(quietHours.schedules == [night, lunch])
         quietHours.deleteSchedule(UUID())
         #expect(quietHours.schedules == [night, lunch])
+    }
+
+    @Test func aTimeWrittenAsMinutesWrapsOntoTheClock() throws {
+        #expect(TimeOfDay(wrappingMinutes: 22 * 60) == (try TimeOfDay(hour: 22)))
+        #expect(TimeOfDay(wrappingMinutes: 7 * 60 + 30) == (try TimeOfDay(hour: 7, minute: 30)))
+        #expect(TimeOfDay(wrappingMinutes: 24 * 60) == (try TimeOfDay(hour: 0)))
+        #expect(TimeOfDay(wrappingMinutes: -60) == (try TimeOfDay(hour: 23)))
     }
 
     @Test func switchingAScheduleKeepsItInItsPlace() {

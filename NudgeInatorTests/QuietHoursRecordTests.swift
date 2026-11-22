@@ -68,13 +68,13 @@ final class QuietHoursRecordTests {
         let first = try model()
         first.quietHours = QuietHours(schedules: [night, weekend])
 
-        first.setQuietHoursSchedule(night.id, on: false)
+        first.switchQuietHoursSchedule(night.id, on: false)
 
         let relaunched = try model()
         #expect(relaunched.quietHours.schedules.map(\.isOn) == [false, true])
         #expect(relaunched.quietHours.schedules.map(\.id) == [night.id, weekend.id])
 
-        relaunched.setQuietHoursSchedule(night.id, on: true)
+        relaunched.switchQuietHoursSchedule(night.id, on: true)
 
         #expect(try model().quietHours == QuietHours(schedules: [night, weekend]))
     }

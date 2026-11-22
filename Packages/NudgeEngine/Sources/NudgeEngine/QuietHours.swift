@@ -16,6 +16,15 @@ public struct TimeOfDay: Comparable, Hashable, Sendable {
         self.minute = minute
     }
 
+    /// The time `minutes` after midnight, wrapped onto the clock, so it never throws: 1,320 is
+    /// 10 PM, 1,440 is midnight again and -60 is 11 PM. For a time written in code, such as a new
+    /// schedule's start.
+    public init(wrappingMinutes minutes: Int) {
+        let onTheClock = ((minutes % 1440) + 1440) % 1440
+        hour = onTheClock / 60
+        minute = onTheClock % 60
+    }
+
     var secondsIntoDay: Int { hour * 3600 + minute * 60 }
 
     public static func < (a: TimeOfDay, b: TimeOfDay) -> Bool {
@@ -95,7 +104,7 @@ public struct QuietHours: Equatable, Sendable {
 
     /// Saves `schedule` (#371): an edited one replaces the one with its identity, in its place; a
     /// new one goes at the end, so the list stays in the order schedules were added.
-    public mutating func save(_ schedule: QuietHoursSchedule) {
+    public mutating func saveSchedule(_ schedule: QuietHoursSchedule) {
         if let index = schedules.firstIndex(where: { $0.id == schedule.id }) {
             schedules[index] = schedule
         } else {

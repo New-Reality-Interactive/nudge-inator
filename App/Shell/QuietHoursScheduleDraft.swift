@@ -12,6 +12,10 @@ struct QuietHoursScheduleDraft {
 
     /// The schedule being edited, as it was saved, or nil for a new one.
     let saved: QuietHoursSchedule?
+    /// What the sheet opened with, so Cancel knows whether anything would be lost.
+    private let openedStart: TimeOfDay
+    private let openedEnd: TimeOfDay
+    private let openedDays: Set<RepeatRule.Weekday>
     /// A new schedule's identity, made once so saving a draft twice can't add two schedules.
     private let newID = UUID()
 
@@ -34,17 +38,22 @@ struct QuietHoursScheduleDraft {
 
     /// A new schedule.
     init() {
-        start = Self.newStart
-        end = Self.newEnd
-        days = Set(RepeatRule.Weekday.allCases)
-        saved = nil
+        self.init(start: TimeOfDay(wrappingMinutes: 22 * 60), end: TimeOfDay(wrappingMinutes: 7 * 60),
+                  days: Set(RepeatRule.Weekday.allCases), saved: nil)
     }
 
     init(editing schedule: QuietHoursSchedule) {
-        start = schedule.start
-        end = schedule.end
-        days = schedule.days
-        saved = schedule
+        self.init(start: schedule.start, end: schedule.end, days: schedule.days, saved: schedule)
+    }
+
+    private init(start: TimeOfDay, end: TimeOfDay, days: Set<RepeatRule.Weekday>, saved: QuietHoursSchedule?) {
+        self.start = start
+        self.end = end
+        self.days = days
+        self.saved = saved
+        openedStart = start
+        openedEnd = end
+        openedDays = days
     }
 
     var isNew: Bool { saved == nil }
@@ -70,12 +79,6 @@ struct QuietHoursScheduleDraft {
 
     /// Whether Cancel would lose anything: the times or days differ from what the sheet opened with.
     var hasChanges: Bool {
-        start != (saved?.start ?? Self.newStart)
-            || end != (saved?.end ?? Self.newEnd)
-            || days != (saved?.days ?? Set(RepeatRule.Weekday.allCases))
+        start != openedStart || end != openedEnd || days != openedDays
     }
-
-    // Literal times the clock shows, so these never throw.
-    private static let newStart = try! TimeOfDay(hour: 22)
-    private static let newEnd = try! TimeOfDay(hour: 7)
 }
