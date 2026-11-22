@@ -827,8 +827,25 @@ What the Quiet Hours page mockup (`docs/mockups/2026-11-21-quiet-hours-page/`, #
   week order. A schedule that's off keeps its row, its times in `{colors.secondary-label}`.
   VoiceOver reads the times, the days and the switch's state as one element.
 - **The page:** inline title "Quiet Hours"; the Schedules section with a footer on turning one off
-  and on what quiet hours do. With no schedules, the empty state is `bell.slash`, "No Schedules".
-- **Symbols added:** `bell.slash`, `clock` on a schedule.
+  and on what quiet hours do. With no schedules, the empty state is `bell.slash`, "No Schedules",
+  with a bordered Add Schedule button (`plus`). Under the schedules, Add Schedule in its own section
+  with no footer (the footer on what quiet hours do stays under Schedules, #370's review), a
+  Settings row with a `{colors.tile-blue}` tile and `plus`, its label in the accent color (#371).
+- **A schedule's sheet** (#371): tapping a schedule's words opens Edit Schedule; VoiceOver has an
+  Edit action on the row instead. Add Schedule and Edit Schedule are a sheet with the inline title,
+  Cancel (`xmark`, asks before discarding changes) and Add or Save (`checkmark`). Edit Schedule
+  opens with a Schedule switch, in a section of its own with no heading, kept on Save like every
+  other edit; Add Schedule has none, since a new schedule is saved on. Starts and Ends
+  are compact time pickers; their footer says "Ends at 7:00 AM the next day." (or "the same day."),
+  or, in `{colors.negative}`, "The start and end are the same. Change one to save." or, while the
+  start, end and days are another schedule's (on or off), "You already have a schedule with these
+  times and days." These reasons are text on the sheet, never an alert. Days is a
+  checklist of full day names in the calendar's week order, its footer on what a day means, and
+  "Choose at least one day to save." in `{colors.negative}` above it while none is checked. Save
+  stays off while any of these lines shows. A new schedule is 10:00 PM to 7:00 AM, every day, on. Edit adds
+  Delete Schedule (`trash`), which asks "Delete This Schedule?" with its times and days.
+- **Symbols added:** `bell.slash`, `clock` on a schedule, `plus` on Add Schedule, `trash` on Delete
+  Schedule.
 
 ### Details tone and Use for All
 What the details tone and Use for All mockup (`docs/mockups/2026-11-19-details-tone-use-for-all/`,

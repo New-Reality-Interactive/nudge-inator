@@ -16,6 +16,15 @@ public struct TimeOfDay: Comparable, Hashable, Sendable {
         self.minute = minute
     }
 
+    /// The time `minutes` after midnight, wrapped onto the clock, so it never throws: 1,320 is
+    /// 10 PM, 1,440 is midnight again and -60 is 11 PM. For a time written in code, such as a new
+    /// schedule's start.
+    public init(wrappingMinutes minutes: Int) {
+        let onTheClock = ((minutes % 1440) + 1440) % 1440
+        hour = onTheClock / 60
+        minute = onTheClock % 60
+    }
+
     var secondsIntoDay: Int { hour * 3600 + minute * 60 }
 
     public static func < (a: TimeOfDay, b: TimeOfDay) -> Bool {
@@ -38,7 +47,11 @@ public enum QuietHoursError: Error, Equatable, Sendable {
 /// start and ends at its end without including it.
 ///
 /// Not a pace: a pace spaces a reminder's nudges, a schedule says when none is delivered.
-public struct QuietHoursSchedule: Equatable, Sendable {
+///
+/// Each schedule has its own identity (#371), which an edit keeps, so two schedules with the same
+/// times and days are still two, and a change made on one never lands on another.
+public struct QuietHoursSchedule: Equatable, Identifiable, Sendable {
+    public let id: UUID
     public let start: TimeOfDay
     public let end: TimeOfDay
     /// The days the window starts on.
@@ -46,9 +59,11 @@ public struct QuietHoursSchedule: Equatable, Sendable {
     /// Off keeps the schedule without it holding anything.
     public var isOn: Bool
 
-    /// Throws `startEqualsEnd` when `start` is `end`.
-    public init(start: TimeOfDay, end: TimeOfDay, days: Set<RepeatRule.Weekday>, isOn: Bool = true) throws {
+    /// Throws `startEqualsEnd` when `start` is `end`. An edit passes the edited schedule's `id`; a
+    /// new schedule gets one of its own.
+    public init(id: UUID = UUID(), start: TimeOfDay, end: TimeOfDay, days: Set<RepeatRule.Weekday>, isOn: Bool = true) throws {
         guard start != end else { throw QuietHoursError.startEqualsEnd }
+        self.id = id
         self.start = start
         self.end = end
         self.days = days
@@ -80,11 +95,26 @@ public struct QuietHours: Equatable, Sendable {
         self.schedules = schedules
     }
 
-    /// Turns the schedule at `index` on or off, keeping it in its place (#370). An index with no
-    /// schedule changes nothing.
-    public mutating func switchSchedule(at index: Int, on: Bool) {
-        guard schedules.indices.contains(index) else { return }
+    /// Turns the schedule `id` on or off, keeping it in its place (#370). An identity these quiet
+    /// hours don't hold changes nothing.
+    public mutating func switchSchedule(_ id: QuietHoursSchedule.ID, on: Bool) {
+        guard let index = schedules.firstIndex(where: { $0.id == id }) else { return }
         schedules[index].isOn = on
+    }
+
+    /// Saves `schedule` (#371): an edited one replaces the one with its identity, in its place; a
+    /// new one goes at the end, so the list stays in the order schedules were added.
+    public mutating func saveSchedule(_ schedule: QuietHoursSchedule) {
+        if let index = schedules.firstIndex(where: { $0.id == schedule.id }) {
+            schedules[index] = schedule
+        } else {
+            schedules.append(schedule)
+        }
+    }
+
+    /// Deletes the schedule `id` (#371). An identity these quiet hours don't hold changes nothing.
+    public mutating func deleteSchedule(_ id: QuietHoursSchedule.ID) {
+        schedules.removeAll { $0.id == id }
     }
 }
 

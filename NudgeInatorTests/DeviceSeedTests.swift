@@ -43,7 +43,12 @@ final class DeviceSeedTests {
             try QuietHoursSchedule(start: TimeOfDay(hour: 22), end: TimeOfDay(hour: 7), days: [.sunday, .thursday]),
             try QuietHoursSchedule(start: TimeOfDay(hour: 18, minute: 30), end: TimeOfDay(hour: 21), days: [.tuesday], isOn: false),
         ])
-        #expect(SeedSettingText.quietHours(from: SeedSettingText.text(of: schedules)) == schedules)
+        // The text holds no identity: a seed's schedules are new ones, with the same fields.
+        let read = try #require(SeedSettingText.quietHours(from: SeedSettingText.text(of: schedules)))
+        #expect(read.schedules.map(\.start) == schedules.schedules.map(\.start))
+        #expect(read.schedules.map(\.end) == schedules.schedules.map(\.end))
+        #expect(read.schedules.map(\.days) == schedules.schedules.map(\.days))
+        #expect(read.schedules.map(\.isOn) == schedules.schedules.map(\.isOn))
         #expect(SeedSettingText.quietHours(from: SeedSettingText.text(of: QuietHours())) == QuietHours())
     }
 

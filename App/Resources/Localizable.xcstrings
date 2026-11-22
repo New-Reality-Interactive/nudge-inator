@@ -135,6 +135,17 @@
         }
       }
     },
+    "%@ · %@. Nudges in it will arrive again." : {
+      "comment" : "Edit Schedule (quiet hours): the message of the question that asks before deleting the schedule. 1: its times, such as \"10:00 PM–7:00 AM\". 2: its days, such as \"Every day\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@. Nudges in it will arrive again."
+          }
+        }
+      }
+    },
     "%@ · **%lld reminders nudging you**" : {
       "comment" : "Now: under the title; the bold part shows in red. 1: today's short date, such as \"Sat, Oct 17\". 2: how many reminders are nudging.",
       "localizations" : {
@@ -888,7 +899,10 @@
       "comment" : "VoiceOver label of Accept on a Waiting for You row on Now. The placeholder is the reminder's title."
     },
     "Add" : {
-      "comment" : "The New Reminder form's confirm button (a checkmark).\nThe Tags page's button that adds the typed tag to the reminder."
+      "comment" : "Add Schedule (quiet hours): the confirm button (a checkmark) that adds the schedule.\nThe New Reminder form's confirm button (a checkmark).\nThe Tags page's button that adds the typed tag to the reminder."
+    },
+    "Add Schedule" : {
+      "comment" : "Title of the sheet that adds a quiet hours schedule, and the Quiet Hours page's button that opens it."
     },
     "Add a schedule, and no nudge arrives while it runs." : {
       "comment" : "Quiet Hours page: under \"No Schedules\"."
@@ -1164,7 +1178,7 @@
       "comment" : "Title shown when the app can't read its stored reminders, for example before the first unlock after a restart."
     },
     "Cancel" : {
-      "comment" : "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, the Reminders and Tags filters', the invite hint's, and Disconnect's.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nInvite: leaves the Already Invited question without sending.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nLeaves every reminder's sound as it is, instead of Use for All Reminders.\nSettings: keeps your data instead of deleting it."
+      "comment" : "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, the Reminders and Tags filters', the invite hint's, and Disconnect's.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nInvite: leaves the Already Invited question without sending.\nKeeps the quiet hours schedule instead of deleting it.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nLeaves every reminder's sound as it is, instead of Use for All Reminders.\nSettings: keeps your data instead of deleting it."
     },
     "Cancel Invite" : {
       "comment" : "An invited person's page: opens the question that asks before canceling the invite.\nThe question before canceling an invite: cancels it."
@@ -1210,6 +1224,9 @@
     },
     "Choose an address" : {
       "comment" : "Invite Someone: title of the choice between a contact's email addresses and phone numbers."
+    },
+    "Choose at least one day to save." : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): under the days, in red, while no day is checked, so Save is off."
     },
     "Choose from Contacts" : {
       "comment" : "Invite Someone: the plus beside the address field, which opens the contact picker."
@@ -1337,6 +1354,9 @@
     "Daily" : {
       "comment" : "The Custom repeat page's frequency."
     },
+    "Days" : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): header of the days of the week the schedule starts on."
+    },
     "Default Alarm" : {
       "comment" : "Alarm sound name: iOS's own alarm sound, the first choice in the alarm sound list."
     },
@@ -1361,8 +1381,14 @@
     "Delete Reminder" : {
       "comment" : "Confirms deleting the reminder.\nReminder details: opens the question that asks before deleting the reminder."
     },
+    "Delete Schedule" : {
+      "comment" : "Edit Schedule (quiet hours): confirms deleting the schedule.\nEdit Schedule (quiet hours): the button that asks before deleting the schedule."
+    },
     "Delete Tag" : {
       "comment" : "Tags: confirms deleting the tag, as Delete Reminder does for a reminder. The reminders that have it are kept."
+    },
+    "Delete This Schedule?" : {
+      "comment" : "Edit Schedule (quiet hours): title of the question that asks before deleting the schedule."
     },
     "Delete “%@”?" : {
       "comment" : "Asked before deleting a reminder, from its details, a Reminders tab row, or a sent reminder's details or Sent row. The placeholder is its title."
@@ -1505,6 +1531,9 @@
     "Each Gentle or Firm reminder has a Break Through Focus switch. Turn it off and a Focus can hold its nudges, and nothing rings. Relentless always breaks through." : {
       "comment" : "Onboarding and How It Nudges: under \"You choose what breaks through\"."
     },
+    "Each day is a day the schedule starts on, so Sunday at 10 PM to 7 AM runs into Monday morning." : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): under the days, what a checked day means."
+    },
     "Each person chooses, for each connection, whether reminders start right away or wait for them to accept first." : {
       "comment" : "How Sharing Works, Send a Reminder: under \"Their Delivery Mode\"."
     },
@@ -1515,13 +1544,16 @@
       "comment" : "Reminders tab's Sort menu, sorted by Due Date: the earliest due time at the top."
     },
     "Edit" : {
-      "comment" : "Reminder details: the toolbar button that opens the Edit Reminder form.\nReminders tab, Sent: a row's swipe action and VoiceOver action that opens the sent reminder's Edit Reminder form.\nReminders tab: a row's swipe action and VoiceOver action that opens the Edit Reminder form.\nTags: a row's swipe action and VoiceOver action that opens the sheet that renames the tag."
+      "comment" : "Quiet Hours page: a schedule row's VoiceOver action that opens its Edit Schedule sheet.\nReminder details: the toolbar button that opens the Edit Reminder form.\nReminders tab, Sent: a row's swipe action and VoiceOver action that opens the sent reminder's Edit Reminder form.\nReminders tab: a row's swipe action and VoiceOver action that opens the Edit Reminder form.\nTags: a row's swipe action and VoiceOver action that opens the sheet that renames the tag."
     },
     "Edit %@" : {
       "comment" : "VoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title."
     },
     "Edit Reminder" : {
       "comment" : "Title of the form that edits a reminder."
+    },
+    "Edit Schedule" : {
+      "comment" : "Title of the sheet that changes or deletes a quiet hours schedule."
     },
     "Edit a reminder and change its Sound, under Break Through Focus, even while it's nudging." : {
       "comment" : "How Alarm Sounds Work, Change Your Reminders: under \"Sound on the form\". Sound is the form's row and Break Through Focus its switch."
@@ -1537,6 +1569,15 @@
     },
     "End Repeat" : {
       "comment" : "The reminder form's row under Repeat, which opens a menu of when the repeat ends."
+    },
+    "Ends" : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): the time the schedule ends, on the same day or the next."
+    },
+    "Ends at %@ the next day." : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): under Starts and Ends when the end is earlier than the start, so the schedule runs past midnight, such as \"Ends at 7:00 AM the next day.\""
+    },
+    "Ends at %@ the same day." : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): under Starts and Ends when the end is later than the start on the same day, such as \"Ends at 1:30 PM the same day.\""
     },
     "Enter a name for the tag." : {
       "comment" : "Tag sheet: shown when what was typed leaves no name, such as only a #. VoiceOver also speaks it when it appears, and after the dimmed Done's name."
@@ -2561,10 +2602,10 @@
       "comment" : "Alarm sound name: a tone that rises in pitch, shipped with the app."
     },
     "Save" : {
-      "comment" : "The Edit Reminder form's confirm button (a checkmark)."
+      "comment" : "Edit Schedule (quiet hours): the confirm button (a checkmark) that saves the changes.\nThe Edit Reminder form's confirm button (a checkmark)."
     },
     "Schedule" : {
-      "comment" : "Reminder details: section header for when and how the reminder nudges."
+      "comment" : "Edit Schedule (quiet hours): the switch that turns the schedule on or off, kept when the person saves.\nReminder details: section header for when and how the reminder nudges."
     },
     "Schedules" : {
       "comment" : "Quiet Hours page: header of the list of quiet hours schedules."
@@ -2705,7 +2746,7 @@
       "comment" : "Reminder details: under Schedule while the reminder is nudging, why five fields can't be edited."
     },
     "Starts" : {
-      "comment" : "The reminder form's start date and time."
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): the time the schedule starts.\nThe reminder form's start date and time."
     },
     "Starts %@" : {
       "comment" : "Settings: the Quiet Hours row when the next schedule starts later today, such as \"Starts 10:00 PM\"."
@@ -2816,6 +2857,9 @@
     },
     "The repeat has already ended. Change when it ends." : {
       "comment" : "Under the reminder form's start when the repeat has no times left, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name."
+    },
+    "The start and end are the same. Change one to save." : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): under Starts and Ends, in red, while they are the same time, so Save is off."
     },
     "Their Delivery Mode" : {
       "comment" : "How Sharing Works, Send a Reminder: the row about the recipient's Delivery Mode, the connection's setting."
@@ -3144,6 +3188,9 @@
     },
     "You" : {
       "comment" : "How Sharing Works, Send Each Other Reminders: the picture's pill for the person reading, beside an iPhone."
+    },
+    "You already have a schedule with these times and days." : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): under Starts and Ends, in red, while the start, end and days are another schedule's, so Save is off."
     },
     "You already have the tag %@." : {
       "comment" : "Tag sheet: shown when another tag has the name, ignoring case. VoiceOver also speaks it when it appears, and after the dimmed Done's name. The placeholder is that tag, such as \"#home\"."

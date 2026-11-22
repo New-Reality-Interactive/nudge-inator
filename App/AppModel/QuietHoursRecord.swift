@@ -6,11 +6,12 @@ import NudgeEngine
 /// the reminder store, so an install updated from an earlier version, with nothing saved, opens
 /// with no migration.
 ///
-/// Each schedule is one property list entry: the start and end as minutes into the day, the days
-/// as the weekday numbers `Calendar` uses, and on or off. The read is defensive: an entry that
-/// isn't a dictionary, lacks a field or fails the engine's throwing initializers (a time the clock
-/// doesn't show, a start equal to the end, a day that isn't a weekday) is left out and the others
-/// are kept, in the order they were saved.
+/// Each schedule is one property list entry: its identity as a UUID string (#371), the start and
+/// end as minutes into the day, the days as the weekday numbers `Calendar` uses, and on or off. The
+/// read is defensive: an entry that isn't a dictionary, lacks a field, has an identity that isn't a
+/// UUID or fails the engine's throwing initializers (a time the clock doesn't show, a start equal
+/// to the end, a day that isn't a weekday) is left out and the others are kept, in the order they
+/// were saved.
 ///
 /// The record also keeps the schedules each edit replaced, with when (#368), which the engine
 /// reports and takes back at launch, so a past occurrence's held count reads as it was after a
@@ -35,6 +36,7 @@ struct QuietHoursRecord {
 
     /// The fields of one entry.
     enum Field {
+        static let id = "id"
         static let start = "start"
         static let end = "end"
         static let days = "days"
@@ -86,6 +88,7 @@ struct QuietHoursRecord {
 
     private static func entry(for schedule: QuietHoursSchedule) -> [String: Any] {
         [
+            Field.id: schedule.id.uuidString,
             Field.start: schedule.start.hour * 60 + schedule.start.minute,
             Field.end: schedule.end.hour * 60 + schedule.end.minute,
             Field.days: schedule.days.map(\.rawValue).sorted(),
@@ -96,6 +99,7 @@ struct QuietHoursRecord {
     private static func schedule(from entry: Any) -> QuietHoursSchedule? {
         guard
             let entry = entry as? [String: Any],
+            let id = (entry[Field.id] as? String).flatMap(UUID.init(uuidString:)),
             let start = entry[Field.start] as? Int, let end = entry[Field.end] as? Int,
             let dayNumbers = entry[Field.days] as? [Int],
             let isOn = entry[Field.isOn] as? Bool,
@@ -104,7 +108,7 @@ struct QuietHoursRecord {
         let days = dayNumbers.compactMap(RepeatRule.Weekday.init(rawValue:))
         // A day that isn't a weekday makes the whole entry unreadable, not a schedule on fewer days.
         guard days.count == dayNumbers.count else { return nil }
-        return try? QuietHoursSchedule(start: startTime, end: endTime, days: Set(days), isOn: isOn)
+        return try? QuietHoursSchedule(id: id, start: startTime, end: endTime, days: Set(days), isOn: isOn)
     }
 
     private static func time(minutes: Int) -> TimeOfDay? {
