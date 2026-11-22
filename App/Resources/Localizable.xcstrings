@@ -1816,6 +1816,9 @@
     "High nudges are Time Sensitive, so a Focus can't hold them. Gentle never reaches Urgent, so it never rings." : {
       "comment" : "Under Break Through Focus when it's on and the strength is Gentle."
     },
+    "Holds every nudge from now until you turn it off, whatever your schedules say." : {
+      "comment" : "Quiet Hours page: under the Quiet Now switch while it is off, saying what it does."
+    },
     "How Alarm Sounds Work" : {
       "comment" : "How Alarm Sounds Work: the sheet's title, and the Settings row under Tutorials that opens it."
     },
@@ -2324,13 +2327,16 @@
       "comment" : "Reminders tab's Sort menu, sorted by Created: the reminder made first at the top."
     },
     "On" : {
-      "comment" : "A connection's page and the Connected sheet: Status Sharing is on.\nHeader of the Custom repeat page's days: the weekdays, or the day of the month.\nReminder details: Break Through Focus is on.\nSettings: status of the Alarms row when alarms are allowed.\nSettings: status of the Badges row when the app icon may show a badge.\nSettings: status of the Notifications row when notifications and Time Sensitive are allowed."
+      "comment" : "A connection's page and the Connected sheet: Status Sharing is on.\nHeader of the Custom repeat page's days: the weekdays, or the day of the month.\nReminder details: Break Through Focus is on.\nSettings: status of the Alarms row when alarms are allowed.\nSettings: status of the Badges row when the app icon may show a badge.\nSettings: status of the Notifications row when notifications and Time Sensitive are allowed.\nSettings: the Quiet Hours row while Quiet Now is on, so every nudge is held."
     },
     "On %@, from the start date. Change it to pick another day." : {
       "comment" : "Under the Custom repeat page's frequency when it's yearly. The placeholder is the start's day and month, such as \"28 October\"."
     },
     "On Date" : {
       "comment" : "The reminder form's End Repeat choice: the repeat ends on a date."
+    },
+    "On since %@. No nudge arrives until you turn it off." : {
+      "comment" : "Quiet Hours page: under the Quiet Now switch while it is on, with the time it was turned on, such as \"On since 8:20 AM.\""
     },
     "On until %@" : {
       "comment" : "Settings: what VoiceOver reads for the Quiet Hours row while quiet hours hold nudges, such as \"On until 7:00 AM\"."
@@ -2452,6 +2458,12 @@
     },
     "Quiet Hours" : {
       "comment" : "Settings: the row that opens the Quiet Hours page, and that page's title."
+    },
+    "Quiet Now" : {
+      "comment" : "Quiet Hours page: the switch that holds every nudge until it is turned off."
+    },
+    "Quiet Now is holding every nudge. These schedules apply again when you turn it off." : {
+      "comment" : "Quiet Hours page: under the schedules while Quiet Now is on."
     },
     "Quiet hours held %lld of its %lld nudges." : {
       "comment" : "Under how an occurrence closed as Missed (Now's Last 24 Hours, My Day, and Last occurrence on a reminder's details), when quiet hours held some of its nudges. 1: how many were held. 2: how many nudges it had in all, held or sent.",

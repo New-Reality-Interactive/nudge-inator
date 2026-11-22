@@ -17,8 +17,9 @@ struct QuietHoursPage: View {
     private let wording = QuietHoursWording(calendar: .autoupdatingCurrent)
 
     var body: some View {
-        Group {
-            if quietHours.schedules.isEmpty { emptyState } else { scheduleList }
+        List {
+            quietNowSection
+            if quietHours.schedules.isEmpty { emptyState } else { scheduleSections }
         }
         .navigationTitle(Text(Self.title))
         .navigationBarTitleDisplayMode(.inline)
@@ -27,8 +28,24 @@ struct QuietHoursPage: View {
         }
     }
 
+    /// Quiet Now (#498): one switch above the schedules, with or without any. It writes the record
+    /// through the app model, so the re-plan follows. The footer says what it does, then since when.
+    private var quietNowSection: some View {
+        Section {
+            Toggle(isOn: quietNowBinding) {
+                SettingsRow(
+                    tile: .tileGray,
+                    symbol: "bell.slash",
+                    title: Text("Quiet Now", comment: "Quiet Hours page: the switch that holds every nudge until it is turned off.")
+                )
+            }
+        } footer: {
+            Text(wording.quietNowFooter(since: quietHours.quietNowSince))
+        }
+    }
+
     private var emptyState: some View {
-        ScrollView {
+        Section {
             ContentUnavailableView {
                 EmptyStateLabel(systemImage: "bell.slash") {
                     Text("No Schedules", comment: "Quiet Hours page: title of the empty state, with no quiet hours schedule.")
@@ -41,12 +58,11 @@ struct QuietHoursPage: View {
                 }
                 .buttonStyle(.bordered)
             }
+            .listRowBackground(Color.clear)
         }
-        .background(Color(uiColor: .systemGroupedBackground))
     }
 
-    private var scheduleList: some View {
-        List {
+    @ViewBuilder private var scheduleSections: some View {
             Section {
                 // In the order they were added; each row is its schedule's, by identity (#371).
                 ForEach(quietHours.schedules) { schedule in
@@ -74,6 +90,10 @@ struct QuietHoursPage: View {
                 Text("Schedules", comment: "Quiet Hours page: header of the list of quiet hours schedules.")
             } footer: {
                 VStack(alignment: .leading, spacing: Design.Spacing.s2) {
+                    if quietHours.quietNowSince != nil {
+                        Text("Quiet Now is holding every nudge. These schedules apply again when you turn it off.",
+                             comment: "Quiet Hours page: under the schedules while Quiet Now is on.")
+                    }
                     Text("Turn a schedule off to keep it for later.", comment: "Quiet Hours page: under the schedules.")
                     Text("No nudge arrives during quiet hours, alarms included. A nudge held this way counts as one you didn't answer, so a reminder can still end as Missed.",
                          comment: "Quiet Hours page: under the schedules, what quiet hours do.")
@@ -85,7 +105,6 @@ struct QuietHoursPage: View {
                     SettingsRow(tile: .tileBlue, symbol: "plus", title: Text(QuietHoursScheduleSheet.addTitle), titleColor: .accentColor)
                 }
             }
-        }
     }
 
     /// The page's title, and the Settings row that opens it.
@@ -104,6 +123,20 @@ struct QuietHoursPage: View {
                 model.switchQuietHoursSchedule(id, on: on)
             } else {
                 changePreview { $0.switchSchedule(id, on: on) }
+            }
+        }
+    }
+
+    /// The Quiet Now switch: the model's, which writes the record so the re-plan follows. Without a
+    /// model, the previews'.
+    private var quietNowBinding: Binding<Bool> {
+        Binding {
+            quietHours.quietNowSince != nil
+        } set: { on in
+            if let model {
+                model.turnQuietNow(on: on)
+            } else {
+                changePreview { if on { $0.turnOnQuietNow(at: .now) } else { $0.turnOffQuietNow() } }
             }
         }
     }
@@ -143,6 +176,10 @@ private let sampleSchedules = QuietHours(schedules: [
 
 #Preview("Schedules, landscape", traits: .landscapeLeft) {
     NavigationStack { QuietHoursPage(previewQuietHours: sampleSchedules) }
+}
+
+#Preview("Quiet Now on") {
+    NavigationStack { QuietHoursPage(previewQuietHours: QuietHours(schedules: sampleSchedules.schedules, quietNowSince: .now)) }
 }
 
 #Preview("No schedules") {

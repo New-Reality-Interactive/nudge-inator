@@ -271,7 +271,8 @@ struct SettingsTab: View {
                 // Settings is open.
                 TimelineView(.everyMinute) { context in
                     let row = QuietHoursWording(calendar: .autoupdatingCurrent)
-                        .row(model?.quietHoursState(at: context.date) ?? .off, now: context.date)
+                        .row(model?.quietHoursState(at: context.date) ?? .off,
+                             quietNowSince: model?.quietHours.quietNowSince, now: context.date)
                     SettingsRow(
                         tile: .tileGray,
                         symbol: "bell.slash",

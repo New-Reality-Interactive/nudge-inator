@@ -17,7 +17,17 @@ struct QuietHoursWording {
         let spoken: LocalizedStringResource
     }
 
-    func row(_ state: QuietHoursState, now: Date) -> Row {
+    /// While Quiet Now is on the row reads On, whatever the schedules say: the engine's state
+    /// doesn't know about Quiet Now (#498). Off, it is the schedules' alone.
+    func row(_ state: QuietHoursState, quietNowSince: Date?, now: Date) -> Row {
+        if quietNowSince != nil {
+            let on = LocalizedStringResource("On", comment: "Settings: the Quiet Hours row while Quiet Now is on, so every nudge is held.")
+            return Row(text: on, spoken: on)
+        }
+        return scheduleRow(state, now: now)
+    }
+
+    private func scheduleRow(_ state: QuietHoursState, now: Date) -> Row {
         switch state {
         case .quietUntil(let end):
             return Row(
@@ -44,6 +54,16 @@ struct QuietHoursWording {
             let off = LocalizedStringResource("Off", comment: "Settings: the Quiet Hours row when no schedule is on, so quiet hours never hold a nudge.")
             return Row(text: off, spoken: off)
         }
+    }
+
+    /// Under the Quiet Now switch: what it does, or since when it has been on.
+    func quietNowFooter(since: Date?) -> LocalizedStringResource {
+        guard let since else {
+            return LocalizedStringResource("Holds every nudge from now until you turn it off, whatever your schedules say.",
+                                           comment: "Quiet Hours page: under the Quiet Now switch while it is off, saying what it does.")
+        }
+        return LocalizedStringResource("On since \(since, format: timeStyle). No nudge arrives until you turn it off.",
+                                       comment: "Quiet Hours page: under the Quiet Now switch while it is on, with the time it was turned on, such as \"On since 8:20 AM.\"")
     }
 
     /// The schedule's times, as the iOS Focus schedules list writes them: "10:00 PM–7:00 AM".
