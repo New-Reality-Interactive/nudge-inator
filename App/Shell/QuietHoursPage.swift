@@ -130,7 +130,7 @@ struct QuietHoursPage: View {
 
     /// The switch that holds every nudge until it is turned off (#498), named so too by How Quiet
     /// Hours Work (#468).
-    static let quietNowTitle = LocalizedStringResource("Quiet Now", comment: "Quiet Hours page: the switch that holds every nudge until it is turned off. Also How Quiet Hours Work's page about it: its heading and picture.")
+    nonisolated static let quietNowTitle = LocalizedStringResource("Quiet Now", comment: "Quiet Hours page: the switch that holds every nudge until it is turned off. Also How Quiet Hours Work's page about it: its heading and picture.")
 
     private var quietHours: QuietHours {
         model?.quietHours ?? previewEdits ?? previewQuietHours
