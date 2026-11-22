@@ -14,12 +14,19 @@ final class FakeTarget: SeedTarget {
         .defaultAlarmSound: "bell",
         .remindersSort: "created.ascending",
     ]
+    /// Spans of the past that read as quiet hours (#369), by when they were added.
+    private(set) var quietSpans: [(from: Date, to: Date, replacedAt: Date)] = []
+    /// How many quiet spans there were when the first reminder arrived.
+    private(set) var quietSpansWhenFirstAdded: Int?
     /// What the record held when the first reminder arrived.
     private(set) var recordWhenFirstAdded: SeedRecord?
     var record: (() -> SeedRecord)?
 
     func add(_ reminder: Reminder) {
-        if reminders.isEmpty { recordWhenFirstAdded = record?() }
+        if reminders.isEmpty {
+            recordWhenFirstAdded = record?()
+            quietSpansWhenFirstAdded = quietSpans.count
+        }
         reminders.append(reminder)
     }
 
@@ -50,6 +57,18 @@ final class FakeTarget: SeedTarget {
         settings[setting] = value
     }
 
+    /// What the record held when the last quiet span was added.
+    private(set) var recordWhenSpanAdded: SeedRecord?
+
+    func addQuietSpan(from start: Date, to end: Date, replacedAt: Date) {
+        recordWhenSpanAdded = record?()
+        quietSpans.append((start, end, replacedAt))
+    }
+
+    func removeQuietSpan(replacedAt: Date) {
+        quietSpans.removeAll { $0.replacedAt == replacedAt }
+    }
+
     /// What the person made by hand.
     func addPersonsOwn(title: String, tagNamed tagName: String? = nil) -> Reminder {
         var tagIDs: [Tag.ID] = []
@@ -78,6 +97,15 @@ extension SeedSet {
         reminders: [
             SeedReminder(id: SeedReminder.fixedID(101), title: "Buy milk", tagNames: ["errands"], dueIn: 3600),
             SeedReminder(id: SeedReminder.fixedID(102), title: "Call home", dueIn: -600, createdAgo: 86400),
+        ]
+    )
+
+    /// One reminder due 3 hours ago, with quiet hours over the hour after it (#369).
+    static let quiet = SeedSet(
+        name: "quiet",
+        quietHoursBefore: SeedQuietSpan(startIn: -3 * 3600, length: 3600),
+        reminders: [
+            SeedReminder(id: SeedReminder.fixedID(104), title: "Feed the cat", dueIn: -3 * 3600, strength: .firm),
         ]
     )
 

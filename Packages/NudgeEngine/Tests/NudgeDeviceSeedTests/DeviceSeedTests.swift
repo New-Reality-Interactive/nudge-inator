@@ -277,6 +277,52 @@ struct DeviceSeedTests {
         #expect(target.setting(.remindersSort) == "created.ascending")
     }
 
+    // MARK: Quiet hours before the load (#369)
+
+    /// The span reads as quiet hours that were on then and turned off at the load, so the set's
+    /// past nudges count as held. It is in place before the first reminder, so that reminder's
+    /// plan reads it.
+    @Test func aSetCanMakeASpanBeforeTheLoadReadAsQuietHours() throws {
+        let sets: [SeedSet] = [.quiet]
+        _ = DeviceSeed.run(command: "quiet", sets: sets, on: target, record: store)
+
+        let span = try #require(target.quietSpans.first)
+        #expect(target.quietSpans.count == 1)
+        #expect(span.from == target.now - 3 * 3600)
+        #expect(span.to == target.now - 2 * 3600)
+        #expect(span.replacedAt == target.now)
+        #expect(target.quietSpansWhenFirstAdded == 1)
+    }
+
+    @Test func loadingAgainReplacesTheSpanAndRemovalTakesItAway() {
+        let sets: [SeedSet] = [.quiet]
+        _ = DeviceSeed.run(command: "quiet", sets: sets, on: target, record: store)
+        target.now += 600
+        target.addQuietSpan(from: target.now - 7200, to: target.now - 3600, replacedAt: target.now - 60)
+        _ = DeviceSeed.run(command: "quiet", sets: sets, on: target, record: store)
+        #expect(target.quietSpans.map(\.replacedAt) == [target.now - 60, target.now])
+
+        _ = DeviceSeed.run(command: "clean", sets: sets, on: target, record: store)
+
+        // Only the seed's own span goes; the person's stays.
+        #expect(target.quietSpans.map(\.replacedAt) == [target.now - 60])
+    }
+
+    /// So a launch that stops partway still leaves a span `clean` can find.
+    @Test func theRecordListsTheSpanBeforeItIsAdded() {
+        target.record = { self.store.record }
+        _ = DeviceSeed.run(command: "quiet", sets: [.quiet], on: target, record: store)
+
+        #expect(target.recordWhenSpanAdded?.sets["quiet"]?.quietSpanAddedAt == target.now)
+    }
+
+    @Test func aSetWithoutASpanAddsNone() {
+        _ = run("sample")
+        _ = run("clean")
+
+        #expect(target.quietSpans.isEmpty)
+    }
+
     // MARK: Shipped sets
 
     @Test func everyShippedSetIsNamedOnceAndHasUniqueReminderIDs() {

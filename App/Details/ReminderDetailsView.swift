@@ -541,7 +541,12 @@ private struct LastOccurrenceRow: View {
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: Design.Spacing.s1))
             : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
         layout {
-            Text("Last occurrence", comment: "Reminder details, Schedule: how the latest occurrence closed.")
+            VStack(alignment: .leading, spacing: Design.Spacing.line) {
+                Text("Last occurrence", comment: "Reminder details, Schedule: how the latest occurrence closed.")
+                if let note = last.missedNote {
+                    MissedNoteLine(note: note)
+                }
+            }
             if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: Design.Spacing.s3) }
             VStack(alignment: dynamicTypeSize.isAccessibilitySize ? .leading : .trailing, spacing: Design.Spacing.line) {
                 StatusLabel(state: last.state)

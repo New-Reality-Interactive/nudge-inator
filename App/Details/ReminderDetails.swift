@@ -86,6 +86,8 @@ struct ReminderDetails {
         /// When it closed: "Today", "Yesterday" or a short date, and the time.
         var day: String
         var time: String
+        /// How many of its nudges quiet hours held, on a Missed one (#369).
+        var missedNote: MissedNote?
     }
 
     enum Next: Equatable {
@@ -117,7 +119,11 @@ struct ReminderDetails {
         let latest = engine.latestOccurrence(for: id)
         // A canceled copy's last occurrence closed Skipped only to stop it nudging: it wasn't paused.
         let closed = reminder.isCanceled ? nil : latest.flatMap { engine.closedOccurrence(of: id, dueAt: $0.dueTime) }
-        lastOccurrence = closed.map { LastOccurrence(state: $0.occurrence.state, day: engine.dayLabel(of: $0.closedAt), time: engine.timeOfDay(of: $0.closedAt)) }
+        lastOccurrence = closed.map {
+            LastOccurrence(
+                state: $0.occurrence.state, day: engine.dayLabel(of: $0.closedAt), time: engine.timeOfDay(of: $0.closedAt), missedNote: MissedNote($0)
+            )
+        }
         repeats = engine.repeatSummary(of: reminder)
         showsLockNote = !engine.lockedFields(of: id).isEmpty
         let howItNudges = engine.howItNudges(reminder.strength, pace: reminder.pace, breakThroughFocus: reminder.breakThroughFocus)

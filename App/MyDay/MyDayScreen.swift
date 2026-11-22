@@ -43,6 +43,8 @@ struct MyDayScreen {
         /// When it closed, as a time of day, once it has.
         var closedTime: String?
         var nudgesSent: Int
+        /// Under how it closed, how many of its nudges quiet hours held, on a Missed one (#369).
+        var missedNote: MissedNote?
         /// When the next nudge fires, while nudging and one is left.
         var nextNudgeTime: String?
         /// The reminder's tags that the engine holds.
@@ -212,6 +214,7 @@ extension MyDayScreen.Item {
         closedTime = closed.map { engine.timeOfDay(of: $0.closedAt) }
         let nudging = engine.nudgingStatus(of: item.reminderID)
         nudgesSent = closed?.nudgesSent ?? nudging?.nudgesSent ?? 0
+        missedNote = closed.flatMap(MissedNote.init)
         nextNudgeTime = nudging?.nextNudge.map { engine.timeOfDay(of: $0.fireTime) }
         tags = reminder.tagIDs.compactMap { tagID in
             engine.tag(withID: tagID).map { MyDayScreen.TagLabel(text: $0.label, isChosen: chosen.contains(tagID)) }

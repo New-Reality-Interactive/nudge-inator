@@ -50,6 +50,24 @@ struct HeldNudgeTests {
         #expect(closed.occurrence.state == .missed(reason: .giveUpLimit))
         #expect(closed.nudgesHeld == 2)
         #expect(closed.nudgesSent == 20)
+        #expect(closed.missedNudgesHeld == 2)
+    }
+
+    /// The Missed note's rule (#369): only an occurrence that closed as Missed with a nudge held
+    /// has a count to show. Done, Skipped, and Missed with none held have none.
+    @Test(arguments: [
+        (OccurrenceState.missed(reason: .giveUpLimit), 3, 3 as Int?),
+        (.missed(reason: .nextTookOver), 1, 1),
+        (.missed(reason: .giveUpLimit), 0, nil),
+        (.done, 2, nil),
+        (.skipped(reason: .paused), 1, nil),
+    ])
+    func onlyAMissedOccurrenceWithAHeldNudgeHasAMissedHeldCount(state: OccurrenceState, held: Int, count: Int?) {
+        let closed = ClosedOccurrence(
+            reminderID: UUID(), occurrence: Occurrence(dueTime: dueTime, state: state), closedAt: dueTime, nudgesSent: 20, nudgesHeld: held
+        )
+
+        #expect(closed.missedNudgesHeld == count)
     }
 
     /// A 9:00 to 9:40 schedule added at 9:20 holds only what is due after it: nudges 6 (9:21:30)

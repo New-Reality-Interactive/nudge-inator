@@ -118,6 +118,9 @@ struct MyDayRowView: View {
             Text(detail)
                 .font(.subheadline)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
+            if let note = item.missedNote {
+                MissedNoteLine(note: note)
+            }
             if let from = item.from {
                 FromLabel(from: from, strength: item.reminder.strength)
             }

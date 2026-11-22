@@ -2358,6 +2358,59 @@
     "Pulse" : {
       "comment" : "Alarm sound name: a pulsing beep tone that ships with the app."
     },
+    "Quiet hours held %lld of its %lld nudges." : {
+      "comment" : "Under how an occurrence closed as Missed (Now's Last 24 Hours, My Day, and Last occurrence on a reminder's details), when quiet hours held some of its nudges. 1: how many were held. 2: how many nudges it had in all, held or sent.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quiet hours held %#@held@ of its %#@total@."
+          },
+          "substitutions" : {
+            "held" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg"
+                    }
+                  }
+                }
+              }
+            },
+            "total" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg nudge"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg nudges"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Relentless" : {
       "comment" : "Strength name, in the form and the Reminders and Filter Sent sheets: the reminder nudges hardest."
     },
