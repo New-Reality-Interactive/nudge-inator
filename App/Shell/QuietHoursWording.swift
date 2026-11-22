@@ -135,7 +135,8 @@ struct QuietHoursWording {
 
     // MARK: Formats
 
-    private var timeStyle: Date.FormatStyle {
+    /// A time as the schedules write it, such as "10:00 PM" (and How Quiet Hours Work, #468).
+    var timeStyle: Date.FormatStyle {
         Date.FormatStyle(date: .omitted, time: .shortened, calendar: calendar, timeZone: calendar.timeZone)
     }
 
@@ -155,7 +156,7 @@ struct QuietHoursWording {
         calendar.date(from: DateComponents(year: 2001, month: 1, day: 7)) ?? .distantPast
     }
 
-    private func onReferenceDay(_ time: TimeOfDay) -> Date {
+    func onReferenceDay(_ time: TimeOfDay) -> Date {
         calendar.date(bySettingHour: time.hour, minute: time.minute, second: 0, of: referenceSunday) ?? referenceSunday
     }
 

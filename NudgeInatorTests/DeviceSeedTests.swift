@@ -63,6 +63,16 @@ final class DeviceSeedTests {
         #expect(SeedSettingText.quietHours(from: noneText) == QuietHours())
     }
 
+    /// #468's phone check: the tutorial unseen, so the Quiet Hours page opens it, over the page's
+    /// three schedules.
+    @Test func theQuietHoursTutorialSetLeavesTheTutorialUnseenOverThePagesSchedules() throws {
+        let set = try #require(SeedSet.all.first { $0.name == "quiet-hours-tutorial" })
+        let page = try #require(SeedSet.all.first { $0.name == "quiet-hours-page" })
+        #expect(set.settings[.quietHoursTutorial] == "unseen")
+        #expect(set.settings[.quietHours] == page.settings[.quietHours])
+        #expect(set.reminders.isEmpty)
+    }
+
     @Test func textTheAppDoesntKnowIsIgnored() {
         #expect(SeedSettingText.quietHours(from: "25:00-07:00 SU on") == nil)
         #expect(SeedSettingText.quietHours(from: "22:00-22:00 SU on") == nil)
@@ -101,7 +111,7 @@ final class DeviceSeedTests {
 struct ModelSeedTargetTests {
     let clock = FakeClock(now: NewYork.local(2026, 10, 15, 8))
 
-    func launchedModel(store: ReminderStore) async -> AppModel {
+    func launchedModel(store: ReminderStore, quietHoursTutorial: QuietHoursTutorialRecord = .standard) async -> AppModel {
         let model = AppModel(
             clock: clock,
             openStore: { store },
@@ -109,6 +119,7 @@ struct ModelSeedTargetTests {
             alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: clock),
             settingsRecords: .temporary(),
             doneQueue: .temporary,
+            quietHoursTutorial: quietHoursTutorial,
             timeZone: NewYork.timeZone
         )
         await model.launch()
@@ -148,6 +159,24 @@ struct ModelSeedTargetTests {
         }
         let created = set.reminders.compactMap { seed in model.engine.reminders.first { $0.id == seed.id }?.createdAt }
         #expect(Set(created).count == set.reminders.count)
+    }
+
+    /// The set makes the tutorial unseen, and `clean` puts back what the phone had: seen.
+    @Test func theTutorialsFlagIsSetAndPutBackThroughTheModel() async throws {
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory), quietHoursTutorial: .temporary)
+        model.quietHoursTutorialClosed()
+        let target = ModelSeedTarget(model: model)
+        let set = try #require(SeedSet.all.first { $0.name == "quiet-hours-tutorial" })
+        let record = MemorySeedRecordStore()
+        let schedules = model.quietHours
+
+        #expect(DeviceSeed.run(command: set.name, sets: [set], on: target, record: record) == .loaded(set.name))
+        #expect(model.isQuietHoursTutorialDue)
+
+        _ = DeviceSeed.run(command: "clean", sets: [set], on: target, record: record)
+        #expect(!model.isQuietHoursTutorialDue)
+        #expect(target.setting(.quietHoursTutorial) == "seen")
+        #expect(model.quietHours == schedules)
     }
 
     @Test func aReminderMadeByHandIsStillStampedWithNow() async throws {

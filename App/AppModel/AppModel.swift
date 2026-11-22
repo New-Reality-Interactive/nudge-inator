@@ -88,6 +88,26 @@ final class AppModel {
 
     private var firstSharingTutorial = FirstSharingTutorial.notPending
     private let sharingTutorial: SharingTutorialRecord
+    private let quietHoursTutorial: QuietHoursTutorialRecord
+
+    /// Whether How Quiet Hours Work should open by itself when the Quiet Hours page opens (#468):
+    /// it hasn't been seen. Read from the record each time, as the Default Pace is.
+    var isQuietHoursTutorialDue: Bool {
+        access(keyPath: \.isQuietHoursTutorialDue)
+        return !quietHoursTutorial.isSeen
+    }
+
+    /// How Quiet Hours Work closed, by Close, Done or a swipe (#468): it never opens by itself again.
+    func quietHoursTutorialClosed() {
+        withMutation(keyPath: \.isQuietHoursTutorialDue) { quietHoursTutorial.isSeen = true }
+    }
+
+    #if DEBUG
+    /// The device seed's (#468): How Quiet Hours Work unseen again, for its phone check.
+    func markQuietHoursTutorialUnseen() {
+        withMutation(keyPath: \.isQuietHoursTutorialDue) { quietHoursTutorial.isSeen = false }
+    }
+    #endif
 
     /// Whether How Sharing Works should open by itself now (#424): Sharing has just been turned on
     /// for the first time, and the tutorial hasn't been seen. The shell opens it while this is true,
@@ -114,6 +134,7 @@ final class AppModel {
         sharing: SharingModel? = nil,
         sharingSwitch: SharingSwitchRecord = .standard,
         sharingTutorial: SharingTutorialRecord = .standard,
+        quietHoursTutorial: QuietHoursTutorialRecord = .standard,
         makeSharing: @escaping () -> SharingModel? = { nil },
         timeZone: TimeZone = .autoupdatingCurrent,
         giveUpLimit: GiveUpLimit = .shipped
@@ -129,6 +150,7 @@ final class AppModel {
         self.doneQueue = doneQueue
         self.sharingSwitch = SharingSwitch(model: sharing, record: sharingSwitch, make: makeSharing)
         self.sharingTutorial = sharingTutorial
+        self.quietHoursTutorial = quietHoursTutorial
         onboarding = onboardingRecord.isFinished ? nil : .welcome
         scheduler = CombinedSchedulerAdapter(adapters: [notifications, alarms])
         // Never handed an event before `launch()` replaces it, so it never applies a plan.

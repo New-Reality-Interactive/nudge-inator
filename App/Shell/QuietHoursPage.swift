@@ -4,7 +4,8 @@ import SwiftUI
 /// Settings' Quiet Hours page (#370, the approved Quiet Hours page mockup): the schedules in the
 /// order they were added, each its times, its days under them, and a switch. Off keeps a schedule,
 /// its times dimmed; on again brings it back. Tapping a schedule's words opens its sheet (#371).
-/// Add Schedule is the bar's plus. With none, an empty state points at it.
+/// Add Schedule is the bar's plus. With none, an empty state points at it. The first time it opens,
+/// How Quiet Hours Work opens over it (#468).
 struct QuietHoursPage: View {
     /// What previews show and change, since they have no app model.
     var previewQuietHours = QuietHours()
@@ -34,6 +35,7 @@ struct QuietHoursPage: View {
         .sheet(item: $openSheet) { kind in
             QuietHoursScheduleSheet(kind: kind, schedules: quietHours.schedules, wording: wording, save: save, delete: delete)
         }
+        .quietHoursTutorialFirstTime(model: model)
     }
 
     /// Quiet Now (#498): one switch above the schedules, with or without any. It writes the record
@@ -44,7 +46,7 @@ struct QuietHoursPage: View {
                 SettingsRow(
                     tile: .tileGray,
                     symbol: "bell.slash",
-                    title: Text("Quiet Now", comment: "Quiet Hours page: the switch that holds every nudge until it is turned off.")
+                    title: Text(Self.quietNowTitle)
                 )
             }
             // A section footer isn't tied to its switch for VoiceOver, so the switch reads it too.
@@ -125,6 +127,10 @@ struct QuietHoursPage: View {
 
     /// The page's title, and the Settings row that opens it.
     static let title = LocalizedStringResource("Quiet Hours", comment: "Settings: the row that opens the Quiet Hours page, and that page's title.")
+
+    /// The switch that holds every nudge until it is turned off (#498), named so too by How Quiet
+    /// Hours Work (#468).
+    static let quietNowTitle = LocalizedStringResource("Quiet Now", comment: "Quiet Hours page: the switch that holds every nudge until it is turned off. Also How Quiet Hours Work's page about it: its heading and picture.")
 
     private var quietHours: QuietHours {
         model?.quietHours ?? previewEdits ?? previewQuietHours

@@ -122,7 +122,7 @@ private struct PageView<Page: TutorialPage>: View {
             Section {
                 ForEach(points.indices, id: \.self) { PointRow(point: points[$0]) }
             }
-        case .steps(let steps, let footnote):
+        case .steps(_, let steps, let footnote):
             Section {
                 ForEach(steps.indices, id: \.self) { StepRow(number: $0 + 1, step: steps[$0]) }
             } footer: {
@@ -161,7 +161,7 @@ private struct PageTop<Page: TutorialPage>: View {
                 .frame(maxWidth: .infinity)
                 .accessibilityAddTraits(.isHeader)
             switch page.content {
-            case .points(let lead?, _, _):
+            case .points(let lead?, _, _), .steps(let lead?, _, _):
                 Text(lead)
                     .font(.body)
             case .schedule(let lead, let note, _):
@@ -172,7 +172,7 @@ private struct PageTop<Page: TutorialPage>: View {
                         .font(.subheadline)
                         .foregroundStyle(Color(uiColor: .secondaryLabel))
                 }
-            case .points(nil, _, _), .steps:
+            case .points(nil, _, _), .steps(nil, _, _):
                 EmptyView()
             }
         }
