@@ -68,15 +68,69 @@ final class QuietHoursRecordTests {
         let first = try model()
         first.quietHours = QuietHours(schedules: [night, weekend])
 
-        first.setQuietHoursSchedule(at: 0, on: false)
+        first.setQuietHoursSchedule(night.id, on: false)
 
         let relaunched = try model()
         #expect(relaunched.quietHours.schedules.map(\.isOn) == [false, true])
-        #expect(relaunched.quietHours.schedules.map(\.start) == [night.start, weekend.start])
+        #expect(relaunched.quietHours.schedules.map(\.id) == [night.id, weekend.id])
 
-        relaunched.setQuietHoursSchedule(at: 0, on: true)
+        relaunched.setQuietHoursSchedule(night.id, on: true)
 
         #expect(try model().quietHours == QuietHours(schedules: [night, weekend]))
+    }
+
+    /// Add Schedule (#371): a new schedule goes at the end of the list, and is there after a relaunch.
+    @Test func aSavedNewScheduleIsAddedAtTheEndAndKept() throws {
+        let night = try schedule(22, 7, days: [.sunday, .monday])
+        let weekend = try schedule(23, 8, days: [.friday, .saturday])
+        let first = try model()
+        first.quietHours = QuietHours(schedules: [night])
+
+        first.saveQuietHoursSchedule(weekend)
+
+        #expect(try model().quietHours == QuietHours(schedules: [night, weekend]))
+    }
+
+    /// A schedule's sheet (#371): an edit keeps the schedule's place and identity, after a relaunch too.
+    @Test func aSavedEditReplacesTheScheduleInItsPlace() throws {
+        let night = try schedule(22, 7, days: [.sunday, .monday])
+        let weekend = try schedule(23, 8, days: [.friday, .saturday])
+        let first = try model()
+        first.quietHours = QuietHours(schedules: [night, weekend])
+        let earlier = try QuietHoursSchedule(id: night.id, start: TimeOfDay(hour: 21, minute: 30), end: TimeOfDay(hour: 6), days: [.monday], isOn: false)
+
+        first.saveQuietHoursSchedule(earlier)
+
+        #expect(try model().quietHours == QuietHours(schedules: [earlier, weekend]))
+    }
+
+    /// Delete Schedule (#371): only that schedule goes, after a relaunch too.
+    @Test func aDeletedScheduleIsGoneAndTheOthersAreKept() throws {
+        let night = try schedule(22, 7, days: [.sunday, .monday])
+        let weekend = try schedule(23, 8, days: [.friday, .saturday])
+        let first = try model()
+        first.quietHours = QuietHours(schedules: [night, weekend])
+
+        first.deleteQuietHoursSchedule(night.id)
+
+        #expect(try model().quietHours == QuietHours(schedules: [weekend]))
+    }
+
+    /// Saving and deleting go through the model's quiet hours, so the launched engine re-plans with
+    /// them (#368) and keeps the schedules each replaced, for past Missed notes.
+    @Test func savingAndDeletingReachTheEngineAndKeepWhatTheyReplaced() async throws {
+        let night = try schedule(22, 7, days: [.sunday, .monday])
+        let model = try model()
+        await model.launch()
+
+        // The clock reads Thursday 2026-10-15, 8:00 AM, so the night's next start is Sunday's.
+        model.saveQuietHoursSchedule(night)
+        #expect(model.quietHoursState(at: clock.now) == .startsAt(NewYork.local(2026, 10, 18, 22)))
+        model.deleteQuietHoursSchedule(night.id)
+        #expect(model.quietHoursState(at: clock.now) == .off)
+
+        let replaced = QuietHoursRecord(defaults: try defaults()).replacedQuietHours.map(\.value)
+        #expect(replaced == [QuietHours(), QuietHours(schedules: [night])])
     }
 
     @Test func aScheduleWithNoDaysIsKept() throws {
@@ -89,11 +143,12 @@ final class QuietHoursRecordTests {
 
     /// One entry in the record's own shape, for a test to spoil one field of.
     nonisolated static func entry(
-        start: Any = 9 * 60, end: Any = 10 * 60, days: Any = [1], isOn: Any? = true
+        id: Any? = UUID().uuidString, start: Any = 9 * 60, end: Any = 10 * 60, days: Any = [1], isOn: Any? = true
     ) -> [String: Any] {
         var entry: [String: Any] = [
             QuietHoursRecord.Field.start: start, QuietHoursRecord.Field.end: end, QuietHoursRecord.Field.days: days,
         ]
+        entry[QuietHoursRecord.Field.id] = id
         entry[QuietHoursRecord.Field.isOn] = isOn
         return entry
     }
@@ -102,6 +157,7 @@ final class QuietHoursRecordTests {
     enum Unreadable: String, CaseIterable, Sendable {
         case timeTheClockDoesntShow, negativeTime, startEqualToEnd, dayThatIsNotAWeekday
         case noOnOrOff, timeThatIsNotANumber, daysThatAreNotAList, notADictionary
+        case noIdentity, identityThatIsNotAUUID
 
         var entry: Any {
             switch self {
@@ -113,20 +169,23 @@ final class QuietHoursRecordTests {
             case .timeThatIsNotANumber: QuietHoursRecordTests.entry(start: "nine")
             case .daysThatAreNotAList: QuietHoursRecordTests.entry(days: "Sunday")
             case .notADictionary: "not an entry"
+            case .noIdentity: QuietHoursRecordTests.entry(id: nil)
+            case .identityThatIsNotAUUID: QuietHoursRecordTests.entry(id: "night")
             }
         }
     }
 
     @Test(arguments: Unreadable.allCases)
     func anEntryTheRecordCantReadIsLeftOutAndTheOthersAreKept(_ unreadable: Unreadable) throws {
-        let first = Self.entry(start: 22 * 60, end: 7 * 60, days: [1, 2])
-        let last = Self.entry(start: 13 * 60 + 15, end: 14 * 60, days: [6], isOn: false)
+        let firstID = UUID(), lastID = UUID()
+        let first = Self.entry(id: firstID.uuidString, start: 22 * 60, end: 7 * 60, days: [1, 2])
+        let last = Self.entry(id: lastID.uuidString, start: 13 * 60 + 15, end: 14 * 60, days: [6], isOn: false)
         // The unreadable entry sits between two readable ones, so order is kept around the gap.
         try defaults().set([first, unreadable.entry, last] as [Any], forKey: QuietHoursRecord.key)
 
         #expect(try model().quietHours == QuietHours(schedules: [
-            try schedule(22, 7, days: [.sunday, .monday]),
-            try QuietHoursSchedule(start: TimeOfDay(hour: 13, minute: 15), end: TimeOfDay(hour: 14), days: [.friday], isOn: false),
+            try QuietHoursSchedule(id: firstID, start: TimeOfDay(hour: 22), end: TimeOfDay(hour: 7), days: [.sunday, .monday]),
+            try QuietHoursSchedule(id: lastID, start: TimeOfDay(hour: 13, minute: 15), end: TimeOfDay(hour: 14), days: [.friday], isOn: false),
         ]))
     }
 

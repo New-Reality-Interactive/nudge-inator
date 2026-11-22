@@ -73,6 +73,45 @@ struct QuietHoursWording {
                                        comment: "Quiet Hours page: what VoiceOver reads for a schedule: its start and end times, then the days it starts on, such as \"10:00 PM to 7:00 AM, Every Fri and Sat\".")
     }
 
+    // MARK: The schedule's sheet (#371)
+
+    /// The line under Starts and Ends: "Ends at 7:00 AM the next day." or "… the same day.", or
+    /// nil while the start equals the end, when the sheet says why it can't be saved instead.
+    func ends(_ draft: QuietHoursScheduleDraft) -> LocalizedStringResource? {
+        guard draft.start != draft.end else { return nil }
+        let end = onReferenceDay(draft.end)
+        if draft.end < draft.start {
+            return LocalizedStringResource("Ends at \(end, format: timeStyle) the next day.",
+                                           comment: "Add Schedule and Edit Schedule (quiet hours): under Starts and Ends when the end is earlier than the start, so the schedule runs past midnight, such as \"Ends at 7:00 AM the next day.\"")
+        }
+        return LocalizedStringResource("Ends at \(end, format: timeStyle) the same day.",
+                                       comment: "Add Schedule and Edit Schedule (quiet hours): under Starts and Ends when the end is later than the start on the same day, such as \"Ends at 1:30 PM the same day.\"")
+    }
+
+    /// The days of the week in the calendar's order, as the sheet's checklist lists them.
+    var weekOrder: [RepeatRule.Weekday] {
+        (0..<7).compactMap { RepeatRule.Weekday(rawValue: (calendar.firstWeekday - 1 + $0) % 7 + 1) }
+    }
+
+    /// A date that stands for `day`, to format its name with `dayName`.
+    func date(of day: RepeatRule.Weekday) -> Date {
+        calendar.date(byAdding: .day, value: day.rawValue - 1, to: referenceSunday) ?? referenceSunday
+    }
+
+    /// A day's full name, as the checklist shows it: "Sunday".
+    var dayName: Date.FormatStyle { weekdayStyle(.wide) }
+
+    /// The date a time pill shows for `time`, on a day with no clock change.
+    func date(of time: TimeOfDay) -> Date {
+        onReferenceDay(time)
+    }
+
+    /// The time a pill's `date` reads on the clock.
+    func time(of date: Date) -> TimeOfDay? {
+        let parts = calendar.dateComponents([.hour, .minute], from: date)
+        return try? TimeOfDay(hour: parts.hour ?? 0, minute: parts.minute ?? 0)
+    }
+
     // MARK: Formats
 
     private var timeStyle: Date.FormatStyle {
@@ -101,9 +140,6 @@ struct QuietHoursWording {
 
     /// One date per day the schedule starts on, in the calendar's week order, standing for that weekday.
     private func weekdays(_ schedule: QuietHoursSchedule) -> [Date] {
-        (0..<7)
-            .compactMap { RepeatRule.Weekday(rawValue: (calendar.firstWeekday - 1 + $0) % 7 + 1) }
-            .filter(schedule.days.contains)
-            .compactMap { calendar.date(byAdding: .day, value: $0.rawValue - 1, to: referenceSunday) }
+        weekOrder.filter(schedule.days.contains).map(date(of:))
     }
 }

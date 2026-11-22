@@ -820,12 +820,28 @@ final class AppModel {
         }
     }
 
-    /// The Quiet Hours page's switch (#370): turns the schedule at `index` on or off and keeps it in
-    /// its place. It writes through `quietHours`, so the re-plan follows and the schedules it
-    /// replaced are kept for past Missed notes; a schedule already in that state changes nothing.
-    func setQuietHoursSchedule(at index: Int, on: Bool) {
+    /// The Quiet Hours page's switch (#370): turns the schedule `id` on or off and keeps it in its
+    /// place. Like saving and deleting, it writes through `quietHours`, so the re-plan follows and
+    /// the schedules it replaced are kept for past Missed notes; a change that leaves the schedules
+    /// as they were changes nothing.
+    func setQuietHoursSchedule(_ id: QuietHoursSchedule.ID, on: Bool) {
+        changeQuietHours { $0.switchSchedule(id, on: on) }
+    }
+
+    /// Add Schedule's and a schedule's sheet (#371): a new schedule at the end of the list, an
+    /// edited one in its place.
+    func saveQuietHoursSchedule(_ schedule: QuietHoursSchedule) {
+        changeQuietHours { $0.save(schedule) }
+    }
+
+    /// Delete Schedule (#371), once the person has confirmed it.
+    func deleteQuietHoursSchedule(_ id: QuietHoursSchedule.ID) {
+        changeQuietHours { $0.deleteSchedule(id) }
+    }
+
+    private func changeQuietHours(_ change: (inout QuietHours) -> Void) {
         var changed = quietHours
-        changed.switchSchedule(at: index, on: on)
+        change(&changed)
         quietHours = changed
     }
 

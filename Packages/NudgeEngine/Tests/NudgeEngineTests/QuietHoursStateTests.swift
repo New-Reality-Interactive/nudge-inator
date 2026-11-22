@@ -38,14 +38,6 @@ struct QuietHoursStateTests {
         #expect(engine.quietHoursState(at: NewYork.local(2026, 3, 8, 1, 30)) == .quietUntil(NewYork.local(2026, 3, 8, 3, 0)))
     }
 
-    @Test func switchingAScheduleKeepsItInItsPlace() throws {
-        var quietHours = QuietHours(schedules: [try schedule(22, 7, on: [.sunday]), try schedule(13, 15, on: [.monday])])
-        quietHours.switchSchedule(at: 0, on: false)
-        quietHours.switchSchedule(at: 5, on: false)
-        #expect(quietHours.schedules.map(\.isOn) == [false, true])
-        #expect(quietHours.schedules.map(\.start) == [try TimeOfDay(hour: 22), try TimeOfDay(hour: 13)])
-    }
-
     @Test func overlappingWindowsHoldUntilTheLaterEnd() throws {
         let engine = engine([try schedule(22, 7, on: [.sunday]), try schedule(23, 8, on: [.sunday])])
         #expect(engine.quietHoursState(at: NewYork.local(2026, 11, 15, 23, 30)) == .quietUntil(NewYork.local(2026, 11, 16, 8, 0)))

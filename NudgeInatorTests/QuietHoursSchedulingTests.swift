@@ -397,14 +397,16 @@ final class QuietHoursSchedulingTests {
 
     @Test func savingTheSameScheduleAgainChangesNothing() async throws {
         let model = try await launchedModel()
-        model.quietHours = try window((9, 20), to: (23, 59))
+        let saved = try window((9, 20), to: (23, 59))
+        model.quietHours = saved
         model.add(call)
         await model.waitUntilApplied()
         let added = center.added.count
         let scheduled = manager.scheduleCalls.count
         let cancelled = manager.cancelledIDs.count
 
-        model.quietHours = try window((9, 20), to: (23, 59))
+        // The same schedule, identity included, as a sheet saved with no change writes it.
+        model.quietHours = saved
         await model.waitUntilApplied()
 
         #expect(center.added.count == added)
