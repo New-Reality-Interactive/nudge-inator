@@ -54,6 +54,19 @@ struct QuietHoursScheduleDraftTests {
         #expect(draft.hasChanges)
     }
 
+    /// Edit Schedule's Schedule switch (the approved schedule switch mockup): an edit like the rest,
+    /// kept on Save, and a change Cancel asks about.
+    @Test func theScheduleSwitchIsKeptOnSave() throws {
+        var draft = QuietHoursScheduleDraft(editing: saved)
+        #expect(!draft.isOn)
+        draft.isOn = true
+        #expect(draft.hasChanges)
+        #expect(try #require(draft.schedule).isOn)
+        draft.isOn = false
+        #expect(!draft.hasChanges)
+        #expect(try !#require(draft.schedule).isOn)
+    }
+
     @Test func changingAndChangingBackIsNoChange() {
         var draft = QuietHoursScheduleDraft(editing: saved)
         draft.toggle(.monday)

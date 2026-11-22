@@ -2,13 +2,16 @@ import Foundation
 import NudgeEngine
 
 /// What Add Schedule's or a schedule's sheet holds while the person changes it (#371, the approved
-/// Quiet Hours page mockup): the start, the end and the days, and what stops Save. A new schedule
-/// starts at 10:00 PM to 7:00 AM, every day, on; an edited one starts as saved and keeps its
-/// identity and its switch.
+/// Quiet Hours page mockup): the start, the end, the days, the switch, and what stops Save. A new
+/// schedule starts at 10:00 PM to 7:00 AM, every day, on; an edited one starts as saved and keeps
+/// its identity. Edit Schedule's Schedule switch writes `isOn`, kept on Save like the rest (the
+/// approved schedule switch mockup).
 struct QuietHoursScheduleDraft {
     var start: TimeOfDay
     var end: TimeOfDay
     private(set) var days: Set<RepeatRule.Weekday>
+    /// Whether the schedule is on. Only Edit Schedule shows it; a new schedule is saved on.
+    var isOn: Bool
 
     /// The schedule being edited, as it was saved, or nil for a new one.
     let saved: QuietHoursSchedule?
@@ -16,6 +19,7 @@ struct QuietHoursScheduleDraft {
     private let openedStart: TimeOfDay
     private let openedEnd: TimeOfDay
     private let openedDays: Set<RepeatRule.Weekday>
+    private let openedIsOn: Bool
     /// A new schedule's identity, made once so saving a draft twice can't add two schedules.
     private let newID = UUID()
 
@@ -39,21 +43,23 @@ struct QuietHoursScheduleDraft {
     /// A new schedule.
     init() {
         self.init(start: TimeOfDay(wrappingMinutes: 22 * 60), end: TimeOfDay(wrappingMinutes: 7 * 60),
-                  days: Set(RepeatRule.Weekday.allCases), saved: nil)
+                  days: Set(RepeatRule.Weekday.allCases), isOn: true, saved: nil)
     }
 
     init(editing schedule: QuietHoursSchedule) {
-        self.init(start: schedule.start, end: schedule.end, days: schedule.days, saved: schedule)
+        self.init(start: schedule.start, end: schedule.end, days: schedule.days, isOn: schedule.isOn, saved: schedule)
     }
 
-    private init(start: TimeOfDay, end: TimeOfDay, days: Set<RepeatRule.Weekday>, saved: QuietHoursSchedule?) {
+    private init(start: TimeOfDay, end: TimeOfDay, days: Set<RepeatRule.Weekday>, isOn: Bool, saved: QuietHoursSchedule?) {
         self.start = start
         self.end = end
         self.days = days
+        self.isOn = isOn
         self.saved = saved
         openedStart = start
         openedEnd = end
         openedDays = days
+        openedIsOn = isOn
     }
 
     var isNew: Bool { saved == nil }
@@ -74,11 +80,12 @@ struct QuietHoursScheduleDraft {
     /// The schedule Save writes, or nil while a problem stops it.
     var schedule: QuietHoursSchedule? {
         guard problems.isEmpty else { return nil }
-        return try? QuietHoursSchedule(id: saved?.id ?? newID, start: start, end: end, days: days, isOn: saved?.isOn ?? true)
+        return try? QuietHoursSchedule(id: saved?.id ?? newID, start: start, end: end, days: days, isOn: isOn)
     }
 
-    /// Whether Cancel would lose anything: the times or days differ from what the sheet opened with.
+    /// Whether Cancel would lose anything: the times, days or switch differ from what the sheet
+    /// opened with.
     var hasChanges: Bool {
-        start != openedStart || end != openedEnd || days != openedDays
+        start != openedStart || end != openedEnd || days != openedDays || isOn != openedIsOn
     }
 }

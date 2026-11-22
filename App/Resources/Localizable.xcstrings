@@ -2605,7 +2605,7 @@
       "comment" : "Edit Schedule (quiet hours): the confirm button (a checkmark) that saves the changes.\nThe Edit Reminder form's confirm button (a checkmark)."
     },
     "Schedule" : {
-      "comment" : "Reminder details: section header for when and how the reminder nudges."
+      "comment" : "Edit Schedule (quiet hours): the switch that turns the schedule on or off, kept when the person saves.\nReminder details: section header for when and how the reminder nudges."
     },
     "Schedules" : {
       "comment" : "Quiet Hours page: header of the list of quiet hours schedules."

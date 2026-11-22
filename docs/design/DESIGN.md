@@ -833,7 +833,9 @@ What the Quiet Hours page mockup (`docs/mockups/2026-11-21-quiet-hours-page/`, #
   Settings row with a `{colors.tile-blue}` tile and `plus`, its label in the accent color (#371).
 - **A schedule's sheet** (#371): tapping a schedule's words opens Edit Schedule; VoiceOver has an
   Edit action on the row instead. Add Schedule and Edit Schedule are a sheet with the inline title,
-  Cancel (`xmark`, asks before discarding changes) and Add or Save (`checkmark`). Starts and Ends
+  Cancel (`xmark`, asks before discarding changes) and Add or Save (`checkmark`). Edit Schedule
+  opens with a Schedule switch, in a section of its own with no heading, kept on Save like every
+  other edit; Add Schedule has none, since a new schedule is saved on. Starts and Ends
   are compact time pickers; their footer says "Ends at 7:00 AM the next day." (or "the same day."),
   or, in `{colors.negative}`, "The start and end are the same. Change one to save." Days is a
   checklist of full day names in the calendar's week order, its footer on what a day means, and

@@ -14,7 +14,9 @@ enum QuietHoursSheetKind: Identifiable {
     }
 }
 
-/// Add Schedule and Edit Schedule (#371, the approved Quiet Hours page mockup): Starts and Ends as
+/// Add Schedule and Edit Schedule (#371, the approved Quiet Hours page mockup): for a schedule that
+/// exists, a Schedule switch first, in a section of its own with no heading, kept on Save like every
+/// other edit (the approved schedule switch mockup); then Starts and Ends as
 /// compact time pills, as the reminder form's Starts row, with a line on when it ends; the days as
 /// a checklist in the calendar's week order; and, for a schedule that exists, Delete Schedule,
 /// which asks first. Add or Save stays off while the start equals the end or no day is checked,
@@ -46,6 +48,7 @@ struct QuietHoursScheduleSheet: View {
     var body: some View {
         NavigationStack {
             Form {
+                if !draft.isNew { switchSection }
                 timesSection
                 daysSection
                 if delete != nil { deleteSection }
@@ -68,6 +71,14 @@ struct QuietHoursScheduleSheet: View {
         }
         // A swipe down mustn't lose a change; Cancel asks first instead.
         .interactiveDismissDisabled(draft.hasChanges)
+    }
+
+    private var switchSection: some View {
+        Section {
+            Toggle(isOn: $draft.isOn) {
+                Text("Schedule", comment: "Edit Schedule (quiet hours): the switch that turns the schedule on or off, kept when the person saves.")
+            }
+        }
     }
 
     private var timesSection: some View {
