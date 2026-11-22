@@ -3,8 +3,8 @@ import SwiftUI
 
 /// Settings' Quiet Hours page (#370, the approved Quiet Hours page mockup): the schedules in the
 /// order they were added, each its times, its days under them, and a switch. Off keeps a schedule,
-/// its times dimmed; on again brings it back. Tapping a schedule's words opens its sheet (#371), and
-/// Add Schedule follows the list. With none, an empty state with its own Add Schedule.
+/// its times dimmed; on again brings it back. Tapping a schedule's words opens its sheet (#371).
+/// Add Schedule is the bar's plus. With none, an empty state points at it.
 struct QuietHoursPage: View {
     /// What previews show and change, since they have no app model.
     var previewQuietHours = QuietHours()
@@ -23,6 +23,14 @@ struct QuietHoursPage: View {
         }
         .navigationTitle(Text(Self.title))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            // Add Schedule is the bar's plus, as the Tags tab's New Tag; the empty state points at it.
+            ToolbarItem(placement: .primaryAction) {
+                Button { openSheet = .add } label: {
+                    Label { Text(QuietHoursScheduleSheet.addTitle) } icon: { Image(systemName: "plus") }
+                }
+            }
+        }
         .sheet(item: $openSheet) { kind in
             QuietHoursScheduleSheet(kind: kind, schedules: quietHours.schedules, wording: wording, save: save, delete: delete)
         }
@@ -44,67 +52,73 @@ struct QuietHoursPage: View {
         }
     }
 
+    /// Built by hand, as `ContentUnavailableView` would draw it, since a list row gives that view
+    /// unlimited height (it stretched this page's old Add Schedule button into a tall pill).
     private var emptyState: some View {
         Section {
-            ContentUnavailableView {
+            VStack(spacing: Design.Spacing.s2) {
                 EmptyStateLabel(systemImage: "bell.slash") {
                     Text("No Schedules", comment: "Quiet Hours page: title of the empty state, with no quiet hours schedule.")
                 }
-            } description: {
-                Text("Add a schedule, and no nudge arrives while it runs.", comment: "Quiet Hours page: under \"No Schedules\".")
-            } actions: {
-                Button { openSheet = .add } label: {
-                    Label { Text(QuietHoursScheduleSheet.addTitle) } icon: { Image(systemName: "plus") }
-                }
-                .buttonStyle(.bordered)
+                .labelStyle(EmptyStateTitleStyle())
+                Text("Tap + to add a schedule, and no nudge arrives while it runs.", comment: "Quiet Hours page: under \"No Schedules\", pointing at the plus in the navigation bar.")
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
             }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Design.Spacing.s4)
             .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+        }
+    }
+
+    /// The empty state's icon above its title, as `ContentUnavailableView` stacks them.
+    private struct EmptyStateTitleStyle: LabelStyle {
+        func makeBody(configuration: Configuration) -> some View {
+            VStack(spacing: Design.Spacing.s2) {
+                configuration.icon.font(.largeTitle).foregroundStyle(.secondary)
+                configuration.title.font(.title2.bold())
+            }
         }
     }
 
     @ViewBuilder private var scheduleSections: some View {
-            Section {
-                // In the order they were added; each row is its schedule's, by identity (#371).
-                ForEach(quietHours.schedules) { schedule in
-                    Toggle(isOn: isOn(schedule.id)) {
-                        SettingsRow(
-                            tile: .tileGray,
-                            symbol: "clock",
-                            title: Text(wording.range(schedule)),
-                            titleColor: schedule.isOn ? Color(uiColor: .label) : Color(uiColor: .secondaryLabel),
-                            value: Text(wording.days(schedule)),
-                            valueFont: .subheadline
-                        )
-                        // The words open the schedule's sheet; the switch stays the switch's. A tap
-                        // gesture, not a button, so the row stays one VoiceOver element.
-                        .contentShape(Rectangle())
-                        .onTapGesture { openSheet = .edit(schedule) }
-                    }
-                    // One element: the schedule's words, then the switch's state, with Edit as an action.
-                    .accessibilityLabel(Text(wording.spoken(schedule)))
-                    .accessibilityAction(named: Text("Edit", comment: "Quiet Hours page: a schedule row's VoiceOver action that opens its Edit Schedule sheet.")) {
-                        openSheet = .edit(schedule)
-                    }
+        Section {
+            // In the order they were added; each row is its schedule's, by identity (#371).
+            ForEach(quietHours.schedules) { schedule in
+                Toggle(isOn: isOn(schedule.id)) {
+                    SettingsRow(
+                        tile: .tileGray,
+                        symbol: "clock",
+                        title: Text(wording.range(schedule)),
+                        titleColor: schedule.isOn ? Color(uiColor: .label) : Color(uiColor: .secondaryLabel),
+                        value: Text(wording.days(schedule)),
+                        valueFont: .subheadline
+                    )
+                    // The words open the schedule's sheet; the switch stays the switch's. A tap
+                    // gesture, not a button, so the row stays one VoiceOver element.
+                    .contentShape(Rectangle())
+                    .onTapGesture { openSheet = .edit(schedule) }
                 }
-            } header: {
-                Text("Schedules", comment: "Quiet Hours page: header of the list of quiet hours schedules.")
-            } footer: {
-                VStack(alignment: .leading, spacing: Design.Spacing.s2) {
-                    if quietHours.quietNowSince != nil {
-                        Text("Quiet Now is holding every nudge. These schedules apply again when you turn it off.",
-                             comment: "Quiet Hours page: under the schedules while Quiet Now is on.")
-                    }
-                    Text("Turn a schedule off to keep it for later.", comment: "Quiet Hours page: under the schedules.")
-                    Text("No nudge arrives during quiet hours, alarms included. A nudge held this way counts as one you didn't answer, so a reminder can still end as Missed.",
-                         comment: "Quiet Hours page: under the schedules, what quiet hours do.")
+                // One element: the schedule's words, then the switch's state, with Edit as an action.
+                .accessibilityLabel(Text(wording.spoken(schedule)))
+                .accessibilityAction(named: Text("Edit", comment: "Quiet Hours page: a schedule row's VoiceOver action that opens its Edit Schedule sheet.")) {
+                    openSheet = .edit(schedule)
                 }
             }
-            // No footer: what quiet hours do stays under Schedules (#370's review).
-            Section {
-                Button { openSheet = .add } label: {
-                    SettingsRow(tile: .tileBlue, symbol: "plus", title: Text(QuietHoursScheduleSheet.addTitle), titleColor: .accentColor)
+        } header: {
+            Text("Schedules", comment: "Quiet Hours page: header of the list of quiet hours schedules.")
+        } footer: {
+            VStack(alignment: .leading, spacing: Design.Spacing.s2) {
+                if quietHours.quietNowSince != nil {
+                    Text("Quiet Now is holding every nudge. These schedules apply again when you turn it off.",
+                         comment: "Quiet Hours page: under the schedules while Quiet Now is on.")
                 }
+                Text("Turn a schedule off to keep it for later.", comment: "Quiet Hours page: under the schedules.")
+                Text("No nudge arrives during quiet hours, alarms included. A nudge held this way counts as one you didn't answer, so a reminder can still end as Missed.",
+                     comment: "Quiet Hours page: under the schedules, what quiet hours do.")
             }
+        }
     }
 
     /// The page's title, and the Settings row that opens it.

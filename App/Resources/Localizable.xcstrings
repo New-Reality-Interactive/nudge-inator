@@ -904,9 +904,6 @@
     "Add Schedule" : {
       "comment" : "Title of the sheet that adds a quiet hours schedule, and the Quiet Hours page's button that opens it."
     },
-    "Add a schedule, and no nudge arrives while it runs." : {
-      "comment" : "Quiet Hours page: under \"No Schedules\"."
-    },
     "Add a title to save." : {
       "comment" : "Under the reminder form's title when it is empty, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name."
     },
@@ -2834,6 +2831,9 @@
     },
     "Tags: %@" : {
       "comment" : "VoiceOver label of a reminder's tags on its details. The placeholder lists them, such as \"#home and #errands\"."
+    },
+    "Tap + to add a schedule, and no nudge arrives while it runs." : {
+      "comment" : "Quiet Hours page: under \"No Schedules\", pointing at the plus in the navigation bar."
     },
     "Tap + to make one. Every reminder you make shows here, whatever its state." : {
       "comment" : "Reminders tab: under the title when there are no reminders at all."
