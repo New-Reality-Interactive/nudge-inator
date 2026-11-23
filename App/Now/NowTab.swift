@@ -27,6 +27,7 @@ struct NowTab: View {
                     } openDetails: { reminderID in
                         path.append(OpenedReminder(id: reminderID))
                     }
+                    .quietHoursHolding(model, at: context.date)
                 }
             }
             .navigationTitle(Text(AppTab.now.title))
@@ -161,6 +162,7 @@ private struct NowHeader: View {
             if let reach {
                 PermissionBanners(reach: reach)
             }
+            QuietHoursBannerView()
             Text("Nudging", comment: "Now: section header for the reminders nudging you now.")
                 .font(.title3.bold())
                 // The label color, as the mockup's big section header: a list header's own

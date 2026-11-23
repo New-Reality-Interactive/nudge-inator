@@ -25,5 +25,25 @@ extension SeedSet {
         settings: [.quietHours: ""],
         reminders: []
     )
+
+    /// #499's holding banner check: one schedule on every day from 12:00 AM to 11:59 PM, so it runs
+    /// whenever the check is loaded, and a few reminders so Now, My Day and Reminders have content.
+    /// Quiet Now, the schedule's switch and a schedule made by hand for the minute it starts are the
+    /// check's own steps; `clean` puts back the schedules the phone had and turns Quiet Now off.
+    static let quietHoursBanner = SeedSet(
+        name: "quiet-hours-banner",
+        settings: [.quietHours: "00:00-23:59 SU,MO,TU,WE,TH,FR,SA on"],
+        reminders: [
+            SeedReminder(id: SeedReminder.fixedID(67), title: "Stretch break", dueIn: -10 * 60, createdAgo: 2 * 86400),
+            SeedReminder(id: SeedReminder.fixedID(68), title: "Book the car service", dueIn: 2 * 86400, createdAgo: 86400),
+        ]
+    )
+
+    /// The same check's empty states: the schedule, and no reminders.
+    static let quietHoursBannerEmpty = SeedSet(
+        name: "quiet-hours-banner-empty",
+        settings: [.quietHours: "00:00-23:59 SU,MO,TU,WE,TH,FR,SA on"],
+        reminders: []
+    )
 }
 #endif

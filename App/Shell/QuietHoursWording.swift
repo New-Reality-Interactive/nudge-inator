@@ -56,6 +56,20 @@ struct QuietHoursWording {
         }
     }
 
+    /// The line under the holding banner's title on Now, My Day and Reminders (#499, the approved
+    /// Quiet hours banner mockup), or nil while nothing is held. It reads as Settings' row does:
+    /// Quiet Now is until the person turns it off, whatever the schedules say, and a running schedule
+    /// is until its end. Not tappable, so it says where to change quiet hours, in words alone.
+    func holdingBannerDetail(_ state: QuietHoursState, quietNowSince: Date?) -> LocalizedStringResource? {
+        if quietNowSince != nil {
+            return LocalizedStringResource("Until you turn it off. Change this in Settings, under Quiet Hours.",
+                                           comment: "Banner on Now, My Day and Reminders while Quiet Now is holding every nudge, under its title. Names where to change it: Settings, then the Quiet Hours row. Not a button.")
+        }
+        guard case .quietUntil(let end) = state else { return nil }
+        return LocalizedStringResource("Until \(end, format: timeStyle). Change this in Settings, under Quiet Hours.",
+                                       comment: "Banner on Now, My Day and Reminders while a quiet hours schedule is holding nudges, under its title, with the time they get through again, such as \"Until 7:00 AM.\" Names where to change it: Settings, then the Quiet Hours row. Not a button.")
+    }
+
     /// Under the Quiet Now switch: what it does, or since when it has been on.
     func quietNowFooter(since: Date?) -> LocalizedStringResource {
         guard let since else {

@@ -104,4 +104,33 @@ struct QuietHoursWordingTests {
     @Test func aStartPastTheHourKeepsItsMinutes() throws {
         #expect(english(wording.range(try schedule(18, 21, on: [.tuesday], startMinute: 30))) == "6:30\u{202F}PM–9:00\u{202F}PM")
     }
+
+    // The holding banner on Now, My Day and Reminders (#499).
+
+    @Test func whileAScheduleRunsTheBannerSaysUntilWhenAndWhereToChangeIt() throws {
+        let detail = try #require(wording.holdingBannerDetail(.quietUntil(monday(7)), quietNowSince: nil))
+        #expect(english(detail) == "Until 7:00\u{202F}AM. Change this in Settings, under Quiet Hours.")
+    }
+
+    @Test func whileQuietNowIsOnTheBannerSaysUntilYouTurnItOff() throws {
+        let detail = try #require(wording.holdingBannerDetail(.off, quietNowSince: monday(8)))
+        #expect(english(detail) == "Until you turn it off. Change this in Settings, under Quiet Hours.")
+    }
+
+    /// Settings' row reads On, whatever the schedules say, while Quiet Now is on; so does the banner.
+    @Test func quietNowWinsOverARunningSchedule() throws {
+        let detail = try #require(wording.holdingBannerDetail(.quietUntil(monday(7)), quietNowSince: monday(6)))
+        #expect(english(detail) == "Until you turn it off. Change this in Settings, under Quiet Hours.")
+    }
+
+    @Test func theBannerAgreesWithTheRowsUntil() throws {
+        let state = QuietHoursState.quietUntil(monday(9, 30))
+        let detail = try #require(wording.holdingBannerDetail(state, quietNowSince: nil))
+        #expect(english(detail).hasPrefix(english(wording.row(state, quietNowSince: nil, now: monday(8)).text)))
+    }
+
+    @Test(arguments: [QuietHoursState.off, .startsAt(Date(timeIntervalSince1970: 1_700_000_000))])
+    func withNothingHeldThereIsNoBanner(state: QuietHoursState) {
+        #expect(wording.holdingBannerDetail(state, quietNowSince: nil) == nil)
+    }
 }

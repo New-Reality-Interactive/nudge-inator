@@ -883,6 +883,13 @@ final class AppModel {
         engine.quietHoursState(at: date)
     }
 
+    /// The line under the holding banner's title on Now, My Day and Reminders at `date`, or nil
+    /// while nothing is held: the same state and Quiet Now that Settings' row reads (#499).
+    func quietHoursHoldingDetail(at date: Date) -> LocalizedStringResource? {
+        QuietHoursWording(calendar: .autoupdatingCurrent)
+            .holdingBannerDetail(quietHoursState(at: date), quietNowSince: quietHours.quietNowSince)
+    }
+
     /// Settings' Send a Test Nudge (ticket 30): one ordinary notification a few seconds away. It is
     /// no reminder's, so the engine and the store know nothing of it.
     func sendTestNudge() async {
