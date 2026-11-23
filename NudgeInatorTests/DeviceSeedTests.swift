@@ -63,6 +63,24 @@ final class DeviceSeedTests {
         #expect(SeedSettingText.quietHours(from: noneText) == QuietHours())
     }
 
+    /// #379's alarm sets: the window is written as text the app reads, on every day, in the
+    /// phone's own time zone, so the schedule is on at the minute the load falls in.
+    @Test(arguments: ["quiet-hours-window", "quiet-hours-ringing", "quiet-hours-edit"])
+    func aTimedWindowIsWrittenAsOneScheduleTheAppReads(name: String) throws {
+        let set = try #require(SeedSet.all.first { $0.name == name })
+        let window = try #require(set.quietWindow)
+        let load = Date()
+        let times = window.times(from: load, calendar: .current)
+
+        let text = window.text(from: load, calendar: .current)
+
+        let schedule = try #require(SeedSettingText.quietHours(from: text)?.schedules.first)
+        #expect(schedule.isOn)
+        #expect(schedule.days == Set(RepeatRule.Weekday.allCases))
+        #expect(schedule.start == times.start)
+        #expect(schedule.end == times.end)
+    }
+
     /// #468's phone check: the tutorial unseen, so the Quiet Hours page opens it, over the page's
     /// three schedules.
     @Test func theQuietHoursTutorialSetLeavesTheTutorialUnseenOverThePagesSchedules() throws {

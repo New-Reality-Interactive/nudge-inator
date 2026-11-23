@@ -61,7 +61,11 @@ public enum DeviceSeed {
 
         // Only the first load of a setting keeps its value, whichever set that is: a later load,
         // of this set or another, would save a seeded value as the original.
-        for (setting, value) in set.settings {
+        var settings = set.settings
+        if let window = set.quietWindow {
+            settings[.quietHours] = window.text(from: target.now, calendar: .current)
+        }
+        for (setting, value) in settings {
             let keptByAnotherSet = otherSets.contains { $0.earlierSettings[setting.rawValue] != nil }
             if loaded.earlierSettings[setting.rawValue] == nil, !keptByAnotherSet {
                 loaded.earlierSettings[setting.rawValue] = target.setting(setting)

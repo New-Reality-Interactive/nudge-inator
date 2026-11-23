@@ -41,6 +41,12 @@ public struct SeedReminder: Sendable {
     public var origin: ReminderOrigin
     /// Default Alarm unless a set gives a tone (#458's set).
     public var alarmSound: AlarmSound
+    /// Escalating unless a set gives a shorter wait, so a check needn't sit through a ladder's waits.
+    public var pace: Pace
+    /// Off unless a set rings on purpose (#379): with it on, a Firm or Relentless reminder's Urgent
+    /// nudges are real AlarmKit alarms, which uninstalling the app doesn't remove, so `clean` is
+    /// what cancels them. Only the sets the tests name may turn it on.
+    public var breakThroughFocus: Bool
 
     public init(
         id: UUID,
@@ -52,7 +58,9 @@ public struct SeedReminder: Sendable {
         strength: Strength = .gentle,
         repeatRule: RepeatRule? = nil,
         origin: ReminderOrigin = .mine,
-        alarmSound: AlarmSound = .default
+        alarmSound: AlarmSound = .default,
+        pace: Pace = .escalating,
+        breakThroughFocus: Bool = false
     ) {
         self.id = id
         self.title = title
@@ -64,6 +72,8 @@ public struct SeedReminder: Sendable {
         self.repeatRule = repeatRule
         self.origin = origin
         self.alarmSound = alarmSound
+        self.pace = pace
+        self.breakThroughFocus = breakThroughFocus
     }
 
     /// A reminder ID that never changes, so the same set always has the same IDs. `number` is
@@ -85,7 +95,8 @@ public struct SeedReminder: Sendable {
             dueTime: Self.wholeMinute(of: now.addingTimeInterval(dueIn)),
             repeatRule: repeatRule,
             strength: strength,
-            breakThroughFocus: false,
+            pace: pace,
+            breakThroughFocus: breakThroughFocus,
             alarmSound: alarmSound,
             createdAt: now.addingTimeInterval(-createdAgo),
             origin: origin
@@ -107,6 +118,39 @@ public struct SeedQuietSpan: Sendable {
     }
 }
 
+/// A quiet hours schedule timed from the load (#379), for a check of what a window does to nudges
+/// that are due minutes away: on every day, from `startIn` seconds after the load, rounded down to
+/// the whole minute as a due time is, and lasting `length`. It replaces the person's schedules for
+/// the check, and `clean` puts them back.
+public struct SeedQuietWindow: Equatable, Sendable {
+    public var startIn: TimeInterval
+    public var length: TimeInterval
+
+    public init(startIn: TimeInterval, length: TimeInterval) {
+        self.startIn = startIn
+        self.length = length
+    }
+
+    /// The schedule's start and end as the clock reads them. The end is not included, and a window
+    /// that crosses midnight wraps onto the next day's clock.
+    public func times(from load: Date, calendar: Calendar) -> (start: TimeOfDay, end: TimeOfDay) {
+        let start = Date(timeIntervalSinceReferenceDate: (load.addingTimeInterval(startIn).timeIntervalSinceReferenceDate / 60).rounded(.down) * 60)
+        return (clock(start, calendar), clock(start.addingTimeInterval(length), calendar))
+    }
+
+    private func clock(_ date: Date, _ calendar: Calendar) -> TimeOfDay {
+        let parts = calendar.dateComponents([.hour, .minute], from: date)
+        return TimeOfDay(wrappingMinutes: (parts.hour ?? 0) * 60 + (parts.minute ?? 0))
+    }
+
+    /// As `SeedSettingText` in the app reads a schedule: `22:00-07:00 SU,MO,TU,WE,TH,FR,SA on`.
+    func text(from load: Date, calendar: Calendar) -> String {
+        let times = times(from: load, calendar: calendar)
+        func clock(_ time: TimeOfDay) -> String { String(format: "%02d:%02d", time.hour, time.minute) }
+        return "\(clock(times.start))-\(clock(times.end)) SU,MO,TU,WE,TH,FR,SA on"
+    }
+}
+
 /// A named set of test data for one manual device check. Add one by writing a file like
 /// `SearchSet.swift` and listing it in `SeedSet.all`.
 public struct SeedSet: Sendable {
@@ -118,6 +162,9 @@ public struct SeedSet: Sendable {
     public var settings: [SeedSetting: String]
     /// A span before the load that reads as quiet hours, or `nil`.
     public var quietHoursBefore: SeedQuietSpan?
+    /// A schedule timed from the load, or `nil`. It is written as the `quietHours` setting, so it
+    /// replaces any `settings` value for it.
+    public var quietWindow: SeedQuietWindow?
     public var reminders: [SeedReminder]
 
     public init(
@@ -125,18 +172,20 @@ public struct SeedSet: Sendable {
         tags: [String] = [],
         settings: [SeedSetting: String] = [:],
         quietHoursBefore: SeedQuietSpan? = nil,
+        quietWindow: SeedQuietWindow? = nil,
         reminders: [SeedReminder]
     ) {
         self.name = name
         self.tags = tags
         self.settings = settings
         self.quietHoursBefore = quietHoursBefore
+        self.quietWindow = quietWindow
         self.reminders = reminders
     }
 }
 
 extension SeedSet {
     /// Every set a launch can name.
-    public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .nameOrder, .deliveredNudges, .keptOrder, .received, .fromOthers, .rowSwipes, .urgencyCards, .alarmSound, .detailsSound, .useForAll, .missedNote, .quietHoursPage, .quietHoursNone, .quietHoursTutorial, .quietHoursBanner, .quietHoursBannerEmpty]
+    public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .nameOrder, .deliveredNudges, .keptOrder, .received, .fromOthers, .rowSwipes, .urgencyCards, .alarmSound, .detailsSound, .useForAll, .missedNote, .quietHoursPage, .quietHoursNone, .quietHoursTutorial, .quietHoursBanner, .quietHoursBannerEmpty, .quietHoursWindow, .quietHoursRinging, .quietHoursEdit, .quietHoursQuietNow]
 }
 #endif

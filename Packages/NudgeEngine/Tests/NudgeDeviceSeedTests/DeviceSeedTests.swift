@@ -344,13 +344,22 @@ struct DeviceSeedTests {
         #expect(Set(ids).count == ids.count)
     }
 
-    @Test func noShippedReminderCanScheduleAnAlarm() {
-        // Relentless always breaks through Focus, and an alarm outlives an uninstall.
-        // The one exception is `urgency-cards` (#442): Urgent on Relentless is a card to look at.
-        // A seed schedules no alarm, and `clean` removes it.
-        let sets = SeedSet.all.filter { $0.name != "urgency-cards" }
+    /// The sets whose reminders ring on purpose, by the developer's go of 2026-11-22 (#379): the
+    /// device checks of what quiet hours do to real alarms. Each cancels its alarms in `clean`.
+    static let setsThatRing: Set<String> = ["urgency-cards", "quiet-hours-window", "quiet-hours-ringing", "quiet-hours-edit", "quiet-hours-quiet-now"]
+
+    @Test func noShippedReminderCanScheduleAnAlarmExceptInTheNamedSets() {
+        // Relentless always breaks through Focus, and an alarm outlives an uninstall, so a set
+        // schedules none, and `clean` removes it, unless it is named in `setsThatRing`:
+        // `urgency-cards` (#442: Urgent on Relentless is a card to look at) and the quiet hours
+        // alarm sets (#379).
+        let sets = SeedSet.all.filter { !Self.setsThatRing.contains($0.name) }
         let reminders = sets.flatMap(\.reminders).map { $0.reminder(tagIDs: [], now: target.now) }
         #expect(reminders.allSatisfy { !$0.breakThroughFocus && $0.strength != .relentless })
+    }
+
+    @Test func everyNamedRingingSetIsShipped() {
+        #expect(Self.setsThatRing.isSubset(of: Set(SeedSet.all.map(\.name))))
     }
 
     @Test(arguments: SeedSet.all)
@@ -372,5 +381,72 @@ struct DeviceSeedTests {
 
         #expect(target.reminders.map(\.id) == [before.id])
         #expect(target.tags.isEmpty)
+    }
+}
+
+// MARK: A quiet window timed from the load, and a reminder that rings (#379)
+
+@MainActor
+struct SeedQuietWindowTests {
+    let target = FakeTarget()
+    let store = MemoryRecordStore()
+
+    static let window = SeedSet(
+        name: "window",
+        quietWindow: SeedQuietWindow(startIn: 3 * 60, length: 6 * 60),
+        reminders: [
+            SeedReminder(id: SeedReminder.fixedID(105), title: "Rings", dueIn: -120, strength: .firm, pace: .consistent(wait: 120), breakThroughFocus: true),
+        ]
+    )
+
+    @Test func aSeedReminderKeepsItsPaceAndBreakThroughFocus() {
+        let rings = Self.window.reminders[0].reminder(tagIDs: [], now: target.now)
+
+        #expect(rings.breakThroughFocus)
+        #expect(rings.pace == .consistent(wait: 120))
+        let plain = SeedReminder(id: SeedReminder.fixedID(106), title: "Quiet", dueIn: 60).reminder(tagIDs: [], now: target.now)
+        #expect(!plain.breakThroughFocus)
+        #expect(plain.pace == .escalating)
+    }
+
+    @Test func theWindowStartsAndEndsOnWholeMinutesCountedFromTheLoad() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let load = target.now + 41  // 00:00:41 after a whole minute
+
+        let times = Self.window.quietWindow!.times(from: load, calendar: calendar)
+
+        let startMinute = calendar.component(.minute, from: target.now)
+        #expect(times.start == (try TimeOfDay(hour: calendar.component(.hour, from: target.now), minute: startMinute + 3)))
+        #expect(times.end == (try TimeOfDay(hour: calendar.component(.hour, from: target.now), minute: startMinute + 9)))
+    }
+
+    @Test func aWindowThatCrossesMidnightWrapsOntoTheClock() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let lateEvening = try #require(calendar.date(from: DateComponents(year: 2026, month: 11, day: 22, hour: 23, minute: 58, second: 20)))
+
+        let times = SeedQuietWindow(startIn: 0, length: 5 * 60).times(from: lateEvening, calendar: calendar)
+
+        #expect(times.start == (try TimeOfDay(hour: 23, minute: 58)))
+        #expect(times.end == (try TimeOfDay(hour: 0, minute: 3)))
+    }
+
+    @Test func loadingWritesTheWindowAsTheQuietHoursSchedule() {
+        _ = DeviceSeed.run(command: "window", sets: [Self.window], on: target, record: store)
+
+        let times = Self.window.quietWindow!.times(from: target.now, calendar: .current)
+        func clock(_ time: TimeOfDay) -> String { String(format: "%02d:%02d", time.hour, time.minute) }
+        #expect(target.setting(.quietHours) == "\(clock(times.start))-\(clock(times.end)) SU,MO,TU,WE,TH,FR,SA on")
+    }
+
+    @Test func cleanPutsTheEarlierSchedulesBack() {
+        target.setSetting(.quietHours, to: "22:00-07:00 SU on")
+
+        _ = DeviceSeed.run(command: "window", sets: [Self.window], on: target, record: store)
+        _ = DeviceSeed.run(command: "clean", sets: [Self.window], on: target, record: store)
+
+        #expect(target.setting(.quietHours) == "22:00-07:00 SU on")
+        #expect(target.reminders.isEmpty)
     }
 }
