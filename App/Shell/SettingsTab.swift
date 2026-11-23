@@ -209,15 +209,15 @@ struct SettingsTab: View {
         }
     }
 
-    /// A permission row as a button that opens where its permission is changed (#372), with a
-    /// spoken hint that it leaves the app.
+    /// A permission row as a button that opens where its permission is changed (#372). It is the
+    /// way to iOS Settings from this section: there is no separate row for it.
     private func permissionRow(_ row: SettingsStatus.PermissionRow, @ViewBuilder label: () -> some View) -> some View {
         Button {
             row.opensSettings.open()
         } label: {
             label()
         }
-        .accessibilityHint(Text(row.hint))
+        .accessibilityHint(row.hint)
     }
 
     private var nudgesSection: some View {
@@ -251,19 +251,6 @@ struct SettingsTab: View {
                     status: status.badges.text,
                     accessory: .chevron
                 )
-            }
-            if let openSettings = status.openSettings {
-                Button {
-                    openSettings.open()
-                } label: {
-                    SettingsRow(
-                        tile: .tileGray,
-                        symbol: "gearshape",
-                        title: Text("Open iOS Settings", comment: "Settings: row that opens the app's page in the iOS Settings app, where notifications, alarms and badges can be turned on."),
-                        titleColor: .accentColor,
-                        accessory: .chevron
-                    )
-                }
             }
             Button(action: sendTestNudge) {
                 SettingsRow(

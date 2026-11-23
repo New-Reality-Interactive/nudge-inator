@@ -16,9 +16,10 @@ last tab; the three rows are at the top of its Nudges section.
 - **Where they go:** Notifications and Badges open the app's notification settings in iOS Settings;
   Alarms opens the app's own page there, since alarms are reached only from it. In the mockup a tap
   shows a note saying where it would land.
-- **VoiceOver:** each row is one button that reads its label and status, then a hint:
-  "Notifications, On. Opens this app's notification settings in Settings." (Alarms: "Opens this
-  app's page in Settings."; Badges: the same as Notifications.) The hint is in the mockup as
-  `aria-description`.
-- **The Open iOS Settings row** (shown only while something is off) and the permission banners are
-  untouched.
+- **VoiceOver:** each row is one button that reads its label and status, then a short hint:
+  "Notifications, On. Opens notification settings." (Alarms: "Opens the app's settings."; Badges: the
+  same as Notifications.) The hint is in the mockup as `aria-description`.
+- **The Open iOS Settings row is gone** (the developer's call, 2026-11-23): the three rows now go
+  to iOS Settings themselves, so a row that appeared only while something was off, to do the same,
+  is redundant. Nothing else in Settings changes. The permission banners keep their Open Settings
+  button, as they were.

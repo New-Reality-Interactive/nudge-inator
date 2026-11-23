@@ -2443,20 +2443,17 @@
     "Open Settings for notifications" : {
       "comment" : "VoiceOver label of the notifications-off banner's Open Settings button."
     },
-    "Open iOS Settings" : {
-      "comment" : "Settings: row that opens the app's page in the iOS Settings app, where notifications, alarms and badges can be turned on."
+    "Opens notification settings." : {
+      "comment" : "VoiceOver hint on Settings' Notifications and Badges rows, which are buttons: they open the app's notification settings in the iOS Settings app."
+    },
+    "Opens the app's settings." : {
+      "comment" : "VoiceOver hint on Settings' Alarms row, which is a button: it opens the app's own page in the iOS Settings app, the only place alarms are turned on."
     },
     "Opens the custom repeat." : {
       "comment" : "VoiceOver hint on the reminder form's row that writes out a custom repeat: it opens the Custom repeat sheet."
     },
     "Opens the reminder's details." : {
       "comment" : "VoiceOver hint on a nudge card's title and on a Now row: tapping it opens the reminder's details."
-    },
-    "Opens this app's notification settings in Settings." : {
-      "comment" : "VoiceOver hint on Settings' Notifications and Badges rows, which are buttons: they open the app's notification settings in the iOS Settings app."
-    },
-    "Opens this app's page in Settings." : {
-      "comment" : "VoiceOver hint on Settings' Alarms row, which is a button: it opens the app's own page in the iOS Settings app, the only place alarms are turned on."
     },
     "Other nudges sound standard" : {
       "comment" : "How Alarm Sounds Work, When It Plays: the row about nudges that use the standard notification sound."

@@ -243,16 +243,15 @@ struct AppModelTests {
 
     /// Ticket 30: Settings' rows, from what the fake adapters report through the model.
     @Test(arguments: [
-        (UNAuthorizationStatus.authorized, AlarmManager.AuthorizationState.authorized, NotificationsStatus.on, AlarmsStatus.on, SettingsStatus.OpenSettings?.none),
-        (.denied, .denied, .off, .off, .appSettings),
-        (.authorized, .notDetermined, .on, .notSet, nil),
+        (UNAuthorizationStatus.authorized, AlarmManager.AuthorizationState.authorized, NotificationsStatus.on, AlarmsStatus.on),
+        (.denied, .denied, .off, .off),
+        (.authorized, .notDetermined, .on, .notSet),
     ])
     func settingsRowsReflectWhatTheAdaptersReadThroughTheModel(
         notifications: UNAuthorizationStatus,
         alarms: AlarmManager.AuthorizationState,
         expectedNotifications: NotificationsStatus,
-        expectedAlarms: AlarmsStatus,
-        expectedOpenSettings: SettingsStatus.OpenSettings?
+        expectedAlarms: AlarmsStatus
     ) async throws {
         center.settings = NotificationSettingsSnapshot(authorizationStatus: notifications, timeSensitiveSetting: .enabled)
         manager.authorizationState = alarms
@@ -262,7 +261,6 @@ struct AppModelTests {
 
         #expect(status.notifications == expectedNotifications)
         #expect(status.alarms == expectedAlarms)
-        #expect(status.openSettings == expectedOpenSettings)
     }
 
     /// Ticket 30's device check: alarms turned off in Settings while the app was suspended, with no

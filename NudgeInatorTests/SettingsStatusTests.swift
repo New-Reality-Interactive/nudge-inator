@@ -3,7 +3,7 @@ import Testing
 import UIKit
 @testable import NudgeInator
 
-/// Settings' status rows and its one Open iOS Settings row, as a value of the adapters' permission
+/// Settings' status rows and where each opens in iOS Settings, as a value of the adapters' permission
 /// states (ticket 30), before any view draws them.
 struct SettingsStatusTests {
     @Test(arguments: [
@@ -36,24 +36,6 @@ struct SettingsStatusTests {
         #expect(SettingsStatus(PermissionStates(badges: badges)).badges == expected)
     }
 
-    @Test(arguments: [
-        PermissionStates(alarms: .allowed, badges: .denied),
-        PermissionStates(alarms: .notDetermined, badges: .denied),
-    ])
-    func badgesOffOpenTheAppsNotificationSettings(states: PermissionStates) {
-        #expect(SettingsStatus(states).openSettings == .notificationSettings)
-    }
-
-    @Test(arguments: [BadgePermission.allowed, .notDetermined])
-    func badgesOnOrNotSetOfferNoWayToOpenSettings(badges: BadgePermission) {
-        #expect(SettingsStatus(PermissionStates(alarms: .allowed, badges: badges)).openSettings == nil)
-    }
-
-    /// Only the app's page reaches alarms, and it links on to Notifications, where Badges is.
-    @Test func deniedAlarmsStillOpenTheAppsPageWhenBadgesAreOff() {
-        #expect(SettingsStatus(PermissionStates(alarms: .denied, badges: .denied)).openSettings == .appSettings)
-    }
-
     @Test func onlyAStatusThatIsOffIsFlaggedAsAProblem() {
         #expect(NotificationsStatus.on.isOff == false)
         #expect(NotificationsStatus.timeSensitiveOff.isOff)
@@ -61,34 +43,6 @@ struct SettingsStatusTests {
         #expect(AlarmsStatus.on.isOff == false)
         #expect(AlarmsStatus.notSet.isOff == false)
         #expect(AlarmsStatus.off.isOff)
-    }
-
-    @Test func everythingOnOrNotAskedYetOffersNoWayToOpenSettings() {
-        #expect(SettingsStatus(PermissionStates(alarms: .allowed)).openSettings == nil)
-        #expect(SettingsStatus(PermissionStates(alarms: .notDetermined)).openSettings == nil)
-    }
-
-    @Test(arguments: [
-        PermissionStates(notifications: .denied, alarms: .allowed),
-        PermissionStates(notifications: .allowed, alarms: .allowed, timeSensitive: .off),
-    ])
-    func deniedNotificationsOrTimeSensitiveOpenTheAppsNotificationSettings(states: PermissionStates) {
-        let openSettings = SettingsStatus(states).openSettings
-
-        #expect(openSettings == .notificationSettings)
-        #expect(openSettings?.urlString == UIApplication.openNotificationSettingsURLString)
-    }
-
-    @Test(arguments: [
-        PermissionStates(notifications: .allowed, alarms: .denied),
-        PermissionStates(notifications: .denied, alarms: .denied),
-        PermissionStates(notifications: .allowed, alarms: .denied, timeSensitive: .off),
-    ])
-    func deniedAlarmsOpenTheAppsPageInSettings(states: PermissionStates) {
-        let openSettings = SettingsStatus(states).openSettings
-
-        #expect(openSettings == .appSettings)
-        #expect(openSettings?.urlString == UIApplication.openSettingsURLString)
     }
 
     /// The three permission rows are shortcuts (#372): each opens where its permission is changed,
@@ -100,6 +54,11 @@ struct SettingsStatusTests {
     ])
     func eachPermissionRowOpensWhereItsPermissionIsChanged(row: SettingsStatus.PermissionRow, expected: SettingsStatus.OpenSettings) {
         #expect(row.opensSettings == expected)
+    }
+
+    @Test func theTwoDestinationsAreTheDocumentedLinks() {
+        #expect(SettingsStatus.OpenSettings.notificationSettings.urlString == UIApplication.openNotificationSettingsURLString)
+        #expect(SettingsStatus.OpenSettings.appSettings.urlString == UIApplication.openSettingsURLString)
     }
 
     @Test func theTwoDestinationsAreDifferentLinks() {
