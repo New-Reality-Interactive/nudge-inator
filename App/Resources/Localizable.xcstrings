@@ -875,7 +875,7 @@
       "comment" : "How Alarm Sounds Work, When It Plays: under \"Some reminders never ring\". Gentle and Firm are strengths; Sound is the form's row."
     },
     "A change applies from now on. What was already sent or held stays as it was." : {
-      "comment" : "How Quiet Hours Work, Your Schedules: the note under the steps."
+      "comment" : "How Quiet Hours Work, Your Schedules: the note under the rows."
     },
     "A different Apple Account signed in, so sharing from the old one was removed." : {
       "comment" : "Share Activity: an entry for a change of Apple Account, which removed the old account's connections."
@@ -920,13 +920,13 @@
       "comment" : "Title of the sheet that adds a quiet hours schedule, and the Quiet Hours page's button that opens it."
     },
     "Add a Schedule" : {
-      "comment" : "How Quiet Hours Work, Your Schedules: the first numbered step, about the Quiet Hours page's Add Schedule (+)."
+      "comment" : "How Quiet Hours Work, Your Schedules: the first row, about the Quiet Hours page's Add Schedule (+)."
     },
     "Add a title to save." : {
       "comment" : "Under the reminder form's title when it is empty, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name."
     },
     "Add as many as you need, such as one for weeknights and one for weekends." : {
-      "comment" : "How Quiet Hours Work, Your Schedules: the line under the heading, above the numbered steps."
+      "comment" : "How Quiet Hours Work, Your Schedules: the line under the heading, above the rows."
     },
     "After" : {
       "comment" : "The reminder form's End Repeat choice: the repeat ends after a number of times."
@@ -1214,7 +1214,7 @@
       "comment" : "An invited person's page: under Cancel Invite."
     },
     "Change One" : {
-      "comment" : "How Quiet Hours Work, Your Schedules: the second numbered step, about editing a schedule."
+      "comment" : "How Quiet Hours Work, Your Schedules: the second row, about editing a schedule."
     },
     "Change These" : {
       "comment" : "Accepting an invite: on the Connected sheet, opens the connection's page in Settings to change Status Sharing and Delivery Mode."
@@ -2522,6 +2522,9 @@
     "Quiet Now is holding every nudge. These schedules apply again when you turn it off." : {
       "comment" : "Quiet Hours page: under the schedules while Quiet Now is on."
     },
+    "Quiet Now is holding its nudges. It closes as Missed at %@ if it stays on." : {
+      "comment" : "Nudge card: in place of the next nudge while Quiet Now holds every nudge left. The placeholder is when the reminder closes as Missed if Quiet Now stays on, such as \"11:17 AM\"."
+    },
     "Quiet hours are holding nudges" : {
       "comment" : "Banner on Now, My Day and Reminders while quiet hours are holding nudges: its bold title."
     },
@@ -2728,7 +2731,7 @@
       "comment" : "How Alarm Sounds Work, Change Your Reminders: under Use for All Reminders. Settings › Default Alarm Sound is where it is."
     },
     "Settings › Quiet Hours. Tap +, choose the times and days, and tap Save." : {
-      "comment" : "How Quiet Hours Work, Your Schedules: under the first numbered step, Add Schedule. Settings › Quiet Hours is the page; + is its navigation bar's Add Schedule button; Save is the sheet's."
+      "comment" : "How Quiet Hours Work, Your Schedules: under the first row, Add a Schedule. Settings › Quiet Hours is the page; + is its navigation bar's Add Schedule button; Save is the sheet's."
     },
     "Settings › Share Activity shows what happened to sharing that you'd otherwise never see." : {
       "comment" : "How Sharing Works, Who Sees What: under \"Share Activity\"."
@@ -2895,7 +2898,7 @@
       "comment" : "About page: row that opens the app's support page on the website, in the web browser."
     },
     "Switch One Off" : {
-      "comment" : "How Quiet Hours Work, Your Schedules: the third numbered step, about a schedule's switch."
+      "comment" : "How Quiet Hours Work, Your Schedules: the third row, about a schedule's switch."
     },
     "Tag Deleted" : {
       "comment" : "A tag's screen after the tag was deleted."

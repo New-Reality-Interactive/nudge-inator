@@ -49,8 +49,6 @@ struct QuietHoursPage: View {
                     title: Text(Self.quietNowTitle)
                 )
             }
-            // A section footer isn't tied to its switch for VoiceOver, so the switch reads it too.
-            .accessibilityHint(Text(wording.quietNowFooter(since: quietHours.quietNowSince)))
         } footer: {
             Text(wording.quietNowFooter(since: quietHours.quietNowSince))
         }
@@ -81,7 +79,8 @@ struct QuietHoursPage: View {
         func makeBody(configuration: Configuration) -> some View {
             VStack(spacing: Design.Spacing.s2) {
                 configuration.icon.font(.largeTitle).foregroundStyle(.secondary)
-                configuration.title.font(.title2.bold())
+                // Centered line by line, so a title that wraps at the largest text size stays under its icon.
+                configuration.title.font(.title2.bold()).multilineTextAlignment(.center)
             }
         }
     }

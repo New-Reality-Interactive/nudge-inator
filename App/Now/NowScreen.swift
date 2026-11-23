@@ -158,9 +158,14 @@ struct NudgeCard: Identifiable {
                                        comment: "VoiceOver value of a nudge card. 1: the strength, such as \"Gentle\". 2: the nudges sent. 3: the most it sends. 4: the urgency now, such as \"High\". 5: the tags and due time, such as \"#home · due 9:00 AM\". 6: the next nudge's time. 7: how it arrives, such as \"Alarm\". 8: its urgency.")
     }
 
-    /// After the last nudge, in place of the next one; its VoiceOver value says the same.
+    /// After the last nudge, in place of the next one; its VoiceOver value says the same. While
+    /// Quiet Now holds every nudge left it says that instead, since turning it off brings them back.
     var lastNudgeLine: LocalizedStringResource {
-        LocalizedStringResource("That was the last nudge. It closes as Missed at \(missedAtTime).",
+        if status.isHeldByQuietNow {
+            return LocalizedStringResource("Quiet Now is holding its nudges. It closes as Missed at \(missedAtTime) if it stays on.",
+                                           comment: "Nudge card: in place of the next nudge while Quiet Now holds every nudge left. The placeholder is when the reminder closes as Missed if Quiet Now stays on, such as \"11:17 AM\".")
+        }
+        return LocalizedStringResource("That was the last nudge. It closes as Missed at \(missedAtTime).",
                                 comment: "Nudge card: after the occurrence's last nudge. The placeholder is when it gives up or the next occurrence takes over, such as \"11:17 AM\".")
     }
 

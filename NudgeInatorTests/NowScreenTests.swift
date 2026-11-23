@@ -212,6 +212,25 @@ struct NowScreenTests {
         #expect(String(localized: card.lastNudgeLine) == "That was the last nudge. It closes as Missed at 11:17\u{202F}AM.")
     }
 
+    /// While Quiet Now holds every nudge left, the card must not say that was the last: turning it
+    /// off brings the rest back (#379's phone check). The Missed time is true if it stays on.
+    @Test func whileQuietNowHoldsEveryNudgeLeftACardSaysSoAndWhenItClosesAsMissed() async throws {
+        let model = try await modelAtNineForty()
+        model.turnQuietNow(on: true)
+        await model.waitUntilApplied()
+
+        let card = try #require(NowScreen(engine: model.engine).nudging.first { $0.title == "Take the bins out" })
+
+        let line = "Quiet Now is holding its nudges. It closes as Missed at 11:17\u{202F}AM if it stays on."
+        #expect(String(localized: card.lastNudgeLine) == line)
+        #expect(String(localized: card.voiceOverValue).hasSuffix(line))
+
+        model.turnQuietNow(on: false)
+        await model.waitUntilApplied()
+        let back = try #require(NowScreen(engine: model.engine).nudging.first { $0.title == "Take the bins out" })
+        #expect(back.status.nextNudge != nil)
+    }
+
     /// The mockup's subhead counts the nudging reminders, as the tab's badge does.
     @Test func theSubheadAndTheBadgeCountWhatIsNudging() async throws {
         let model = try await modelAtNineForty()

@@ -75,14 +75,17 @@ enum QuietHoursTutorialPage: TutorialPage, CaseIterable {
                               text: LocalizedStringResource("Turn it off, and your schedules hold nudges again as before.", comment: "How Quiet Hours Work, Quiet Now: under \"Then your schedules apply\".")),
             ])
         case .yourSchedules:
-            .steps(lead: LocalizedStringResource("Add as many as you need, such as one for weeknights and one for weekends.", comment: "How Quiet Hours Work, Your Schedules: the line under the heading, above the numbered steps."), [
-                TutorialStep(title: LocalizedStringResource("Add a Schedule", comment: "How Quiet Hours Work, Your Schedules: the first numbered step, about the Quiet Hours page's Add Schedule (+)."),
-                             text: LocalizedStringResource("Settings › Quiet Hours. Tap +, choose the times and days, and tap Save.", comment: "How Quiet Hours Work, Your Schedules: under the first numbered step, Add Schedule. Settings › Quiet Hours is the page; + is its navigation bar's Add Schedule button; Save is the sheet's.")),
-                TutorialStep(title: LocalizedStringResource("Change One", comment: "How Quiet Hours Work, Your Schedules: the second numbered step, about editing a schedule."),
-                             text: LocalizedStringResource("Tap a schedule to change its times and days, or to delete it.", comment: "How Quiet Hours Work, Your Schedules: under \"Change One\".")),
-                TutorialStep(title: LocalizedStringResource("Switch One Off", comment: "How Quiet Hours Work, Your Schedules: the third numbered step, about a schedule's switch."),
-                             text: LocalizedStringResource("Its switch turns it off and keeps it for later.", comment: "How Quiet Hours Work, Your Schedules: under \"Switch One Off\".")),
-            ], footnote: LocalizedStringResource("A change applies from now on. What was already sent or held stays as it was.", comment: "How Quiet Hours Work, Your Schedules: the note under the steps."))
+            .points(lead: LocalizedStringResource("Add as many as you need, such as one for weeknights and one for weekends.", comment: "How Quiet Hours Work, Your Schedules: the line under the heading, above the rows."), [
+                TutorialPoint(symbol: "plus",
+                              title: LocalizedStringResource("Add a Schedule", comment: "How Quiet Hours Work, Your Schedules: the first row, about the Quiet Hours page's Add Schedule (+)."),
+                              text: LocalizedStringResource("Settings › Quiet Hours. Tap +, choose the times and days, and tap Save.", comment: "How Quiet Hours Work, Your Schedules: under the first row, Add a Schedule. Settings › Quiet Hours is the page; + is its navigation bar's Add Schedule button; Save is the sheet's.")),
+                TutorialPoint(symbol: "pencil",
+                              title: LocalizedStringResource("Change One", comment: "How Quiet Hours Work, Your Schedules: the second row, about editing a schedule."),
+                              text: LocalizedStringResource("Tap a schedule to change its times and days, or to delete it.", comment: "How Quiet Hours Work, Your Schedules: under \"Change One\".")),
+                TutorialPoint(symbol: "switch.2",
+                              title: LocalizedStringResource("Switch One Off", comment: "How Quiet Hours Work, Your Schedules: the third row, about a schedule's switch."),
+                              text: LocalizedStringResource("Its switch turns it off and keeps it for later.", comment: "How Quiet Hours Work, Your Schedules: under \"Switch One Off\".")),
+            ], footnote: LocalizedStringResource("A change applies from now on. What was already sent or held stays as it was.", comment: "How Quiet Hours Work, Your Schedules: the note under the rows."))
         case .heldNudges:
             .points(lead: LocalizedStringResource("A nudge that falls in quiet hours is held, and counts as one you didn't answer.", comment: "How Quiet Hours Work, Held Nudges: the line under the heading."), [
                 TutorialPoint(symbol: "arrow.right",

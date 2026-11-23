@@ -45,20 +45,20 @@ struct QuietHoursTutorialTests {
         #expect(footnote == nil)
     }
 
-    /// Your Schedules numbers its three steps under a lead, the developer's addition to the mockup
-    /// (#468), and ends with a note.
-    @Test func yourSchedulesNumbersItsStepsUnderALeadAndEndsWithANote() {
-        guard case .steps(let lead, let steps, let footnote) = QuietHoursTutorialPage.yourSchedules.content else {
-            Issue.record("Your Schedules isn't a page of steps")
+    /// Your Schedules lists its three rows with icons, like the other pages, under a lead, and ends
+    /// with a note (the approved 2026-11-23 mockup: the numbers looked out of place, #379).
+    @Test func yourSchedulesListsItsRowsWithIconsUnderALeadAndEndsWithANote() {
+        guard case .points(let lead, let points, let footnote) = QuietHoursTutorialPage.yourSchedules.content else {
+            Issue.record("Your Schedules isn't a page of points")
             return
         }
         #expect(lead.map { String(localized: $0) } == "Add as many as you need, such as one for weeknights and one for weekends.")
-        #expect(steps.map { [String(localized: $0.title), String(localized: $0.text)] } == [
-            ["Add a Schedule", "Settings › Quiet Hours. Tap +, choose the times and days, and tap Save."],
-            ["Change One", "Tap a schedule to change its times and days, or to delete it."],
-            ["Switch One Off", "Its switch turns it off and keeps it for later."],
+        #expect(points.map { [$0.symbol, String(localized: $0.title), String(localized: $0.text)] } == [
+            ["plus", "Add a Schedule", "Settings › Quiet Hours. Tap +, choose the times and days, and tap Save."],
+            ["pencil", "Change One", "Tap a schedule to change its times and days, or to delete it."],
+            ["switch.2", "Switch One Off", "Its switch turns it off and keeps it for later."],
         ])
-        #expect(String(localized: footnote) == "A change applies from now on. What was already sent or held stays as it was.")
+        #expect(footnote.map { String(localized: $0) } == "A change applies from now on. What was already sent or held stays as it was.")
     }
 
     /// The pictures' pills, decoration only: their symbol and word, an arrow as "→".

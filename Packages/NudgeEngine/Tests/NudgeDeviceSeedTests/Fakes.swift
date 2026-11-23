@@ -126,3 +126,26 @@ extension SeedSet {
         ]
     )
 }
+
+/// A target whose clock moves on each time it is read, as the app's live `Date()` does, and counts the reads.
+@MainActor
+final class MovingClockTarget: SeedTarget {
+    private let base = FakeTarget()
+    private(set) var nowReads = 0
+
+    var now: Date {
+        nowReads += 1
+        return base.now + Double(nowReads) * 30
+    }
+    var reminders: [Reminder] { base.reminders }
+    var tags: [Tag] { base.tags }
+    func add(_ reminder: Reminder) { base.add(reminder) }
+    func delete(_ reminderID: Reminder.ID) { base.delete(reminderID) }
+    func createTag(named name: String) -> Tag? { base.createTag(named: name) }
+    func deleteTag(_ tagID: Tag.ID) { base.deleteTag(tagID) }
+    func setting(_ setting: SeedSetting) -> String { base.setting(setting) }
+    func setSetting(_ setting: SeedSetting, to value: String) { base.setSetting(setting, to: value) }
+    func addQuietSpan(from start: Date, to end: Date, replacedAt: Date) { base.addQuietSpan(from: start, to: end, replacedAt: replacedAt) }
+    func removeQuietSpan(replacedAt: Date) { base.removeQuietSpan(replacedAt: replacedAt) }
+    func turnQuietNowOff() { base.turnQuietNowOff() }
+}

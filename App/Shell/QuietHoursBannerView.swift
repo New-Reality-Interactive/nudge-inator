@@ -19,14 +19,21 @@ struct QuietHoursBannerView: View {
             BannerCard(systemImage: "bell.slash", text: text(detail), borderColor: .neutral) {}
                 .textCase(nil)
                 .accessibilityElement(children: .combine)
+                // The title is the label and the detail the value, which VoiceOver speaks as two
+                // phrases with a pause between: on screen they are two lines, and a full stop
+                // inside one label gave no pause (#379's phone check).
+                .accessibilityLabel(Text(Self.title))
+                .accessibilityValue(Text(detail))
                 // In a header, but not one itself.
                 .accessibilityRemoveTraits(.isHeader)
         }
     }
 
+    static let title = LocalizedStringResource("Quiet hours are holding nudges", comment: "Banner on Now, My Day and Reminders while quiet hours are holding nudges: its bold title.")
+
     /// The bold title, then the detail in the secondary label color, on its own line.
     private func text(_ detail: LocalizedStringResource) -> Text {
-        var title = AttributedString(localized: LocalizedStringResource("Quiet hours are holding nudges", comment: "Banner on Now, My Day and Reminders while quiet hours are holding nudges: its bold title."))
+        var title = AttributedString(localized: Self.title)
         title.inlinePresentationIntent = .stronglyEmphasized
         var detail = AttributedString(localized: detail)
         detail.foregroundColor = Color(uiColor: .secondaryLabel)
