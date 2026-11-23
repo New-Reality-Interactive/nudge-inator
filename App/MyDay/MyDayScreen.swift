@@ -13,15 +13,18 @@ struct MyDayScreen {
     let filterSummary: LocalizedStringResource?
     /// What the list says when it has no rows, by the chosen count.
     let emptyMessage: LocalizedStringResource
-    /// Whether the Filter button shows: a reminder is due today, and a tag exists or someone has
-    /// sent a reminder (ticket 209). With neither the sheet would offer only No Tags, which matches
+    /// What VoiceOver says when My Day moves to this day: its label and how many are due with the
+    /// filter's tags (#375).
+    let announcement: LocalizedStringResource
+    /// Whether the Filter button shows: a reminder is due on the day, or on another day a filter is
+    /// on (#375), and a tag exists or someone has sent a reminder (ticket 209). With neither the sheet would offer only No Tags, which matches
     /// every row. Read from the whole day, not the rows the filter leaves, so a filter that empties
     /// the list keeps the button that clears it (Decision 56).
     let offersFilter: Bool
     private let nowTime: String
     private let now: Date
-    /// Only today has the "Now" marker.
-    private let showsNowMarker: Bool
+    /// The day listed, its label, its neighbours and its words (#375).
+    let shown: MyDayShownDay
 
     struct Count: Identifiable {
         var kind: MyDayCount
@@ -53,6 +56,8 @@ struct MyDayScreen {
         var tags: [TagLabel]
         /// "From Riley Park" under the title of a received reminder, or `nil` (ticket 199).
         var from: FromLine?
+        /// How it repeats, on a day after today, where it stands in for how soon (#375).
+        var schedule: String?
 
         /// A reminder can be due twice in a day after an Edit, so its ID alone isn't unique.
         var id: String { "\(reminder.id.uuidString) \(dueTime.timeIntervalSinceReferenceDate)" }
@@ -84,8 +89,8 @@ struct MyDayScreen {
             case .canceled:
                 return LocalizedStringResource("Canceled", comment: "My Day: under the title of a reminder someone sent that its sender deleted. It no longer nudges.")
             case .left:
-                let relative = dueTime.shortRelative(to: now)
-                return LocalizedStringResource("\(relative)", comment: "My Day: under the title of an occurrence due later today. The placeholder is how soon, such as \"in 4 hr.\".")
+                let soon = schedule ?? dueTime.shortRelative(to: now)
+                return LocalizedStringResource("\(soon)", comment: "My Day: under the title of an occurrence still to come: on today how soon, such as \"in 4 hr.\"; on a later day how it repeats, such as \"Every day at 6:30 AM\".")
             }
         }
     }
@@ -131,47 +136,35 @@ struct MyDayScreen {
     /// The items with the "Now" marker among them, after those already due. An empty list has no
     /// marker, nor has another day's (#374).
     var rows: [Row] {
-        guard showsNowMarker else { return items.map(Row.item) }
+        // Only today has the "Now" marker.
+        guard shown.isToday else { return items.map(Row.item) }
         guard !items.isEmpty else { return [] }
         let due = items.prefix { $0.dueTime <= now }
         return due.map(Row.item) + [.now(time: nowTime)] + items.dropFirst(due.count).map(Row.item)
     }
 
-    private static func emptyMessage(forCount count: MyDayCount?) -> LocalizedStringResource {
-        switch count {
-        case nil:
-            LocalizedStringResource("Nothing is due today.", comment: "My Day: the list when nothing is due today.")
-        case .done:
-            LocalizedStringResource("Nothing is done yet today.", comment: "My Day: the list when Done is chosen and nothing is done yet today.")
-        case .nudging:
-            LocalizedStringResource("Nothing is nudging you.", comment: "My Day: the list when Nudging is chosen and nothing is nudging.")
-        case .missed:
-            LocalizedStringResource("Nothing was missed today.", comment: "My Day: the list when Missed is chosen and nothing was missed today.")
-        case .left:
-            LocalizedStringResource("Nothing is left to do today.", comment: "My Day: the list when Left is chosen and nothing is left to do today.")
-        }
-    }
-
     /// Nothing is due: the app hosting tests, and previews without an engine.
     init(filter: MyDayFilter, now: Date) {
         self.now = now
-        showsNowMarker = true
+        shown = MyDayShownDay(now: now)
         nowTime = now.formatted(date: .omitted, time: .shortened)
         counts = MyDayCount.allCases.map { Count(kind: $0, number: 0, isChosen: filter.count == $0) }
         items = []
         offersFilter = false
         filterTokens = []
         filterSummary = nil
-        emptyMessage = Self.emptyMessage(forCount: filter.count)
+        emptyMessage = shown.emptyMessage(forCount: filter.count)
+        announcement = shown.announcement(due: 0, filtered: false)
     }
 
     /// `now` is when the screen is drawn, the same moment as the engine's clock. `senders` names
     /// who sent each received reminder; with none, each reads "From Someone". `day` is the day it
-    /// lists, today if none (#374).
+    /// lists, today if none (#374), kept inside the range (#375).
     init(engine: Engine, filter: MyDayFilter, now: Date, senders: Senders = Senders(), day: CalendarDay? = nil) {
         let filter = filter.keeping(tagsIn: Set(engine.tags.map(\.id)))
         self.now = now
-        showsNowMarker = day.map { $0 == engine.today } ?? true
+        let shown = MyDayShownDay(engine: engine, asked: day)
+        self.shown = shown
         let chosenTags = filter.tagIDs.compactMap { engine.tag(withID: $0) }
         let fromOthersToken = filter.fromOthers ? [FilterToken(kind: .fromOthers, tagText: nil)] : []
         if filter.noTags {
@@ -182,37 +175,39 @@ struct MyDayScreen {
         }
         // The tokens name the tags, so the line says only how they combine (ticket 20).
         if filter.noTags {
-            filterSummary = LocalizedStringResource("Due today with no tags", comment: "My Day: under the No Tags filter token.")
+            filterSummary = shown.filterSummary(.noTags)
         } else if chosenTags.count == 1 {
-            filterSummary = LocalizedStringResource("Due today with the selected tag", comment: "My Day: under the filter token when one tag is chosen.")
+            filterSummary = shown.filterSummary(.oneTag)
         } else if chosenTags.count > 1 {
-            filterSummary = switch filter.match {
-            case .all:
-                LocalizedStringResource("Due today with all selected tags", comment: "My Day: under the filter tokens when two or more tags are chosen and Match is All Tags.")
-            case .any:
-                LocalizedStringResource("Due today with any selected tags", comment: "My Day: under the filter tokens when two or more tags are chosen and Match is Any Tag.")
-            }
+            filterSummary = shown.filterSummary(filter.match == .all ? .all : .any)
         } else {
             filterSummary = nil
         }
-        emptyMessage = Self.emptyMessage(forCount: filter.count)
+        emptyMessage = shown.emptyMessage(forCount: filter.count)
         nowTime = engine.timeOfDay(of: now)
-        let myDay = engine.myDay(on: day, tagFilter: filter.tagFilter, fromOthers: filter.fromOthers)
-        let wholeDay = engine.myDay(on: day)
-        offersFilter = (!engine.tags.isEmpty || engine.hasReceivedReminders) && !wholeDay.items.isEmpty
+        let myDay = engine.myDay(on: shown.day, tagFilter: filter.tagFilter, fromOthers: filter.fromOthers)
+        let wholeDay = engine.myDay(on: shown.day)
+        // On another day a filter that's on keeps the button, so moving to a day with nothing due
+        // doesn't clear it (#375). Today's rule is as before.
+        let keepsFilter = !shown.isToday && filter.isOn
+        offersFilter = (!engine.tags.isEmpty || engine.hasReceivedReminders) && (!wholeDay.items.isEmpty || keepsFilter)
         counts = MyDayCount.allCases.map { Count(kind: $0, number: myDay.count(of: $0), isChosen: filter.count == $0) }
+        announcement = shown.announcement(due: myDay.items.count, filtered: filter.isOn)
+        let isLater = shown.isLater
         let reminders = Dictionary(engine.reminders.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        let shown = filter.count.map(myDay.items(countedIn:)) ?? myDay.items
-        items = shown.compactMap { item in
-            reminders[item.reminderID].map { Item(engine: engine, reminder: $0, item: item, chosen: Set(filter.tagIDs), from: senders.fromLine(of: $0)) }
+        let listed = filter.count.map(myDay.items(countedIn:)) ?? myDay.items
+        items = listed.compactMap { item in
+            reminders[item.reminderID].map { Item(engine: engine, reminder: $0, item: item, chosen: Set(filter.tagIDs), from: senders.fromLine(of: $0), isLater: isLater) }
         }
     }
 }
 
 extension MyDayScreen.Item {
-    init(engine: Engine, reminder: Reminder, item: MyDay.Item, chosen: Set<Tag.ID>, from: FromLine?) {
+    /// `isLater` says the row is on a day after today, where it says how it repeats.
+    init(engine: Engine, reminder: Reminder, item: MyDay.Item, chosen: Set<Tag.ID>, from: FromLine?, isLater: Bool = false) {
         self.reminder = reminder
         self.from = from
+        schedule = isLater ? engine.repeatSummary(of: reminder) : nil
         dueTime = item.dueTime
         time = engine.timeOfDay(of: item.dueTime)
         status = item.status

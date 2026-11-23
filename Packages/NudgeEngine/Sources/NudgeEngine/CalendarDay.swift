@@ -33,6 +33,15 @@ extension Engine {
         calendarDay(of: clock.now)
     }
 
+    /// The day `days` calendar days after `day`, or before it for a negative count: My Day's
+    /// Previous Day and Next Day (#375). Counted from noon, so a clock change can't land it on the
+    /// wrong day.
+    public func day(_ day: CalendarDay, movedBy days: Int) -> CalendarDay {
+        let noon = DateComponents(year: day.year, month: day.month, day: day.day, hour: 12)
+        guard let start = calendar.date(from: noon), let moved = calendar.date(byAdding: .day, value: days, to: start) else { return day }
+        return calendarDay(of: moved)
+    }
+
     /// When `day` starts, for a date picker. The calendar finds every day a picker can offer, so the
     /// clock only stands in for a date it can't.
     public func startOfDay(_ day: CalendarDay) -> Date {

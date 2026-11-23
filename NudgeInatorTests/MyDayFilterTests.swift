@@ -36,6 +36,20 @@ struct MyDayFilterTests {
         #expect(filter.tagFilter == .off)
     }
 
+    /// A move to another day never clears the filter (#375, the developer's answer to question 1):
+    /// moving back to a today with nothing due hides the button but keeps the tags. Only the button
+    /// going on the same day (midnight, the last tag deleted) clears them, as before.
+    @Test func aMoveToAnotherDayKeepsTheFilterEvenWhenTheButtonHides() {
+        var filter = MyDayFilter()
+        filter.toggle(home.id)
+
+        filter.update(offersFilter: false, afterMovingDay: true)
+        #expect(filter.tagFilter == .matchAll([home.id]))
+
+        filter.update(offersFilter: false, afterMovingDay: false)
+        #expect(filter.tagFilter == .off)
+    }
+
     @Test func checkingACheckedTagUnchecksItAndNoTagsLeftMeansNoFilter() {
         var filter = MyDayFilter()
         filter.toggle(home.id)
