@@ -610,6 +610,19 @@ rewrites nothing above.
   or link styling, and names where to change quiet hours in words alone. VoiceOver reads it as one
   element. At accessibility text sizes the icon goes above the text, as the permission banner's does.
 
+### Settings shortcuts
+What the Settings rows mockup (`docs/mockups/2026-11-23-settings-rows/`, #372) adds. It rewrites
+nothing above.
+- **Notifications, Alarms and Badges are buttons:** each keeps its tile, label and status (and the
+  status colors) and ends in the chevron (`chevron.forward`, `{colors.tertiary-label}`) after the
+  status, as Default Pace and Quiet Hours do.
+- **Where they go:** Notifications and Badges open the app's notification settings in iOS Settings;
+  Alarms opens the app's own page there, since alarms are reached only from it. A row opens Settings
+  whatever it reads, On included.
+- **VoiceOver:** one button per row that reads its label and status, then a hint that it opens
+  Settings ("Opens this app's notification settings in Settings."; Alarms: "Opens this app's page in
+  Settings."). The Open iOS Settings row and the permission banners are as they were.
+
 ### Settings row
 - Icon tile, label in `{typography.body}`, trailing status in `{colors.secondary-label}` (or
   `{colors.negative}` when off) or a chevron. The Badges row is the exception: its status is

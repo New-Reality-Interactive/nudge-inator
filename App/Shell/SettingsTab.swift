@@ -209,29 +209,49 @@ struct SettingsTab: View {
         }
     }
 
+    /// A permission row as a button that opens where its permission is changed (#372), with a
+    /// spoken hint that it leaves the app.
+    private func permissionRow(_ row: SettingsStatus.PermissionRow, @ViewBuilder label: () -> some View) -> some View {
+        Button {
+            row.opensSettings.open()
+        } label: {
+            label()
+        }
+        .accessibilityHint(Text(row.hint))
+    }
+
     private var nudgesSection: some View {
         Section {
-            SettingsRow(
-                tile: .tileRed,
-                symbol: "bell",
-                title: Text("Notifications", comment: "Settings: row that shows whether notifications are allowed."),
-                status: status.notifications.text,
-                statusIsNegative: status.notifications.isOff
-            )
-            SettingsRow(
-                tile: .tileOrange,
-                symbol: "alarm",
-                title: Text("Alarms", comment: "Settings: row that shows whether alarms are allowed."),
-                status: status.alarms.text,
-                statusIsNegative: status.alarms.isOff
-            )
+            permissionRow(.notifications) {
+                SettingsRow(
+                    tile: .tileRed,
+                    symbol: "bell",
+                    title: Text("Notifications", comment: "Settings: row that shows whether notifications are allowed, and opens the app's notification settings in iOS Settings."),
+                    status: status.notifications.text,
+                    statusIsNegative: status.notifications.isOff,
+                    accessory: .chevron
+                )
+            }
+            permissionRow(.alarms) {
+                SettingsRow(
+                    tile: .tileOrange,
+                    symbol: "alarm",
+                    title: Text("Alarms", comment: "Settings: row that shows whether alarms are allowed, and opens the app's page in iOS Settings."),
+                    status: status.alarms.text,
+                    statusIsNegative: status.alarms.isOff,
+                    accessory: .chevron
+                )
+            }
             // Gray even when Off: badges off isn't a problem to flag (DESIGN.md › Settings row).
-            SettingsRow(
-                tile: .tileRed,
-                symbol: "app.badge",
-                title: Text("Badges", comment: "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging."),
-                status: status.badges.text
-            )
+            permissionRow(.badges) {
+                SettingsRow(
+                    tile: .tileRed,
+                    symbol: "app.badge",
+                    title: Text("Badges", comment: "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging, and opens the app's notification settings in iOS Settings."),
+                    status: status.badges.text,
+                    accessory: .chevron
+                )
+            }
             if let openSettings = status.openSettings {
                 Button {
                     openSettings.open()

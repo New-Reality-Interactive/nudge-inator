@@ -37,7 +37,22 @@ struct SettingsStatus: Equatable {
         canSendTestNudge = states.notifications == .allowed
     }
 
-    /// Where the Open iOS Settings row goes.
+    /// The three rows that show a permission. Each is a shortcut to where that permission is
+    /// changed (#372), whatever it currently reads.
+    enum PermissionRow: Equatable {
+        case notifications, alarms, badges
+
+        /// Alarms are reached only from the app's own page, which links on to Notifications;
+        /// Notifications, Time Sensitive and Badges are all on the notification settings.
+        var opensSettings: OpenSettings {
+            switch self {
+            case .notifications, .badges: .notificationSettings
+            case .alarms: .appSettings
+            }
+        }
+    }
+
+    /// Where a Settings shortcut goes: the permission rows and the Open iOS Settings row.
     enum OpenSettings: Equatable {
         /// The app's notification settings, where the notification, Time Sensitive and Badges
         /// switches are.
@@ -52,7 +67,7 @@ struct SettingsStatus: Equatable {
             }
         }
 
-        /// Opens that page in the Settings app: Settings' row and the permission banners.
+        /// Opens that page in the Settings app: Settings' rows and the permission banners.
         @MainActor func open() {
             guard let url = URL(string: urlString) else { return }
             Task { await UIApplication.shared.open(url) }

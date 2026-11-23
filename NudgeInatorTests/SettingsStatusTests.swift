@@ -91,6 +91,17 @@ struct SettingsStatusTests {
         #expect(openSettings?.urlString == UIApplication.openSettingsURLString)
     }
 
+    /// The three permission rows are shortcuts (#372): each opens where its permission is changed,
+    /// whatever the states say, so a row that reads On opens Settings too.
+    @Test(arguments: [
+        (SettingsStatus.PermissionRow.notifications, SettingsStatus.OpenSettings.notificationSettings),
+        (.alarms, .appSettings),
+        (.badges, .notificationSettings),
+    ])
+    func eachPermissionRowOpensWhereItsPermissionIsChanged(row: SettingsStatus.PermissionRow, expected: SettingsStatus.OpenSettings) {
+        #expect(row.opensSettings == expected)
+    }
+
     @Test func theTwoDestinationsAreDifferentLinks() {
         #expect(SettingsStatus.OpenSettings.notificationSettings.urlString != SettingsStatus.OpenSettings.appSettings.urlString)
     }
