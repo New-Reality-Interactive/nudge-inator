@@ -284,7 +284,7 @@
       "comment" : "A repeat summary as a sentence, under the reminder form's Starts. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".\nTop of the Custom repeat page: the repeat as a sentence. The placeholder is the engine's summary, such as \"Every 2 weeks on Monday at 9:00 AM\"."
     },
     "%@. %@" : {
-      "comment" : "VoiceOver label of a dimmed confirm button in a sheet's top bar (Add, Save, Done). 1: the button's name, such as \"Add\". 2: why it is dimmed, such as \"Add a title to save.\"\nVoiceOver label of the holding banner on Now, My Day and Reminders. 1: its title, \"Quiet hours are holding nudges\". 2: its detail, such as \"Until 7:00 AM. Change this in Settings, under Quiet Hours.\"",
+      "comment" : "VoiceOver label of a dimmed confirm button in a sheet's top bar (Add, Save, Done). 1: the button's name, such as \"Add\". 2: why it is dimmed, such as \"Add a title to save.\"",
       "localizations" : {
         "en" : {
           "stringUnit" : {
