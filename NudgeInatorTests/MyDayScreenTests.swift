@@ -641,6 +641,19 @@ struct MyDayScreenTests {
         #expect(plain(screen.shown.countsLabel) == expected)
     }
 
+    /// My Day pages through every day in its range, oldest first (#375): with the reminder made on
+    /// 1 October, from then to 7 days ahead.
+    @Test func thePagesAreEveryDayInTheRange() async throws {
+        let fixture = try await dayWithAnOldReminder()
+
+        let days = MyDayShownDay.days(of: fixture.model.engine)
+
+        #expect(days.count == 23)
+        #expect(days.first == CalendarDay(year: 2026, month: 10, day: 1))
+        #expect(days.last == CalendarDay(year: 2026, month: 10, day: 23))
+        #expect(MyDayShownDay.days(of: try await launchedModel().engine) == [CalendarDay(year: 2026, month: 10, day: 16)])
+    }
+
     /// The test host and previews have no engine: My Day then shows nothing is due.
     @Test func withoutAnEngineNothingIsDue() {
         let screen = MyDayScreen(filter: MyDayFilter(), now: clock.now)

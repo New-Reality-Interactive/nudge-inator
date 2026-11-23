@@ -73,6 +73,15 @@ struct MyDayShownDay: Equatable {
         }
     }
 
+    /// Every day in the range, oldest first: the pages My Day swipes through.
+    static func days(of engine: Engine) -> [CalendarDay] {
+        let range = engine.myDayRange
+        return Array(sequence(first: range.lowerBound) { day in
+            let next = engine.day(day, movedBy: 1)
+            return next <= range.upperBound && next > day ? next : nil
+        })
+    }
+
     /// What the list says when it has no rows, by the chosen count, in the day's words (the
     /// mockup's `dayEmpty`). Each is a whole sentence, so a translation can agree its words.
     func emptyMessage(forCount count: MyDayCount?) -> LocalizedStringResource {

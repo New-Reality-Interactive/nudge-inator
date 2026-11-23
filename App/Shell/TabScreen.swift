@@ -5,6 +5,8 @@ import SwiftUI
 /// can't be, otherwise the tab's own content.
 struct TabScreen<Content: View>: View {
     let state: ScreenState
+    /// False when the content centers itself, as My Day's pages each do (#375).
+    var centersInReadableColumn = true
     @ViewBuilder let content: () -> Content
 
     var body: some View {
@@ -15,8 +17,12 @@ struct TabScreen<Content: View>: View {
         case .storeUnreadable:
             StoreUnreadableView()
         case .ready:
-            content()
-                .centeredInReadableColumn()
+            if centersInReadableColumn {
+                content()
+                    .centeredInReadableColumn()
+            } else {
+                content()
+            }
         }
     }
 }

@@ -2285,7 +2285,7 @@
       "comment" : "Now: how far ahead the Coming Up section looks."
     },
     "Next Day" : {
-      "comment" : "My Day: the button (a forward arrow) beside the day label that shows the day after. Dimmed 7 days ahead, the last day My Day can show."
+      "comment" : "My Day: the button (a forward arrow) after the day label that shows the day after. Dimmed 7 days ahead, the last day My Day can show."
     },
     "Next Times" : {
       "comment" : "Header of the Custom repeat page's next three due times."
@@ -2784,7 +2784,7 @@
       "comment" : "Under the alarm sound list, and under the reminder form's Sound row."
     },
     "Previous Day" : {
-      "comment" : "My Day: the button (a back arrow) beside the day label that shows the day before. Dimmed on the first day My Day can show."
+      "comment" : "My Day: the button (a back arrow) before the day label that shows the day before. Dimmed on the first day My Day can show."
     },
     "Privacy Policy" : {
       "comment" : "About page: row that opens the app's privacy policy on the website, in the web browser."

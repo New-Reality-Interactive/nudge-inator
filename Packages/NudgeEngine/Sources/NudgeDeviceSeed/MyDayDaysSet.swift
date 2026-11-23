@@ -5,9 +5,9 @@ import NudgeEngine
 extension SeedSet {
     /// #375's phone check of My Day's other days. Morning meds repeats daily from 3 days back, so
     /// the range starts 3 days ago and each past day lists it, Missed, since nobody marked it Done;
-    /// Stretch break is Nudging today, so a sideways drag on its row can be checked against its
-    /// Done swipe. Water the plants (weekly) and Call the dentist and Take the bins out (once) fall
-    /// on coming days, two of them tagged, so a tag filter has something to keep on each. Gentle,
+    /// Stretch break is Nudging today, so its Done swipe can be checked. Water the plants (weekly)
+    /// and Call the dentist and Take the bins out (once) fall on coming days, two of them tagged,
+    /// so a tag filter has something to keep on each. Gentle,
     /// as every set is, so no real alarm is scheduled. Load it at least 2 hours before midnight.
     static let myDayDays = SeedSet(
         name: "my-day-days",
