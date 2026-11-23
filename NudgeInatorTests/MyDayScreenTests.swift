@@ -12,6 +12,8 @@ struct MyDayScreenTests {
     let clock = FakeClock(now: NewYork.local(2026, 10, 16, 6))
     let center = FakeNotificationCenter()
     let manager = FakeAlarmManager()
+    /// The day after ticket 16's day, for the screen on another day (#374).
+    let tomorrow = CalendarDay(year: 2026, month: 10, day: 17)
 
     func launchedModel() async throws -> AppModel {
         let store = try ReminderStore(location: .inMemory)
@@ -428,7 +430,6 @@ struct MyDayScreenTests {
     /// are still paused. Nothing is Done, Nudging or Missed, and there's no Now marker.
     @Test func anotherDayListsWhatFallsDueOnItWithNoNowMarker() async throws {
         let day = try await dayAtOnePM()
-        let tomorrow = CalendarDay(year: 2026, month: 10, day: 17)
 
         let screen = MyDayScreen(engine: day.model.engine, filter: MyDayFilter(), now: clock.now, day: tomorrow)
 
@@ -453,7 +454,6 @@ struct MyDayScreenTests {
     /// The filter sheet's "Apply shows" counts the day My Day shows: #home tomorrow is the dog alone.
     @Test func theFilterSheetCountsTheDayShown() async throws {
         let day = try await dayAtOnePM()
-        let tomorrow = CalendarDay(year: 2026, month: 10, day: 17)
         var draft = MyDayFilterChoices()
         draft.toggle(day.home.id)
 

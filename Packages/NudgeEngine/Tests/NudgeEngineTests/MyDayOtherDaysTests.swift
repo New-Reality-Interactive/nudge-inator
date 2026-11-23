@@ -117,6 +117,78 @@ struct MyDayOtherDaysTests {
         #expect(items.map(\.status) == [.due(.missed(reason: .giveUpLimit))])
     }
 
+    /// Every day at 9:00 from 1 October, Firm, received from someone.
+    func received(_ state: ReminderOrigin.ReceivedState) -> Reminder {
+        Reminder(title: "Take the pills", dueTime: NewYork.local(2026, 10, 1, 9), repeatRule: .everyDay, strength: .firm, createdAt: NewYork.local(2026, 9, 30, 20),
+                 origin: .received(connectionID: UUID(), sendersReminderID: UUID(), revision: 1, state: state))
+    }
+
+    /// The developer's answer to question 7 (2026-11-23): a past day shows what happened. Yesterday's
+    /// 9:00 went unanswered before the sender deleted the reminder, so it stays Missed there;
+    /// today and tomorrow say Canceled, as before.
+    @Test func aCanceledCopyShowsItsHistoryOnAPastDayAndCanceledFromToday() {
+        let copy = received(.accepted)
+        var engine = engineAtOnePM([copy])
+        engine.cancel(copy.id)
+
+        func status(on day: CalendarDay) -> [MyDay.Status] {
+            engine.myDay(on: day).items.filter { $0.reminderID == copy.id }.map(\.status)
+        }
+
+        #expect(status(on: yesterday) == [.due(.missed(reason: .giveUpLimit))])
+        #expect(status(on: today) == [.canceled])
+        #expect(status(on: tomorrow) == [.canceled])
+    }
+
+    /// A copy never accepted never nudged, so no past day lists it; today and tomorrow say Waiting.
+    @Test func aWaitingCopyIsntListedOnAPastDay() {
+        let copy = received(.waiting)
+        let engine = engineAtOnePM([copy])
+
+        func status(on day: CalendarDay) -> [MyDay.Status] {
+            engine.myDay(on: day).items.filter { $0.reminderID == copy.id }.map(\.status)
+        }
+
+        #expect(status(on: yesterday).isEmpty)
+        #expect(status(on: today) == [.waiting])
+        #expect(status(on: tomorrow) == [.waiting])
+    }
+
+    /// Havana's clocks go from 0:00 to 1:00 on Sunday 8 March 2026, so that day has no midnight.
+    /// Its My Day still ends at the next day's start: the 9th's 0:30 isn't in it.
+    @Test func aDayWhoseMidnightIsSkippedEndsAtTheNextDaysStart() throws {
+        let havana = try #require(TimeZone(identifier: "America/Havana"))
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = havana
+        func local(_ day: Int, _ hour: Int, _ minute: Int = 0) -> Date {
+            calendar.date(from: DateComponents(year: 2026, month: 3, day: day, hour: hour, minute: minute)) ?? .distantPast
+        }
+        let clock = FakeClock(now: local(5, 12))
+        let late = Reminder(title: "Lock up", dueTime: local(1, 0, 30), repeatRule: .everyDay, strength: .gentle, createdAt: local(1, 0))
+        var engine = Engine(clock: clock, scheduler: scheduler, timeZone: havana)
+        engine.update(reminders: [late])
+
+        let dueTimes = engine.myDay(on: CalendarDay(year: 2026, month: 3, day: 8)).items.map(\.dueTime)
+
+        #expect(dueTimes.allSatisfy { calendar.component(.day, from: $0) == 8 })
+    }
+
+    /// An Edit fixes only the occurrences on or after the day the reminder was made: Stretching,
+    /// made this morning with its rule reaching back two weeks, keeps nothing from before today,
+    /// so no past day lists it after the Edit either.
+    @Test func anEditFixesNothingFromBeforeTheReminderWasMade() throws {
+        let stretch = Reminder(title: "Stretch", dueTime: NewYork.local(2026, 10, 1, 6), repeatRule: .everyDay, strength: .gentle, createdAt: NewYork.local(2026, 10, 16, 8))
+        var engine = engineAtOnePM([stretch])
+        clock.now = NewYork.local(2026, 10, 16, 15)
+        var evening = stretch
+        evening.dueTime = NewYork.local(2026, 10, 1, 21)
+        try engine.edit(evening)
+
+        let fixed = engine.histories[stretch.id]?.closedOccurrences.keys.sorted() ?? []
+
+        #expect(fixed == [NewYork.local(2026, 10, 16, 6)])
+    }
+
     /// Delete takes a reminder's history with it, so a past day no longer lists it.
     @Test func aDeletedReminderIsntListedOnAPastDay() {
         var engine = engineAtOnePM()

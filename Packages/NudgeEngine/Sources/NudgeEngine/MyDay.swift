@@ -103,20 +103,28 @@ extension Engine {
     /// lets through, and with `fromOthers` only received ones (ticket 209). The counts cover every
     /// item the filter lets through, as in the mockup. A day is the local day in the engine's time
     /// zone (#374). A past day lists each occurrence as its history recorded it; a future day
-    /// lists what falls due on it as Left, or Paused if its reminder is.
+    /// lists what falls due on it as Left, or Paused if its reminder is. A received copy says
+    /// Canceled or Waiting from today on; a past day shows what happened to it, and a copy never
+    /// accepted had nothing happen (the developer's call, 2026-11-23).
     public func myDay(on day: CalendarDay? = nil, tagFilter: TagFilter = .off, fromOthers: Bool = false) -> MyDay {
         let now = clock.now
-        let start = day.map(startOfDay) ?? calendar.startOfDay(for: now)
-        guard let end = calendar.date(byAdding: .day, value: 1, to: start) else { return MyDay(items: []) }
+        let today = calendar.startOfDay(for: now)
+        // `startOfDay(for:)` gives the day's first moment even where a clock change skips midnight.
+        let start = day.map { calendar.startOfDay(for: startOfDay($0)) } ?? today
+        guard let next = calendar.date(byAdding: .day, value: 1, to: start) else { return MyDay(items: []) }
+        let end = calendar.startOfDay(for: next)
+        let isPast = start < today
         // The store may hand back a deleted tag's ID; it is no tag.
         let tagIDs = Set(tags.map(\.id))
-        // A reminder made after the day didn't exist on it, even if its rule reaches back.
+        // A reminder made after a past day didn't exist on it, even if its rule reaches back.
         let items = reminders.filter {
-            $0.createdAt < end && (!fromOthers || $0.isReceived) && tagFilter.includes(tagIDs.intersection($0.tagIDs))
+            (!isPast || $0.createdAt < end) && (!fromOthers || $0.isReceived) && tagFilter.includes(tagIDs.intersection($0.tagIDs))
         }.flatMap { reminder in
             dueTimes(of: reminder, in: start...end.justBefore).compactMap { dueTime -> MyDay.Item? in
                 let status: MyDay.Status
-                if reminder.isCanceled {
+                if isPast && reminder.isWaiting {
+                    return nil
+                } else if reminder.isCanceled && !isPast {
                     status = .canceled
                 } else if reminder.isWaiting {
                     status = .waiting
