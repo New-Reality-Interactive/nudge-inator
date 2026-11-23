@@ -958,7 +958,7 @@
       "comment" : "Nudge card: the next nudge rings as an alarm. Also How Alarm Sounds Work's picture of a nudge that rings as an alarm."
     },
     "Alarms" : {
-      "comment" : "Settings: row that shows whether alarms are allowed."
+      "comment" : "Settings: row that shows whether alarms are allowed, and opens the app's page in iOS Settings."
     },
     "Alarms and Time Sensitive are off, so Urgent nudges come as ordinary notifications." : {
       "comment" : "How It Nudges footer, when alarms and Time Sensitive are both off."
@@ -1160,7 +1160,7 @@
       "comment" : "A tutorial sheet, such as How Sharing Works: the top bar's button (a back arrow) that goes back a page. Dimmed on the first page."
     },
     "Badges" : {
-      "comment" : "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging."
+      "comment" : "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging, and opens the app's notification settings in iOS Settings."
     },
     "Beacon" : {
       "comment" : "Alarm sound name: a beacon-like signal tone that ships with the app."
@@ -2251,7 +2251,7 @@
       "comment" : "Nudge card: an Urgent nudge comes as a notification because the system's alarm limit is reached."
     },
     "Notifications" : {
-      "comment" : "Settings: row that shows whether notifications are allowed."
+      "comment" : "Settings: row that shows whether notifications are allowed, and opens the app's notification settings in iOS Settings."
     },
     "Notifications and alarms alike, even a Relentless reminder's. Quiet hours hold them all." : {
       "comment" : "How Quiet Hours Work, Rest Without Nudges: under \"Every nudge is held\". Relentless is a strength."
@@ -2443,8 +2443,11 @@
     "Open Settings for notifications" : {
       "comment" : "VoiceOver label of the notifications-off banner's Open Settings button."
     },
-    "Open iOS Settings" : {
-      "comment" : "Settings: row that opens the app's page in the iOS Settings app, where notifications, alarms and badges can be turned on."
+    "Opens notification settings." : {
+      "comment" : "VoiceOver hint on Settings' Notifications and Badges rows, which are buttons: they open the app's notification settings in the iOS Settings app."
+    },
+    "Opens the app's settings." : {
+      "comment" : "VoiceOver hint on Settings' Alarms row, which is a button: it opens the app's own page in the iOS Settings app, the only place alarms are turned on."
     },
     "Opens the custom repeat." : {
       "comment" : "VoiceOver hint on the reminder form's row that writes out a custom repeat: it opens the Custom repeat sheet."

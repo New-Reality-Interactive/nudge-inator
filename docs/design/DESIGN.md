@@ -250,7 +250,7 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
   the icon. My Day's chosen-tag tokens and each button's VoiceOver label carry the count there.
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
   actions are `{colors.tile-green}` (Done), `{colors.tile-red}` (Delete) and `{colors.tile-blue}` (Edit). Settings rows: red (Notifications, Badges, Delete All Data), orange
-  (Alarms), gray (About, Open iOS Settings, Default Pace, Default Alarm Sound, the Tutorials rows, and About's Privacy Policy
+  (Alarms), gray (About, Default Pace, Default Alarm Sound, the Tutorials rows, and About's Privacy Policy
   and Support), blue (Send a Test Nudge, Sharing). Tiles are icons for rows, not
   statuses, so "one color, one meaning" does not apply to them.
 
@@ -609,6 +609,23 @@ rewrites nothing above.
 - **Not tappable** (the developer's call, #499): it never leaves the tab, so it has no chevron, button
   or link styling, and names where to change quiet hours in words alone. VoiceOver reads it as one
   element. At accessibility text sizes the icon goes above the text, as the permission banner's does.
+
+### Settings shortcuts
+What the Settings rows mockup (`docs/mockups/2026-11-23-settings-rows/`, #372) adds. It rewrites
+nothing above except that Settings no longer has an Open iOS Settings row.
+- **Notifications, Alarms and Badges are buttons:** each keeps its tile, label and status (and the
+  status colors) and ends in the chevron (`chevron.forward`, `{colors.tertiary-label}`) after the
+  status. A row with a status and a chevron together is the exception to the Settings row's "status
+  or a chevron" below. Rows that open iOS Settings use the chevron, not `arrow.up.forward`, which
+  stays for a row that opens a web page.
+- **Where they go:** Notifications and Badges open the app's notification settings in iOS Settings;
+  Alarms opens the app's own page there, since alarms are reached only from it. A row opens Settings
+  whatever it reads, On included.
+- **VoiceOver:** one button per row that reads its label and status, then a short hint ("Opens
+  notification settings."; Alarms: "Opens the app's settings.").
+- **No Open iOS Settings row** (the developer's call, 2026-11-23): the three rows are the way in, so
+  the row that appeared only while something was off is gone. The permission banners keep their
+  Open Settings button.
 
 ### Settings row
 - Icon tile, label in `{typography.body}`, trailing status in `{colors.secondary-label}` (or
