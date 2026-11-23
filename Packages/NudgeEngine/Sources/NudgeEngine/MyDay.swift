@@ -87,17 +87,32 @@ public enum TagFilter: Equatable, Sendable {
 }
 
 extension Engine {
-    /// My Day as it stands now, for the reminders `tagFilter` lets through, and with `fromOthers`
-    /// only received ones (ticket 209). The counts cover every item the filter lets through, as in
-    /// the mockup. "Today" is the local day, in the engine's time zone, that holds now.
-    public func myDay(tagFilter: TagFilter = .off, fromOthers: Bool = false) -> MyDay {
+    /// How far ahead My Day goes, as Coming Up looks.
+    static let myDayDaysAhead = 7
+
+    /// The days My Day can show (#374): back to the day the earliest reminder was made, forward 7
+    /// days. With no reminders, just today.
+    public var myDayRange: ClosedRange<CalendarDay> {
+        let today = today
+        guard let earliest = reminders.map(\.createdAt).min() else { return today...today }
+        let ahead = calendar.date(byAdding: .day, value: Self.myDayDaysAhead, to: clock.now).map(calendarDay) ?? today
+        return min(today, calendarDay(of: earliest))...ahead
+    }
+
+    /// My Day on `day` as it stands now, today if none is given, for the reminders `tagFilter`
+    /// lets through, and with `fromOthers` only received ones (ticket 209). The counts cover every
+    /// item the filter lets through, as in the mockup. A day is the local day in the engine's time
+    /// zone (#374). A past day lists each occurrence as its history recorded it; a future day
+    /// lists what falls due on it as Left, or Paused if its reminder is.
+    public func myDay(on day: CalendarDay? = nil, tagFilter: TagFilter = .off, fromOthers: Bool = false) -> MyDay {
         let now = clock.now
-        let start = calendar.startOfDay(for: now)
+        let start = day.map(startOfDay) ?? calendar.startOfDay(for: now)
         guard let end = calendar.date(byAdding: .day, value: 1, to: start) else { return MyDay(items: []) }
         // The store may hand back a deleted tag's ID; it is no tag.
         let tagIDs = Set(tags.map(\.id))
+        // A reminder made after the day didn't exist on it, even if its rule reaches back.
         let items = reminders.filter {
-            (!fromOthers || $0.isReceived) && tagFilter.includes(tagIDs.intersection($0.tagIDs))
+            $0.createdAt < end && (!fromOthers || $0.isReceived) && tagFilter.includes(tagIDs.intersection($0.tagIDs))
         }.flatMap { reminder in
             dueTimes(of: reminder, in: start...end.justBefore).compactMap { dueTime -> MyDay.Item? in
                 let status: MyDay.Status
