@@ -20,6 +20,8 @@ struct MyDayScreen {
     let offersFilter: Bool
     private let nowTime: String
     private let now: Date
+    /// Only today has the "Now" marker.
+    private let showsNowMarker: Bool
 
     struct Count: Identifiable {
         var kind: MyDayCount
@@ -127,8 +129,9 @@ struct MyDayScreen {
     }
 
     /// The items with the "Now" marker among them, after those already due. An empty list has no
-    /// marker.
+    /// marker, nor has another day's (#374).
     var rows: [Row] {
+        guard showsNowMarker else { return items.map(Row.item) }
         guard !items.isEmpty else { return [] }
         let due = items.prefix { $0.dueTime <= now }
         return due.map(Row.item) + [.now(time: nowTime)] + items.dropFirst(due.count).map(Row.item)
@@ -152,6 +155,7 @@ struct MyDayScreen {
     /// Nothing is due: the app hosting tests, and previews without an engine.
     init(filter: MyDayFilter, now: Date) {
         self.now = now
+        showsNowMarker = true
         nowTime = now.formatted(date: .omitted, time: .shortened)
         counts = MyDayCount.allCases.map { Count(kind: $0, number: 0, isChosen: filter.count == $0) }
         items = []
@@ -162,10 +166,12 @@ struct MyDayScreen {
     }
 
     /// `now` is when the screen is drawn, the same moment as the engine's clock. `senders` names
-    /// who sent each received reminder; with none, each reads "From Someone".
-    init(engine: Engine, filter: MyDayFilter, now: Date, senders: Senders = Senders()) {
+    /// who sent each received reminder; with none, each reads "From Someone". `day` is the day it
+    /// lists, today if none (#374).
+    init(engine: Engine, filter: MyDayFilter, now: Date, senders: Senders = Senders(), day: CalendarDay? = nil) {
         let filter = filter.keeping(tagsIn: Set(engine.tags.map(\.id)))
         self.now = now
+        showsNowMarker = day.map { $0 == engine.today } ?? true
         let chosenTags = filter.tagIDs.compactMap { engine.tag(withID: $0) }
         let fromOthersToken = filter.fromOthers ? [FilterToken(kind: .fromOthers, tagText: nil)] : []
         if filter.noTags {
@@ -191,8 +197,8 @@ struct MyDayScreen {
         }
         emptyMessage = Self.emptyMessage(forCount: filter.count)
         nowTime = engine.timeOfDay(of: now)
-        let myDay = engine.myDay(tagFilter: filter.tagFilter, fromOthers: filter.fromOthers)
-        let wholeDay = engine.myDay()
+        let myDay = engine.myDay(on: day, tagFilter: filter.tagFilter, fromOthers: filter.fromOthers)
+        let wholeDay = engine.myDay(on: day)
         offersFilter = (!engine.tags.isEmpty || engine.hasReceivedReminders) && !wholeDay.items.isEmpty
         counts = MyDayCount.allCases.map { Count(kind: $0, number: myDay.count(of: $0), isChosen: filter.count == $0) }
         let reminders = Dictionary(engine.reminders.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })

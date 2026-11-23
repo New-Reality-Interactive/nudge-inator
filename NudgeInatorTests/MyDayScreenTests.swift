@@ -12,6 +12,8 @@ struct MyDayScreenTests {
     let clock = FakeClock(now: NewYork.local(2026, 10, 16, 6))
     let center = FakeNotificationCenter()
     let manager = FakeAlarmManager()
+    /// The day after ticket 16's day, for the screen on another day (#374).
+    let tomorrow = CalendarDay(year: 2026, month: 10, day: 17)
 
     func launchedModel() async throws -> AppModel {
         let store = try ReminderStore(location: .inMemory)
@@ -410,6 +412,56 @@ struct MyDayScreenTests {
 
         #expect(sheet(MyDayFilterChoices()).hasChanges)
         #expect(!sheet(MyDayFilterChoices()).canReset)
+    }
+
+    /// The screen lists the day it's asked for (#374), today when it's asked for none.
+    @Test func withNoDayTheScreenListsToday() async throws {
+        let day = try await dayAtOnePM()
+        let engine = day.model.engine
+
+        let screen = MyDayScreen(engine: engine, filter: MyDayFilter(), now: clock.now)
+        let today = MyDayScreen(engine: engine, filter: MyDayFilter(), now: clock.now, day: engine.today)
+
+        #expect(screen.items.map(\.id) == today.items.map(\.id))
+        #expect(screen.rows.map(\.id) == today.rows.map(\.id))
+    }
+
+    /// Tomorrow: the daily ones and the dentist, the stretch break and Grandma Paused, since both
+    /// are still paused. Nothing is Done, Nudging or Missed, and there's no Now marker.
+    @Test func anotherDayListsWhatFallsDueOnItWithNoNowMarker() async throws {
+        let day = try await dayAtOnePM()
+
+        let screen = MyDayScreen(engine: day.model.engine, filter: MyDayFilter(), now: clock.now, day: tomorrow)
+
+        #expect(screen.items.map(\.title) == ["Morning meds", "Walk the dog", "Stretch break", "Dentist appointment", "Call Grandma"])
+        #expect(screen.items.map(\.status) == [.left, .left, .paused, .left, .paused])
+        #expect(screen.counts.map(\.number) == [0, 0, 0, 3])
+        #expect(!screen.rows.contains { if case .now = $0 { true } else { false } })
+    }
+
+    /// The reminders were all made this morning, so yesterday lists none of them, though their
+    /// rules reach back to the first of the month.
+    @Test func aPastDayBeforeTheRemindersWereMadeListsNothing() async throws {
+        let day = try await dayAtOnePM()
+        let yesterday = CalendarDay(year: 2026, month: 10, day: 15)
+
+        let screen = MyDayScreen(engine: day.model.engine, filter: MyDayFilter(), now: clock.now, day: yesterday)
+
+        #expect(screen.items.isEmpty)
+        #expect(screen.rows.isEmpty)
+    }
+
+    /// The filter sheet's "Apply shows" counts the day My Day shows: #home tomorrow is the dog alone.
+    @Test func theFilterSheetCountsTheDayShown() async throws {
+        let day = try await dayAtOnePM()
+        var draft = MyDayFilterChoices()
+        draft.toggle(day.home.id)
+
+        let sheet = MyDayFilterSheet(engine: day.model.engine, draft: draft, applied: MyDayFilterChoices(), day: tomorrow)
+        let todays = MyDayFilterSheet(engine: day.model.engine, draft: draft, applied: MyDayFilterChoices())
+
+        #expect(sheet.dueCount == 1)
+        #expect(todays.dueCount == 3)
     }
 
     /// The test host and previews have no engine: My Day then shows nothing is due.

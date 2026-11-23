@@ -452,13 +452,17 @@ public struct Engine {
         applyPlan()
     }
 
-    /// Fixes how the occurrences that closed so far closed, before the reminder's fields change,
-    /// since the clock would now work them out from the new fields. With `movingNudgeTimes` the new
-    /// fields apply from the next occurrence: due times up to the latest never happened, and the
-    /// system's alarm-limit answers about the old ladder go.
+    /// Fixes how every occurrence that closed so far closed, before the reminder's fields change,
+    /// since the clock would now work them out from the new fields. Every one since the day the
+    /// reminder was made, however old, so My Day on a past day still lists it (#374); none from
+    /// before, which My Day never lists. With `movingNudgeTimes` the new fields apply from the
+    /// next occurrence: due times up to the latest never happened, and the system's alarm-limit
+    /// answers about the old ladder go.
     private mutating func fixOccurrences(of current: Reminder, movingNudgeTimes: Bool) {
         let latest = latestOccurrence(for: current.id)?.dueTime
-        for dueTime in latestAndListedDueTimes(of: current) {
+        let made = calendar.startOfDay(for: current.createdAt)
+        let past = made <= clock.now ? dueTimes(of: current, in: made...clock.now) : []
+        for dueTime in Set([latest].compactMap(\.self) + past).sorted() {
             if let closing = reading(of: current.id, dueAt: dueTime)?.closing {
                 fix(closing, of: current, dueAt: dueTime)
             }
@@ -844,7 +848,7 @@ public struct Engine {
     }
 
     /// The latest occurrence's due time, however old, then each the Now tab's Last 24 Hours can
-    /// list, which may repeat it. What an Edit fixes, so what it moves due times away from.
+    /// list, which may repeat it: the ones an alarm may still be ringing for.
     private func latestAndListedDueTimes(of reminder: Reminder) -> [Date] {
         [latestOccurrence(for: reminder.id)?.dueTime].compactMap(\.self) + dueTimes(of: reminder, in: earliestListedDueTime...clock.now)
     }
