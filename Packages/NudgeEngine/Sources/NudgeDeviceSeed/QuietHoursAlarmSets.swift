@@ -10,8 +10,8 @@ import NudgeEngine
 ///
 /// Every time below is counted from `m`, the whole minute the load falls in: a due time is rounded
 /// down to the minute, so nudges land on whole minutes after `m` whichever second the load is
-/// at, and a test checks that for several seconds. These are the only sets that ring, by the
-/// developer's go of 2026-11-22 (`DeviceSeedTests.setsThatRing`); `clean` deletes the reminder,
+/// at, and a test checks that for several seconds. With `urgency-cards` these are the only sets that
+/// ring, by the developer's go of 2026-11-22 (`DeviceSeedTests.setsThatRing`); `clean` deletes the reminder,
 /// which cancels its alarms and notifications, and puts back the person's schedules.
 extension SeedSet {
     /// A window holds an alarm and a notification. The reminder was due at `m` − 2 min, nudging

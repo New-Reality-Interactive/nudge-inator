@@ -121,7 +121,9 @@ public struct SeedQuietSpan: Sendable {
 /// A quiet hours schedule timed from the load (#379), for a check of what a window does to nudges
 /// that are due minutes away: on every day, from `startIn` seconds after the load, rounded down to
 /// the whole minute as a due time is, and lasting `length`. It replaces the person's schedules for
-/// the check, and `clean` puts them back.
+/// the check, and `clean` puts them back. Read from the phone's clock at the load, so a load within
+/// minutes of a daylight saving change, or a change of time zone before the check, can put it an
+/// hour off.
 public struct SeedQuietWindow: Equatable, Sendable {
     public var startIn: TimeInterval
     public var length: TimeInterval
@@ -135,10 +137,10 @@ public struct SeedQuietWindow: Equatable, Sendable {
     /// that crosses midnight wraps onto the next day's clock.
     public func times(from load: Date, calendar: Calendar) -> (start: TimeOfDay, end: TimeOfDay) {
         let start = Date(timeIntervalSinceReferenceDate: (load.addingTimeInterval(startIn).timeIntervalSinceReferenceDate / 60).rounded(.down) * 60)
-        return (clock(start, calendar), clock(start.addingTimeInterval(length), calendar))
+        return (timeOfDay(start, calendar), timeOfDay(start.addingTimeInterval(length), calendar))
     }
 
-    private func clock(_ date: Date, _ calendar: Calendar) -> TimeOfDay {
+    private func timeOfDay(_ date: Date, _ calendar: Calendar) -> TimeOfDay {
         let parts = calendar.dateComponents([.hour, .minute], from: date)
         return TimeOfDay(wrappingMinutes: (parts.hour ?? 0) * 60 + (parts.minute ?? 0))
     }
@@ -146,9 +148,13 @@ public struct SeedQuietWindow: Equatable, Sendable {
     /// As `SeedSettingText` in the app reads a schedule: `22:00-07:00 SU,MO,TU,WE,TH,FR,SA on`.
     func text(from load: Date, calendar: Calendar) -> String {
         let times = times(from: load, calendar: calendar)
-        func clock(_ time: TimeOfDay) -> String { String(format: "%02d:%02d", time.hour, time.minute) }
-        return "\(clock(times.start))-\(clock(times.end)) SU,MO,TU,WE,TH,FR,SA on"
+        return "\(times.start.clockText)-\(times.end.clockText) SU,MO,TU,WE,TH,FR,SA on"
     }
+}
+
+extension TimeOfDay {
+    /// `07:05`, as a schedule's text writes a time.
+    var clockText: String { String(format: "%02d:%02d", hour, minute) }
 }
 
 /// A named set of test data for one manual device check. Add one by writing a file like
@@ -185,6 +191,16 @@ public struct SeedSet: Sendable {
 }
 
 extension SeedSet {
+    /// The settings a load applies: `settings`, with the `quietHours` one written from `quietWindow`
+    /// as of the load, so the schedule and the reminders' due times count from the same instant.
+    func settings(at load: Date, calendar: Calendar) -> [SeedSetting: String] {
+        var settings = settings
+        if let quietWindow {
+            settings[.quietHours] = quietWindow.text(from: load, calendar: calendar)
+        }
+        return settings
+    }
+
     /// Every set a launch can name.
     public static let all: [SeedSet] = [.search, .dueDates, .swipeTiles, .tagSearch, .lastTag, .nameOrder, .deliveredNudges, .keptOrder, .received, .fromOthers, .rowSwipes, .urgencyCards, .alarmSound, .detailsSound, .useForAll, .missedNote, .quietHoursPage, .quietHoursNone, .quietHoursTutorial, .quietHoursBanner, .quietHoursBannerEmpty, .quietHoursWindow, .quietHoursRinging, .quietHoursEdit, .quietHoursQuietNow]
 }

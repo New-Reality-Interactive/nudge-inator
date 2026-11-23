@@ -70,9 +70,9 @@ final class DeviceSeedTests {
         let set = try #require(SeedSet.all.first { $0.name == name })
         let window = try #require(set.quietWindow)
         let load = Date()
-        let times = window.times(from: load, calendar: .current)
+        let times = window.times(from: load, calendar: .autoupdatingCurrent)
 
-        let text = window.text(from: load, calendar: .current)
+        let text = window.text(from: load, calendar: .autoupdatingCurrent)
 
         let schedule = try #require(SeedSettingText.quietHours(from: text)?.schedules.first)
         #expect(schedule.isOn)

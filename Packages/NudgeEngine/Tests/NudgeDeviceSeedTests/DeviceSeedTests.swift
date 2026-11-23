@@ -416,9 +416,9 @@ struct SeedQuietWindowTests {
 
         let times = Self.window.quietWindow!.times(from: load, calendar: calendar)
 
-        let startMinute = calendar.component(.minute, from: target.now)
-        #expect(times.start == (try TimeOfDay(hour: calendar.component(.hour, from: target.now), minute: startMinute + 3)))
-        #expect(times.end == (try TimeOfDay(hour: calendar.component(.hour, from: target.now), minute: startMinute + 9)))
+        let minuteOfDay = calendar.component(.hour, from: target.now) * 60 + calendar.component(.minute, from: target.now)
+        #expect(times.start == TimeOfDay(wrappingMinutes: minuteOfDay + 3))
+        #expect(times.end == TimeOfDay(wrappingMinutes: minuteOfDay + 9))
     }
 
     @Test func aWindowThatCrossesMidnightWrapsOntoTheClock() throws {
@@ -435,9 +435,18 @@ struct SeedQuietWindowTests {
     @Test func loadingWritesTheWindowAsTheQuietHoursSchedule() {
         _ = DeviceSeed.run(command: "window", sets: [Self.window], on: target, record: store)
 
-        let times = Self.window.quietWindow!.times(from: target.now, calendar: .current)
-        func clock(_ time: TimeOfDay) -> String { String(format: "%02d:%02d", time.hour, time.minute) }
-        #expect(target.setting(.quietHours) == "\(clock(times.start))-\(clock(times.end)) SU,MO,TU,WE,TH,FR,SA on")
+        let times = Self.window.quietWindow!.times(from: target.now, calendar: .autoupdatingCurrent)
+        func hhmm(_ time: TimeOfDay) -> String { String(format: "%02d:%02d", time.hour, time.minute) }
+        #expect(target.setting(.quietHours) == "\(hhmm(times.start))-\(hhmm(times.end)) SU,MO,TU,WE,TH,FR,SA on")
+    }
+
+    /// The window and the reminders count from one read of the clock, whatever it reads next.
+    @Test func theWindowAndTheDueTimesCountFromTheSameInstant() {
+        let moving = MovingClockTarget()
+
+        _ = DeviceSeed.run(command: "window", sets: [Self.window], on: moving, record: store)
+
+        #expect(moving.nowReads == 1)
     }
 
     @Test func cleanPutsTheEarlierSchedulesBack() {

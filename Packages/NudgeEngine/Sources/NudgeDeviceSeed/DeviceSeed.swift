@@ -37,6 +37,8 @@ public enum DeviceSeed {
 
     /// Loading a set again replaces its reminders, so one copy is left.
     private static func load(_ set: SeedSet, into target: some SeedTarget, record store: some SeedRecordStore) {
+        // Read once: the window, the span and every due time count from the same instant.
+        let now = target.now
         var record = store.read()
         var loaded = record.sets[set.name] ?? SeedRecord.Loaded()
 
@@ -61,11 +63,7 @@ public enum DeviceSeed {
 
         // Only the first load of a setting keeps its value, whichever set that is: a later load,
         // of this set or another, would save a seeded value as the original.
-        var settings = set.settings
-        if let window = set.quietWindow {
-            settings[.quietHours] = window.text(from: target.now, calendar: .current)
-        }
-        for (setting, value) in settings {
+        for (setting, value) in set.settings(at: now, calendar: .autoupdatingCurrent) {
             let keptByAnotherSet = otherSets.contains { $0.earlierSettings[setting.rawValue] != nil }
             if loaded.earlierSettings[setting.rawValue] == nil, !keptByAnotherSet {
                 loaded.earlierSettings[setting.rawValue] = target.setting(setting)
@@ -74,7 +72,6 @@ public enum DeviceSeed {
         }
 
         // A load again replaces the earlier span.
-        let now = target.now
         if let addedAt = loaded.quietSpanAddedAt {
             target.removeQuietSpan(replacedAt: addedAt)
         }
