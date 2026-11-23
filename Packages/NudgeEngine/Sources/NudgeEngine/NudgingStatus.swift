@@ -13,6 +13,10 @@ public struct NudgingStatus: Equatable, Sendable {
     /// The next nudge that will arrive, or `nil` after the last one, when quiet hours hold every
     /// one left, or when the next occurrence of its repeat falls due first and takes over.
     public var nextNudge: NextNudge?
+    /// Quiet Now is on and holds every nudge left, so `nextNudge` is `nil` for now: turning Quiet
+    /// Now off brings the rest back, where after the last nudge, or under a schedule that holds
+    /// the rest, there is nothing to come (#379's phone check).
+    public var isHeldByQuietNow: Bool = false
     /// When it closes as Missed, by its give-up limit or a take-over, unless it's Done first.
     public var missedAt: Date
 }
@@ -72,12 +76,14 @@ extension Engine {
             let delivery = nudgeDelivery(of: reminder, firingAt: nudgeTimes[index], urgency: urgency)
             return NextNudge(nudgeNumber: index + 1, fireTime: nudgeTimes[index], urgency: urgency, delivery: delivery)
         }
+        let nudgesLeft = nudgeTimes.count > nudgesSent
         return NudgingStatus(
             dueTime: occurrence.dueTime,
             nudgesSent: nudgesSent,
             nudgesInAll: nudgeTimes.count,
             urgency: strength.urgency(ofNudge: nudgesSent),
             nextNudge: nextNudge,
+            isHeldByQuietNow: nextNudge == nil && nudgesLeft && quietHours.quietNowSince != nil,
             missedAt: missedAt
         )
     }

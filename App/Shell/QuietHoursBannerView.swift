@@ -19,14 +19,25 @@ struct QuietHoursBannerView: View {
             BannerCard(systemImage: "bell.slash", text: text(detail), borderColor: .neutral) {}
                 .textCase(nil)
                 .accessibilityElement(children: .combine)
+                .accessibilityLabel(Text(Self.spoken(detail)))
                 // In a header, but not one itself.
                 .accessibilityRemoveTraits(.isHeader)
         }
     }
 
+    private static let title = LocalizedStringResource("Quiet hours are holding nudges", comment: "Banner on Now, My Day and Reminders while quiet hours are holding nudges: its bold title.")
+
+    /// What VoiceOver reads: the title, a pause, then the detail. On screen the two are on separate
+    /// lines, which VoiceOver reads as one run (#379's phone check).
+    static func spoken(_ detail: LocalizedStringResource) -> LocalizedStringResource {
+        let title = String(localized: Self.title)
+        let detail = String(localized: detail)
+        return LocalizedStringResource("\(title). \(detail)", comment: "VoiceOver label of the holding banner on Now, My Day and Reminders. 1: its title, \"Quiet hours are holding nudges\". 2: its detail, such as \"Until 7:00 AM. Change this in Settings, under Quiet Hours.\"")
+    }
+
     /// The bold title, then the detail in the secondary label color, on its own line.
     private func text(_ detail: LocalizedStringResource) -> Text {
-        var title = AttributedString(localized: LocalizedStringResource("Quiet hours are holding nudges", comment: "Banner on Now, My Day and Reminders while quiet hours are holding nudges: its bold title."))
+        var title = AttributedString(localized: Self.title)
         title.inlinePresentationIntent = .stronglyEmphasized
         var detail = AttributedString(localized: detail)
         detail.foregroundColor = Color(uiColor: .secondaryLabel)

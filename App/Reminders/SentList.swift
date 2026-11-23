@@ -315,7 +315,6 @@ private struct NoOneToSendToView: View {
 
     var body: some View {
         ScrollView {
-            QuietHoursBannerAboveEmptyState()
             BannerAboveEmptyState(banner: banner)
             ContentUnavailableView {
                 EmptyStateLabel(systemImage: "person.2") {
@@ -335,6 +334,7 @@ private struct NoOneToSendToView: View {
             }
         }
         .centeredWhenShort()
+        .safeAreaInset(edge: .top, spacing: 0) { QuietHoursBannerAboveEmptyState() }
     }
 }
 
@@ -345,7 +345,6 @@ private struct NothingSentView: View {
 
     var body: some View {
         ScrollView {
-            QuietHoursBannerAboveEmptyState()
             BannerAboveEmptyState(banner: banner)
             ContentUnavailableView {
                 EmptyStateLabel(systemImage: "list.bullet.clipboard") {
@@ -359,6 +358,7 @@ private struct NothingSentView: View {
             }
         }
         .centeredWhenShort()
+        .safeAreaInset(edge: .top, spacing: 0) { QuietHoursBannerAboveEmptyState() }
     }
 }
 

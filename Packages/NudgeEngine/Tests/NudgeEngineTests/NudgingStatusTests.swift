@@ -178,4 +178,58 @@ struct NudgingStatusTests {
         #expect(status.nudgesSent == 2)
         #expect(status.nudgesInAll == 5)
     }
+
+    // MARK: Quiet Now holding the rest (#379's phone check)
+
+    func engine(quietHours: QuietHours, holding reminders: [Reminder]) -> Engine {
+        var engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone, quietHours: quietHours)
+        engine.update(reminders: reminders)
+        return engine
+    }
+
+    /// While Quiet Now is on no nudge is left to name, but turning it off brings them back, so the
+    /// card must not say that was the last one.
+    @Test func quietNowHoldingEveryNudgeLeftIsSaidSo() throws {
+        var quietHours = QuietHours()
+        quietHours.turnOnQuietNow(at: NewYork.local(2026, 10, 16, 9, 35))
+        let engine = engine(quietHours: quietHours, holding: [bins])
+        clock.now = NewYork.local(2026, 10, 16, 9, 40)
+
+        let status = try #require(engine.nudgingStatus(of: bins.id))
+
+        #expect(status.nextNudge == nil)
+        #expect(status.isHeldByQuietNow)
+    }
+
+    @Test func aNudgeStillComingIsNotHeldByQuietNow() throws {
+        let engine = engine(holding: [bins])
+        clock.now = NewYork.local(2026, 10, 16, 9, 40)
+
+        #expect(try #require(engine.nudgingStatus(of: bins.id)).isHeldByQuietNow == false)
+    }
+
+    /// A schedule that covers the rest of the occurrence leaves no nudge to come: that was the last.
+    @Test func aScheduleHoldingEveryNudgeLeftIsNotQuietNow() throws {
+        let schedule = try QuietHoursSchedule(start: TimeOfDay(hour: 9, minute: 35), end: TimeOfDay(hour: 12), days: Set(RepeatRule.Weekday.allCases))
+        let engine = engine(quietHours: QuietHours(schedules: [schedule]), holding: [bins])
+        clock.now = NewYork.local(2026, 10, 16, 9, 40)
+
+        let status = try #require(engine.nudgingStatus(of: bins.id))
+
+        #expect(status.nextNudge == nil)
+        #expect(!status.isHeldByQuietNow)
+    }
+
+    /// Quiet Now on, but the nudges are all sent: nothing is being held, and the last nudge is the last.
+    @Test func quietNowAfterTheLastNudgeHoldsNothing() throws {
+        var quietHours = QuietHours()
+        quietHours.turnOnQuietNow(at: NewYork.local(2026, 10, 16, 8, 30))
+        let engine = engine(quietHours: quietHours, holding: [bins])
+        // Firm's 20th nudge is at 11:12:30 and it gives up 5 minutes later.
+        clock.now = NewYork.local(2026, 10, 16, 11, 13)
+        let status = try #require(engine.nudgingStatus(of: bins.id))
+
+        #expect(status.nudgesSent == status.nudgesInAll)
+        #expect(!status.isHeldByQuietNow)
+    }
 }
