@@ -99,6 +99,35 @@ struct MyDayOtherDaysTests {
         #expect(engine.myDayRange == today...today)
     }
 
+    /// The swipe and Previous Day and Next Day move one calendar day (#375): across a month end, a
+    /// year end, and New York's clock change on 1 November, whose day is 25 hours long.
+    @Test(arguments: [
+        (CalendarDay(year: 2026, month: 10, day: 31), 1, CalendarDay(year: 2026, month: 11, day: 1)),
+        (CalendarDay(year: 2026, month: 11, day: 1), 1, CalendarDay(year: 2026, month: 11, day: 2)),
+        (CalendarDay(year: 2026, month: 11, day: 2), -1, CalendarDay(year: 2026, month: 11, day: 1)),
+        (CalendarDay(year: 2026, month: 1, day: 1), -1, CalendarDay(year: 2025, month: 12, day: 31)),
+        (CalendarDay(year: 2026, month: 10, day: 16), 7, CalendarDay(year: 2026, month: 10, day: 23)),
+    ])
+    func aDayMovesByWholeCalendarDays(from day: CalendarDay, by days: Int, to expected: CalendarDay) {
+        let engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone)
+
+        #expect(engine.day(day, movedBy: days) == expected)
+    }
+
+    /// My Day's day label and its sentences name a day by its date (#375), with the year only when
+    /// it isn't this year's.
+    @Test(arguments: [
+        (CalendarDay(year: 2026, month: 9, day: 29), "Tuesday, September 29", "Tue, Sep 29"),
+        (CalendarDay(year: 2025, month: 12, day: 29), "Monday, December 29, 2025", "Mon, Dec 29, 2025"),
+    ])
+    func aDayIsNamedByItsDateWithTheYearOnlyWhenItIsAnotherYears(day: CalendarDay, long: String, short: String) {
+        clock.now = NewYork.local(2026, 10, 16, 13)
+        let engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone, locale: Locale(identifier: "en_US"))
+
+        #expect(engine.longDate(of: day) == long)
+        #expect(engine.shortDate(of: day) == short)
+    }
+
     /// The developer's answer to question 6 (2026-11-23): an Edit that moves the due time keeps
     /// how every past occurrence closed, not only the latest and the last 24 hours', so the meds
     /// Missed on the 14th and the 15th still show at 6:30 on those days, and the evening time

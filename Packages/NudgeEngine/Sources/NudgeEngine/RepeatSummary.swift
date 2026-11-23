@@ -21,6 +21,16 @@ extension Engine {
         summaryWriter.shortDate(of: date)
     }
 
+    /// My Day's day label (#375): "Tuesday, September 29", with the year when it isn't this year's.
+    public func longDate(of day: CalendarDay) -> String {
+        summaryWriter.named(startOfDay(day), weekday: .wide, month: .wide, withYear: day.year != today.year)
+    }
+
+    /// A day in My Day's sentences (#375): "Tue, Sep 29", with the year when it isn't this year's.
+    public func shortDate(of day: CalendarDay) -> String {
+        summaryWriter.named(startOfDay(day), weekday: .abbreviated, month: .abbreviated, withYear: day.year != today.year)
+    }
+
     /// The time of day, such as "9:00 AM", in the engine's locale and time zone.
     public func timeOfDay(of date: Date) -> String {
         summaryWriter.time(of: date)
@@ -117,7 +127,13 @@ struct RepeatSummaryWriter {
 
     /// "Sat 10 Oct" in en_GB, "Sat, Oct 10" in en_US.
     func shortDate(of date: Date) -> String {
-        date.formatted(Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone).weekday(.abbreviated).day().month(.abbreviated))
+        named(date, weekday: .abbreviated, month: .abbreviated, withYear: false)
+    }
+
+    /// A date with its weekday, day and month, and its year if asked.
+    func named(_ date: Date, weekday: Date.FormatStyle.Symbol.Weekday, month: Date.FormatStyle.Symbol.Month, withYear: Bool) -> String {
+        let style = Date.FormatStyle(locale: locale, calendar: calendar, timeZone: calendar.timeZone).weekday(weekday).day().month(month)
+        return date.formatted(withYear ? style.year() : style)
     }
 
     /// What the rule falls on, before its time: "Every 2 weeks on Monday and Wednesday". The

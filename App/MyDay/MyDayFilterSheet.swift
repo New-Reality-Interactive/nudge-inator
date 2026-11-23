@@ -23,7 +23,7 @@ struct MyDayFilterSheet: FilterSheetSummary {
     /// How many Apply would show on the day My Day shows.
     let dueCount: Int
 
-    /// `day` is the day My Day shows, today if none (#374).
+    /// `day` is the day My Day shows, today if none (#374); the count and its words are that day's (#375).
     init(engine: Engine, draft: MyDayFilterChoices, applied: MyDayFilterChoices, day: CalendarDay? = nil) {
         let existing = Set(engine.tags.map(\.id))
         let draft = draft.keeping(tagsIn: existing)
@@ -31,8 +31,9 @@ struct MyDayFilterSheet: FilterSheetSummary {
         hasChanges = draft != applied.keeping(tagsIn: existing)
         canReset = draft != MyDayFilterChoices()
         offersFromOthers = draft.fromOthers || engine.hasReceivedReminders
-        let due = engine.myDay(on: day, tagFilter: draft.tagFilter, fromOthers: draft.fromOthers).items.count
+        let shown = MyDayShownDay(engine: engine, asked: day)
+        let due = engine.myDay(on: shown.day, tagFilter: draft.tagFilter, fromOthers: draft.fromOthers).items.count
         dueCount = due
-        result = LocalizedStringResource("Apply shows \(due) reminders due today.", comment: "My Day's filter sheet: above Reset. The placeholder is how many reminders due today My Day would show with these filters. VoiceOver also speaks it when a choice changes it.")
+        result = shown.sheetResult(due: due)
     }
 }

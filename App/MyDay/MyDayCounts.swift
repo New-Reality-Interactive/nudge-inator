@@ -37,6 +37,8 @@ extension MyDayCount {
 /// filter. In landscape they are capsules in a row, as the mockup's compact layout has them.
 struct MyDayCounts: View {
     let counts: [MyDayScreen.Count]
+    /// VoiceOver's name for the group, which says the day (#375).
+    let label: LocalizedStringResource
     let tap: (MyDayCount) -> Void
 
     @Environment(\.verticalSizeClass) private var verticalSizeClass
@@ -53,7 +55,7 @@ struct MyDayCounts: View {
                 }
             }
             .accessibilityElement(children: .contain)
-            .accessibilityLabel(Text("Today's counts. Choose one to show only those.", comment: "VoiceOver label of the group of four counts on My Day."))
+            .accessibilityLabel(Text(label))
     }
 
     /// Four equal cells in portrait, capsules that wrap to rows in landscape. At accessibility
@@ -172,7 +174,7 @@ private struct CountCell: View {
             .init(kind: .nudging, number: 1, isChosen: true),
             .init(kind: .missed, number: 0, isChosen: false),
             .init(kind: .left, number: 3, isChosen: false),
-        ]) { _ in }
+        ], label: MyDayShownDay(now: .now).countsLabel) { _ in }
     }
     .padding()
 }

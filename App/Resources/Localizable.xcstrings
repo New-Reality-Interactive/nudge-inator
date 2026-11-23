@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "%@" : {
-      "comment" : "My Day: under the title of an occurrence due later today. The placeholder is how soon, such as \"in 4 hr.\"."
+      "comment" : "My Day: under the title of an occurrence still to come: on today how soon, such as \"in 4 hr.\"; on a later day how it repeats, such as \"Every day at 6:30 AM\"."
     },
     "%@ %@" : {
       "comment" : "Via label: a glyph, then how a nudge arrives. Keep the glyph first.",
@@ -290,6 +290,72 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@. %2$@"
+          }
+        }
+      }
+    },
+    "%@. %lld reminders due with your filter." : {
+      "comment" : "VoiceOver, when My Day moves to another day with a tag filter on. 1: the day as its label reads, such as \"Tomorrow, Tuesday, September 29\". 2: how many reminders due that day the filter shows.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@. %2$#@n@ due with your filter."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%@. %lld reminders due." : {
+      "comment" : "VoiceOver, when My Day moves to another day. 1: the day as its label reads, such as \"Tomorrow, Tuesday, September 29\". 2: how many reminders are due that day.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@. %2$#@n@ due."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1045,6 +1111,39 @@
     "Apply" : {
       "comment" : "A filter sheet's confirm button (a checkmark), on My Day, Reminders and Tags: applies the choices and closes the sheet.\nThe Custom repeat sheet's only button (a checkmark): it closes the sheet. Its choices are already the reminder form's repeat."
     },
+    "Apply shows %lld reminders due on %@." : {
+      "comment" : "My Day's filter sheet on a day other than today, yesterday or tomorrow: above Reset. 1: how many reminders due that day My Day would show with these filters. 2: the day, such as \"Tue, Sep 29\". VoiceOver also speaks it when a choice changes it.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apply shows %1$#@n@ due on %2$@."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Apply shows %lld reminders due today." : {
       "comment" : "My Day's filter sheet: above Reset. The placeholder is how many reminders due today My Day would show with these filters. VoiceOver also speaks it when a choice changes it.",
       "localizations" : {
@@ -1052,6 +1151,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apply shows %#@n@ due today."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Apply shows %lld reminders due tomorrow." : {
+      "comment" : "My Day's filter sheet on tomorrow: above Reset. The placeholder is how many reminders due tomorrow My Day would show with these filters. VoiceOver also speaks it when a choice changes it.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apply shows %#@n@ due tomorrow."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Apply shows %lld reminders due yesterday." : {
+      "comment" : "My Day's filter sheet on yesterday: above Reset. The placeholder is how many reminders due yesterday My Day would show with these filters. VoiceOver also speaks it when a choice changes it.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apply shows %#@n@ due yesterday."
           },
           "substitutions" : {
             "n" : {
@@ -1363,6 +1528,15 @@
     "Couldn't Turn Off Sharing" : {
       "comment" : "Settings and Turn Off Sharing's sheet: title of the message shown when turning Sharing off couldn't be saved."
     },
+    "Counts for %@. Choose one to show only those." : {
+      "comment" : "VoiceOver label of the group of four counts on My Day on a day other than today, yesterday or tomorrow. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Counts for tomorrow. Choose one to show only those." : {
+      "comment" : "VoiceOver label of the group of four counts on My Day on tomorrow."
+    },
+    "Counts for yesterday. Choose one to show only those." : {
+      "comment" : "VoiceOver label of the group of four counts on My Day on yesterday."
+    },
     "Created" : {
       "comment" : "Reminders tab's Sort menu: the header of the section that sorts by when each reminder was made."
     },
@@ -1523,6 +1697,18 @@
     "Due Date, Latest First" : {
       "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Latest First."
     },
+    "Due on %@ with all selected tags" : {
+      "comment" : "My Day on a day other than today, yesterday or tomorrow: under the filter tokens when two or more tags are chosen and Match is All Tags. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Due on %@ with any selected tags" : {
+      "comment" : "My Day on a day other than today, yesterday or tomorrow: under the filter tokens when two or more tags are chosen and Match is Any Tag. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Due on %@ with no tags" : {
+      "comment" : "My Day on a day other than today, yesterday or tomorrow: under the No Tags filter token. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Due on %@ with the selected tag" : {
+      "comment" : "My Day on a day other than today, yesterday or tomorrow: under the filter token when one tag is chosen. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
     "Due time changed from %@ to %@" : {
       "comment" : "Change note line: the sender moved a reminder's due time. 1: the old time, such as \"8:00 AM\", or with its day, such as \"Today at 8:00 AM\", when the day changed too. 2: the new time, in the same style.",
       "localizations" : {
@@ -1545,6 +1731,30 @@
     },
     "Due today with the selected tag" : {
       "comment" : "My Day: under the filter token when one tag is chosen."
+    },
+    "Due tomorrow with all selected tags" : {
+      "comment" : "My Day on tomorrow: under the filter tokens when two or more tags are chosen and Match is All Tags."
+    },
+    "Due tomorrow with any selected tags" : {
+      "comment" : "My Day on tomorrow: under the filter tokens when two or more tags are chosen and Match is Any Tag."
+    },
+    "Due tomorrow with no tags" : {
+      "comment" : "My Day on tomorrow: under the No Tags filter token."
+    },
+    "Due tomorrow with the selected tag" : {
+      "comment" : "My Day on tomorrow: under the filter token when one tag is chosen."
+    },
+    "Due yesterday with all selected tags" : {
+      "comment" : "My Day on yesterday: under the filter tokens when two or more tags are chosen and Match is All Tags."
+    },
+    "Due yesterday with any selected tags" : {
+      "comment" : "My Day on yesterday: under the filter tokens when two or more tags are chosen and Match is Any Tag."
+    },
+    "Due yesterday with no tags" : {
+      "comment" : "My Day on yesterday: under the No Tags filter token."
+    },
+    "Due yesterday with the selected tag" : {
+      "comment" : "My Day on yesterday: under the filter token when one tag is chosen."
     },
     "During a Focus, Normal nudges wait until High, unless you allow %@ in that Focus." : {
       "comment" : "How It Nudges footer. The placeholder is the app's name."
@@ -2074,6 +2284,9 @@
     "Next 7 days" : {
       "comment" : "Now: how far ahead the Coming Up section looks."
     },
+    "Next Day" : {
+      "comment" : "My Day: the button (a forward arrow) after the day label that shows the day after. Dimmed 7 days ahead, the last day My Day can show."
+    },
     "Next Times" : {
       "comment" : "Header of the Custom repeat page's next three due times."
     },
@@ -2190,20 +2403,62 @@
     "Nothing due" : {
       "comment" : "A sent reminder's details, under \"<name>, Last 7 Days\": the person's copy had nothing due that day."
     },
+    "Nothing from %@ is left to do." : {
+      "comment" : "My Day on a day before yesterday: the list when Left is chosen and nothing due that day is left to do. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Nothing from %@ is nudging you yet." : {
+      "comment" : "My Day on a day after tomorrow: the list when Nudging is chosen, which a day still to come can't have. The placeholder is the day, such as \"Fri, Oct 2\"."
+    },
+    "Nothing from %@ is nudging you." : {
+      "comment" : "My Day on a day before yesterday: the list when Nudging is chosen and nothing due that day is nudging. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Nothing from tomorrow is nudging you yet." : {
+      "comment" : "My Day on tomorrow: the list when Nudging is chosen, which a day still to come can't have."
+    },
+    "Nothing from yesterday is left to do." : {
+      "comment" : "My Day on yesterday: the list when Left is chosen and nothing due yesterday is left to do."
+    },
+    "Nothing from yesterday is nudging you." : {
+      "comment" : "My Day on yesterday: the list when Nudging is chosen and nothing due yesterday is nudging."
+    },
     "Nothing has changed. Try again." : {
       "comment" : "Disconnect's sheet and Connection Ended: under Couldn't Disconnect.\nSettings and Turn Off Sharing's sheet: under Couldn't Turn Off Sharing."
     },
     "Nothing has gone wrong with sharing. If iCloud refuses a change or a connection ends, it shows here." : {
       "comment" : "Share Activity: under \"No Share Activity\"."
     },
+    "Nothing is done yet for %@." : {
+      "comment" : "My Day on a day after tomorrow: the list when Done is chosen, which a day still to come can't have. The placeholder is the day, such as \"Fri, Oct 2\"."
+    },
+    "Nothing is done yet for tomorrow." : {
+      "comment" : "My Day on tomorrow: the list when Done is chosen, which a day still to come can't have."
+    },
     "Nothing is done yet today." : {
       "comment" : "My Day: the list when Done is chosen and nothing is done yet today."
+    },
+    "Nothing is due on %@." : {
+      "comment" : "My Day on a day after tomorrow: the list when nothing is due. The placeholder is the day, such as \"Fri, Oct 2\"."
     },
     "Nothing is due today." : {
       "comment" : "My Day: the list when nothing is due today."
     },
+    "Nothing is due tomorrow." : {
+      "comment" : "My Day on tomorrow: the list when nothing is due."
+    },
+    "Nothing is left to do on %@." : {
+      "comment" : "My Day on a day after tomorrow: the list when Left is chosen and nothing is due that day. The placeholder is the day, such as \"Fri, Oct 2\"."
+    },
     "Nothing is left to do today." : {
       "comment" : "My Day: the list when Left is chosen and nothing is left to do today."
+    },
+    "Nothing is left to do tomorrow." : {
+      "comment" : "My Day on tomorrow: the list when Left is chosen and nothing is due tomorrow."
+    },
+    "Nothing is missed yet for %@." : {
+      "comment" : "My Day on a day after tomorrow: the list when Missed is chosen, which a day still to come can't have. The placeholder is the day, such as \"Fri, Oct 2\"."
+    },
+    "Nothing is missed yet for tomorrow." : {
+      "comment" : "My Day on tomorrow: the list when Missed is chosen, which a day still to come can't have."
     },
     "Nothing is nudging you." : {
       "comment" : "My Day: the list when Nudging is chosen and nothing is nudging."
@@ -2217,8 +2472,26 @@
     "Nothing was deleted. Your reminders and their nudges are as they were. Try again." : {
       "comment" : "Settings: under the message shown when deleting everything failed."
     },
+    "Nothing was done on %@." : {
+      "comment" : "My Day on a day before yesterday: the list when Done is chosen and nothing was done. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Nothing was done yesterday." : {
+      "comment" : "My Day on yesterday: the list when Done is chosen and nothing was done."
+    },
+    "Nothing was due on %@." : {
+      "comment" : "My Day on a day before yesterday: the list when nothing was due. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Nothing was due yesterday." : {
+      "comment" : "My Day on yesterday: the list when nothing was due."
+    },
+    "Nothing was missed on %@." : {
+      "comment" : "My Day on a day before yesterday: the list when Missed is chosen and nothing was missed. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
     "Nothing was missed today." : {
       "comment" : "My Day: the list when Missed is chosen and nothing was missed today."
+    },
+    "Nothing was missed yesterday." : {
+      "comment" : "My Day on yesterday: the list when Missed is chosen and nothing was missed."
     },
     "Nothing was sent. Sharing is paused: iCloud is restricted on this iPhone. Screen Time or whoever manages it can change that." : {
       "comment" : "The reminder form: under Couldn't Send the Reminder, when Add found iCloud restricted, for example by Screen Time or a device management profile."
@@ -2509,6 +2782,9 @@
     },
     "Plays when a nudge arrives as an alarm. Other nudges use the standard notification sound." : {
       "comment" : "Under the alarm sound list, and under the reminder form's Sound row."
+    },
+    "Previous Day" : {
+      "comment" : "My Day: the button (a back arrow) before the day label that shows the day before. Dimmed on the first day My Day can show."
     },
     "Privacy Policy" : {
       "comment" : "About page: row that opens the app's privacy policy on the website, in the web browser."
@@ -3189,13 +3465,82 @@
       "comment" : "Settings: footer under the Nudges rows. The placeholder is the app's name."
     },
     "Today" : {
-      "comment" : "A tag's screen: header of the reminders that are nudging or due later today.\nThe Custom repeat page's Next Times: a due time today."
+      "comment" : "A tag's screen: header of the reminders that are nudging or due later today.\nMy Day: the top bar's button, shown on another day, that goes back to today.\nThe Custom repeat page's Next Times: a due time today."
     },
     "Today's counts. Choose one to show only those." : {
       "comment" : "VoiceOver label of the group of four counts on My Day."
     },
+    "Today, %@. %lld reminders due with your filter." : {
+      "comment" : "VoiceOver, when My Day moves back to today with a tag filter on. 1: today's date, such as \"Monday, September 28\". 2: how many reminders due today the filter shows.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today, %1$@. %2$#@n@ due with your filter."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Today, %@. %lld reminders due." : {
+      "comment" : "VoiceOver, when My Day moves back to today. 1: today's date, such as \"Monday, September 28\". 2: how many reminders are due today.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today, %1$@. %2$#@n@ due."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Tomorrow" : {
       "comment" : "The Custom repeat page's Next Times: a due time tomorrow."
+    },
+    "Tomorrow, %@" : {
+      "comment" : "My Day: the label under the title on tomorrow. The placeholder is its date, such as \"Wednesday, September 30\"."
     },
     "Turn Off Sharing" : {
       "comment" : "Turn Off Sharing's sheet: its title, and the button that disconnects everyone and turns Sharing off."
@@ -3307,6 +3652,9 @@
     },
     "Yearly" : {
       "comment" : "The Custom repeat page's frequency."
+    },
+    "Yesterday, %@" : {
+      "comment" : "My Day: the label under the title on yesterday. The placeholder is its date, such as \"Monday, September 28\"."
     },
     "You" : {
       "comment" : "How Sharing Works, Send Each Other Reminders: the picture's pill for the person reading, beside an iPhone."

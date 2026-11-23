@@ -54,9 +54,10 @@ struct MyDayFilter: Equatable {
 
     /// Called when the Filter button shows or goes. With the button gone the sheet's choices clear,
     /// so a filter nobody can see doesn't narrow the list when reminders or tags come back. The
-    /// chosen count is the counts' own control and stays.
-    mutating func update(offersFilter: Bool) {
-        if !offersFilter { clear() }
+    /// chosen count is the counts' own control and stays. A move to another day never clears it
+    /// (#375): the tags keep applying from day to day, though a day with nothing due hides the button.
+    mutating func update(offersFilter: Bool, afterMovingDay: Bool = false) {
+        if !offersFilter && !afterMovingDay { clear() }
     }
 
     /// The filter without tags that no longer exist.
