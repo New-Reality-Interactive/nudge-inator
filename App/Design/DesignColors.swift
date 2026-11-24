@@ -23,4 +23,6 @@ extension Color {
     static let tileGray = Color("TileGray")
     static let tileBlue = Color("TileBlue")
     static let tileGreen = Color("TileGreen")
+    /// A swipe tile that goes somewhere: Reminders on a tag's row.
+    static let tileTeal = Color("TileTeal")
 }

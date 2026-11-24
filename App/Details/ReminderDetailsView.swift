@@ -368,6 +368,7 @@ private struct WaitingSection: View {
                     Text("Remove", comment: "Reminder details: on a reminder someone sent that waits to be accepted, opens the question that asks before removing it.")
                 } icon: {
                     Image(systemName: "trash")
+                    .foregroundStyle(.red)
                 }
             }
             .deleteReminderConfirmation(title: title, kind: .received, isPresented: $isConfirmingRemove, confirm: remove)
@@ -392,6 +393,7 @@ private struct DeleteButton: View {
                     : Text("Delete Reminder", comment: "Reminder details: opens the question that asks before deleting the reminder.")
             } icon: {
                 Image(systemName: "trash")
+                    .foregroundStyle(.red)
             }
         }
         .deleteReminderConfirmation(title: title, kind: DeletedReminderKind(isReceived: isReceived), isPresented: $isConfirming, confirm: confirm)

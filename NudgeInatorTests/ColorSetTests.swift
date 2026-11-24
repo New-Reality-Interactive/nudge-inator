@@ -30,6 +30,7 @@ struct ColorSetTests {
         Expected(name: "TileGray", hex: ["6C6C70", "6C6C70", "6C6C70", "6C6C70"]),
         Expected(name: "TileBlue", hex: ["1E6EF4", "1E6EF4", "1E6EF4", "1E6EF4"]),
         Expected(name: "TileGreen", hex: ["008932", "008932", "008932", "008932"]),
+        Expected(name: "TileTeal", hex: ["04666B", "04666B", "04666B", "04666B"]),
     ]
 
     static let appearances: [(UIUserInterfaceStyle, UIAccessibilityContrast)] = [
@@ -60,7 +61,7 @@ struct ColorSetTests {
         (Color.onAccent, "OnAccent"), (.negative, "Negative"),
         (.warning, "Warning"), (.positive, "Positive"), (.neutral, "Neutral"), (.badge, "Badge"),
         (.tileRed, "TileRed"), (.tileOrange, "TileOrange"), (.tileGray, "TileGray"),
-        (.tileBlue, "TileBlue"), (.tileGreen, "TileGreen"),
+        (.tileBlue, "TileBlue"), (.tileGreen, "TileGreen"), (.tileTeal, "TileTeal"),
     ])
     func theColorStaticIsItsSet(_ color: Color, named name: String) throws {
         let expected = try #require(Self.expected.first { $0.name == name })
