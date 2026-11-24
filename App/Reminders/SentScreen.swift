@@ -50,9 +50,9 @@ struct SentScreen {
         /// Who it went to, for VoiceOver: the group's header says it on screen.
         var personName: String
         /// The time of day of its next due time, such as "9:00 AM".
-        var time: String
+        var time: LocalizedStringResource
         /// "Today", "Tomorrow", "Yesterday" or a short date, under the time.
-        var day: String
+        var day: LocalizedStringResource
         /// How the person's copy is going, as the sender may read it.
         var state: SentCopyState
         /// The strip under a repeating reminder's text: today and the 7 days before, or `nil` for a
@@ -72,8 +72,7 @@ struct SentScreen {
         /// What VoiceOver reads for the row: the person, the title, how the copy is going or
         /// whether it was delivered or waits to be accepted, and the due time.
         var voiceOverLabel: LocalizedStringResource {
-            let state = String(localized: state.spokenState)
-            return LocalizedStringResource("\(personName), \(title), \(state), \(day), \(time)", comment: "VoiceOver label of a row on the Reminders tab's Sent view. 1: who it was sent to, such as \"Riley Park\". 2: the reminder's title. 3: how the copy is going, such as \"Done\", \"Delivered, Not sharing status\", \"Not delivered yet\" or \"Waiting for them to accept\". 4: its due day, such as \"Today\". 5: its due time, such as \"9:00 AM\".")
+            LocalizedStringResource("\(personName), \(title), \(state.spokenState), \(day), \(time)", comment: "VoiceOver label of a row on the Reminders tab's Sent view. 1: who it was sent to, such as \"Riley Park\". 2: the reminder's title. 3: how the copy is going, such as \"Done\", \"Delivered, Not sharing status\", \"Not delivered yet\" or \"Waiting for them to accept\". 4: its due day, such as \"Today\". 5: its due time, such as \"9:00 AM\".")
         }
 
         static let waitingText = LocalizedStringResource("Waiting for them to accept", comment: "Under a sent reminder's title on the Sent view, and under a person's name on its details: their copy has reached their iPhone, which asks them first (Ask me first), and they haven't accepted it yet.")
@@ -282,8 +281,7 @@ struct SentCopyState: Equatable {
     var spokenState: LocalizedStringResource {
         if waitingToSync {
             guard let line = detailLine else { return LocalizedStringResource.waitingToSync }
-            let detail = String(localized: line)
-            return LocalizedStringResource("Waiting to sync, \(detail)", comment: "VoiceOver, on a Sent row and a recipient on a sent reminder's details: the send or a change to it hasn't gone through iCloud yet. The placeholder is the line under the title, such as \"Not delivered yet\" or \"Delivered\".")
+            return LocalizedStringResource("Waiting to sync, \(line)", comment: "VoiceOver, on a Sent row and a recipient on a sent reminder's details: the send or a change to it hasn't gone through iCloud yet. The placeholder is the line under the title, such as \"Not delivered yet\" or \"Delivered\".")
         }
         if case .status(let reported) = trailing { return reported.name }
         switch (delivery, status) {

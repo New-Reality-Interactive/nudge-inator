@@ -283,17 +283,28 @@ struct AccountChangeNoteRowsTests {
     @Test func everyKindRemovedHasItsRowInTheMockupsOrder() {
         let note = AccountChangeNote(receivedCount: 5, senders: ["Maya Torres", "Sam Okafor"], connections: ["Maya Torres", "Sam Okafor", "Jordan Lee"], sentCount: 2)
 
-        #expect(note.rows == [
-            .received(count: 5, senders: "Maya Torres and Sam Okafor"),
-            .connections(count: 3, names: "Maya Torres, Sam Okafor, and Jordan Lee"),
-            .sent(count: 2),
+        #expect(english(note.rows) == [
+            "5 received from Maya Torres and Sam Okafor",
+            "3 connections: Maya Torres, Sam Okafor, and Jordan Lee",
+            "2 sent",
         ])
     }
 
     @Test func aKindWithNothingRemovedHasNoRow() {
         let note = AccountChangeNote(receivedCount: 0, senders: [], connections: ["Jordan Lee"], sentCount: 0)
 
-        #expect(note.rows == [.connections(count: 1, names: "Jordan Lee")])
+        #expect(english(note.rows) == ["1 connections: Jordan Lee"])
+    }
+
+    /// Each row's count and its names, joined as a list in US English.
+    private func english(_ rows: [AccountChangeNote.Row]) -> [String] {
+        rows.map { row in
+            switch row {
+            case let .received(count, _): "\(count) received from \(row.names?.english ?? "")"
+            case let .connections(count, _): "\(count) connections: \(row.names?.english ?? "")"
+            case let .sent(count): "\(count) sent"
+            }
+        }
     }
 }
 

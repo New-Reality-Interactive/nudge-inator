@@ -131,7 +131,7 @@ private struct SentDetailsList: View {
                             LabeledContent {
                                 SentHistoryDayLabel(day: day)
                             } label: {
-                                Text(verbatim: day.label)
+                                Text(day.label)
                             }
                         }
                     } header: {

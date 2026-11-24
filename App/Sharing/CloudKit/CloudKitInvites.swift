@@ -75,6 +75,7 @@ final class CloudKitInvites {
         let participant = try await shareParticipant(for: person, container: container)
         participant.permission = .readWrite
         let share = CloudKitSync.share(for: zoneID)
+        // String needed: invite, whose share title CloudKit carries to the other person.
         share[CKShare.SystemFieldKey.title] = String(localized: "Nudge-inator Reminders", comment: "Invite: the title of the share the invite carries, which the invitation shows.")
         share[CKShare.SystemFieldKey.thumbnailImageData] = Self.appIconData()
         share.addParticipant(participant)
@@ -114,6 +115,7 @@ final class CloudKitInvites {
         let sender = InviteParticipant.displayName(metadata.ownerIdentity.nameComponents) ?? metadata.ownerIdentity.lookupInfo?.emailAddress
         return IncomingInvite(
             connectionID: connectionID,
+            // String needed: invite, whose sender becomes the connection's name.
             senderName: sender ?? String(localized: "Someone", comment: "Invite: the sender's name when iCloud gives none.")
         )
     }

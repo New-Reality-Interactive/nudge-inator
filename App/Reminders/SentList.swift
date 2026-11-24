@@ -183,9 +183,9 @@ private struct SentRowView: View {
 
 private extension View {
     /// The row's value, only when it has one: a one-off row reads its label alone, as before.
-    @ViewBuilder func accessibilityValue(spoken value: String?) -> some View {
+    @ViewBuilder func accessibilityValue(spoken value: LocalizedStringResource?) -> some View {
         if let value {
-            accessibilityValue(Text(verbatim: value))
+            accessibilityValue(Text(value))
         } else {
             self
         }
@@ -227,7 +227,7 @@ private struct SentHistoryCell: View {
 
     var body: some View {
         VStack(spacing: Design.Spacing.line) {
-            Text(verbatim: day.initial)
+            Text(day.initial)
                 .font(day.isToday ? .footnote.weight(.semibold) : .footnote)
             // Every glyph in the box Done's takes, so a short one (a minus, a ✕) doesn't make its
             // cell shorter and drop its initial below the others' (the #207 phone check).

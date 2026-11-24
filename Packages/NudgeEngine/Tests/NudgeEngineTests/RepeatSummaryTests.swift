@@ -15,7 +15,8 @@ struct RepeatSummaryTests {
     }
 
     func summary(of reminder: Reminder, locale: Locale = Self.british) -> String {
-        Engine(clock: clock, scheduler: FakeScheduler(), timeZone: NewYork.timeZone, locale: locale).repeatSummary(of: reminder)
+        // The summary carries the engine's locale, so it reads the same wherever it's resolved.
+        String(localized: Engine(clock: clock, scheduler: FakeScheduler(), timeZone: NewYork.timeZone, locale: locale).repeatSummary(of: reminder))
     }
 
     @Test func everyThreeDaysSaysTheIntervalAndTime() throws {

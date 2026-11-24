@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "%@" : {
-      "comment" : "My Day: under the title of an occurrence still to come: on today how soon, such as \"in 4 hr.\"; on a later day how it repeats, such as \"Every day at 6:30 AM\"."
+      "comment" : "Words standing alone, already in the language's own format, such as a date, a time or how soon, which a sentence holds as a placeholder. Keep it as it is."
     },
     "%@ %@" : {
       "comment" : "Via label: a glyph, then how a nudge arrives. Keep the glyph first.",

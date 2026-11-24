@@ -9,7 +9,7 @@ struct MyDayShownDay: Equatable {
     /// How the day relates to today, for the sentences that name it.
     let name: Name
     /// The day's date, such as "Tuesday, September 29", with the year when it isn't this year's.
-    let longDate: String
+    let longDate: LocalizedStringResource
     /// The day before, or `nil` at the range's start.
     let previous: CalendarDay?
     /// The day after, or `nil` at the range's end.
@@ -29,9 +29,9 @@ struct MyDayShownDay: Equatable {
         case yesterday
         case tomorrow
         /// Before yesterday, with its short date, such as "Tue, Sep 29".
-        case earlier(String)
+        case earlier(LocalizedStringResource)
         /// After tomorrow, with its short date.
-        case later(String)
+        case later(LocalizedStringResource)
     }
 
     /// The mockup's day label on yesterday and tomorrow, which put the word before the date. Any
@@ -47,9 +47,9 @@ struct MyDayShownDay: Equatable {
         }
     }
 
-    /// The label as it reads, for VoiceOver's announcement and the tests.
-    var labelWords: String {
-        labelSentence.map { String(localized: $0) } ?? longDate
+    /// The label as it reads: its sentence, or the date alone. VoiceOver's announcement holds it.
+    var label: LocalizedStringResource {
+        labelSentence ?? longDate
     }
 
     /// `asked` is the day the person moved to, today if none. A day outside the range, as after
@@ -139,7 +139,7 @@ struct MyDayShownDay: Equatable {
         }
     }
 
-    private static func earlierEmptyMessage(forCount count: MyDayCount?, date: String) -> LocalizedStringResource {
+    private static func earlierEmptyMessage(forCount count: MyDayCount?, date: LocalizedStringResource) -> LocalizedStringResource {
         switch count {
         case nil:
             LocalizedStringResource("Nothing was due on \(date).", comment: "My Day on a day before yesterday: the list when nothing was due. The placeholder is the day, such as \"Tue, Sep 29\".")
@@ -154,7 +154,7 @@ struct MyDayShownDay: Equatable {
         }
     }
 
-    private static func laterEmptyMessage(forCount count: MyDayCount?, date: String) -> LocalizedStringResource {
+    private static func laterEmptyMessage(forCount count: MyDayCount?, date: LocalizedStringResource) -> LocalizedStringResource {
         switch count {
         case nil:
             LocalizedStringResource("Nothing is due on \(date).", comment: "My Day on a day after tomorrow: the list when nothing is due. The placeholder is the day, such as \"Fri, Oct 2\".")
@@ -221,13 +221,13 @@ struct MyDayShownDay: Equatable {
     func announcement(due: Int, filtered: Bool) -> LocalizedStringResource {
         switch (isToday, filtered) {
         case (true, false):
-            LocalizedStringResource("Today, \(labelWords). \(due) reminders due.", comment: "VoiceOver, when My Day moves back to today. 1: today's date, such as \"Monday, September 28\". 2: how many reminders are due today.")
+            LocalizedStringResource("Today, \(label). \(due) reminders due.", comment: "VoiceOver, when My Day moves back to today. 1: today's date, such as \"Monday, September 28\". 2: how many reminders are due today.")
         case (true, true):
-            LocalizedStringResource("Today, \(labelWords). \(due) reminders due with your filter.", comment: "VoiceOver, when My Day moves back to today with a tag filter on. 1: today's date, such as \"Monday, September 28\". 2: how many reminders due today the filter shows.")
+            LocalizedStringResource("Today, \(label). \(due) reminders due with your filter.", comment: "VoiceOver, when My Day moves back to today with a tag filter on. 1: today's date, such as \"Monday, September 28\". 2: how many reminders due today the filter shows.")
         case (false, false):
-            LocalizedStringResource("\(labelWords). \(due) reminders due.", comment: "VoiceOver, when My Day moves to another day. 1: the day as its label reads, such as \"Tomorrow, Tuesday, September 29\". 2: how many reminders are due that day.")
+            LocalizedStringResource("\(label). \(due) reminders due.", comment: "VoiceOver, when My Day moves to another day. 1: the day as its label reads, such as \"Tomorrow, Tuesday, September 29\". 2: how many reminders are due that day.")
         case (false, true):
-            LocalizedStringResource("\(labelWords). \(due) reminders due with your filter.", comment: "VoiceOver, when My Day moves to another day with a tag filter on. 1: the day as its label reads, such as \"Tomorrow, Tuesday, September 29\". 2: how many reminders due that day the filter shows.")
+            LocalizedStringResource("\(label). \(due) reminders due with your filter.", comment: "VoiceOver, when My Day moves to another day with a tag filter on. 1: the day as its label reads, such as \"Tomorrow, Tuesday, September 29\". 2: how many reminders due that day the filter shows.")
         }
     }
 
@@ -249,7 +249,7 @@ struct MyDayShownDay: Equatable {
     init(now: Date) {
         day = nil
         name = .today
-        longDate = now.formatted(.dateTime.weekday(.wide).day().month(.wide))
+        longDate = .alone(now, format: .dateTime.weekday(.wide).day().month(.wide))
         previous = nil
         next = nil
     }

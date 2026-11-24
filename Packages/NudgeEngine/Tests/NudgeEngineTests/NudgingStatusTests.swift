@@ -141,8 +141,8 @@ struct NudgingStatusTests {
     func aTimeReadsAsItsDayAndTimeOfDay(date: Date, day: String, time: String) {
         let engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone, locale: Locale(identifier: "en_US"))
 
-        #expect(engine.dayLabel(of: date) == day)
-        #expect(engine.timeOfDay(of: date) == time)
+        #expect(String(localized: engine.dayLabel(of: date)) == day)
+        #expect(String(localized: engine.timeOfDay(of: date)) == time)
     }
 
     /// With the give-up limit widened, a daily 9:00 Firm reminder nudges every 5 minutes until the

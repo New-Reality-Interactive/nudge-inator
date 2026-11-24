@@ -26,7 +26,7 @@ struct StrengthLine: Equatable {
         if strength == .relentless {
             return LocalizedStringResource("Relentless: rings an alarm until you mark it done", comment: "A received Relentless reminder's strength in words, on its arrival notification and its details.")
         }
-        let name = String(localized: strength.title)
+        let name = strength.title
         switch firstAlarm {
         case 1?:
             return LocalizedStringResource("\(name): every nudge rings as an alarm", comment: "A received reminder's strength in words, on its arrival notification and its details, when every nudge rings. The placeholder is the strength, such as \"Firm\".")

@@ -13,7 +13,7 @@ struct ComingUpRowView: View {
         } main: {
             Text(verbatim: row.title)
                 .font(.body)
-            Text(verbatim: row.schedule)
+            Text(row.schedule)
                 .font(.subheadline)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
             if let from = row.from {
@@ -195,15 +195,15 @@ extension ReminderRowLayout where Footer == EmptyView {
 
 /// The time, with its day ("Today", "Tomorrow" or a short date) under it.
 struct TimeColumn: View {
-    let time: String
-    let day: String
+    let time: LocalizedStringResource
+    let day: LocalizedStringResource
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(verbatim: time)
+            Text(time)
                 .font(.body)
                 .monospacedDigit()
-            Text(verbatim: day)
+            Text(day)
                 .font(.footnote)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
         }

@@ -27,11 +27,11 @@ struct TagRemindersScreen {
         var reminder: Reminder
         /// When it is next due, or nudging since. `nil` when paused or finished.
         var dueTime: Date?
-        var time: String?
+        var time: LocalizedStringResource?
         /// "Today", "Tomorrow" or a short date, under the time.
-        var day: String?
+        var day: LocalizedStringResource?
         /// The repeat summary, such as "Every day at 8:00 AM".
-        var schedule: String
+        var schedule: LocalizedStringResource
         /// The reminder's tags that the engine holds, this screen's tag in bold.
         var tags: [MyDayScreen.TagLabel]
 

@@ -15,11 +15,13 @@ import SwiftUI
 enum VoiceOverAnnouncement {
     /// What answers the person's own action, at the high priority.
     static func post(_ sentence: LocalizedStringResource) {
+        // String needed: VoiceOver announcement, which UIAccessibility posts as an attributed string.
         post(AttributedString(localized: sentence), priority: .high)
     }
 
     /// News beside VoiceOver's focus, as an error or a count, at the low priority.
     static func mention(_ sentence: LocalizedStringResource) {
+        // String needed: VoiceOver announcement, which UIAccessibility posts as an attributed string.
         post(AttributedString(localized: sentence), priority: .low)
     }
 

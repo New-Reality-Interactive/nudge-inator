@@ -11,15 +11,15 @@ struct SentHistory: Equatable {
     /// What VoiceOver reads for the whole strip, one day after another, such as "Thursday: Done,
     /// Friday: Missed, …, Today: Coming up". Each day is a whole localized string, and the days are
     /// joined with the engine's locale's list format.
-    let voiceOverValue: String
+    let voiceOverValue: LocalizedStringResource
 
     /// One day of the history.
     struct Day: Equatable, Identifiable {
         var calendarDay: CalendarDay
         /// The weekday's initial, such as "T", the cell's text.
-        var initial: String
+        var initial: LocalizedStringResource
         /// "Today", or a short date such as "Wed, Oct 21": the details' row.
-        var label: String
+        var label: LocalizedStringResource
         /// The status of the occurrence due that day, or `nil` when none was.
         var status: ReportedStatus?
         var isToday: Bool
@@ -46,16 +46,15 @@ struct SentHistory: Equatable {
             )
         }
         voiceOverValue = engine.list(history.days.map { day in
-            String(localized: Self.spoken(day.isToday ? today : engine.weekdayName(of: day.day), day.status))
+            Self.spoken(day.isToday ? today : engine.weekdayName(of: day.day), day.status)
         })
     }
 
-    private static func spoken(_ day: String, _ status: ReportedStatus?) -> LocalizedStringResource {
+    private static func spoken(_ day: LocalizedStringResource, _ status: ReportedStatus?) -> LocalizedStringResource {
         guard let status else {
             return LocalizedStringResource("\(day): Nothing due", comment: "VoiceOver, a repeating sent reminder's last 7 days on the Sent view: a day the person's copy had nothing due. The placeholder is the weekday, such as \"Thursday\", or \"Today\".")
         }
-        let name = String(localized: status.name)
-        return LocalizedStringResource("\(day): \(name)", comment: "VoiceOver, a repeating sent reminder's last 7 days on the Sent view: one day and how the person's copy went. 1: the weekday, such as \"Thursday\", or \"Today\". 2: the status, such as \"Done\" or \"Missed\".")
+        return LocalizedStringResource("\(day): \(status.name)", comment: "VoiceOver, a repeating sent reminder's last 7 days on the Sent view: one day and how the person's copy went. 1: the weekday, such as \"Thursday\", or \"Today\". 2: the status, such as \"Done\" or \"Missed\".")
     }
 
     /// A day with nothing due: "not applicable", a slashed circle.

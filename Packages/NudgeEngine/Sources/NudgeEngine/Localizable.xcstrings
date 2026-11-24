@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@" : {
+      "comment" : "A date, a time or a list standing alone, already in the language's own format, which a sentence holds as a placeholder. Keep it as it is."
+    },
     "%@ (%@ in years without one)" : {
       "comment" : "Repeat summary: a yearly preset on 29 February, which moves to the 28th in other years. 1: the repeat. 2: the day it moves to, such as \"28 February\".",
       "localizations" : {

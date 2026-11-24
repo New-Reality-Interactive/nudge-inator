@@ -23,14 +23,14 @@ struct ShareActivityListTests {
         #expect(list.rows.map(\.id) == [record[2].id, record[1].id, record[0].id])
         #expect(list.rows.map(\.at) == [300, 200, 100].map(Date.init(timeIntervalSince1970:)))
         #expect(list.rows.map(\.event) == [.changeGivenUp(.send), .connectionLost, .otherPersonLeft])
-        #expect(list.rows.map(\.who) == ["Maya Torres", "Robin Vega", "Alex Morgan"])
+        #expect(list.rows.map { $0.who.map { String(localized: $0) } } == ["Maya Torres", "Robin Vega", "Alex Morgan"])
     }
 
     @Test func severalNamesAreJoinedAsAListInThePersonsLanguage() {
         let data = SharingData(activity: [entry(100, ["Chris Nolan", "Pat Rivera", "Dana Kim"], .accountChanged)])
 
-        #expect(ShareActivityList(data, locale: english).rows.map(\.who) == ["Chris Nolan, Pat Rivera, and Dana Kim"])
-        #expect(ShareActivityList(data, locale: Locale(identifier: "es_ES")).rows.map(\.who) == ["Chris Nolan, Pat Rivera y Dana Kim"])
+        #expect(ShareActivityList(data, locale: english).rows.map { $0.who.map { String(localized: $0) } } == ["Chris Nolan, Pat Rivera, and Dana Kim"])
+        #expect(ShareActivityList(data, locale: Locale(identifier: "es_ES")).rows.map { $0.who.map { String(localized: $0) } } == ["Chris Nolan, Pat Rivera y Dana Kim"])
     }
 
     /// The store can hold an entry from before a waiting change kept its name: its row has no one
@@ -38,7 +38,7 @@ struct ShareActivityListTests {
     @Test func anEntryWithNoNameHasNoOneToName() {
         let list = ShareActivityList(SharingData(activity: [entry(100, [], .changeGivenUp(.cancel))]), locale: english)
 
-        #expect(list.rows.map(\.who) == [nil])
+        #expect(list.rows.map { $0.who.map { String(localized: $0) } } == [nil])
     }
 
     @Test func anEmptyRecordListsNothing() {

@@ -11,7 +11,7 @@ struct SentReminderDetails {
     /// Sent To: each person it went to that is still connected, in the Sent view's order.
     var recipients: [Recipient]
     /// The Schedule's Repeats row: the engine's summary.
-    var repeats: String
+    var repeats: LocalizedStringResource
     /// The Schedule's Next row.
     var next: ReminderDetails.Next
 
@@ -35,8 +35,8 @@ struct SentReminderDetails {
 
         /// The header over their history: "Riley, Last 7 Days", with the person's short name.
         var historyHeader: LocalizedStringResource {
-            let name = (try? PersonNameComponents(name))?.formatted(.name(style: .short)) ?? name
-            return LocalizedStringResource("\(name), Last 7 Days", comment: "A sent reminder's details: section header over one person's last 7 days of the reminder. The placeholder is the person's short name, such as \"Riley\".")
+            let short = (try? PersonNameComponents(name)).map { LocalizedStringResource.alone($0, format: .name(style: .short)) } ?? .alone(name)
+            return LocalizedStringResource("\(short), Last 7 Days", comment: "A sent reminder's details: section header over one person's last 7 days of the reminder. The placeholder is the person's short name, such as \"Riley\".")
         }
         var isDelivered: Bool { state.isDelivered }
         var trailing: SentReadOut.Trailing { state.trailing }

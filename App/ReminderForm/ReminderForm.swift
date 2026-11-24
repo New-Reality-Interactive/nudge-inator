@@ -161,7 +161,7 @@ final class ReminderForm: Identifiable {
 
     /// The sender of a received reminder, who owns its content, for the form's note (ticket 200),
     /// or `nil` for the person's own.
-    let senderName: String?
+    let senderName: LocalizedStringResource?
 
     /// An Edit form for a reminder the engine holds, or `nil` if it doesn't hold it. `senders` names
     /// a received reminder's sender.
@@ -180,7 +180,7 @@ final class ReminderForm: Identifiable {
     /// Whether this is the sender's form for a reminder they sent (ticket 201).
     let isSent: Bool
 
-    private init(engine currentEngine: @escaping () -> Engine, original reminder: Reminder, now: @escaping () -> Date, senderName: String?, isSent: Bool) {
+    private init(engine currentEngine: @escaping () -> Engine, original reminder: Reminder, now: @escaping () -> Date, senderName: LocalizedStringResource?, isSent: Bool) {
         let engine = currentEngine()
         self.currentEngine = currentEngine
         tagRules = engine
@@ -266,9 +266,9 @@ final class ReminderForm: Identifiable {
 
     /// The chosen people's names as one list ("Riley Park and Sam Rivera"), for the row and its
     /// footer, or `nil` when no one is chosen.
-    var recipientsText: String? {
+    var recipientsText: LocalizedStringResource? {
         let names = recipientNames
-        return names.isEmpty ? nil : names.formatted(.list(type: .and))
+        return names.isEmpty ? nil : .list(names)
     }
 
     /// Whether the form has a Tags row: not with anyone chosen in Send To, nor for a reminder already
@@ -347,7 +347,7 @@ final class ReminderForm: Identifiable {
 
     /// The Custom page's summary sentence, of the choices it shows, without the end: End Repeat is
     /// the form's (#287).
-    var customPageSummary: String {
+    var customPageSummary: LocalizedStringResource {
         currentEngine().repeatSummary(of: draft(tagIDs: tagIDs, repeatRule: pattern(for: customPageChoices)))
     }
 
@@ -362,13 +362,13 @@ final class ReminderForm: Identifiable {
 
     /// The Custom page's monthly choices for the start, each with its title ("On the fourth
     /// Monday"), from the engine.
-    var monthlyDays: [(day: CustomRepeat.MonthlyDay, title: String)] {
+    var monthlyDays: [(day: CustomRepeat.MonthlyDay, title: LocalizedStringResource)] {
         let engine = currentEngine()
         return engine.monthlyDays(startingAt: dueTime).map { ($0, engine.title(of: $0, startingAt: dueTime)) }
     }
 
     /// Under a monthly choice of the 29th to the 31st: such months are skipped. From the engine.
-    var skippedMonthsNote: String? {
+    var skippedMonthsNote: LocalizedStringResource? {
         currentEngine().skippedMonthsNote(of: customPageChoices, startingAt: dueTime)
     }
 
@@ -407,13 +407,13 @@ final class ReminderForm: Identifiable {
 
     /// The engine's summary of the draft's repeat and time, end included ("Every 3 days at 9:00 AM,
     /// 10 times"), for the footer under the section, whatever the repeat (#287).
-    var repeatSummary: String {
+    var repeatSummary: LocalizedStringResource {
         currentEngine().repeatSummary(of: draft(tagIDs: tagIDs))
     }
 
     /// The same without the end ("Every 3 days at 9:00 AM"), for the Custom row: End Repeat and the
     /// footer say the end (#287).
-    var repeatPatternSummary: String {
+    var repeatPatternSummary: LocalizedStringResource {
         var pattern = repeatRule
         pattern?.end = nil
         return currentEngine().repeatSummary(of: draft(tagIDs: tagIDs, repeatRule: pattern))

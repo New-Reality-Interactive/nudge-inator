@@ -16,8 +16,8 @@ struct TagChoice: Equatable {
         case any
 
         /// The tags as a list in the engine's locale: "#home and #money", or "#home or #money".
-        func list(of labels: [String]) -> String {
-            labels.formatted(.list(type: self == .all ? .and : .or))
+        func list(of labels: [String]) -> LocalizedStringResource {
+            .list(labels, type: self == .all ? .and : .or)
         }
     }
 

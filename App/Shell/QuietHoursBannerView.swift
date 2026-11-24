@@ -33,8 +33,10 @@ struct QuietHoursBannerView: View {
 
     /// The bold title, then the detail in the secondary label color, on its own line.
     private func text(_ detail: LocalizedStringResource) -> Text {
+        // String needed: styled, the title bold.
         var title = AttributedString(localized: Self.title)
         title.inlinePresentationIntent = .stronglyEmphasized
+        // String needed: styled, the detail in the secondary color.
         var detail = AttributedString(localized: detail)
         detail.foregroundColor = Color(uiColor: .secondaryLabel)
         return Text(title + AttributedString("\n") + detail)

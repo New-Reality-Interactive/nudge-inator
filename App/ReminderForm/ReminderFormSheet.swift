@@ -126,7 +126,7 @@ enum ReminderFormPage: Hashable {
 private struct EditNoteSection: View {
     let isLocked: Bool
     /// A received reminder's sender, or `nil` for the person's own.
-    let senderName: String?
+    let senderName: LocalizedStringResource?
     /// Whether the reminder sends alarms, so a received one's note says its sound can be chosen
     /// (#230). Two whole sentences, not a joined fragment (#223's review).
     let sendsAlarms: Bool
@@ -641,14 +641,14 @@ extension Strength {
 
 extension GiveUpLimit {
     /// The span in words, such as "24 hours", in the app's language.
-    var spanText: String {
-        Duration.seconds(span).formatted(.units(allowed: [.hours], width: .wide))
+    var spanText: LocalizedStringResource {
+        .alone(Duration.seconds(span), format: .units(allowed: [.hours], width: .wide))
     }
 }
 
 /// A repeat summary as a sentence: the footer under Starts, Repeat and End Repeat.
 struct RepeatSummarySentence: View {
-    let summary: String
+    let summary: LocalizedStringResource
 
     var body: some View {
         Text("\(summary).", comment: "A repeat summary as a sentence, under the reminder form's Starts. The placeholder is the engine's summary, such as \"Every 3 days at 9:00 AM\".")

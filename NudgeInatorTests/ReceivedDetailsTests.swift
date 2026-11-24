@@ -119,7 +119,7 @@ struct ReceivedDetailsTests {
 
         let received = try #require(details.received)
         #expect(String(localized: received.from.label) == "From Alex Morgan")
-        #expect(received.senderName == "Alex Morgan")
+        #expect(received.senderName.english == "Alex Morgan")
         #expect(String(localized: received.strengthLine.text) == "Firm: rings as an alarm from nudge 4")
         #expect(details.notes == "Two with water.")
     }
@@ -214,7 +214,7 @@ struct ReceivedDetailsTests {
 
         let form = try editForm(of: copy.id, on: riley)
 
-        #expect(form.senderName == "Alex Morgan")
+        #expect(form.senderName?.english == "Alex Morgan")
         #expect(form.isContentLocked)
         #expect(form.lockedFields == Set(LockedField.allCases))
     }

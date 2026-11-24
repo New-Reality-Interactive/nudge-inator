@@ -16,10 +16,9 @@ enum MyDayMove {
 }
 
 extension MyDayShownDay {
-    /// The day label as it shows: Yesterday or Tomorrow before the date, or the formatter's date as
-    /// it is.
+    /// The day label as it shows: Yesterday or Tomorrow before the date, or the date alone.
     var labelText: Text {
-        labelSentence.map { Text($0) } ?? Text(verbatim: longDate)
+        Text(label)
     }
 }
 

@@ -206,7 +206,7 @@ struct ReceivedCancelTests {
         #expect(shown.card == nil)
         // It closed Skipped only to stop nudging; it wasn't paused (phone check).
         #expect(shown.lastOccurrence == nil)
-        #expect(shown.received?.senderName == "Alex Morgan")
+        #expect(shown.received?.senderName.english == "Alex Morgan")
         // It never nudges again, so it has no Sound row, though Relentless rings (#457).
         #expect(shown.sound == nil)
         // So its footers don't offer to choose a sound.

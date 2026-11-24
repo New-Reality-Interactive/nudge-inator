@@ -144,7 +144,7 @@ struct OfflineTests {
 
         let card = try #require(NowScreen(engine: riley.model.engine, senders: riley.model.senders).lastDay.first { $0.title == "Call the clinic" })
         #expect(card.from?.waitsToSync == true)
-        #expect(card.from?.spoken == "From Alex Morgan, Waiting to sync")
+        #expect(card.from?.spoken.english == "From Alex Morgan, Waiting to sync")
         #expect(try row(on: alex).trailing == .status(.nudging))
 
         await setOnline(true, riley, settling: alex, riley)
