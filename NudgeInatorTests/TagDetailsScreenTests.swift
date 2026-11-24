@@ -25,4 +25,16 @@ struct TagDetailsScreenTests {
 
         #expect(TagDetailsScreen(engine: day.model.engine, tagID: day.home.id) == nil)
     }
+
+    /// After Edit's Done, the page shows the new name in place, with the counts it had.
+    @Test func aRenamedTagShowsItsNewNameWithTheSameCounts() async throws {
+        let day = try await fixture.dayAtOnePM()
+        let before = try #require(TagDetailsScreen(engine: day.model.engine, tagID: day.home.id))
+
+        try day.model.renameTag(day.home.id, to: "house")
+
+        let after = try #require(TagDetailsScreen(engine: day.model.engine, tagID: day.home.id))
+        #expect(after.tag.name == "house")
+        #expect(after.summary.reminderCount == before.summary.reminderCount)
+    }
 }

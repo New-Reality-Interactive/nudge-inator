@@ -527,7 +527,9 @@ The Reminders tab's tools, in its layout, so they're learned once.
 ### Tag details page
 Pushed on the Tags tab from a tag's row, as a reminder's details page is from Reminders (#376). The
 mockup is `docs/mockups/2026-11-23-tag-details/`.
-- **Bar:** Back only, with an empty inline title; the hero carries the name, as on a reminder's details.
+- **Bar:** Back, and Edit at the trailing end, as on a reminder's details, with an empty inline title; the
+  hero carries the name. Edit's VoiceOver label names the tag ("Edit #home") and it opens the Rename Tag
+  sheet, unchanged; the page shows the new name when it closes.
 - **Hero:** a card with the tag's tile (a round `{colors.tile-gray}` tile with `tag`, 56 pt at the default
   size and scaling with the text) beside the name in `{typography.title2}` bold and, under it, the counts line
   a row shows ("3 reminders · 2 today · 1 nudging", the nudging part in `{colors.negative}`), read from the
@@ -537,7 +539,10 @@ mockup is `docs/mockups/2026-11-23-tag-details/`.
   its own destination, so the row and, later, the row's swipe both open it; Back returns to whichever did.
 - **Tag Deleted:** both of a tag's pages show `tag.slash`, "Tag Deleted" and "This tag was deleted. Its
   reminders are still there." when the tag goes while the page is open.
-- **Read again** at every change and every minute. Edit and Delete Tag come with #377.
+- **Delete Tag:** a destructive row with `trash` in a section of its own, below Reminders, as Delete Reminder
+  is on a reminder's details. It asks the Tags row's question (the tag as its title, how many reminders use it
+  and that they stay) and, once confirmed, deletes the tag and goes back to the list.
+- **Read again** at every change and every minute.
 
 ### Reminder form's Repeat
 - The Repeat row sits under Starts and shows the current choice. A tap opens a

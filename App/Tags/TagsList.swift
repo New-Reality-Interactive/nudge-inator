@@ -90,24 +90,7 @@ private struct TagRow: View {
             RowAction(kind: .edit, label: editLabel, action: rename),
             RowAction(kind: .delete, label: deleteLabel, action: { isConfirmingDelete = true }),
         ])
-        // The system's confirmation dialog with its title showing, as Apple's own apps ask (#286).
-        // From a tile, iOS 27.0 (simulator) draws a popover with Delete alone: a tap outside it, or
-        // VoiceOver's "Dismiss popup", closes it with nothing deleted. As an action sheet, its Cancel does.
-        .confirmationDialog(
-            Text("Delete \(summary.tag.label)?", comment: "Tags: title of the question that asks before deleting a tag. The placeholder is the tag, such as \"#home\"."),
-            isPresented: $isConfirmingDelete,
-            titleVisibility: .visible
-        ) {
-            Button(role: .destructive, action: delete) {
-                Text("Delete Tag", comment: "Tags: confirms deleting the tag, as Delete Reminder does for a reminder. The reminders that have it are kept.")
-            }
-            Button(role: .cancel) {
-            } label: {
-                Text("Cancel", comment: "Keeps the tag instead of deleting it.")
-            }
-        } message: {
-            Text(summary.deleteMessage)
-        }
+        .deleteTagConfirmation(summary, isPresented: $isConfirmingDelete, delete: delete)
     }
 
     private var editLabel: Text {

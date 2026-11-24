@@ -1583,7 +1583,7 @@
       "comment" : "Edit Schedule (quiet hours): confirms deleting the schedule.\nEdit Schedule (quiet hours): the button that asks before deleting the schedule."
     },
     "Delete Tag" : {
-      "comment" : "Tags: confirms deleting the tag, as Delete Reminder does for a reminder. The reminders that have it are kept."
+      "comment" : "A tag's details page: opens the question that asks before deleting the tag, as Delete Reminder does on a reminder's details.\nTags: confirms deleting the tag, as Delete Reminder does for a reminder. The reminders that have it are kept."
     },
     "Delete This Schedule?" : {
       "comment" : "Edit Schedule (quiet hours): title of the question that asks before deleting the schedule."
@@ -1778,10 +1778,10 @@
       "comment" : "Reminders tab's Sort menu, sorted by Due Date: the earliest due time at the top."
     },
     "Edit" : {
-      "comment" : "Quiet Hours page: a schedule row's VoiceOver action that opens its Edit Schedule sheet.\nReminder details: the toolbar button that opens the Edit Reminder form.\nReminders tab, Sent: a row's swipe action and VoiceOver action that opens the sent reminder's Edit Reminder form.\nReminders tab: a row's swipe action and VoiceOver action that opens the Edit Reminder form.\nTags: a row's swipe action and VoiceOver action that opens the sheet that renames the tag."
+      "comment" : "A tag's details page: the toolbar button that opens the Rename Tag sheet.\nQuiet Hours page: a schedule row's VoiceOver action that opens its Edit Schedule sheet.\nReminder details: the toolbar button that opens the Edit Reminder form.\nReminders tab, Sent: a row's swipe action and VoiceOver action that opens the sent reminder's Edit Reminder form.\nReminders tab: a row's swipe action and VoiceOver action that opens the Edit Reminder form.\nTags: a row's swipe action and VoiceOver action that opens the sheet that renames the tag."
     },
     "Edit %@" : {
-      "comment" : "VoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title."
+      "comment" : "VoiceOver label of a tag's details page's Edit button. The placeholder is the tag, such as \"#home\".\nVoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title."
     },
     "Edit Reminder" : {
       "comment" : "Title of the form that edits a reminder."
