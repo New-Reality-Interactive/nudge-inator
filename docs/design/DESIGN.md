@@ -511,7 +511,7 @@ The Reminders tab's tools, in its layout, so they're learned once.
   Apply), Reset at the bottom and the Discard Changes prompt. One row, Has no reminders, with the
   footer "Shows only tags that no reminder uses." and what Apply would show.
 - **Rows:** the tag tile, name and counts, with content at least 48 pt tall for the swipe (Swipe
-  actions). A tap opens the tag's reminders. A row that leaves, after a delete or when the filter
+  actions). A tap opens the tag's details page (Tag details page, below). A row that leaves, after a delete or when the filter
   excludes it, fades as its height closes up, and the count follows.
 - **Help text:** static, not a dismissible tip, for a person new to tags. The list's footer, in
   `{typography.footnote}` and wrapping at large text and in landscape: "Tags are labels you add to
@@ -523,6 +523,21 @@ The Reminders tab's tools, in its layout, so they're learned once.
   `line.3.horizontal.decrease`, a title, a line naming what's narrowing the list and a bordered
   Clear button (Clear Search, Clear Filter, Clear Search and Filter), with no help text. The header
   row stays above it.
+
+### Tag details page
+Pushed on the Tags tab from a tag's row, as a reminder's details page is from Reminders (#376). The
+mockup is `docs/mockups/2026-11-23-tag-details/`.
+- **Bar:** Back only, with an empty inline title; the hero carries the name, as on a reminder's details.
+- **Hero:** a card with the tag's tile (a round `{colors.tile-gray}` tile with `tag`, 56 pt at the default
+  size and scaling with the text) beside the name in `{typography.title2}` bold and, under it, the counts line
+  a row shows ("3 reminders · 2 today · 1 nudging", the nudging part in `{colors.negative}`), read from the
+  same summary so the page and the list agree. At accessibility sizes the tile sits above the text.
+- **Reminders row:** a plain row with a chevron that opens the tag's reminders page, which is unchanged
+  (its sections, count header, + that starts a reminder with the tag chosen, and Tag Deleted state). The page has
+  its own destination, so the row and, later, the row's swipe both open it; Back returns to whichever did.
+- **Tag Deleted:** both of a tag's pages show `tag.slash`, "Tag Deleted" and "This tag was deleted. Its
+  reminders are still there." when the tag goes while the page is open.
+- **Read again** at every change and every minute. Edit and Delete Tag come with #377.
 
 ### Reminder form's Repeat
 - The Repeat row sits under Starts and shows the current choice. A tap opens a

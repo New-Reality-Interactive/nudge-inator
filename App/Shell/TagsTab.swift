@@ -2,7 +2,7 @@ import NudgeEngine
 import SwiftUI
 
 /// Tags: your tags with their counts, in the Sort menu's order, a search by name, a filter, + to add
-/// one, and a swipe to edit or delete one. A tag opens its reminders. The sheets live here, so they
+/// one, and a swipe to edit or delete one. A tag opens its details page, whose Reminders row opens its reminders. The sheets live here, so they
 /// survive a redraw of the list. The search and the filter are screen state, so a launch resets them
 /// and Back from a tag keeps them.
 ///
@@ -10,7 +10,7 @@ import SwiftUI
 /// stops matching the filter comes and goes with no tap.
 struct TagsTab: View {
     let state: ScreenState
-    /// A tag's screen, and the reminders pushed from it.
+    /// A tag's details page, its reminders, and the reminders pushed from them.
     @Binding var path: NavigationPath
     /// What previews show, since they have no app model.
     var previewEngine: Engine?
@@ -69,7 +69,8 @@ struct TagsTab: View {
                 if !hasTags { clearSearchAndFilter() }
             }
             .navigationTitle(Text(AppTab.tags.title))
-            .navigationDestination(for: OpenedTag.self) { TagRemindersView(tagID: $0.id, previewEngine: previewEngine) }
+            .navigationDestination(for: OpenedTag.self) { TagDetailsView(tagID: $0.id, previewEngine: previewEngine) }
+            .navigationDestination(for: OpenedTagReminders.self) { TagRemindersView(tagID: $0.id, previewEngine: previewEngine) }
             .reminderDetailsDestination()
             .toolbar {
                 if hasTags {

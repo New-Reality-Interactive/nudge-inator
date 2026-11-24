@@ -1,7 +1,7 @@
 import NudgeEngine
 import SwiftUI
 
-/// The Tags list: a row per tag, which opens the tag. A trailing swipe offers Edit and Delete. When
+/// The Tags list: a row per tag, which opens the tag's details page. A trailing swipe offers Edit and Delete. When
 /// nothing matches, the count stays above the no-match state, and the footer goes.
 struct TagsList: View {
     let screen: TagsScreen
@@ -70,7 +70,7 @@ private struct TagsNoMatchView: View {
     }
 }
 
-/// A tag's row. It opens the tag's reminders. The trailing swipe offers Edit, at the edge, and
+/// A tag's row. It opens the tag's details. The trailing swipe offers Edit, at the edge, and
 /// Delete, which asks first. Nothing is on the leading edge and there's no full swipe, so a stray
 /// swipe neither renames nor deletes. VoiceOver gets the same as the row's own actions: these and
 /// the swipe are the only ways to Edit or Delete a tag (DESIGN.md, Swipe actions).
@@ -139,21 +139,12 @@ private struct TagRowContent: View {
             VStack(alignment: .leading, spacing: Design.Spacing.line) {
                 Text(verbatim: summary.tag.label)
                     .font(.body)
-                Text(styledDetail)
+                Text(summary.styledCounts)
                     .font(.subheadline)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
         }
         .accessibilityElement(children: .combine)
-    }
-
-    /// The bold part in the negative color, as the mockup's `note-warn`.
-    private var styledDetail: AttributedString {
-        var text = AttributedString(localized: summary.counts)
-        for run in text.runs where run.inlinePresentationIntent?.contains(.stronglyEmphasized) == true {
-            text[run.range].foregroundColor = Color.negative
-        }
-        return text
     }
 }
 

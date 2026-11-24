@@ -28,13 +28,7 @@ struct TagRemindersView: View {
                     .navigationTitle(Text(verbatim: screen.tag.label))
                     .toolbar { ToolbarItem(placement: .primaryAction) { NewReminderButton(tagIDs: [tagID]) } }
             } else {
-                ContentUnavailableView {
-                    EmptyStateLabel(systemImage: "tag.slash") {
-                        Text("Tag Deleted", comment: "A tag's screen after the tag was deleted.")
-                    }
-                } description: {
-                    Text("This tag was deleted. Its reminders are still there.", comment: "A tag's screen after the tag was deleted.")
-                }
+                TagDeletedView()
             }
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -152,3 +146,16 @@ struct TagReminderRowView: View {
     }
 }
 #endif
+
+/// What both of a tag's pages show once the tag is gone: its details page and its reminders.
+struct TagDeletedView: View {
+    var body: some View {
+        ContentUnavailableView {
+            EmptyStateLabel(systemImage: "tag.slash") {
+                Text("Tag Deleted", comment: "A tag's screen after the tag was deleted.")
+            }
+        } description: {
+            Text("This tag was deleted. Its reminders are still there.", comment: "A tag's screen after the tag was deleted.")
+        }
+    }
+}
