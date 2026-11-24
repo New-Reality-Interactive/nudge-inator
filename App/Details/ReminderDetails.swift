@@ -127,19 +127,22 @@ struct ReminderDetails {
         showsLockNote = !engine.lockedFields(of: id).isEmpty
         let howItNudges = engine.howItNudges(reminder.strength, pace: reminder.pace, breakThroughFocus: reminder.breakThroughFocus)
         self.howItNudges = howItNudges
-        received = from.map { from in
+        // A received reminder has both its From line and its sender's name; the person's own has neither.
+        if let from, let senderName = senders.name(of: reminder) {
             let connection = sharing.connections.first { $0.id == reminder.receivedThrough }
             let syncState = sharing.receivedSyncStates.first { $0.reminderID == reminder.id }
-            return Received(
+            received = Received(
                 from: from,
-                senderName: senders.name(of: reminder) ?? .alone(""),
+                senderName: senderName,
                 strengthLine: StrengthLine(reminder.strength, howItNudges),
                 notSharingThisOne: connection?.mine.sharesStatus == true ? syncState?.notSharingThisOne ?? false : nil,
                 changeNote: syncState?.changeNote.map {
                     let words = ChangeNoteText($0, dueTime: reminder.dueTime, engine: engine)
-                    return ChangeNote(heading: words.heading(from: senders.name(of: reminder) ?? .alone(""), at: $0.at), lines: words.lines)
+                    return ChangeNote(heading: words.heading(from: senderName, at: $0.at), lines: words.lines)
                 }
             )
+        } else {
+            received = nil
         }
 
         let nextDueTime = engine.nextDueTime(of: reminder)

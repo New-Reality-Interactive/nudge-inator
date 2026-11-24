@@ -65,7 +65,7 @@ struct AccountChangedSheet: View {
     private func title(of row: AccountChangeNote.Row) -> Text {
         switch row {
         case .received(let count, let senders):
-            Text("\(count) reminders from \(LocalizedStringResource.list(senders))", comment: "The Apple Account Changed sheet: the received reminders removed. 1: how many. 2: who sent them, as a list, such as \"Maya Torres and Sam Okafor\".")
+            Text("\(count) reminders from \(AccountChangeNote.Row.list(of: senders))", comment: "The Apple Account Changed sheet: the received reminders removed. 1: how many. 2: who sent them, as a list, such as \"Maya Torres and Sam Okafor\".")
         case .connections(let count, _):
             Text("\(count) connections", comment: "The Apple Account Changed sheet: the connections removed, invites among them. The placeholder is how many.")
         case .sent(let count):
@@ -78,7 +78,7 @@ struct AccountChangedSheet: View {
         case .received:
             Text("Their nudges and alarms are canceled.", comment: "The Apple Account Changed sheet: under the received reminders removed.")
         case .connections(_, let names):
-            Text("\(LocalizedStringResource.list(names)), including invites not yet accepted.", comment: "The Apple Account Changed sheet: under the connections removed. The placeholder is their names, as a list, such as \"Maya Torres, Sam Okafor, and Jordan Lee\".")
+            Text("\(AccountChangeNote.Row.list(of: names)), including invites not yet accepted.", comment: "The Apple Account Changed sheet: under the connections removed. The placeholder is their names, as a list, such as \"Maya Torres, Sam Okafor, and Jordan Lee\".")
         case .sent:
             Text("Your Sent view starts empty.", comment: "The Apple Account Changed sheet: under the reminders this person sent, removed.")
         }
@@ -95,12 +95,9 @@ extension AccountChangeNote: Identifiable {
         case connections(count: Int, names: [String])
         case sent(count: Int)
 
-        /// Its names as one list in the language's words, or `nil` for a row with none.
-        var names: LocalizedStringResource? {
-            switch self {
-            case .received(_, let names), .connections(_, let names): .list(names)
-            case .sent: nil
-            }
+        /// A row's names as one list in the language's words, as the sheet shows them.
+        static func list(of names: [String]) -> LocalizedStringResource {
+            .list(names)
         }
     }
 

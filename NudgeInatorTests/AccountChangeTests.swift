@@ -300,8 +300,8 @@ struct AccountChangeNoteRowsTests {
     private func english(_ rows: [AccountChangeNote.Row]) -> [String] {
         rows.map { row in
             switch row {
-            case let .received(count, _): "\(count) received from \(row.names?.english ?? "")"
-            case let .connections(count, _): "\(count) connections: \(row.names?.english ?? "")"
+            case let .received(count, senders): "\(count) received from \(AccountChangeNote.Row.list(of: senders).english)"
+            case let .connections(count, names): "\(count) connections: \(AccountChangeNote.Row.list(of: names).english)"
             case let .sent(count): "\(count) sent"
             }
         }

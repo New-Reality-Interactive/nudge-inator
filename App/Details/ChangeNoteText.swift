@@ -37,9 +37,8 @@ struct ChangeNoteText {
             let words = String(localized: line)
             return words.prefix(1).lowercased() + words.dropFirst()
         }
-        let list = sentences.formatted(.list(type: .and))
         // String needed: notification, whose body is a String.
-        return String(localized: "\(name) changed this: \(list)", comment: "Body of the notification that the sender changed a reminder they sent. 1: the sender's name. 2: what changed, such as \"due time changed from 8:30 AM to 9:00 AM\", or several joined as a list.")
+        return String(localized: "\(name) changed this: \(sentences, format: .list(type: .and))", comment: "Body of the notification that the sender changed a reminder they sent. 1: the sender's name. 2: what changed, such as \"due time changed from 8:30 AM to 9:00 AM\", or several joined as a list.")
     }
 
     private func line(for change: ReceivedChange) -> LocalizedStringResource {

@@ -141,16 +141,16 @@ struct RepeatSummaryWriter {
     }
 
     /// A date or a time standing alone, to go into a sentence's placeholder. Every resource that is
-    /// only a placeholder shares this one catalog entry, so its comment is the same.
+    /// only a placeholder shares one catalog entry, so each `alone` spells the same comment.
     func alone(_ date: Date, format: Date.FormatStyle) -> LocalizedStringResource {
         LocalizedStringResource("\(date, format: format)", locale: locale, bundle: .module,
-                                comment: "A date, a time or a list standing alone, already in the language's own format, which a sentence holds as a placeholder. Keep it as it is.")
+                                comment: "Words standing alone, already in the language's own format: a date, a time, a list, or a weekday or month name. A sentence holds it as a placeholder. Keep it as it is.")
     }
 
     /// A list standing alone, to go into a sentence's placeholder: "Monday and Friday".
     func alone(_ items: [LocalizedStringResource], type: ListFormatStyle<StringStyle, [String]>.ListType, width: ListFormatStyle<StringStyle, [String]>.Width = .standard) -> LocalizedStringResource {
         LocalizedStringResource("\(items, format: .list(type: type, width: width))", locale: locale, bundle: .module,
-                                comment: "A date, a time or a list standing alone, already in the language's own format, which a sentence holds as a placeholder. Keep it as it is.")
+                                comment: "Words standing alone, already in the language's own format: a date, a time, a list, or a weekday or month name. A sentence holds it as a placeholder. Keep it as it is.")
     }
 
     /// What the rule falls on, before its time: "Every 2 weeks on Monday and Wednesday". The
@@ -378,13 +378,17 @@ struct RepeatSummaryWriter {
     /// A weekday's standalone name as a sentence's placeholder, within a condition: "… when it's a
     /// Monday or Friday".
     private func nameAlone(_ weekday: RepeatRule.Weekday) -> LocalizedStringResource {
-        LocalizedStringResource("\(name(weekday))", locale: locale, bundle: .module,
-                                comment: "A date, a time or a list standing alone, already in the language's own format, which a sentence holds as a placeholder. Keep it as it is.")
+        alone(name(weekday))
     }
 
     private func monthNameAlone(_ month: Int) -> LocalizedStringResource {
-        LocalizedStringResource("\(monthName(month))", locale: locale, bundle: .module,
-                                comment: "A date, a time or a list standing alone, already in the language's own format, which a sentence holds as a placeholder. Keep it as it is.")
+        alone(monthName(month))
+    }
+
+    /// A name already in the engine's locale, as a sentence's placeholder.
+    private func alone(_ words: String) -> LocalizedStringResource {
+        LocalizedStringResource("\(words)", locale: locale, bundle: .module,
+                                comment: "Words standing alone, already in the language's own format: a date, a time, a list, or a weekday or month name. A sentence holds it as a placeholder. Keep it as it is.")
     }
 
     private func monthName(_ month: Int) -> String {

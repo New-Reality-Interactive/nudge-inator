@@ -144,11 +144,11 @@ struct InvitePage: View {
 
     /// "Today", "Yesterday" or a short date, from the engine as the details page has it.
     private func dayLabel(of date: Date) -> LocalizedStringResource {
-        model?.engine.dayLabel(of: date) ?? .alone(date, format: Date.FormatStyle(date: .abbreviated, time: .omitted))
+        EngineDayAndTime.day(of: date, in: model?.engine)
     }
 
     private func timeOfDay(of date: Date) -> LocalizedStringResource {
-        model?.engine.timeOfDay(of: date) ?? .alone(date, format: Date.FormatStyle(date: .omitted, time: .shortened))
+        EngineDayAndTime.time(of: date, in: model?.engine)
     }
 }
 
