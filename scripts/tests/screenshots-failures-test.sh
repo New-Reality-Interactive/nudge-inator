@@ -91,12 +91,13 @@ case "\$*" in *build-for-testing*) exit 0 ;; esac
 case "\$*" in *id=$a*) lane=a ;; *) lane=b ;; esac
 variant="\$(basename "\$TEST_RUNNER_SHOTS_DIR")"
 echo "\$lane-\$variant" >> "\$STUB_DIR/ran"
+echo "\$*" > "\$STUB_DIR/args-\$lane-\$variant"
 [ ! -f "\$STUB_DIR/\$lane-\$variant" ] || source "\$STUB_DIR/\$lane-\$variant"
 EOF
 chmod +x "$stub/bin/"*
 
 # Clears the stand-ins' records and scenario files.
-reset_stub() { rm -rf "$stub"/simctl.log "$stub"/ran "$stub"/[ab]-* "$stub"/finished-* "$work/metrics"; }
+reset_stub() { rm -rf "$stub"/simctl.log "$stub"/ran "$stub"/args-* "$stub"/[ab]-* "$stub"/finished-* "$work/metrics"; }
 
 # The records the last run added, as "<simulator>|<variant>|<result>|<failed test>", in order.
 recorded() {
@@ -106,7 +107,7 @@ recorded() {
 
 # Runs the real script over the stand-ins, with any VAR=value arguments. Sets $status.
 run_shots() {
-  env PATH="$stub/bin:$PATH" STUB_DIR="$stub" NUDGE_METRICS_DIR="$work/metrics" NUDGE_METRICS_TICKET=303 SIMULATORS="Stub A;Stub B" SHOTS_OUT="$work/out" \
+  env PATH="$stub/bin:$PATH" STUB_DIR="$stub" NUDGE_METRICS_DIR="$work/metrics" NUDGE_METRICS_TICKET=303 SIMULATORS="Stub A;Stub B" SHOTS_OUT="$work/out" SHOTS_LEDGER="$work/ledger" \
     SHOTS_VARIANTS="portrait landscape" "$@" scripts/screenshots.sh > "$work/output" 2>&1
   status=$?
 }
@@ -202,6 +203,55 @@ run_shots NUDGE_METRICS_DIR="$work/blocked/file/inside"
 expect "a run whose metrics can't be written still succeeds" "0" "$status"
 expect "and warns" "1" "$(grep -c '^warning: could not write the metrics' "$work/output")"
 expect_cleanup "after a clean run"
+
+# ---- resuming an interrupted run (#488) ----
+
+# Scenario lines are shell commands, as the stand-in sources them.
+passed_test() { echo "echo \"Test Case '-[NudgeShotsUITests.ShotsUITests $1]' passed (1.0 seconds).\""; }
+failed_test() { echo "echo '$(fail_line "$1")'; echo \"Test Case '-[NudgeShotsUITests.ShotsUITests $1]' failed (1.0 seconds).\""; }
+tests="testOne testTwo testThree"
+
+# The tests the stand-in's last run was asked for, as "only:" or "skip:" and the names.
+asked() { tr ' ' '\n' < "$stub/args-$1" | sed -E -n 's/^-(only|skip)-testing:NudgeShotsUITests\/ShotsUITests\//\1:/p' | tr '\n' ' '; }
+
+reset_stub
+{ passed_test testOne; passed_test testTwo; failed_test testThree; } > "$stub/a-portrait"
+{ passed_test testOne; passed_test testTwo; passed_test testThree; } > "$stub/b-portrait"
+run_shots SHOTS_KEEP_GOING=1 SHOTS_VARIANTS=portrait SHOTS_TESTS="$tests"
+expect "the ledger keeps what passed on a simulator and variant" "testOne testTwo" "$(tr '\n' ' ' < "$work/ledger/Stub A-portrait.passed" | sed 's/ $//')"
+expect "a test that failed is not in the ledger" "0" "$(grep -c testThree "$work/ledger/Stub A-portrait.passed")"
+
+reset_stub
+run_shots SHOTS_RESUME=1 SHOTS_VARIANTS=portrait SHOTS_TESTS="$tests"
+expect "a resumed run asks only for the test that didn't pass" "only:testThree " "$(asked a-portrait)"
+expect "and skips a variant where every test passed" "a-portrait" "$(cat "$stub/ran")"
+expect "it says which it skipped" "1" "$(grep -c '^\[Stub B\] every test already passed in portrait, skipped' "$work/output")"
+expect "a resumed run keeps the images already taken" "yes" "$([ -d "$work/out/Stub B/portrait" ] && echo yes || echo no)"
+expect_cleanup "after a resumed run"
+
+reset_stub
+run_shots SHOTS_RESUME=1 SHOTS_VARIANTS=portrait SHOTS_NOW=01:30 SHOTS_TESTS="$tests"
+expect "a resume at another SHOTS_NOW skips nothing" "a-portrait
+b-portrait" "$(sort "$stub/ran")"
+expect "and says why" "1" "$(grep -c '^==> Nothing to resume' "$work/output")"
+
+reset_stub
+{ passed_test testOne; } > "$stub/a-portrait"
+run_shots SHOTS_VARIANTS=portrait SHOTS_TESTS="$tests"
+reset_stub
+run_shots SHOTS_VARIANTS=portrait SHOTS_TESTS="$tests" # passes nothing, and starts the ledger over
+expect "a run without SHOTS_RESUME leaves no passed test in the ledger" "0" "$(find "$work/ledger" -name '*.passed' | wc -l | tr -d ' ')"
+reset_stub
+run_shots SHOTS_RESUME=1 SHOTS_VARIANTS=portrait SHOTS_TESTS="$tests"
+expect "a run without SHOTS_RESUME empties the ledger first" "only:testOne only:testTwo only:testThree " "$(asked a-portrait)"
+
+reset_stub
+{ passed_test testOne; passed_test testTwo; } > "$stub/a-portrait"
+run_shots SHOTS_VARIANTS=portrait
+reset_stub
+run_shots SHOTS_RESUME=1 SHOTS_VARIANTS=portrait
+expect "with no test list, a resumed run skips the ones that passed" "skip:testOne skip:testTwo " "$(asked a-portrait)"
+expect "and a simulator with nothing passed skips nothing" "" "$(asked b-portrait)"
 
 [ "$failures" -eq 0 ] || { echo "FAIL: $failures check(s)" >&2; exit 1; }
 echo "PASS: finding and acting on a failed screenshot test"
