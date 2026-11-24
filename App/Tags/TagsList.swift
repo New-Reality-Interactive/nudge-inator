@@ -1,8 +1,8 @@
 import NudgeEngine
 import SwiftUI
 
-/// The Tags list: a row per tag, which opens the tag. A trailing swipe offers Edit and Delete. When
-/// nothing matches, the count stays above the no-match state, and the footer goes.
+/// The Tags list: a row per tag, which opens the tag's details page. A trailing swipe offers Edit
+/// and Delete. When nothing matches, the count stays above the no-match state, and the footer goes.
 struct TagsList: View {
     let screen: TagsScreen
     let filter: TagListFilter
@@ -70,7 +70,7 @@ private struct TagsNoMatchView: View {
     }
 }
 
-/// A tag's row. It opens the tag's reminders. The trailing swipe offers Edit, at the edge, and
+/// A tag's row. It opens the tag's details. The trailing swipe offers Edit, at the edge, and
 /// Delete, which asks first. Nothing is on the leading edge and there's no full swipe, so a stray
 /// swipe neither renames nor deletes. VoiceOver gets the same as the row's own actions: these and
 /// the swipe are the only ways to Edit or Delete a tag (DESIGN.md, Swipe actions).
@@ -90,24 +90,7 @@ private struct TagRow: View {
             RowAction(kind: .edit, label: editLabel, action: rename),
             RowAction(kind: .delete, label: deleteLabel, action: { isConfirmingDelete = true }),
         ])
-        // The system's confirmation dialog with its title showing, as Apple's own apps ask (#286).
-        // From a tile, iOS 27.0 (simulator) draws a popover with Delete alone: a tap outside it, or
-        // VoiceOver's "Dismiss popup", closes it with nothing deleted. As an action sheet, its Cancel does.
-        .confirmationDialog(
-            Text("Delete \(summary.tag.label)?", comment: "Tags: title of the question that asks before deleting a tag. The placeholder is the tag, such as \"#home\"."),
-            isPresented: $isConfirmingDelete,
-            titleVisibility: .visible
-        ) {
-            Button(role: .destructive, action: delete) {
-                Text("Delete Tag", comment: "Tags: confirms deleting the tag, as Delete Reminder does for a reminder. The reminders that have it are kept.")
-            }
-            Button(role: .cancel) {
-            } label: {
-                Text("Cancel", comment: "Keeps the tag instead of deleting it.")
-            }
-        } message: {
-            Text(summary.deleteMessage)
-        }
+        .deleteTagConfirmation(summary, isPresented: $isConfirmingDelete, delete: delete)
     }
 
     private var editLabel: Text {
@@ -139,21 +122,12 @@ private struct TagRowContent: View {
             VStack(alignment: .leading, spacing: Design.Spacing.line) {
                 Text(verbatim: summary.tag.label)
                     .font(.body)
-                Text(styledDetail)
+                Text(summary.styledCounts)
                     .font(.subheadline)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
         }
         .accessibilityElement(children: .combine)
-    }
-
-    /// The bold part in the negative color, as the mockup's `note-warn`.
-    private var styledDetail: AttributedString {
-        var text = AttributedString(localized: summary.counts)
-        for run in text.runs where run.inlinePresentationIntent?.contains(.stronglyEmphasized) == true {
-            text[run.range].foregroundColor = Color.negative
-        }
-        return text
     }
 }
 

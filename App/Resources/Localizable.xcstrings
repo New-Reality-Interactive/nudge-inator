@@ -1583,7 +1583,7 @@
       "comment" : "Edit Schedule (quiet hours): confirms deleting the schedule.\nEdit Schedule (quiet hours): the button that asks before deleting the schedule."
     },
     "Delete Tag" : {
-      "comment" : "Tags: confirms deleting the tag, as Delete Reminder does for a reminder. The reminders that have it are kept."
+      "comment" : "A tag's details page: opens the question that asks before deleting the tag, as Delete Reminder does on a reminder's details.\nTags: confirms deleting the tag, as Delete Reminder does for a reminder. The reminders that have it are kept."
     },
     "Delete This Schedule?" : {
       "comment" : "Edit Schedule (quiet hours): title of the question that asks before deleting the schedule."
@@ -1778,10 +1778,10 @@
       "comment" : "Reminders tab's Sort menu, sorted by Due Date: the earliest due time at the top."
     },
     "Edit" : {
-      "comment" : "Quiet Hours page: a schedule row's VoiceOver action that opens its Edit Schedule sheet.\nReminder details: the toolbar button that opens the Edit Reminder form.\nReminders tab, Sent: a row's swipe action and VoiceOver action that opens the sent reminder's Edit Reminder form.\nReminders tab: a row's swipe action and VoiceOver action that opens the Edit Reminder form.\nTags: a row's swipe action and VoiceOver action that opens the sheet that renames the tag."
+      "comment" : "A tag's details page: the toolbar button that opens the Rename Tag sheet.\nQuiet Hours page: a schedule row's VoiceOver action that opens its Edit Schedule sheet.\nReminder details: the toolbar button that opens the Edit Reminder form.\nReminders tab, Sent: a row's swipe action and VoiceOver action that opens the sent reminder's Edit Reminder form.\nReminders tab: a row's swipe action and VoiceOver action that opens the Edit Reminder form.\nTags: a row's swipe action and VoiceOver action that opens the sheet that renames the tag."
     },
     "Edit %@" : {
-      "comment" : "VoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title."
+      "comment" : "VoiceOver label of a tag's details page's Edit button. The placeholder is the tag, such as \"#home\".\nVoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title."
     },
     "Edit Reminder" : {
       "comment" : "Title of the form that edits a reminder."
@@ -2873,7 +2873,7 @@
       "comment" : "Reminder details: title when the reminder isn't there."
     },
     "Reminders" : {
-      "comment" : "Tab bar: the tab listing every reminder in any state\nTags tab's Sort menu: the header of the section that sorts by how many reminders have each tag."
+      "comment" : "A tag's details page: the row that opens the tag's reminders.\nTab bar: the tab listing every reminder in any state\nTags tab's Sort menu: the header of the section that sorts by how many reminders have each tag."
     },
     "Reminders from %@" : {
       "comment" : "A connection's page: header of this person's choices for what they receive. The argument is the other person's name, such as \"Alex Morgan\"."
@@ -3180,7 +3180,7 @@
       "comment" : "How Quiet Hours Work, Your Schedules: the third row, about a schedule's switch."
     },
     "Tag Deleted" : {
-      "comment" : "A tag's screen after the tag was deleted."
+      "comment" : "A tag's details page and its reminders page after the tag was deleted."
     },
     "Tag Name" : {
       "comment" : "The New Tag and Rename Tag sheet's field for the tag's name."
@@ -3433,7 +3433,7 @@
       "comment" : "Under the Custom repeat page's Next Times when the repeat has ended."
     },
     "This tag was deleted. Its reminders are still there." : {
-      "comment" : "A tag's screen after the tag was deleted."
+      "comment" : "A tag's details page and its reminders page after the tag was deleted."
     },
     "This time has passed. Choose a later time." : {
       "comment" : "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name."

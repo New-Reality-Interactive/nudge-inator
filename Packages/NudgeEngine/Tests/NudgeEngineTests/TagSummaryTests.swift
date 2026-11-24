@@ -29,4 +29,29 @@ struct TagSummaryTests {
             TagSummary(tag: travel, reminderCount: 0, dueTodayCount: 0, nudgingCount: 0),
         ])
     }
+
+    /// A tag's details page reads one tag with the numbers its row on the list shows.
+    @Test func readsOneTagWithTheCountsItsRowShows() {
+        let home = Tag(name: "home"), money = Tag(name: "money"), travel = Tag(name: "travel")
+        let rent = Reminder(title: "Pay rent", tagIDs: [money.id, home.id], dueTime: NewYork.local(2026, 10, 16, 5, 45), strength: .relentless)
+        let bins = Reminder(title: "Take the bins out", tagIDs: [home.id], dueTime: NewYork.local(2026, 10, 16, 20), strength: .firm)
+        var engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone)
+        engine.update(tags: [travel, money, home])
+        engine.update(reminders: [rent, bins])
+        clock.now = NewYork.local(2026, 10, 16, 6)
+
+        #expect(engine.tagSummary(for: home.id) == TagSummary(tag: home, reminderCount: 2, dueTodayCount: 2, nudgingCount: 1))
+        #expect(engine.tagSummary(for: travel.id) == TagSummary(tag: travel, reminderCount: 0, dueTodayCount: 0, nudgingCount: 0))
+        for row in engine.tagSummaries() {
+            #expect(engine.tagSummary(for: row.tag.id) == row)
+        }
+    }
+
+    /// A tag deleted while its page is open has no summary: the page shows Tag Deleted.
+    @Test func hasNoSummaryForATagTheEngineDoesNotHold() {
+        var engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone)
+        engine.update(tags: [Tag(name: "home")])
+
+        #expect(engine.tagSummary(for: Tag(name: "gone").id) == nil)
+    }
 }

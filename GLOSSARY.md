@@ -135,6 +135,10 @@ _Avoid_: Skipped (that is an occurrence's closing), suppressed, snoozed
 **Tag**:
 A one-word label (`#home`) on a reminder, used only to filter. Never shown in alerts.
 
+**Tag details**:
+The page a tag row on the Tags tab opens: the tag's tile, name and counts, and a Reminders row. Distinct from the tag's reminders page, the list of the reminders with the tag, which the Reminders row opens.
+_Avoid_: Tag page, tag screen (say which: Tag details or the tag's reminders)
+
 **My Day**:
 Today's occurrences in time order, with Done, Nudging, Missed and Left counts.
 

@@ -57,19 +57,37 @@ public struct TagSummary: Equatable, Sendable {
 extension Engine {
     /// Every tag's row on the Tags tab, by name in `nameOrder`, then by ID so the order is fixed.
     public func tagSummaries(nameOrder: NameOrder = NameOrder()) -> [TagSummary] {
-        let today = myDay().items.map(\.reminderID)
-        let nudging = Set(nudgingOccurrences().map(\.reminderID))
+        let counting = tagCounting()
         return tags
             .sorted { nameOrder.isOrdered($0.name, $0.id, before: $1.name, $1.id) }
-            .map { tag in
-                let tagged = taggedReminders(tag.id).map(\.id)
-                return TagSummary(
-                    tag: tag,
-                    reminderCount: tagged.count,
-                    dueTodayCount: today.count { tagged.contains($0) },
-                    nudgingCount: tagged.count { nudging.contains($0) }
-                )
-            }
+            .map { summary(of: $0, counting) }
+    }
+
+    /// One tag's row, with the counts the list shows for it: a tag's details page. `nil` for a tag
+    /// the engine doesn't hold, such as one deleted while its page is open.
+    public func tagSummary(for tagID: Tag.ID) -> TagSummary? {
+        guard let tag = tags.first(where: { $0.id == tagID }) else { return nil }
+        return summary(of: tag, tagCounting())
+    }
+
+    /// What the counts need from the engine, read once for a list of tags.
+    private struct TagCounting {
+        var today: [Reminder.ID]
+        var nudging: Set<Reminder.ID>
+    }
+
+    private func tagCounting() -> TagCounting {
+        TagCounting(today: myDay().items.map(\.reminderID), nudging: Set(nudgingOccurrences().map(\.reminderID)))
+    }
+
+    private func summary(of tag: Tag, _ counting: TagCounting) -> TagSummary {
+        let tagged = taggedReminders(tag.id).map(\.id)
+        return TagSummary(
+            tag: tag,
+            reminderCount: tagged.count,
+            dueTodayCount: counting.today.count { tagged.contains($0) },
+            nudgingCount: tagged.count { counting.nudging.contains($0) }
+        )
     }
 
     /// Adds a tag, from the Tags tab's + or the reminder form. A name another tag has, ignoring
