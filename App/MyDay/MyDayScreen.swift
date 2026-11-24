@@ -21,7 +21,7 @@ struct MyDayScreen {
     /// every row. Read from the whole day, not the rows the filter leaves, so a filter that empties
     /// the list keeps the button that clears it (Decision 56).
     let offersFilter: Bool
-    private let nowTime: String
+    private let nowTime: LocalizedStringResource
     private let now: Date
     /// The day listed, its label, its neighbours and its words (#375).
     let shown: MyDayShownDay
@@ -43,21 +43,21 @@ struct MyDayScreen {
         var reminder: Reminder
         var dueTime: Date
         /// The due time of day, in the engine's zone.
-        var time: String
+        var time: LocalizedStringResource
         var status: MyDay.Status
         /// When it closed, as a time of day, once it has.
-        var closedTime: String?
+        var closedTime: LocalizedStringResource?
         var nudgesSent: Int
         /// Under how it closed, how many of its nudges quiet hours held, on a Missed one (#369).
         var missedNote: MissedNote?
         /// When the next nudge fires, while nudging and one is left.
-        var nextNudgeTime: String?
+        var nextNudgeTime: LocalizedStringResource?
         /// The reminder's tags that the engine holds.
         var tags: [TagLabel]
         /// "From Riley Park" under the title of a received reminder, or `nil` (ticket 199).
         var from: FromLine?
         /// How it repeats, on a day after today, where it stands in for how soon (#375).
-        var schedule: String?
+        var schedule: LocalizedStringResource?
 
         /// A reminder can be due twice in a day after an Edit, so its ID alone isn't unique.
         var id: String { "\(reminder.id.uuidString) \(dueTime.timeIntervalSinceReferenceDate)" }
@@ -89,8 +89,10 @@ struct MyDayScreen {
             case .canceled:
                 return LocalizedStringResource("Canceled", comment: "My Day: under the title of a reminder someone sent that its sender deleted. It no longer nudges.")
             case .left:
-                let soon = schedule ?? dueTime.shortRelative(to: now)
-                return LocalizedStringResource("\(soon)", comment: "My Day: under the title of an occurrence still to come: on today how soon, such as \"in 4 hr.\"; on a later day how it repeats, such as \"Every day at 6:30 AM\".")
+                if let schedule { return schedule }
+                // How soon stays a String from RelativeDateTimeFormatter: Foundation's relative format
+                // style rounds where it truncates, so 90 minutes would read "in 2 hr.", not "in 1 hr.".
+                return .alone(dueTime.shortRelative(to: now))
             }
         }
     }
@@ -123,7 +125,7 @@ struct MyDayScreen {
     /// One line of the list: a due time, or the marker for where the time is now.
     enum Row: Identifiable {
         case item(Item)
-        case now(time: String)
+        case now(time: LocalizedStringResource)
 
         var id: String {
             switch self {
@@ -147,7 +149,7 @@ struct MyDayScreen {
     init(filter: MyDayFilter, now: Date) {
         self.now = now
         shown = MyDayShownDay(now: now)
-        nowTime = now.formatted(date: .omitted, time: .shortened)
+        nowTime = .alone(now, format: Date.FormatStyle(date: .omitted, time: .shortened))
         counts = MyDayCount.allCases.map { Count(kind: $0, number: 0, isChosen: filter.count == $0) }
         items = []
         offersFilter = false

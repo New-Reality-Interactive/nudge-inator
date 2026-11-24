@@ -79,8 +79,8 @@ struct AskMeFirstTests {
         #expect(screen.waiting.count == 1)
         #expect(row.title == "Take the pills")
         #expect(row.from.map { String(localized: $0.label) } == "From Alex Morgan")
-        #expect(row.day == "Tomorrow")
-        #expect(row.time == "8:30\u{202F}AM")
+        #expect(row.day.english == "Tomorrow")
+        #expect(row.time.english == "8:30\u{202F}AM")
         #expect(screen.nudging.map(\.title) == ["Walk the dog"])
         #expect(!screen.comingUp.contains { $0.title == "Take the pills" })
         #expect(NowScreen.badgeCount(of: riley.model.engine) == 1)
@@ -129,7 +129,7 @@ struct AskMeFirstTests {
         let engine = riley.model.engine
         #expect(engine.status(of: copy.id) == .comingUp)
         #expect(engine.occurrence(of: copy.id, dueAt: NewYork.local(2026, 10, 15, 8, 30))?.state == .skipped(reason: .paused))
-        #expect(now(on: riley).comingUp.first { $0.title == "Take the pills" }?.day == "Tomorrow")
+        #expect(now(on: riley).comingUp.first { $0.title == "Take the pills" }?.day.english == "Tomorrow")
     }
 
     @Test func acceptingTellsTheSenderItStarted() async throws {
@@ -207,7 +207,7 @@ struct AskMeFirstTests {
         #expect(details.status == .waiting)
         #expect(details.isWaiting)
         #expect(details.pauseAction == nil)
-        #expect(details.next == .at(day: "Today", time: "8:30\u{202F}AM"))
+        #expect(details.next.english == ["Today", "8:30\u{202F}AM"])
     }
 
     @Test func anAcceptedReminderDetailsOfferPauseAndNoAccept() async throws {

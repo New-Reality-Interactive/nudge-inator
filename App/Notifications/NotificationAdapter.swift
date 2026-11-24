@@ -92,6 +92,7 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
         // Empty options: .foreground would open the app and .authenticationRequired would need an
         // unlocked phone, and Done should run from the Lock Screen. One action, since the system
         // shows only two when space is short.
+        // String needed: notification action, whose title is a String.
         let done = UNNotificationAction(identifier: Self.doneActionIdentifier, title: String(localized: "Done", comment: "Notification action: marks the reminder Done and stops its nudges."), options: [])
         center.setNotificationCategories([
             UNNotificationCategory(identifier: Self.categoryIdentifier, actions: [done], intentIdentifiers: []),
@@ -212,7 +213,9 @@ final class NotificationAdapter: @MainActor SchedulerAdapter {
     /// refusal is reported like any other.
     func sendTestNudge() async {
         let content = UNMutableNotificationContent()
+        // String needed: notification, whose title and body are Strings.
         content.title = String(localized: "Test nudge", comment: "Title of the notification that Settings' Send a Test Nudge sends.")
+        // String needed: notification, whose title and body are Strings.
         content.body = String(localized: "Nudges will look like this.", comment: "Body of the notification that Settings' Send a Test Nudge sends.")
         content.interruptionLevel = .active
         content.categoryIdentifier = Self.categoryIdentifier

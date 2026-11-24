@@ -156,6 +156,12 @@ step "List row insets are never all zero without a reason"
 scripts/tests/list-row-insets-test.sh || failed+=("list-row-insets-test")
 scripts/check-list-row-insets.sh App NudgeWidgets Packages || failed+=("list-row-insets")
 
+# Screen text is a LocalizedStringResource that SwiftUI resolves as it draws; a lookup into a String
+# is only for text an API takes as one, and says why (#500, CODING_STANDARDS.md, Localization).
+step "Words are looked up as a String only where a marker says why"
+scripts/tests/localized-strings-test.sh || failed+=("localized-strings-test")
+scripts/check-localized-strings.sh App NudgeWidgets Packages/NudgeShared Packages/NudgeEngine/Sources || failed+=("localized-strings")
+
 # App/Resources/PrivacyInfo.xcprivacy gives UserDefaults the reason CA92.1: the app reading its own
 # standard defaults. A suite would be a different reason (1C8F.1 for the App Group's), and the widget
 # has no manifest, so a UserDefaults there would be an undeclared required reason API. Shipped

@@ -84,7 +84,7 @@ private struct HowItNudgesRowView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 VStack(alignment: labelAlignment, spacing: Design.Spacing.s1) {
-                    Text(verbatim: row.urgency.name)
+                    Text(row.urgency.name)
                         .fontWeight(.semibold)
                         .foregroundStyle(row.urgency.color)
                     ViaLabel(delivery: row.delivery).text
@@ -127,8 +127,8 @@ extension HowItNudges.Row {
 
 /// The ladder's times in the locale's words, at most two units: "7 min, 30 sec", "2 hr, 18 min".
 enum HowItNudgesDuration {
-    static func text(_ interval: TimeInterval) -> String {
-        Duration.seconds(interval).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .abbreviated, maximumUnitCount: 2))
+    static func text(_ interval: TimeInterval) -> LocalizedStringResource {
+        .alone(Duration.seconds(interval), format: .units(allowed: [.hours, .minutes, .seconds], width: .abbreviated, maximumUnitCount: 2))
     }
 }
 

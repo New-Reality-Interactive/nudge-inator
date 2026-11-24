@@ -831,9 +831,9 @@ struct ReminderFormTests {
 
         #expect(form.isCustomRepeat)
         #expect(form.repeatRule?.rrule == "FREQ=DAILY;INTERVAL=3")
-        #expect(form.repeatPatternSummary == "Every 3 days at 9:00\u{202F}AM")
-        #expect(form.repeatSummary == "Every 3 days at 9:00\u{202F}AM")
-        #expect(form.customPageSummary == "Every 3 days at 9:00\u{202F}AM")
+        #expect(form.repeatPatternSummary.english == "Every 3 days at 9:00\u{202F}AM")
+        #expect(form.repeatSummary.english == "Every 3 days at 9:00\u{202F}AM")
+        #expect(form.customPageSummary.english == "Every 3 days at 9:00\u{202F}AM")
     }
 
     /// A menu choice counts as a change, so Cancel asks first; choosing the repeat it already is
@@ -902,7 +902,7 @@ struct ReminderFormTests {
         form.dueTime = Self.monday
 
         // Never starts the page from a weekly repeat on the start's weekday (the mockup's `customFrom`).
-        #expect(form.customPageSummary == "Every Monday at 9:00\u{202F}AM")
+        #expect(form.customPageSummary.english == "Every Monday at 9:00\u{202F}AM")
         #expect(form.customPageUpcomingDueTimes == [Self.monday, NewYork.local(2026, 10, 26), NewYork.local(2026, 11, 2)])
         #expect(form.repeatPreset == .never)
         #expect(form.repeatRule == nil)
@@ -920,7 +920,7 @@ struct ReminderFormTests {
 
         #expect(form.repeatPreset == nil)
         #expect(form.repeatRule?.rrule == "FREQ=WEEKLY;BYDAY=MO")
-        #expect(form.repeatSummary == "Every Monday at 9:00\u{202F}AM")
+        #expect(form.repeatSummary.english == "Every Monday at 9:00\u{202F}AM")
     }
 
     /// #284: the Custom sheet's changes are the form's, so the form's Cancel asks before dropping
@@ -1002,7 +1002,7 @@ struct ReminderFormTests {
         #expect(form.customPageUpcomingDueTimes == [Self.monday, NewYork.local(2026, 10, 21)])
         let expected = Reminder(title: "Water the plants", dueTime: Self.monday,
                                 repeatRule: try RepeatRule(rrule: "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE;COUNT=2"), strength: .firm)
-        #expect(form.customPageSummary == "Every 2 weeks on Monday and Wednesday at 9:00\u{202F}AM")
+        #expect(form.customPageSummary.english == "Every 2 weeks on Monday and Wednesday at 9:00\u{202F}AM")
         #expect(form.customPageUpcomingDueTimes == model.engine.upcomingDueTimes(of: expected, count: 3))
     }
 
@@ -1017,8 +1017,8 @@ struct ReminderFormTests {
         if isCustom { form.chooseCustomRepeat() }
         form.repeatEnd.ending = .afterCount
 
-        #expect(form.repeatSummary == "Every Monday at 9:00\u{202F}AM, 10 times")
-        #expect(form.repeatPatternSummary == "Every Monday at 9:00\u{202F}AM")
+        #expect(form.repeatSummary.english == "Every Monday at 9:00\u{202F}AM, 10 times")
+        #expect(form.repeatPatternSummary.english == "Every Monday at 9:00\u{202F}AM")
     }
 
     /// Wednesday 28 October is October's last Wednesday; 18 November isn't November's.

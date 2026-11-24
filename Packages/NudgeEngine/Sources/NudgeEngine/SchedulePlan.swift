@@ -73,8 +73,8 @@ public struct SchedulePlan: Equatable, Sendable {
 
         /// The notification body, for example "Nudge 3 of 20 · High", in the app's language.
         public var body: String {
-            let urgency = urgency.name
-            return String(localized: "Nudge \(nudgeNumber) of \(nudgesInAll) · \(urgency)", bundle: .module,
+            // String needed: notification, whose body is a String.
+            return String(localized: "Nudge \(nudgeNumber) of \(nudgesInAll) · \(urgency.name)", bundle: .module,
                           comment: "Notification body: never the notes or tags. 1: which nudge this is. 2: how many nudges its occurrence sends in all. 3: the urgency, such as High.")
         }
     }
@@ -96,11 +96,11 @@ public enum Urgency: Equatable, Sendable {
     case urgent
 
     /// The urgency's word, in the app's language, as a notification and the screens show it.
-    public var name: String {
+    public var name: LocalizedStringResource {
         switch self {
-        case .normal: String(localized: "Normal", bundle: .module, comment: "Urgency: a nudge on the first rung of its ladder, as in \"Nudge 1 of 20 · Normal\".")
-        case .high: String(localized: "High", bundle: .module, comment: "Urgency: a nudge that has escalated, as in \"Nudge 3 of 20 · High\".")
-        case .urgent: String(localized: "Urgent", bundle: .module, comment: "Urgency: a nudge at the top of its ladder, which may ring as an alarm, as in \"Nudge 4 of 20 · Urgent\".")
+        case .normal: LocalizedStringResource("Normal", bundle: .module, comment: "Urgency: a nudge on the first rung of its ladder, as in \"Nudge 1 of 20 · Normal\".")
+        case .high: LocalizedStringResource("High", bundle: .module, comment: "Urgency: a nudge that has escalated, as in \"Nudge 3 of 20 · High\".")
+        case .urgent: LocalizedStringResource("Urgent", bundle: .module, comment: "Urgency: a nudge at the top of its ladder, which may ring as an alarm, as in \"Nudge 4 of 20 · Urgent\".")
         }
     }
 }

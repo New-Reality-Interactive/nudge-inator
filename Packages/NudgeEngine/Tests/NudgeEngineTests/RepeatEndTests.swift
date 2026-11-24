@@ -80,6 +80,6 @@ struct RepeatEndTests {
         let reminder = Reminder(title: "Water the plants", dueTime: Self.monday,
                                 repeatRule: engine.rule(.everyWeek, ending: end), strength: .gentle)
 
-        #expect(engine.repeatSummary(of: reminder) == "Every Monday at 9:00\u{202F}AM, 5 times")
+        #expect(String(localized: engine.repeatSummary(of: reminder)) == "Every Monday at 9:00\u{202F}AM, 5 times")
     }
 }

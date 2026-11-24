@@ -195,10 +195,10 @@ struct ConnectionPage: View {
     }
 
     /// "Sep 12", with the year when it isn't this year's.
-    private static func day(of date: Date) -> String {
+    private static func day(of date: Date) -> LocalizedStringResource {
         let calendar = Calendar.autoupdatingCurrent
         let format = Date.FormatStyle.dateTime.month(.abbreviated).day()
-        return calendar.isDate(date, equalTo: .now, toGranularity: .year) ? date.formatted(format) : date.formatted(format.year())
+        return .alone(date, format: calendar.isDate(date, equalTo: .now, toGranularity: .year) ? format : format.year())
     }
 }
 

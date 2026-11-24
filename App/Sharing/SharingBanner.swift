@@ -102,6 +102,7 @@ struct SharingBannerView: View {
 
     var body: some View {
         if let banner {
+            // String needed: styled, its Markdown bold drawn.
             BannerCard(systemImage: banner.systemImage, text: Text(AttributedString(localized: banner.text)), borderColor: .warning) {
                 if banner.offersOpenSettings {
                     OpenSettingsButton {

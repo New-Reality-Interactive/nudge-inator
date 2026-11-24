@@ -174,6 +174,7 @@ private struct NowHeader: View {
 
     /// The subhead's bold count in red, "needs you now", as the mockup's `<strong>`.
     private static func styled(_ subhead: LocalizedStringResource) -> AttributedString {
+        // String needed: styled, its bold count turned red.
         var text = AttributedString(localized: subhead)
         for run in text.runs where run.inlinePresentationIntent?.contains(.stronglyEmphasized) == true {
             text[run.range].foregroundColor = .negative

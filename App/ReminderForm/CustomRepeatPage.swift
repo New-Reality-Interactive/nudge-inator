@@ -89,8 +89,7 @@ private struct FrequencySection: View {
                             label: Text(choices.frequency.every(choices.interval)))
         } footer: {
             if choices.frequency == .yearly {
-                let day = start.formatted(.dateTime.day().month(.wide))
-                Text("On \(day), from the start date. Change it to pick another day.",
+                Text("On \(start, format: .dateTime.day().month(.wide)), from the start date. Change it to pick another day.",
                      comment: "Under the Custom repeat page's frequency when it's yearly. The placeholder is the start's day and month, such as \"28 October\".")
             }
         }
@@ -136,7 +135,7 @@ private struct MonthlySection: View {
         Section {
             ForEach(form.monthlyDays, id: \.day) { monthlyDay in
                 // The person's choice of one, read as "selected" as the Repeat menu's items are.
-                CheckmarkRow(title: Text(verbatim: monthlyDay.title), isChecked: monthlyDay.day == chosen) {
+                CheckmarkRow(title: Text(monthlyDay.title), isChecked: monthlyDay.day == chosen) {
                     form.customPageChoices.monthlyDay = monthlyDay.day
                 }
                 .lockedWhileNudging(isLocked)
@@ -146,7 +145,7 @@ private struct MonthlySection: View {
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s1) {
                 if let note = form.skippedMonthsNote {
-                    Text(verbatim: note)
+                    Text(note)
                 }
                 Text("These follow the start date. Change it to pick another day.",
                      comment: "Under the Custom repeat page's monthly days.")
@@ -204,8 +203,7 @@ private struct NextTimesSection: View {
         if days == 0 { return Text("Today", comment: "The Custom repeat page's Next Times: a due time today.") }
         if days == 1 { return Text("Tomorrow", comment: "The Custom repeat page's Next Times: a due time tomorrow.") }
         let style = Date.FormatStyle().weekday(.abbreviated).day().month(.abbreviated)
-        // Formatted for the locale already.
-        return Text(verbatim: date.formatted(form.showsYear(of: date) ? style.year() : style))
+        return Text(date, format: form.showsYear(of: date) ? style.year() : style)
     }
 }
 

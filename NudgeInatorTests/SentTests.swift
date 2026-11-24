@@ -69,8 +69,8 @@ struct SentTests {
         for person in screen.people {
             #expect(person.rows.map(\.title) == ["Take the pills"])
             #expect(person.rows.map(\.isDelivered) == [true])
-            #expect(person.rows.map(\.time) == ["8:30\u{202F}AM"])
-            #expect(person.rows.map(\.day) == ["Today"])
+            #expect(person.rows.map(\.time.english) == ["8:30\u{202F}AM"])
+            #expect(person.rows.map(\.day.english) == ["Today"])
         }
     }
 
@@ -120,8 +120,8 @@ struct SentTests {
 
         let rows = try #require(sent(on: alex).people.first?.rows)
 
-        #expect(rows.map(\.day) == ["Tomorrow", "Today"])
-        #expect(rows.map(\.time) == ["8:30\u{202F}AM", "9:00\u{202F}AM"])
+        #expect(rows.map(\.day.english) == ["Tomorrow", "Today"])
+        #expect(rows.map(\.time.english) == ["8:30\u{202F}AM", "9:00\u{202F}AM"])
     }
 
     @Test func sentHoldsNothingOfTheSendersOwnAndMineHoldsNothingSent() async throws {
@@ -222,8 +222,8 @@ struct SentTests {
         #expect(details.notes == "Two with water")
         #expect(details.strength == .firm)
         #expect(details.recipients.map(\.name) == ["Riley Park", "Sam Rivera"])
-        #expect(details.repeats == "Every day at 8:30\u{202F}AM")
-        #expect(details.next == .at(day: "Today", time: "8:30\u{202F}AM"))
+        #expect(details.repeats.english == "Every day at 8:30\u{202F}AM")
+        #expect(details.next.english == ["Today", "8:30\u{202F}AM"])
         #expect(details.pace == .consistent(wait: 10 * 60))
         #expect(details.breaksThroughFocus)
     }
@@ -252,7 +252,7 @@ struct SentTests {
         let details = try #require(details(of: call.id, on: alex))
 
         #expect(details.next == .none)
-        #expect(details.repeats == "Once, Today at 9:00\u{202F}AM")
+        #expect(details.repeats.english == "Once, Today at 9:00\u{202F}AM")
     }
 
     @Test func aReminderTheSenderOwnsOrNeverSentHasNoSentDetails() async throws {
@@ -373,7 +373,7 @@ extension SentTests {
             #expect(sent == kept)
         }
         #expect(sent(on: alex).people.flatMap(\.rows).map(\.title) == ["Take the blue pills", "Take the blue pills"])
-        #expect(details(of: pills.id, on: alex)?.next == .at(day: "Today", time: "9:00\u{202F}AM"))
+        #expect(details(of: pills.id, on: alex)?.next.english == ["Today", "9:00\u{202F}AM"])
         #expect(alex.model.engine.reminders.isEmpty)
     }
 

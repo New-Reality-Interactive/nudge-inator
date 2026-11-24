@@ -87,7 +87,7 @@ struct MyDayScreenTests {
             "Morning meds", "Walk the dog", "Team stand-up", "Stretch break", "Reply to Alex",
             "Send the status update", "Call Grandma", "Water the plants", "Take the bins out",
         ])
-        #expect(screen.items.map(\.time) == ["6:30\u{202F}AM", "7:00\u{202F}AM", "9:30\u{202F}AM", "10:00\u{202F}AM", "12:30\u{202F}PM", "4:30\u{202F}PM", "5:00\u{202F}PM", "6:00\u{202F}PM", "8:00\u{202F}PM"])
+        #expect(screen.items.map(\.time.english) == ["6:30\u{202F}AM", "7:00\u{202F}AM", "9:30\u{202F}AM", "10:00\u{202F}AM", "12:30\u{202F}PM", "4:30\u{202F}PM", "5:00\u{202F}PM", "6:00\u{202F}PM", "8:00\u{202F}PM"])
     }
 
     /// The mockup's `note`: how a closed occurrence closed, as Last 24 Hours words it, and for
@@ -202,7 +202,7 @@ struct MyDayScreenTests {
             MyDayScreen(engine: day.model.engine, filter: filter, now: clock.now).rows.map {
                 switch $0 {
                 case .item(let item): item.title
-                case .now(let time): "Now, \(time)"
+                case .now(let time): "Now, \(time.english)"
                 }
             }
         }
@@ -479,7 +479,7 @@ struct MyDayScreenTests {
 
         let screen = MyDayScreen(engine: fixture.model.engine, filter: MyDayFilter(), now: clock.now, day: october(day))
 
-        #expect(screen.shown.labelWords == label)
+        #expect(screen.shown.label.english == label)
         #expect(screen.shown.previous == previous.map(october))
         #expect(screen.shown.next == next.map(october))
         #expect(screen.shown.isToday == (day == 16))
@@ -494,7 +494,7 @@ struct MyDayScreenTests {
         let engine = fixture.model.engine
         let yesterday = CalendarDay(year: 2026, month: 10, day: 15)
 
-        #expect(MyDayScreen(engine: engine, filter: MyDayFilter(), now: clock.now, day: yesterday).shown.labelWords == "Yesterday, Thursday, October 15")
+        #expect(MyDayScreen(engine: engine, filter: MyDayFilter(), now: clock.now, day: yesterday).shown.label.english == "Yesterday, Thursday, October 15")
         let beyond = MyDayScreen(engine: engine, filter: MyDayFilter(), now: clock.now, day: CalendarDay(year: 2026, month: 11, day: 30))
         #expect(beyond.shown.day == CalendarDay(year: 2026, month: 10, day: 23))
         #expect(beyond.shown.next == nil)

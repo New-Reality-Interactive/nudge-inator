@@ -52,6 +52,7 @@ final class SystemInviteDelivery: NSObject, InviteDelivering {
             let controller = MFMailComposeViewController()
             controller.mailComposeDelegate = self
             controller.setToRecipients([person.address])
+            // String needed: invite email, whose subject is a String.
             controller.setSubject(String(localized: "Invitation to Nudge-inator", comment: "Invite email: the subject."))
             controller.setMessageBody(Self.message(with: link), isHTML: false)
             return await present(controller, over: presenter)
@@ -59,6 +60,7 @@ final class SystemInviteDelivery: NSObject, InviteDelivering {
     }
 
     private static func message(with link: URL) -> String {
+        // String needed: invite message and email, whose body is a String.
         String(localized: "I'd like us to send each other reminders in Nudge-inator. Open this on your iPhone to connect: \(link.absoluteString)", comment: "Invite message and email: the body. The argument is the invite's link.")
     }
 

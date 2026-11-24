@@ -124,8 +124,8 @@ struct MyDayOtherDaysTests {
         clock.now = NewYork.local(2026, 10, 16, 13)
         let engine = Engine(clock: clock, scheduler: scheduler, timeZone: NewYork.timeZone, locale: Locale(identifier: "en_US"))
 
-        #expect(engine.longDate(of: day) == long)
-        #expect(engine.shortDate(of: day) == short)
+        #expect(String(localized: engine.longDate(of: day)) == long)
+        #expect(String(localized: engine.shortDate(of: day)) == short)
     }
 
     /// The developer's answer to question 6 (2026-11-23): an Edit that moves the due time keeps

@@ -15,7 +15,7 @@ struct ReminderDetails {
     /// card says it.
     var lastOccurrence: LastOccurrence?
     /// The Schedule's Repeats row: the engine's summary, for presets and custom rules alike.
-    var repeats: String
+    var repeats: LocalizedStringResource
     /// The Schedule's Next row.
     var next: Next
     /// Pause for a reminder that can still nudge, Resume for a paused one, nothing for one that
@@ -52,8 +52,7 @@ struct ReminderDetails {
     /// The tags as VoiceOver reads them, a list in the engine's words, or `nil` with none.
     var tagsVoiceOverLabel: LocalizedStringResource? {
         guard !tags.isEmpty else { return nil }
-        let list = tags.formatted(.list(type: .and))
-        return LocalizedStringResource("Tags: \(list)", comment: "VoiceOver label of a reminder's tags on its details. The placeholder lists them, such as \"#home and #errands\".")
+        return LocalizedStringResource("Tags: \(tags, format: .list(type: .and))", comment: "VoiceOver label of a reminder's tags on its details. The placeholder lists them, such as \"#home and #errands\".")
     }
 
     /// A received reminder's sender and strength, and the person's choice to keep its status from
@@ -62,7 +61,7 @@ struct ReminderDetails {
         /// "From Alex Morgan", as Now, My Day and the Reminders tab label it.
         var from: FromLine
         /// Who owns its content, for "Alex Morgan owns this schedule."
-        var senderName: String
+        var senderName: LocalizedStringResource
         /// "Firm: rings as an alarm from nudge 4", under the strength badge.
         var strengthLine: StrengthLine
         /// The "Don't share this one" switch, or `nil` when the person's Status sharing for the
@@ -84,15 +83,15 @@ struct ReminderDetails {
     struct LastOccurrence: Equatable {
         var state: OccurrenceState
         /// When it closed: "Today", "Yesterday" or a short date, and the time.
-        var day: String
-        var time: String
+        var day: LocalizedStringResource
+        var time: LocalizedStringResource
         /// How many of its nudges quiet hours held, on a Missed one (#369).
         var missedNote: MissedNote?
     }
 
     enum Next: Equatable {
         /// The next due time, as the engine's day label and time of day.
-        case at(day: String, time: String)
+        case at(day: LocalizedStringResource, time: LocalizedStringResource)
         case paused
         /// Nothing is left: a one-off that has come due, or a repeat that ended.
         case none
@@ -128,19 +127,22 @@ struct ReminderDetails {
         showsLockNote = !engine.lockedFields(of: id).isEmpty
         let howItNudges = engine.howItNudges(reminder.strength, pace: reminder.pace, breakThroughFocus: reminder.breakThroughFocus)
         self.howItNudges = howItNudges
-        received = from.map { from in
+        // A received reminder has both its From line and its sender's name; the person's own has neither.
+        if let from, let senderName = senders.name(of: reminder) {
             let connection = sharing.connections.first { $0.id == reminder.receivedThrough }
             let syncState = sharing.receivedSyncStates.first { $0.reminderID == reminder.id }
-            return Received(
+            received = Received(
                 from: from,
-                senderName: senders.name(of: reminder) ?? "",
+                senderName: senderName,
                 strengthLine: StrengthLine(reminder.strength, howItNudges),
                 notSharingThisOne: connection?.mine.sharesStatus == true ? syncState?.notSharingThisOne ?? false : nil,
                 changeNote: syncState?.changeNote.map {
                     let words = ChangeNoteText($0, dueTime: reminder.dueTime, engine: engine)
-                    return ChangeNote(heading: words.heading(from: senders.name(of: reminder) ?? "", at: $0.at), lines: words.lines)
+                    return ChangeNote(heading: words.heading(from: senderName, at: $0.at), lines: words.lines)
                 }
             )
+        } else {
+            received = nil
         }
 
         let nextDueTime = engine.nextDueTime(of: reminder)

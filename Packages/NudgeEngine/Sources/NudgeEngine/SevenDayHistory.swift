@@ -39,20 +39,24 @@ extension Engine {
 
 extension Engine {
     /// The weekday's initial, such as "T" for Thursday, in the engine's locale: a history cell's.
-    public func weekdayInitial(of day: CalendarDay) -> String {
-        startOfDay(day).formatted(dayStyle.weekday(.narrow))
+    public func weekdayInitial(of day: CalendarDay) -> LocalizedStringResource {
+        words.alone(startOfDay(day), format: dayStyle.weekday(.narrow))
     }
 
     /// The weekday's whole name, such as "Thursday", in the engine's locale: what VoiceOver reads
     /// for a history cell.
-    public func weekdayName(of day: CalendarDay) -> String {
-        startOfDay(day).formatted(dayStyle.weekday(.wide))
+    public func weekdayName(of day: CalendarDay) -> LocalizedStringResource {
+        words.alone(startOfDay(day), format: dayStyle.weekday(.wide))
     }
 
     /// `items` as a list in the engine's locale, with no "and" before the last, such as "Thursday:
     /// Done, Friday: Missed, Today: Coming up": what VoiceOver reads for a history.
-    public func list(_ items: [String]) -> String {
-        items.formatted(.list(type: .and, width: .narrow).locale(locale))
+    public func list(_ items: [LocalizedStringResource]) -> LocalizedStringResource {
+        words.alone(items, type: .and, width: .narrow)
+    }
+
+    private var words: RepeatSummaryWriter {
+        RepeatSummaryWriter(locale: locale, calendar: calendar, now: clock.now)
     }
 
     private var dayStyle: Date.FormatStyle {

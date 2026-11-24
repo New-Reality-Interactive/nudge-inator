@@ -89,9 +89,9 @@ struct SentHistoryTests {
         let history = try #require(try row(on: alex).history)
 
         #expect(history.days.map(\.status) == [.done, .missed, .done, .done, .done, .done, .done, .comingUp])
-        #expect(history.days.map(\.initial) == ["T", "F", "S", "S", "M", "T", "W", "T"])
+        #expect(history.days.map(\.initial.english) == ["T", "F", "S", "S", "M", "T", "W", "T"])
         #expect(history.days.map(\.isToday) == [false, false, false, false, false, false, false, true])
-        #expect(history.voiceOverValue == "Thursday: Done, Friday: Missed, Saturday: Done, Sunday: Done, Monday: Done, Tuesday: Done, Wednesday: Done, Today: Coming up")
+        #expect(history.voiceOverValue.english == "Thursday: Done, Friday: Missed, Saturday: Done, Sunday: Done, Monday: Done, Tuesday: Done, Wednesday: Done, Today: Coming up")
     }
 
     @Test func theRowsStatusLabelDetailLineAndVoiceOverLabelStayAsTheyWere() async throws {
@@ -111,7 +111,7 @@ struct SentHistoryTests {
         let history = try #require(recipient.history)
 
         #expect(String(localized: recipient.historyHeader) == "Riley, Last 7 Days")
-        #expect(history.newestFirst.map(\.label) == ["Today", "Wed, Oct 21", "Tue, Oct 20", "Mon, Oct 19", "Sun, Oct 18", "Sat, Oct 17", "Fri, Oct 16", "Thu, Oct 15"])
+        #expect(history.newestFirst.map(\.label.english) == ["Today", "Wed, Oct 21", "Tue, Oct 20", "Mon, Oct 19", "Sun, Oct 18", "Sat, Oct 17", "Fri, Oct 16", "Thu, Oct 15"])
         #expect(history.newestFirst.map(\.status) == [.comingUp, .done, .done, .done, .done, .done, .missed, .done])
         #expect(history.newestFirst.map(\.glyph) == ["clock", "checkmark.circle.fill", "checkmark.circle.fill", "checkmark.circle.fill", "checkmark.circle.fill", "checkmark.circle.fill", "xmark.circle.fill", "checkmark.circle.fill"])
     }
@@ -126,7 +126,7 @@ struct SentHistoryTests {
 
         #expect(history.days.map(\.status) == [nil, nil, nil, nil, nil, nil, .missed, .comingUp])
         #expect(history.days.first?.glyph == "circle.slash")
-        #expect(history.voiceOverValue.hasPrefix("Friday: Nothing due, "))
+        #expect(history.voiceOverValue.english.hasPrefix("Friday: Nothing due, "))
     }
 
     // MARK: When it's hidden

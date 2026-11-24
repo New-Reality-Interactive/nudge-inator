@@ -158,12 +158,12 @@ struct NowScreenTests {
         let bins = try #require(screen.nudging.last)
         #expect(String(localized: meds.detail) == "Due 8:00\u{202F}AM")
         #expect(String(localized: bins.detail) == "#home · due 9:00\u{202F}AM")
-        #expect(bins.nextNudgeTime == "9:45\u{202F}AM")
-        #expect(bins.missedAtTime == "11:17\u{202F}AM")
+        #expect(bins.nextNudgeTime?.english == "9:45\u{202F}AM")
+        #expect(bins.missedAtTime.english == "11:17\u{202F}AM")
         let comingUp = try #require(screen.comingUp.first)
-        #expect([comingUp.day, comingUp.time, comingUp.schedule] == ["Tomorrow", "8:00\u{202F}AM", "Every day at 8:00\u{202F}AM"])
+        #expect([comingUp.day.english, comingUp.time.english, comingUp.schedule.english] == ["Tomorrow", "8:00\u{202F}AM", "Every day at 8:00\u{202F}AM"])
         let closed = try #require(screen.lastDay.first)
-        #expect([closed.day, closed.time] == ["Today", "7:30\u{202F}AM"])
+        #expect([closed.day.english, closed.time.english] == ["Today", "7:30\u{202F}AM"])
     }
 
     /// Nothing nudging, nothing in the next 7 days and nothing closed: every section is empty, the
@@ -276,7 +276,7 @@ struct NowScreenTests {
 
         #expect(screen.lastDay.map { "\($0.title): \(String(localized: $0.detail))" } == ["Take the pills: Missed: the next one took over"])
         let closed = try #require(screen.lastDay.first)
-        #expect([closed.day, closed.time] == ["Today", "12:00\u{202F}AM"])
+        #expect([closed.day.english, closed.time.english] == ["Today", "12:00\u{202F}AM"])
         #expect(String(localized: closed.closed.occurrence.state.statusName) == "Missed")
         #expect(screen.nudging.map(\.status.nudgesInAll) == [281])
     }

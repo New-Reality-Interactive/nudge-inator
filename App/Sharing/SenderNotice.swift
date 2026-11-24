@@ -31,8 +31,11 @@ struct SenderNotice: Equatable {
         key = "\(copy.reminderID.uuidString).\(connection.id.uuidString).\(event.token)"
         title = sent.reminder.title
         body = switch event.kind {
+        // String needed: notification, whose body is a String.
         case .done: String(localized: "\(name) marked it Done", comment: "Body of the notification to the sender that the person they sent a reminder to marked it Done. 1: the person's name.")
+        // String needed: notification, whose body is a String.
         case .removed: String(localized: "\(name) removed it", comment: "Body of the notification to the sender that the person they sent a reminder to removed it. 1: the person's name.")
+        // String needed: notification, whose body is a String.
         case .missed: String(localized: "Missed: \(name) didn't mark it Done", comment: "Body of the notification to the sender that the person they sent a reminder to didn't mark it Done in time. 1: the person's name.")
         }
     }

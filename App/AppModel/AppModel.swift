@@ -1085,7 +1085,8 @@ extension AppModel: ReceivedReminders {
     private func postArrival(of copy: Reminder) {
         guard let from = senders.label(of: copy) else { return }
         let strength = StrengthLine(of: copy, in: engine)
-        let body = String(localized: "\(String(localized: from)) · \(String(localized: strength.text))", comment: "Body of the notification that a reminder someone sent has arrived. 1: who sent it, such as \"From Alex Morgan\". 2: its strength in words, such as \"Firm: rings as an alarm from nudge 4\".")
+        // String needed: notification, whose body is a String.
+        let body = String(localized: "\(from) · \(strength.text)", comment: "Body of the notification that a reminder someone sent has arrived. 1: who sent it, such as \"From Alex Morgan\". 2: its strength in words, such as \"Firm: rings as an alarm from nudge 4\".")
         notifications.postArrival(of: copy.id, title: copy.title, body: body)
     }
 }
