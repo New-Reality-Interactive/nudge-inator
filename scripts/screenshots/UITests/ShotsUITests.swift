@@ -1302,9 +1302,17 @@ final class ShotsUITests: XCTestCase {
     /// it: the popover's own dismiss region, which is there even when the popover fills the screen at
     /// the largest text. Where iOS draws an action sheet instead, its Cancel is the way out.
     private func keepEditing(titled title: String, line: UInt = #line) {
-        // The top corner: at the largest text the popover covers the window's middle, and in
-        // landscape with the keyboard up the middle is the keyboard's edge (#285).
-        if !tapOutsidePopover(waiting: 1, at: CGVector(dx: 0.97, dy: 0.03)) {
+        // A corner: at the largest text the popover covers the window's middle, and in landscape
+        // with the keyboard up the middle is the keyboard's edge (#285). The top corner no longer
+        // closes it on the iOS 27.2 simulator, where the bottom one does (#488), so each corner is
+        // tried in turn until the question closes.
+        let corners = [CGVector(dx: 0.97, dy: 0.03), CGVector(dx: 0.97, dy: 0.97), CGVector(dx: 0.03, dy: 0.97)]
+        if app.otherElements["PopoverDismissRegion"].waitForExistence(timeout: 1) {
+            for corner in corners {
+                _ = tapOutsidePopover(at: corner)
+                if app.buttons["Discard Changes"].waitForNonExistence(timeout: 3) { break }
+            }
+        } else {
             let cancel = app.sheets.buttons["Cancel"].firstMatch
             XCTAssert(cancel.exists, "No way out of the discard question:\n\(app.debugDescription)", line: line)
             cancel.tap()
