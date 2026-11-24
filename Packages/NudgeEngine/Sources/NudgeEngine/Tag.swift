@@ -57,7 +57,7 @@ public struct TagSummary: Equatable, Sendable {
 extension Engine {
     /// Every tag's row on the Tags tab, by name in `nameOrder`, then by ID so the order is fixed.
     public func tagSummaries(nameOrder: NameOrder = NameOrder()) -> [TagSummary] {
-        let counting = TagCounting(today: myDay().items.map(\.reminderID), nudging: Set(nudgingOccurrences().map(\.reminderID)))
+        let counting = tagCounting()
         return tags
             .sorted { nameOrder.isOrdered($0.name, $0.id, before: $1.name, $1.id) }
             .map { summary(of: $0, counting) }
@@ -67,13 +67,17 @@ extension Engine {
     /// the engine doesn't hold, such as one deleted while its page is open.
     public func tagSummary(for tagID: Tag.ID) -> TagSummary? {
         guard let tag = tags.first(where: { $0.id == tagID }) else { return nil }
-        return summary(of: tag, TagCounting(today: myDay().items.map(\.reminderID), nudging: Set(nudgingOccurrences().map(\.reminderID))))
+        return summary(of: tag, tagCounting())
     }
 
     /// What the counts need from the engine, read once for a list of tags.
     private struct TagCounting {
         var today: [Reminder.ID]
         var nudging: Set<Reminder.ID>
+    }
+
+    private func tagCounting() -> TagCounting {
+        TagCounting(today: myDay().items.map(\.reminderID), nudging: Set(nudgingOccurrences().map(\.reminderID)))
     }
 
     private func summary(of tag: Tag, _ counting: TagCounting) -> TagSummary {

@@ -15,7 +15,6 @@ struct TagDetailsScreenTests {
 
         for row in list.rows {
             let page = try #require(TagDetailsScreen(engine: day.model.engine, tagID: row.tag.id))
-            #expect(page.tag == row.tag)
             #expect(page.summary == row)
         }
     }

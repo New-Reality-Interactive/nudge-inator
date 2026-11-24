@@ -1,8 +1,8 @@
 import NudgeEngine
 import SwiftUI
 
-/// The Tags list: a row per tag, which opens the tag's details page. A trailing swipe offers Edit and Delete. When
-/// nothing matches, the count stays above the no-match state, and the footer goes.
+/// The Tags list: a row per tag, which opens the tag's details page. A trailing swipe offers Edit
+/// and Delete. When nothing matches, the count stays above the no-match state, and the footer goes.
 struct TagsList: View {
     let screen: TagsScreen
     let filter: TagListFilter

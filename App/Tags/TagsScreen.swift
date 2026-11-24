@@ -1,6 +1,5 @@
 import Foundation
 import NudgeEngine
-import SwiftUI
 
 /// What the Tags tab shows, read from the engine at one moment: each tag with its counts, in the
 /// Sort menu's order and narrowed by the search and the filter, and the header row's count. A
@@ -92,15 +91,6 @@ extension TagSummary {
             return LocalizedStringResource("\(reminderCount) reminders · \(dueTodayCount) today · **\(nudgingCount) nudging**", comment: "Tags: under a tag's name. 1: how many reminders have the tag. 2: how many of them are due today. 3: how many are nudging, in bold, shown in red.")
         }
         return LocalizedStringResource("\(reminderCount) reminders · \(dueTodayCount) today", comment: "Tags: under a tag's name when none is nudging. 1: how many reminders have the tag. 2: how many of them are due today.")
-    }
-
-    /// `counts` with the nudging part in the negative color, as a row and a tag's details page show it.
-    var styledCounts: AttributedString {
-        var text = AttributedString(localized: counts)
-        for run in text.runs where run.inlinePresentationIntent?.contains(.stronglyEmphasized) == true {
-            text[run.range].foregroundColor = Color.negative
-        }
-        return text
     }
 
     /// What the delete question says: how many reminders use the tag, and that they stay.

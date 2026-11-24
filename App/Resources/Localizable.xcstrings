@@ -3180,7 +3180,7 @@
       "comment" : "How Quiet Hours Work, Your Schedules: the third row, about a schedule's switch."
     },
     "Tag Deleted" : {
-      "comment" : "A tag's screen after the tag was deleted."
+      "comment" : "A tag's details page and its reminders page after the tag was deleted."
     },
     "Tag Name" : {
       "comment" : "The New Tag and Rename Tag sheet's field for the tag's name."
@@ -3433,7 +3433,7 @@
       "comment" : "Under the Custom repeat page's Next Times when the repeat has ended."
     },
     "This tag was deleted. Its reminders are still there." : {
-      "comment" : "A tag's screen after the tag was deleted."
+      "comment" : "A tag's details page and its reminders page after the tag was deleted."
     },
     "This time has passed. Choose a later time." : {
       "comment" : "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name."

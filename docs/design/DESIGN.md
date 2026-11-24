@@ -511,8 +511,8 @@ The Reminders tab's tools, in its layout, so they're learned once.
   Apply), Reset at the bottom and the Discard Changes prompt. One row, Has no reminders, with the
   footer "Shows only tags that no reminder uses." and what Apply would show.
 - **Rows:** the tag tile, name and counts, with content at least 48 pt tall for the swipe (Swipe
-  actions). A tap opens the tag's details page (Tag details page, below). A row that leaves, after a delete or when the filter
-  excludes it, fades as its height closes up, and the count follows.
+  actions). A tap opens the tag's details page (Tag details page, below). A row that leaves, after a
+  delete or when the filter excludes it, fades as its height closes up, and the count follows.
 - **Help text:** static, not a dismissible tip, for a person new to tags. The list's footer, in
   `{typography.footnote}` and wrapping at large text and in landscape: "Tags are labels you add to
   reminders. Choose one to see every reminder that has it." The no-tags description: "Tags are labels, like #home or #errands, that you add

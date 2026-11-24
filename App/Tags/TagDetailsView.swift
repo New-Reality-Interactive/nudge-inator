@@ -40,7 +40,6 @@ private struct TagDetailsList: View {
                 NavigationLink(value: OpenedTagReminders(id: screen.tag.id)) {
                     Text("Reminders", comment: "A tag's details page: the row that opens the tag's reminders.")
                 }
-                .frame(minHeight: Design.Size.swipeRowContentHeight)
             }
         }
         .centeredInReadableColumn()
@@ -60,7 +59,6 @@ private struct TagDetailsHero: View {
             VStack(alignment: .leading, spacing: Design.Spacing.line) {
                 Text(verbatim: summary.tag.label)
                     .font(.title2.bold())
-                    .accessibilityAddTraits(.isHeader)
                 Text(summary.styledCounts)
                     .font(.subheadline)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
@@ -68,6 +66,9 @@ private struct TagDetailsHero: View {
         }
         .padding(.vertical, Design.Spacing.s1)
         .accessibilityElement(children: .combine)
+        // On the combined element, so the heading doesn't depend on how `.combine` merges traits:
+        // with the bar's title empty, the hero is the page's only heading.
+        .accessibilityAddTraits(.isHeader)
     }
 }
 
