@@ -42,6 +42,20 @@ struct SwipeEditTile: View {
     }
 }
 
+/// DESIGN.md's `swipe-reminders`: a trailing swipe action on a teal tile, with a white
+/// `list.bullet.clipboard` and its word. Teal is for a tile that goes somewhere.
+struct SwipeRemindersTile: View {
+    let label: Text
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Label { label } icon: { Image(systemName: "list.bullet.clipboard") }
+        }
+        .tint(Color.tileTeal)
+    }
+}
+
 /// One of a list row's trailing actions (DESIGN.md, Swipe actions): its tile in the swipe, and the
 /// same action among the row's VoiceOver actions.
 struct RowAction: Identifiable {
@@ -49,6 +63,7 @@ struct RowAction: Identifiable {
         case done
         case edit
         case delete
+        case reminders
     }
 
     let kind: Kind
@@ -97,6 +112,7 @@ private struct RowActionsModifier: ViewModifier {
         case .done: SwipeDoneTile(label: action.label, action: action.action)
         case .edit: SwipeEditTile(label: action.label, action: action.action)
         case .delete: SwipeDeleteTile(label: action.label, action: action.action)
+        case .reminders: SwipeRemindersTile(label: action.label, action: action.action)
         }
     }
 }
@@ -111,6 +127,7 @@ private struct RowActionsModifier: ViewModifier {
             }
         Text(verbatim: "Swipe a tag")
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                SwipeRemindersTile(label: Text(verbatim: "Reminders"), action: {})
                 SwipeEditTile(label: Text(verbatim: "Edit"), action: {})
                 SwipeDeleteTile(label: Text(verbatim: "Delete"), action: {})
             }

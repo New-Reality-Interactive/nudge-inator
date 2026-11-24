@@ -45,6 +45,7 @@ struct TagsTab: View {
                             countFocusRequests: countFocusRequests,
                             clearAll: clearSearchAndFilter,
                             rename: { sheet = .rename($0) },
+                            showReminders: { path.append(OpenedTagReminders(id: $0.id)) },
                             delete: { model?.deleteTag($0.tag.id) }
                         )
                     } else {

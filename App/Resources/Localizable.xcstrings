@@ -2873,7 +2873,7 @@
       "comment" : "Reminder details: title when the reminder isn't there."
     },
     "Reminders" : {
-      "comment" : "A tag's details page: the row that opens the tag's reminders.\nTab bar: the tab listing every reminder in any state\nTags tab's Sort menu: the header of the section that sorts by how many reminders have each tag."
+      "comment" : "A tag's details page: the row that opens the tag's reminders.\nTab bar: the tab listing every reminder in any state\nTags tab's Sort menu: the header of the section that sorts by how many reminders have each tag.\nTags: a row's swipe action and VoiceOver action that opens the tag's reminders."
     },
     "Reminders from %@" : {
       "comment" : "A connection's page: header of this person's choices for what they receive. The argument is the other person's name, such as \"Alex Morgan\"."

@@ -1,8 +1,8 @@
 import NudgeEngine
 import SwiftUI
 
-/// The Tags list: a row per tag, which opens the tag's details page. A trailing swipe offers Edit
-/// and Delete. When nothing matches, the count stays above the no-match state, and the footer goes.
+/// The Tags list: a row per tag, which opens the tag's details page. A trailing swipe offers Reminders,
+/// Edit and Delete. When nothing matches, the count stays above the no-match state, and the footer goes.
 struct TagsList: View {
     let screen: TagsScreen
     let filter: TagListFilter
@@ -11,6 +11,8 @@ struct TagsList: View {
     /// The no-match state's button: clears the search and the filter.
     let clearAll: () -> Void
     let rename: (Tag) -> Void
+    /// Opens the tag's reminders page.
+    let showReminders: (Tag) -> Void
     /// Called once the person confirms.
     let delete: (TagSummary) -> Void
 
@@ -22,7 +24,12 @@ struct TagsList: View {
             List {
                 Section {
                     ForEach(screen.rows, id: \.tag.id) { summary in
-                        TagRow(summary: summary, rename: { rename(summary.tag) }, delete: { delete(summary) })
+                        TagRow(
+                            summary: summary,
+                            rename: { rename(summary.tag) },
+                            showReminders: { showReminders(summary.tag) },
+                            delete: { delete(summary) }
+                        )
                     }
                     if screen.emptyState == .noMatch {
                         TagsNoMatchView(filter: filter) {
@@ -70,13 +77,14 @@ private struct TagsNoMatchView: View {
     }
 }
 
-/// A tag's row. It opens the tag's details. The trailing swipe offers Edit, at the edge, and
-/// Delete, which asks first. Nothing is on the leading edge and there's no full swipe, so a stray
-/// swipe neither renames nor deletes. VoiceOver gets the same as the row's own actions: these and
-/// the swipe are the only ways to Edit or Delete a tag (DESIGN.md, Swipe actions).
+/// A tag's row. It opens the tag's details. The trailing swipe offers Delete, which asks first,
+/// Edit and Reminders at the edge. Nothing is on the leading edge and there's no full swipe, so a
+/// stray swipe neither renames, deletes nor opens anything. VoiceOver gets the same as the row's
+/// own actions (DESIGN.md, Swipe actions).
 private struct TagRow: View {
     let summary: TagSummary
     let rename: () -> Void
+    let showReminders: () -> Void
     let delete: () -> Void
 
     @State private var isConfirmingDelete = false
@@ -87,6 +95,7 @@ private struct TagRow: View {
                 .frame(minHeight: Design.Size.swipeRowContentHeight)
         }
         .rowActions([
+            RowAction(kind: .reminders, label: remindersLabel, action: showReminders),
             RowAction(kind: .edit, label: editLabel, action: rename),
             RowAction(kind: .delete, label: deleteLabel, action: { isConfirmingDelete = true }),
         ])
@@ -95,6 +104,10 @@ private struct TagRow: View {
 
     private var editLabel: Text {
         Text("Edit", comment: "Tags: a row's swipe action and VoiceOver action that opens the sheet that renames the tag.")
+    }
+
+    private var remindersLabel: Text {
+        Text("Reminders", comment: "Tags: a row's swipe action and VoiceOver action that opens the tag's reminders.")
     }
 
     private var deleteLabel: Text {

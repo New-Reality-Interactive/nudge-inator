@@ -25,7 +25,7 @@ perl -e '
     [accent => "AccentColor"], ["on-accent" => "OnAccent"], [negative => "Negative"],
     [warning => "Warning"], [positive => "Positive"], [neutral => "Neutral"], [badge => "Badge"],
     ["tile-red" => "TileRed"], ["tile-orange" => "TileOrange"], ["tile-gray" => "TileGray"],
-    ["tile-blue" => "TileBlue"], ["tile-green" => "TileGreen"],
+    ["tile-blue" => "TileBlue"], ["tile-green" => "TileGreen"], ["tile-teal" => "TileTeal"],
   );
 
   open(my $fh, "<", $design) or die "$design: $!\n";

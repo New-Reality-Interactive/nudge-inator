@@ -66,6 +66,8 @@ colors:
   tile-blue: '#1E6EF4'
   # Swipe action tiles: Done green, Delete red and Edit blue (tile-red and tile-blue above).
   tile-green: '#008932'
+  # Swipe action tile that goes somewhere (Reminders on a tag's row): Lagoon teal, the accent's light value.
+  tile-teal: '#04666B'
 typography:
   # Platform text styles only. Sizes are at the default (Large) size and scale with Dynamic Type.
   family:
@@ -182,6 +184,8 @@ components:
     background: '{colors.tile-red}'
   swipe-edit:
     background: '{colors.tile-blue}'
+  swipe-reminders:
+    background: '{colors.tile-teal}'
   alarm-tint:
     stop-open-tint: '{colors.accent-dark}'
 ---
@@ -249,7 +253,7 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
   no Filter button has a badge: on iOS 27 the system draws it at the text size, so it covers
   the icon. My Day's chosen-tag tokens and each button's VoiceOver label carry the count there.
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
-  actions are `{colors.tile-green}` (Done), `{colors.tile-red}` (Delete) and `{colors.tile-blue}` (Edit). Settings rows: red (Notifications, Badges, Delete All Data), orange
+  actions are `{colors.tile-green}` (Done), `{colors.tile-red}` (Delete), `{colors.tile-blue}` (Edit) and `{colors.tile-teal}` (Reminders, on a tag's row). Settings rows: red (Notifications, Badges, Delete All Data), orange
   (Alarms), gray (About, Default Pace, Default Alarm Sound, the Tutorials rows, and About's Privacy Policy
   and Support), blue (Send a Test Nudge, Sharing). Tiles are icons for rows, not
   statuses, so "one color, one meaning" does not apply to them.
@@ -661,14 +665,17 @@ nothing above except that Settings no longer has an Open iOS Settings row.
   Colors.
 
 ### Swipe actions
-- **Token:** `swipe-done`, `swipe-delete`, `swipe-edit`. Trailing swipe shows Done: green tile, white
+- **Token:** `swipe-done`, `swipe-delete`, `swipe-edit`, `swipe-reminders`. Trailing swipe shows Done: green tile, white
   `checkmark` and the word "Done". On the Reminders tab's Mine, Edit sits beside it: blue tile, white
   `pencil` and the word "Edit", which opens the Edit Reminder form; then Delete: red tile, white
   `trash` and the word "Delete". Done is offered only while Nudging, at the edge; a row that isn't
   Nudging shows Edit at the edge with Delete beside it. Edit is on the person's own rows only: a
   received copy's row shows Remove (and Done while Nudging), since its sender owns what it says
-  (#429). On Sent and on the Tags tab, Edit is at the edge with Delete beside it; a tag's Edit opens
-  the rename sheet, a sent reminder's its Edit Reminder form. Delete asks first. Nothing is on
+  (#429). On Sent, Edit is at the edge with Delete beside it; a sent reminder's Edit opens its Edit Reminder
+  form. On the Tags tab the tiles are Delete, Edit and Reminders, left to right with Reminders at
+  the edge: a teal (`{colors.tile-teal}`) tile, white `list.bullet.clipboard` and the word
+  "Reminders", which opens the tag's reminders page (Back returns to the Tags list); a tag's Edit opens
+  the rename sheet. Teal is for a tile that goes somewhere, blue for one that edits in place. Delete asks first. Nothing is on
   the leading edge, there's no full swipe (ADR 0001), and each tile always shows its glyph and its
   word. There is no Snooze.
 - **Shape:** a tile is the same 50 pt circle on every screen, holding the white glyph, with the word
