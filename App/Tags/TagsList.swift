@@ -77,10 +77,10 @@ private struct TagsNoMatchView: View {
     }
 }
 
-/// A tag's row. It opens the tag's details. The trailing swipe offers Delete, which asks first,
-/// Edit and Reminders at the edge. Nothing is on the leading edge and there's no full swipe, so a
-/// stray swipe neither renames, deletes nor opens anything. VoiceOver gets the same as the row's
-/// own actions (DESIGN.md, Swipe actions).
+/// A tag's row. It opens the tag's details. A right-to-left swipe shows Delete, Edit and Reminders,
+/// left to right, so Reminders is at the edge; Delete asks first. Nothing is on the leading edge and
+/// there's no full swipe, so a stray swipe neither renames, deletes nor opens anything. VoiceOver
+/// gets the same actions as the row's own (DESIGN.md, Swipe actions).
 private struct TagRow: View {
     let summary: TagSummary
     let rename: () -> Void
