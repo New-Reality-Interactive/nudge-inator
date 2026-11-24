@@ -43,7 +43,7 @@ struct SwipeEditTile: View {
 }
 
 /// DESIGN.md's `swipe-reminders`: a trailing swipe action on a teal tile, with a white
-/// `list.bullet.clipboard` and its word. Teal is for a tile that goes somewhere.
+/// `list.bullet.clipboard` and its word, "List". Teal is for a tile that goes somewhere.
 struct SwipeRemindersTile: View {
     let label: Text
     let action: () -> Void
@@ -71,6 +71,10 @@ struct RowAction: Identifiable {
     let action: () -> Void
     /// What VoiceOver's action does instead, when it must say more than the tile: Done's announcement.
     var voiceOverAction: (() -> Void)?
+    /// What VoiceOver calls the action when the tile's word is shorter than its name: a longer word
+    /// widens every tile into an oval (#378's phone check), so the tile says "List" and VoiceOver
+    /// "Reminders".
+    var voiceOverLabel: Text?
 
     var id: Kind { kind }
 }
@@ -95,7 +99,7 @@ private struct RowActionsModifier: ViewModifier {
         content
             .accessibilityActions {
                 ForEach(actions) { action in
-                    Button(action: action.voiceOverAction ?? action.action) { action.label }
+                    Button(action: action.voiceOverAction ?? action.action) { action.voiceOverLabel ?? action.label }
                 }
             }
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {

@@ -76,7 +76,11 @@ private struct TagDetailsList: View {
             }
             Section {
                 NavigationLink(value: OpenedTagReminders(id: screen.tag.id)) {
-                    Text("Reminders", comment: "A tag's details page: the row that opens the tag's reminders.")
+                    Label {
+                        Text("Reminders", comment: "A tag's details page: the row that opens the tag's reminders.")
+                    } icon: {
+                        Image(systemName: "list.bullet.clipboard")
+                    }
                 }
             }
             Section {

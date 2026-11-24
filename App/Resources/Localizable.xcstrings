@@ -2188,6 +2188,9 @@
     "Link Copied" : {
       "comment" : "Invite: title of the message shown after Copy Link, once the invite's link is on the clipboard."
     },
+    "List" : {
+      "comment" : "Tags: the word under a row's swipe tile that opens the tag's reminders. Short, so the tile stays a circle."
+    },
     "Locked while it's nudging. Mark it Done or pause it to change it." : {
       "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging."
     },
@@ -2873,7 +2876,7 @@
       "comment" : "Reminder details: title when the reminder isn't there."
     },
     "Reminders" : {
-      "comment" : "A tag's details page: the row that opens the tag's reminders.\nTab bar: the tab listing every reminder in any state\nTags tab's Sort menu: the header of the section that sorts by how many reminders have each tag.\nTags: a row's swipe action and VoiceOver action that opens the tag's reminders."
+      "comment" : "A tag's details page: the row that opens the tag's reminders.\nTab bar: the tab listing every reminder in any state\nTags tab's Sort menu: the header of the section that sorts by how many reminders have each tag.\nTags: a row's VoiceOver action that opens the tag's reminders."
     },
     "Reminders from %@" : {
       "comment" : "A connection's page: header of this person's choices for what they receive. The argument is the other person's name, such as \"Alex Morgan\"."

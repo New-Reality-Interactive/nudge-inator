@@ -373,7 +373,7 @@ except in the tab and navigation bars. Verify names against the mockup.
 |---|---|
 | Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `magnifyingglass` and `xmark.circle.fill` (Search, drawn by the system), `line.3.horizontal.decrease` (the Filter button of My Day, Reminders and Tags and its Filter menu item, and the no-match state's image when only the sheet's filters narrow the list; `xmark` is its Clear All Filters) |
 | Sort | `arrow.up.arrow.down` (the Reminders and Tags tabs' Sort buttons, which open the Sort menu) |
-| Swipe | `pencil` (the Tags tab's Edit tile) |
+| Swipe | `pencil` (the Tags tab's Edit tile), `list.bullet.clipboard` (its List tile, and the Reminders row on a tag's details page) |
 | Tabs | `bell` (Now), `calendar` (My Day), `list.bullet.clipboard` (Reminders), `tag` (Tags), `gearshape` (Settings) |
 | Urgency | `arrow.up` (High), `alarm` (Urgent) |
 | Status | `checkmark.circle.fill` (Done), `bell.slash`, `clock`, `exclamationmark.triangle`, `lock` (a field locked while nudging, always beside its reason as text) |
@@ -538,7 +538,7 @@ mockup is `docs/mockups/2026-11-23-tag-details/`.
   size and scaling with the text) beside the name in `{typography.title2}` bold and, under it, the counts line
   a row shows ("3 reminders · 2 today · 1 nudging", the nudging part in `{colors.negative}`), read from the
   same summary so the page and the list agree. At accessibility sizes the tile sits above the text.
-- **Reminders row:** a plain row with a chevron that opens the tag's reminders page, which is unchanged
+- **Reminders row:** a row with `list.bullet.clipboard` before the word, as Delete Tag has its trash, and a chevron, which opens the tag's reminders page, which is unchanged
   (its sections, count header, + that starts a reminder with the tag chosen, and Tag Deleted state). The page has
   its own destination, so the row and, later, the row's swipe both open it; Back returns to whichever did.
 - **Tag Deleted:** both of a tag's pages show `tag.slash`, "Tag Deleted" and "This tag was deleted. Its
@@ -674,7 +674,8 @@ nothing above except that Settings no longer has an Open iOS Settings row.
   (#429). On Sent, Edit is at the edge with Delete beside it; a sent reminder's Edit opens its Edit Reminder
   form. On the Tags tab the tiles are Delete, Edit and Reminders, left to right with Reminders at
   the edge: a teal (`{colors.tile-teal}`) tile, white `list.bullet.clipboard` and the word
-  "Reminders", which opens the tag's reminders page (Back returns to the Tags list); a tag's Edit opens
+  "List" (a longer word widens every tile into an oval, #378; VoiceOver's action is still
+  "Reminders"), which opens the tag's reminders page (Back returns to the Tags list); a tag's Edit opens
   the rename sheet. Teal is for a tile that goes somewhere, blue for one that edits in place. Delete asks first. Nothing is on
   the leading edge, there's no full swipe (ADR 0001), and each tile always shows its glyph and its
   word. There is no Snooze.

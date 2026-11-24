@@ -95,7 +95,7 @@ private struct TagRow: View {
                 .frame(minHeight: Design.Size.swipeRowContentHeight)
         }
         .rowActions([
-            RowAction(kind: .reminders, label: remindersLabel, action: showReminders),
+            RowAction(kind: .reminders, label: listLabel, action: showReminders, voiceOverLabel: remindersLabel),
             RowAction(kind: .edit, label: editLabel, action: rename),
             RowAction(kind: .delete, label: deleteLabel, action: { isConfirmingDelete = true }),
         ])
@@ -106,8 +106,13 @@ private struct TagRow: View {
         Text("Edit", comment: "Tags: a row's swipe action and VoiceOver action that opens the sheet that renames the tag.")
     }
 
+    /// Short, so the three tiles stay circles: "Reminders" widened them into ovals (#378).
+    private var listLabel: Text {
+        Text("List", comment: "Tags: the word under a row's swipe tile that opens the tag's reminders. Short, so the tile stays a circle.")
+    }
+
     private var remindersLabel: Text {
-        Text("Reminders", comment: "Tags: a row's swipe action and VoiceOver action that opens the tag's reminders.")
+        Text("Reminders", comment: "Tags: a row's VoiceOver action that opens the tag's reminders.")
     }
 
     private var deleteLabel: Text {
