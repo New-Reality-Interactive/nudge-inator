@@ -655,6 +655,12 @@ li > .swipe { border-radius: 0; }
 .taghero-text h1 { margin-bottom: 2px; }
 .taghero-text p { margin: 0; font: var(--subhead); letter-spacing: var(--subhead-track); }
 :root[data-type^="ax"] .taghero { flex-direction: column; align-items: flex-start; }
+/* The details page's Reminders row (#378): at the accessibility sizes the glyph sits on a line above
+   the word, so the word keeps the row's width and doesn't break mid-word. */
+.remrow .remglyph { display: flex; flex: none; }
+:root[data-type^="ax"] .remrow { flex-wrap: wrap; row-gap: 4px; }
+:root[data-type^="ax"] .remrow .remglyph { flex-basis: 100%; }
+:root[data-type^="ax"] .remrow .main { flex: 1; min-width: 0; }
 .hero .hero-tags { font: var(--subhead); letter-spacing: var(--subhead-track); margin-top: 8px; }
 .cell .trail.stack small { font: var(--footnote); color: var(--secondary-label); }
 details.occ summary { list-style: none; cursor: pointer; }
@@ -2903,7 +2909,7 @@ function viewTagDetails(id) {
     <div class="taghero-text"><h1 tabindex="-1">${name}</h1><p>${tagCountsLine(c)}</p></div>
   </div></div>
   <div class="sec" style="margin-top:20px"><ul class="list">
-    <li><button type="button" class="cell" data-tagrems="${t.id}">${I("list.bullet.clipboard", 20)}<span class="main">Reminders</span><span class="trail">${chev}</span></button></li>
+    <li><button type="button" class="cell tint remrow" data-tagrems="${t.id}"><span class="remglyph">${I("list.bullet.clipboard", 20)}</span><span class="main">Reminders</span><span class="trail">${chev}</span></button></li>
   </ul></div>
   <div class="sec"><ul class="list">
     <li><button type="button" class="cell destructive" data-deletetag="${t.id}">${I("trash", 20)} Delete Tag</button></li>

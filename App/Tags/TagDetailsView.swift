@@ -76,11 +76,15 @@ private struct TagDetailsList: View {
             }
             Section {
                 NavigationLink(value: OpenedTagReminders(id: screen.tag.id)) {
-                    Label {
-                        Text("Reminders", comment: "A tag's details page: the row that opens the tag's reminders.")
-                    } icon: {
+                    // The glyph and the word in the accent, as Pause Reminder is on a reminder's details.
+                    // At accessibility sizes the glyph sits above the word, so the one long word keeps
+                    // the row's width instead of breaking mid-word (#378's phone check).
+                    SizeAdaptiveStack(rowSpacing: Design.Spacing.s2, stackedSpacing: Design.Spacing.line) {
                         Image(systemName: "list.bullet.clipboard")
+                            .accessibilityHidden(true)
+                        Text("Reminders", comment: "A tag's details page: the row that opens the tag's reminders.")
                     }
+                    .foregroundStyle(Color.accentColor)
                 }
             }
             Section {
@@ -88,7 +92,9 @@ private struct TagDetailsList: View {
                     Label {
                         Text("Delete Tag", comment: "A tag's details page: opens the question that asks before deleting the tag, as Delete Reminder does on a reminder's details.")
                     } icon: {
+                        // Red with the word: a Label's glyph took the accent here (#378's phone check).
                         Image(systemName: "trash")
+                            .foregroundStyle(.red)
                     }
                 }
             }

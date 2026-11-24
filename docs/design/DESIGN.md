@@ -538,7 +538,7 @@ mockup is `docs/mockups/2026-11-23-tag-details/`.
   size and scaling with the text) beside the name in `{typography.title2}` bold and, under it, the counts line
   a row shows ("3 reminders · 2 today · 1 nudging", the nudging part in `{colors.negative}`), read from the
   same summary so the page and the list agree. At accessibility sizes the tile sits above the text.
-- **Reminders row:** a row with `list.bullet.clipboard` before the word, as Delete Tag has its trash, and a chevron, which opens the tag's reminders page, which is unchanged
+- **Reminders row:** a row with `list.bullet.clipboard` before the word, both in `{colors.accent}` as Pause Reminder is on a reminder's details (at accessibility sizes the glyph sits above the word, so it doesn't break mid-word), and a gray chevron, which opens the tag's reminders page, which is unchanged
   (its sections, count header, + that starts a reminder with the tag chosen, and Tag Deleted state). The page has
   its own destination, so the row and, later, the row's swipe both open it; Back returns to whichever did.
 - **Tag Deleted:** both of a tag's pages show `tag.slash`, "Tag Deleted" and "This tag was deleted. Its
