@@ -66,9 +66,10 @@ final class ShotsUITests: XCTestCase {
     /// which didn't scroll in landscape (iOS 26.5 simulator, seen before #300; not rechecked).
     private func scroll(down: Bool) {
         let window = app.windows.firstMatch
-        // A scroll up from under the search field moves nothing, so it starts below the field.
-        let (lowY, highY) = !down && searchCoversScrollStart
-            ? (0.95, (app.searchFields.firstMatch.frame.maxY + 16) / window.frame.height)
+        // A scroll up from under the search field moves nothing, and one from Mine | Sent switches
+        // the list (#522), so it starts below them.
+        let (lowY, highY) = !down && pinnedControlsCoverScrollStart
+            ? (0.95, startBelowPinnedControls)
             : (0.78, 0.22)
         let low = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: lowY))
         let high = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: highY))
@@ -76,16 +77,62 @@ final class ShotsUITests: XCTestCase {
         from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
     }
 
-    /// Whether the search field covers where a scroll up normally starts: at the largest text in
-    /// landscape, where the bar and the field fill the top half of the window (#285).
-    private var searchCoversScrollStart: Bool {
-        let search = app.searchFields.firstMatch
-        return search.exists && search.frame.maxY > app.windows.firstMatch.frame.height * 0.22
+    /// Reminders' Mine | Sent control, there only with sharing.
+    private var mineOrSent: XCUIElement {
+        app.segmentedControls.containing(.button, identifier: "Sent").firstMatch
     }
 
-    /// Four scrolls up, or ten of the shorter ones a search field in the way leaves room for.
+    /// Whether Mine | Sent is there to take touches: under a sheet it stays in the hierarchy.
+    private var isMineOrSentPinned: Bool {
+        mineOrSent.exists && mineOrSent.isHittable
+    }
+
+    /// The bottom of what stays put over a list and takes the touches that land on it: the search
+    /// field, and Mine | Sent under it. 0 with neither.
+    private var pinnedBottom: CGFloat {
+        let search = app.searchFields.firstMatch
+        let pinned = (search.exists ? [search] : []) + (isMineOrSentPinned ? [mineOrSent] : [])
+        return pinned.map(\.frame.maxY).max() ?? 0
+    }
+
+    /// Whether they cover where a scroll up normally starts: at the largest text in landscape, where
+    /// the bar and the field fill the top half of the window (#285), and with Mine | Sent in
+    /// portrait too.
+    private var pinnedControlsCoverScrollStart: Bool {
+        pinnedBottom > app.windows.firstMatch.frame.height * 0.22
+    }
+
+    /// Where a drag starts to stay off the pinned controls, as a fraction of the window's height:
+    /// just below them, since a drag that starts on one works it instead.
+    private var startBelowPinnedControls: CGFloat {
+        (pinnedBottom + 16) / app.windows.firstMatch.frame.height
+    }
+
+    /// Four scrolls up, or ten when the search field covers where one usually starts. Fifteen where
+    /// Mine | Sent under it leaves a scroll less than the usual 0.56 of the window's height, as at
+    /// the largest text in landscape.
     private func scrollToTop() {
-        for _ in 0..<(searchCoversScrollStart ? 10 : 4) { scroll(down: false) }
+        let search = app.searchFields.firstMatch
+        let searchCoversStart = search.exists && search.frame.maxY > app.windows.firstMatch.frame.height * 0.22
+        let isShort = isMineOrSentPinned && 0.95 - startBelowPinnedControls < 0.56
+        let scrolls = isShort ? 15 : searchCoversStart ? 10 : 4
+        for _ in 0..<scrolls { scroll(down: false) }
+    }
+
+    /// Drags the list down until `row`'s middle, where a tap or a swipe lands, is clear of the
+    /// pinned controls. A short drag, only clearing the middle: at the largest text in landscape a
+    /// tall row dragged clear whole ends up with its middle at the tab bar (#285). It is never
+    /// shorter than the clearance, so it isn't taken for a tap. Returns whether it dragged: an
+    /// element found by its place in a query may be another one afterwards.
+    private func dragClearOfPinnedControls(_ row: XCUIElement) -> Bool {
+        let bottom = pinnedBottom
+        let clearance: CGFloat = 40
+        guard bottom > 0, row.frame.midY < bottom + clearance else { return false }
+        let from = app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: startBelowPinnedControls))
+        let distance = max(bottom + clearance - row.frame.midY, clearance)
+        from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 0, dy: distance)), withVelocity: .slow, thenHoldForDuration: 0.2)
+        pause(0.5)
+        return true
     }
 
     private func pause(_ seconds: TimeInterval) {
@@ -157,9 +204,17 @@ final class ShotsUITests: XCTestCase {
         if !inSheet {
             scrollToTop()
         }
-        guard let element = scrollTo(label, scrolls: scrolls) else {
+        guard var element = scrollTo(label, scrolls: scrolls) else {
             XCTFail("No \(label):\n\(app.debugDescription)")
             return
+        }
+        // A row under a pinned control still counts as hittable, and its tap lands on the control.
+        if !inSheet, dragClearOfPinnedControls(element) {
+            guard let again = scrollTo(label, scrolls: 0) else {
+                XCTFail("No \(label) after the drag:\n\(app.debugDescription)")
+                return
+            }
+            element = again
         }
         element.tap()
         pause(0.8)
@@ -1091,16 +1146,18 @@ final class ShotsUITests: XCTestCase {
     }
 
     /// Opens a row's trailing swipe, scrolling to the row first. On Now and My Day, which have no
-    /// Delete to look for, it swipes all three times; a swipe on an open row leaves it open.
-    private func swipe(_ title: String) {
+    /// Delete to look for, it swipes all three times; a swipe on an open row leaves it open. On
+    /// Sent, `person` is who it went to, since a row's label there leads with them.
+    private func swipe(_ title: String, sentTo person: String? = nil) {
         scrollToTop()
         guard let found = scrollTo(title) else {
             XCTFail("No \(title):\n\(app.debugDescription)")
             return
         }
         // With a tall row's middle hidden the query finds its title, too small a target to swipe (#285).
-        let rowButton = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
-        let row = found.elementType != .button && rowButton.exists ? rowButton : found
+        let lead = [person, title].compactMap { $0 }.joined(separator: ", ")
+        let rowButton = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(lead), ")).firstMatch
+        var row = found.elementType != .button && rowButton.exists ? rowButton : found
         // At the largest text four scrolls up can leave the first row under the bar.
         var tries = 0
         while row.frame.minY < app.navigationBars.firstMatch.frame.maxY, tries < 8 {
@@ -1114,19 +1171,13 @@ final class ShotsUITests: XCTestCase {
             scroll(down: true)
             tries += 1
         }
-        // In landscape a row's middle, where the swipe starts, can sit under the search field, which
-        // takes the swipe. A short drag, only clearing the middle: at the largest text in landscape a
-        // tall row dragged clear of the field whole ends up with its middle at the tab bar (#285).
-        // It starts below the field, since there the window's middle is on it and a drag that starts
-        // on it opens the search, and the clearance keeps it too long to count as a tap.
-        let search = app.searchFields.firstMatch
-        let clearance: CGFloat = 40
-        if search.exists, row.frame.midY < search.frame.maxY + clearance {
-            let window = app.windows.firstMatch
-            let from = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: (search.frame.maxY + 16) / window.frame.height))
-            let distance = search.frame.maxY + clearance - row.frame.midY
-            from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 0, dy: distance)), withVelocity: .slow, thenHoldForDuration: 0.2)
-            pause(0.5)
+        // In landscape a row's middle can sit under a pinned control, which takes the swipe.
+        if dragClearOfPinnedControls(row), row === found {
+            guard let again = scrollTo(title, scrolls: 0) else {
+                XCTFail("No \(title) after the drag:\n\(app.debugDescription)")
+                return
+            }
+            row = again
         }
         // With another row's actions still open, the first swipe only closes them.
         func opened() -> Bool {
@@ -2104,9 +2155,10 @@ final class ShotsUITests: XCTestCase {
         tab("Reminders")
         app.buttons["Sent"].firstMatch.tap()
         pause(1)
-        swipe("Take the pills")
+        swipe("Take the pills", sentTo: "Riley Park")
         shot("sent-swipe")
         app.buttons["Delete"].firstMatch.tap()
+        deleteQuestion(titled: "Delete “Take the pills”?", saying: "with a note saying so")
         pause(1)
         shot("sent-delete")
     }
