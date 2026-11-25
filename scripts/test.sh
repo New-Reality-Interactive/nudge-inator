@@ -144,6 +144,10 @@ scripts/tests/sync-strings-test.sh || failed+=("sync-strings")
 step "The phone-check comments name the connected phone, and post nothing without one"
 scripts/tests/phone-check-test.sh || failed+=("phone-check")
 
+# No phone needed: a stand-in for xcrun.
+step "A seed load succeeds only when the app says it did"
+scripts/tests/device-seed-test.sh || failed+=("device-seed")
+
 # chevron.right points the wrong way in right-to-left languages (#121).
 step "Chevrons use chevron.forward"
 if grep -rn --include='*.swift' 'chevron\.right' App NudgeWidgets Packages; then
@@ -161,6 +165,11 @@ scripts/check-list-row-insets.sh App NudgeWidgets Packages || failed+=("list-row
 step "Words are looked up as a String only where a marker says why"
 scripts/tests/localized-strings-test.sh || failed+=("localized-strings-test")
 scripts/check-localized-strings.sh App NudgeWidgets Packages/NudgeShared Packages/NudgeEngine/Sources || failed+=("localized-strings")
+
+# Pinned content never scrolls: words pinned above a scroll view outgrew the screen (#516).
+step "Content is pinned beside a scroll view only where a marker says why"
+scripts/tests/pinned-insets-test.sh || failed+=("pinned-insets-test")
+scripts/check-pinned-insets.sh App NudgeWidgets Packages || failed+=("pinned-insets")
 
 # App/Resources/PrivacyInfo.xcprivacy gives UserDefaults the reason CA92.1: the app reading its own
 # standard defaults. A suite would be a different reason (1C8F.1 for the App Group's), and the widget
