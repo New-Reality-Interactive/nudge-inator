@@ -18,7 +18,9 @@ Everything else the ticket needs is in the ticket: its sections, and **Before yo
 2. Branch from the up-to-date release branch of the ticket's milestone (`release.md`, Release branches): `<feature>-<n>-<slug>`, such as `tags-83-filter-sheet`, `<feature>`
    being the slug in the milestone's description. If `release/<version>` doesn't exist yet, create it from the spec's `Base:` and push it first.
 3. Read the ticket, all its sections (Context, Must keep, Developer stops) and its Before you start, the Comments of the tickets it builds on, and the spec
-   sections it names (`review.md`, Session size).
+   sections it names (`review.md`, Session size). For a bug, also read the report of the check
+   that found it, and set up the state it names (seed, stand-in, settings, text size,
+   orientation) before reading code.
 
 ## During `/implement`
 
@@ -26,7 +28,8 @@ Everything else the ticket needs is in the ticket: its sections, and **Before yo
    ticket's Comments before the first test, then go on (global rule: the developer raises a
    wrong seam in review). A ticket with no behaviour (docs, a mockup) skips `tdd`; say so.
 5. Run `mattpocock-skills:domain-modeling` when a name isn't in `GLOSSARY.md`, and
-   `mattpocock-skills:diagnosing-bugs` when something fails and a first look doesn't explain it.
+   `mattpocock-skills:diagnosing-bugs` when something fails and a first look doesn't explain it,
+   or a bug doesn't reproduce on the first try.
 6. Test with `scripts/test.sh`.
 7. Review as `review.md` says, starting once step 6 passes. Once the developer has answered the
    review's list (`review.md`), make the fixes they settled in one round, rerun
@@ -35,7 +38,7 @@ Everything else the ticket needs is in the ticket: its sections, and **Before yo
    saying so in the ticket or when starting it). Never install it while the review runs: the
    developer checks only a build the review's fixes are already in (the developer's rule,
    2026-11-11, #198). The phone is the only place the screens are checked (the developer retired
-   the simulator screenshot runs on 2026-11-09), so this one pass also covers what those runs did.
+   each ticket's simulator screenshot runs on 2026-11-09), so this one pass also covers what those runs did.
    - Install the build on the phone and load the ticket's seed (`device-testing.md`, Manual device
      checks). The check covers the ticket's acceptance criteria and the screens next to the change,
      plus landscape and the largest text size on the changed screens, and, for a ticket with a
@@ -78,6 +81,12 @@ A ticket that changes something on screen records every finding in its Comments 
 - **Kind:** an app bug, a harness fault, a mockup mismatch, or a flake.
 - **Where:** the orientation and text size it showed on (the phone's).
 - A run that found nothing says so in one line, so a ticket with no findings still shows its checks.
+
+**The state a finding showed in** is recorded with it, since a bug may need all of it to show
+(#516 needed a banner its report didn't mention): the seed and stand-in (`phone-check.sh` lists
+what `device-seed.sh` launched), every setting the check had changed by then (such as Quiet Now,
+the stand-in's iCloud choice, the text size), and the developer's screenshot, asked for as the
+next step. Ticket input for a bug carries the same state in its Context.
 
 **Phone time** comes from timestamps, with no stopwatch. `scripts/phone-check.sh <n> installed` and `scripts/phone-check.sh <n> report` post the two comments described next, each naming the connected phone's model and iOS version as the device reports them (never typed by hand); `report` takes the findings one per line (arguments, or stdin), and the script stops without posting when no phone is connected (#352). Post a comment as soon as the build is installed and the seed loaded (the script words it "Phone check: installed, checklist sent"), and post the developer's report as a comment as soon as the last step is answered, one line per finding as above. The phone time is the gap between the two comments' timestamps (`gh issue view <n> --comments --json comments`). A report that comes in pieces is recorded when its last piece arrives.
 

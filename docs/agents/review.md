@@ -21,5 +21,5 @@ Most usage comes from long sessions that re-send a large history on every reques
 
 - Read a ticket's Comments only for the tickets it builds on. Never read a whole finished ticket.
 - Never `cat` test logs (`.build/test-logs`) or `Localizable.xcstrings`. Grep them, or Read with `offset` and `limit`.
-- Run `/compact` after tests pass and before review.
+- After tests pass and before review, ask the developer to run `/compact` (only they can type it), and start the review once they answer.
 - Run device-check walkthroughs in a fresh session holding only the ticket and the check list.

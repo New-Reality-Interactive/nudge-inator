@@ -27,10 +27,13 @@ while [ $# -gt 0 ]; do [ "$1" = --json-output ] && cp "$FAKE_DEVICES" "$2"; shif
 SH
 cat > "$work/bin/gh" <<'SH'
 #!/bin/sh
+[ -n "${FAKE_GH_FAILS:-}" ] && exit 1
 printf '%s\n' "$@" > "$FAKE_GH_LOG"
 SH
 chmod +x "$work/bin/"*
 export PATH="$work/bin:$PATH" FAKE_GH_LOG="$work/gh.log" FAKE_WAKE_LOG="$work/wake.log"
+# The seeds device-seed.sh recorded; never the checkout's own record.
+export NUDGE_SEED_LOG="$work/seeds.log"
 
 phone='{"hardwareProperties":{"reality":"physical","marketingName":"iPhone 15","productType":"iPhone15,4"},"deviceProperties":{"osVersionNumber":"27.2.1"},"connectionProperties":{"tunnelState":"connected"}}'
 ipad='{"hardwareProperties":{"reality":"physical","marketingName":"iPad Pro","productType":"iPad16,3"},"deviceProperties":{"osVersionNumber":"27.2"},"connectionProperties":{"tunnelState":"connected"}}'
@@ -57,6 +60,19 @@ expect "report takes findings as arguments" "- Found by: the phone; Kind: a flak
 rm -f "$FAKE_GH_LOG"
 scripts/phone-check.sh 352 report < /dev/null
 expect "a report with no findings says so" "- Nothing found." "$(tail -1 "$FAKE_GH_LOG")"
+
+devices "$phone"
+printf '%s\n' "2026-11-25 07:32:54 quiet-hours-banner-empty (stand-in seeded)" "2026-11-25 07:40:48 clean" > "$NUDGE_SEED_LOG"
+scripts/phone-check.sh 352 installed
+expect "the install comment leaves the seed record for the report" 2 "$(wc -l < "$NUDGE_SEED_LOG" | tr -d ' ')"
+NUDGE_PHONE_CHECK_DRY_RUN=1 scripts/phone-check.sh 352 report < /dev/null > /dev/null
+expect "a dry run leaves the seed record" 2 "$(wc -l < "$NUDGE_SEED_LOG" | tr -d ' ')"
+FAKE_GH_FAILS=1 scripts/phone-check.sh 352 report < /dev/null > /dev/null 2>&1
+expect "a report that isn't posted keeps the seed record" 2 "$(wc -l < "$NUDGE_SEED_LOG" | tr -d ' ')"
+scripts/phone-check.sh 352 report < /dev/null
+expect "the report lists the seeds launched" \
+  $'issue\ncomment\n352\n--body\nPhone check: report (iPhone 15, iOS 27.2.1)\n\nSeeds launched: 2026-11-25 07:32:54 quiet-hours-banner-empty (stand-in seeded); 2026-11-25 07:40:48 clean\n\n- Nothing found.' "$(cat "$FAKE_GH_LOG")"
+expect "a posted report clears the seed record" no "$([ -e "$NUDGE_SEED_LOG" ] && echo yes || echo no)"
 
 for scenario in "$sim" "$away" "$ipad" ""; do
   devices "$scenario"

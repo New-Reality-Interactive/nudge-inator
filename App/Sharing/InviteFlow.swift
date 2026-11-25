@@ -223,6 +223,7 @@ private struct InviteSheet: View {
             .onChange(of: approval.identifiers) { _, identifiers in
                 Task { await choose(from: identifiers) }
             }
+            // Pinned: one button, which compact height and accessibility text sizes move into the form.
             .safeAreaInset(edge: .bottom) {
                 if !invitesInForm {
                     inviteButton
