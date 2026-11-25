@@ -68,5 +68,3 @@ NudgeInator.xcodeproj/
 buildServer.json
 # Scratch output from image generation
 generated_images/
-# CodeGraph index; local to each machine
-.codegraph/

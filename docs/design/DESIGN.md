@@ -623,7 +623,9 @@ rewrites nothing above.
 - **Shown** on Now, My Day and Reminders (Mine and Sent, empty states too) while Quiet Now is on or a
   schedule that's on covers the time, the same test as Settings' Quiet Hours row. It leads the content
   after any permission banners, above the lists, counts and filters; on Reminders it follows the
-  Mine | Sent control, ahead of the sharing banner.
+  Mine | Sent control, ahead of the sharing banner. On Reminders' empty states the banner and the
+  empty state scroll as one page under that control: the banner at the top, the empty state centered
+  in what is left (#516). Pinned, a banner taller than the screen pushed the control over the title.
 - **Look:** the permission banner's card (`{colors.cell}`, `{rounded.card}`, 2 pt border) with a
   `{colors.neutral}` border and a `bell.slash` icon: being held is the person's own choice, not
   a problem to fix, so it uses neither red nor orange. A bold title, "Quiet hours are holding nudges",

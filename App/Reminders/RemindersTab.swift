@@ -302,16 +302,11 @@ struct RemindersTab: View {
     }
 
     /// As Tags': the text points to the toolbar's +, with no button of its own. It scrolls, so the
-    /// text clears the tab bar at the largest text size in landscape (#328's phone check), and is
-    /// centered while it fits, as Sent's empty states are.
+    /// text clears the tab bar at the largest text size in landscape (#328's phone check).
     private var noReminders: some View {
-        // The quiet hours banner stays under the Mine | Sent picker, as the mockup has it; only the
-        // empty state is centered in what is left (#379's phone check).
-        ScrollView {
+        RemindersEmptyStateScroll {
             noRemindersContent
         }
-        .centeredWhenShort()
-        .safeAreaInset(edge: .top, spacing: 0) { QuietHoursBannerAboveEmptyState() }
     }
 
     private var noRemindersContent: some View {
