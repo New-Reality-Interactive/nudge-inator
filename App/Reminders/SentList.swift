@@ -314,7 +314,7 @@ private struct NoOneToSendToView: View {
     let manageConnections: () -> Void
 
     var body: some View {
-        ScrollView {
+        RemindersEmptyStateScroll {
             BannerAboveEmptyState(banner: banner)
             ContentUnavailableView {
                 EmptyStateLabel(systemImage: "person.2") {
@@ -333,8 +333,6 @@ private struct NoOneToSendToView: View {
                 }
             }
         }
-        .centeredWhenShort()
-        .safeAreaInset(edge: .top, spacing: 0) { QuietHoursBannerAboveEmptyState() }
     }
 }
 
@@ -344,7 +342,7 @@ private struct NothingSentView: View {
     let banner: SharingBanner?
 
     var body: some View {
-        ScrollView {
+        RemindersEmptyStateScroll {
             BannerAboveEmptyState(banner: banner)
             ContentUnavailableView {
                 EmptyStateLabel(systemImage: "list.bullet.clipboard") {
@@ -357,8 +355,6 @@ private struct NothingSentView: View {
                     .buttonStyle(.bordered)
             }
         }
-        .centeredWhenShort()
-        .safeAreaInset(edge: .top, spacing: 0) { QuietHoursBannerAboveEmptyState() }
     }
 }
 
