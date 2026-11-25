@@ -1426,16 +1426,21 @@ final class ShotsUITests: XCTestCase {
         tapText(label, inSheet: true)
     }
 
-    /// A tap at a switch's center doesn't flip it (#114), so this one goes near its end. Nor does that
-    /// tap flip it in landscape (iOS 27.0 simulator), so the phone is turned to portrait for it and back,
-    /// which moves the list, so this scrolls to the row again.
+    /// A tap at a switch's center doesn't flip it (#114), so this one goes near its end.
+    private func tapSwitchEnd(_ row: XCUIElement) {
+        row.coordinate(withNormalizedOffset: CGVector(dx: isRightToLeft ? 0.15 : 0.85, dy: 0.5)).tap()
+    }
+
+    /// Flips the switch labelled `label`. A tap near its end doesn't flip it in landscape (iOS 27.0
+    /// simulator), so the phone is turned to portrait for it and back, which moves the list, so this
+    /// scrolls to the row again.
     private func flipSwitch(_ label: String) {
         barTap {
             XCTAssertNotNil(scrollTo(label), "No \(label):\n\(app.debugDescription)")
             // By type: the row's title shares the label, and comes first on iOS 26.5.
             let row = app.switches[label].firstMatch
             let before = row.value as? String
-            row.coordinate(withNormalizedOffset: CGVector(dx: isRightToLeft ? 0.15 : 0.85, dy: 0.5)).tap()
+            tapSwitchEnd(row)
             pause(0.8)
             XCTAssertNotEqual(row.value as? String, before, "\(label) didn't flip")
         }
@@ -2163,32 +2168,72 @@ final class ShotsUITests: XCTestCase {
         shot("sent-delete")
     }
 
+    /// Chooses from the Stand-in menu: `path` is the item, after its submenu if it has one. At the
+    /// largest text in landscape a menu doesn't fit, and its lower items aren't there until it
+    /// scrolls (#524); a tap then brings one into view.
+    private func chooseStandIn(_ path: String..., line: UInt = #line) {
+        app.buttons["Stand-in"].firstMatch.tap()
+        for title in path {
+            let item = app.buttons[title].firstMatch
+            for _ in 0..<8 where !item.waitForExistence(timeout: 1) {
+                dragMenuUp()
+            }
+            XCTAssert(item.exists, "No \(title) in the Stand-in menu:\n\(app.debugDescription)", line: line)
+            item.tap()
+        }
+    }
+
+    /// Scrolls the open menu, or the submenu over it, down by less than it shows. A slow drag: a
+    /// swipe flings it past rows, which are gone once off it (#524).
+    private func dragMenuUp() {
+        // Narrower than the window, as the page's list isn't.
+        let width = app.windows.firstMatch.frame.width
+        guard let menu = app.collectionViews.allElementsBoundByIndex.last(where: { $0.frame.width < width }) else { return }
+        // In points from its top: its frame runs on past the part that shows, and a drag from under
+        // that closes it. At its shortest, in landscape at the largest text, it shows about 320.
+        let topCenter = menu.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0))
+        let from = topCenter.withOffset(CGVector(dx: 0, dy: 270))
+        let to = topCenter.withOffset(CGVector(dx: 0, dy: 55))
+        from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
+    }
+
+    /// Fails unless a text starting `start` is there, on screen or scrolled off it: a step that
+    /// missed its screen still takes a picture.
+    private func assertText(startingWith start: String, line: UInt = #line) {
+        let text = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", start)).firstMatch
+        XCTAssert(text.waitForExistence(timeout: 3), "No text starting \(start):\n\(app.debugDescription)", line: line)
+    }
+
+    /// Fails unless the screen or sheet titled `title` is there.
+    private func assertBar(_ title: String, line: UInt = #line) {
+        XCTAssert(app.navigationBars[title].waitForExistence(timeout: 3), "No \(title) bar:\n\(app.debugDescription)", line: line)
+    }
+
     /// The Stand-in menu's states: iCloud unavailable, offline, and another Apple Account signing in.
     func testSharingStates() {
         launch(.sharing, standIn: "sent")
         tab("Settings")
         tapText("Connections")
-        app.buttons["Stand-in"].firstMatch.tap()
-        app.buttons["iCloud"].firstMatch.tap()
-        app.buttons["No iCloud Account"].firstMatch.tap()
+        chooseStandIn("iCloud", "No iCloud Account")
         pause(1)
+        assertText(startingWith: "Sharing is paused.")
         shot("sharing-paused")
-        app.buttons["Stand-in"].firstMatch.tap()
-        app.buttons["iCloud"].firstMatch.tap()
-        app.buttons["Available"].firstMatch.tap()
-        app.buttons["Stand-in"].firstMatch.tap()
-        app.buttons["Network"].firstMatch.tap()
-        app.buttons["Offline"].firstMatch.tap()
+        chooseStandIn("iCloud", "Available")
+        chooseStandIn("Network", "Offline")
         pause(1)
         tab("Reminders")
         app.buttons["Sent"].firstMatch.tap()
         pause(1)
+        // Connections says it's offline too, so the text alone doesn't prove this is Sent.
+        assertBar("Reminders")
+        XCTAssert(mineOrSent.buttons["Sent"].isSelected, "Sent isn't selected:\n\(app.debugDescription)")
+        assertText(startingWith: "You're offline.")
         shot("sharing-offline")
         launch(.sharing, standIn: "sent")
         tab("Settings")
         tapText("Connections")
-        app.buttons["Stand-in"].firstMatch.tap()
-        app.buttons["Another Apple Account Signs In"].firstMatch.tap()
+        chooseStandIn("Another Apple Account Signs In")
+        assertBar("Apple Account Changed")
         pause(1.5)
         shot("account-changed", pages: 2)
     }
@@ -2198,14 +2243,27 @@ final class ShotsUITests: XCTestCase {
         launch(.sharingOff, standIn: "empty")
         tab("Settings")
         shot("settings-sharing-off")
+        // Off the first screen at the largest text, so it's checked after the picture.
+        let sharingSwitch = app.switches["Sharing"].firstMatch
+        reveal(sharingSwitch)
+        XCTAssertEqual(sharingSwitch.value as? String, "0", "Sharing isn't off:\n\(app.debugDescription)")
         tab("Now")
+        assertBar("Now")
         shot("now-sharing-off")
         tab("Reminders")
+        assertBar("Reminders")
+        XCTAssertFalse(mineOrSent.exists, "Mine | Sent shows with Sharing off")
         shot("reminders-sharing-off")
         launch(.sharing, standIn: "sent")
         tab("Settings")
-        // The switch's own end of the row: a tap in the middle of it lands on the label.
-        app.switches.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        // Turned to portrait, as for `flipSwitch`; the switch stays on, since turning it off asks.
+        barTap {
+            // At the largest text the list builds the switch only once it scrolls near it (#524).
+            let sharingSwitch = app.switches["Sharing"].firstMatch
+            reveal(sharingSwitch)
+            tapSwitchEnd(sharingSwitch)
+            assertBar("Turn Off Sharing")
+        }
         pause(1.5)
         shot("sharing-off-confirm", pages: 2)
     }
