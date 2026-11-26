@@ -1974,6 +1974,12 @@ final class ShotsUITests: XCTestCase {
             tapText(title)
             siteTutorialShots("site-tutorial-\(slug)", pages: pages)
         }
+        // Quiet hours (1.6.0): the Quiet Hours page with one schedule, and Quiet Now off as it starts.
+        tapText("Quiet Hours")
+        openSheet("Add Schedule", title: "Add Schedule")
+        barTap { app.buttons["Add"].tap() }
+        pause(0.8)
+        shot("site-8-quiet-hours")
     }
 
     /// Saves each page of the open tutorial sheet once, as `<name>-<page>`, as it opens to it,
