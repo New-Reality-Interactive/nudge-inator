@@ -21,6 +21,11 @@
 # day: the harness clock reads that time today from each launch on (#297).
 # SHOTS_KEEP_GOING=1 runs every test and lists every failure at the end; without it, the first
 # failed test on any simulator stops every simulator's run (#302).
+# SHOTS_RESUME=1 continues an interrupted run (#488): every test that passed is kept in a ledger
+# (SHOTS_LEDGER, default .build/screenshots-ledger) as it passes, and a resumed run skips those, on
+# the same simulator and variant, and keeps their images. It does so only if the app, the harness
+# and SHOTS_NOW are as they were; otherwise it says so and runs everything. A run without
+# SHOTS_RESUME empties the ledger first.
 # Each variant's run adds a record to the test metrics (scripts/metrics.sh, #303): pass, fail, or
 # stopped for a run that was cut short because another failed or the script was interrupted.
 # Writes <SHOTS_OUT>/<simulator>/<variant>/<screen>.png, a clone's under the simulator it clones.
@@ -49,12 +54,30 @@ expand_variants() {
 }
 
 lanes="$(shots_lanes "$SIMULATORS" "${SHOTS_VARIANTS:-${defaults[*]}}" "${SHOTS_PLAN:-}")" || exit 1
-only=()
-for test in ${SHOTS_TESTS:-}; do only+=("-only-testing:NudgeShotsUITests/ShotsUITests/$test"); done
+ledger="${SHOTS_LEDGER:-$PWD/.build/screenshots-ledger}"
 out="$(mkdir -p "$out" && cd "$out" && pwd)"
 build=.build/screenshots
 logs="$PWD/.build/test-logs"
 mkdir -p "$build/Generated" "$logs"
+
+# What a passed test depends on: the sources it ran against and the clock it ran at. Hashed by
+# content, so an edit that isn't committed yet counts.
+fingerprint="$( { find scripts/screenshots App Packages NudgeInatorTests/Fakes.swift -type f \( -name '*.swift' -o -name '*.yml' \) -not -path '*/.build/*' -print0 2> /dev/null \
+  | LC_ALL=C sort -z | xargs -0 shasum; echo "now=${SHOTS_NOW:-}"; } | shasum | cut -d' ' -f1)"
+resume=0
+if [ "${SHOTS_RESUME:-0}" = 1 ]; then
+  if [ "$(cat "$ledger/fingerprint" 2> /dev/null)" = "$fingerprint" ]; then
+    resume=1
+    echo "==> Resuming: tests that already passed are skipped"
+  else
+    echo "==> Nothing to resume: the code or SHOTS_NOW changed since the ledger was made, so everything runs"
+  fi
+fi
+if [ "$resume" = 0 ]; then
+  rm -rf "$ledger"
+  mkdir -p "$ledger"
+  printf '%s\n' "$fingerprint" > "$ledger/fingerprint"
+fi
 
 # The fakes, minus their `@testable import`: in the harness they compile into the app itself.
 grep -v '^@testable import NudgeInator$' NudgeInatorTests/Fakes.swift > "$build/Generated/Fakes.swift"
@@ -135,8 +158,31 @@ record_failure() {
 shoot() {
   local name="$1" folder="$2" udid="$3" failed_prefix="$4" lane_variants="$5"
   local variant base size orientation direction dir log started failed_file metrics_file began test
+  local passed_file selection remaining total
   for variant in $lane_variants; do
     echo "[$name] ==> $variant"
+    # What a resumed run still has to do here (#488): the tests asked for, less those that passed.
+    passed_file="$ledger/$name-$variant.passed"
+    selection=()
+    if [ -n "${SHOTS_TESTS:-}" ]; then
+      remaining=0
+      for test in $SHOTS_TESTS; do
+        if [ "$resume" = 1 ] && grep -qx "$test" "$passed_file" 2> /dev/null; then continue; fi
+        selection+=("-only-testing:NudgeShotsUITests/ShotsUITests/$test")
+        remaining=$((remaining + 1))
+      done
+    else
+      total="$(grep -c 'func test[A-Za-z0-9_]*()' scripts/screenshots/UITests/ShotsUITests.swift)"
+      remaining=$total
+      if [ "$resume" = 1 ] && [ -f "$passed_file" ]; then
+        while IFS= read -r test; do selection+=("-skip-testing:NudgeShotsUITests/ShotsUITests/$test"); done < "$passed_file"
+        remaining=$((total - $(wc -l < "$passed_file")))
+      fi
+    fi
+    if [ "$resume" = 1 ] && [ "$remaining" -le 0 ]; then
+      echo "[$name] every test already passed in $variant, skipped"
+      continue
+    fi
     # The rtl- prefix is a launch argument of the harness app's (ShotsUITests), so the simulator's
     # settings stay as they are; the rest of the name sets them as for any variant.
     base="${variant#rtl-}" direction=ltr
@@ -146,7 +192,7 @@ shoot() {
     case "$base" in largest-text*) size=accessibility-extra-extra-extra-large ;; esac
     xcrun simctl ui "$udid" content_size "$size"
     dir="$out/$folder/$variant"
-    [ -n "${SHOTS_TESTS:-}" ] || rm -rf "$dir"
+    [ -n "${SHOTS_TESTS:-}" ] || [ "$resume" = 1 ] || rm -rf "$dir"
     mkdir -p "$dir"
     log="$logs/screenshots-$name-$variant.log"
     started="$log.started"
@@ -158,14 +204,14 @@ shoot() {
     TEST_RUNNER_SHOTS_DIR="$dir" TEST_RUNNER_SHOTS_ORIENTATION="$orientation" TEST_RUNNER_SHOTS_DIRECTION="$direction" \
     TEST_RUNNER_SHOTS_NOW="${SHOTS_NOW:-}" \
       xcodebuild test-without-building -project "$build/NudgeShots.xcodeproj" -scheme NudgeShots \
-      -destination "platform=iOS Simulator,id=$udid" -derivedDataPath "$build/derived" ${only[@]+"${only[@]}"} \
+      -destination "platform=iOS Simulator,id=$udid" -derivedDataPath "$build/derived" ${selection[@]+"${selection[@]}"} \
       2>&1 < /dev/null \
-      | shots_watch_output "$log" \
+      | shots_watch_output "$log" "$passed_file" \
       | while IFS= read -r test; do record_failure "$test" "$name" "$variant" "$log" "$failed_file"; done \
       || [ -s "$failed_file" ] \
       || record_failure "the run itself (no test named)" "$name" "$variant" "$log" "$failed_file"
     echo "[$name] $(ls "$dir" | wc -l | tr -d ' ') screenshots in $dir"
-    if [ -n "${SHOTS_TESTS:-}" ]; then
+    if [ -n "${SHOTS_TESTS:-}" ] || [ "$resume" = 1 ]; then
       echo "[$name] wrote: $(find "$dir" -name '*.png' -newer "$started" -exec basename {} .png \; | sort | tr '\n' ' ')"
     fi
     rm -f "$started"

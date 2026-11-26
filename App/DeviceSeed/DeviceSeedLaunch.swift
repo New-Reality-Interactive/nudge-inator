@@ -67,7 +67,21 @@ struct ModelSeedTarget: SeedTarget {
         case .defaultPace: SeedSettingText.text(of: model.defaultPace)
         case .defaultAlarmSound: SeedSettingText.text(of: model.defaultAlarmSound)
         case .remindersSort: SeedSettingText.text(of: model.remindersSort)
+        case .quietHours: SeedSettingText.text(of: model.quietHours)
+        case .quietHoursTutorial: model.isQuietHoursTutorialDue ? SeedSeenText.unseen : SeedSeenText.seen
         }
+    }
+
+    func addQuietSpan(from start: Date, to end: Date, replacedAt: Date) {
+        model.addSeedQuietSpan(from: start, to: end, replacedAt: replacedAt)
+    }
+
+    func removeQuietSpan(replacedAt: Date) {
+        model.removeSeedQuietSpan(replacedAt: replacedAt)
+    }
+
+    func turnQuietNowOff() {
+        model.turnQuietNow(on: false)
     }
 
     func setSetting(_ setting: SeedSetting, to value: String) {
@@ -78,13 +92,22 @@ struct ModelSeedTarget: SeedTarget {
             if let sound = SeedSettingText.defaultAlarmSound(from: value) { model.defaultAlarmSound = sound }
         case .remindersSort:
             if let sort = SeedSettingText.remindersSort(from: value) { model.remindersSort = sort }
+        case .quietHours:
+            if let quietHours = SeedSettingText.quietHours(from: value) { model.quietHours = quietHours }
+        case .quietHoursTutorial:
+            switch value {
+            case SeedSeenText.seen: model.quietHoursTutorialClosed()
+            case SeedSeenText.unseen: model.markQuietHoursTutorialUnseen()
+            default: break
+            }
         }
     }
 }
 
 /// How a setting's value is written in a set and in the record: `created.ascending` for the sort,
 /// `consistent.600` for the Default Pace (choice, then the Consistent wait in seconds), and the
-/// sound's ID for the Default Alarm Sound.
+/// sound's ID for the Default Alarm Sound, and for quiet hours each schedule as
+/// `22:00-07:00 SU,MO on`, joined by `; ` (none is empty).
 enum SeedSettingText {
     static func text(of sort: RemindersSort) -> String {
         "\(sort.field.rawValue).\(sort.order.rawValue)"
@@ -115,6 +138,44 @@ enum SeedSettingText {
 
     static func text(of sound: AlarmSound) -> String {
         sound.id
+    }
+
+    static func text(of quietHours: QuietHours) -> String {
+        quietHours.schedules.map { schedule in
+            let days = RepeatRule.Weekday.allCases.filter(schedule.days.contains).map { dayCodes[$0.rawValue - 1] }.joined(separator: ",")
+            return "\(clock(schedule.start))-\(clock(schedule.end)) \(days) \(schedule.isOn ? "on" : "off")"
+        }.joined(separator: "; ")
+    }
+
+    /// Nil when any schedule doesn't read, so a set never applies part of its schedules.
+    static func quietHours(from text: String) -> QuietHours? {
+        guard !text.isEmpty else { return QuietHours() }
+        var schedules: [QuietHoursSchedule] = []
+        for entry in text.components(separatedBy: "; ") {
+            let parts = entry.split(separator: " ").map(String.init)
+            let times = parts.first?.split(separator: "-").map(String.init) ?? []
+            guard parts.count == 3, times.count == 2,
+                  let start = timeOfDay(times[0]), let end = timeOfDay(times[1]),
+                  parts[2] == "on" || parts[2] == "off"
+            else { return nil }
+            let days = parts[1].split(separator: ",").compactMap { code in dayCodes.firstIndex(of: String(code)).flatMap { RepeatRule.Weekday(rawValue: $0 + 1) } }
+            guard let schedule = try? QuietHoursSchedule(start: start, end: end, days: Set(days), isOn: parts[2] == "on") else { return nil }
+            schedules.append(schedule)
+        }
+        return QuietHours(schedules: schedules)
+    }
+
+    /// RRULE's day codes, Sunday first as `RepeatRule.Weekday`'s raw values are.
+    private static let dayCodes = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"]
+
+    private static func clock(_ time: TimeOfDay) -> String {
+        String(format: "%02d:%02d", time.hour, time.minute)
+    }
+
+    private static func timeOfDay(_ text: String) -> TimeOfDay? {
+        let parts = text.split(separator: ":").compactMap { Int($0) }
+        guard parts.count == 2 else { return nil }
+        return try? TimeOfDay(hour: parts[0], minute: parts[1])
     }
 
     /// Only an ID this build knows: unlike the store, a set naming no sound changes nothing.

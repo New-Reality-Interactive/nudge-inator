@@ -14,9 +14,15 @@ struct OpenedSentReminder: Hashable {
     var id: Reminder.ID
 }
 
-/// A tag's screen pushed on the Tags tab. Like `OpenedReminder`, a type of its own, not the bare
-/// ID.
+/// A tag's details page pushed on the Tags tab. Like `OpenedReminder`, a type of its own, not the
+/// bare ID.
 struct OpenedTag: Hashable {
+    var id: Tag.ID
+}
+
+/// A tag's reminders pushed on the Tags tab: from the Reminders row on the tag's details page. Its
+/// own destination, so a second route (the row's swipe) can open it too.
+struct OpenedTagReminders: Hashable {
     var id: Tag.ID
 }
 

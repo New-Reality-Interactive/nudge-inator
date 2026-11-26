@@ -136,8 +136,8 @@ struct ReminderDetailsTests {
         let details = try #require(ReminderDetails(engine: model.engine, id: bins.id))
         #expect(details.status == .paused)
         #expect(details.lastOccurrence?.state == .skipped(reason: .paused))
-        #expect(details.lastOccurrence?.day == "Today")
-        #expect(details.lastOccurrence?.time == "9:40\u{202F}AM")
+        #expect(details.lastOccurrence?.day.english == "Today")
+        #expect(details.lastOccurrence?.time.english == "9:40\u{202F}AM")
         #expect(!details.offersDone)
     }
 
@@ -158,7 +158,7 @@ struct ReminderDetailsTests {
 
         let resumed = try #require(ReminderDetails(engine: model.engine, id: meds.id))
         #expect(resumed.status == .comingUp)
-        #expect(resumed.next == .at(day: "Tomorrow", time: "8:00\u{202F}AM"))
+        #expect(resumed.next.english == ["Tomorrow", "8:00\u{202F}AM"])
         #expect(resumed.pauseAction == .pause)
         #expect(resumed.lastOccurrence?.state == .skipped(reason: .paused))
     }
@@ -206,8 +206,8 @@ struct ReminderDetailsTests {
 
         let details = try #require(ReminderDetails(engine: model.engine, id: custom.id))
 
-        #expect(details.repeats == "Every 2 weeks on Monday and Wednesday at 9:00\u{202F}AM, 5 times")
-        #expect(try #require(ReminderDetails(engine: model.engine, id: bins.id)).repeats == "Once, Today at 9:00\u{202F}AM")
+        #expect(details.repeats.english == "Every 2 weeks on Monday and Wednesday at 9:00\u{202F}AM, 5 times")
+        #expect(try #require(ReminderDetails(engine: model.engine, id: bins.id)).repeats.english == "Once, Today at 9:00\u{202F}AM")
     }
 
     /// Criterion 5, Confirm: Delete removes the reminder and everything pending for it, from the
@@ -284,7 +284,7 @@ struct ReminderDetailsTests {
         let details = try #require(ReminderDetails(engine: model.engine, id: bins.id))
 
         #expect(details.status == .comingUp)
-        #expect(details.next == .at(day: "Today", time: "9:00\u{202F}AM"))
+        #expect(details.next.english == ["Today", "9:00\u{202F}AM"])
         #expect(details.pauseAction == .pause)
     }
 
@@ -299,7 +299,7 @@ struct ReminderDetailsTests {
         let details = try #require(ReminderDetails(engine: model.engine, id: meds.id))
 
         #expect(details.status == .nudging)
-        #expect(details.next == .at(day: "Tomorrow", time: "8:00\u{202F}AM"))
+        #expect(details.next.english == ["Tomorrow", "8:00\u{202F}AM"])
         #expect(details.pauseAction == .pause)
     }
 
@@ -353,7 +353,7 @@ struct ReminderDetailsTests {
 
         let details = try #require(ReminderDetails(engine: model.engine, id: bins.id))
         #expect(details.status == .comingUp)
-        #expect(details.next == .at(day: "Today", time: "12:00\u{202F}PM"))
+        #expect(details.next.english == ["Today", "12:00\u{202F}PM"])
     }
 
     /// A Save that left the time alone, a new title say, still has no time to resume at: the

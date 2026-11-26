@@ -1,8 +1,8 @@
 import NudgeEngine
 import SwiftUI
 
-/// The Tags list: a row per tag, which opens the tag. A trailing swipe offers Edit and Delete. When
-/// nothing matches, the count stays above the no-match state, and the footer goes.
+/// The Tags list: a row per tag, which opens the tag's details page. A trailing swipe offers Reminders,
+/// Edit and Delete. When nothing matches, the count stays above the no-match state, and the footer goes.
 struct TagsList: View {
     let screen: TagsScreen
     let filter: TagListFilter
@@ -11,6 +11,8 @@ struct TagsList: View {
     /// The no-match state's button: clears the search and the filter.
     let clearAll: () -> Void
     let rename: (Tag) -> Void
+    /// Opens the tag's reminders page.
+    let showReminders: (Tag) -> Void
     /// Called once the person confirms.
     let delete: (TagSummary) -> Void
 
@@ -22,7 +24,12 @@ struct TagsList: View {
             List {
                 Section {
                     ForEach(screen.rows, id: \.tag.id) { summary in
-                        TagRow(summary: summary, rename: { rename(summary.tag) }, delete: { delete(summary) })
+                        TagRow(
+                            summary: summary,
+                            rename: { rename(summary.tag) },
+                            showReminders: { showReminders(summary.tag) },
+                            delete: { delete(summary) }
+                        )
                     }
                     if screen.emptyState == .noMatch {
                         TagsNoMatchView(filter: filter) {
@@ -70,13 +77,14 @@ private struct TagsNoMatchView: View {
     }
 }
 
-/// A tag's row. It opens the tag's reminders. The trailing swipe offers Edit, at the edge, and
-/// Delete, which asks first. Nothing is on the leading edge and there's no full swipe, so a stray
-/// swipe neither renames nor deletes. VoiceOver gets the same as the row's own actions: these and
-/// the swipe are the only ways to Edit or Delete a tag (DESIGN.md, Swipe actions).
+/// A tag's row. It opens the tag's details. A right-to-left swipe shows Delete, Edit and Reminders,
+/// left to right, so Reminders is at the edge; Delete asks first. Nothing is on the leading edge and
+/// there's no full swipe, so a stray swipe neither renames, deletes nor opens anything. VoiceOver
+/// gets the same actions as the row's own (DESIGN.md, Swipe actions).
 private struct TagRow: View {
     let summary: TagSummary
     let rename: () -> Void
+    let showReminders: () -> Void
     let delete: () -> Void
 
     @State private var isConfirmingDelete = false
@@ -87,31 +95,24 @@ private struct TagRow: View {
                 .frame(minHeight: Design.Size.swipeRowContentHeight)
         }
         .rowActions([
+            RowAction(kind: .reminders, label: listLabel, action: showReminders, voiceOverLabel: remindersLabel),
             RowAction(kind: .edit, label: editLabel, action: rename),
             RowAction(kind: .delete, label: deleteLabel, action: { isConfirmingDelete = true }),
         ])
-        // The system's confirmation dialog with its title showing, as Apple's own apps ask (#286).
-        // From a tile, iOS 27.0 (simulator) draws a popover with Delete alone: a tap outside it, or
-        // VoiceOver's "Dismiss popup", closes it with nothing deleted. As an action sheet, its Cancel does.
-        .confirmationDialog(
-            Text("Delete \(summary.tag.label)?", comment: "Tags: title of the question that asks before deleting a tag. The placeholder is the tag, such as \"#home\"."),
-            isPresented: $isConfirmingDelete,
-            titleVisibility: .visible
-        ) {
-            Button(role: .destructive, action: delete) {
-                Text("Delete Tag", comment: "Tags: confirms deleting the tag, as Delete Reminder does for a reminder. The reminders that have it are kept.")
-            }
-            Button(role: .cancel) {
-            } label: {
-                Text("Cancel", comment: "Keeps the tag instead of deleting it.")
-            }
-        } message: {
-            Text(summary.deleteMessage)
-        }
+        .deleteTagConfirmation(summary, isPresented: $isConfirmingDelete, delete: delete)
     }
 
     private var editLabel: Text {
         Text("Edit", comment: "Tags: a row's swipe action and VoiceOver action that opens the sheet that renames the tag.")
+    }
+
+    /// Short, so the three tiles stay circles: "Reminders" widened them into ovals (#378).
+    private var listLabel: Text {
+        Text("List", comment: "Tags: the word under a row's swipe tile that opens the tag's reminders. Short, so the tile stays a circle.")
+    }
+
+    private var remindersLabel: Text {
+        Text("Reminders", comment: "Tags: a row's VoiceOver action that opens the tag's reminders.")
     }
 
     private var deleteLabel: Text {
@@ -139,21 +140,12 @@ private struct TagRowContent: View {
             VStack(alignment: .leading, spacing: Design.Spacing.line) {
                 Text(verbatim: summary.tag.label)
                     .font(.body)
-                Text(styledDetail)
+                Text(summary.styledCounts)
                     .font(.subheadline)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
         }
         .accessibilityElement(children: .combine)
-    }
-
-    /// The bold part in the negative color, as the mockup's `note-warn`.
-    private var styledDetail: AttributedString {
-        var text = AttributedString(localized: summary.counts)
-        for run in text.runs where run.inlinePresentationIntent?.contains(.stronglyEmphasized) == true {
-            text[run.range].foregroundColor = Color.negative
-        }
-        return text
     }
 }
 

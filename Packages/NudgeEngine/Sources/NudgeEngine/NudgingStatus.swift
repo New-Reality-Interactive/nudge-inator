@@ -10,9 +10,13 @@ public struct NudgingStatus: Equatable, Sendable {
     public var nudgesInAll: Int
     /// The urgency of the latest nudge sent.
     public var urgency: Urgency
-    /// The nudge still to come, or `nil` after the last one, or when the next occurrence of its
-    /// repeat falls due first and takes over.
+    /// The next nudge that will arrive, or `nil` after the last one, when quiet hours hold every
+    /// one left, or when the next occurrence of its repeat falls due first and takes over.
     public var nextNudge: NextNudge?
+    /// Quiet Now is on and holds every nudge left, so `nextNudge` is `nil` for now: turning Quiet
+    /// Now off brings the rest back, where after the last nudge, or under a schedule that holds
+    /// the rest, there is nothing to come (#379's phone check).
+    public var isHeldByQuietNow: Bool = false
     /// When it closes as Missed, by its give-up limit or a take-over, unless it's Done first.
     public var missedAt: Date
 }
@@ -66,17 +70,20 @@ extension Engine {
         let missedAt = min(giveUpTime, takeOverTime ?? giveUpTime)
         // Cut at the take-over, as the plan's ladder is.
         let nudgeTimes = nudgeTimes(of: reminder, dueAt: occurrence.dueTime, takenOverAt: takeOverTime)
-        let nextNudge = nudgeTimes.indices.dropFirst(nudgesSent).first.map { index in
+        // A held nudge won't arrive, so the next one named is the first after it that will.
+        let nextNudge = nudgeTimes.indices.dropFirst(nudgesSent).first { !isHeld(firingAt: nudgeTimes[$0]) }.map { index in
             let urgency = strength.urgency(ofNudge: index + 1)
             let delivery = nudgeDelivery(of: reminder, firingAt: nudgeTimes[index], urgency: urgency)
             return NextNudge(nudgeNumber: index + 1, fireTime: nudgeTimes[index], urgency: urgency, delivery: delivery)
         }
+        let nudgesLeft = nudgeTimes.count > nudgesSent
         return NudgingStatus(
             dueTime: occurrence.dueTime,
             nudgesSent: nudgesSent,
             nudgesInAll: nudgeTimes.count,
             urgency: strength.urgency(ofNudge: nudgesSent),
             nextNudge: nextNudge,
+            isHeldByQuietNow: nextNudge == nil && nudgesLeft && quietHours.quietNowSince != nil,
             missedAt: missedAt
         )
     }

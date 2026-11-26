@@ -99,13 +99,18 @@ final class ClosedOccurrenceRecord {
     var nudgeNumber: Int?
     var closedAt: Date
     var nudgesSent: Int
+    /// How many of `nudgesSent` quiet hours held (schema version 5), fixed with the closing. `nil`
+    /// for a closing saved before quiet hours, which the lightweight stage opens with none: the
+    /// engine reads it as none held.
+    var nudgesHeld: Int?
 
-    init(dueTime: Date, state: String, nudgeNumber: Int?, closedAt: Date, nudgesSent: Int) {
+    init(dueTime: Date, state: String, nudgeNumber: Int?, closedAt: Date, nudgesSent: Int, nudgesHeld: Int?) {
         self.dueTime = dueTime
         self.state = state
         self.nudgeNumber = nudgeNumber
         self.closedAt = closedAt
         self.nudgesSent = nudgesSent
+        self.nudgesHeld = nudgesHeld
     }
 }
 

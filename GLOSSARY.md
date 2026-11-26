@@ -106,7 +106,7 @@ What can still reach the person with the permissions they've given: how a nudge 
 The number of nudges or span of time after which an open occurrence stops nudging and closes as Missed.
 
 **Missed**:
-How an occurrence closes when it hits its give-up limit, or when the next occurrence takes over while it is still nudging.
+How an occurrence closes when it hits its give-up limit, or when the next occurrence takes over while it is still nudging. Held nudges count toward both, so an occurrence can be Missed with nothing ever sounding.
 
 **Paused**:
 The state of a reminder that has stopped nudging without being lost. Pause closes its Nudging occurrence as Skipped and silences its ringing alarm, and anything due while it is paused is Skipped too. Resume brings it back at its next future due time.
@@ -116,8 +116,28 @@ _Avoid_: Disabled, suspended
 How an occurrence closes when its reminder is paused while it is Nudging, or when it falls due while the reminder is paused or waiting to be accepted, or when a sender's change reaches a copy that is Nudging. It isn't counted as Missed.
 _Avoid_: Cancelled
 
+**Quiet hours**:
+A person's set of quiet hours schedules, during which no nudge is delivered, alarms and Relentless ones included. A time is quiet when any schedule that is on covers it, or when Quiet Now was on by then; with none on and Quiet Now off, nothing is quiet. Not Break through Focus, which is about a nudge sounding through a system Focus, and not a Connection's Quiet.
+_Avoid_: Do not disturb, silent hours, mute
+
+**Quiet Now**:
+A single on or off state beside the quiet hours schedules (#497). While it is on, no nudge is delivered, alarms and Relentless ones included, from the moment it was turned on until it is turned off; it never ends by itself, whatever the schedules say. Its nudges are held nudges, so a reminder can still close as Missed. Kept with the schedules, with the moment it was turned on. Delete All Data turns it off.
+_Avoid_: Do not disturb, mute, snooze, pause (that is one reminder's)
+
+**Quiet hours schedule**:
+One window of quiet hours: a start time of day, an end time of day, the days of the week it starts on, and an on or off state. If its end is not after its start it runs through midnight into the next day (10 PM to 7 AM on Sunday ends on Monday 7 AM). It includes its start and ends at its end. Its start can't be its end. It is not a pace: a pace spaces a reminder's nudges, a schedule says when none is delivered.
+_Avoid_: Pace, quiet period, quiet time
+
+**Held nudge**:
+A nudge left out of the plan because its time is quiet. It counts as dismissed, so the ladder moves on without it and no catch-up nudge follows.
+_Avoid_: Skipped (that is an occurrence's closing), suppressed, snoozed
+
 **Tag**:
 A one-word label (`#home`) on a reminder, used only to filter. Never shown in alerts.
+
+**Tag details**:
+The page a tag row on the Tags tab opens: the tag's tile, name and counts, and a Reminders row. Distinct from the tag's reminders page, the list of the reminders with the tag, which the Reminders row opens.
+_Avoid_: Tag page, tag screen (say which: Tag details or the tag's reminders)
 
 **My Day**:
 Today's occurrences in time order, with Done, Nudging, Missed and Left counts.

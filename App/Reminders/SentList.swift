@@ -81,6 +81,7 @@ private struct SentGroups: View {
                 } header: {
                     // The banner, then the count, above the groups, as the mockup's `viewSentTab`.
                     VStack(alignment: .leading, spacing: Design.Spacing.s3) {
+                        QuietHoursBannerView()
                         SharingBannerView(banner: banner)
                         CountHeaderRow(count: screen.countText, countFocus: $countFocused)
                     }
@@ -182,9 +183,9 @@ private struct SentRowView: View {
 
 private extension View {
     /// The row's value, only when it has one: a one-off row reads its label alone, as before.
-    @ViewBuilder func accessibilityValue(spoken value: String?) -> some View {
+    @ViewBuilder func accessibilityValue(spoken value: LocalizedStringResource?) -> some View {
         if let value {
-            accessibilityValue(Text(verbatim: value))
+            accessibilityValue(Text(value))
         } else {
             self
         }
@@ -226,7 +227,7 @@ private struct SentHistoryCell: View {
 
     var body: some View {
         VStack(spacing: Design.Spacing.line) {
-            Text(verbatim: day.initial)
+            Text(day.initial)
                 .font(day.isToday ? .footnote.weight(.semibold) : .footnote)
             // Every glyph in the box Done's takes, so a short one (a minus, a ✕) doesn't make its
             // cell shorter and drop its initial below the others' (the #207 phone check).
@@ -313,7 +314,7 @@ private struct NoOneToSendToView: View {
     let manageConnections: () -> Void
 
     var body: some View {
-        ScrollView {
+        RemindersEmptyStateScroll {
             BannerAboveEmptyState(banner: banner)
             ContentUnavailableView {
                 EmptyStateLabel(systemImage: "person.2") {
@@ -332,7 +333,6 @@ private struct NoOneToSendToView: View {
                 }
             }
         }
-        .centeredWhenShort()
     }
 }
 
@@ -342,7 +342,7 @@ private struct NothingSentView: View {
     let banner: SharingBanner?
 
     var body: some View {
-        ScrollView {
+        RemindersEmptyStateScroll {
             BannerAboveEmptyState(banner: banner)
             ContentUnavailableView {
                 EmptyStateLabel(systemImage: "list.bullet.clipboard") {
@@ -355,7 +355,6 @@ private struct NothingSentView: View {
                     .buttonStyle(.bordered)
             }
         }
-        .centeredWhenShort()
     }
 }
 

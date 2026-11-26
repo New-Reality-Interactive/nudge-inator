@@ -37,6 +37,8 @@ public enum DeviceSeed {
 
     /// Loading a set again replaces its reminders, so one copy is left.
     private static func load(_ set: SeedSet, into target: some SeedTarget, record store: some SeedRecordStore) {
+        // Read once: the window, the span and every due time count from the same instant.
+        let now = target.now
         var record = store.read()
         var loaded = record.sets[set.name] ?? SeedRecord.Loaded()
 
@@ -61,7 +63,7 @@ public enum DeviceSeed {
 
         // Only the first load of a setting keeps its value, whichever set that is: a later load,
         // of this set or another, would save a seeded value as the original.
-        for (setting, value) in set.settings {
+        for (setting, value) in set.settings(at: now, calendar: .autoupdatingCurrent) {
             let keptByAnotherSet = otherSets.contains { $0.earlierSettings[setting.rawValue] != nil }
             if loaded.earlierSettings[setting.rawValue] == nil, !keptByAnotherSet {
                 loaded.earlierSettings[setting.rawValue] = target.setting(setting)
@@ -69,12 +71,23 @@ public enum DeviceSeed {
             target.setSetting(setting, to: value)
         }
 
-        // Written before the reminders, so a launch that stops partway can still be removed.
+        // A load again replaces the earlier span.
+        if let addedAt = loaded.quietSpanAddedAt {
+            target.removeQuietSpan(replacedAt: addedAt)
+        }
+        loaded.quietSpanAddedAt = set.quietHoursBefore == nil ? nil : now
+
+        // Written before the span and the reminders, so a launch that stops partway can still be removed.
         loaded.reminderIDs = set.reminders.map(\.id)
         record.sets[set.name] = loaded
         store.write(record)
 
-        let now = target.now
+        // Before the reminders, so their plan reads it.
+        if let span = set.quietHoursBefore {
+            let start = now.addingTimeInterval(span.startIn)
+            target.addQuietSpan(from: start, to: start.addingTimeInterval(span.length), replacedAt: now)
+        }
+
         for seeded in set.reminders {
             let tagIDs = seeded.tagNames.compactMap { tagIDsByName[$0] }
             target.add(seeded.reminder(tagIDs: tagIDs, now: now))
@@ -104,12 +117,18 @@ public enum DeviceSeed {
         }
 
         for loaded in loadedSets {
+            if let addedAt = loaded.quietSpanAddedAt {
+                target.removeQuietSpan(replacedAt: addedAt)
+            }
             for (name, value) in loaded.earlierSettings {
                 if let setting = SeedSetting(rawValue: name) {
                     target.setSetting(setting, to: value)
                 }
             }
         }
+
+        // Whatever sets were loaded: a check can turn it on by hand (#497).
+        target.turnQuietNowOff()
 
         store.write(SeedRecord())
     }

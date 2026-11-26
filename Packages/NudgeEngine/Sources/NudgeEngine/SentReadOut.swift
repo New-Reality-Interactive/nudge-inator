@@ -111,17 +111,21 @@ public struct SentReadOut: Equatable, Sendable {
     }
 
     /// Builds the read-out. A person with nothing sent has no group, and a copy of a connection the
-    /// sender no longer holds is left out. People are ordered by name without regard to case, then
-    /// by connection ID; a person's rows by the date the sent reminder was made, then by its ID.
-    /// The same input in any order gives the same read-out. The name order is deliberately not
-    /// localized, so it is the same on every iPhone and in every test; a screen that wants the
-    /// person's own locale's order sorts the people again.
+    /// sender no longer holds is left out. People are ordered by name in `nameOrder`, the person's
+    /// locale's unless told otherwise (ticket 335), then by connection ID; a person's rows by the
+    /// date the sent reminder was made, then by its ID. The same input in any order gives the same
+    /// read-out.
     ///
     /// `isWaitingToSync` says which copies' send or revision hasn't gone through iCloud yet (GLOSSARY.md,
     /// Waiting to sync): the sender's app knows from its outbox, which the engine doesn't hold.
-    public init(connections: [SentConnection], copies: [SentCopy], isWaitingToSync: (SentCopy) -> Bool = { _ in false }) {
+    public init(
+        connections: [SentConnection],
+        copies: [SentCopy],
+        nameOrder: NameOrder = NameOrder(),
+        isWaitingToSync: (SentCopy) -> Bool = { _ in false }
+    ) {
         let copiesByConnection = Dictionary(grouping: copies, by: \.connectionID)
-        people = Self.inOrder(connections)
+        people = Self.inOrder(connections, nameOrder: nameOrder)
             .compactMap { connection in
                 guard let sent = copiesByConnection[connection.id], !sent.isEmpty else { return nil }
                 let rows = sent
@@ -131,23 +135,15 @@ public struct SentReadOut: Equatable, Sendable {
             }
     }
 
-    /// `connections` in the order the read-out lists its people: by name without regard to case,
-    /// then by connection ID. What lists the people beside the read-out, such as a filter, uses it.
-    public static func inOrder(_ connections: [SentConnection]) -> [SentConnection] {
-        connections.sorted { isOrdered($0, before: $1) }
+    /// `connections` in the order the read-out lists its people: by name in `nameOrder`, then by
+    /// connection ID. What lists the people beside the read-out, such as a filter, uses it.
+    public static func inOrder(_ connections: [SentConnection], nameOrder: NameOrder = NameOrder()) -> [SentConnection] {
+        connections.sorted { nameOrder.isOrdered($0.name, $0.id, before: $1.name, $1.id) }
     }
 
     private static func isOrdered(_ a: SentCopy, before b: SentCopy) -> Bool {
         if a.createdAt != b.createdAt { return a.createdAt < b.createdAt }
         return a.reminderID.uuidString < b.reminderID.uuidString
-    }
-
-    private static func isOrdered(_ a: SentConnection, before b: SentConnection) -> Bool {
-        switch a.name.compare(b.name, options: .caseInsensitive) {
-        case .orderedAscending: true
-        case .orderedDescending: false
-        case .orderedSame: a.id.uuidString < b.id.uuidString
-        }
     }
 }
 

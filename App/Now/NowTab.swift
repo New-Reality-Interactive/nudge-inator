@@ -27,6 +27,7 @@ struct NowTab: View {
                     } openDetails: { reminderID in
                         path.append(OpenedReminder(id: reminderID))
                     }
+                    .quietHoursHolding(model, at: context.date)
                 }
             }
             .navigationTitle(Text(AppTab.now.title))
@@ -161,6 +162,7 @@ private struct NowHeader: View {
             if let reach {
                 PermissionBanners(reach: reach)
             }
+            QuietHoursBannerView()
             Text("Nudging", comment: "Now: section header for the reminders nudging you now.")
                 .font(.title3.bold())
                 // The label color, as the mockup's big section header: a list header's own
@@ -172,6 +174,7 @@ private struct NowHeader: View {
 
     /// The subhead's bold count in red, "needs you now", as the mockup's `<strong>`.
     private static func styled(_ subhead: LocalizedStringResource) -> AttributedString {
+        // String needed: styled, its bold count turned red.
         var text = AttributedString(localized: subhead)
         for run in text.runs where run.inlinePresentationIntent?.contains(.stronglyEmphasized) == true {
             text[run.range].foregroundColor = .negative

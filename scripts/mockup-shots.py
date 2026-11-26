@@ -29,6 +29,10 @@ SCREENS = {
   "myday-filter": ("state.tab='day';nav();openDayFilter()", 1),
   "tags": ("state.tab='tags';nav()", 2),
   "tag-home": ("state.tab='tags';nav();push({kind:'tag',id:'home'})", 2),
+  "tag-details": ("state.tab='tags';nav();push({kind:'tagdetails',id:'home'})", 1),
+  "tag-details-none": ("state.tab='tags';nav();push({kind:'tagdetails',id:'yoga'})", 1),
+  "tag-swipe": ("state.tab='tags';nav();revealTagSwipe('home')", 1),
+  "tag-deleted": ("state.tab='tags';nav();push({kind:'tagdetails',id:'yoga'});tags=tags.filter(t=>t.id!=='yoga');render()", 1),
   "tags-edit": ("state.tab='tags';state.tagEdit=true;nav()", 1),
   "tag-new": ("state.tab='tags';nav();openTagSheet()", 1),
   "settings": ("state.tab='settings';nav()", 3),
@@ -195,6 +199,33 @@ SCREENS = {
   "tutorial-how-alarm-sounds-work-p1": ("setTimeout(()=>{document.getElementById('c-tt-sound').click();state.sheet.page=0;render()},200)", 1),
   "tutorial-how-alarm-sounds-work-p2": ("setTimeout(()=>{document.getElementById('c-tt-sound').click();state.sheet.page=1;render()},200)", 1),
   "tutorial-how-alarm-sounds-work-p3": ("setTimeout(()=>{document.getElementById('c-tt-sound').click();state.sheet.page=2;render()},200)", 1),
+  # The Missed note (#369). Only a mockup with it draws these; now and myday show it too.
+  "now-last-24-hours": ("setTimeout(()=>document.getElementById('c-mn-now').click(),200)", 1),
+  "details-missed-held": ("setTimeout(()=>document.getElementById('c-mn-details').click(),200)", 3),
+  # The Quiet Hours page (#370, #371). Only a mockup with it draws these; settings shows its row too.
+  "quiet-hours": ("setTimeout(()=>document.getElementById('c-qh-page').click(),200)", 1),
+  "quiet-hours-several": ("setTimeout(()=>document.getElementById('c-qh-many').click(),200)", 1),
+  "settings-quiet-hours-active": ("setTimeout(()=>document.getElementById('c-qh-running').click(),200)", 1),
+  "quiet-hours-now":("setTimeout(()=>document.getElementById('c-qh-now').click(),200)", 1),
+  "quiet-hours-empty":("setTimeout(()=>document.getElementById('c-qh-empty').click(),200)", 1),
+  "quiet-hours-add": ("setTimeout(()=>document.getElementById('c-qh-add').click(),200)", 2),
+  "quiet-hours-edit": ("setTimeout(()=>document.getElementById('c-qh-edit').click(),200)", 2),
+  "quiet-hours-same": ("setTimeout(()=>document.getElementById('c-qh-same').click(),200)", 1),
+  "quiet-hours-no-days": ("setTimeout(()=>document.getElementById('c-qh-nodays').click(),200)", 2),
+  "quiet-hours-duplicate": ("setTimeout(()=>document.getElementById('c-qh-dup').click(),200)", 1),
+  "quiet-hours-delete":("setTimeout(()=>document.getElementById('c-qh-delete').click(),200)", 1),
+  # The holding banner (#499), with Quiet Now on. Only a mockup with it draws these.
+  "now-quiet-now-banner": ("setTimeout(()=>document.getElementById('c-qb-now').click(),200)", 1),
+  "myday-quiet-now-banner": ("setTimeout(()=>document.getElementById('c-qb-day').click(),200)", 1),
+  "reminders-quiet-now-banner": ("setTimeout(()=>document.getElementById('c-qb-rems').click(),200)", 1),
+  # How Quiet Hours Work (#468). Only a mockup with it draws these.
+  "tutorial-how-quiet-hours-work-p1": ("setTimeout(()=>{document.getElementById('c-qt-sheet').click();state.sheet.page=0;render()},200)", 1),
+  "tutorial-how-quiet-hours-work-p2": ("setTimeout(()=>{document.getElementById('c-qt-sheet').click();state.sheet.page=1;render()},200)", 1),
+  "tutorial-how-quiet-hours-work-p3": ("setTimeout(()=>{document.getElementById('c-qt-sheet').click();state.sheet.page=2;render()},200)", 1),
+  "tutorial-how-quiet-hours-work-p4": ("setTimeout(()=>{document.getElementById('c-qt-sheet').click();state.sheet.page=3;render()},200)", 1),
+  # My Day on another day (#374, #375). Only a mockup with it draws these.
+  "myday-yesterday": ("setTimeout(()=>document.getElementById('c-od-yesterday').click(),200)", 3),
+  "myday-tomorrow": ("setTimeout(()=>document.getElementById('c-od-tomorrow').click(),200)", 3),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}

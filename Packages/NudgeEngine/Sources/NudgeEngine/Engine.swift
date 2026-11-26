@@ -69,6 +69,13 @@ public struct Engine {
     /// Formats the times and dates in a repeat's summary.
     let locale: Locale
     private(set) var permissions: PermissionStates
+    /// The person's quiet hours now, read through `isQuiet(at:)`.
+    private(set) var quietHours: QuietHours
+    /// Earlier quiet hours, oldest first, with when the app reported a change: a nudge due before
+    /// the change was held or sent under them, which `isHeld(firingAt:)` reads. App-wide, as with
+    /// `replacedPermissions`, but never pruned: a reminder's details show its latest occurrence
+    /// however old, and its held count must stay true (ADR 0007). Only a person's edit adds one.
+    public private(set) var replacedQuietHours: [Replaced<QuietHours>] = []
     /// Earlier permission states, oldest first, with when the app reported a change. A nudge that
     /// fired before the change was delivered under the old states, so its plan item keeps that
     /// delivery. App-wide, so not in a reminder's `History`.
@@ -106,7 +113,8 @@ public struct Engine {
         giveUpLimit: GiveUpLimit = .shipped,
         timeZone: TimeZone = .autoupdatingCurrent,
         locale: Locale = .autoupdatingCurrent,
-        permissions: PermissionStates = PermissionStates()
+        permissions: PermissionStates = PermissionStates(),
+        quietHours: QuietHours = QuietHours()
     ) {
         self.init(
             clock: clock,
@@ -115,7 +123,8 @@ public struct Engine {
             alarmLimit: .shipped,
             timeZone: timeZone,
             locale: locale,
-            permissions: permissions
+            permissions: permissions,
+            quietHours: quietHours
         )
     }
 
@@ -128,7 +137,8 @@ public struct Engine {
         alarmLimit: AlarmLimit,
         timeZone: TimeZone = .autoupdatingCurrent,
         locale: Locale = .autoupdatingCurrent,
-        permissions: PermissionStates = PermissionStates()
+        permissions: PermissionStates = PermissionStates(),
+        quietHours: QuietHours = QuietHours()
     ) {
         self.clock = clock
         self.scheduler = scheduler
@@ -141,6 +151,7 @@ public struct Engine {
         self.calendar = calendar
         self.locale = locale
         self.permissions = permissions
+        self.quietHours = quietHours
     }
 
     /// Replaces the whole list: App opened, the store's reload, and the app's re-plan when time
@@ -210,6 +221,23 @@ public struct Engine {
         applyPlan()
     }
 
+    /// The person's quiet hours after they changed them. Nudges due after now follow them; ones due
+    /// before stay held or sent as they were, so a past occurrence's held count stays true. Quiet
+    /// hours that match the current ones change nothing, so they're ignored.
+    public mutating func update(quietHours: QuietHours) {
+        guard quietHours != self.quietHours else { return }
+        replacedQuietHours.append(Replaced(value: self.quietHours, replacedAt: clock.now))
+        self.quietHours = quietHours
+        applyPlan()
+    }
+
+    /// The `replacedQuietHours` the app saved, handed back at launch, so a past occurrence's held
+    /// count reads as it did. Like `update(histories:)` it applies no plan: send it before
+    /// `update(reminders:)`, which plans once with them in place.
+    public mutating func update(replacedQuietHours: [Replaced<QuietHours>]) {
+        self.replacedQuietHours = replacedQuietHours
+    }
+
     /// The scheduler adapter's report that the alarm for the reminder's nudge firing at
     /// `fireTime` failed with the system's alarm limit (`maximumLimitReached`). That nudge falls
     /// back to a Time Sensitive notification marked `isPastAlarmLimit`; the rest of the ladder
@@ -230,14 +258,11 @@ public struct Engine {
     /// mockup's `ack`: it can race the give-up limit, or come from two places at once, and
     /// neither is something to tell the person about.
     public mutating func markDone(_ reminderID: Reminder.ID) {
-        guard let occurrence = openOccurrence(for: reminderID),
+        guard let reminder = reminder(reminderID),
+              let occurrence = openOccurrence(for: reminderID),
               case let .nudging(nudgeNumber) = occurrence.state
         else { return }
-        historyByReminder[reminderID, default: History()].saved.closedOccurrences[occurrence.dueTime] = Closing(
-            state: .done,
-            closedAt: clock.now,
-            nudgesSent: nudgeNumber
-        )
+        fix(Closing(state: .done, closedAt: clock.now, nudgesSent: nudgeNumber), of: reminder, dueAt: occurrence.dueTime)
         applyPlan()
     }
 
@@ -260,11 +285,7 @@ public struct Engine {
               case let (occurrence, nil) = occurrence(of: reminder, dueAt: dueTime, takenOverAt: nil, asOf: doneAt),
               case let .nudging(nudgeNumber) = occurrence.state
         else { return }
-        historyByReminder[reminderID, default: History()].saved.closedOccurrences[dueTime] = Closing(
-            state: .done,
-            closedAt: doneAt,
-            nudgesSent: nudgeNumber
-        )
+        fix(Closing(state: .done, closedAt: doneAt, nudgesSent: nudgeNumber), of: reminder, dueAt: dueTime)
         applyPlan()
     }
 
@@ -431,15 +452,19 @@ public struct Engine {
         applyPlan()
     }
 
-    /// Fixes how the occurrences that closed so far closed, before the reminder's fields change,
-    /// since the clock would now work them out from the new fields. With `movingNudgeTimes` the new
-    /// fields apply from the next occurrence: due times up to the latest never happened, and the
-    /// system's alarm-limit answers about the old ladder go.
+    /// Fixes how every occurrence that closed so far closed, before the reminder's fields change,
+    /// since the clock would now work them out from the new fields. Every one since the day the
+    /// reminder was made, however old, so My Day on a past day still lists it (#374); none from
+    /// before, which My Day never lists. With `movingNudgeTimes` the new fields apply from the
+    /// next occurrence: due times up to the latest never happened, and the system's alarm-limit
+    /// answers about the old ladder go.
     private mutating func fixOccurrences(of current: Reminder, movingNudgeTimes: Bool) {
         let latest = latestOccurrence(for: current.id)?.dueTime
-        for dueTime in latestAndListedDueTimes(of: current) {
+        let made = calendar.startOfDay(for: current.createdAt)
+        let past = made <= clock.now ? dueTimes(of: current, in: made...clock.now) : []
+        for dueTime in Set([latest].compactMap(\.self) + past).sorted() {
             if let closing = reading(of: current.id, dueAt: dueTime)?.closing {
-                historyByReminder[current.id, default: History()].saved.closedOccurrences[dueTime] = closing
+                fix(closing, of: current, dueAt: dueTime)
             }
         }
         guard movingNudgeTimes else { return }
@@ -450,6 +475,20 @@ public struct Engine {
         if let reported = historyByReminder[current.id]?.reportedAlarmLimitFireTimes {
             historyByReminder[current.id]?.reportedAlarmLimitFireTimes = reported.filter { $0 <= now }
         }
+    }
+
+    /// Records how the occurrence due at `dueTime` closed, with its held count fixed from the
+    /// reminder's ladder as it is now, before any Edit moves it.
+    private mutating func fix(_ closing: Closing, of reminder: Reminder, dueAt dueTime: Date) {
+        var fixed = closing
+        fixed.nudgesHeld = closing.nudgesHeld ?? nudgesHeld(of: reminder, dueAt: dueTime, nudgesSent: closing.nudgesSent)
+        historyByReminder[reminder.id, default: History()].saved.closedOccurrences[dueTime] = fixed
+    }
+
+    /// How many of the occurrence's first `nudgesSent` nudges quiet hours held, each read as the
+    /// schedules were when it was due. A take-over can only cut the ladder after them.
+    func nudgesHeld(of reminder: Reminder, dueAt dueTime: Date, nudgesSent: Int) -> Int {
+        nudgeTimes(of: reminder, dueAt: dueTime, takenOverAt: nil).prefix(nudgesSent).count { isHeld(firingAt: $0) }
     }
 
     /// The sender's revision of a received reminder, passing the lock (ADR 0005). `revised` carries
@@ -652,10 +691,12 @@ public struct Engine {
 
     /// An occurrence's ladder, stopped where the next occurrence takes over (the mockup's
     /// `simulate` with `until`), so the plan never nudges about two occurrences at once.
-    /// `takeOverTime` is the next due time, `nil` if the repeat has none.
+    /// `takeOverTime` is the next due time, `nil` if the repeat has none. A held nudge is left out
+    /// and the rest keep their numbers, so it counts as dismissed (ADR 0007).
     private func ladder(of reminder: Reminder, dueAt dueTime: Date, takenOverAt takeOverTime: Date?) -> [SchedulePlan.Item] {
         let nudgeTimes = nudgeTimes(of: reminder, dueAt: dueTime, takenOverAt: takeOverTime)
         return nudgeTimes.enumerated().compactMap { index, fireTime in
+            guard !isHeld(firingAt: fireTime) else { return nil }
             let urgency = reminder.strength.urgency(ofNudge: index + 1)
             guard let delivery = delivery(of: reminder, firingAt: fireTime, urgency: urgency) else { return nil }
             return SchedulePlan.Item(
@@ -702,6 +743,13 @@ public struct Engine {
     /// at a change counts as delivered, as with titles.
     func permissions(firingAt fireTime: Date) -> PermissionStates {
         replacedPermissions.value(firingAt: fireTime) ?? permissions
+    }
+
+    /// Whether quiet hours held the nudge firing at `fireTime`: read under the quiet hours in force
+    /// when it was due, if a change came after, otherwise the current ones. A nudge due exactly at
+    /// a change is read under the old ones, as with permissions.
+    func isHeld(firingAt fireTime: Date) -> Bool {
+        isQuiet(at: fireTime, under: replacedQuietHours.value(firingAt: fireTime) ?? quietHours)
     }
 
     /// The spec's Delivery by urgency rule, with the weaker fallbacks for denied permissions and
@@ -800,7 +848,7 @@ public struct Engine {
     }
 
     /// The latest occurrence's due time, however old, then each the Now tab's Last 24 Hours can
-    /// list, which may repeat it. What an Edit fixes, so what it moves due times away from.
+    /// list, which may repeat it: the ones an alarm may still be ringing for.
     private func latestAndListedDueTimes(of reminder: Reminder) -> [Date] {
         [latestOccurrence(for: reminder.id)?.dueTime].compactMap(\.self) + dueTimes(of: reminder, in: earliestListedDueTime...clock.now)
     }
@@ -855,7 +903,10 @@ public struct Engine {
         func closed(_ closing: Closing) -> (occurrence: Occurrence, closing: Closing?) {
             (Occurrence(dueTime: dueTime, state: closing.state), closing)
         }
-        if let closing = historyByReminder[reminder.id]?.saved.closedOccurrences[dueTime] {
+        if var closing = historyByReminder[reminder.id]?.saved.closedOccurrences[dueTime] {
+            // Saved with no count only before quiet hours, when nothing could be held. Its
+            // reminder's ladder may have moved since, so it isn't read.
+            closing.nudgesHeld = closing.nudgesHeld ?? 0
             return closed(closing)
         }
         let nudgeTimes = reminder.nudgeTimes(from: dueTime, within: giveUpLimit)
@@ -892,11 +943,17 @@ public struct Closing: Equatable, Sendable {
     public var state: OccurrenceState
     public var closedAt: Date
     public var nudgesSent: Int
+    /// How many of `nudgesSent` quiet hours held, fixed when the engine fixes the closing, so an
+    /// Edit that later moves the reminder's nudge times can't change it (ADR 0007). `nil` for a
+    /// closing the clock works out, whose count is read from the reminder's ladder. One saved with
+    /// none was saved before quiet hours, and reads as 0.
+    public var nudgesHeld: Int?
 
-    public init(state: OccurrenceState, closedAt: Date, nudgesSent: Int) {
+    public init(state: OccurrenceState, closedAt: Date, nudgesSent: Int, nudgesHeld: Int? = nil) {
         self.state = state
         self.closedAt = closedAt
         self.nudgesSent = nudgesSent
+        self.nudgesHeld = nudgesHeld
     }
 }
 

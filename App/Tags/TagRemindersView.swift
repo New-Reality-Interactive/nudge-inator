@@ -28,13 +28,7 @@ struct TagRemindersView: View {
                     .navigationTitle(Text(verbatim: screen.tag.label))
                     .toolbar { ToolbarItem(placement: .primaryAction) { NewReminderButton(tagIDs: [tagID]) } }
             } else {
-                ContentUnavailableView {
-                    EmptyStateLabel(systemImage: "tag.slash") {
-                        Text("Tag Deleted", comment: "A tag's screen after the tag was deleted.")
-                    }
-                } description: {
-                    Text("This tag was deleted. Its reminders are still there.", comment: "A tag's screen after the tag was deleted.")
-                }
+                TagDeletedView()
             }
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -101,7 +95,7 @@ struct TagReminderRowView: View {
                 VStack(alignment: .leading, spacing: Design.Spacing.line) {
                     Text(verbatim: row.title)
                         .font(.body)
-                    Text(detail)
+                    detail
                         .font(.subheadline)
                         .foregroundStyle(Color(uiColor: .secondaryLabel))
                 }
@@ -115,10 +109,10 @@ struct TagReminderRowView: View {
     @ViewBuilder private var timeColumn: some View {
         if let time = row.time, let day = row.day {
             VStack(alignment: .leading, spacing: 0) {
-                Text(verbatim: time)
+                Text(time)
                     .font(.body)
                     .monospacedDigit()
-                Text(verbatim: day)
+                Text(day)
                     .font(.caption)
                     .foregroundStyle(Color(uiColor: .secondaryLabel))
             }
@@ -130,16 +124,17 @@ struct TagReminderRowView: View {
         }
     }
 
-    /// The tags, this screen's in bold, then the schedule.
-    private var detail: AttributedString {
+    /// The tags, this screen's in bold, then the schedule. SwiftUI puts the sentence into the
+    /// view's language as it draws.
+    private var detail: Text {
         var tags = AttributedString()
         for (index, tag) in row.tags.enumerated() {
             var text = AttributedString(index == 0 ? tag.text : " " + tag.text)
             if tag.isChosen { text.inlinePresentationIntent = .stronglyEmphasized }
             tags += text
         }
-        guard !row.tags.isEmpty else { return AttributedString(row.schedule) }
-        return AttributedString(localized: "\(tags) · \(row.schedule)", comment: "A tag's screen: under a reminder's title. 1: its tags, such as \"#home #errands\", this screen's tag in bold. 2: its schedule, such as \"Every day at 8:00 AM\".")
+        guard !row.tags.isEmpty else { return Text(row.schedule) }
+        return Text("\(tags) · \(row.schedule)", comment: "A tag's screen: under a reminder's title. 1: its tags, such as \"#home #errands\", this screen's tag in bold. 2: its schedule, such as \"Every day at 8:00 AM\".")
     }
 }
 

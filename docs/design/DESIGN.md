@@ -66,6 +66,8 @@ colors:
   tile-blue: '#1E6EF4'
   # Swipe action tiles: Done green, Delete red and Edit blue (tile-red and tile-blue above).
   tile-green: '#008932'
+  # Swipe action tile that goes somewhere (Reminders on a tag's row): Lagoon teal, the accent's light value.
+  tile-teal: '#04666B'
 typography:
   # Platform text styles only. Sizes are at the default (Large) size and scale with Dynamic Type.
   family:
@@ -182,6 +184,8 @@ components:
     background: '{colors.tile-red}'
   swipe-edit:
     background: '{colors.tile-blue}'
+  swipe-reminders:
+    background: '{colors.tile-teal}'
   alarm-tint:
     stop-open-tint: '{colors.accent-dark}'
 ---
@@ -249,8 +253,8 @@ Increased Contrast and dark Increased Contrast values (frontmatter suffixes).
   no Filter button has a badge: on iOS 27 the system draws it at the text size, so it covers
   the icon. My Day's chosen-tag tokens and each button's VoiceOver label carry the count there.
 - **Tiles** are Apple's Increased Contrast light values in every mode with white glyphs. The swipe
-  actions are `{colors.tile-green}` (Done), `{colors.tile-red}` (Delete) and `{colors.tile-blue}` (Edit). Settings rows: red (Notifications, Badges, Delete All Data), orange
-  (Alarms), gray (About, Open iOS Settings, Default Pace, Default Alarm Sound, the Tutorials rows, and About's Privacy Policy
+  actions are `{colors.tile-green}` (Done), `{colors.tile-red}` (Delete), `{colors.tile-blue}` (Edit) and `{colors.tile-teal}` (Reminders, on a tag's row). Settings rows: red (Notifications, Badges, Delete All Data), orange
+  (Alarms), gray (About, Default Pace, Default Alarm Sound, the Tutorials rows, and About's Privacy Policy
   and Support), blue (Send a Test Nudge, Sharing). Tiles are icons for rows, not
   statuses, so "one color, one meaning" does not apply to them.
 
@@ -369,7 +373,7 @@ except in the tab and navigation bars. Verify names against the mockup.
 |---|---|
 | Standard actions | `checkmark`, `xmark`, `trash`, `plus`, `magnifyingglass` and `xmark.circle.fill` (Search, drawn by the system), `line.3.horizontal.decrease` (the Filter button of My Day, Reminders and Tags and its Filter menu item, and the no-match state's image when only the sheet's filters narrow the list; `xmark` is its Clear All Filters) |
 | Sort | `arrow.up.arrow.down` (the Reminders and Tags tabs' Sort buttons, which open the Sort menu) |
-| Swipe | `pencil` (the Tags tab's Edit tile) |
+| Swipe | `pencil` (the Tags tab's Edit tile), `list.bullet.clipboard` (its List tile, and the Reminders row on a tag's details page) |
 | Tabs | `bell` (Now), `calendar` (My Day), `list.bullet.clipboard` (Reminders), `tag` (Tags), `gearshape` (Settings) |
 | Urgency | `arrow.up` (High), `alarm` (Urgent) |
 | Status | `checkmark.circle.fill` (Done), `bell.slash`, `clock`, `exclamationmark.triangle`, `lock` (a field locked while nudging, always beside its reason as text) |
@@ -511,8 +515,8 @@ The Reminders tab's tools, in its layout, so they're learned once.
   Apply), Reset at the bottom and the Discard Changes prompt. One row, Has no reminders, with the
   footer "Shows only tags that no reminder uses." and what Apply would show.
 - **Rows:** the tag tile, name and counts, with content at least 48 pt tall for the swipe (Swipe
-  actions). A tap opens the tag's reminders. A row that leaves, after a delete or when the filter
-  excludes it, fades as its height closes up, and the count follows.
+  actions). A tap opens the tag's details page (Tag details page, below). A row that leaves, after a
+  delete or when the filter excludes it, fades as its height closes up, and the count follows.
 - **Help text:** static, not a dismissible tip, for a person new to tags. The list's footer, in
   `{typography.footnote}` and wrapping at large text and in landscape: "Tags are labels you add to
   reminders. Choose one to see every reminder that has it." The no-tags description: "Tags are labels, like #home or #errands, that you add
@@ -523,6 +527,26 @@ The Reminders tab's tools, in its layout, so they're learned once.
   `line.3.horizontal.decrease`, a title, a line naming what's narrowing the list and a bordered
   Clear button (Clear Search, Clear Filter, Clear Search and Filter), with no help text. The header
   row stays above it.
+
+### Tag details page
+Pushed on the Tags tab from a tag's row, as a reminder's details page is from Reminders (#376). The
+mockup is `docs/mockups/2026-11-23-tag-details/`.
+- **Bar:** Back, and Edit at the trailing end, as on a reminder's details, with an empty inline title; the
+  hero carries the name. Edit's VoiceOver label names the tag ("Edit #home") and it opens the Rename Tag
+  sheet, unchanged; the page shows the new name when it closes.
+- **Hero:** a card with the tag's tile (a round `{colors.tile-gray}` tile with `tag`, 56 pt at the default
+  size and scaling with the text) beside the name in `{typography.title2}` bold and, under it, the counts line
+  a row shows ("3 reminders · 2 today · 1 nudging", the nudging part in `{colors.negative}`), read from the
+  same summary so the page and the list agree. At accessibility sizes the tile sits above the text.
+- **Reminders row:** a row with `list.bullet.clipboard` before the word, both in `{colors.accent}` as Pause Reminder is on a reminder's details (at accessibility sizes the glyph sits above the word, so it doesn't break mid-word), and a gray chevron, which opens the tag's reminders page, which is unchanged
+  (its sections, count header, + that starts a reminder with the tag chosen, and Tag Deleted state). The page has
+  its own destination, so the row and, later, the row's swipe both open it; Back returns to whichever did.
+- **Tag Deleted:** both of a tag's pages show `tag.slash`, "Tag Deleted" and "This tag was deleted. Its
+  reminders are still there." when the tag goes while the page is open.
+- **Delete Tag:** a destructive row with `trash` in a section of its own, below Reminders, as Delete Reminder
+  is on a reminder's details. It asks the Tags row's question (the tag as its title, how many reminders use it
+  and that they stay) and, once confirmed, deletes the tag and goes back to the list.
+- **Read again** at every change and every minute.
 
 ### Reminder form's Repeat
 - The Repeat row sits under Starts and shows the current choice. A tap opens a
@@ -593,6 +617,42 @@ The Reminders tab's tools, in its layout, so they're learned once.
   the banner's width with `{rounded.control}` corners, as a nudge card's Done does; its label
   wraps there rather than truncating.
 
+### Quiet hours banner
+What the quiet hours banner mockup (`docs/mockups/2026-11-22-quiet-hours-banner/`, #499) adds. It
+rewrites nothing above.
+- **Shown** on Now, My Day and Reminders (Mine and Sent, empty states too) while Quiet Now is on or a
+  schedule that's on covers the time, the same test as Settings' Quiet Hours row. It leads the content
+  after any permission banners, above the lists, counts and filters; on Reminders it follows the
+  Mine | Sent control, ahead of the sharing banner. On Reminders' empty states the banner and the
+  empty state scroll as one page under that control: the banner at the top, the empty state centered
+  in what is left (#516). Pinned, a banner taller than the screen pushed the control over the title.
+- **Look:** the permission banner's card (`{colors.cell}`, `{rounded.card}`, 2 pt border) with a
+  `{colors.neutral}` border and a `bell.slash` icon: being held is the person's own choice, not
+  a problem to fix, so it uses neither red nor orange. A bold title, "Quiet hours are holding nudges",
+  and under it, in `{colors.secondary-label}`, "Until 9:00 AM." (the latest end of the schedules
+  running, as Settings' Until reads) or "Until you turn it off." for Quiet Now, then "Change this in
+  Settings, under Quiet Hours."
+- **Not tappable** (the developer's call, #499): it never leaves the tab, so it has no chevron, button
+  or link styling, and names where to change quiet hours in words alone. VoiceOver reads it as one
+  element. At accessibility text sizes the icon goes above the text, as the permission banner's does.
+
+### Settings shortcuts
+What the Settings rows mockup (`docs/mockups/2026-11-23-settings-rows/`, #372) adds. It rewrites
+nothing above except that Settings no longer has an Open iOS Settings row.
+- **Notifications, Alarms and Badges are buttons:** each keeps its tile, label and status (and the
+  status colors) and ends in the chevron (`chevron.forward`, `{colors.tertiary-label}`) after the
+  status. A row with a status and a chevron together is the exception to the Settings row's "status
+  or a chevron" below. Rows that open iOS Settings use the chevron, not `arrow.up.forward`, which
+  stays for a row that opens a web page.
+- **Where they go:** Notifications and Badges open the app's notification settings in iOS Settings;
+  Alarms opens the app's own page there, since alarms are reached only from it. A row opens Settings
+  whatever it reads, On included.
+- **VoiceOver:** one button per row that reads its label and status, then a short hint ("Opens
+  notification settings."; Alarms: "Opens the app's settings.").
+- **No Open iOS Settings row** (the developer's call, 2026-11-23): the three rows are the way in, so
+  the row that appeared only while something was off is gone. The permission banners keep their
+  Open Settings button.
+
 ### Settings row
 - Icon tile, label in `{typography.body}`, trailing status in `{colors.secondary-label}` (or
   `{colors.negative}` when off) or a chevron. The Badges row is the exception: its status is
@@ -607,14 +667,18 @@ The Reminders tab's tools, in its layout, so they're learned once.
   Colors.
 
 ### Swipe actions
-- **Token:** `swipe-done`, `swipe-delete`, `swipe-edit`. Trailing swipe shows Done: green tile, white
+- **Token:** `swipe-done`, `swipe-delete`, `swipe-edit`, `swipe-reminders`. Trailing swipe shows Done: green tile, white
   `checkmark` and the word "Done". On the Reminders tab's Mine, Edit sits beside it: blue tile, white
   `pencil` and the word "Edit", which opens the Edit Reminder form; then Delete: red tile, white
   `trash` and the word "Delete". Done is offered only while Nudging, at the edge; a row that isn't
   Nudging shows Edit at the edge with Delete beside it. Edit is on the person's own rows only: a
   received copy's row shows Remove (and Done while Nudging), since its sender owns what it says
-  (#429). On Sent and on the Tags tab, Edit is at the edge with Delete beside it; a tag's Edit opens
-  the rename sheet, a sent reminder's its Edit Reminder form. Delete asks first. Nothing is on
+  (#429). On Sent, Edit is at the edge with Delete beside it; a sent reminder's Edit opens its Edit Reminder
+  form. On the Tags tab the tiles are Delete, Edit and Reminders, left to right with Reminders at
+  the edge: a teal (`{colors.tile-teal}`) tile, white `list.bullet.clipboard` and the word
+  "List" (a longer word widens every tile into an oval, #378; VoiceOver's action is still
+  "Reminders"), which opens the tag's reminders page (Back returns to the Tags list); a tag's Edit opens
+  the rename sheet. Teal is for a tile that goes somewhere, blue for one that edits in place. Delete asks first. Nothing is on
   the leading edge, there's no full swipe (ADR 0001), and each tile always shows its glyph and its
   word. There is no Snooze.
 - **Shape:** a tile is the same 50 pt circle on every screen, holding the white glyph, with the word
@@ -671,12 +735,12 @@ sharing paused and offline banner.
   How Sharing Works is no longer in this section: it's under Tutorials (#466).
 - **Tutorials section** (mockups `2026-11-20-tutorials` and `2026-11-20-tutorial-sheets`, #466):
   Settings' last section above Your Data, headed Tutorials, with no footer. One row per feature's
-  tutorial, in the order the features shipped: How It Nudges, How Sharing Works, then How Alarm Sounds
-  Work (#467). Each row is a `{colors.tile-gray}` tile with its feature's symbol (`bell`, `person.2`,
-  `speaker.wave.2`) and its title in the accent, which says it can be tapped, as Send a Test Nudge's
+  tutorial, in the order the features shipped: How It Nudges, How Sharing Works, How Alarm Sounds
+  Work (#467), then How Quiet Hours Work (#468). Each row is a `{colors.tile-gray}` tile with its
+  feature's symbol (`bell`, `person.2`, `speaker.wave.2`, `bell.slash`) and its title in the accent, which says it can be tapped, as Send a Test Nudge's
   does. Every row opens a sheet, so none has a chevron, since the HIG keeps the disclosure indicator
   for drilling in (#423, #470). Every tutorial sheet is the one How Sharing Works uses (below), with
-  its own pages. Only How Sharing Works opens by itself.
+  its own pages. Only How Sharing Works and How Quiet Hours Work open by themselves.
 - **How Sharing Works sheet** (mockup `2026-11-15-sharing-tutorial`, #423): four pages in an inset
   grouped list, inline title How Sharing Works. Each page has decorative pills (an SF Symbol and a
   word in `{colors.label}`, 8 pt apart, on `tertiary-system-fill`, `arrow.forward` between them in
@@ -686,7 +750,8 @@ sharing paused and offline banner.
   `{typography.body}` and rows with a `{colors.tile-blue}` tile, a title in `{typography.body}` and a
   line under it in `{typography.subhead}` `{colors.secondary-label}`, or, on Connect, three numbered
   steps in accent circles (Accent's one exception; capped at 44 pt, dividers from the circle's
-  edge) and a footer. Rows stack at the accessibility
+  edge) and a footer, with an optional lead under the heading, as How Quiet Hours Work's Your
+  Schedules has (#468). Rows stack at the accessibility
   sizes, as Settings rows do. The pages swipe, a paged `TabView` that settles one page at a time
   (#430, mockup `2026-11-16-tutorial-swipe-top-bar`); each page scrolls on its own. Under them,
   pinned and centred, page dots (accent for this page, separator for the others; VoiceOver reads
@@ -712,6 +777,15 @@ sharing paused and offline banner.
   never plays the sound; three rows). Its pills and the Use for All Reminders row reuse the screens'
   own strings, and its tests check that the sentences name Default Alarm Sound, Sound and the tones
   as the screens do.
+- **How Quiet Hours Work sheet** (mockup `2026-11-22-quiet-hours-tutorial`, #468): How Sharing Works'
+  sheet with four pages, inline title How Quiet Hours Work. It opens by itself over the Quiet Hours
+  page the first time that page opens (Close, Done or a swipe ends that for good; an update keeps
+  it; opening it from Settings' row doesn't count), and any time from its row. Rest Without Nudges
+  (`moon.fill` 10:00 PM, an arrow, `bell` 7:00 AM; two rows), Quiet Now (a `bell.slash` Quiet Now
+  pill; two rows), Your Schedules (a `plus` Add Schedule pill; a lead under the heading, then three
+  numbered steps and a footer) and Held Nudges (`bell.slash` Held, an arrow, `xmark.circle.fill`
+  Missed; three rows, the last quoting the Missed note). Its pills reuse the screens' own strings,
+  and the Missed note is the note's own text.
 - **Share Activity entries:** plain rows with nothing to tap, newest first, in one inset list: who
   it concerns in `{typography.body}` (several names joined as a list), then what happened and when
   ("Today at 7:58 AM"), each in `{typography.subhead}` `{colors.secondary-label}`. VoiceOver reads
@@ -810,6 +884,42 @@ nothing above.
   `speaker.wave.2`, in Nudges right after Default Pace, showing the current tone's name as Default
   Pace shows its pace. It starts as Default Alarm, the list's first sound.
 - **Symbols added:** `speaker.wave.2`.
+
+### Quiet Hours page
+What the Quiet Hours page mockup (`docs/mockups/2026-11-21-quiet-hours-page/`, #370) adds:
+- **Settings' Quiet Hours:** a Settings row with a `{colors.tile-gray}` tile and `bell.slash`, in
+  Nudges right after Default Pace. Under the label, as Default Pace shows its pace, whether nudges
+  are held now and until when: "Until 7:00 AM" while a schedule that's on covers this moment (when
+  nudges get through again, so back-to-back schedules read as one), "Starts 10:00 PM" for the next
+  start of a schedule that's on, with the short weekday when it isn't today ("Starts Fri
+  11:00 PM"), or "Off" with no schedule on. VoiceOver reads "On until 7:00 AM", "Starts Friday at
+  11:00 PM". It is read again every minute.
+- **Schedule row:** a Settings row ending in the system switch, with a `{colors.tile-gray}` tile and
+  `clock`; the times as the label ("10:00 PM–7:00 AM", an en dash with no spaces) and the days under
+  it in `{typography.subheadline}` `{colors.secondary-label}`, as the iOS Focus schedules list words
+  them: "Every Sun, Mon, Tue, Wed, and Thu", "Every Fri and Sat", "Every day", in the calendar's
+  week order. A schedule that's off keeps its row, its times in `{colors.secondary-label}`.
+  VoiceOver reads the times, the days and the switch's state as one element.
+- **The page:** inline title "Quiet Hours"; the Schedules section with a footer on turning one off
+  and on what quiet hours do. With no schedules, the empty state is `bell.slash`, "No Schedules",
+  with a bordered Add Schedule button (`plus`). Under the schedules, Add Schedule in its own section
+  with no footer (the footer on what quiet hours do stays under Schedules, #370's review), a
+  Settings row with a `{colors.tile-blue}` tile and `plus`, its label in the accent color (#371).
+- **A schedule's sheet** (#371): tapping a schedule's words opens Edit Schedule; VoiceOver has an
+  Edit action on the row instead. Add Schedule and Edit Schedule are a sheet with the inline title,
+  Cancel (`xmark`, asks before discarding changes) and Add or Save (`checkmark`). Edit Schedule
+  opens with a Schedule switch, in a section of its own with no heading, kept on Save like every
+  other edit; Add Schedule has none, since a new schedule is saved on. Starts and Ends
+  are compact time pickers; their footer says "Ends at 7:00 AM the next day." (or "the same day."),
+  or, in `{colors.negative}`, "The start and end are the same. Change one to save." or, while the
+  start, end and days are another schedule's (on or off), "You already have a schedule with these
+  times and days." These reasons are text on the sheet, never an alert. Days is a
+  checklist of full day names in the calendar's week order, its footer on what a day means, and
+  "Choose at least one day to save." in `{colors.negative}` above it while none is checked. Save
+  stays off while any of these lines shows. A new schedule is 10:00 PM to 7:00 AM, every day, on. Edit adds
+  Delete Schedule (`trash`), which asks "Delete This Schedule?" with its times and days.
+- **Symbols added:** `bell.slash`, `clock` on a schedule, `plus` on Add Schedule, `trash` on Delete
+  Schedule.
 
 ### Details tone and Use for All
 What the details tone and Use for All mockup (`docs/mockups/2026-11-19-details-tone-use-for-all/`,

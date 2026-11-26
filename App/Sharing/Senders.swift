@@ -36,9 +36,9 @@ struct Senders {
     /// The sender's name for a received reminder ("Riley Park"), or `nil` for the person's own. A
     /// connection the sharing store doesn't hold reads "Someone", as `label(of:)` does (ticket 200's
     /// "Someone owns this schedule.").
-    func name(of reminder: Reminder) -> String? {
+    func name(of reminder: Reminder) -> LocalizedStringResource? {
         guard let connectionID = reminder.receivedThrough else { return nil }
-        return names[connectionID] ?? String(localized: "Someone", comment: "Who owns a received reminder, on its details and form, when the app doesn't know who sent it, as in \"Someone owns this schedule.\"")
+        return names[connectionID].map { .alone($0) } ?? LocalizedStringResource("Someone", comment: "Who owns a received reminder, on its details and form, when the app doesn't know who sent it, as in \"Someone owns this schedule.\"")
     }
 
     /// "From Riley Park" for a received reminder, or `nil` for the person's own. A connection the
@@ -60,9 +60,8 @@ struct FromLine: Equatable {
     var waitsToSync = false
 
     /// What VoiceOver reads for the line: "From Riley Park", then Waiting to sync when it shows.
-    var spoken: String {
-        let label = String(localized: label)
+    var spoken: LocalizedStringResource {
         guard waitsToSync else { return label }
-        return String(localized: "\(label), Waiting to sync", comment: "VoiceOver, on a received reminder's row or card: who sent it, then that what this person's app tells them hasn't gone through iCloud yet. The placeholder is such as \"From Riley Park\".")
+        return LocalizedStringResource("\(label), Waiting to sync", comment: "VoiceOver, on a received reminder's row or card: who sent it, then that what this person's app tells them hasn't gone through iCloud yet. The placeholder is such as \"From Riley Park\".")
     }
 }

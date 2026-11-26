@@ -9,7 +9,7 @@ struct ShareActivityList {
         let id: ShareActivityEntry.ID
         /// The connections the entry concerns: one name, or several joined as a list in the
         /// person's language. `nil` for an entry with no one to name.
-        let who: String?
+        let who: LocalizedStringResource?
         let event: ShareActivityEntry.Event
         let at: Date
     }
@@ -19,7 +19,7 @@ struct ShareActivityList {
         rows = data.activity.reversed().map { entry in
             Row(
                 id: entry.id,
-                who: entry.connectionNames.isEmpty ? nil : entry.connectionNames.formatted(.list(type: .and).locale(locale)),
+                who: entry.connectionNames.isEmpty ? nil : Self.names(entry.connectionNames, in: locale),
                 event: entry.event,
                 at: entry.at
             )
@@ -27,4 +27,11 @@ struct ShareActivityList {
     }
 
     var isEmpty: Bool { rows.isEmpty }
+
+    /// The names as a list, joined in `locale`'s words.
+    private static func names(_ names: [String], in locale: Locale) -> LocalizedStringResource {
+        var list = LocalizedStringResource.list(names)
+        list.locale = locale
+        return list
+    }
 }

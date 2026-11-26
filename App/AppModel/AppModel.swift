@@ -88,6 +88,26 @@ final class AppModel {
 
     private var firstSharingTutorial = FirstSharingTutorial.notPending
     private let sharingTutorial: SharingTutorialRecord
+    private let quietHoursTutorial: QuietHoursTutorialRecord
+
+    /// Whether How Quiet Hours Work should open by itself when the Quiet Hours page opens (#468):
+    /// it hasn't been seen. Read from the record each time, as the Default Pace is.
+    var isQuietHoursTutorialDue: Bool {
+        access(keyPath: \.isQuietHoursTutorialDue)
+        return !quietHoursTutorial.isSeen
+    }
+
+    /// How Quiet Hours Work closed, by Close, Done or a swipe (#468): it never opens by itself again.
+    func quietHoursTutorialClosed() {
+        withMutation(keyPath: \.isQuietHoursTutorialDue) { quietHoursTutorial.isSeen = true }
+    }
+
+    #if DEBUG
+    /// The device seed's (#468): How Quiet Hours Work unseen again, for its phone check.
+    func markQuietHoursTutorialUnseen() {
+        withMutation(keyPath: \.isQuietHoursTutorialDue) { quietHoursTutorial.isSeen = false }
+    }
+    #endif
 
     /// Whether How Sharing Works should open by itself now (#424): Sharing has just been turned on
     /// for the first time, and the tutorial hasn't been seen. The shell opens it while this is true,
@@ -114,6 +134,7 @@ final class AppModel {
         sharing: SharingModel? = nil,
         sharingSwitch: SharingSwitchRecord = .standard,
         sharingTutorial: SharingTutorialRecord = .standard,
+        quietHoursTutorial: QuietHoursTutorialRecord = .standard,
         makeSharing: @escaping () -> SharingModel? = { nil },
         timeZone: TimeZone = .autoupdatingCurrent,
         giveUpLimit: GiveUpLimit = .shipped
@@ -129,6 +150,7 @@ final class AppModel {
         self.doneQueue = doneQueue
         self.sharingSwitch = SharingSwitch(model: sharing, record: sharingSwitch, make: makeSharing)
         self.sharingTutorial = sharingTutorial
+        self.quietHoursTutorial = quietHoursTutorial
         onboarding = onboardingRecord.isFinished ? nil : .welcome
         scheduler = CombinedSchedulerAdapter(adapters: [notifications, alarms])
         // Never handed an event before `launch()` replaces it, so it never applies a plan.
@@ -276,7 +298,10 @@ final class AppModel {
     }
 
     private func makeEngine(permissions: PermissionStates) -> Engine {
-        Engine(clock: clock, scheduler: scheduler, giveUpLimit: giveUpLimit, timeZone: timeZone, permissions: permissions)
+        Engine(
+            clock: clock, scheduler: scheduler, giveUpLimit: giveUpLimit, timeZone: timeZone, permissions: permissions,
+            quietHours: quietHours
+        )
     }
 
     /// The one launch, which the app delegate starts and App opened waits for.
@@ -317,6 +342,8 @@ final class AppModel {
         var engine = makeEngine(permissions: permissions)
         engine.update(tags: stored.tags)
         engine.update(histories: stored.histories)
+        // Before the reminders, which plan once with them in place (#368).
+        engine.update(replacedQuietHours: settingsRecords.quietHours.replacedQuietHours)
         engine.update(reminders: stored.reminders)
         let queued = loadQueuedDones()
         for done in queued {
@@ -520,6 +547,39 @@ final class AppModel {
     /// made by hand with now; this exists in Debug builds only.
     func addKeepingCreationDate(_ reminder: Reminder) {
         perform { $0.update(reminders: $0.reminders + [reminder]) }
+    }
+
+    /// The device seed's quiet span (#369): `start` to `end` reads as quiet hours that were on
+    /// then and turned off at `replacedAt`, kept with the replaced schedules in the record and the
+    /// engine, so a seeded reminder's nudges in it count as held. The current schedules don't change.
+    /// A span that crosses midnight is one schedule on its first day, as the Quiet Hours page makes.
+    func addSeedQuietSpan(from start: Date, to end: Date, replacedAt: Date) {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        func time(of date: Date) -> TimeOfDay? {
+            let parts = calendar.dateComponents([.hour, .minute], from: date)
+            return try? TimeOfDay(hour: parts.hour ?? 0, minute: parts.minute ?? 0)
+        }
+        guard
+            let startTime = time(of: start), let endTime = time(of: end),
+            let day = RepeatRule.Weekday(rawValue: calendar.component(.weekday, from: start)),
+            let schedule = try? QuietHoursSchedule(start: startTime, end: endTime, days: [day])
+        else {
+            Self.logger.error("The seed's quiet span from \(start, privacy: .public) to \(end, privacy: .public) couldn't be made")
+            return
+        }
+        let span = Replaced(value: QuietHours(schedules: [schedule]), replacedAt: replacedAt)
+        setReplacedQuietHours((engine.replacedQuietHours + [span]).sorted { $0.replacedAt < $1.replacedAt })
+    }
+
+    /// Takes away the seed's span added with `replacedAt`, and no other replaced schedules.
+    func removeSeedQuietSpan(replacedAt: Date) {
+        setReplacedQuietHours(engine.replacedQuietHours.filter { $0.replacedAt != replacedAt })
+    }
+
+    private func setReplacedQuietHours(_ replaced: [Replaced<QuietHours>]) {
+        settingsRecords.quietHours.replacedQuietHours = replaced
+        perform { $0.update(replacedQuietHours: replaced) }
     }
     #endif
 
@@ -761,6 +821,75 @@ final class AppModel {
         }
     }
 
+    /// The quiet hours schedules (#366), none until a person sets one, which means off. Read from
+    /// the record each time, as the Default Pace is, so a launch before the first unlock doesn't
+    /// fix it at none. A change after launch re-plans (#368): nudges now inside a window are
+    /// cancelled, ones no longer inside are scheduled, and the schedules it replaced are saved with
+    /// them. Before launch it only saves: the launch builds its engine from the record.
+    var quietHours: QuietHours {
+        get {
+            access(keyPath: \.quietHours)
+            return settingsRecords.quietHours.quietHours
+        }
+        set {
+            withMutation(keyPath: \.quietHours) {
+                settingsRecords.quietHours.quietHours = newValue
+                // The engine's list is only the saved one once launch has handed it back.
+                guard case .ready = launchState else { return }
+                perform { $0.update(quietHours: newValue) }
+                settingsRecords.quietHours.replacedQuietHours = engine.replacedQuietHours
+            }
+        }
+    }
+
+    /// The Quiet Hours page's switch (#370): turns the schedule `id` on or off and keeps it in its
+    /// place. Like saving and deleting, it writes through `quietHours`, so the re-plan follows and
+    /// the schedules it replaced are kept for past Missed notes; a change that leaves the schedules
+    /// as they were changes nothing.
+    func switchQuietHoursSchedule(_ id: QuietHoursSchedule.ID, on: Bool) {
+        changeQuietHours { $0.switchSchedule(id, on: on) }
+    }
+
+    /// Add Schedule's and a schedule's sheet (#371): a new schedule at the end of the list, an
+    /// edited one in its place.
+    func saveQuietHoursSchedule(_ schedule: QuietHoursSchedule) {
+        changeQuietHours { $0.saveSchedule(schedule) }
+    }
+
+    /// Delete Schedule (#371), once the person has confirmed it.
+    func deleteQuietHoursSchedule(_ id: QuietHoursSchedule.ID) {
+        changeQuietHours { $0.deleteSchedule(id) }
+    }
+
+    /// Quiet Now (#497): on holds every nudge from now until it is turned off, whatever the
+    /// schedules say. Written through `quietHours`, as a schedule's change is, so it re-plans at
+    /// once. Turning it on while it is on keeps the first moment.
+    func turnQuietNow(on: Bool) {
+        let now = clock.now
+        changeQuietHours { quietHours in
+            if on { quietHours.turnOnQuietNow(at: now) } else { quietHours.turnOffQuietNow() }
+        }
+    }
+
+    private func changeQuietHours(_ change: (inout QuietHours) -> Void) {
+        var changed = quietHours
+        change(&changed)
+        quietHours = changed
+    }
+
+    /// Whether quiet hours hold nudges at `date` and until when, or when the next schedule
+    /// starts: what Settings' Quiet Hours row reads (#370).
+    func quietHoursState(at date: Date) -> QuietHoursState {
+        engine.quietHoursState(at: date)
+    }
+
+    /// The line under the holding banner's title on Now, My Day and Reminders at `date`, or nil
+    /// while nothing is held: the same state and Quiet Now that Settings' row reads (#499).
+    func quietHoursHoldingDetail(at date: Date) -> LocalizedStringResource? {
+        QuietHoursWording(calendar: .autoupdatingCurrent)
+            .holdingBannerDetail(quietHoursState(at: date), quietNowSince: quietHours.quietNowSince)
+    }
+
     /// Settings' Send a Test Nudge (ticket 30): one ordinary notification a few seconds away. It is
     /// no reminder's, so the engine and the store know nothing of it.
     func sendTestNudge() async {
@@ -768,10 +897,10 @@ final class AppModel {
     }
 
     /// Settings' Delete All Data (ticket 30, 214): the store, sharing, the Default Pace, the Default
-    /// Alarm Sound and the Reminders and Tags tabs' sorts, then the engine, then everything the
-    /// adapters hold, including the test nudge and the nudges already in Notification Center. Not
-    /// through `perform`: the store goes first and a store that turns the delete down stops it, so
-    /// the reminders and their nudges stay as they were. A disk failure is likelier than a failed
+    /// Alarm Sound, the Reminders and Tags tabs' sorts and the quiet hours schedules and Quiet Now,
+    /// then the engine, then everything the adapters hold, including the test nudge and the nudges already
+    /// in Notification Center. Not through `perform`: the store goes first and a store that turns
+    /// the delete down stops it, so the reminders and their nudges stay as they were. A disk failure is likelier than a failed
     /// cancel, and a nudge left pending for deleted data is cancelled by the next App opened, which
     /// plans from nothing. Every ring stops, with no reminder left for Stop or Open to act on. Before
     /// the store has been read there is nothing to delete.
@@ -786,6 +915,7 @@ final class AppModel {
         withMutation(keyPath: \.defaultAlarmSound) { settingsRecords.defaultAlarmSound.clear() }
         withMutation(keyPath: \.remindersSort) { settingsRecords.remindersSort.clear() }
         withMutation(keyPath: \.tagsSort) { settingsRecords.tagsSort.clear() }
+        withMutation(keyPath: \.quietHours) { settingsRecords.quietHours.clear() }
         // A new engine, not emptied lists: the old one keeps a key for every history it held, and
         // its alarm-limit records. Its empty plan still reaches the adapters.
         var empty = makeEngine(permissions: permissions)
@@ -955,7 +1085,8 @@ extension AppModel: ReceivedReminders {
     private func postArrival(of copy: Reminder) {
         guard let from = senders.label(of: copy) else { return }
         let strength = StrengthLine(of: copy, in: engine)
-        let body = String(localized: "\(String(localized: from)) · \(String(localized: strength.text))", comment: "Body of the notification that a reminder someone sent has arrived. 1: who sent it, such as \"From Alex Morgan\". 2: its strength in words, such as \"Firm: rings as an alarm from nudge 4\".")
+        // String needed: notification, whose body is a String.
+        let body = String(localized: "\(from) · \(strength.text)", comment: "Body of the notification that a reminder someone sent has arrived. 1: who sent it, such as \"From Alex Morgan\". 2: its strength in words, such as \"Firm: rings as an alarm from nudge 4\".")
         notifications.postArrival(of: copy.id, title: copy.title, body: body)
     }
 }

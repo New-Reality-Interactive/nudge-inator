@@ -111,40 +111,40 @@ extension Engine {
     /// A monthly choice as the page lists it for this start, such as "On the fourth Monday". Its
     /// words come from the engine's String Catalog; the weekday and the ordinal follow its locale.
     /// Only for a choice `monthlyDays(startingAt:)` offers for this start.
-    public func title(of monthlyDay: CustomRepeat.MonthlyDay, startingAt start: Date) -> String {
+    public func title(of monthlyDay: CustomRepeat.MonthlyDay, startingAt start: Date) -> LocalizedStringResource {
         let words = RepeatSummaryWriter(locale: locale, calendar: calendar, now: clock.now)
         let day = calendar.component(.day, from: start)
         let weekday = words.name(startWeekday(of: start))
         switch monthlyDay {
         case .dayOfMonth:
             let ordinal = words.ordinalNumber(day)
-            return String(localized: "On the \(ordinal)", bundle: .module, locale: locale,
-                          comment: "Custom repeat page: a monthly repeat on the start's day of the month. The placeholder is the ordinal number, such as \"28th\".")
+            return LocalizedStringResource("On the \(ordinal)", locale: locale, bundle: .module,
+                                           comment: "Custom repeat page: a monthly repeat on the start's day of the month. The placeholder is the ordinal number, such as \"28th\".")
         case .weekdayOfMonth:
             return switch weekdayOrdinal(ofDay: day) {
-            case 1: String(localized: "On the first \(weekday)", bundle: .module, locale: locale, comment: "Custom repeat page: a monthly repeat on the first of the start's weekday. The placeholder is the weekday.")
-            case 2: String(localized: "On the second \(weekday)", bundle: .module, locale: locale, comment: "Custom repeat page: a monthly repeat on the second of the start's weekday. The placeholder is the weekday.")
-            case 3: String(localized: "On the third \(weekday)", bundle: .module, locale: locale, comment: "Custom repeat page: a monthly repeat on the third of the start's weekday. The placeholder is the weekday.")
-            default: String(localized: "On the fourth \(weekday)", bundle: .module, locale: locale, comment: "Custom repeat page: a monthly repeat on the fourth of the start's weekday. The placeholder is the weekday.")
+            case 1: LocalizedStringResource("On the first \(weekday)", locale: locale, bundle: .module, comment: "Custom repeat page: a monthly repeat on the first of the start's weekday. The placeholder is the weekday.")
+            case 2: LocalizedStringResource("On the second \(weekday)", locale: locale, bundle: .module, comment: "Custom repeat page: a monthly repeat on the second of the start's weekday. The placeholder is the weekday.")
+            case 3: LocalizedStringResource("On the third \(weekday)", locale: locale, bundle: .module, comment: "Custom repeat page: a monthly repeat on the third of the start's weekday. The placeholder is the weekday.")
+            default: LocalizedStringResource("On the fourth \(weekday)", locale: locale, bundle: .module, comment: "Custom repeat page: a monthly repeat on the fourth of the start's weekday. The placeholder is the weekday.")
             }
         case .lastWeekdayOfMonth:
-            return String(localized: "On the last \(weekday)", bundle: .module, locale: locale,
-                          comment: "Custom repeat page: a monthly repeat on the last of the start's weekday in each month. The placeholder is the weekday.")
+            return LocalizedStringResource("On the last \(weekday)", locale: locale, bundle: .module,
+                                           comment: "Custom repeat page: a monthly repeat on the last of the start's weekday in each month. The placeholder is the weekday.")
         case .lastDay:
-            return String(localized: "On the last day", bundle: .module, locale: locale,
-                          comment: "Custom repeat page: a monthly repeat on the last day of each month.")
+            return LocalizedStringResource("On the last day", locale: locale, bundle: .module,
+                                           comment: "Custom repeat page: a monthly repeat on the last day of each month.")
         }
     }
 
     /// Under a monthly choice of a day some months lack (the 29th to the 31st), which RFC 5545
     /// skips (ADR 0003): "Months without a 31st are skipped. Choose On the last day to get every
     /// month." `nil` for any other choice.
-    public func skippedMonthsNote(of choices: CustomRepeat, startingAt start: Date) -> String? {
+    public func skippedMonthsNote(of choices: CustomRepeat, startingAt start: Date) -> LocalizedStringResource? {
         let day = calendar.component(.day, from: start)
         guard monthlyDay(of: choices, startingAt: start) == .dayOfMonth, day > 28 else { return nil }
         let ordinal = RepeatSummaryWriter(locale: locale, calendar: calendar, now: clock.now).ordinalNumber(day)
-        return String(localized: "Months without a \(ordinal) are skipped. Choose On the last day to get every month.", bundle: .module, locale: locale,
-                      comment: "Under the Custom repeat page's monthly days when the start is the 29th to the 31st. The placeholder is the ordinal day, such as \"31st\". \"On the last day\" is the choice's title.")
+        return LocalizedStringResource("Months without a \(ordinal) are skipped. Choose On the last day to get every month.", locale: locale, bundle: .module,
+                                       comment: "Under the Custom repeat page's monthly days when the start is the 29th to the 31st. The placeholder is the ordinal day, such as \"31st\". \"On the last day\" is the choice's title.")
     }
 
     /// A weekday's name in the engine's locale, as the Custom page lists it.

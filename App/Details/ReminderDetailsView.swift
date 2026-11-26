@@ -327,7 +327,7 @@ private struct ChangeNoteSection: View {
 /// A received reminder its sender deleted (ticket 205, the mockup's `viewReceived`): the note that it
 /// won't nudge and stays until removed, above the change note.
 private struct CanceledSection: View {
-    let senderName: String
+    let senderName: LocalizedStringResource
 
     var body: some View {
         NoteCard(symbol: "info.circle") {
@@ -368,6 +368,7 @@ private struct WaitingSection: View {
                     Text("Remove", comment: "Reminder details: on a reminder someone sent that waits to be accepted, opens the question that asks before removing it.")
                 } icon: {
                     Image(systemName: "trash")
+                    .foregroundStyle(.red)
                 }
             }
             .deleteReminderConfirmation(title: title, kind: .received, isPresented: $isConfirmingRemove, confirm: remove)
@@ -392,6 +393,7 @@ private struct DeleteButton: View {
                     : Text("Delete Reminder", comment: "Reminder details: opens the question that asks before deleting the reminder.")
             } icon: {
                 Image(systemName: "trash")
+                    .foregroundStyle(.red)
             }
         }
         .deleteReminderConfirmation(title: title, kind: DeletedReminderKind(isReceived: isReceived), isPresented: $isConfirming, confirm: confirm)
@@ -401,7 +403,7 @@ private struct DeleteButton: View {
 /// A received reminder's "Don't share this one" (ticket 200), while the person's Status sharing for
 /// its sender is on: it holds this one's status back from them. Its effect is the status tickets'.
 private struct DontShareSection: View {
-    let senderName: String
+    let senderName: LocalizedStringResource
     let isOn: Bool
     let set: (Bool) -> Void
 
@@ -487,7 +489,7 @@ private struct ScheduleRows: View {
 /// Repeats, Next, Pace and Break Through Focus: a reminder's details, and a sent reminder's
 /// (ticket 201).
 struct ScheduleSummaryRows: View {
-    let repeats: String
+    let repeats: LocalizedStringResource
     let next: ReminderDetails.Next
     let pace: Pace
     /// On for Relentless, which always breaks through Focus (ADR 0004).
@@ -495,7 +497,7 @@ struct ScheduleSummaryRows: View {
 
     var body: some View {
         LabeledContent {
-            Text(verbatim: repeats)
+            Text(repeats)
         } label: {
             Text("Repeats", comment: "Reminder details, Schedule: how often the reminder comes due.")
         }
@@ -541,7 +543,12 @@ private struct LastOccurrenceRow: View {
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: Design.Spacing.s1))
             : AnyLayout(HStackLayout(alignment: .firstTextBaseline))
         layout {
-            Text("Last occurrence", comment: "Reminder details, Schedule: how the latest occurrence closed.")
+            VStack(alignment: .leading, spacing: Design.Spacing.line) {
+                Text("Last occurrence", comment: "Reminder details, Schedule: how the latest occurrence closed.")
+                if let note = last.missedNote {
+                    MissedNoteLine(note: note)
+                }
+            }
             if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: Design.Spacing.s3) }
             VStack(alignment: dynamicTypeSize.isAccessibilitySize ? .leading : .trailing, spacing: Design.Spacing.line) {
                 StatusLabel(state: last.state)

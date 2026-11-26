@@ -38,11 +38,11 @@ private struct EveryRow: View {
     var body: some View {
         let label = Text("Every", comment: "The row for a Consistent pace's wait between nudges, such as \"10 min\", in the reminder form and on Settings' Default Pace page.")
         if isLocked {
-            LockedValueRow(label: label, value: Text(verbatim: HowItNudgesDuration.text(wait)))
+            LockedValueRow(label: label, value: Text(HowItNudgesDuration.text(wait)))
         } else {
             Picker(selection: $wait) {
                 ForEach(Pace.consistentWaits, id: \.self) { wait in
-                    Text(verbatim: HowItNudgesDuration.text(wait)).tag(wait)
+                    Text(HowItNudgesDuration.text(wait)).tag(wait)
                 }
             } label: {
                 label

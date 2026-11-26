@@ -22,9 +22,9 @@ struct RemindersScreen {
         var reminder: Reminder
         var status: ReminderStatus
         /// The time of day of the row's due time, such as "9:00 AM".
-        var time: String
+        var time: LocalizedStringResource
         /// "Today", "Tomorrow", "Yesterday" or a short date, under the time.
-        var day: String
+        var day: LocalizedStringResource
         /// The reminder's tags that the engine holds, as "#home". The ones the filter chose are bold.
         var tags: [MyDayScreen.TagLabel]
         /// "From Riley Park" under the title of a received reminder, or `nil` (ticket 199).
@@ -41,19 +41,19 @@ struct RemindersScreen {
         /// What VoiceOver reads for the row: the title first, then who sent it and its strength
         /// (which only a received row shows), the status, the due time and the tags.
         var voiceOverLabel: LocalizedStringResource {
-            let status = String(localized: status.name)
-            let tags = tags.isEmpty ? nil : tags.map(\.text).formatted(.list(type: .and))
+            let status = status.name
+            let tags = tags.isEmpty ? nil : tags.map(\.text)
             switch (from?.spoken, tags) {
             case (nil, nil):
                 return LocalizedStringResource("\(title), \(status), \(day), \(time)", comment: "VoiceOver label of a Reminders tab row with no tags. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\".")
             case (nil, let tags?):
-                return LocalizedStringResource("\(title), \(status), \(day), \(time), tags: \(tags)", comment: "VoiceOver label of a Reminders tab row. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\". 5: its tags, such as \"#home and #errands\".")
+                return LocalizedStringResource("\(title), \(status), \(day), \(time), tags: \(tags, format: .list(type: .and))", comment: "VoiceOver label of a Reminders tab row. 1: the reminder's title. 2: its status, such as \"Nudging\". 3: its due day, such as \"Today\". 4: its due time, such as \"9:00 AM\". 5: its tags, such as \"#home and #errands\".")
             case (let from?, nil):
-                let strength = String(localized: reminder.strength.title)
+                let strength = reminder.strength.title
                 return LocalizedStringResource("\(title), \(from), \(strength), \(status), \(day), \(time)", comment: "VoiceOver label of a Reminders tab row of a received reminder with no tags. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\". 3: its strength, such as \"Firm\". 4: its status, such as \"Nudging\". 5: its due day, such as \"Today\". 6: its due time, such as \"9:00 AM\".")
             case (let from?, let tags?):
-                let strength = String(localized: reminder.strength.title)
-                return LocalizedStringResource("\(title), \(from), \(strength), \(status), \(day), \(time), tags: \(tags)", comment: "VoiceOver label of a Reminders tab row of a received reminder. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\". 3: its strength, such as \"Firm\". 4: its status, such as \"Nudging\". 5: its due day, such as \"Today\". 6: its due time, such as \"9:00 AM\". 7: its tags, such as \"#home and #errands\".")
+                let strength = reminder.strength.title
+                return LocalizedStringResource("\(title), \(from), \(strength), \(status), \(day), \(time), tags: \(tags, format: .list(type: .and))", comment: "VoiceOver label of a Reminders tab row of a received reminder. 1: the reminder's title. 2: who sent it, such as \"From Riley Park\". 3: its strength, such as \"Firm\". 4: its status, such as \"Nudging\". 5: its due day, such as \"Today\". 6: its due time, such as \"9:00 AM\". 7: its tags, such as \"#home and #errands\".")
             }
         }
     }

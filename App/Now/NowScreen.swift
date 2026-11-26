@@ -11,7 +11,7 @@ struct NowScreen {
     var comingUp: [ComingUpRow]
     var lastDay: [ClosedRow]
     /// The engine's short date, so the subhead's day is in its time zone, as every other time is.
-    private let shortDate: (Date) -> String
+    private let shortDate: (Date) -> LocalizedStringResource
 
     /// Nothing to show: the app hosting tests, and previews without an engine.
     init() {
@@ -19,7 +19,7 @@ struct NowScreen {
         waiting = []
         comingUp = []
         lastDay = []
-        shortDate = { $0.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)) }
+        shortDate = { .alone($0, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated)) }
     }
 
     /// `senders` names who sent each received reminder; with none, each reads "From Someone".
@@ -104,10 +104,10 @@ struct NudgeCard: Identifiable {
     var status: NudgingStatus
     /// The reminder's tags as "#home".
     var tags: [String]
-    var dueTime: String
-    var nextNudgeTime: String?
+    var dueTime: LocalizedStringResource
+    var nextNudgeTime: LocalizedStringResource?
     /// When it closes as Missed, for the line after its last nudge.
-    var missedAtTime: String
+    var missedAtTime: LocalizedStringResource
     /// "From Riley Park" under the title of a received reminder, or `nil` (ticket 199).
     var from: FromLine?
 
@@ -146,21 +146,25 @@ struct NudgeCard: Identifiable {
     /// What VoiceOver reads after the label. The card's top row and title are one element, so
     /// this says everything they and the details show, the strength first.
     var voiceOverValue: LocalizedStringResource {
-        let strength = String(localized: reminder.strength.title)
-        let detail = String(localized: detail)
+        let strength = reminder.strength.title
         guard let next = status.nextNudge, let nextNudgeTime else {
-            let lastNudge = String(localized: lastNudgeLine)
+            let lastNudge = lastNudgeLine
             return LocalizedStringResource("\(strength), nudge \(status.nudgesSent) of \(status.nudgesInAll), urgency \(status.urgency.name). \(detail). \(lastNudge)",
                                            comment: "VoiceOver value of a nudge card after its last nudge. 1: the strength, such as \"Gentle\". 2: the nudges sent. 3: the most it sends. 4: the urgency now, such as \"High\". 5: the tags and due time, such as \"#home · due 9:00 AM\". 6: the card's line saying that was the last nudge and when it closes as Missed.")
         }
-        let via = String(localized: Self.via(next.delivery))
+        let via = Self.via(next.delivery)
         return LocalizedStringResource("\(strength), nudge \(status.nudgesSent) of \(status.nudgesInAll), urgency \(status.urgency.name). \(detail). Next nudge \(nextNudgeTime): \(via), \(next.urgency.name).",
                                        comment: "VoiceOver value of a nudge card. 1: the strength, such as \"Gentle\". 2: the nudges sent. 3: the most it sends. 4: the urgency now, such as \"High\". 5: the tags and due time, such as \"#home · due 9:00 AM\". 6: the next nudge's time. 7: how it arrives, such as \"Alarm\". 8: its urgency.")
     }
 
-    /// After the last nudge, in place of the next one; its VoiceOver value says the same.
+    /// After the last nudge, in place of the next one; its VoiceOver value says the same. While
+    /// Quiet Now holds every nudge left it says that instead, since turning it off brings them back.
     var lastNudgeLine: LocalizedStringResource {
-        LocalizedStringResource("That was the last nudge. It closes as Missed at \(missedAtTime).",
+        if status.isHeldByQuietNow {
+            return LocalizedStringResource("Quiet Now is holding its nudges. It closes as Missed at \(missedAtTime) if it stays on.",
+                                           comment: "Nudge card: in place of the next nudge while Quiet Now holds every nudge left. The placeholder is when the reminder closes as Missed if Quiet Now stays on, such as \"11:17 AM\".")
+        }
+        return LocalizedStringResource("That was the last nudge. It closes as Missed at \(missedAtTime).",
                                 comment: "Nudge card: after the occurrence's last nudge. The placeholder is when it gives up or the next occurrence takes over, such as \"11:17 AM\".")
     }
 
@@ -193,10 +197,10 @@ struct ComingUpRow: Identifiable {
     var reminder: Reminder
     var dueTime: Date
     /// "Today", "Tomorrow" or a short date, under the time.
-    var day: String
-    var time: String
+    var day: LocalizedStringResource
+    var time: LocalizedStringResource
     /// The repeat summary, such as "Every day at 8:00 AM".
-    var schedule: String
+    var schedule: LocalizedStringResource
     /// "From Riley Park" under the title of a received reminder, or `nil` (ticket 199).
     var from: FromLine?
 
@@ -209,8 +213,8 @@ struct ComingUpRow: Identifiable {
 struct WaitingRow: Identifiable {
     var reminder: Reminder
     /// "Today", "Tomorrow" or a short date, under the time.
-    var day: String
-    var time: String
+    var day: LocalizedStringResource
+    var time: LocalizedStringResource
     /// "From Riley Park" under the title.
     var from: FromLine?
 
@@ -233,14 +237,17 @@ struct ClosedRow: Identifiable {
     var reminder: Reminder
     var closed: ClosedOccurrence
     /// When it closed: "Today" or "Yesterday", under the time.
-    var day: String
-    var time: String
+    var day: LocalizedStringResource
+    var time: LocalizedStringResource
     /// "From Riley Park" under the title of a received reminder, or `nil` (ticket 199).
     var from: FromLine?
 
     /// A reminder can close twice in a day, so its ID alone isn't unique.
     var id: String { "\(reminder.id.uuidString) \(closed.occurrence.dueTime.timeIntervalSinceReferenceDate)" }
     var title: String { reminder.title }
+
+    /// Under how it closed, how many of its nudges quiet hours held, on a Missed one (#369).
+    var missedNote: MissedNote? { MissedNote(closed) }
 
     /// How it closed, under the title: the mockup's `closedLabel`.
     var detail: LocalizedStringResource {

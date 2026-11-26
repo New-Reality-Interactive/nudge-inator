@@ -106,7 +106,7 @@ struct MyDayRowView: View {
     }
 
     private var time: some View {
-        Text(verbatim: item.time)
+        Text(item.time)
             .font(.body)
             .monospacedDigit()
     }
@@ -115,26 +115,30 @@ struct MyDayRowView: View {
         VStack(alignment: .leading, spacing: Design.Spacing.line) {
             Text(verbatim: item.title)
                 .font(.body)
-            Text(detail)
+            detail
                 .font(.subheadline)
                 .foregroundStyle(Color(uiColor: .secondaryLabel))
+            if let note = item.missedNote {
+                MissedNoteLine(note: note)
+            }
             if let from = item.from {
                 FromLabel(from: from, strength: item.reminder.strength)
             }
         }
     }
 
-    /// The tags, the ones the filter chose in bold, then the note.
-    private var detail: AttributedString {
-        let note = AttributedString(localized: item.note(at: now))
-        guard !item.tags.isEmpty else { return note }
+    /// The tags, the ones the filter chose in bold, then the note. SwiftUI puts the sentence into
+    /// the view's language as it draws.
+    private var detail: Text {
+        let note = item.note(at: now)
+        guard !item.tags.isEmpty else { return Text(note) }
         var tags = AttributedString()
         for (index, tag) in item.tags.enumerated() {
             var text = AttributedString(index == 0 ? tag.text : " " + tag.text)
             if tag.isChosen { text.inlinePresentationIntent = .stronglyEmphasized }
             tags += text
         }
-        return AttributedString(localized: "\(tags) · \(note)", comment: "My Day: under the title of a tagged reminder. 1: its tags, such as \"#home #errands\", the ones the filter chose in bold. 2: the note, such as \"Nudging · 2 nudges · next 1:15 PM\".")
+        return Text("\(tags) · \(note)", comment: "My Day: under the title of a tagged reminder. 1: its tags, such as \"#home #errands\", the ones the filter chose in bold. 2: the note, such as \"Nudging · 2 nudges · next 1:15 PM\".")
     }
 
     /// What the row shows in place of Done: how it closed, or that it is paused or waiting. Nothing while
@@ -168,7 +172,7 @@ struct MyDayRowView: View {
 
 /// The "Now, 9:07 AM" marker among the rows: a label and a line to the trailing edge.
 struct NowMarkerView: View {
-    let time: String
+    let time: LocalizedStringResource
 
     var body: some View {
         HStack(spacing: Design.Spacing.s2) {

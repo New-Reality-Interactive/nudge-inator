@@ -14,11 +14,11 @@ struct BuiltBundleTests {
     }
 
     /// The literal is the pin: a release edits this and `MARKETING_VERSION` in project.yml together.
-    @Test func theVersionIs1_2_0AndTheWidgetHasTheSame() throws {
+    @Test func theAppAndWidgetShareTheReleaseVersion() throws {
         let widget = try #require(Self.widget)
 
-        #expect(Self.app.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String == "1.5.0")
-        #expect(widget.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String == "1.5.0")
+        #expect(Self.app.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String == "1.6.0")
+        #expect(widget.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String == "1.6.0")
     }
 
     /// The repo's number is a placeholder: the export step or the Organizer raises it for the app and

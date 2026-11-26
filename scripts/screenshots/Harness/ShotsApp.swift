@@ -177,6 +177,10 @@ enum ShotsSeed {
         if scenario != .noReminders { try! store.save(storedBeforeLaunch()) }
         let sharingSwitch = SharingSwitchRecord(defaults: defaults)
         let sharingTutorial = SharingTutorialRecord(defaults: defaults)
+        // How Quiet Hours Work seen, so it doesn't open by itself over the Quiet Hours page; the
+        // walk opens it from its Settings row.
+        let quietHoursTutorial = QuietHoursTutorialRecord(defaults: defaults)
+        quietHoursTutorial.isSeen = true
         var standIn: SharingModel?
         if scenario == .sharingOff { sharingSwitch.isOn = false }
         if scenario == .sharing {
@@ -196,6 +200,7 @@ enum ShotsSeed {
             sharing: standIn,
             sharingSwitch: sharingSwitch,
             sharingTutorial: sharingTutorial,
+            quietHoursTutorial: quietHoursTutorial,
             makeSharing: { StandInSharing.modelIfAsked(clock: clock) }
         )
         return model

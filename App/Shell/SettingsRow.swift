@@ -12,12 +12,15 @@ struct SettingsRow: View {
     var titleColor: Color = Color(uiColor: .label)
     /// Under the label, such as "Consistent · 10 min".
     var value: Text?
+    /// The value's style: body under a row that opens a page, subheadline under a Quiet Hours
+    /// schedule's times (#370).
+    var valueFont: Font = .body
     var status: Text?
     var statusIsNegative = false
     var accessory: Accessory?
 
-    /// What ends the row: a chevron, or for a row that leaves the app, as About's links do,
-    /// `arrow.up.forward`.
+    /// What ends the row: a chevron, or `arrow.up.forward` for a row that opens a web page, as About's
+    /// links do. The rows that open iOS Settings end in a chevron (#372).
     enum Accessory {
         case chevron, link
 
@@ -72,7 +75,7 @@ struct SettingsRow: View {
                     .foregroundStyle(titleColor)
                 if let value {
                     value
-                        .font(.body)
+                        .font(valueFont)
                         .foregroundStyle(Color(uiColor: .secondaryLabel))
                 }
             }
@@ -90,7 +93,7 @@ struct SettingsRow: View {
     List {
         SettingsRow(tile: .tileRed, symbol: "bell", title: Text(verbatim: "Notifications"), status: Text(verbatim: "Off"), statusIsNegative: true)
         SettingsRow(tile: .tileOrange, symbol: "alarm", title: Text(verbatim: "Alarms"), status: Text(verbatim: "On"))
-        SettingsRow(tile: .tileGray, symbol: "gearshape", title: Text(verbatim: "Open iOS Settings"), titleColor: .accentColor, accessory: .chevron)
+        SettingsRow(tile: .tileGray, symbol: "clock", title: Text(verbatim: "Default Pace"), accessory: .chevron)
     }
 }
 

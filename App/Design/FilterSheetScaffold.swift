@@ -59,6 +59,7 @@ struct FilterSheetScaffold<Choices: FilterSheetChoices, Summary: FilterSheetSumm
             .onChange(of: draft) { old, new in
                 let before = summary(old).result
                 let after = summary(new).result
+                // String needed: VoiceOver announcement, said only when the words change.
                 if VoiceOverAnnouncement.spoken(from: String(localized: before), to: String(localized: after)) != nil {
                     VoiceOverAnnouncement.post(after)
                 }

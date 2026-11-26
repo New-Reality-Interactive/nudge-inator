@@ -12,8 +12,10 @@
 #     ready-for-human;
 #   - a ticket's body mentions an issue that is neither the spec nor one of its tickets, or a
 #     number that doesn't exist. A mention of a pull request is allowed: GitHub numbers issues and
-#     pull requests from one sequence, so a ticket that names a PR is correct. A lookup that fails
-#     for another reason (such as the network) fails the check too, rather than passing it.
+#     pull requests from one sequence, so a ticket that names a PR is correct. So is a mention of
+#     an issue in a closed milestone, a released feature's ticket: "Builds on: #201" is how a
+#     ticket points at what an earlier release left. A lookup that fails for another reason
+#     (such as the network) fails the check too, rather than passing it.
 # It can't tell that a mention of a real ticket is stale (a criterion that moved in a split), so
 # read the mentions of any ticket that was split.
 set -uo pipefail
@@ -27,7 +29,7 @@ fail() { echo "FAIL: $*" >&2; failed=true; }
 # Sorted unique numbers, one line, from lines of numbers on stdin.
 numbers() { sort -un | tr '\n' ' ' | sed 's/ $//'; }
 
-# Sets `kind` to issue, pr or missing for #$1, or to error when the lookup failed for any other
+# Sets `kind` to issue, released (an issue in a closed milestone), pr or missing for #$1, or to error when the lookup failed for any other
 # reason. Each number is looked up once per run (a lookup is a network call); not in a subshell, so
 # the cache survives.
 kinds=""
@@ -36,7 +38,7 @@ lookup() {
     *" $1="*) kind="${kinds##* $1=}"; kind="${kind%% *}"; return ;;
   esac
   local out
-  if out="$(gh api "repos/$repo/issues/$1" --jq 'if .pull_request then "pr" else "issue" end' 2>&1)"; then
+  if out="$(gh api "repos/$repo/issues/$1" --jq 'if .pull_request then "pr" elif .milestone.state == "closed" then "released" else "issue" end' 2>&1)"; then
     kind="$out"
   elif printf '%s' "$out" | grep -q 'HTTP 404'; then
     kind=missing
@@ -82,7 +84,7 @@ for n in $subs; do
       *)
         lookup "$m"
         case "$kind" in
-          pr) ;;
+          pr | released) ;;
           issue) fail "#$n mentions #$m, which is neither the spec nor one of its tickets" ;;
           missing) fail "#$n mentions #$m, which doesn't exist" ;;
           *) fail "#$n mentions #$m, which couldn't be looked up" ;;

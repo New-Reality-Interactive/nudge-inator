@@ -147,7 +147,7 @@ struct CustomRepeatChoicesTests {
     func eachMonthlyChoiceIsTitledFromTheStart(monthlyDay: CustomRepeat.MonthlyDay, startDay: Int, title: String) {
         let engine = Engine(clock: clock, scheduler: FakeScheduler(), timeZone: NewYork.timeZone, locale: Locale(identifier: "en_US"))
 
-        #expect(engine.title(of: monthlyDay, startingAt: NewYork.local(2026, 10, startDay)) == title)
+        #expect(String(localized: engine.title(of: monthlyDay, startingAt: NewYork.local(2026, 10, startDay))) == title)
     }
 
     /// The ticket's example, built control by control from Every 2 Weeks.
@@ -159,7 +159,7 @@ struct CustomRepeatChoicesTests {
         let reminder = Reminder(title: "Water the plants", dueTime: Self.monday,
                                 repeatRule: engine.rule(engine.repeatRule(for: choices, startingAt: Self.monday), ending: end), strength: .gentle)
 
-        #expect(engine.repeatSummary(of: reminder) == "Every 2 weeks on Monday and Wednesday at 9:00\u{202F}AM, 5 times")
+        #expect(String(localized: engine.repeatSummary(of: reminder)) == "Every 2 weeks on Monday and Wednesday at 9:00\u{202F}AM, 5 times")
     }
 
     /// The app never writes such a rule, but the parser accepts it. The page keeps what it can
@@ -193,7 +193,7 @@ struct CustomRepeatChoicesTests {
         var choices = engine.customRepeat(from: .everyMonth, startingAt: start)
         choices.monthlyDay = monthlyDay
 
-        #expect(engine.skippedMonthsNote(of: choices, startingAt: start) == note)
+        #expect(engine.skippedMonthsNote(of: choices, startingAt: start).map { String(localized: $0) } == note)
     }
 
     @Test func weekdayNamesFollowTheEnginesLocale() {

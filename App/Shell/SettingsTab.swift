@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Settings: the permission banners, About, what the app may send (notifications, alarms and
 /// badges), a way to open iOS Settings when something is off, Send a Test Nudge, the Default Pace,
-/// the Default Alarm Sound, the Tutorials, and Delete All Data.
+/// Quiet Hours, the Default Alarm Sound, the Tutorials, and Delete All Data.
 struct SettingsTab: View {
     let state: ScreenState
     /// What previews show, since they have no app model: the permissions and how they leave
@@ -73,6 +73,7 @@ struct SettingsTab: View {
                 case .howItNudges: TutorialSheet(pages: howItNudgesPages)
                 case .howSharingWorks: TutorialSheet<SharingTutorialPage>()
                 case .howAlarmSoundsWork: TutorialSheet<AlarmSoundsTutorialPage>()
+                case .howQuietHoursWork: TutorialSheet<QuietHoursTutorialPage>()
                 }
             }
             .navigationTitle(Text(AppTab.settings.title))
@@ -208,41 +209,48 @@ struct SettingsTab: View {
         }
     }
 
+    /// A permission row as a button that opens where its permission is changed (#372). It is the
+    /// way to iOS Settings from this section: there is no separate row for it.
+    private func permissionRow(_ row: SettingsStatus.PermissionRow, @ViewBuilder label: () -> some View) -> some View {
+        Button {
+            row.opensSettings.open()
+        } label: {
+            label()
+        }
+        .accessibilityHint(row.hint)
+    }
+
     private var nudgesSection: some View {
         Section {
-            SettingsRow(
-                tile: .tileRed,
-                symbol: "bell",
-                title: Text("Notifications", comment: "Settings: row that shows whether notifications are allowed."),
-                status: status.notifications.text,
-                statusIsNegative: status.notifications.isOff
-            )
-            SettingsRow(
-                tile: .tileOrange,
-                symbol: "alarm",
-                title: Text("Alarms", comment: "Settings: row that shows whether alarms are allowed."),
-                status: status.alarms.text,
-                statusIsNegative: status.alarms.isOff
-            )
+            permissionRow(.notifications) {
+                SettingsRow(
+                    tile: .tileRed,
+                    symbol: "bell",
+                    title: Text("Notifications", comment: "Settings: row that shows whether notifications are allowed, and opens the app's notification settings in iOS Settings."),
+                    status: status.notifications.text,
+                    statusIsNegative: status.notifications.isOff,
+                    accessory: .chevron
+                )
+            }
+            permissionRow(.alarms) {
+                SettingsRow(
+                    tile: .tileOrange,
+                    symbol: "alarm",
+                    title: Text("Alarms", comment: "Settings: row that shows whether alarms are allowed, and opens the app's page in iOS Settings."),
+                    status: status.alarms.text,
+                    statusIsNegative: status.alarms.isOff,
+                    accessory: .chevron
+                )
+            }
             // Gray even when Off: badges off isn't a problem to flag (DESIGN.md › Settings row).
-            SettingsRow(
-                tile: .tileRed,
-                symbol: "app.badge",
-                title: Text("Badges", comment: "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging."),
-                status: status.badges.text
-            )
-            if let openSettings = status.openSettings {
-                Button {
-                    openSettings.open()
-                } label: {
-                    SettingsRow(
-                        tile: .tileGray,
-                        symbol: "gearshape",
-                        title: Text("Open iOS Settings", comment: "Settings: row that opens the app's page in the iOS Settings app, where notifications, alarms and badges can be turned on."),
-                        titleColor: .accentColor,
-                        accessory: .chevron
-                    )
-                }
+            permissionRow(.badges) {
+                SettingsRow(
+                    tile: .tileRed,
+                    symbol: "app.badge",
+                    title: Text("Badges", comment: "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging, and opens the app's notification settings in iOS Settings."),
+                    status: status.badges.text,
+                    accessory: .chevron
+                )
             }
             Button(action: sendTestNudge) {
                 SettingsRow(
@@ -265,6 +273,23 @@ struct SettingsTab: View {
                 )
             }
             NavigationLink {
+                QuietHoursPage()
+            } label: {
+                // Read again every minute, so it changes as a schedule starts or ends while
+                // Settings is open.
+                TimelineView(.everyMinute) { context in
+                    let row = QuietHoursWording(calendar: .autoupdatingCurrent)
+                        .row(model?.quietHoursState(at: context.date) ?? .off,
+                             quietNowSince: model?.quietHours.quietNowSince, now: context.date)
+                    SettingsRow(
+                        tile: .tileGray,
+                        symbol: "bell.slash",
+                        title: Text(QuietHoursPage.title),
+                        value: Text(row.text).accessibilityLabel(Text(row.spoken))
+                    )
+                }
+            }
+            NavigationLink {
                 DefaultAlarmSoundPage(sound: defaultAlarmSound, remindersToChange: model?.remindersToChangeByUseForAll ?? 0) {
                     model?.useDefaultAlarmSoundForAllReminders()
                 }
@@ -277,7 +302,7 @@ struct SettingsTab: View {
                 )
             }
         } header: {
-            Text("Nudges", comment: "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and Default Alarm Sound.")
+            Text("Nudges", comment: "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace, Quiet Hours and Default Alarm Sound.")
         } footer: {
             VStack(alignment: .leading, spacing: Design.Spacing.s2) {
                 ForEach(SettingsStatus.footer(for: reach), id: \.self) { $0.text }
@@ -294,7 +319,8 @@ struct SettingsTab: View {
     /// One row per feature's tutorial, in the order the features shipped (#466). Every row is in the
     /// accent color, which says it can be tapped, and opens a sheet, so none has a chevron (#470).
     /// How Sharing Works also opens by itself the first time Sharing is turned on
-    /// (`sharingTutorialFirstTime`); the others never do.
+    /// (`sharingTutorialFirstTime`), and How Quiet Hours Work the first time the Quiet Hours page
+    /// opens (`quietHoursTutorialFirstTime`); the others never do.
     private var tutorialsSection: some View {
         Section {
             ForEach(SettingsTutorial.allCases, id: \.self) { tutorial in

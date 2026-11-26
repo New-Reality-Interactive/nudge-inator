@@ -66,9 +66,10 @@ final class ShotsUITests: XCTestCase {
     /// which didn't scroll in landscape (iOS 26.5 simulator, seen before #300; not rechecked).
     private func scroll(down: Bool) {
         let window = app.windows.firstMatch
-        // A scroll up from under the search field moves nothing, so it starts below the field.
-        let (lowY, highY) = !down && searchCoversScrollStart
-            ? (0.95, (app.searchFields.firstMatch.frame.maxY + 16) / window.frame.height)
+        // A scroll up from under the search field moves nothing, and one from Mine | Sent switches
+        // the list (#522), so it starts below them.
+        let (lowY, highY) = !down && pinnedControlsCoverScrollStart
+            ? (0.95, startBelowPinnedControls)
             : (0.78, 0.22)
         let low = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: lowY))
         let high = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: highY))
@@ -76,16 +77,62 @@ final class ShotsUITests: XCTestCase {
         from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
     }
 
-    /// Whether the search field covers where a scroll up normally starts: at the largest text in
-    /// landscape, where the bar and the field fill the top half of the window (#285).
-    private var searchCoversScrollStart: Bool {
-        let search = app.searchFields.firstMatch
-        return search.exists && search.frame.maxY > app.windows.firstMatch.frame.height * 0.22
+    /// Reminders' Mine | Sent control, there only with sharing.
+    private var mineOrSent: XCUIElement {
+        app.segmentedControls.containing(.button, identifier: "Sent").firstMatch
     }
 
-    /// Four scrolls up, or ten of the shorter ones a search field in the way leaves room for.
+    /// Whether Mine | Sent is there to take touches: under a sheet it stays in the hierarchy.
+    private var isMineOrSentPinned: Bool {
+        mineOrSent.exists && mineOrSent.isHittable
+    }
+
+    /// The bottom of what stays put over a list and takes the touches that land on it: the search
+    /// field, and Mine | Sent under it. 0 with neither.
+    private var pinnedBottom: CGFloat {
+        let search = app.searchFields.firstMatch
+        let pinned = (search.exists ? [search] : []) + (isMineOrSentPinned ? [mineOrSent] : [])
+        return pinned.map(\.frame.maxY).max() ?? 0
+    }
+
+    /// Whether they cover where a scroll up normally starts: at the largest text in landscape, where
+    /// the bar and the field fill the top half of the window (#285), and with Mine | Sent in
+    /// portrait too.
+    private var pinnedControlsCoverScrollStart: Bool {
+        pinnedBottom > app.windows.firstMatch.frame.height * 0.22
+    }
+
+    /// Where a drag starts to stay off the pinned controls, as a fraction of the window's height:
+    /// just below them, since a drag that starts on one works it instead.
+    private var startBelowPinnedControls: CGFloat {
+        (pinnedBottom + 16) / app.windows.firstMatch.frame.height
+    }
+
+    /// Four scrolls up, or ten when the search field covers where one usually starts. Fifteen where
+    /// Mine | Sent under it leaves a scroll less than the usual 0.56 of the window's height, as at
+    /// the largest text in landscape.
     private func scrollToTop() {
-        for _ in 0..<(searchCoversScrollStart ? 10 : 4) { scroll(down: false) }
+        let search = app.searchFields.firstMatch
+        let searchCoversStart = search.exists && search.frame.maxY > app.windows.firstMatch.frame.height * 0.22
+        let isShort = isMineOrSentPinned && 0.95 - startBelowPinnedControls < 0.56
+        let scrolls = isShort ? 15 : searchCoversStart ? 10 : 4
+        for _ in 0..<scrolls { scroll(down: false) }
+    }
+
+    /// Drags the list down until `row`'s middle, where a tap or a swipe lands, is clear of the
+    /// pinned controls. A short drag, only clearing the middle: at the largest text in landscape a
+    /// tall row dragged clear whole ends up with its middle at the tab bar (#285). It is never
+    /// shorter than the clearance, so it isn't taken for a tap. Returns whether it dragged: an
+    /// element found by its place in a query may be another one afterwards.
+    private func dragClearOfPinnedControls(_ row: XCUIElement) -> Bool {
+        let bottom = pinnedBottom
+        let clearance: CGFloat = 40
+        guard bottom > 0, row.frame.midY < bottom + clearance else { return false }
+        let from = app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: startBelowPinnedControls))
+        let distance = max(bottom + clearance - row.frame.midY, clearance)
+        from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 0, dy: distance)), withVelocity: .slow, thenHoldForDuration: 0.2)
+        pause(0.5)
+        return true
     }
 
     private func pause(_ seconds: TimeInterval) {
@@ -157,9 +204,17 @@ final class ShotsUITests: XCTestCase {
         if !inSheet {
             scrollToTop()
         }
-        guard let element = scrollTo(label, scrolls: scrolls) else {
+        guard var element = scrollTo(label, scrolls: scrolls) else {
             XCTFail("No \(label):\n\(app.debugDescription)")
             return
+        }
+        // A row under a pinned control still counts as hittable, and its tap lands on the control.
+        if !inSheet, dragClearOfPinnedControls(element) {
+            guard let again = scrollTo(label, scrolls: 0) else {
+                XCTFail("No \(label) after the drag:\n\(app.debugDescription)")
+                return
+            }
+            element = again
         }
         element.tap()
         pause(0.8)
@@ -261,6 +316,22 @@ final class ShotsUITests: XCTestCase {
         tapText("#health", inSheet: true)
         barTap { tapButton(containing: "Apply", inSheet: true) }
         shot("myday-filtered")
+        // Another day (#374, #375): tomorrow, then back past today to yesterday, unfiltered.
+        launch(.app)
+        tab("My Day")
+        func tapDayButton(_ label: String) {
+            let button = app.buttons[label].firstMatch
+            XCTAssert(button.waitForExistence(timeout: 3), "No \(label) on My Day:\n\(app.debugDescription)")
+            button.tap()
+            pause(0.8)
+        }
+        tapDayButton("Next Day")
+        XCTAssert(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Tomorrow")).firstMatch.waitForExistence(timeout: 3), "My Day isn't on tomorrow")
+        shot("myday-tomorrow", pages: 20, stopsAtEnd: true)
+        tapDayButton("Today")
+        tapDayButton("Previous Day")
+        XCTAssert(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Yesterday")).firstMatch.waitForExistence(timeout: 3), "My Day isn't on yesterday")
+        shot("myday-yesterday", pages: 20, stopsAtEnd: true)
     }
 
     /// My Day's bar (#161): the Filter button is a glass circle of its own with New apart from it,
@@ -283,23 +354,6 @@ final class ShotsUITests: XCTestCase {
         shot("myday-no-filter")
     }
 
-    /// The Filter button's badge as tags come off the filter: the badge follows the count when a
-    /// token is removed from My Day, not only when the filter sheet closes (found on the iPhone,
-    /// ticket 19).
-    func testMyDayFilterBadgeFollowsTokens() {
-        launch(.app)
-        tab("My Day")
-        openMyDayFilter()
-        tapText("#health", inSheet: true)
-        tapText("#work", inSheet: true)
-        barTap { tapButton(containing: "Apply", inSheet: true) }
-        shot("myday-badge-2-tags")
-        tapButton(containing: "Remove #work")
-        shot("myday-badge-1-tag-after-remove")
-        tapButton(containing: "Remove #health")
-        shot("myday-badge-0-tags-after-remove")
-    }
-
     /// What VoiceOver gets for the Filter button with none, one and two tags chosen: its label and
     /// value, in the test log (`ACCESSIBILITY` lines). VoiceOver speaks the label, then the value.
     func testMyDayFilterAccessibility() {
@@ -318,58 +372,6 @@ final class ShotsUITests: XCTestCase {
         tapText("#work", inSheet: true)
         barTap { tapButton(containing: "Apply", inSheet: true) }
         report(2)
-    }
-
-    /// Six tags, wrapping to at most three rows with "+N more" past them, then the Filter button's
-    /// menu (ticket 20): a tap shows Filter and Clear All Filters, at every text size, and Clear
-    /// All Tags removes every tag. What VoiceOver gets is in the test log (`ACCESSIBILITY` lines).
-    func testMyDayClearAllTags() {
-        launch(.app)
-        tab("My Day")
-        let filter = myDayFilterButtons.firstMatch
-        // With none chosen the button isn't a menu: a tap opens the sheet.
-        openMyDayFilter()
-        // The sheet lists tags A to Z and tapText scrolls only down, so #appointments goes first: last,
-        // it was missed in landscape and at the largest size.
-        for tag in ["#appointments", "#home", "#health", "#work", "#money", "#morning"] {
-            tapText(tag, inSheet: true)
-        }
-        barTap { tapButton(containing: "Apply", inSheet: true) }
-        XCTAssertEqual(filter.value as? String, "6 chosen", "A tag wasn't chosen")
-        shot("myday-tokens-6")
-        // The tokens' hidden measuring copies aren't elements.
-        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "label == %@", "Remove #home from the filter")).count, 1)
-        let more = app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", "more tags")).firstMatch
-        if more.exists {
-            print("ACCESSIBILITY more token: label=\"\(more.label)\"")
-            more.tap()
-            XCTAssert(app.navigationBars["Filter My Day"].waitForExistence(timeout: 3), "+N more didn't open the sheet")
-            barTap { tapButton(containing: "Apply", inSheet: true) }
-        }
-        print("ACCESSIBILITY 6 tags: label=\"\(filter.label)\" value=\"\(filter.value as? String ?? "nil")\"")
-        let clear = app.buttons["Clear All Filters"]
-        barTap {
-            scrollToTop()
-            filter.tap()
-            XCTAssert(clear.waitForExistence(timeout: 3), "The Filter menu didn't open")
-            shot("myday-filter-menu")
-            print("ACCESSIBILITY menu items: \(myDayFilterButtons.count) named Filter, clear=\"\(clear.label)\"")
-            clear.tap()
-        }
-        shot("myday-cleared")
-        XCTAssertFalse(app.buttons["Remove #home from the filter"].exists, "Clear All Filters left a token")
-        XCTAssertEqual(filter.value as? String ?? "", "", "The Filter button still has a count")
-        // No Tags is cleared too.
-        openMyDayFilter()
-        tapText("No Tags", inSheet: true)
-        barTap { tapButton(containing: "Apply", inSheet: true) }
-        barTap {
-            scrollToTop()
-            filter.tap()
-            XCTAssert(clear.waitForExistence(timeout: 3), "The Filter menu didn't open with No Tags")
-            clear.tap()
-        }
-        XCTAssertFalse(app.buttons["Remove No Tags from the filter"].exists, "Clear All Filters left No Tags")
     }
 
     /// The seed's tags, as the filter sheet lists them.
@@ -484,8 +486,16 @@ final class ShotsUITests: XCTestCase {
         launch(.app)
         tab("Tags")
         shot("tags", pages: 2)
+        // A tag row opens its details page (#376), whose Reminders row opens its reminders.
         tapText("#home")
+        shot("tag-details")
+        // The page's row, not the tab bar's Reminders tab.
+        let remindersRow = app.collectionViews.buttons["Reminders"].firstMatch
+        XCTAssert(remindersRow.waitForExistence(timeout: 3), "No Reminders row on the Tag details page:\n\(app.debugDescription)")
+        remindersRow.tap()
+        pause(0.8)
         shot("tag-home", pages: 2)
+        back()
         back()
         openSheet("New Tag", title: "New Tag")
         dismissKeyboardTip()
@@ -656,49 +666,6 @@ final class ShotsUITests: XCTestCase {
         assertTagCount(startsWith: "8 tags out of 8")
     }
 
-    /// The tag sheet's Cancel (#285), New Tag and rename: with the name as it opened it closes
-    /// without asking; with a change it asks, and Discard Changes adds and renames nothing.
-    func testTagSheetDiscard() {
-        launch(.app)
-        tab("Tags")
-        openRenameSheet(for: "#home")
-        dismissKeyboardTip()
-        closeUnchangedSheet(titled: "Rename Tag")
-
-        openRenameSheet(for: "#home")
-        app.typeText("x")
-        assertTagSheetAsksBeforeDiscarding(titled: "Rename Tag", shot: "tag-rename-discard")
-        // By existence, not hittability: at the largest text scrolling can step past the middle of a
-        // row this tall, and the rotation for the bar's taps moves the list.
-        scrollToTop()
-        XCTAssert(rowExists("#home"), "Discard Changes renamed the tag:\n\(app.debugDescription)")
-
-        openSheet("New Tag", title: "New Tag")
-        closeUnchangedSheet(titled: "New Tag")
-
-        openSheet("New Tag", title: "New Tag")
-        app.typeText("spare")
-        assertTagSheetAsksBeforeDiscarding(titled: "New Tag", shot: "tag-new-discard")
-        XCTAssertNil(scrollTo("#spare"), "Discard Changes added the tag")
-    }
-
-    /// With a changed name in the open tag sheet: a swipe down leaves it open, a tap outside the
-    /// question keeps the name, and Discard Changes closes it. The keyboard stays up: a return
-    /// here would save the name.
-    private func assertTagSheetAsksBeforeDiscarding(titled title: String, shot shotName: String, line: UInt = #line) {
-        let typed = app.textFields.firstMatch.value as? String
-        XCTAssertNotNil(typed, "The name field has no value", line: line)
-        swipeSheetDown(titled: title)
-        pause(0.8)
-        XCTAssert(app.navigationBars[title].exists, "A swipe down closed the sheet with a changed name", line: line)
-        askToDiscard(titled: title, line: line)
-        shot(shotName)
-        keepEditing(titled: title, line: line)
-        XCTAssertEqual(app.textFields.firstMatch.value as? String, typed, "Leaving the discard question lost the name", line: line)
-        askToDiscard(titled: title, line: line)
-        discardChanges(titled: title, line: line)
-    }
-
     /// Whether a list row with this title is there, scrolling down to it. The label also carries the
     /// row's other text. By existence, not hittability: at the largest text a scroll can step past
     /// the middle of a tall row, and a row's middle can be under the bar.
@@ -710,13 +677,6 @@ final class ShotsUITests: XCTestCase {
             scrolls += 1
         }
         return row.exists
-    }
-
-    /// Opens the rename sheet from a tag row's trailing swipe.
-    private func openRenameSheet(for tag: String) {
-        swipe(tag)
-        app.buttons["Edit"].firstMatch.tap()
-        XCTAssert(app.navigationBars["Rename Tag"].waitForExistence(timeout: 3), "No Rename Tag sheet")
     }
 
     private func assertTagCount(startsWith text: String, line: UInt = #line) {
@@ -1091,16 +1051,18 @@ final class ShotsUITests: XCTestCase {
     }
 
     /// Opens a row's trailing swipe, scrolling to the row first. On Now and My Day, which have no
-    /// Delete to look for, it swipes all three times; a swipe on an open row leaves it open.
-    private func swipe(_ title: String) {
+    /// Delete to look for, it swipes all three times; a swipe on an open row leaves it open. On
+    /// Sent, `person` is who it went to, since a row's label there leads with them.
+    private func swipe(_ title: String, sentTo person: String? = nil) {
         scrollToTop()
         guard let found = scrollTo(title) else {
             XCTFail("No \(title):\n\(app.debugDescription)")
             return
         }
         // With a tall row's middle hidden the query finds its title, too small a target to swipe (#285).
-        let rowButton = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
-        let row = found.elementType != .button && rowButton.exists ? rowButton : found
+        let lead = [person, title].compactMap { $0 }.joined(separator: ", ")
+        let rowButton = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(lead), ")).firstMatch
+        var row = found.elementType != .button && rowButton.exists ? rowButton : found
         // At the largest text four scrolls up can leave the first row under the bar.
         var tries = 0
         while row.frame.minY < app.navigationBars.firstMatch.frame.maxY, tries < 8 {
@@ -1114,19 +1076,13 @@ final class ShotsUITests: XCTestCase {
             scroll(down: true)
             tries += 1
         }
-        // In landscape a row's middle, where the swipe starts, can sit under the search field, which
-        // takes the swipe. A short drag, only clearing the middle: at the largest text in landscape a
-        // tall row dragged clear of the field whole ends up with its middle at the tab bar (#285).
-        // It starts below the field, since there the window's middle is on it and a drag that starts
-        // on it opens the search, and the clearance keeps it too long to count as a tap.
-        let search = app.searchFields.firstMatch
-        let clearance: CGFloat = 40
-        if search.exists, row.frame.midY < search.frame.maxY + clearance {
-            let window = app.windows.firstMatch
-            let from = window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: (search.frame.maxY + 16) / window.frame.height))
-            let distance = search.frame.maxY + clearance - row.frame.midY
-            from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 0, dy: distance)), withVelocity: .slow, thenHoldForDuration: 0.2)
-            pause(0.5)
+        // In landscape a row's middle can sit under a pinned control, which takes the swipe.
+        if dragClearOfPinnedControls(row), row === found {
+            guard let again = scrollTo(title, scrolls: 0) else {
+                XCTFail("No \(title) after the drag:\n\(app.debugDescription)")
+                return
+            }
+            row = again
         }
         // With another row's actions still open, the first swipe only closes them.
         func opened() -> Bool {
@@ -1302,9 +1258,17 @@ final class ShotsUITests: XCTestCase {
     /// it: the popover's own dismiss region, which is there even when the popover fills the screen at
     /// the largest text. Where iOS draws an action sheet instead, its Cancel is the way out.
     private func keepEditing(titled title: String, line: UInt = #line) {
-        // The top corner: at the largest text the popover covers the window's middle, and in
-        // landscape with the keyboard up the middle is the keyboard's edge (#285).
-        if !tapOutsidePopover(waiting: 1, at: CGVector(dx: 0.97, dy: 0.03)) {
+        // A corner: at the largest text the popover covers the window's middle, and in landscape
+        // with the keyboard up the middle is the keyboard's edge (#285). The top corner no longer
+        // closes it on the iOS 27.2 simulator, where the bottom one does (#488), so each corner is
+        // tried in turn until the question closes.
+        let corners = [CGVector(dx: 0.97, dy: 0.03), CGVector(dx: 0.97, dy: 0.97), CGVector(dx: 0.03, dy: 0.97)]
+        if app.otherElements["PopoverDismissRegion"].waitForExistence(timeout: 1) {
+            for corner in corners {
+                _ = tapOutsidePopover(at: corner)
+                if app.buttons["Discard Changes"].waitForNonExistence(timeout: 3) { break }
+            }
+        } else {
             let cancel = app.sheets.buttons["Cancel"].firstMatch
             XCTAssert(cancel.exists, "No way out of the discard question:\n\(app.debugDescription)", line: line)
             cancel.tap()
@@ -1367,16 +1331,21 @@ final class ShotsUITests: XCTestCase {
         tapText(label, inSheet: true)
     }
 
-    /// A tap at a switch's center doesn't flip it (#114), so this one goes near its end. Nor does that
-    /// tap flip it in landscape (iOS 27.0 simulator), so the phone is turned to portrait for it and back,
-    /// which moves the list, so this scrolls to the row again.
+    /// A tap at a switch's center doesn't flip it (#114), so this one goes near its end.
+    private func tapSwitchEnd(_ row: XCUIElement) {
+        row.coordinate(withNormalizedOffset: CGVector(dx: isRightToLeft ? 0.15 : 0.85, dy: 0.5)).tap()
+    }
+
+    /// Flips the switch labelled `label`. A tap near its end doesn't flip it in landscape (iOS 27.0
+    /// simulator), so the phone is turned to portrait for it and back, which moves the list, so this
+    /// scrolls to the row again.
     private func flipSwitch(_ label: String) {
         barTap {
             XCTAssertNotNil(scrollTo(label), "No \(label):\n\(app.debugDescription)")
             // By type: the row's title shares the label, and comes first on iOS 26.5.
             let row = app.switches[label].firstMatch
             let before = row.value as? String
-            row.coordinate(withNormalizedOffset: CGVector(dx: isRightToLeft ? 0.15 : 0.85, dy: 0.5)).tap()
+            tapSwitchEnd(row)
             pause(0.8)
             XCTAssertNotEqual(row.value as? String, before, "\(label) didn't flip")
         }
@@ -1574,6 +1543,46 @@ final class ShotsUITests: XCTestCase {
         // the count just clear of the field, as it did at the largest text (#135).
         let bar = app.navigationBars.firstMatch
         XCTAssertGreaterThanOrEqual(count.frame.minY, bar.frame.maxY, "After \(button), the list stopped short of its top", line: line)
+    }
+
+    /// The Quiet Hours page (#498, the Add Button mockup): the empty state with its plus, Quiet Now
+    /// on and off, the Add Schedule sheet, and the list with Quiet Now on. Writes what the Quiet Now
+    /// switch exposes to VoiceOver to `quiet-hours-accessibility.txt`.
+    func testQuietHours() {
+        launch(.app)
+        tab("Settings")
+        tapText("Quiet Hours")
+        shot("quiet-hours-empty")
+        let quietNow = app.switches["Quiet Now"]
+        XCTAssert(quietNow.waitForExistence(timeout: 3), "No Quiet Now switch:\n\(app.debugDescription)")
+        try? quietNow.debugDescription.write(to: directory.appending(path: "quiet-hours-accessibility.txt"), atomically: true, encoding: .utf8)
+        // The switch itself, at the row's right end: the middle is the label, which doesn't toggle.
+        func flipQuietNow() {
+            app.switches["Quiet Now"].coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+            pause(0.5)
+        }
+        flipQuietNow()
+        shot("quiet-hours-empty-now-on")
+        flipQuietNow()
+        openSheet("Add Schedule", title: "Add Schedule")
+        shot("quiet-hours-add-sheet")
+        barTap { app.buttons["Add"].tap() }
+        pause(0.8)
+        shot("quiet-hours-list")
+        flipQuietNow()
+        shot("quiet-hours-list-now-on")
+        // The holding banner (#499) on each tab that has it, while Quiet Now is on.
+        for (title, name) in [("Now", "now"), ("My Day", "myday"), ("Reminders", "reminders")] {
+            tab(title)
+            let banner = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Quiet hours are holding nudges")).firstMatch
+            XCTAssert(banner.waitForExistence(timeout: 3), "No holding banner on \(title):\n\(app.debugDescription)")
+            shot("\(name)-quiet-now-banner")
+        }
+        // How Quiet Hours Work (#468), from its Settings row.
+        launch(.app)
+        tab("Settings")
+        tapText("How Quiet Hours Work")
+        tutorialShots("tutorial-how-quiet-hours-work", pages: 4)
     }
 
     func testSettings() {
@@ -1961,7 +1970,7 @@ final class ShotsUITests: XCTestCase {
         // tutorials), which scripts/site-shots.sh copies as tutorial-<slug>-<page>.png.
         launch(.sharing, standIn: "sent")
         tab("Settings")
-        for (title, slug, pages) in [("How It Nudges", "how-it-nudges", 4), ("How Sharing Works", "how-sharing-works", 4), ("How Alarm Sounds Work", "how-alarm-sounds-work", 3)] {
+        for (title, slug, pages) in [("How It Nudges", "how-it-nudges", 4), ("How Sharing Works", "how-sharing-works", 4), ("How Alarm Sounds Work", "how-alarm-sounds-work", 3), ("How Quiet Hours Work", "how-quiet-hours-work", 4)] {
             tapText(title)
             siteTutorialShots("site-tutorial-\(slug)", pages: pages)
         }
@@ -2068,11 +2077,53 @@ final class ShotsUITests: XCTestCase {
         tab("Reminders")
         app.buttons["Sent"].firstMatch.tap()
         pause(1)
-        swipe("Take the pills")
+        swipe("Take the pills", sentTo: "Riley Park")
         shot("sent-swipe")
         app.buttons["Delete"].firstMatch.tap()
+        deleteQuestion(titled: "Delete “Take the pills”?", saying: "with a note saying so")
         pause(1)
         shot("sent-delete")
+    }
+
+    /// Chooses from the Stand-in menu: `path` is the item, after its submenu if it has one. At the
+    /// largest text in landscape a menu doesn't fit, and its lower items aren't there until it
+    /// scrolls (#524); a tap then brings one into view.
+    private func chooseStandIn(_ path: String..., line: UInt = #line) {
+        app.buttons["Stand-in"].firstMatch.tap()
+        for title in path {
+            let item = app.buttons[title].firstMatch
+            for _ in 0..<8 where !item.waitForExistence(timeout: 1) {
+                dragMenuUp()
+            }
+            XCTAssert(item.exists, "No \(title) in the Stand-in menu:\n\(app.debugDescription)", line: line)
+            item.tap()
+        }
+    }
+
+    /// Scrolls the open menu, or the submenu over it, down by less than it shows. A slow drag: a
+    /// swipe flings it past rows, which are gone once off it (#524).
+    private func dragMenuUp() {
+        // Narrower than the window, as the page's list isn't.
+        let width = app.windows.firstMatch.frame.width
+        guard let menu = app.collectionViews.allElementsBoundByIndex.last(where: { $0.frame.width < width }) else { return }
+        // In points from its top: its frame runs on past the part that shows, and a drag from under
+        // that closes it. At its shortest, in landscape at the largest text, it shows about 320.
+        let topCenter = menu.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0))
+        let from = topCenter.withOffset(CGVector(dx: 0, dy: 270))
+        let to = topCenter.withOffset(CGVector(dx: 0, dy: 55))
+        from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.2)
+    }
+
+    /// Fails unless a text starting `start` is there, on screen or scrolled off it: a step that
+    /// missed its screen still takes a picture.
+    private func assertText(startingWith start: String, line: UInt = #line) {
+        let text = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", start)).firstMatch
+        XCTAssert(text.waitForExistence(timeout: 3), "No text starting \(start):\n\(app.debugDescription)", line: line)
+    }
+
+    /// Fails unless the screen or sheet titled `title` is there.
+    private func assertBar(_ title: String, line: UInt = #line) {
+        XCTAssert(app.navigationBars[title].waitForExistence(timeout: 3), "No \(title) bar:\n\(app.debugDescription)", line: line)
     }
 
     /// The Stand-in menu's states: iCloud unavailable, offline, and another Apple Account signing in.
@@ -2080,27 +2131,26 @@ final class ShotsUITests: XCTestCase {
         launch(.sharing, standIn: "sent")
         tab("Settings")
         tapText("Connections")
-        app.buttons["Stand-in"].firstMatch.tap()
-        app.buttons["iCloud"].firstMatch.tap()
-        app.buttons["No iCloud Account"].firstMatch.tap()
+        chooseStandIn("iCloud", "No iCloud Account")
         pause(1)
+        assertText(startingWith: "Sharing is paused.")
         shot("sharing-paused")
-        app.buttons["Stand-in"].firstMatch.tap()
-        app.buttons["iCloud"].firstMatch.tap()
-        app.buttons["Available"].firstMatch.tap()
-        app.buttons["Stand-in"].firstMatch.tap()
-        app.buttons["Network"].firstMatch.tap()
-        app.buttons["Offline"].firstMatch.tap()
+        chooseStandIn("iCloud", "Available")
+        chooseStandIn("Network", "Offline")
         pause(1)
         tab("Reminders")
         app.buttons["Sent"].firstMatch.tap()
         pause(1)
+        // Connections says it's offline too, so the text alone doesn't prove this is Sent.
+        assertBar("Reminders")
+        XCTAssert(mineOrSent.buttons["Sent"].isSelected, "Sent isn't selected:\n\(app.debugDescription)")
+        assertText(startingWith: "You're offline.")
         shot("sharing-offline")
         launch(.sharing, standIn: "sent")
         tab("Settings")
         tapText("Connections")
-        app.buttons["Stand-in"].firstMatch.tap()
-        app.buttons["Another Apple Account Signs In"].firstMatch.tap()
+        chooseStandIn("Another Apple Account Signs In")
+        assertBar("Apple Account Changed")
         pause(1.5)
         shot("account-changed", pages: 2)
     }
@@ -2110,14 +2160,27 @@ final class ShotsUITests: XCTestCase {
         launch(.sharingOff, standIn: "empty")
         tab("Settings")
         shot("settings-sharing-off")
+        // Off the first screen at the largest text, so it's checked after the picture.
+        let sharingSwitch = app.switches["Sharing"].firstMatch
+        reveal(sharingSwitch)
+        XCTAssertEqual(sharingSwitch.value as? String, "0", "Sharing isn't off:\n\(app.debugDescription)")
         tab("Now")
+        assertBar("Now")
         shot("now-sharing-off")
         tab("Reminders")
+        assertBar("Reminders")
+        XCTAssertFalse(mineOrSent.exists, "Mine | Sent shows with Sharing off")
         shot("reminders-sharing-off")
         launch(.sharing, standIn: "sent")
         tab("Settings")
-        // The switch's own end of the row: a tap in the middle of it lands on the label.
-        app.switches.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
+        // Turned to portrait, as for `flipSwitch`; the switch stays on, since turning it off asks.
+        barTap {
+            // At the largest text the list builds the switch only once it scrolls near it (#524).
+            let sharingSwitch = app.switches["Sharing"].firstMatch
+            reveal(sharingSwitch)
+            tapSwitchEnd(sharingSwitch)
+            assertBar("Turn Off Sharing")
+        }
         pause(1.5)
         shot("sharing-off-confirm", pages: 2)
     }

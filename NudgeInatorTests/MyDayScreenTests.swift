@@ -12,6 +12,8 @@ struct MyDayScreenTests {
     let clock = FakeClock(now: NewYork.local(2026, 10, 16, 6))
     let center = FakeNotificationCenter()
     let manager = FakeAlarmManager()
+    /// The day after ticket 16's day, for the screen on another day (#374).
+    let tomorrow = CalendarDay(year: 2026, month: 10, day: 17)
 
     func launchedModel() async throws -> AppModel {
         let store = try ReminderStore(location: .inMemory)
@@ -85,7 +87,7 @@ struct MyDayScreenTests {
             "Morning meds", "Walk the dog", "Team stand-up", "Stretch break", "Reply to Alex",
             "Send the status update", "Call Grandma", "Water the plants", "Take the bins out",
         ])
-        #expect(screen.items.map(\.time) == ["6:30\u{202F}AM", "7:00\u{202F}AM", "9:30\u{202F}AM", "10:00\u{202F}AM", "12:30\u{202F}PM", "4:30\u{202F}PM", "5:00\u{202F}PM", "6:00\u{202F}PM", "8:00\u{202F}PM"])
+        #expect(screen.items.map(\.time.english) == ["6:30\u{202F}AM", "7:00\u{202F}AM", "9:30\u{202F}AM", "10:00\u{202F}AM", "12:30\u{202F}PM", "4:30\u{202F}PM", "5:00\u{202F}PM", "6:00\u{202F}PM", "8:00\u{202F}PM"])
     }
 
     /// The mockup's `note`: how a closed occurrence closed, as Last 24 Hours words it, and for
@@ -200,7 +202,7 @@ struct MyDayScreenTests {
             MyDayScreen(engine: day.model.engine, filter: filter, now: clock.now).rows.map {
                 switch $0 {
                 case .item(let item): item.title
-                case .now(let time): "Now, \(time)"
+                case .now(let time): "Now, \(time.english)"
                 }
             }
         }
@@ -410,6 +412,246 @@ struct MyDayScreenTests {
 
         #expect(sheet(MyDayFilterChoices()).hasChanges)
         #expect(!sheet(MyDayFilterChoices()).canReset)
+    }
+
+    /// The screen lists the day it's asked for (#374), today when it's asked for none.
+    @Test func withNoDayTheScreenListsToday() async throws {
+        let day = try await dayAtOnePM()
+        let engine = day.model.engine
+
+        let screen = MyDayScreen(engine: engine, filter: MyDayFilter(), now: clock.now)
+        let today = MyDayScreen(engine: engine, filter: MyDayFilter(), now: clock.now, day: engine.today)
+
+        #expect(screen.items.map(\.id) == today.items.map(\.id))
+        #expect(screen.rows.map(\.id) == today.rows.map(\.id))
+    }
+
+    /// Tomorrow: the daily ones and the dentist, the stretch break and Grandma Paused, since both
+    /// are still paused. Nothing is Done, Nudging or Missed, and there's no Now marker.
+    @Test func anotherDayListsWhatFallsDueOnItWithNoNowMarker() async throws {
+        let day = try await dayAtOnePM()
+
+        let screen = MyDayScreen(engine: day.model.engine, filter: MyDayFilter(), now: clock.now, day: tomorrow)
+
+        #expect(screen.items.map(\.title) == ["Morning meds", "Walk the dog", "Stretch break", "Dentist appointment", "Call Grandma"])
+        #expect(screen.items.map(\.status) == [.left, .left, .paused, .left, .paused])
+        #expect(screen.counts.map(\.number) == [0, 0, 0, 3])
+        #expect(!screen.rows.contains { if case .now = $0 { true } else { false } })
+    }
+
+    /// The reminders were all made this morning, so the range starts today, though their rules
+    /// reach back to the first of the month: asked for yesterday, the screen stays on today (#375).
+    @Test func aPastDayBeforeTheRemindersWereMadeIsOutsideTheRange() async throws {
+        let day = try await dayAtOnePM()
+        let yesterday = CalendarDay(year: 2026, month: 10, day: 15)
+
+        let screen = MyDayScreen(engine: day.model.engine, filter: MyDayFilter(), now: clock.now, day: yesterday)
+
+        #expect(screen.shown.isToday)
+        #expect(screen.shown.previous == nil)
+    }
+
+    /// The filter sheet's "Apply shows" counts the day My Day shows: #home tomorrow is the dog alone.
+    @Test func theFilterSheetCountsTheDayShown() async throws {
+        let day = try await dayAtOnePM()
+        var draft = MyDayFilterChoices()
+        draft.toggle(day.home.id)
+
+        let sheet = MyDayFilterSheet(engine: day.model.engine, draft: draft, applied: MyDayFilterChoices(), day: tomorrow)
+        let todays = MyDayFilterSheet(engine: day.model.engine, draft: draft, applied: MyDayFilterChoices())
+
+        #expect(sheet.dueCount == 1)
+        #expect(todays.dueCount == 3)
+    }
+
+    /// The label under the title names the day (#375): today's date as before, Tomorrow before the
+    /// date, any other day its date alone. The fixture's reminders were made this morning, so the
+    /// range runs from today to 7 days ahead: no day before today, none after the 23rd.
+    @Test(arguments: [
+        (16, "Friday, October 16", nil, 17),
+        (17, "Tomorrow, Saturday, October 17", 16, 18),
+        (20, "Tuesday, October 20", 19, 21),
+        (23, "Friday, October 23", 22, nil),
+    ] as [(Int, String, Int?, Int?)])
+    func theDayLabelNamesTheDayAndTheRangeEndsStopTheMove(day: Int, label: String, previous: Int?, next: Int?) async throws {
+        let fixture = try await dayAtOnePM()
+        let october = { (day: Int) in CalendarDay(year: 2026, month: 10, day: day) }
+
+        let screen = MyDayScreen(engine: fixture.model.engine, filter: MyDayFilter(), now: clock.now, day: october(day))
+
+        #expect(screen.shown.label.english == label)
+        #expect(screen.shown.previous == previous.map(october))
+        #expect(screen.shown.next == next.map(october))
+        #expect(screen.shown.isToday == (day == 16))
+    }
+
+    /// Yesterday before the date, once there is a yesterday in the range; and a day outside the
+    /// range, as after the reminders it reached back for are deleted, shows the nearest day in it.
+    @Test func yesterdayIsNamedAndADayOutsideTheRangeShowsTheNearestEnd() async throws {
+        let fixture = try await dayAtOnePM()
+        fixture.model.addKeepingCreationDate(Reminder(title: "Pay rent", dueTime: NewYork.local(2026, 10, 1, 9), strength: .gentle, createdAt: NewYork.local(2026, 10, 1, 8)))
+        await fixture.model.waitUntilApplied()
+        let engine = fixture.model.engine
+        let yesterday = CalendarDay(year: 2026, month: 10, day: 15)
+
+        #expect(MyDayScreen(engine: engine, filter: MyDayFilter(), now: clock.now, day: yesterday).shown.label.english == "Yesterday, Thursday, October 15")
+        let beyond = MyDayScreen(engine: engine, filter: MyDayFilter(), now: clock.now, day: CalendarDay(year: 2026, month: 11, day: 30))
+        #expect(beyond.shown.day == CalendarDay(year: 2026, month: 10, day: 23))
+        #expect(beyond.shown.next == nil)
+    }
+
+    /// Ticket 16's day with a reminder made on 1 October, so the range reaches back past yesterday.
+    func dayWithAnOldReminder() async throws -> Day {
+        let fixture = try await dayAtOnePM()
+        fixture.model.addKeepingCreationDate(Reminder(title: "Pay rent", dueTime: NewYork.local(2026, 10, 1, 9), strength: .gentle, createdAt: NewYork.local(2026, 10, 1, 8)))
+        await fixture.model.waitUntilApplied()
+        return fixture
+    }
+
+    /// On another day the empty states say that day, each a whole sentence (#375; the mockup's
+    /// `dayEmpty`): what was on a past day, what is yet to be on a future one. Today's are above.
+    @Test(arguments: [
+        (15, nil, "Nothing was due yesterday."),
+        (15, MyDayCount.done, "Nothing was done yesterday."),
+        (15, .nudging, "Nothing from yesterday is nudging you."),
+        (15, .missed, "Nothing was missed yesterday."),
+        (15, .left, "Nothing from yesterday is left to do."),
+        (13, nil, "Nothing was due on Tue, Oct 13."),
+        (13, .done, "Nothing was done on Tue, Oct 13."),
+        (13, .nudging, "Nothing from Tue, Oct 13 is nudging you."),
+        (13, .missed, "Nothing was missed on Tue, Oct 13."),
+        (13, .left, "Nothing from Tue, Oct 13 is left to do."),
+        (17, nil, "Nothing is due tomorrow."),
+        (17, .done, "Nothing is done yet for tomorrow."),
+        (17, .nudging, "Nothing from tomorrow is nudging you yet."),
+        (17, .missed, "Nothing is missed yet for tomorrow."),
+        (17, .left, "Nothing is left to do tomorrow."),
+        (20, nil, "Nothing is due on Tue, Oct 20."),
+        (20, .done, "Nothing is done yet for Tue, Oct 20."),
+        (20, .nudging, "Nothing from Tue, Oct 20 is nudging you yet."),
+        (20, .missed, "Nothing is missed yet for Tue, Oct 20."),
+        (20, .left, "Nothing is left to do on Tue, Oct 20."),
+    ] as [(Int, MyDayCount?, String)])
+    func anotherDaysEmptyStateSaysThatDay(day: Int, count: MyDayCount?, expected: String) async throws {
+        let fixture = try await dayWithAnOldReminder()
+        var filter = MyDayFilter()
+        if let count { filter.tap(count) }
+
+        let screen = MyDayScreen(engine: fixture.model.engine, filter: filter, now: clock.now, day: CalendarDay(year: 2026, month: 10, day: day))
+
+        #expect(plain(screen.emptyMessage) == expected)
+    }
+
+    /// The line under the filter tokens and the filter sheet's count say the day shown (#375). On
+    /// tomorrow #health is the meds and the dentist; #work the stretch break.
+    @Test(arguments: [
+        (15, "yesterday", "yesterday"),
+        (13, "on Tue, Oct 13", "on Tue, Oct 13"),
+        (17, "tomorrow", "tomorrow"),
+        (20, "on Tue, Oct 20", "on Tue, Oct 20"),
+    ])
+    func theFilterSummaryAndTheSheetSayTheDayShown(day: Int, inSummary: String, inSheet: String) async throws {
+        let fixture = try await dayWithAnOldReminder()
+        let shown = CalendarDay(year: 2026, month: 10, day: day)
+        var filter = MyDayFilter()
+        func summary() -> String? {
+            MyDayScreen(engine: fixture.model.engine, filter: filter, now: clock.now, day: shown).filterSummary.map(plain)
+        }
+
+        filter.toggle(fixture.health.id)
+        #expect(summary() == "Due \(inSummary) with the selected tag")
+        filter.toggle(fixture.work.id)
+        #expect(summary() == "Due \(inSummary) with all selected tags")
+        filter.match = .any
+        #expect(summary() == "Due \(inSummary) with any selected tags")
+        filter.toggleNoTags()
+        #expect(summary() == "Due \(inSummary) with no tags")
+
+        var draft = MyDayFilterChoices()
+        draft.toggle(fixture.work.id)
+        let sheet = MyDayFilterSheet(engine: fixture.model.engine, draft: draft, applied: MyDayFilterChoices(), day: shown)
+        #expect(plain(sheet.result) == "Apply shows \(sheet.dueCount) \(sheet.dueCount == 1 ? "reminder" : "reminders") due \(inSheet).")
+    }
+
+    /// A tag filter keeps applying as the person moves between days (#375): on a day with nothing
+    /// due, the Filter button stays while a filter is on, so the filter isn't cleared with it.
+    /// Today's rule is as before: an empty today has no Filter button.
+    @Test func aFilterOnKeepsTheFilterButtonOnAnotherDayWithNothingDue() async throws {
+        let model = try await launchedModel()
+        let home = try #require(try model.createTag(named: "home"))
+        model.add(Reminder(title: "Dentist", tagIDs: [home.id], dueTime: NewYork.local(2026, 10, 16, 15), strength: .gentle))
+        await model.waitUntilApplied()
+        let empty = CalendarDay(year: 2026, month: 10, day: 18)
+        var filter = MyDayFilter()
+        func offers(on day: CalendarDay?) -> Bool { MyDayScreen(engine: model.engine, filter: filter, now: clock.now, day: day).offersFilter }
+
+        #expect(!offers(on: empty))
+        filter.toggle(home.id)
+        #expect(offers(on: empty))
+        #expect(offers(on: nil))
+    }
+
+    /// A future day's row says how it repeats, as Coming Up's rows do, not "in 24 hr." (#375); a
+    /// paused one still says it will be skipped. Today's rows say how soon, as before.
+    @Test func aFutureDaysRowSaysHowItRepeats() async throws {
+        let fixture = try await dayAtOnePM()
+        let engine = fixture.model.engine
+        func note(_ title: String, on day: CalendarDay?) throws -> String {
+            let item = try #require(MyDayScreen(engine: engine, filter: MyDayFilter(), now: clock.now, day: day).items.first { $0.title == title })
+            return plain(item.note(at: clock.now))
+        }
+
+        #expect(try note("Morning meds", on: tomorrow) == "Every day at 6:30\u{202F}AM")
+        #expect(try note("Dentist appointment", on: tomorrow) == "Once, Tomorrow at 1:15\u{202F}PM")
+        #expect(try note("Call Grandma", on: tomorrow) == "Paused: this one will be skipped")
+        #expect(try note("Water the plants", on: nil) == "in 5 hr.")
+    }
+
+    /// VoiceOver announces the day moved to and how many are due on it with the filter (#375; the
+    /// mockup's `goDay`). Today says it is today. With a filter on, the sentence says so, without
+    /// naming the tags, which the tokens show (the developer's answer to question 2).
+    @Test func aDayChangeIsAnnouncedWithItsLabelAndHowManyAreDue() async throws {
+        let fixture = try await dayAtOnePM()
+        let engine = fixture.model.engine
+        var filter = MyDayFilter()
+        func announcement(_ day: CalendarDay?) -> String {
+            plain(MyDayScreen(engine: engine, filter: filter, now: clock.now, day: day).announcement)
+        }
+
+        #expect(announcement(tomorrow) == "Tomorrow, Saturday, October 17. 5 reminders due.")
+        #expect(announcement(nil) == "Today, Friday, October 16. 9 reminders due.")
+        #expect(announcement(CalendarDay(year: 2026, month: 10, day: 20)) == "Tuesday, October 20. 4 reminders due.")
+        filter.toggle(fixture.home.id)
+        #expect(announcement(tomorrow) == "Tomorrow, Saturday, October 17. 1 reminder due with your filter.")
+        #expect(announcement(nil) == "Today, Friday, October 16. 3 reminders due with your filter.")
+    }
+
+    /// VoiceOver's name for the counts says the day too (#375; the mockup's "Counts for tomorrow").
+    @Test(arguments: [
+        (16, "Today's counts. Choose one to show only those."),
+        (15, "Counts for yesterday. Choose one to show only those."),
+        (17, "Counts for tomorrow. Choose one to show only those."),
+        (20, "Counts for Tue, Oct 20. Choose one to show only those."),
+    ])
+    func theCountsAreNamedForTheDay(day: Int, expected: String) async throws {
+        let fixture = try await dayWithAnOldReminder()
+
+        let screen = MyDayScreen(engine: fixture.model.engine, filter: MyDayFilter(), now: clock.now, day: CalendarDay(year: 2026, month: 10, day: day))
+
+        #expect(plain(screen.shown.countsLabel) == expected)
+    }
+
+    /// My Day pages through every day in its range, oldest first (#375): with the reminder made on
+    /// 1 October, from then to 7 days ahead.
+    @Test func thePagesAreEveryDayInTheRange() async throws {
+        let fixture = try await dayWithAnOldReminder()
+
+        let days = MyDayShownDay.days(of: fixture.model.engine)
+
+        #expect(days.count == 23)
+        #expect(days.first == CalendarDay(year: 2026, month: 10, day: 1))
+        #expect(days.last == CalendarDay(year: 2026, month: 10, day: 23))
+        #expect(MyDayShownDay.days(of: try await launchedModel().engine) == [CalendarDay(year: 2026, month: 10, day: 16)])
     }
 
     /// The test host and previews have no engine: My Day then shows nothing is due.

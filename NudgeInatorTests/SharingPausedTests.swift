@@ -215,7 +215,7 @@ struct SharingPausedTests {
         await setAccount(account, on: alex)
 
         #expect(form.recipients == [connectionID])
-        #expect(form.recipientsText == "Riley Park")
+        #expect(form.recipientsText?.english == "Riley Park")
         #expect(!form.showsSendToPaused)
         #expect(!form.showsTags)
     }

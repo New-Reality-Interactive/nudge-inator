@@ -2,7 +2,7 @@
   "sourceLanguage" : "en",
   "strings" : {
     "%@" : {
-      "comment" : "My Day: under the title of an occurrence due later today. The placeholder is how soon, such as \"in 4 hr.\"."
+      "comment" : "Words standing alone, already in the language's own format: a date, a time, a duration, how soon, a list, or a person's name. A sentence holds it as a placeholder. Keep it as it is."
     },
     "%@ %@" : {
       "comment" : "Via label: a glyph, then how a nudge arrives. Keep the glyph first.",
@@ -102,6 +102,28 @@
     "%@ sees “Not sharing this one” in place of how it's going." : {
       "comment" : "Reminder details: under Don't share this one while it's on. The placeholder is the sender's name."
     },
+    "%@ to %@, Every %@" : {
+      "comment" : "Quiet Hours page: what VoiceOver reads for a schedule: its start and end times, then the days it starts on, such as \"10:00 PM to 7:00 AM, Every Fri and Sat\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ to %2$@, Every %3$@"
+          }
+        }
+      }
+    },
+    "%@ to %@, Every day" : {
+      "comment" : "Quiet Hours page: what VoiceOver reads for a schedule that runs every day: its start and end times, such as \"10:00 PM to 7:00 AM, Every day\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ to %2$@, Every day"
+          }
+        }
+      }
+    },
     "%@ · %@" : {
       "comment" : "A tag's screen: under a reminder's title. 1: its tags, such as \"#home #errands\", this screen's tag in bold. 2: its schedule, such as \"Every day at 8:00 AM\".\nBody of the notification that a reminder someone sent has arrived. 1: who sent it, such as \"From Alex Morgan\". 2: its strength in words, such as \"Firm: rings as an alarm from nudge 4\".\nMy Day: under the title of a tagged reminder. 1: its tags, such as \"#home #errands\", the ones the filter chose in bold. 2: the note, such as \"Nudging · 2 nudges · next 1:15 PM\".",
       "localizations" : {
@@ -109,6 +131,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@. Nudges in it will arrive again." : {
+      "comment" : "Edit Schedule (quiet hours): the message of the question that asks before deleting the schedule. 1: its times, such as \"10:00 PM–7:00 AM\". 2: its days, such as \"Every day\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ · %2$@. Nudges in it will arrive again."
           }
         }
       }
@@ -261,6 +294,72 @@
         }
       }
     },
+    "%@. %lld reminders due with your filter." : {
+      "comment" : "VoiceOver, when My Day moves to another day with a tag filter on. 1: the day as its label reads, such as \"Tomorrow, Tuesday, September 29\". 2: how many reminders due that day the filter shows.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@. %2$#@n@ due with your filter."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%@. %lld reminders due." : {
+      "comment" : "VoiceOver, when My Day moves to another day. 1: the day as its label reads, such as \"Tomorrow, Tuesday, September 29\". 2: how many reminders are due that day.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@. %2$#@n@ due."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%@: %@" : {
       "comment" : "VoiceOver, a repeating sent reminder's last 7 days on the Sent view: one day and how the person's copy went. 1: the weekday, such as \"Thursday\", or \"Today\". 2: the status, such as \"Done\" or \"Missed\".",
       "localizations" : {
@@ -288,6 +387,17 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@: rings as an alarm from nudge %2$lld"
+          }
+        }
+      }
+    },
+    "%@–%@" : {
+      "comment" : "Quiet Hours page: a schedule's times, start then end, joined by an en dash with no spaces, such as \"10:00 PM–7:00 AM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@–%2$@"
           }
         }
       }
@@ -830,17 +940,32 @@
     "A Gentle reminder, or a Firm one with Break Through Focus off, never rings, so it has no Sound row." : {
       "comment" : "How Alarm Sounds Work, When It Plays: under \"Some reminders never ring\". Gentle and Firm are strengths; Sound is the form's row."
     },
+    "A change applies from now on. What was already sent or held stays as it was." : {
+      "comment" : "How Quiet Hours Work, Your Schedules: the note under the rows."
+    },
     "A different Apple Account signed in, so sharing from the old one was removed." : {
       "comment" : "Share Activity: an entry for a change of Apple Account, which removed the old account's connections."
     },
     "A new schedule applies from the next time it's due. A new strength, pace or Break Through Focus setting applies from the next nudge." : {
       "comment" : "Top of the Edit Reminder form when the reminder isn't nudging: when changes apply."
     },
+    "A nudge that falls in quiet hours is held, and counts as one you didn't answer." : {
+      "comment" : "How Quiet Hours Work, Held Nudges: the line under the heading."
+    },
+    "A quiet hours schedule is a time, on the days you choose, when no nudge arrives." : {
+      "comment" : "How Quiet Hours Work, Rest Without Nudges: the line under the heading."
+    },
     "A reminder someone sends you rings with the sound chosen on your iPhone." : {
       "comment" : "How Alarm Sounds Work, Change Your Reminders: the note under the rows."
     },
+    "A reminder that reaches its limit while held ends as Missed, with a note such as “%@”" : {
+      "comment" : "How Quiet Hours Work, Held Nudges: under \"It can end as Missed\". Missed is a status. The placeholder is the Missed note, \"Quiet hours held 10 of its 20 nudges.\", in the language's quotation marks."
+    },
     "A reminder's details name its sound, under Break Through Focus." : {
       "comment" : "How Alarm Sounds Work, Change Your Reminders: under \"Named on its details\". Break Through Focus is the details' row."
+    },
+    "A start, an end and days" : {
+      "comment" : "How Quiet Hours Work, Rest Without Nudges: the row about what a schedule is made of."
     },
     "A to Z" : {
       "comment" : "Tags tab's Sort menu, sorted by Name: alphabetical order."
@@ -855,10 +980,19 @@
       "comment" : "VoiceOver label of Accept on a Waiting for You row on Now. The placeholder is the reminder's title."
     },
     "Add" : {
-      "comment" : "The New Reminder form's confirm button (a checkmark).\nThe Tags page's button that adds the typed tag to the reminder."
+      "comment" : "Add Schedule (quiet hours): the confirm button (a checkmark) that adds the schedule.\nThe New Reminder form's confirm button (a checkmark).\nThe Tags page's button that adds the typed tag to the reminder."
+    },
+    "Add Schedule" : {
+      "comment" : "Title of the sheet that adds a quiet hours schedule, and the Quiet Hours page's button that opens it."
+    },
+    "Add a Schedule" : {
+      "comment" : "How Quiet Hours Work, Your Schedules: the first row, about the Quiet Hours page's Add Schedule (+)."
     },
     "Add a title to save." : {
       "comment" : "Under the reminder form's title when it is empty, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name."
+    },
+    "Add as many as you need, such as one for weeknights and one for weekends." : {
+      "comment" : "How Quiet Hours Work, Your Schedules: the line under the heading, above the rows."
     },
     "After" : {
       "comment" : "The reminder form's End Repeat choice: the repeat ends after a number of times."
@@ -890,7 +1024,7 @@
       "comment" : "Nudge card: the next nudge rings as an alarm. Also How Alarm Sounds Work's picture of a nudge that rings as an alarm."
     },
     "Alarms" : {
-      "comment" : "Settings: row that shows whether alarms are allowed."
+      "comment" : "Settings: row that shows whether alarms are allowed, and opens the app's page in iOS Settings."
     },
     "Alarms and Time Sensitive are off, so Urgent nudges come as ordinary notifications." : {
       "comment" : "How It Nudges footer, when alarms and Time Sensitive are both off."
@@ -962,11 +1096,11 @@
     "Already Invited" : {
       "comment" : "Invite: title of the question shown when the person invited has an invite waiting."
     },
-    "An invite opens only for the Apple Account it was sent to, and you both need the latest Nudge-inator." : {
-      "comment" : "How Sharing Works, Connect: the note under the steps."
-    },
     "An invite opens only for the Apple Account it was sent to, and only in the latest Nudge-inator. If it doesn't open, check the email address or phone number of their Apple Account, and ask them to update Nudge-inator, then invite them again." : {
       "comment" : "An invited person's page: the help under \"Didn't open for them?\"."
+    },
+    "An invite opens only for the Apple Account it was sent to, and you both need the latest Nudge-inator." : {
+      "comment" : "How Sharing Works, Connect: the note under the steps."
     },
     "Any Tag" : {
       "comment" : "A filter sheet: the Match choice that needs at least one checked tag."
@@ -977,6 +1111,39 @@
     "Apply" : {
       "comment" : "A filter sheet's confirm button (a checkmark), on My Day, Reminders and Tags: applies the choices and closes the sheet.\nThe Custom repeat sheet's only button (a checkmark): it closes the sheet. Its choices are already the reminder form's repeat."
     },
+    "Apply shows %lld reminders due on %@." : {
+      "comment" : "My Day's filter sheet on a day other than today, yesterday or tomorrow: above Reset. 1: how many reminders due that day My Day would show with these filters. 2: the day, such as \"Tue, Sep 29\". VoiceOver also speaks it when a choice changes it.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apply shows %1$#@n@ due on %2$@."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Apply shows %lld reminders due today." : {
       "comment" : "My Day's filter sheet: above Reset. The placeholder is how many reminders due today My Day would show with these filters. VoiceOver also speaks it when a choice changes it.",
       "localizations" : {
@@ -984,6 +1151,72 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apply shows %#@n@ due today."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Apply shows %lld reminders due tomorrow." : {
+      "comment" : "My Day's filter sheet on tomorrow: above Reset. The placeholder is how many reminders due tomorrow My Day would show with these filters. VoiceOver also speaks it when a choice changes it.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apply shows %#@n@ due tomorrow."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Apply shows %lld reminders due yesterday." : {
+      "comment" : "My Day's filter sheet on yesterday: above Reset. The placeholder is how many reminders due yesterday My Day would show with these filters. VoiceOver also speaks it when a choice changes it.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apply shows %#@n@ due yesterday."
           },
           "substitutions" : {
             "n" : {
@@ -1079,6 +1312,9 @@
     "Are you sure you want to discard these changes?" : {
       "comment" : "Asked when cancelling a sheet with changes: the reminder form, the tag sheet, or the Reminders or Tags filter."
     },
+    "As if you'd swiped the nudge away, the next nudges come as planned, and the held ones count toward its limit." : {
+      "comment" : "How Quiet Hours Work, Held Nudges: under \"Its reminder moves on\". Its limit is the reminder's give-up limit."
+    },
     "Ask me first" : {
       "comment" : "Delivery Mode: a reminder from this person waits to be accepted before it nudges."
     },
@@ -1089,7 +1325,7 @@
       "comment" : "A tutorial sheet, such as How Sharing Works: the top bar's button (a back arrow) that goes back a page. Dimmed on the first page."
     },
     "Badges" : {
-      "comment" : "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging."
+      "comment" : "Settings: row that shows whether the app icon may show a badge with how many reminders are nudging, and opens the app's notification settings in iOS Settings."
     },
     "Beacon" : {
       "comment" : "Alarm sound name: a beacon-like signal tone that ships with the app."
@@ -1128,7 +1364,7 @@
       "comment" : "Title shown when the app can't read its stored reminders, for example before the first unlock after a restart."
     },
     "Cancel" : {
-      "comment" : "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, the Reminders and Tags filters', the invite hint's, and Disconnect's.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nInvite: leaves the Already Invited question without sending.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nLeaves every reminder's sound as it is, instead of Use for All Reminders.\nSettings: keeps your data instead of deleting it."
+      "comment" : "A sheet's cancel button (an xmark): the reminder form's, the tag sheet's, the Reminders and Tags filters', the invite hint's, and Disconnect's.\nCloses the alert without choosing a new time.\nCloses the discard question and goes back to the sheet with its changes.\nInvite: leaves the Already Invited question without sending.\nKeeps the quiet hours schedule instead of deleting it.\nKeeps the reminder instead of deleting it.\nKeeps the tag instead of deleting it.\nLeaves every reminder's sound as it is, instead of Use for All Reminders.\nSettings: keeps your data instead of deleting it."
     },
     "Cancel Invite" : {
       "comment" : "An invited person's page: opens the question that asks before canceling the invite.\nThe question before canceling an invite: cancels it."
@@ -1141,6 +1377,9 @@
     },
     "Canceling stops the invite from working." : {
       "comment" : "An invited person's page: under Cancel Invite."
+    },
+    "Change One" : {
+      "comment" : "How Quiet Hours Work, Your Schedules: the second row, about editing a schedule."
     },
     "Change These" : {
       "comment" : "Accepting an invite: on the Connected sheet, opens the connection's page in Settings to change Status Sharing and Delivery Mode."
@@ -1174,6 +1413,9 @@
     },
     "Choose an address" : {
       "comment" : "Invite Someone: title of the choice between a contact's email addresses and phone numbers."
+    },
+    "Choose at least one day to save." : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): under the days, in red, while no day is checked, so Save is off."
     },
     "Choose from Contacts" : {
       "comment" : "Invite Someone: the plus beside the address field, which opens the contact picker."
@@ -1286,6 +1528,15 @@
     "Couldn't Turn Off Sharing" : {
       "comment" : "Settings and Turn Off Sharing's sheet: title of the message shown when turning Sharing off couldn't be saved."
     },
+    "Counts for %@. Choose one to show only those." : {
+      "comment" : "VoiceOver label of the group of four counts on My Day on a day other than today, yesterday or tomorrow. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Counts for tomorrow. Choose one to show only those." : {
+      "comment" : "VoiceOver label of the group of four counts on My Day on tomorrow."
+    },
+    "Counts for yesterday. Choose one to show only those." : {
+      "comment" : "VoiceOver label of the group of four counts on My Day on yesterday."
+    },
     "Created" : {
       "comment" : "Reminders tab's Sort menu: the header of the section that sorts by when each reminder was made."
     },
@@ -1300,6 +1551,9 @@
     },
     "Daily" : {
       "comment" : "The Custom repeat page's frequency."
+    },
+    "Days" : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): header of the days of the week the schedule starts on."
     },
     "Default Alarm" : {
       "comment" : "Alarm sound name: iOS's own alarm sound, the first choice in the alarm sound list."
@@ -1325,8 +1579,14 @@
     "Delete Reminder" : {
       "comment" : "Confirms deleting the reminder.\nReminder details: opens the question that asks before deleting the reminder."
     },
+    "Delete Schedule" : {
+      "comment" : "Edit Schedule (quiet hours): confirms deleting the schedule.\nEdit Schedule (quiet hours): the button that asks before deleting the schedule."
+    },
     "Delete Tag" : {
-      "comment" : "Tags: confirms deleting the tag, as Delete Reminder does for a reminder. The reminders that have it are kept."
+      "comment" : "A tag's details page: opens the question that asks before deleting the tag, as Delete Reminder does on a reminder's details.\nTags: confirms deleting the tag, as Delete Reminder does for a reminder. The reminders that have it are kept."
+    },
+    "Delete This Schedule?" : {
+      "comment" : "Edit Schedule (quiet hours): title of the question that asks before deleting the schedule."
     },
     "Delete “%@”?" : {
       "comment" : "Asked before deleting a reminder, from its details, a Reminders tab row, or a sent reminder's details or Sent row. The placeholder is its title."
@@ -1437,6 +1697,18 @@
     "Due Date, Latest First" : {
       "comment" : "VoiceOver value of the Reminders tab's Sort button: sorted by Due Date, Latest First."
     },
+    "Due on %@ with all selected tags" : {
+      "comment" : "My Day on a day other than today, yesterday or tomorrow: under the filter tokens when two or more tags are chosen and Match is All Tags. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Due on %@ with any selected tags" : {
+      "comment" : "My Day on a day other than today, yesterday or tomorrow: under the filter tokens when two or more tags are chosen and Match is Any Tag. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Due on %@ with no tags" : {
+      "comment" : "My Day on a day other than today, yesterday or tomorrow: under the No Tags filter token. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Due on %@ with the selected tag" : {
+      "comment" : "My Day on a day other than today, yesterday or tomorrow: under the filter token when one tag is chosen. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
     "Due time changed from %@ to %@" : {
       "comment" : "Change note line: the sender moved a reminder's due time. 1: the old time, such as \"8:00 AM\", or with its day, such as \"Today at 8:00 AM\", when the day changed too. 2: the new time, in the same style.",
       "localizations" : {
@@ -1460,6 +1732,30 @@
     "Due today with the selected tag" : {
       "comment" : "My Day: under the filter token when one tag is chosen."
     },
+    "Due tomorrow with all selected tags" : {
+      "comment" : "My Day on tomorrow: under the filter tokens when two or more tags are chosen and Match is All Tags."
+    },
+    "Due tomorrow with any selected tags" : {
+      "comment" : "My Day on tomorrow: under the filter tokens when two or more tags are chosen and Match is Any Tag."
+    },
+    "Due tomorrow with no tags" : {
+      "comment" : "My Day on tomorrow: under the No Tags filter token."
+    },
+    "Due tomorrow with the selected tag" : {
+      "comment" : "My Day on tomorrow: under the filter token when one tag is chosen."
+    },
+    "Due yesterday with all selected tags" : {
+      "comment" : "My Day on yesterday: under the filter tokens when two or more tags are chosen and Match is All Tags."
+    },
+    "Due yesterday with any selected tags" : {
+      "comment" : "My Day on yesterday: under the filter tokens when two or more tags are chosen and Match is Any Tag."
+    },
+    "Due yesterday with no tags" : {
+      "comment" : "My Day on yesterday: under the No Tags filter token."
+    },
+    "Due yesterday with the selected tag" : {
+      "comment" : "My Day on yesterday: under the filter token when one tag is chosen."
+    },
     "During a Focus, Normal nudges wait until High, unless you allow %@ in that Focus." : {
       "comment" : "How It Nudges footer. The placeholder is the app's name."
     },
@@ -1468,6 +1764,9 @@
     },
     "Each Gentle or Firm reminder has a Break Through Focus switch. Turn it off and a Focus can hold its nudges, and nothing rings. Relentless always breaks through." : {
       "comment" : "Onboarding and How It Nudges: under \"You choose what breaks through\"."
+    },
+    "Each day is a day the schedule starts on, so Sunday at 10 PM to 7 AM runs into Monday morning." : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): under the days, what a checked day means."
     },
     "Each person chooses, for each connection, whether reminders start right away or wait for them to accept first." : {
       "comment" : "How Sharing Works, Send a Reminder: under \"Their Delivery Mode\"."
@@ -1479,13 +1778,16 @@
       "comment" : "Reminders tab's Sort menu, sorted by Due Date: the earliest due time at the top."
     },
     "Edit" : {
-      "comment" : "Reminder details: the toolbar button that opens the Edit Reminder form.\nReminders tab, Sent: a row's swipe action and VoiceOver action that opens the sent reminder's Edit Reminder form.\nReminders tab: a row's swipe action and VoiceOver action that opens the Edit Reminder form.\nTags: a row's swipe action and VoiceOver action that opens the sheet that renames the tag."
+      "comment" : "A tag's details page: the toolbar button that opens the Rename Tag sheet.\nQuiet Hours page: a schedule row's VoiceOver action that opens its Edit Schedule sheet.\nReminder details: the toolbar button that opens the Edit Reminder form.\nReminders tab, Sent: a row's swipe action and VoiceOver action that opens the sent reminder's Edit Reminder form.\nReminders tab: a row's swipe action and VoiceOver action that opens the Edit Reminder form.\nTags: a row's swipe action and VoiceOver action that opens the sheet that renames the tag."
     },
     "Edit %@" : {
-      "comment" : "VoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title."
+      "comment" : "VoiceOver label of a tag's details page's Edit button. The placeholder is the tag, such as \"#home\".\nVoiceOver label of the reminder details' Edit button. The placeholder is the reminder's title."
     },
     "Edit Reminder" : {
       "comment" : "Title of the form that edits a reminder."
+    },
+    "Edit Schedule" : {
+      "comment" : "Title of the sheet that changes or deletes a quiet hours schedule."
     },
     "Edit a reminder and change its Sound, under Break Through Focus, even while it's nudging." : {
       "comment" : "How Alarm Sounds Work, Change Your Reminders: under \"Sound on the form\". Sound is the form's row and Break Through Focus its switch."
@@ -1502,6 +1804,15 @@
     "End Repeat" : {
       "comment" : "The reminder form's row under Repeat, which opens a menu of when the repeat ends."
     },
+    "Ends" : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): the time the schedule ends, on the same day or the next."
+    },
+    "Ends at %@ the next day." : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): under Starts and Ends when the end is earlier than the start, so the schedule runs past midnight, such as \"Ends at 7:00 AM the next day.\""
+    },
+    "Ends at %@ the same day." : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): under Starts and Ends when the end is later than the start on the same day, such as \"Ends at 1:30 PM the same day.\""
+    },
     "Enter a name for the tag." : {
       "comment" : "Tag sheet: shown when what was typed leaves no name, such as only a #. VoiceOver also speaks it when it appears, and after the dimmed Done's name."
     },
@@ -1510,6 +1821,9 @@
     },
     "Every" : {
       "comment" : "The row for a Consistent pace's wait between nudges, such as \"10 min\", in the reminder form and on Settings' Default Pace page."
+    },
+    "Every %@" : {
+      "comment" : "Quiet Hours page: under a schedule's times, the days it starts on as a list of short day names, such as \"Every Fri and Sat\" or \"Every Sun, Mon, and Thu\"."
     },
     "Every %@ at first, down to every %@." : {
       "comment" : "Under the reminder form's pace when it is Escalating. 1: the wait after the first nudge, such as \"30 min\". 2: the shortest wait.",
@@ -1638,8 +1952,14 @@
     "Every Year" : {
       "comment" : "Repeat preset, in the form's Repeat menu."
     },
+    "Every day" : {
+      "comment" : "Quiet Hours page: under a schedule's times, when it runs on every day of the week."
+    },
     "Every nudge is an ordinary notification, which a Focus can hold. Nothing rings." : {
       "comment" : "Under Break Through Focus when it's off."
+    },
+    "Every nudge is held" : {
+      "comment" : "How Quiet Hours Work, Rest Without Nudges: the row about which nudges quiet hours hold."
     },
     "Every nudge rings as an alarm." : {
       "comment" : "Under the reminder form's strength, and under a strength's heading in the How It Nudges tutorial, when every nudge rings, as Relentless's do."
@@ -1695,6 +2015,9 @@
     "From others" : {
       "comment" : "A filter sheet: the row that shows only reminders someone sent this person.\nMy Day: the filter token that shows only reminders someone sent this person."
     },
+    "From the moment you turn it on until you turn it off, whatever your schedules say. It never ends by itself." : {
+      "comment" : "How Quiet Hours Work, Quiet Now: under \"Holds every nudge\"."
+    },
     "General" : {
       "comment" : "Settings: header of the first section, with the About row."
     },
@@ -1727,17 +2050,32 @@
     "Has no reminders" : {
       "comment" : "Tags' filter sheet: the condition that shows only the tags no reminder uses."
     },
+    "Held" : {
+      "comment" : "How Quiet Hours Work, Held Nudges: the picture's first pill, a nudge quiet hours held, before the Missed it can end as."
+    },
+    "Held Nudges" : {
+      "comment" : "How Quiet Hours Work: the last page's heading, about what happens to nudges quiet hours hold."
+    },
     "High nudges are Time Sensitive and Urgent nudges ring as alarms, so a Focus can't hold them." : {
       "comment" : "Under Break Through Focus when it's on and the strength is Firm."
     },
     "High nudges are Time Sensitive, so a Focus can't hold them. Gentle never reaches Urgent, so it never rings." : {
       "comment" : "Under Break Through Focus when it's on and the strength is Gentle."
     },
+    "Holds every nudge" : {
+      "comment" : "How Quiet Hours Work, Quiet Now: the row about what Quiet Now does."
+    },
+    "Holds every nudge from now until you turn it off, whatever your schedules say." : {
+      "comment" : "Quiet Hours page: under the Quiet Now switch while it is off, saying what it does."
+    },
     "How Alarm Sounds Work" : {
       "comment" : "How Alarm Sounds Work: the sheet's title, and the Settings row under Tutorials that opens it."
     },
     "How It Nudges" : {
       "comment" : "How It Nudges: the sheet's title, and the Settings row under Tutorials that opens it, about how each strength nudges and what onboarding said.\nSection header on reminder details and the reminder form: the nudges a reminder sends, when, and how they arrive."
+    },
+    "How Quiet Hours Work" : {
+      "comment" : "How Quiet Hours Work: the sheet's title, and the Settings row under Tutorials that opens it."
     },
     "How Sharing Works" : {
       "comment" : "How Sharing Works: the sheet's title, and the Settings row under Tutorials that opens it."
@@ -1784,6 +2122,9 @@
     "It appears among their reminders, labeled From you. They can mark it Done, pause it, remove it and tag it." : {
       "comment" : "How Sharing Works, Send a Reminder: under \"It shows your name\". \"From you\" stands for the From label with the sender's name."
     },
+    "It can end as Missed" : {
+      "comment" : "How Quiet Hours Work, Held Nudges: the row about a reminder closing as Missed while its nudges are held. Missed is a status."
+    },
     "It may have been deleted." : {
       "comment" : "Reminder details: under \"Reminder Not Found\"."
     },
@@ -1805,11 +2146,17 @@
     "It's canceled on everyone's iPhone, with a note saying so." : {
       "comment" : "Under the question asked before deleting a reminder this person sent to others."
     },
+    "Its reminder moves on" : {
+      "comment" : "How Quiet Hours Work, Held Nudges: the row about a held nudge counting as dismissed."
+    },
     "Its sender owns this. You can change only its tags and alarm sound." : {
       "comment" : "VoiceOver hint on each field of a received reminder's Edit Reminder form, which only its sender can change, when the reminder rings alarms and so has a Sound row."
     },
     "Its sender owns this. You can change only its tags." : {
       "comment" : "VoiceOver hint on each field of a received reminder's Edit Reminder form, which only its sender can change."
+    },
+    "Its switch turns it off and keeps it for later." : {
+      "comment" : "How Quiet Hours Work, Your Schedules: under \"Switch One Off\"."
     },
     "Keep Invite" : {
       "comment" : "The question before canceling an invite: keeps it."
@@ -1840,6 +2187,9 @@
     },
     "Link Copied" : {
       "comment" : "Invite: title of the message shown after Copy Link, once the invite's link is on the clipboard."
+    },
+    "List" : {
+      "comment" : "Tags: the word under a row's swipe tile that opens the tag's reminders. Short, so the tile stays a circle."
     },
     "Locked while it's nudging. Mark it Done or pause it to change it." : {
       "comment" : "VoiceOver hint on each field of the Edit Reminder form that is locked while the reminder is nudging."
@@ -1937,6 +2287,9 @@
     "Next 7 days" : {
       "comment" : "Now: how far ahead the Coming Up section looks."
     },
+    "Next Day" : {
+      "comment" : "My Day: the button (a forward arrow) after the day label that shows the day after. Dimmed 7 days ahead, the last day My Day can show."
+    },
     "Next Times" : {
       "comment" : "Header of the Custom repeat page's next three due times."
     },
@@ -1966,11 +2319,17 @@
     "No Results for “%@”" : {
       "comment" : "Reminders tab, Mine and Sent: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces.\nTags tab: title when a search finds nothing. 1: the text searched for, without leading or trailing spaces."
     },
+    "No Schedules" : {
+      "comment" : "Quiet Hours page: title of the empty state, with no quiet hours schedule."
+    },
     "No Share Activity" : {
       "comment" : "Share Activity: title of the empty state, with nothing recorded."
     },
     "No Tags" : {
       "comment" : "A filter sheet: the row that shows only reminders without tags.\nMy Day: the filter token that shows only reminders without tags.\nTags: title when there are no tags yet."
+    },
+    "No nudge arrives during quiet hours, alarms included. A nudge held this way counts as one you didn't answer, so a reminder can still end as Missed." : {
+      "comment" : "Quiet Hours page: under the schedules, what quiet hours do."
     },
     "No reminder has this tag yet. Tap + to make one, or add the tag to a reminder you already have." : {
       "comment" : "A tag's screen when no reminder has the tag."
@@ -2038,11 +2397,32 @@
     "Nothing Sent" : {
       "comment" : "Reminders tab, Sent: title when this person has sent nothing to anyone connected."
     },
+    "Nothing arrives late" : {
+      "comment" : "How Quiet Hours Work, Held Nudges: the row about held nudges never being sent afterward."
+    },
     "Nothing closed yet today." : {
       "comment" : "Now: the Last 24 Hours section when no occurrence closed in that time."
     },
     "Nothing due" : {
       "comment" : "A sent reminder's details, under \"<name>, Last 7 Days\": the person's copy had nothing due that day."
+    },
+    "Nothing from %@ is left to do." : {
+      "comment" : "My Day on a day before yesterday: the list when Left is chosen and nothing due that day is left to do. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Nothing from %@ is nudging you yet." : {
+      "comment" : "My Day on a day after tomorrow: the list when Nudging is chosen, which a day still to come can't have. The placeholder is the day, such as \"Fri, Oct 2\"."
+    },
+    "Nothing from %@ is nudging you." : {
+      "comment" : "My Day on a day before yesterday: the list when Nudging is chosen and nothing due that day is nudging. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Nothing from tomorrow is nudging you yet." : {
+      "comment" : "My Day on tomorrow: the list when Nudging is chosen, which a day still to come can't have."
+    },
+    "Nothing from yesterday is left to do." : {
+      "comment" : "My Day on yesterday: the list when Left is chosen and nothing due yesterday is left to do."
+    },
+    "Nothing from yesterday is nudging you." : {
+      "comment" : "My Day on yesterday: the list when Nudging is chosen and nothing due yesterday is nudging."
     },
     "Nothing has changed. Try again." : {
       "comment" : "Disconnect's sheet and Connection Ended: under Couldn't Disconnect.\nSettings and Turn Off Sharing's sheet: under Couldn't Turn Off Sharing."
@@ -2050,14 +2430,38 @@
     "Nothing has gone wrong with sharing. If iCloud refuses a change or a connection ends, it shows here." : {
       "comment" : "Share Activity: under \"No Share Activity\"."
     },
+    "Nothing is done yet for %@." : {
+      "comment" : "My Day on a day after tomorrow: the list when Done is chosen, which a day still to come can't have. The placeholder is the day, such as \"Fri, Oct 2\"."
+    },
+    "Nothing is done yet for tomorrow." : {
+      "comment" : "My Day on tomorrow: the list when Done is chosen, which a day still to come can't have."
+    },
     "Nothing is done yet today." : {
       "comment" : "My Day: the list when Done is chosen and nothing is done yet today."
+    },
+    "Nothing is due on %@." : {
+      "comment" : "My Day on a day after tomorrow: the list when nothing is due. The placeholder is the day, such as \"Fri, Oct 2\"."
     },
     "Nothing is due today." : {
       "comment" : "My Day: the list when nothing is due today."
     },
+    "Nothing is due tomorrow." : {
+      "comment" : "My Day on tomorrow: the list when nothing is due."
+    },
+    "Nothing is left to do on %@." : {
+      "comment" : "My Day on a day after tomorrow: the list when Left is chosen and nothing is due that day. The placeholder is the day, such as \"Fri, Oct 2\"."
+    },
     "Nothing is left to do today." : {
       "comment" : "My Day: the list when Left is chosen and nothing is left to do today."
+    },
+    "Nothing is left to do tomorrow." : {
+      "comment" : "My Day on tomorrow: the list when Left is chosen and nothing is due tomorrow."
+    },
+    "Nothing is missed yet for %@." : {
+      "comment" : "My Day on a day after tomorrow: the list when Missed is chosen, which a day still to come can't have. The placeholder is the day, such as \"Fri, Oct 2\"."
+    },
+    "Nothing is missed yet for tomorrow." : {
+      "comment" : "My Day on tomorrow: the list when Missed is chosen, which a day still to come can't have."
     },
     "Nothing is nudging you." : {
       "comment" : "My Day: the list when Nudging is chosen and nothing is nudging."
@@ -2071,8 +2475,26 @@
     "Nothing was deleted. Your reminders and their nudges are as they were. Try again." : {
       "comment" : "Settings: under the message shown when deleting everything failed."
     },
+    "Nothing was done on %@." : {
+      "comment" : "My Day on a day before yesterday: the list when Done is chosen and nothing was done. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Nothing was done yesterday." : {
+      "comment" : "My Day on yesterday: the list when Done is chosen and nothing was done."
+    },
+    "Nothing was due on %@." : {
+      "comment" : "My Day on a day before yesterday: the list when nothing was due. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
+    "Nothing was due yesterday." : {
+      "comment" : "My Day on yesterday: the list when nothing was due."
+    },
+    "Nothing was missed on %@." : {
+      "comment" : "My Day on a day before yesterday: the list when Missed is chosen and nothing was missed. The placeholder is the day, such as \"Tue, Sep 29\"."
+    },
     "Nothing was missed today." : {
       "comment" : "My Day: the list when Missed is chosen and nothing was missed today."
+    },
+    "Nothing was missed yesterday." : {
+      "comment" : "My Day on yesterday: the list when Missed is chosen and nothing was missed."
     },
     "Nothing was sent. Sharing is paused: iCloud is restricted on this iPhone. Screen Time or whoever manages it can change that." : {
       "comment" : "The reminder form: under Couldn't Send the Reminder, when Add found iCloud restricted, for example by Screen Time or a device management profile."
@@ -2105,7 +2527,10 @@
       "comment" : "Nudge card: an Urgent nudge comes as a notification because the system's alarm limit is reached."
     },
     "Notifications" : {
-      "comment" : "Settings: row that shows whether notifications are allowed."
+      "comment" : "Settings: row that shows whether notifications are allowed, and opens the app's notification settings in iOS Settings."
+    },
+    "Notifications and alarms alike, even a Relentless reminder's. Quiet hours hold them all." : {
+      "comment" : "How Quiet Hours Work, Rest Without Nudges: under \"Every nudge is held\". Relentless is a strength."
     },
     "Notifications are off, so none of them can reach you." : {
       "comment" : "How It Nudges footer, when notifications are off and none of the nudges rings as an alarm."
@@ -2151,7 +2576,7 @@
       "comment" : "Invite: the title of the share the invite carries, which the invitation shows."
     },
     "Nudges" : {
-      "comment" : "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace and Default Alarm Sound."
+      "comment" : "Settings: header of the section with the permission rows, Send a Test Nudge, Default Pace, Quiet Hours and Default Alarm Sound."
     },
     "Nudges 1–%lld are notifications. Nudges %lld–%lld ring as alarms." : {
       "comment" : "How It Nudges footer. 1: the last nudge that is a notification. 2: the first nudge that rings as an alarm. 3: the last nudge.",
@@ -2229,19 +2654,25 @@
       "comment" : "A connection's page: dismisses the message that a change couldn't be saved.\nA sent reminder's details or Sent row: dismisses the message that the reminder couldn't be deleted.\nAccepting an invite: dismisses the Couldn't Accept the Invite message.\nAccepting an invite: dismisses the Invite Unavailable message.\nAn invited person's page: dismisses the message that canceling failed.\nDisconnect's sheet and Connection Ended: dismisses Couldn't Disconnect.\nInvite: dismisses the Already Connected message.\nInvite: dismisses the Link Copied message and closes the sheet.\nInvite: dismisses the message that the invite couldn't be made.\nSettings and Turn Off Sharing's sheet: dismisses Couldn't Turn Off Sharing.\nSettings: dismisses the message that deleting failed.\nThe Apple Account Changed sheet: closes it.\nThe Edit Reminder form: closes the form of a sent reminder that was deleted while it was open.\nThe reminder form: dismisses the message that the reminder couldn't be sent."
     },
     "Off" : {
-      "comment" : "A connection's page and the Connected sheet: Status Sharing is off.\nReminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off."
+      "comment" : "A connection's page and the Connected sheet: Status Sharing is off.\nReminder details: Break Through Focus is off.\nSettings: status of the Alarms row when alarms are turned off.\nSettings: status of the Badges row when badges or notifications are turned off in iOS Settings.\nSettings: status of the Notifications row when notifications are turned off.\nSettings: the Quiet Hours row when no schedule is on, so quiet hours never hold a nudge."
     },
     "Oldest First" : {
       "comment" : "Reminders tab's Sort menu, sorted by Created: the reminder made first at the top."
     },
     "On" : {
-      "comment" : "A connection's page and the Connected sheet: Status Sharing is on.\nHeader of the Custom repeat page's days: the weekdays, or the day of the month.\nReminder details: Break Through Focus is on.\nSettings: status of the Alarms row when alarms are allowed.\nSettings: status of the Badges row when the app icon may show a badge.\nSettings: status of the Notifications row when notifications and Time Sensitive are allowed."
+      "comment" : "A connection's page and the Connected sheet: Status Sharing is on.\nHeader of the Custom repeat page's days: the weekdays, or the day of the month.\nReminder details: Break Through Focus is on.\nSettings: status of the Alarms row when alarms are allowed.\nSettings: status of the Badges row when the app icon may show a badge.\nSettings: status of the Notifications row when notifications and Time Sensitive are allowed.\nSettings: the Quiet Hours row while Quiet Now is on, so every nudge is held."
     },
     "On %@, from the start date. Change it to pick another day." : {
       "comment" : "Under the Custom repeat page's frequency when it's yearly. The placeholder is the start's day and month, such as \"28 October\"."
     },
     "On Date" : {
       "comment" : "The reminder form's End Repeat choice: the repeat ends on a date."
+    },
+    "On since %@. No nudge arrives until you turn it off." : {
+      "comment" : "Quiet Hours page: under the Quiet Now switch while it is on, with the time it was turned on, such as \"On since 8:20 AM.\""
+    },
+    "On until %@" : {
+      "comment" : "Settings: what VoiceOver reads for the Quiet Hours row while quiet hours hold nudges, such as \"On until 7:00 AM\"."
     },
     "On · Time Sensitive off" : {
       "comment" : "Settings: status of the Notifications row when notifications are allowed but Time Sensitive is turned off."
@@ -2288,8 +2719,11 @@
     "Open Settings for notifications" : {
       "comment" : "VoiceOver label of the notifications-off banner's Open Settings button."
     },
-    "Open iOS Settings" : {
-      "comment" : "Settings: row that opens the app's page in the iOS Settings app, where notifications, alarms and badges can be turned on."
+    "Opens notification settings." : {
+      "comment" : "VoiceOver hint on Settings' Notifications and Badges rows, which are buttons: they open the app's notification settings in the iOS Settings app."
+    },
+    "Opens the app's settings." : {
+      "comment" : "VoiceOver hint on Settings' Alarms row, which is a button: it opens the app's own page in the iOS Settings app, the only place alarms are turned on."
     },
     "Opens the custom repeat." : {
       "comment" : "VoiceOver hint on the reminder form's row that writes out a custom repeat: it opens the Custom repeat sheet."
@@ -2352,11 +2786,82 @@
     "Plays when a nudge arrives as an alarm. Other nudges use the standard notification sound." : {
       "comment" : "Under the alarm sound list, and under the reminder form's Sound row."
     },
+    "Previous Day" : {
+      "comment" : "My Day: the button (a back arrow) before the day label that shows the day before. Dimmed on the first day My Day can show."
+    },
     "Privacy Policy" : {
       "comment" : "About page: row that opens the app's privacy policy on the website, in the web browser."
     },
     "Pulse" : {
       "comment" : "Alarm sound name: a pulsing beep tone that ships with the app."
+    },
+    "Quiet Hours" : {
+      "comment" : "Settings: the row that opens the Quiet Hours page, and that page's title."
+    },
+    "Quiet Now" : {
+      "comment" : "Quiet Hours page: the switch that holds every nudge until it is turned off. Also How Quiet Hours Work's page about it: its heading and picture."
+    },
+    "Quiet Now is holding every nudge. These schedules apply again when you turn it off." : {
+      "comment" : "Quiet Hours page: under the schedules while Quiet Now is on."
+    },
+    "Quiet Now is holding its nudges. It closes as Missed at %@ if it stays on." : {
+      "comment" : "Nudge card: in place of the next nudge while Quiet Now holds every nudge left. The placeholder is when the reminder closes as Missed if Quiet Now stays on, such as \"11:17 AM\"."
+    },
+    "Quiet hours are holding nudges" : {
+      "comment" : "Banner on Now, My Day and Reminders while quiet hours are holding nudges: its bold title."
+    },
+    "Quiet hours held %lld of its %lld nudges." : {
+      "comment" : "Under how an occurrence closed as Missed (Now's Last 24 Hours, My Day, and Last occurrence on a reminder's details), when quiet hours held some of its nudges. 1: how many were held. 2: how many nudges it had in all, held or sent.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quiet hours held %#@held@ of its %#@total@."
+          },
+          "substitutions" : {
+            "held" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg"
+                    }
+                  }
+                }
+              }
+            },
+            "total" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg nudge"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg nudges"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "Relentless" : {
       "comment" : "Strength name, in the form and the Reminders and Filter Sent sheets: the reminder nudges hardest."
@@ -2371,7 +2876,7 @@
       "comment" : "Reminder details: title when the reminder isn't there."
     },
     "Reminders" : {
-      "comment" : "Tab bar: the tab listing every reminder in any state\nTags tab's Sort menu: the header of the section that sorts by how many reminders have each tag."
+      "comment" : "A tag's details page: the row that opens the tag's reminders.\nTab bar: the tab listing every reminder in any state\nTags tab's Sort menu: the header of the section that sorts by how many reminders have each tag.\nTags: a row's VoiceOver action that opens the tag's reminders."
     },
     "Reminders from %@" : {
       "comment" : "A connection's page: header of this person's choices for what they receive. The argument is the other person's name, such as \"Alex Morgan\"."
@@ -2444,6 +2949,9 @@
     "Reset" : {
       "comment" : "A filter sheet, on My Day, Reminders and Tags: clears the choices. Nothing changes until Apply."
     },
+    "Rest Without Nudges" : {
+      "comment" : "How Quiet Hours Work: the first page's heading, about what a quiet hours schedule is."
+    },
     "Resume Reminder" : {
       "comment" : "Reminder details: brings a paused reminder back at its next time."
     },
@@ -2454,10 +2962,13 @@
       "comment" : "Alarm sound name: a tone that rises in pitch, shipped with the app."
     },
     "Save" : {
-      "comment" : "The Edit Reminder form's confirm button (a checkmark)."
+      "comment" : "Edit Schedule (quiet hours): the confirm button (a checkmark) that saves the changes.\nThe Edit Reminder form's confirm button (a checkmark)."
     },
     "Schedule" : {
-      "comment" : "Reminder details: section header for when and how the reminder nudges."
+      "comment" : "Edit Schedule (quiet hours): the switch that turns the schedule on or off, kept when the person saves.\nReminder details: section header for when and how the reminder nudges."
+    },
+    "Schedules" : {
+      "comment" : "Quiet Hours page: header of the list of quiet hours schedules."
     },
     "Search tags" : {
       "comment" : "Tags tab: the search field's prompt."
@@ -2500,6 +3011,9 @@
     },
     "Settings › Default Alarm Sound. Gives every reminder you have the default, including ones people sent you." : {
       "comment" : "How Alarm Sounds Work, Change Your Reminders: under Use for All Reminders. Settings › Default Alarm Sound is where it is."
+    },
+    "Settings › Quiet Hours. Tap +, choose the times and days, and tap Save." : {
+      "comment" : "How Quiet Hours Work, Your Schedules: under the first row, Add a Schedule. Settings › Quiet Hours is the page; + is its navigation bar's Add Schedule button; Save is the sheet's."
     },
     "Settings › Share Activity shows what happened to sharing that you'd otherwise never see." : {
       "comment" : "How Sharing Works, Who Sees What: under \"Share Activity\"."
@@ -2595,7 +3109,35 @@
       "comment" : "Reminder details: under Schedule while the reminder is nudging, why five fields can't be edited."
     },
     "Starts" : {
-      "comment" : "The reminder form's start date and time."
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): the time the schedule starts.\nThe reminder form's start date and time."
+    },
+    "Starts %@" : {
+      "comment" : "Settings: the Quiet Hours row when the next schedule starts later today, such as \"Starts 10:00 PM\"."
+    },
+    "Starts %@ %@" : {
+      "comment" : "Settings: the Quiet Hours row when the next schedule starts on another day: the day, short, then the time, such as \"Starts Fri 11:00 PM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Starts %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Starts %@ at %@" : {
+      "comment" : "Settings: what VoiceOver reads for the Quiet Hours row when the next schedule starts on another day, such as \"Starts Friday at 11:00 PM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Starts %1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "Starts at %@" : {
+      "comment" : "Settings: what VoiceOver reads for the Quiet Hours row when the next schedule starts later today, such as \"Starts at 10:00 PM\"."
     },
     "Status" : {
       "comment" : "How Sharing Works, Who Sees What: the picture's second pill, the status the recipient chooses to share.\nThe Reminders and Filter Sent sheets: header of the list of statuses."
@@ -2623,11 +3165,25 @@
         }
       }
     },
+    "Such as %@ to %@, every day. A schedule that ends before it starts runs past midnight." : {
+      "comment" : "How Quiet Hours Work, Rest Without Nudges: under \"A start, an end and days\". 1: an example schedule's start time, such as \"10:00 PM\". 2: its end time, such as \"7:00 AM\".",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Such as %1$@ to %2$@, every day. A schedule that ends before it starts runs past midnight."
+          }
+        }
+      }
+    },
     "Support" : {
       "comment" : "About page: row that opens the app's support page on the website, in the web browser."
     },
+    "Switch One Off" : {
+      "comment" : "How Quiet Hours Work, Your Schedules: the third row, about a schedule's switch."
+    },
     "Tag Deleted" : {
-      "comment" : "A tag's screen after the tag was deleted."
+      "comment" : "A tag's details page and its reminders page after the tag was deleted."
     },
     "Tag Name" : {
       "comment" : "The New Tag and Rename Tag sheet's field for the tag's name."
@@ -2644,8 +3200,14 @@
     "Tags: %@" : {
       "comment" : "VoiceOver label of a reminder's tags on its details. The placeholder lists them, such as \"#home and #errands\"."
     },
+    "Tap + to add a schedule, and no nudge arrives while it runs." : {
+      "comment" : "Quiet Hours page: under \"No Schedules\", pointing at the plus in the navigation bar."
+    },
     "Tap + to make one. Every reminder you make shows here, whatever its state." : {
       "comment" : "Reminders tab: under the title when there are no reminders at all."
+    },
+    "Tap a schedule to change its times and days, or to delete it." : {
+      "comment" : "How Quiet Hours Work, Your Schedules: under \"Change One\"."
     },
     "Tap a tone to hear it" : {
       "comment" : "How Alarm Sounds Work, Pick Your Default Sound: the row about the preview a tone plays when tapped."
@@ -2679,6 +3241,12 @@
     "The repeat has already ended. Change when it ends." : {
       "comment" : "Under the reminder form's start when the repeat has no times left, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name."
     },
+    "The start and end are the same. Change one to save." : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): under Starts and Ends, in red, while they are the same time, so Save is off."
+    },
+    "The switch above your schedules, for quiet hours no schedule covers." : {
+      "comment" : "How Quiet Hours Work, Quiet Now: the line under the heading. Quiet Now is the switch above the schedules on the Quiet Hours page."
+    },
     "Their Delivery Mode" : {
       "comment" : "How Sharing Works, Send a Reminder: the row about the recipient's Delivery Mode, the connection's setting."
     },
@@ -2687,6 +3255,9 @@
     },
     "Then it ends." : {
       "comment" : "Under the Custom repeat page's Next Times when fewer than three are left."
+    },
+    "Then your schedules apply" : {
+      "comment" : "How Quiet Hours Work, Quiet Now: the row about what happens once Quiet Now is off."
     },
     "These are your choices for reminders from %@. You can change them at any time in Settings › Connections." : {
       "comment" : "Accepting an invite: under Status Sharing and Delivery Mode on the Connected sheet. The argument is the name of the person who sent the invite, such as \"Alex Morgan\"."
@@ -2865,7 +3436,7 @@
       "comment" : "Under the Custom repeat page's Next Times when the repeat has ended."
     },
     "This tag was deleted. Its reminders are still there." : {
-      "comment" : "A tag's screen after the tag was deleted."
+      "comment" : "A tag's details page and its reminders page after the tag was deleted."
     },
     "This time has passed. Choose a later time." : {
       "comment" : "Under the reminder form's start when a one-off reminder's time has passed, so Save is disabled. VoiceOver also speaks it when it appears, and after the dimmed Save's or Add's name."
@@ -2897,19 +3468,94 @@
       "comment" : "Settings: footer under the Nudges rows. The placeholder is the app's name."
     },
     "Today" : {
-      "comment" : "A tag's screen: header of the reminders that are nudging or due later today.\nThe Custom repeat page's Next Times: a due time today."
+      "comment" : "A tag's screen: header of the reminders that are nudging or due later today.\nMy Day: the top bar's button, shown on another day, that goes back to today.\nThe Custom repeat page's Next Times: a due time today."
     },
     "Today's counts. Choose one to show only those." : {
       "comment" : "VoiceOver label of the group of four counts on My Day."
     },
+    "Today, %@. %lld reminders due with your filter." : {
+      "comment" : "VoiceOver, when My Day moves back to today with a tag filter on. 1: today's date, such as \"Monday, September 28\". 2: how many reminders due today the filter shows.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today, %1$@. %2$#@n@ due with your filter."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Today, %@. %lld reminders due." : {
+      "comment" : "VoiceOver, when My Day moves back to today. 1: today's date, such as \"Monday, September 28\". 2: how many reminders are due today.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today, %1$@. %2$#@n@ due."
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminder"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg reminders"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Tomorrow" : {
       "comment" : "The Custom repeat page's Next Times: a due time tomorrow."
+    },
+    "Tomorrow, %@" : {
+      "comment" : "My Day: the label under the title on tomorrow. The placeholder is its date, such as \"Wednesday, September 30\"."
     },
     "Turn Off Sharing" : {
       "comment" : "Turn Off Sharing's sheet: its title, and the button that disconnects everyone and turns Sharing off."
     },
     "Turn On Sharing" : {
       "comment" : "Opening an invite while Sharing is off: turns Sharing on and accepts the invite."
+    },
+    "Turn a schedule off to keep it for later." : {
+      "comment" : "Quiet Hours page: under the schedules."
+    },
+    "Turn it off, and your schedules hold nudges again as before." : {
+      "comment" : "How Quiet Hours Work, Quiet Now: under \"Then your schedules apply\"."
     },
     "Turn on sharing to connect with %@?" : {
       "comment" : "Opening an invite while Sharing is off: title of the question. The argument is the name of the person who sent the invite, such as \"Alex Morgan\"."
@@ -2919,6 +3565,15 @@
     },
     "Unknown" : {
       "comment" : "About page: shown for the version or build number when the app can't read it."
+    },
+    "Until %@" : {
+      "comment" : "Settings: the Quiet Hours row while quiet hours hold nudges, with the time they get through again, such as \"Until 7:00 AM\"."
+    },
+    "Until %@. Change this in Settings, under Quiet Hours." : {
+      "comment" : "Banner on Now, My Day and Reminders while a quiet hours schedule is holding nudges, under its title, with the time they get through again, such as \"Until 7:00 AM.\" Names where to change it: Settings, then the Quiet Hours row. Not a button."
+    },
+    "Until you turn it off. Change this in Settings, under Quiet Hours." : {
+      "comment" : "Banner on Now, My Day and Reminders while Quiet Now is holding every nudge, under its title. Names where to change it: Settings, then the Quiet Hours row. Not a button."
     },
     "Urgent nudges come as ordinary notifications, which silent mode can mute and a Focus can hold." : {
       "comment" : "Settings: footer under the Nudges rows, when neither alarms nor Time Sensitive can deliver Urgent nudges."
@@ -2983,6 +3638,9 @@
     "When it really matters, your iPhone rings and vibrates like an alarm, even on silent and in a Focus. Stopping the alarm only quiets it: the next nudge still comes, and only Done ends the reminder." : {
       "comment" : "Onboarding and How It Nudges: under \"Urgent nudges ring as alarms\"."
     },
+    "When quiet hours end, the next nudge arrives on time. Held nudges aren't sent afterward." : {
+      "comment" : "How Quiet Hours Work, Held Nudges: under \"Nothing arrives late\"."
+    },
     "When you send feedback, include the version and build." : {
       "comment" : "About page: under the version and build number, for beta testers sending feedback."
     },
@@ -2998,8 +3656,14 @@
     "Yearly" : {
       "comment" : "The Custom repeat page's frequency."
     },
+    "Yesterday, %@" : {
+      "comment" : "My Day: the label under the title on yesterday. The placeholder is its date, such as \"Monday, September 28\"."
+    },
     "You" : {
       "comment" : "How Sharing Works, Send Each Other Reminders: the picture's pill for the person reading, beside an iPhone."
+    },
+    "You already have a schedule with these times and days." : {
+      "comment" : "Add Schedule and Edit Schedule (quiet hours): under Starts and Ends, in red, while the start, end and days are another schedule's, so Save is off."
     },
     "You already have the tag %@." : {
       "comment" : "Tag sheet: shown when another tag has the name, ignoring case. VoiceOver also speaks it when it appears, and after the dimmed Done's name. The placeholder is that tag, such as \"#home\"."
@@ -3042,6 +3706,9 @@
     },
     "Your Data" : {
       "comment" : "Settings: header of the section with Delete All Data."
+    },
+    "Your Schedules" : {
+      "comment" : "How Quiet Hours Work: the third page's heading, about adding, changing and switching off quiet hours schedules."
     },
     "Your Sent view starts empty." : {
       "comment" : "The Apple Account Changed sheet: under the reminders this person sent, removed."
@@ -3096,6 +3763,30 @@
     },
     "iCloud refused part of disconnecting, so it didn't finish." : {
       "comment" : "Share Activity: an entry for a disconnect that iCloud refused for good."
+    },
+    "quietHoursTutorial.exampleEnd" : {
+      "comment" : "How Quiet Hours Work, Rest Without Nudges: the picture's second pill, beside a bell: the example schedule's end time, such as \"7:00 AM\". The placeholder is the time.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@"
+          }
+        }
+      }
+    },
+    "quietHoursTutorial.exampleStart" : {
+      "comment" : "How Quiet Hours Work, Rest Without Nudges: the picture's first pill, beside a moon: an example schedule's start time, such as \"10:00 PM\". The placeholder is the time.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%@"
+          }
+        }
+      }
     },
     "then waits %@" : {
       "comment" : "How It Nudges row: the wait after one nudge before the next. The placeholder is a duration, such as \"30 min\"."

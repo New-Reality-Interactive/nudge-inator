@@ -36,13 +36,13 @@ struct RemindersScreenTests {
         }
 
         let alex = try row(day.alex)
-        #expect((alex.time, alex.day, alex.tags.map(\.text)) == ("12:30\u{202F}PM", "Today", []))
+        #expect((alex.time.english, alex.day.english, alex.tags.map(\.text)) == ("12:30\u{202F}PM", "Today", []))
         // Done this morning, so tomorrow's is next.
         let dog = try row(day.dog)
-        #expect((dog.time, dog.day, dog.tags.map(\.text)) == ("7:00\u{202F}AM", "Tomorrow", ["#home"]))
+        #expect((dog.time.english, dog.day.english, dog.tags.map(\.text)) == ("7:00\u{202F}AM", "Tomorrow", ["#home"]))
         // Given up, so its latest occurrence's.
         let standUp = try row(day.standUp)
-        #expect((standUp.time, standUp.day, standUp.tags.map(\.text)) == ("9:30\u{202F}AM", "Today", ["#work"]))
+        #expect((standUp.time.english, standUp.day.english, standUp.tags.map(\.text)) == ("9:30\u{202F}AM", "Today", ["#work"]))
         let stretch = try row(day.stretch)
         #expect(stretch.tags.map(\.text) == ["#health", "#work"])
     }
@@ -159,7 +159,7 @@ struct RemindersScreenTests {
 
         let keptScreen = RemindersScreen(engine: day.model.engine, sort: sort, keptOrder: kept)
         #expect(keptScreen.rows.map(\.id) == kept)
-        #expect(keptScreen.rows.first { $0.id == day.meds.id }?.day == "Tomorrow")
+        #expect(keptScreen.rows.first { $0.id == day.meds.id }?.day.english == "Tomorrow")
         let sortedAgain = RemindersScreen(engine: day.model.engine, sort: sort)
         #expect(sortedAgain.rows.last?.id == day.meds.id)
     }
@@ -401,8 +401,8 @@ struct RemindersScreenTests {
         fixture.clock.now = NewYork.local(2026, 10, 16, 9, 0, 30)
         let after = RemindersScreen(engine: engine).rows.first
 
-        #expect((before?.status, before?.day) == (.nudging, "Yesterday"))
-        #expect((after?.status, after?.day) == (.nudging, "Today"))
+        #expect((before?.status, before?.day.english) == (.nudging, "Yesterday"))
+        #expect((after?.status, after?.day.english) == (.nudging, "Today"))
     }
 
     /// Spec #104, Live refresh: within a minute of midnight the rows and the count follow. A paused
@@ -427,13 +427,13 @@ struct RemindersScreenTests {
 
         #expect(saturdayBefore.rows.map(\.title) == ["Midnight walk", "Early call"])
         #expect(String(localized: saturdayBefore.countText) == "2 reminders out of 2")
-        #expect(saturdayBefore.rows.map(\.day) == ["Tomorrow", "Tomorrow"])
+        #expect(saturdayBefore.rows.map(\.day.english) == ["Tomorrow", "Tomorrow"])
         #expect(sundayBefore.rows.isEmpty)
         #expect(sundayBefore.emptyState == .noMatch)
 
         #expect(saturdayAfter.rows.map(\.title) == ["Early call"])
         #expect(String(localized: saturdayAfter.countText) == "1 reminder out of 2")
-        #expect(saturdayAfter.rows.map(\.day) == ["Today"])
+        #expect(saturdayAfter.rows.map(\.day.english) == ["Today"])
         #expect(sundayAfter.rows.map(\.title) == ["Midnight walk"])
         #expect(sundayAfter.emptyState == nil)
     }
@@ -452,8 +452,8 @@ struct RemindersScreenTests {
 
         let row = try #require(screen.rows.first)
         #expect(row.status == .comingUp)
-        #expect(row.time == "9:00\u{202F}AM")
-        #expect(row.day == "Wed, Oct 14")
+        #expect(row.time.english == "9:00\u{202F}AM")
+        #expect(row.day.english == "Wed, Oct 14")
         #expect(row.offersDone == false)
         #expect(screen.emptyState == nil)
     }
@@ -500,7 +500,7 @@ struct RemindersScreenTests {
         let after = RemindersScreen(engine: day.model.engine).rows
         #expect(after.map(\.id) == before)
         let bins = try #require(after.first { $0.id == day.bins.id })
-        #expect((bins.title, bins.time) == ("Take the recycling out", "9:00\u{202F}PM"))
+        #expect((bins.title, bins.time.english) == ("Take the recycling out", "9:00\u{202F}PM"))
     }
 
     @Test func aPauseShowsOnReturningToTheList() async throws {

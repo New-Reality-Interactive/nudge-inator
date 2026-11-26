@@ -41,8 +41,8 @@ struct SendToSection: View {
                 NavigationLink(value: ReminderFormPage.sendTo) {
                     LabeledContent {
                         if let names = form.recipientsText {
-                            // People's own names, never translated.
-                            Text(verbatim: names)
+                            // People's own names, never translated, joined in the language's words.
+                            Text(names)
                         } else {
                             Text("None", comment: "The reminder form's Send To row when no one is chosen.")
                         }

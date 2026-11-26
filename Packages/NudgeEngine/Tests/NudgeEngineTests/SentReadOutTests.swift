@@ -132,9 +132,23 @@ struct SentReadOutTests {
         let ana = SentConnection(id: UUID(), name: "Ana", sharesStatus: true)
         let last = SentConnection(id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!, name: "SAM", sharesStatus: true)
         let copies = [high, low, last, ana].map { copy(to: $0) }
-        let readOut = SentReadOut(connections: [high, low, last, ana], copies: copies)
+        let readOut = SentReadOut(connections: [high, low, last, ana], copies: copies, nameOrder: NameOrder(locale: Locale(identifier: "en_US")))
         // Names compare without regard to case; equal names fall back to the connection's ID.
         #expect(readOut.people.map(\.connectionID) == [ana.id, low.id, high.id, last.id])
+    }
+
+    @Test func peopleAreInTheGivenLocalesOrder() {
+        let anna = SentConnection(id: UUID(), name: "Anna", sharesStatus: true)
+        let osten = SentConnection(id: UUID(), name: "Östen", sharesStatus: true)
+        let zed = SentConnection(id: UUID(), name: "Zed", sharesStatus: true)
+        let people = [zed, osten, anna]
+        let copies = people.map { copy(to: $0) }
+        let swedish = NameOrder(locale: Locale(identifier: "sv_SE"))
+        let english = NameOrder(locale: Locale(identifier: "en_US"))
+
+        #expect(SentReadOut(connections: people, copies: copies, nameOrder: swedish).people.map(\.connectionID) == [anna.id, zed.id, osten.id])
+        #expect(SentReadOut(connections: people, copies: copies, nameOrder: english).people.map(\.connectionID) == [anna.id, osten.id, zed.id])
+        #expect(SentReadOut.inOrder(people, nameOrder: swedish).map(\.id) == [anna.id, zed.id, osten.id])
     }
 
     @Test func rowsAreOrderedByCreationDateThenByReminderID() {

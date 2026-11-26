@@ -43,8 +43,8 @@ struct ShareActivityPage: View {
     /// "Today at 7:58 AM", "Yesterday at 4:12 PM" or a short date and the time, from the engine as
     /// an invited person's page has it.
     private func when(_ date: Date) -> Text {
-        let day = model?.engine.dayLabel(of: date) ?? date.formatted(date: .abbreviated, time: .omitted)
-        let time = model?.engine.timeOfDay(of: date) ?? date.formatted(date: .omitted, time: .shortened)
+        let day = EngineDayAndTime.day(of: date, in: model?.engine)
+        let time = EngineDayAndTime.time(of: date, in: model?.engine)
         return Text("\(day) at \(time)", comment: "Share Activity: when an entry happened. 1: \"Today\", \"Yesterday\" or a short date. 2: the time, such as \"7:58 AM\".")
     }
 }
@@ -57,7 +57,7 @@ private struct ShareActivityRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Design.Spacing.line) {
             if let who = row.who {
-                Text(verbatim: who)
+                Text(who)
                     .font(.body)
             }
             Group {

@@ -39,7 +39,7 @@ enum SharingTutorialPage: TutorialPage, CaseIterable {
              .pill(symbol: "checkmark.circle.fill", text: LocalizedStringResource("Connected", comment: "How Sharing Works, Connect: the picture's second pill, the connection made once the invite is accepted."))]
         case .sendAReminder:
             // The received reminder's own From label (`Senders`), so the two can't be worded apart.
-            [.pill(symbol: "bell", text: LocalizedStringResource("From \(String(localized: Self.examplePerson))", comment: "Under a received reminder's title on Now, My Day and the Reminders tab. The placeholder is the sender's name, such as \"Riley Park\"."))]
+            [.pill(symbol: "bell", text: LocalizedStringResource("From \(Self.examplePerson)", comment: "Under a received reminder's title on Now, My Day and the Reminders tab. The placeholder is the sender's name, such as \"Riley Park\"."))]
         case .whoSeesWhat:
             [.pill(symbol: "lock", text: LocalizedStringResource("Yours", comment: "How Sharing Works, Who Sees What: the picture's first pill, what the sender owns.")),
              .pill(symbol: "eye", text: LocalizedStringResource("Status", comment: "How Sharing Works, Who Sees What: the picture's second pill, the status the recipient chooses to share."))]

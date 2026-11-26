@@ -38,7 +38,62 @@ final class DeviceSeedTests {
         #expect(SeedSettingText.defaultAlarmSound(from: text) == .default)
     }
 
+    @Test func quietHoursSurviveBeingWrittenAndRead() throws {
+        let schedules = QuietHours(schedules: [
+            try QuietHoursSchedule(start: TimeOfDay(hour: 22), end: TimeOfDay(hour: 7), days: [.sunday, .thursday]),
+            try QuietHoursSchedule(start: TimeOfDay(hour: 18, minute: 30), end: TimeOfDay(hour: 21), days: [.tuesday], isOn: false),
+        ])
+        // The text holds no identity: a seed's schedules are new ones, with the same fields.
+        let read = try #require(SeedSettingText.quietHours(from: SeedSettingText.text(of: schedules)))
+        #expect(read.schedules.map(\.start) == schedules.schedules.map(\.start))
+        #expect(read.schedules.map(\.end) == schedules.schedules.map(\.end))
+        #expect(read.schedules.map(\.days) == schedules.schedules.map(\.days))
+        #expect(read.schedules.map(\.isOn) == schedules.schedules.map(\.isOn))
+        #expect(SeedSettingText.quietHours(from: SeedSettingText.text(of: QuietHours())) == QuietHours())
+    }
+
+    /// #370's phone check: two schedules on and one off, and a set with none for the empty state.
+    @Test func theQuietHoursSetsAreOnesTheAppReads() throws {
+        let page = try #require(SeedSet.all.first { $0.name == "quiet-hours-page" })
+        let pageText = try #require(page.settings[.quietHours])
+        let schedules = try #require(SeedSettingText.quietHours(from: pageText))
+        #expect(schedules.schedules.map(\.isOn) == [true, true, false])
+        let none = try #require(SeedSet.all.first { $0.name == "quiet-hours-none" })
+        let noneText = try #require(none.settings[.quietHours])
+        #expect(SeedSettingText.quietHours(from: noneText) == QuietHours())
+    }
+
+    /// #379's alarm sets: the window is written as text the app reads, on every day, in the
+    /// phone's own time zone, so the schedule is on at the minute the load falls in.
+    @Test(arguments: ["quiet-hours-window", "quiet-hours-ringing", "quiet-hours-edit"])
+    func aTimedWindowIsWrittenAsOneScheduleTheAppReads(name: String) throws {
+        let set = try #require(SeedSet.all.first { $0.name == name })
+        let window = try #require(set.quietWindow)
+        let load = Date()
+        let times = window.times(from: load, calendar: .autoupdatingCurrent)
+
+        let text = window.text(from: load, calendar: .autoupdatingCurrent)
+
+        let schedule = try #require(SeedSettingText.quietHours(from: text)?.schedules.first)
+        #expect(schedule.isOn)
+        #expect(schedule.days == Set(RepeatRule.Weekday.allCases))
+        #expect(schedule.start == times.start)
+        #expect(schedule.end == times.end)
+    }
+
+    /// #468's phone check: the tutorial unseen, so the Quiet Hours page opens it, over the page's
+    /// three schedules.
+    @Test func theQuietHoursTutorialSetLeavesTheTutorialUnseenOverThePagesSchedules() throws {
+        let set = try #require(SeedSet.all.first { $0.name == "quiet-hours-tutorial" })
+        let page = try #require(SeedSet.all.first { $0.name == "quiet-hours-page" })
+        #expect(set.settings[.quietHoursTutorial] == "unseen")
+        #expect(set.settings[.quietHours] == page.settings[.quietHours])
+        #expect(set.reminders.isEmpty)
+    }
+
     @Test func textTheAppDoesntKnowIsIgnored() {
+        #expect(SeedSettingText.quietHours(from: "25:00-07:00 SU on") == nil)
+        #expect(SeedSettingText.quietHours(from: "22:00-22:00 SU on") == nil)
         #expect(SeedSettingText.defaultAlarmSound(from: "foghorn") == nil)
         #expect(SeedSettingText.remindersSort(from: "title.ascending") == nil)
         #expect(SeedSettingText.remindersSort(from: "created") == nil)
@@ -74,7 +129,7 @@ final class DeviceSeedTests {
 struct ModelSeedTargetTests {
     let clock = FakeClock(now: NewYork.local(2026, 10, 15, 8))
 
-    func launchedModel(store: ReminderStore) async -> AppModel {
+    func launchedModel(store: ReminderStore, quietHoursTutorial: QuietHoursTutorialRecord = .temporary) async -> AppModel {
         let model = AppModel(
             clock: clock,
             openStore: { store },
@@ -82,6 +137,7 @@ struct ModelSeedTargetTests {
             alarms: AlarmAdapter(manager: FakeAlarmManager(), clock: clock),
             settingsRecords: .temporary(),
             doneQueue: .temporary,
+            quietHoursTutorial: quietHoursTutorial,
             timeZone: NewYork.timeZone
         )
         await model.launch()
@@ -121,6 +177,24 @@ struct ModelSeedTargetTests {
         }
         let created = set.reminders.compactMap { seed in model.engine.reminders.first { $0.id == seed.id }?.createdAt }
         #expect(Set(created).count == set.reminders.count)
+    }
+
+    /// The set makes the tutorial unseen, and `clean` puts back what the phone had: seen.
+    @Test func theTutorialsFlagIsSetAndPutBackThroughTheModel() async throws {
+        let model = await launchedModel(store: try ReminderStore(location: .inMemory))
+        model.quietHoursTutorialClosed()
+        let target = ModelSeedTarget(model: model)
+        let set = try #require(SeedSet.all.first { $0.name == "quiet-hours-tutorial" })
+        let record = MemorySeedRecordStore()
+        let schedules = model.quietHours
+
+        #expect(DeviceSeed.run(command: set.name, sets: [set], on: target, record: record) == .loaded(set.name))
+        #expect(model.isQuietHoursTutorialDue)
+
+        _ = DeviceSeed.run(command: "clean", sets: [set], on: target, record: record)
+        #expect(!model.isQuietHoursTutorialDue)
+        #expect(target.setting(.quietHoursTutorial) == "seen")
+        #expect(model.quietHours == schedules)
     }
 
     @Test func aReminderMadeByHandIsStillStampedWithNow() async throws {

@@ -65,7 +65,7 @@ struct AccountChangedSheet: View {
     private func title(of row: AccountChangeNote.Row) -> Text {
         switch row {
         case .received(let count, let senders):
-            Text("\(count) reminders from \(senders)", comment: "The Apple Account Changed sheet: the received reminders removed. 1: how many. 2: who sent them, as a list, such as \"Maya Torres and Sam Okafor\".")
+            Text("\(count) reminders from \(AccountChangeNote.Row.list(of: senders))", comment: "The Apple Account Changed sheet: the received reminders removed. 1: how many. 2: who sent them, as a list, such as \"Maya Torres and Sam Okafor\".")
         case .connections(let count, _):
             Text("\(count) connections", comment: "The Apple Account Changed sheet: the connections removed, invites among them. The placeholder is how many.")
         case .sent(let count):
@@ -78,7 +78,7 @@ struct AccountChangedSheet: View {
         case .received:
             Text("Their nudges and alarms are canceled.", comment: "The Apple Account Changed sheet: under the received reminders removed.")
         case .connections(_, let names):
-            Text("\(names), including invites not yet accepted.", comment: "The Apple Account Changed sheet: under the connections removed. The placeholder is their names, as a list, such as \"Maya Torres, Sam Okafor, and Jordan Lee\".")
+            Text("\(AccountChangeNote.Row.list(of: names)), including invites not yet accepted.", comment: "The Apple Account Changed sheet: under the connections removed. The placeholder is their names, as a list, such as \"Maya Torres, Sam Okafor, and Jordan Lee\".")
         case .sent:
             Text("Your Sent view starts empty.", comment: "The Apple Account Changed sheet: under the reminders this person sent, removed.")
         }
@@ -91,9 +91,14 @@ extension AccountChangeNote: Identifiable {
 
     /// One line under Removed from This iPhone, with its names as a list in the person's locale.
     enum Row: Hashable {
-        case received(count: Int, senders: String)
-        case connections(count: Int, names: String)
+        case received(count: Int, senders: [String])
+        case connections(count: Int, names: [String])
         case sent(count: Int)
+
+        /// A row's names as one list in the language's words, as the sheet shows them.
+        static func list(of names: [String]) -> LocalizedStringResource {
+            .list(names)
+        }
     }
 
     /// What the note says under its rows (#433).
@@ -114,8 +119,8 @@ extension AccountChangeNote: Identifiable {
     /// The note's rows, in the mockup's order, a kind with nothing removed left out.
     var rows: [Row] {
         var rows: [Row] = []
-        if receivedCount > 0 { rows.append(.received(count: receivedCount, senders: senders.formatted(.list(type: .and)))) }
-        if !connections.isEmpty { rows.append(.connections(count: connections.count, names: connections.formatted(.list(type: .and)))) }
+        if receivedCount > 0 { rows.append(.received(count: receivedCount, senders: senders)) }
+        if !connections.isEmpty { rows.append(.connections(count: connections.count, names: connections)) }
         if sentCount > 0 { rows.append(.sent(count: sentCount)) }
         return rows
     }

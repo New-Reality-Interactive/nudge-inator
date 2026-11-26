@@ -98,7 +98,7 @@ struct UrgencyWord: View {
             HStack(spacing: Design.Spacing.s1) {
                 Image(systemName: systemImage)
                     .accessibilityHidden(true)
-                Text(verbatim: urgency.name)
+                Text(urgency.name)
             }
             .font(.caption.weight(.semibold))
             .foregroundStyle(urgency.color)

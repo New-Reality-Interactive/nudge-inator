@@ -22,11 +22,11 @@ enum TutorialArtPiece: Sendable {
     case strength(Strength)
 }
 
-/// Under the heading: a lead and rows, each with its SF Symbol, or numbered steps; either can end
-/// with a footer. Or a strength's schedule, as How It Nudges draws it, under a lead and a note.
+/// Under the heading: a lead and rows, each with its SF Symbol, or numbered steps under an optional
+/// lead (#468); either can end with a footer. Or a strength's schedule, as How It Nudges draws it, under a lead and a note.
 enum TutorialContent: Sendable {
     case points(lead: LocalizedStringResource?, [TutorialPoint], footnote: LocalizedStringResource? = nil)
-    case steps([TutorialStep], footnote: LocalizedStringResource)
+    case steps(lead: LocalizedStringResource? = nil, [TutorialStep], footnote: LocalizedStringResource)
     case schedule(lead: LocalizedStringResource, note: LocalizedStringResource, HowItNudges)
 }
 

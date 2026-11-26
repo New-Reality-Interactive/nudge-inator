@@ -30,15 +30,12 @@ struct DefaultAlarmSoundPage: View {
         }
     }
 
-    private var soundName: String { Self.name(of: sound) }
-
-    /// The sound's name, as a placeholder in the page's sentences.
-    private static func name(of sound: AlarmSound) -> String { String(localized: sound.title) }
+    private var soundName: LocalizedStringResource { sound.title }
 
     /// The confirmation's message, counting only the reminders it changes, with its own words for
     /// one (#456's approval).
     static func useForAllMessage(changing count: Int, to sound: AlarmSound) -> LocalizedStringResource {
-        LocalizedStringResource("\(count) reminders, including ones people sent you, will use \(name(of: sound)).",
+        LocalizedStringResource("\(count) reminders, including ones people sent you, will use \(sound.title).",
                                 comment: "Under the question asked before Use for All Reminders. 1: how many reminders change, only those not on the sound already. 2: the sound, such as \"Chime\".")
     }
 

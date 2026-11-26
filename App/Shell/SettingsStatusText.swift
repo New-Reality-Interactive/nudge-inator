@@ -32,6 +32,20 @@ extension BadgesStatus {
     }
 }
 
+extension SettingsStatus.PermissionRow {
+    /// The spoken hint after the row's label and status, short and without the word "button" or
+    /// the gesture, which VoiceOver adds itself. Notifications and Badges share the notification
+    /// settings, so they share the words.
+    var hint: LocalizedStringResource {
+        switch self {
+        case .notifications, .badges:
+            LocalizedStringResource("Opens notification settings.", comment: "VoiceOver hint on Settings' Notifications and Badges rows, which are buttons: they open the app's notification settings in the iOS Settings app.")
+        case .alarms:
+            LocalizedStringResource("Opens the app's settings.", comment: "VoiceOver hint on Settings' Alarms row, which is a button: it opens the app's own page in the iOS Settings app, the only place alarms are turned on.")
+        }
+    }
+}
+
 extension FooterSentence {
     var text: Text {
         switch self {
