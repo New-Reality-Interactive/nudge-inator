@@ -316,6 +316,22 @@ final class ShotsUITests: XCTestCase {
         tapText("#health", inSheet: true)
         barTap { tapButton(containing: "Apply", inSheet: true) }
         shot("myday-filtered")
+        // Another day (#374, #375): tomorrow, then back past today to yesterday, unfiltered.
+        launch(.app)
+        tab("My Day")
+        func tapDayButton(_ label: String) {
+            let button = app.buttons[label].firstMatch
+            XCTAssert(button.waitForExistence(timeout: 3), "No \(label) on My Day:\n\(app.debugDescription)")
+            button.tap()
+            pause(0.8)
+        }
+        tapDayButton("Next Day")
+        XCTAssert(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Tomorrow")).firstMatch.waitForExistence(timeout: 3), "My Day isn't on tomorrow")
+        shot("myday-tomorrow", pages: 20, stopsAtEnd: true)
+        tapDayButton("Today")
+        tapDayButton("Previous Day")
+        XCTAssert(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Yesterday")).firstMatch.waitForExistence(timeout: 3), "My Day isn't on yesterday")
+        shot("myday-yesterday", pages: 20, stopsAtEnd: true)
     }
 
     /// My Day's bar (#161): the Filter button is a glass circle of its own with New apart from it,
@@ -539,8 +555,16 @@ final class ShotsUITests: XCTestCase {
         launch(.app)
         tab("Tags")
         shot("tags", pages: 2)
+        // A tag row opens its details page (#376), whose Reminders row opens its reminders.
         tapText("#home")
+        shot("tag-details")
+        // The page's row, not the tab bar's Reminders tab.
+        let remindersRow = app.collectionViews.buttons["Reminders"].firstMatch
+        XCTAssert(remindersRow.waitForExistence(timeout: 3), "No Reminders row on the Tag details page:\n\(app.debugDescription)")
+        remindersRow.tap()
+        pause(0.8)
         shot("tag-home", pages: 2)
+        back()
         back()
         openSheet("New Tag", title: "New Tag")
         dismissKeyboardTip()
@@ -1666,6 +1690,18 @@ final class ShotsUITests: XCTestCase {
         shot("quiet-hours-list")
         flipQuietNow()
         shot("quiet-hours-list-now-on")
+        // The holding banner (#499) on each tab that has it, while Quiet Now is on.
+        for (title, name) in [("Now", "now"), ("My Day", "myday"), ("Reminders", "reminders")] {
+            tab(title)
+            let banner = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Quiet hours are holding nudges")).firstMatch
+            XCTAssert(banner.waitForExistence(timeout: 3), "No holding banner on \(title):\n\(app.debugDescription)")
+            shot("\(name)-quiet-now-banner")
+        }
+        // How Quiet Hours Work (#468), from its Settings row.
+        launch(.app)
+        tab("Settings")
+        tapText("How Quiet Hours Work")
+        tutorialShots("tutorial-how-quiet-hours-work", pages: 4)
     }
 
     func testSettings() {
@@ -2053,7 +2089,7 @@ final class ShotsUITests: XCTestCase {
         // tutorials), which scripts/site-shots.sh copies as tutorial-<slug>-<page>.png.
         launch(.sharing, standIn: "sent")
         tab("Settings")
-        for (title, slug, pages) in [("How It Nudges", "how-it-nudges", 4), ("How Sharing Works", "how-sharing-works", 4), ("How Alarm Sounds Work", "how-alarm-sounds-work", 3)] {
+        for (title, slug, pages) in [("How It Nudges", "how-it-nudges", 4), ("How Sharing Works", "how-sharing-works", 4), ("How Alarm Sounds Work", "how-alarm-sounds-work", 3), ("How Quiet Hours Work", "how-quiet-hours-work", 4)] {
             tapText(title)
             siteTutorialShots("site-tutorial-\(slug)", pages: pages)
         }

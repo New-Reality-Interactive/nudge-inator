@@ -1,7 +1,7 @@
 import NudgeEngine
 import SwiftUI
 
-/// One day back or forward on My Day (#375): Previous Day, Next Day and the swipe.
+/// One day back or forward on My Day (#375): Previous Day and Next Day.
 enum MyDayMove {
     case previous
     case next

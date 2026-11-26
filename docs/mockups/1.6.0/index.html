@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Tag Details Mockup</title>
+<title>Nudge-inator 1.6.0</title>
 <style>
 /* ============ Colors =============
    Follows Apple's HIG "Color" and "Dark Mode" pages (docs/apple/design). Every token is a dynamic color
@@ -655,6 +655,12 @@ li > .swipe { border-radius: 0; }
 .taghero-text h1 { margin-bottom: 2px; }
 .taghero-text p { margin: 0; font: var(--subhead); letter-spacing: var(--subhead-track); }
 :root[data-type^="ax"] .taghero { flex-direction: column; align-items: flex-start; }
+/* The details page's Reminders row (#378): at the accessibility sizes the glyph sits on a line above
+   the word, so the word keeps the row's width and doesn't break mid-word. */
+.remrow .remglyph { display: flex; flex: none; }
+:root[data-type^="ax"] .remrow { flex-wrap: wrap; row-gap: 4px; }
+:root[data-type^="ax"] .remrow .remglyph { flex-basis: 100%; }
+:root[data-type^="ax"] .remrow .main { flex: 1; min-width: 0; }
 .hero .hero-tags { font: var(--subhead); letter-spacing: var(--subhead-track); margin-top: 8px; }
 .cell .trail.stack small { font: var(--footnote); color: var(--secondary-label); }
 details.occ summary { list-style: none; cursor: pointer; }
@@ -1156,6 +1162,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <button type="button" class="cbtn" id="c-qt-first">First time: open Quiet Hours from Settings</button>
       <button type="button" class="cbtn" id="c-qt-section">Settings › Tutorials (the new last row)</button>
       <button type="button" class="cbtn" id="c-qt-sheet">How Quiet Hours Work (4 pages)</button>
+      <button type="button" class="cbtn" id="c-qt-p3">How Quiet Hours Work, page 3 (Your Schedules)</button>
       <button type="button" class="cbtn" id="c-qt-p4">How Quiet Hours Work, page 4 (Held Nudges)</button>
     </fieldset>
     <fieldset>
@@ -1177,6 +1184,7 @@ details.occ[open] .chev svg { transform: rotate(90deg); }
       <button type="button" class="cbtn" id="c-qh-edit">A schedule's sheet (Schedule switch)</button>
       <button type="button" class="cbtn" id="c-qh-same">Start equals end: can't save</button>
       <button type="button" class="cbtn" id="c-qh-nodays">No days: can't save</button>
+      <button type="button" class="cbtn" id="c-qh-dup">Same as another schedule: can't save</button>
       <button type="button" class="cbtn" id="c-qh-delete">Delete Schedule asks</button>
     </fieldset>
     <fieldset>
@@ -1539,6 +1547,7 @@ const SYMBOLS = {
   "pause": { d: '<path d="M9 5.5v13M15 5.5v13"/>', scale: 0.92 },
   "arrow.uturn.backward": { d: '<path d="M8.5 4.5 4 9l4.5 4.5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H10"/>', scale: 0.94 },
   "play": { d: '<path d="M8 5.2v13.6a.8.8 0 0 0 1.2.7l10.3-6.8a.8.8 0 0 0 0-1.4L9.2 4.5A.8.8 0 0 0 8 5.2z"/>', scale: 0.9 },
+  "switch.2": { d: '<rect x="3" y="7.5" width="18" height="9" rx="4.5"/><circle cx="16.5" cy="12" r="2.2"/>' },
   "pencil": { d: '<path d="M16.6 4.2a1.9 1.9 0 0 1 2.7 0l.5.5a1.9 1.9 0 0 1 0 2.7L8.6 18.6 4 20l1.4-4.6Z"/><path d="m14.8 6 3.2 3.2"/>' },
   "trash": { d: '<path d="M4 6.5h16"/><path d="M9 6.5V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v1.5"/><path d="m6 6.5 1 12.8A1.8 1.8 0 0 0 8.8 21h6.4a1.8 1.8 0 0 0 1.8-1.7L18 6.5"/><path d="M9.6 10.2v7.2M12 10.2v7.2M14.4 10.2v7.2"/>', scale: 0.96 },
   "magnifyingglass": { d: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.3 15.3 5 5"/>', scale: 0.96 },
@@ -2190,6 +2199,8 @@ function nudgeCard(o) {
   const nextLevel = Math.min(o.level + 1, maxLevel(r.strength));
   const urg = urgencyFor(r.strength, nextLevel), now = urgencyFor(r.strength, o.level);
   const next = L(o.nextNudgeAt);
+  // When it closes as Missed: its give-up limit from when it was due.
+  const missedAt = new Date(L(o.scheduledFor).getTime() + simulate(r.strength, cap, paceOf(r)).giveUpAt * 60000);
   // Two parts, so a wide card can put its buttons beside its text (see .nc in the CSS).
   return `<article class="nudgecard u-${now}" aria-labelledby="nt-${o.id}"><div class="nc">
     <div class="nc-main">
@@ -2197,7 +2208,10 @@ function nudgeCard(o) {
     <h3 id="nt-${o.id}"><button type="button" class="linkish" data-open="${r.id}">${esc(r.title)}</button></h3>
     ${fromLabel(r, false)}
     <p>${tl ? `${tl} · due` : "Due"} ${hm(L(o.scheduledFor))}</p>
-    <p class="nextline">Next nudge ${hm(next)} (${rel(next)}): ${viaLabel(urg, 16, bt)} · ${urg}</p>
+    ${quietNowSince
+      // While Quiet Now holds every nudge left, the card says so in place of the next nudge (#379).
+      ? `<p class="nextline">Quiet Now is holding its nudges. It closes as Missed at ${hm(missedAt)} if it stays on.</p>`
+      : `<p class="nextline">Next nudge ${hm(next)} (${rel(next)}): ${viaLabel(urg, 16, bt)} · ${urg}</p>`}
     <div class="meter" role="img" aria-label="${o.attempts} of ${cap.maxAttempts} nudges sent"><span class="meter-fill" style="width:${Math.min(100, (o.attempts / cap.maxAttempts) * 100)}%"></span></div>
     </div>
     <div class="nc-side">
@@ -2810,7 +2824,7 @@ function tagRow(t) {
     <span class="main"><span class="t">${name}</span><span class="s">${tagCountsLine(c)}</span></span>
     <span class="trail">${chev}</span>
   </button>`;
-  const rems = `<button type="button" class="swipe-act tile rems" data-tagrems="${t.id}" tabindex="-1" aria-hidden="true"><span class="disc">${I("list.bullet.clipboard", 22)}</span><span>Reminders</span></button>`;
+  const rems = `<button type="button" class="swipe-act tile rems" data-tagrems="${t.id}" tabindex="-1" aria-hidden="true"><span class="disc">${I("list.bullet.clipboard", 22)}</span><span>List</span></button>`;
   const edit = `<button type="button" class="swipe-act tile edit" data-renametag="${t.id}" tabindex="-1" aria-hidden="true"><span class="disc">${I("pencil", 22)}</span><span>Edit</span></button>`;
   const del = `<button type="button" class="swipe-act tile del" data-deletetag="${t.id}" tabindex="-1" aria-hidden="true"><span class="disc">${I("trash", 22)}</span><span>Delete</span></button>`;
   const actions = `<button type="button" class="sr-only" data-tagrems="${t.id}">Reminders: ${name}</button><button type="button" class="sr-only" data-renametag="${t.id}">Edit: ${name}</button><button type="button" class="sr-only" data-deletetag="${t.id}">Delete: ${name}</button>`;
@@ -2903,7 +2917,7 @@ function viewTagDetails(id) {
     <div class="taghero-text"><h1 tabindex="-1">${name}</h1><p>${tagCountsLine(c)}</p></div>
   </div></div>
   <div class="sec" style="margin-top:20px"><ul class="list">
-    <li><button type="button" class="cell" data-tagrems="${t.id}"><span class="main">Reminders</span><span class="trail">${chev}</span></button></li>
+    <li><button type="button" class="cell tint remrow" data-tagrems="${t.id}"><span class="remglyph">${I("list.bullet.clipboard", 20)}</span><span class="main">Reminders</span><span class="trail">${chev}</span></button></li>
   </ul></div>
   <div class="sec"><ul class="list">
     <li><button type="button" class="cell destructive" data-deletetag="${t.id}">${I("trash", 20)} Delete Tag</button></li>
@@ -3181,10 +3195,13 @@ function openQhSheet(id = null) {
   state.focus = "sheet"; render();
 }
 const qhSame = (x) => x.start === x.end;
-const qhCanSave = (x) => !qhSame(x) && x.days.length > 0;
+/* The same start, end and days as another schedule, on or off: a copy holds nothing more, and
+   turning one copy off would leave the other holding nudges. */
+const qhDuplicate = (x, id) => quietHours.some((q) => q.id !== id && q.start === x.start && q.end === x.end && q.days.length === x.days.length && q.days.every((d) => x.days.includes(d)));
+const qhCanSave = (x, id) => !qhSame(x) && x.days.length > 0 && !qhDuplicate(x, id);
 function qhSheet(sh) {
   const x = sh.draft;
-  const save = confirmButton("data-qhsave", sh.id ? "Save" : "Add", qhCanSave(x));
+  const save = confirmButton("data-qhsave", sh.id ? "Save" : "Add", qhCanSave(x, sh.id));
   // The compact time pill of the reminder form's Starts row: sized to its time, opening the wheel.
   const pill = (f, label) => `<span class="dtpills"><label class="pill-input dtpill">${hmOf(x[f])}<input type="time" id="qh-${f}" data-qf="${f}" value="${x[f]}" aria-label="${label}"></label></span>`;
   const runs = qhSame(x) ? "" : x.end < x.start ? `Ends at ${qhTime(x.end)} the next day.` : `Ends at ${qhTime(x.end)} the same day.`;
@@ -3197,7 +3214,7 @@ function qhSheet(sh) {
     <div class="sec"${sh.id ? "" : ' style="margin-top:12px"'}><ul class="list">
       <li><div class="formrow"><span class="lbl" id="l-qh-start">Starts</span>${pill("start", "Starts")}</div></li>
       <li><div class="formrow"><span class="lbl" id="l-qh-end">Ends</span>${pill("end", "Ends")}</div></li>
-    </ul>${qhSame(x) ? `<p class="errtext" role="alert">The start and end are the same. Change one to save.</p>` : `<p class="sec-f">${runs}</p>`}</div>
+    </ul>${qhSame(x) ? `<p class="errtext" role="alert">The start and end are the same. Change one to save.</p>` : qhDuplicate(x, sh.id) ? `<p class="errtext" role="alert">You already have a schedule with these times and days.</p>` : `<p class="sec-f">${runs}</p>`}</div>
     <h3 class="sec-h" id="l-qh-days">Days</h3>
     <div class="sec"><ul class="list" role="group" aria-labelledby="l-qh-days">${BYDAY.map(check).join("")}</ul>
     ${x.days.length ? "" : `<p class="errtext" role="alert">Choose at least one day to save.</p>`}
@@ -3207,7 +3224,7 @@ function qhSheet(sh) {
 }
 function saveQh() {
   const sh = state.sheet, x = sh.draft;
-  if (!qhCanSave(x)) return;
+  if (!qhCanSave(x, sh.id)) return;
   const days = WEEK_ORDER.filter((d) => x.days.includes(d));
   if (sh.id) Object.assign(quietHours.find((q) => q.id === sh.id), { start: x.start, end: x.end, days, on: x.on });
   else quietHours.push({ id: `q${Date.now()}`, start: x.start, end: x.end, days, on: true });
@@ -3792,9 +3809,9 @@ const QUIET_PAGES = [
   { art: () => `<span class="pill">${I("plus", 20)} Add Schedule</span>`,
     h: "Your Schedules",
     lead: "Add as many as you need, such as one for weeknights and one for weekends.",
-    steps: [["Add a Schedule", "Settings › Quiet Hours. Tap +, choose the times and days, and tap Save."],
-            ["Change One", "Tap a schedule to change its times and days, or to delete it."],
-            ["Switch One Off", "Its switch turns it off and keeps it for later."]],
+    rows: [["plus", "Add a Schedule", "Settings › Quiet Hours. Tap +, choose the times and days, and tap Save."],
+           ["pencil", "Change One", "Tap a schedule to change its times and days, or to delete it."],
+           ["switch.2", "Switch One Off", "Its switch turns it off and keeps it for later."]],
     foot: "A change applies from now on. What was already sent or held stays as it was." },
   { art: () => `<span class="pill">${I("bell.slash", 20)} Held</span><span class="arrow">${I("arrow.right", 22)}</span><span class="pill">${I("xmark.circle.fill", 20)} Missed</span>`,
     h: "Held Nudges",
@@ -5850,6 +5867,7 @@ for (const [id, run] of Object.entries({
   "c-qh-add": () => { showTab("settings", { kind: "qh" }); openQhSheet(); },
   "c-qh-edit": () => { if (!quietHours.length) seedQuietHours(); showTab("settings", { kind: "qh" }); openQhSheet(quietHours[0].id); },
   "c-qh-same": () => { showTab("settings", { kind: "qh" }); openQhSheet(); state.sheet.draft.end = "22:00"; render(); },
+  "c-qh-dup": () => { if (!quietHours.length) seedQuietHours(); showTab("settings", { kind: "qh" }); const q = quietHours[0]; openQhSheet(); Object.assign(state.sheet.draft, { start: q.start, end: q.end, days: [...q.days] }); render(); },
   "c-qh-nodays": () => { showTab("settings", { kind: "qh" }); openQhSheet(); state.sheet.draft.days = []; render(); },
   "c-qh-delete": () => { if (!quietHours.length) seedQuietHours(); showTab("settings", { kind: "qh" }); openQhSheet(quietHours[0].id); confirmDeleteQh(quietHours[0].id); },
   "c-mn-now": () => { showTab("now"); scrollToSection("h-closed"); },
@@ -5895,6 +5913,7 @@ for (const [id, run] of Object.entries({
   "c-qt-section": () => { showTab("settings"); scrollToSection("h-tutorials"); },
   "c-qt-first": () => { quietTutorial.seen = false; showTab("settings"); document.querySelector("[data-qh]")?.scrollIntoView({ block: "center" }); controlNote("Tap Quiet Hours: the tutorial opens over its page."); },
   "c-qt-sheet": () => { showTab("settings"); openTutorial(false, "quiet"); },
+  "c-qt-p3": () => { showTab("settings"); openTutorial(false, "quiet"); state.sheet.page = 2; render(); },
   "c-qt-p4": () => { showTab("settings"); openTutorial(false, "quiet"); state.sheet.page = 3; render(); },
   "c-tt-sharingon": () => { startSharing(true); showTab("settings"); scrollToSection("h-sharing"); },
   "c-tt-sound": () => { showTab("settings"); openTutorial(false, "sounds"); },

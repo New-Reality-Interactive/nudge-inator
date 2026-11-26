@@ -73,7 +73,7 @@ struct MyDayShownDay: Equatable {
         }
     }
 
-    /// Every day in the range, oldest first: the pages My Day swipes through.
+    /// Every day in the range, oldest first: the pages Previous Day and Next Day move through.
     static func days(of engine: Engine) -> [CalendarDay] {
         let range = engine.myDayRange
         return Array(sequence(first: range.lowerBound) { day in

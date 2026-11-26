@@ -212,7 +212,20 @@ SCREENS = {
   "quiet-hours-edit": ("setTimeout(()=>document.getElementById('c-qh-edit').click(),200)", 2),
   "quiet-hours-same": ("setTimeout(()=>document.getElementById('c-qh-same').click(),200)", 1),
   "quiet-hours-no-days": ("setTimeout(()=>document.getElementById('c-qh-nodays').click(),200)", 2),
-  "quiet-hours-delete": ("setTimeout(()=>document.getElementById('c-qh-delete').click(),200)", 1),
+  "quiet-hours-duplicate": ("setTimeout(()=>document.getElementById('c-qh-dup').click(),200)", 1),
+  "quiet-hours-delete":("setTimeout(()=>document.getElementById('c-qh-delete').click(),200)", 1),
+  # The holding banner (#499), with Quiet Now on. Only a mockup with it draws these.
+  "now-quiet-now-banner": ("setTimeout(()=>document.getElementById('c-qb-now').click(),200)", 1),
+  "myday-quiet-now-banner": ("setTimeout(()=>document.getElementById('c-qb-day').click(),200)", 1),
+  "reminders-quiet-now-banner": ("setTimeout(()=>document.getElementById('c-qb-rems').click(),200)", 1),
+  # How Quiet Hours Work (#468). Only a mockup with it draws these.
+  "tutorial-how-quiet-hours-work-p1": ("setTimeout(()=>{document.getElementById('c-qt-sheet').click();state.sheet.page=0;render()},200)", 1),
+  "tutorial-how-quiet-hours-work-p2": ("setTimeout(()=>{document.getElementById('c-qt-sheet').click();state.sheet.page=1;render()},200)", 1),
+  "tutorial-how-quiet-hours-work-p3": ("setTimeout(()=>{document.getElementById('c-qt-sheet').click();state.sheet.page=2;render()},200)", 1),
+  "tutorial-how-quiet-hours-work-p4": ("setTimeout(()=>{document.getElementById('c-qt-sheet').click();state.sheet.page=3;render()},200)", 1),
+  # My Day on another day (#374, #375). Only a mockup with it draws these.
+  "myday-yesterday": ("setTimeout(()=>document.getElementById('c-od-yesterday').click(),200)", 3),
+  "myday-tomorrow": ("setTimeout(()=>document.getElementById('c-od-tomorrow').click(),200)", 3),
 }
 # Variant: JavaScript that sets it up.
 VARIANTS = {"portrait": "", "landscape": "setOrientation(true);", "largest-text": "document.documentElement.dataset.type='ax5';"}
