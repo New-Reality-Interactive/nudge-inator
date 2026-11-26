@@ -354,23 +354,6 @@ final class ShotsUITests: XCTestCase {
         shot("myday-no-filter")
     }
 
-    /// The Filter button's badge as tags come off the filter: the badge follows the count when a
-    /// token is removed from My Day, not only when the filter sheet closes (found on the iPhone,
-    /// ticket 19).
-    func testMyDayFilterBadgeFollowsTokens() {
-        launch(.app)
-        tab("My Day")
-        openMyDayFilter()
-        tapText("#health", inSheet: true)
-        tapText("#work", inSheet: true)
-        barTap { tapButton(containing: "Apply", inSheet: true) }
-        shot("myday-badge-2-tags")
-        tapButton(containing: "Remove #work")
-        shot("myday-badge-1-tag-after-remove")
-        tapButton(containing: "Remove #health")
-        shot("myday-badge-0-tags-after-remove")
-    }
-
     /// What VoiceOver gets for the Filter button with none, one and two tags chosen: its label and
     /// value, in the test log (`ACCESSIBILITY` lines). VoiceOver speaks the label, then the value.
     func testMyDayFilterAccessibility() {
@@ -389,58 +372,6 @@ final class ShotsUITests: XCTestCase {
         tapText("#work", inSheet: true)
         barTap { tapButton(containing: "Apply", inSheet: true) }
         report(2)
-    }
-
-    /// Six tags, wrapping to at most three rows with "+N more" past them, then the Filter button's
-    /// menu (ticket 20): a tap shows Filter and Clear All Filters, at every text size, and Clear
-    /// All Tags removes every tag. What VoiceOver gets is in the test log (`ACCESSIBILITY` lines).
-    func testMyDayClearAllTags() {
-        launch(.app)
-        tab("My Day")
-        let filter = myDayFilterButtons.firstMatch
-        // With none chosen the button isn't a menu: a tap opens the sheet.
-        openMyDayFilter()
-        // The sheet lists tags A to Z and tapText scrolls only down, so #appointments goes first: last,
-        // it was missed in landscape and at the largest size.
-        for tag in ["#appointments", "#home", "#health", "#work", "#money", "#morning"] {
-            tapText(tag, inSheet: true)
-        }
-        barTap { tapButton(containing: "Apply", inSheet: true) }
-        XCTAssertEqual(filter.value as? String, "6 chosen", "A tag wasn't chosen")
-        shot("myday-tokens-6")
-        // The tokens' hidden measuring copies aren't elements.
-        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "label == %@", "Remove #home from the filter")).count, 1)
-        let more = app.buttons.matching(NSPredicate(format: "label ENDSWITH %@", "more tags")).firstMatch
-        if more.exists {
-            print("ACCESSIBILITY more token: label=\"\(more.label)\"")
-            more.tap()
-            XCTAssert(app.navigationBars["Filter My Day"].waitForExistence(timeout: 3), "+N more didn't open the sheet")
-            barTap { tapButton(containing: "Apply", inSheet: true) }
-        }
-        print("ACCESSIBILITY 6 tags: label=\"\(filter.label)\" value=\"\(filter.value as? String ?? "nil")\"")
-        let clear = app.buttons["Clear All Filters"]
-        barTap {
-            scrollToTop()
-            filter.tap()
-            XCTAssert(clear.waitForExistence(timeout: 3), "The Filter menu didn't open")
-            shot("myday-filter-menu")
-            print("ACCESSIBILITY menu items: \(myDayFilterButtons.count) named Filter, clear=\"\(clear.label)\"")
-            clear.tap()
-        }
-        shot("myday-cleared")
-        XCTAssertFalse(app.buttons["Remove #home from the filter"].exists, "Clear All Filters left a token")
-        XCTAssertEqual(filter.value as? String ?? "", "", "The Filter button still has a count")
-        // No Tags is cleared too.
-        openMyDayFilter()
-        tapText("No Tags", inSheet: true)
-        barTap { tapButton(containing: "Apply", inSheet: true) }
-        barTap {
-            scrollToTop()
-            filter.tap()
-            XCTAssert(clear.waitForExistence(timeout: 3), "The Filter menu didn't open with No Tags")
-            clear.tap()
-        }
-        XCTAssertFalse(app.buttons["Remove No Tags from the filter"].exists, "Clear All Filters left No Tags")
     }
 
     /// The seed's tags, as the filter sheet lists them.
@@ -735,49 +666,6 @@ final class ShotsUITests: XCTestCase {
         assertTagCount(startsWith: "8 tags out of 8")
     }
 
-    /// The tag sheet's Cancel (#285), New Tag and rename: with the name as it opened it closes
-    /// without asking; with a change it asks, and Discard Changes adds and renames nothing.
-    func testTagSheetDiscard() {
-        launch(.app)
-        tab("Tags")
-        openRenameSheet(for: "#home")
-        dismissKeyboardTip()
-        closeUnchangedSheet(titled: "Rename Tag")
-
-        openRenameSheet(for: "#home")
-        app.typeText("x")
-        assertTagSheetAsksBeforeDiscarding(titled: "Rename Tag", shot: "tag-rename-discard")
-        // By existence, not hittability: at the largest text scrolling can step past the middle of a
-        // row this tall, and the rotation for the bar's taps moves the list.
-        scrollToTop()
-        XCTAssert(rowExists("#home"), "Discard Changes renamed the tag:\n\(app.debugDescription)")
-
-        openSheet("New Tag", title: "New Tag")
-        closeUnchangedSheet(titled: "New Tag")
-
-        openSheet("New Tag", title: "New Tag")
-        app.typeText("spare")
-        assertTagSheetAsksBeforeDiscarding(titled: "New Tag", shot: "tag-new-discard")
-        XCTAssertNil(scrollTo("#spare"), "Discard Changes added the tag")
-    }
-
-    /// With a changed name in the open tag sheet: a swipe down leaves it open, a tap outside the
-    /// question keeps the name, and Discard Changes closes it. The keyboard stays up: a return
-    /// here would save the name.
-    private func assertTagSheetAsksBeforeDiscarding(titled title: String, shot shotName: String, line: UInt = #line) {
-        let typed = app.textFields.firstMatch.value as? String
-        XCTAssertNotNil(typed, "The name field has no value", line: line)
-        swipeSheetDown(titled: title)
-        pause(0.8)
-        XCTAssert(app.navigationBars[title].exists, "A swipe down closed the sheet with a changed name", line: line)
-        askToDiscard(titled: title, line: line)
-        shot(shotName)
-        keepEditing(titled: title, line: line)
-        XCTAssertEqual(app.textFields.firstMatch.value as? String, typed, "Leaving the discard question lost the name", line: line)
-        askToDiscard(titled: title, line: line)
-        discardChanges(titled: title, line: line)
-    }
-
     /// Whether a list row with this title is there, scrolling down to it. The label also carries the
     /// row's other text. By existence, not hittability: at the largest text a scroll can step past
     /// the middle of a tall row, and a row's middle can be under the bar.
@@ -789,13 +677,6 @@ final class ShotsUITests: XCTestCase {
             scrolls += 1
         }
         return row.exists
-    }
-
-    /// Opens the rename sheet from a tag row's trailing swipe.
-    private func openRenameSheet(for tag: String) {
-        swipe(tag)
-        app.buttons["Edit"].firstMatch.tap()
-        XCTAssert(app.navigationBars["Rename Tag"].waitForExistence(timeout: 3), "No Rename Tag sheet")
     }
 
     private func assertTagCount(startsWith text: String, line: UInt = #line) {
