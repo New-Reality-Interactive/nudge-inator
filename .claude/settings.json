@@ -1,15 +1,23 @@
 {
   "permissions": {
-    "allow": ["Bash(gh *)"]
+    "allow": [
+      "Bash(gh *)"
+    ]
   },
   "hooks": {
     "PreToolUse": [
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/hooks/pr-body-check.sh" }
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/hooks/pr-body-check.sh"
+          }
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "creative-writing-skills@cw": false
   }
 }

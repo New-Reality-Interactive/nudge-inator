@@ -24,11 +24,15 @@ Single-context: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agen
 
 ### Design system
 
-Colors, type, spacing, shapes and components are in `docs/design/DESIGN.md`. UI stories meet it; screen layout is the latest version mockup, `docs/mockups/<version>/`, or a change's mockup for what it changes. New mockups start from `docs/mockups/*-mockup-template/`.
+Colors, type, spacing, shapes and the component index are in `docs/design/DESIGN.md`; each component has its own file in `docs/design/components/`, so read only the one you need. UI stories meet it; screen layout is the latest version mockup, `docs/mockups/<version>/`, or a change's mockup for what it changes. New mockups start from `docs/mockups/*-mockup-template/`.
 
 ### Code review and session size
 
 How a ticket is reviewed and how to keep a session small: `docs/agents/review.md`.
+
+### Compact instructions
+
+When the conversation is compacted, keep: the ticket or spec number and its acceptance criteria; the last test run's result; the review findings and what was done about each; every decision the developer made, with its question number; the branch and PR. Drop raw command output, file contents and logs: they can be read again.
 
 ### Ticket workflow
 
