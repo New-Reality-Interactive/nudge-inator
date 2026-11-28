@@ -2,7 +2,7 @@
 
 What the app charges for and what stays free. Writing a spec, a ticket or a milestone, or building a feature that someone might pay for: read this.
 
-The developer decided this on 2026-11-20. On 2026-11-27 they moved the App Store launch to 1.7.0: the Pro unlock (spec #474) and the Accessibility Nutrition Labels (spec #257) ship in it, in English, and the milestones after it ship as App Store updates.
+The developer decided this on 2026-11-20. On 2026-11-27 they moved the App Store launch to 1.7.0: the Pro unlock (spec #474) ships in it, in English, and the milestones after it ship as App Store updates. On 2026-11-28 they moved the Accessibility Nutrition Labels (spec #257) to 1.7.1, so the launch claims no labels.
 
 ## The model
 

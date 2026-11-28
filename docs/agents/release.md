@@ -65,6 +65,6 @@ When a feature's last ticket is resolved and merged into its release branch, it'
 4. **App Review submission**, for every release from 1.7.0, the App Store launch (the developer's decision, 2026-11-27): the same build goes to App Review once TestFlight has it, with **manual release**, so it goes live only on the developer's go. The agent drafts what App Store Connect needs and the developer enters it, since it is outward-facing:
    - the App Review notes, from the version's Review Notes file, which also says how a reviewer sees Pro (buy, restore, the one free connection);
    - the version's What's New text, from the What to Test note's highlights;
-   - the iPhone's Accessibility Nutrition Label answers and the accessibility URL page, re-checked against what the version changed by spec #257's method (its common tasks and matrix). If a change breaks a claimed label, the label is fixed or withdrawn before submitting;
+   - from 1.7.1, which claims the first labels (spec #257; 1.7.0 claims none, the developer's decision 2026-11-28), the iPhone's Accessibility Nutrition Label answers and the accessibility URL page, re-checked against what the version changed by spec #257's method (its common tasks and matrix). If a change breaks a claimed label, the label is fixed or withdrawn before submitting;
    - the privacy label and policy, re-checked against what the version adds (`privacy-compliance.md`).
    1.7.0's own launch steps, the English listing and screenshots, are tickets in its milestone.
