@@ -173,7 +173,7 @@ The whole feature of sending reminders to people and receiving theirs: Connectio
 _Avoid_: Shared reminders (for the feature), social, family sharing
 
 **Connection**:
-Two people who have agreed to send each other reminders, set up by one accepted Invite. It works both ways, and either person can end it.
+Two people who have agreed to send each other reminders, set up by one accepted Invite. It works both ways, and either person can end it. A person without Pro sends over only their Free connection; each of their other Connections is receive-only for them.
 _Avoid_: Friend, contact, share, follower
 
 **Invite**:
@@ -187,6 +187,18 @@ _Avoid_: Unshare, unfriend, block
 **Connection Ended**:
 What a person sees once the other person has disconnected: a note that the connection ended, with the same Remove or Keep as My Own Reminders choice for what they received, which they have to make.
 _Avoid_: Disconnected (for the other person's side)
+
+**Pro**:
+The one-time purchase that unlocks the paid features. A person has it once they buy it, restore it, or a member of their family group bought it, and loses it only when Apple refunds it or they leave that family. Without it, a person is free.
+_Avoid_: Premium, upgrade, subscription, paid tier
+
+**Free connection**:
+The one Connection a person without Pro can send reminders to. It is the Connection they started with their own Invite, held from the moment the Invite is sent; with none, the first Connection they send a reminder to. Ending it, or cancelling the waiting Invite, frees it, and the next Invite or first send picks the next one. After losing Pro, the person picks it themselves. Receiving and accepting Invites never use it.
+_Avoid_: Sending connection, slot, free slot
+
+**Pro screen**:
+The screen that says what Pro adds, shows its price, and offers Buy and Restore. It opens from Settings, and from every place that asks for Pro, such as a receive-only Connection on Send To.
+_Avoid_: Paywall, upgrade screen, store
 
 **Sender**:
 The person who sent a reminder. The sender owns what it says and when it's due.

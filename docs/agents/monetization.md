@@ -17,21 +17,26 @@ The developer decided this on 2026-11-20. On 2026-11-27 they moved the App Store
 - Reminders, repeats, strengths and paces, Break through Focus, tags, My Day and Sent.
 - The bundled alarm tones and the Default Alarm Sound.
 - Quiet hours and the other 1.6.0 items, localization and accessibility.
-- **Receiving** shared reminders: always free, and it never uses the free connection.
-- **One sharing connection.**
+- **Receiving** reminders, from any number of Connections, and accepting Invites: always free, and they never use the free connection.
+- **One free connection**: the one Connection a person without Pro sends reminders to.
 
 ## Pro
 
-- Sharing beyond one connection: the sender pays. Receiving stays free so every Pro sender brings in free recipients who install the app.
+- Sending to more than one Connection: the sender pays. Receiving stays free so every Pro sender brings in free recipients who install the app.
 - Siri and Shortcuts (1.8.0), Apple Watch (1.9.0) and accent color (1.10.0).
 
-Sharing beyond one connection is gated from 1.7.0; before it, sharing shipped ungated in TestFlight builds only. Every later Pro feature ships gated from its first version: its spec says `Tier: Pro`, and its gate ticket sits in its own milestone.
+Sending beyond the free connection is gated from 1.7.0; before it, sharing shipped ungated in TestFlight builds only. Every later Pro feature ships gated from its first version: its spec says `Tier: Pro`, and its gate ticket sits in its own milestone.
 
 ## Connections
 
-- The free connection counts only people you send to, never people who send to you. Ending a connection frees it.
-- If Pro is revoked (a refund, or a family member removed), existing connections keep working. Only adding a connection beyond the free one is blocked. The gate is checked once, at the moment a connection is added.
-- TestFlight testers get Pro free. How is decided in the Pro spec (#474).
+The developer decided these on 2026-11-28 (spec #474). The terms are in `GLOSSARY.md` (Pro, Free connection, Pro screen).
+
+- A person without Pro can be connected with any number of people, and receives from all of them. They send reminders to one Connection only, their **free connection**; every other Connection is receive-only for them. Accepting an Invite and receiving never use it.
+- The free connection is the Connection they started with their own Invite, held from the moment the Invite is sent (cancelling it frees it). With none, it is the first Connection they send a reminder to.
+- Ending the free connection frees it, and nothing is picked automatically: the next Invite or the next first send picks it.
+- On Send To, a receive-only Connection shows a Pro badge, and tapping it opens the Pro screen.
+- Losing Pro (Apple refunds it, or the person leaves the family that bought it) puts the person back to one free connection, which they pick: on the next open, a sheet asks which Connection to keep sending to (none when they have only one). Until they pick, every Connection has the Pro badge, and the sheet returns on each open. Reminders already sent stay on the recipients' phones; changing one counts as sending; cancelling and Disconnect always work.
+- TestFlight testers get Pro free with a one-time offer code the developer sends at launch. The app has no tester rule: in TestFlight, the first-installed version always reads "1.0".
 
 ## Each new feature
 
