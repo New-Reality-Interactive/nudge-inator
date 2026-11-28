@@ -154,5 +154,13 @@ Fable 5.1 $10/$50.
 | Crosses engine and UI, or needs a visual or design call (mockups, layout, accessibility) | Opus 5.5 · medium |
 | AlarmKit, concurrency, isolation, a hard bug, or a ticket that failed once | Opus 5.5 · high |
 | Failed again at that, or the way forward is unclear | Fable 5.1 · high, or step back to `/grill-with-docs` |
+| Not a ticket: a spec or grilling session with product calls still open | Opus 5.5 · medium |
+| Not a ticket: `to-tickets` from a spec that already lists its tickets | Sonnet 5.5 · medium |
+
+Model, effort and fast mode are part of the prompt cache's key, so changing any of them partway
+through a session re-sends the whole conversation at full price. Choose them once, right after
+`/clear`, and keep them for the session. A ticket that needs a stronger model gets one in a new
+session: the developer runs `/clear`, sets the model, and runs `/implement #<n>` again, which reads
+the ticket's Comments rather than the old conversation.
 
 Haiku 5.5 isn't recommended for ticket work.

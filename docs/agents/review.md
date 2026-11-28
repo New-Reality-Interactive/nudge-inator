@@ -23,3 +23,5 @@ Most usage comes from long sessions that re-send a large history on every reques
 - Never `cat` test logs (`.build/test-logs`) or `Localizable.xcstrings`. Grep them, or Read with `offset` and `limit`.
 - After tests pass and before review, ask the developer to run `/compact` (only they can type it), and start the review once they answer.
 - Run device-check walkthroughs in a fresh session holding only the ticket and the check list.
+- After a dead end or a wrong attempt, suggest the developer `/rewind` to just before it rather than carry on or `/compact`: rewinding cuts turns off the end, so what came before stays cached, while compacting rewrites the whole conversation.
+- When iterating on one test, run it alone with `ONLY=` (`scripts/test.sh`); the full run still comes before every commit.

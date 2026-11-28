@@ -55,6 +55,7 @@ The app ships in English, but every string a person sees goes through a String C
 - Group related tests in a `struct` suite. Use parameterized `@Test(arguments:)` instead of `for` loops over cases.
 - Test names describe behavior, without a `test` prefix.
 - Engine logic is tested in `NudgeEngineTests` with no simulator. App-target tests cover only code that needs Apple frameworks.
+- While iterating on one test, run it alone: `ONLY=<Target>/<Suite>/<test> scripts/test.sh` (an `-only-testing` identifier; `ONLY=NudgeEngineTests/...` runs just the engine, anything else just the app on the first simulator). It's for the red-green loop only: the full run, on both simulators, comes before every commit.
 
 ## Comments and style
 

@@ -4,6 +4,7 @@
 # of the app scheme).
 # Env: SIMULATORS (simulator names separated by ";", default the iOS 26.5 and 27.2 ones below).
 # SIMULATORS= (set but empty) runs only the steps that need no simulator, as CI does.
+# ONLY=<Target>/<Suite>/<test> runs one test alone, for the red-green loop (below).
 # The String Catalogs (#350): a local run brings them up to date from the app build and names each one it
 # changed; on GitHub Actions (GITHUB_ACTIONS is set) the run only checks them and fails on a stale one.
 # CI has no simulator, so it builds the app for the generic simulator destination instead.
@@ -82,12 +83,48 @@ cleanup() {
     xcrun simctl shutdown "$udid" 2>/dev/null || true
   done
   # The run as a whole, which is stopped if the script never reached its end. Last, so a slow write
-  # can't hold up the simulators' shutdown.
-  metrics_record test.sh "" "" "" "$(( $(date +%s) - run_began ))" "${run_result:-stopped}" "${failed[*]-}"
+  # can't hold up the simulators' shutdown. An ONLY= run isn't a whole run, so it records nothing.
+  [ -n "${ONLY:-}" ] || metrics_record test.sh "" "" "" "$(( $(date +%s) - run_began ))" "${run_result:-stopped}" "${failed[*]-}"
 }
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
+
+# Prints the UDID of the available simulator named exactly $1, or nothing.
+simulator_udid() {
+  xcrun simctl list devices available | awk -v name="$1" '
+    { line = $0; sub(/^ +/, "", line) }
+    index(line, name " (") == 1 {
+      match(line, /[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}/); print substr(line, RSTART, RLENGTH); exit }'
+}
+
+# ONLY=<Target>/<Suite>/<test> runs that one test (an -only-testing identifier) and nothing else: the
+# red-green loop's quick run (CODING_STANDARDS.md, Tests). An engine target runs on macOS; anything
+# else runs the app's tests on the first simulator in the matrix. It never stands in for the full run
+# before a commit.
+if [ -n "${ONLY:-}" ]; then
+  case "$ONLY" in
+    NudgeEngineTests/*|NudgeDeviceSeedTests/*)
+      step "xcodebuild test -only-testing:$ONLY (NudgeEngine, macOS)"
+      (cd Packages/NudgeEngine && xcodebuild_logged "$logs/only.log" test -scheme NudgeEngine \
+        -destination 'platform=macOS' -derivedDataPath .build/xcode "-only-testing:$ONLY")
+      status=$? ;;
+    *)
+      name="${simulators[0]:-}"
+      udid="$( [ -n "$name" ] && simulator_udid "$name")"
+      if [ -z "$udid" ]; then echo "FAIL: ONLY= needs the simulator \"$name\"" >&2; exit 1; fi
+      xcrun simctl list devices | grep -q "$udid) (Booted)" || shut_down_at_exit+=("$udid")
+      xcodegen generate --quiet || exit 1
+      step "xcodebuild test -only-testing:$ONLY on $name"
+      xcodebuild_logged "$logs/only.log" test -project NudgeInator.xcodeproj -scheme NudgeInator \
+        -destination "platform=iOS Simulator,id=$udid" -derivedDataPath .build/derived "-only-testing:$ONLY"
+      status=$? ;;
+  esac
+  echo
+  if [ "$status" -eq 0 ]; then echo "PASS: $ONLY (not a full run: run scripts/test.sh before committing)"
+  else echo "FAIL: $ONLY" >&2; fi
+  exit "$status"
+fi
 
 step "NudgeEngine imports no Apple framework (Foundation only)"
 if non_foundation_imports Packages/NudgeEngine/Sources/NudgeEngine | grep .; then
@@ -217,14 +254,6 @@ cp App/Resources/InfoPlist.xcstrings "$scratch/InfoPlist.xcstrings"
 
 step "xcodegen generate"
 xcodegen generate --quiet || failed+=("xcodegen")
-
-# Prints the UDID of the available simulator named exactly $1, or nothing.
-simulator_udid() {
-  xcrun simctl list devices available | awk -v name="$1" '
-    { line = $0; sub(/^ +/, "", line) }
-    index(line, name " (") == 1 {
-      match(line, /[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}/); print substr(line, RSTART, RLENGTH); exit }'
-}
 
 # The iOS 26.5 simulator's own mediaanalysisd (its Photos analysis daemon) ran away after every boot,
 # 700-870% of a CPU for as long as the simulator was up, with no app or test involved; 26.1's did not.
